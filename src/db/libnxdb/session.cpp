@@ -52,16 +52,16 @@ static void (*s_sessionInitCb)(DB_HANDLE session) = nullptr;
  */
 static void InvalidatePreparedStatements(DB_HANDLE hConn)
 {
-   hConn->m_preparedStatementsLock->lock();
-   for(int i = 0; i < hConn->m_preparedStatements->size(); i++)
+   hConn->m_preparedStatementsLock.lock();
+   for(int i = 0; i < hConn->m_preparedStatements.size(); i++)
    {
-      db_statement_t *stmt = hConn->m_preparedStatements->get(i);
+      db_statement_t *stmt = hConn->m_preparedStatements.get(i);
       hConn->m_driver->m_callTable.FreeStatement(stmt->m_statement);
       stmt->m_statement = nullptr;
       stmt->m_connection = nullptr;
    }
-   hConn->m_preparedStatements->clear();
-   hConn->m_preparedStatementsLock->unlock();
+   hConn->m_preparedStatements.clear();
+   hConn->m_preparedStatementsLock.unlock();
 }
 
 /**
@@ -105,31 +105,12 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
 #endif
    if (hDrvConn != nullptr)
    {
-      hConn = MemAllocStruct<db_handle_t>();
-      if (hConn != nullptr)
-      {
-			hConn->m_driver = driver;
-			hConn->m_reconnectEnabled = true;
-			hConn->m_connection = hDrvConn;
-         hConn->m_mutexTransLock = new Mutex(MutexType::RECURSIVE);
-         hConn->m_transactionLevel = 0;
-         hConn->m_preparedStatements = new ObjectArray<db_statement_t>(4, 4, Ownership::False);
-         hConn->m_preparedStatementsLock = new Mutex(MutexType::FAST);
-         hConn->m_dbName = utfDatabase;
-         hConn->m_login = utfLogin;
-         hConn->m_password = utfPassword;
-         hConn->m_server = utfServer;
-         hConn->m_schema = utfSchema;
-         if (driver->m_callTable.SetPrefetchLimit != nullptr)
-            driver->m_callTable.SetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
-		   nxlog_debug_tag(DEBUG_TAG_CONNECTION, 4, _T("New DB connection opened: handle=%p"), hConn);
-         if (s_sessionInitCb != nullptr)
-            s_sessionInitCb(hConn);
-      }
-      else
-      {
-         driver->m_callTable.Disconnect(hDrvConn);
-      }
+      hConn = new db_handle_t(driver, hDrvConn, utfDatabase, utfLogin, utfPassword, utfServer, utfSchema);
+      if (driver->m_callTable.SetPrefetchLimit != nullptr)
+         driver->m_callTable.SetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
+      nxlog_debug_tag(DEBUG_TAG_CONNECTION, 4, _T("New DB connection opened: handle=%p"), hConn);
+      if (s_sessionInitCb != nullptr)
+         s_sessionInitCb(hConn);
    }
 	if (hConn == nullptr)
 	{
@@ -155,15 +136,7 @@ void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn)
    InvalidatePreparedStatements(hConn);
 
 	hConn->m_driver->m_callTable.Disconnect(hConn->m_connection);
-   delete hConn->m_mutexTransLock;
-   MemFree(hConn->m_dbName);
-   MemFree(hConn->m_login);
-   MemFree(hConn->m_password);
-   MemFree(hConn->m_server);
-   MemFree(hConn->m_schema);
-   delete hConn->m_preparedStatements;
-   delete hConn->m_preparedStatementsLock;
-   MemFree(hConn);
+   delete hConn;
 }
 
 /**
@@ -256,25 +229,24 @@ void LIBNXDB_EXPORTABLE DBSetSessionInitCallback(void (*cb)(DB_HANDLE))
 /**
  * Perform a non-SELECT SQL query
  */
-bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
+bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *query, TCHAR *errorText)
 {
-   DWORD dwResult;
 #ifdef UNICODE
-#define pwszQuery szQuery
-#define wcErrorText errorText
+   auto wcQuery = query;
+   auto wcErrorText = errorText;
 #else
-   WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+   WCHAR *wcQuery = WideStringFromMBString(query);
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
-   hConn->m_mutexTransLock->lock();
+   hConn->m_mutexTransLock.lock();
    int64_t ms = GetCurrentTimeMs();
 
-   dwResult = hConn->m_driver->m_callTable.Query(hConn->m_connection, pwszQuery, wcErrorText);
-   if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   uint32_t rc = hConn->m_driver->m_callTable.Query(hConn->m_connection, wcQuery, wcErrorText);
+   if ((rc == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      dwResult = hConn->m_driver->m_callTable.Query(hConn->m_connection, pwszQuery, wcErrorText);
+      rc = hConn->m_driver->m_callTable.Query(hConn->m_connection, wcQuery, wcErrorText);
    }
 
    s_perfNonSelectQueries++;
@@ -283,36 +255,34 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    ms = GetCurrentTimeMs() - ms;
    if (s_queryTrace)
    {
-      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
+      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s sync query: \"%s\" [%d ms]"), (rc == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), query, ms);
    }
-   if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   if ((rc == DBERR_SUCCESS) && (static_cast<uint32_t>(ms) > hConn->getQueryExecTimeThreshold()))
    {
-      nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
+      nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), query, (int)ms);
       s_perfLongRunningQueries++;
    }
    
-   hConn->m_mutexTransLock->unlock();
+   hConn->m_mutexTransLock.unlock();
 
 #ifndef UNICODE
 	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-   if (dwResult != DBERR_SUCCESS)
+   if (rc != DBERR_SUCCESS)
 	{	
       s_perfFailedQueries++;
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, wcQuery, wcErrorText, rc == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 	}
 
 #ifndef UNICODE
-   MemFree(pwszQuery);
+   MemFree(wcQuery);
 #endif
 
-   return dwResult == DBERR_SUCCESS;
-#undef pwszQuery
-#undef wcErrorText
+   return rc == DBERR_SUCCESS;
 }
 
 bool LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
@@ -324,43 +294,41 @@ bool LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
 /**
  * Perform SELECT query
  */
-DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
+DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *query, TCHAR *errorText)
 {
-   DBDRV_RESULT hResult;
-	DB_RESULT result = NULL;
-   uint32_t dwError = DBERR_OTHER_ERROR;
 #ifdef UNICODE
-#define pwszQuery szQuery
-#define wcErrorText errorText
+   auto wcQuery = query;
+   auto wcErrorText = errorText;
 #else
-   WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+   WCHAR *wcQuery = WideStringFromMBString(query);
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
-   
-   hConn->m_mutexTransLock->lock();
+
+   hConn->m_mutexTransLock.lock();
    int64_t ms = GetCurrentTimeMs();
 
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
 
-   hResult = hConn->m_driver->m_callTable.Select(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
-   if ((hResult == nullptr) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   uint32_t errorCode = DBERR_OTHER_ERROR;
+   DBDRV_RESULT hResult = hConn->m_driver->m_callTable.Select(hConn->m_connection, wcQuery, &errorCode, wcErrorText);
+   if ((hResult == nullptr) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_callTable.Select(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+      hResult = hConn->m_driver->m_callTable.Select(hConn->m_connection, wcQuery, &errorCode, wcErrorText);
    }
 
    ms = GetCurrentTimeMs() - ms;
    if (s_queryTrace)
    {
-      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
+      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != nullptr) ? _T("Successful") : _T("Failed"), query, (int)ms);
    }
-   if ((hResult != nullptr) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   if ((hResult != nullptr) && (static_cast<uint32_t>(ms) > hConn->getQueryExecTimeThreshold()))
    {
-      nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
+      nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), query, (int)ms);
       InterlockedIncrement64(&s_perfLongRunningQueries);
    }
-   hConn->m_mutexTransLock->unlock();
+   hConn->m_mutexTransLock.unlock();
 
 #ifndef UNICODE
 	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
@@ -370,26 +338,23 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 	if (hResult == nullptr)
 	{
 	   InterlockedIncrement64(&s_perfFailedQueries);
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, wcQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 	}
 
 #ifndef UNICODE
-   MemFree(pwszQuery);
+   MemFree(wcQuery);
 #endif
    
-	if (hResult != nullptr)
-	{
-		result = MemAllocStruct<db_result_t>();
-		result->m_driver = hConn->m_driver;
-		result->m_connection = hConn;
-		result->m_data = hResult;
-	}
+	if (hResult == nullptr)
+	   return nullptr;
 
+   DB_RESULT result = MemAllocStruct<db_result_t>();
+   result->m_driver = hConn->m_driver;
+   result->m_connection = hConn;
+   result->m_data = hResult;
    return result;
-#undef pwszQuery
-#undef wcErrorText
 }
 
 /**
@@ -842,72 +807,67 @@ void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 /**
  * Unbuffered SELECT query
  */
-DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
+DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, const TCHAR *query, TCHAR *errorText)
 {
-   DBDRV_UNBUFFERED_RESULT hResult;
-	DB_UNBUFFERED_RESULT result = NULL;
-   uint32_t errorCode = DBERR_OTHER_ERROR;
 #ifdef UNICODE
-#define pwszQuery szQuery
-#define wcErrorText errorText
+   auto wcQuery = query;
+   auto wcErrorText = errorText;
 #else
-   WCHAR *pwszQuery = WideStringFromMBString(szQuery);
+   WCHAR *wcQuery = WideStringFromMBString(query);
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
-   
-   hConn->m_mutexTransLock->lock();
+
+   hConn->m_mutexTransLock.lock();
    int64_t ms = GetCurrentTimeMs();
 
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
 
-   hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
+   uint32_t errorCode = DBERR_OTHER_ERROR;
+   DBDRV_UNBUFFERED_RESULT hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, wcQuery, &errorCode, wcErrorText);
    if ((hResult == nullptr) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, pwszQuery, &errorCode, wcErrorText);
+      hResult = hConn->m_driver->m_callTable.SelectUnbuffered(hConn->m_connection, wcQuery, &errorCode, wcErrorText);
    }
 
    ms = GetCurrentTimeMs() - ms;
    if (s_queryTrace)
    {
-      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s unbuffered query: \"%s\" [%d ms]"), (hResult != nullptr) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
+      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s unbuffered query: \"%s\" [%d ms]"), (hResult != nullptr) ? _T("Successful") : _T("Failed"), query, (int)ms);
    }
-   if ((hResult != nullptr) && ((uint32_t)ms > g_sqlQueryExecTimeThreshold))
+   if ((hResult != nullptr) && ((uint32_t)ms > hConn->getQueryExecTimeThreshold()))
    {
-      nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
+      nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), query, (int)ms);
       InterlockedIncrement64(&s_perfLongRunningQueries);
    }
    if (hResult == nullptr)
    {
       InterlockedIncrement64(&s_perfFailedQueries);
-      hConn->m_mutexTransLock->unlock();
+      hConn->m_mutexTransLock.unlock();
 
 #ifndef UNICODE
 		wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), szQuery, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != nullptr)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, wcQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
    }
 
 #ifndef UNICODE
-   free(pwszQuery);
+   MemFree(wcQuery);
 #endif
-   
-	if (hResult != nullptr)
-	{
-		result = MemAllocStruct<db_unbuffered_result_t>();
-		result->m_driver = hConn->m_driver;
-		result->m_connection = hConn;
-		result->m_data = hResult;
-	}
 
+	if (hResult == nullptr)
+	   return nullptr;
+
+   DB_UNBUFFERED_RESULT result = MemAllocStruct<db_unbuffered_result_t>();
+   result->m_driver = hConn->m_driver;
+   result->m_connection = hConn;
+   result->m_data = hResult;
    return result;
-#undef pwszQuery
-#undef wcErrorText
 }
 
 /**
@@ -1165,7 +1125,7 @@ void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult)
    if (hResult == nullptr)
       return;
 	hResult->m_driver->m_callTable.FreeUnbufferedResult(hResult->m_data);
-	hResult->m_connection->m_mutexTransLock->unlock();
+	hResult->m_connection->m_mutexTransLock.unlock();
 	MemFree(hResult);
 }
 
@@ -1178,26 +1138,26 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	INT64 ms;
 
 #ifdef UNICODE
-#define pwszQuery query
+#define wcQuery query
 #define wcErrorText errorText
 #else
-   WCHAR *pwszQuery = WideStringFromMBString(query);
+   WCHAR *wcQuery = WideStringFromMBString(query);
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
-	hConn->m_mutexTransLock->lock();
+	hConn->m_mutexTransLock.lock();
 
 	if (s_queryTrace)
       ms = GetCurrentTimeMs();
 
 	uint32_t errorCode;
-	DBDRV_STATEMENT stmt = hConn->m_driver->m_callTable.Prepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
+	DBDRV_STATEMENT stmt = hConn->m_driver->m_callTable.Prepare(hConn->m_connection, wcQuery, optimizeForReuse, &errorCode, wcErrorText);
    if ((stmt == nullptr) && (errorCode == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-		stmt = hConn->m_driver->m_callTable.Prepare(hConn->m_connection, pwszQuery, optimizeForReuse, &errorCode, wcErrorText);
+		stmt = hConn->m_driver->m_callTable.Prepare(hConn->m_connection, wcQuery, optimizeForReuse, &errorCode, wcErrorText);
 	}
-   hConn->m_mutexTransLock->unlock();
+   hConn->m_mutexTransLock.unlock();
 
 	if (stmt != nullptr)
 	{
@@ -1216,7 +1176,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, wcQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 
 		InterlockedIncrement64(&s_perfFailedQueries);
 		InterlockedIncrement64(&s_perfTotalQueries);
@@ -1229,18 +1189,18 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 	}
 
 #ifndef UNICODE
-	MemFree(pwszQuery);
+	MemFree(wcQuery);
 #endif
 
    if (result != nullptr)
    {
-      hConn->m_preparedStatementsLock->lock();
-      hConn->m_preparedStatements->add(result);
-      hConn->m_preparedStatementsLock->unlock();
+      hConn->m_preparedStatementsLock.lock();
+      hConn->m_preparedStatements.add(result);
+      hConn->m_preparedStatementsLock.unlock();
    }
 
 	return result;
-#undef pwszQuery
+#undef wcQuery
 #undef wcErrorText
 }
 
@@ -1263,9 +1223,9 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
 
    if (hStmt->m_connection != nullptr)
    {
-      hStmt->m_connection->m_preparedStatementsLock->lock();
-      hStmt->m_connection->m_preparedStatements->remove(hStmt);
-      hStmt->m_connection->m_preparedStatementsLock->unlock();
+      hStmt->m_connection->m_preparedStatementsLock.lock();
+      hStmt->m_connection->m_preparedStatements.remove(hStmt);
+      hStmt->m_connection->m_preparedStatementsLock.unlock();
    }
    hStmt->m_driver->m_callTable.FreeStatement(hStmt->m_statement);
    MemFree(hStmt->m_query);
@@ -1509,25 +1469,25 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
    }
 
 #ifdef UNICODE
-#define wcErrorText errorText
+   auto wcErrorText = errorText;
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
 	DB_HANDLE hConn = hStmt->m_connection;
-	hConn->m_mutexTransLock->lock();
+	hConn->m_mutexTransLock.lock();
    uint64_t ms = GetCurrentTimeMs();
 
    InterlockedIncrement64(&s_perfNonSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
 
-	uint32_t dwResult = hConn->m_driver->m_callTable.Execute(hConn->m_connection, hStmt->m_statement, wcErrorText);
+	uint32_t rc = hConn->m_driver->m_callTable.Execute(hConn->m_connection, hStmt->m_statement, wcErrorText);
    ms = GetCurrentTimeMs() - ms;
    if (s_queryTrace)
    {
-      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s prepared sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
+      nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s prepared sync query: \"%s\" [%d ms]"), (rc == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
    }
-   if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   if ((rc == DBERR_SUCCESS) && (static_cast<uint32_t>(ms) > hConn->getQueryExecTimeThreshold()))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
       InterlockedIncrement64(&s_perfLongRunningQueries);
@@ -1535,36 +1495,35 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 
    // Do reconnect if needed, but don't retry statement execution
    // because it will fail anyway
-   if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   if ((rc == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
    }
-   
-   hConn->m_mutexTransLock->unlock();
+
+   hConn->m_mutexTransLock.unlock();
 
 #ifndef UNICODE
 	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-   if (dwResult != DBERR_SUCCESS)
+   if (rc != DBERR_SUCCESS)
 	{	
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != nullptr)
 		{
 #ifdef UNICODE
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, rc == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 #else
 			WCHAR *query = WideStringFromMBString(hStmt->m_query);
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, rc == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
 			MemFree(query);
 #endif
 		}
 		InterlockedIncrement64(&s_perfFailedQueries);
 	}
 
-   return dwResult == DBERR_SUCCESS;
-#undef wcErrorText
+   return rc == DBERR_SUCCESS;
 }
 
 /**
@@ -1587,15 +1546,14 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
       return nullptr;
    }
 
-	DB_RESULT result = nullptr;
 #ifdef UNICODE
-#define wcErrorText errorText
+   auto wcErrorText = errorText;
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
 	DB_HANDLE hConn = hStmt->m_connection;
-   hConn->m_mutexTransLock->lock();
+   hConn->m_mutexTransLock.lock();
 
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
@@ -1610,7 +1568,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s prepared sync query: \"%s\" [%d ms]"),
 		              (hResult != nullptr) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
    }
-   if ((hResult != nullptr) && ((uint32_t)ms > g_sqlQueryExecTimeThreshold))
+   if ((hResult != nullptr) && (static_cast<uint32_t>(ms) > hConn->getQueryExecTimeThreshold()))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
       InterlockedIncrement64(&s_perfLongRunningQueries);
@@ -1623,17 +1581,17 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
       DBReconnect(hConn);
    }
 
-   hConn->m_mutexTransLock->unlock();
+   hConn->m_mutexTransLock.unlock();
 
 #ifndef UNICODE
 	wchar_to_mb(wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #endif
 
-	if (hResult == NULL)
+	if (hResult == nullptr)
 	{
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
-		if (hConn->m_driver->m_fpEventHandler != NULL)
+		if (hConn->m_driver->m_fpEventHandler != nullptr)
 		{
 #ifdef UNICODE
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_context);
@@ -1644,18 +1602,14 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 #endif
 		}
 		InterlockedIncrement64(&s_perfFailedQueries);
+      return nullptr;
 	}
 
-	if (hResult != nullptr)
-	{
-		result = MemAllocStruct<db_result_t>();
-		result->m_driver = hConn->m_driver;
-		result->m_connection = hConn;
-		result->m_data = hResult;
-	}
-
+   DB_RESULT result = MemAllocStruct<db_result_t>();
+   result->m_driver = hConn->m_driver;
+   result->m_connection = hConn;
+   result->m_data = hResult;
    return result;
-#undef wcErrorText
 }
 
 /**
@@ -1678,15 +1632,14 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
       return nullptr;
    }
 
-   DB_UNBUFFERED_RESULT result = nullptr;
 #ifdef UNICODE
-#define wcErrorText errorText
+   auto wcErrorText = errorText;
 #else
    WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
 
    DB_HANDLE hConn = hStmt->m_connection;
-   hConn->m_mutexTransLock->lock();
+   hConn->m_mutexTransLock.lock();
 
    InterlockedIncrement64(&s_perfSelectQueries);
    InterlockedIncrement64(&s_perfTotalQueries);
@@ -1701,7 +1654,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
       nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("%s prepared sync query: \"%s\" [%d ms]"),
                     (hResult != nullptr) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
    }
-   if ((hResult != nullptr) && ((uint32_t)ms > g_sqlQueryExecTimeThreshold))
+   if ((hResult != nullptr) && (static_cast<uint32_t>(ms) > hConn->getQueryExecTimeThreshold()))
    {
       nxlog_debug_tag(DEBUG_TAG_QUERY, 3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
       InterlockedIncrement64(&s_perfLongRunningQueries);
@@ -1721,7 +1674,7 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
 
    if (hResult == nullptr)
    {
-      hConn->m_mutexTransLock->unlock();
+      hConn->m_mutexTransLock.unlock();
 
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_DRIVER, _T("SQL query failed (Query = \"%s\"): %s"), hStmt->m_query, errorText);
       if (hConn->m_driver->m_fpEventHandler != nullptr)
@@ -1735,18 +1688,14 @@ DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMEN
 #endif
       }
       InterlockedIncrement64(&s_perfFailedQueries);
+      return nullptr;
    }
 
-   if (hResult != nullptr)
-   {
-      result = MemAllocStruct<db_unbuffered_result_t>();
-      result->m_driver = hConn->m_driver;
-      result->m_connection = hConn;
-      result->m_data = hResult;
-   }
-
+   DB_UNBUFFERED_RESULT result = MemAllocStruct<db_unbuffered_result_t>();
+   result->m_driver = hConn->m_driver;
+   result->m_connection = hConn;
+   result->m_data = hResult;
    return result;
-#undef wcErrorText
 }
 
 /**
@@ -1766,7 +1715,7 @@ bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    uint32_t dwResult;
    bool bRet = false;
 
-   hConn->m_mutexTransLock->lock();
+   hConn->m_mutexTransLock.lock();
    if (hConn->m_transactionLevel == 0)
    {
       dwResult = hConn->m_driver->m_callTable.Begin(hConn->m_connection);
@@ -1783,7 +1732,7 @@ bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
       }
       else
       {
-         hConn->m_mutexTransLock->unlock();
+         hConn->m_mutexTransLock.unlock();
 			nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("BEGIN TRANSACTION failed"), hConn->m_transactionLevel);
       }
    }
@@ -1803,7 +1752,7 @@ bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
    bool bRet = false;
 
-   hConn->m_mutexTransLock->lock();
+   hConn->m_mutexTransLock.lock();
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;
@@ -1812,9 +1761,9 @@ bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
       else
          bRet = true;
 		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
-      hConn->m_mutexTransLock->unlock();
+      hConn->m_mutexTransLock.unlock();
    }
-   hConn->m_mutexTransLock->unlock();
+   hConn->m_mutexTransLock.unlock();
    return bRet;
 }
 
@@ -1825,7 +1774,7 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
    bool bRet = false;
 
-   hConn->m_mutexTransLock->lock();
+   hConn->m_mutexTransLock.lock();
    if (hConn->m_transactionLevel > 0)
    {
       hConn->m_transactionLevel--;
@@ -1834,9 +1783,9 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
       else
          bRet = true;
 		nxlog_debug_tag(DEBUG_TAG_QUERY, 9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
-      hConn->m_mutexTransLock->unlock();
+      hConn->m_mutexTransLock.unlock();
    }
-   hConn->m_mutexTransLock->unlock();
+   hConn->m_mutexTransLock.unlock();
    return bRet;
 }
 

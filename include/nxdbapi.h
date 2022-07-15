@@ -236,7 +236,8 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE connection);
 int LIBNXDB_EXPORTABLE DBConnectionPoolGetSize();
 int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount();
 
-void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold);
+void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(uint32_t threshold);
+void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(DB_HANDLE conn, uint32_t threshold);
 ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList();
 void LIBNXDB_EXPORTABLE DBGetPerfCounters(LIBNXDB_PERF_COUNTERS *counters);
 

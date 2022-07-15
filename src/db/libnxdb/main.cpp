@@ -24,12 +24,21 @@
 #include "libnxdb.h"
 
 /**
- * Set long running query threshold (milliseconds)
+ * Set global long running query threshold (milliseconds)
  */
-void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold)
+void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(uint32_t threshold)
 {
 	g_sqlQueryExecTimeThreshold = threshold;
-   nxlog_debug_tag(_T("db.query"), 3, _T("DB Library: long running query threshold set to %u"), threshold);
+   nxlog_debug_tag(_T("db.query"), 3, _T("DB Library: global long running query threshold set to %u"), threshold);
+}
+
+/**
+ * Set per-session long running query threshold (milliseconds)
+ */
+void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(DB_HANDLE conn, uint32_t threshold)
+{
+   conn->m_sqlQueryExecTimeThreshold = threshold;
+   nxlog_debug_tag(_T("db.query"), 3, _T("DB Library: long running query threshold for session %p set to %u"), conn, threshold);
 }
 
 #ifdef _WIN32

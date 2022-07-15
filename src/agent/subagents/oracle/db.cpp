@@ -107,6 +107,7 @@ reconnect:
 
       m_connected = true;
 		DBEnableReconnect(m_session, false);
+		DBSetLongRunningThreshold(m_session, 5000);  // Override global long running query threshold
       m_version = getOracleVersion();
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_ORACLE, _T("Connection with database %s restored (version %d.%d, connection TTL %d)"),
          m_info.id, m_version >> 8, m_version &0xFF, m_info.connectionTTL);

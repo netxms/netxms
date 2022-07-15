@@ -1023,7 +1023,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
    if (lrt != 0)
    {
       DBSetLongRunningThreshold(lrt);
-      nxlog_write_tag(NXLOG_INFO, _T("db"), _T("Long running query threshold set at %d milliseconds"), lrt);
+      nxlog_write_tag(NXLOG_INFO, _T("db"), _T("Long running query threshold set at %u milliseconds"), lrt);
    }
 
    MetaDataPreLoad();

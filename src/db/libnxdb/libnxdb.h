@@ -38,6 +38,11 @@
 #define MAX_DB_DRIVERS			16
 
 /**
+ * Global variables
+ */
+extern uint32_t g_sqlQueryExecTimeThreshold;
+
+/**
  * Database driver structure
  */
 struct db_driver_t
@@ -72,15 +77,45 @@ struct db_handle_t
    DBDRV_CONNECTION m_connection;
 	DB_DRIVER m_driver;
 	bool m_reconnectEnabled;
-   Mutex *m_mutexTransLock;      // Transaction lock
+	uint32_t m_sqlQueryExecTimeThreshold;
+   Mutex m_mutexTransLock;      // Transaction lock
    int m_transactionLevel;
    char *m_server;
    char *m_login;
    char *m_password;
    char *m_dbName;
    char *m_schema;
-   ObjectArray<db_statement_t> *m_preparedStatements;
-   Mutex *m_preparedStatementsLock;
+   ObjectArray<db_statement_t> m_preparedStatements;
+   Mutex m_preparedStatementsLock;
+
+   db_handle_t(DB_DRIVER driver, DBDRV_CONNECTION connection, char *dbName, char *login, char *password, char *server, char *schema) :
+         m_mutexTransLock(MutexType::RECURSIVE), m_preparedStatements(4, 4, Ownership::False), m_preparedStatementsLock(MutexType::FAST)
+   {
+      m_driver = driver;
+      m_reconnectEnabled = true;
+      m_sqlQueryExecTimeThreshold = 0;
+      m_connection = connection;
+      m_transactionLevel = 0;
+      m_dbName = dbName;
+      m_login = login;
+      m_password = password;
+      m_server = server;
+      m_schema = schema;
+   }
+
+   ~db_handle_t()
+   {
+      MemFree(m_dbName);
+      MemFree(m_login);
+      MemFree(m_password);
+      MemFree(m_server);
+      MemFree(m_schema);
+   }
+
+   uint32_t getQueryExecTimeThreshold()
+   {
+      return (m_sqlQueryExecTimeThreshold != 0) ? m_sqlQueryExecTimeThreshold : g_sqlQueryExecTimeThreshold;
+   }
 };
 
 /**
@@ -102,10 +137,5 @@ struct db_unbuffered_result_t
 	DB_HANDLE m_connection;
 	DBDRV_UNBUFFERED_RESULT m_data;
 };
-
-/**
- * Global variables
- */
-extern uint32_t g_sqlQueryExecTimeThreshold;
 
 #endif   /* _libnxsrv_h_ */
