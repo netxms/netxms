@@ -1020,17 +1020,16 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
               response.setField(VID_WEBSVC_RESPONSE_CODE, static_cast<uint32_t>(response_code));
 
               data.write('\0');
-              size_t size;
-              const char *text = reinterpret_cast<const char*>(data.buffer(&size));
-              response.setFieldFromMBString(VID_WEBSVC_RESPONSE, text);
+              const char *text = reinterpret_cast<const char*>(data.buffer());
+              response.setFieldFromUtf8String(VID_WEBSVC_RESPONSE, text);
               errorText = _T("");
 
               if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
               {
 #ifdef UNICODE
-                 WCHAR *responseText = WideStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
+                 WCHAR *responseText = WideStringFromUTF8String(text);
 #else
-                 char *responseText = MBStringFromUTF8String(reinterpret_cast<const char*>(data.buffer()));
+                 char *responseText = MBStringFromUTF8String(text);
 #endif
                  for (TCHAR *s = responseText; *s != 0; s++)
                     if (*s < ' ')
