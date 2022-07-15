@@ -62,11 +62,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
-import org.netxms.client.datacollection.RemoteChangeListener;
-import org.netxms.client.datacollection.LocalChangeListener;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.datacollection.LocalChangeListener;
+import org.netxms.client.datacollection.RemoteChangeListener;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
@@ -105,9 +105,9 @@ public class DataCollectionEditor extends ViewPart
 
 	// Columns
 	public static final int COLUMN_ID = 0;
-	public static final int COLUMN_ORIGIN = 1;
-	public static final int COLUMN_DESCRIPTION = 2;
-	public static final int COLUMN_PARAMETER = 3;
+   public static final int COLUMN_DESCRIPTION = 1;
+   public static final int COLUMN_ORIGIN = 2;
+   public static final int COLUMN_PARAMETER = 3;
 	public static final int COLUMN_DATATYPE = 4;
 	public static final int COLUMN_INTERVAL = 5;
 	public static final int COLUMN_RETENTION = 6;
@@ -233,15 +233,18 @@ public class DataCollectionEditor extends ViewPart
 			}
 		});
 		
-		final String[] names = { Messages.get().DataCollectionEditor_ColID, Messages.get().DataCollectionEditor_ColOrigin, Messages.get().DataCollectionEditor_ColDescription, Messages.get().DataCollectionEditor_ColParameter, Messages.get().DataCollectionEditor_ColDataType, Messages.get().DataCollectionEditor_ColPollingInterval, Messages.get().DataCollectionEditor_ColRetentionTime, Messages.get().DataCollectionEditor_ColStatus, Messages.get().DataCollectionEditor_ColThresholds, Messages.get().DataCollectionEditor_ColTemplate, "Related Object", "Is status calculation" };
-		final int[] widths = { 60, 100, 250, 200, 90, 90, 90, 100, 200, 150, 150, 90 };
+      final String[] names = { Messages.get().DataCollectionEditor_ColID, Messages.get().DataCollectionEditor_ColDescription, Messages.get().DataCollectionEditor_ColOrigin,
+            Messages.get().DataCollectionEditor_ColParameter, Messages.get().DataCollectionEditor_ColDataType, Messages.get().DataCollectionEditor_ColPollingInterval,
+            Messages.get().DataCollectionEditor_ColRetentionTime, Messages.get().DataCollectionEditor_ColStatus, Messages.get().DataCollectionEditor_ColThresholds,
+            Messages.get().DataCollectionEditor_ColTemplate, "Related Object", "Is status calculation" };
+      final int[] widths = { 60, 250, 150, 200, 90, 90, 90, 100, 200, 150, 150, 90 };
 		viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DciLabelProvider());
 		viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
 		filter = new DciFilter();
 		viewer.addFilter(filter);
-		WidgetHelper.restoreTableViewerSettings(viewer, settings, "DataCollectionEditor"); //$NON-NLS-1$
+      WidgetHelper.restoreTableViewerSettings(viewer, settings, "DataCollectionEditor.V3"); //$NON-NLS-1$
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -285,7 +288,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, settings, "DataCollectionEditor"); //$NON-NLS-1$
+            WidgetHelper.saveTableViewerSettings(viewer, settings, "DataCollectionEditor.V3"); //$NON-NLS-1$
 	         settings.put("DataCollectionEditor.hideModificationWarnings", hideModificationWarnings);
 			}
 		});

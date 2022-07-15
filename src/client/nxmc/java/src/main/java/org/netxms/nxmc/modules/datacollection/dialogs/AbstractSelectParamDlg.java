@@ -64,9 +64,10 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 {
    private static final I18n i18n = LocalizationHelper.getI18n(AbstractSelectParamDlg.class);
    
-	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_TYPE = 1;
-	public static final int COLUMN_DESCRIPTION = 2;
+   public static final int COLUMN_DESCRIPTION = 0;
+   public static final int COLUMN_NAME = 1;
+   public static final int COLUMN_TYPE = 2;
+
 	
 	protected boolean selectTables;
 	protected AbstractObject object;
@@ -138,8 +139,8 @@ public abstract class AbstractSelectParamDlg extends Dialog implements IParamete
 			}
 	   });
 		
-		final String[] names = { i18n.tr("Name"), selectTables ? i18n.tr("Instance Column") : i18n.tr("Type"), i18n.tr("Description") };
-		final int[] widths = { 150, selectTables ? 150 : 100, 350 };
+		final String[] names = { i18n.tr("Description"),  i18n.tr("Name"), selectTables ? i18n.tr("Instance Column"):i18n.tr("Data Type") };
+		final int[] widths = { 350, 150, selectTables ? 150 : 100 };
 	   viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.BORDER);
 	   WidgetHelper.restoreTableViewerSettings(viewer, getConfigurationPrefix() + ".viewer"); //$NON-NLS-1$
 	   viewer.setContentProvider(new ArrayContentProvider());
