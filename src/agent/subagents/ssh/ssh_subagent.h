@@ -90,7 +90,7 @@ shared_ptr<KeyPair> GetSshKey(AbstractCommSession *session, uint32_t id);
 /* Session pool */
 void InitializeSessionPool();
 void ShutdownSessionPool();
-SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys);
+SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys);
 void ReleaseSession(SSHSession *session);
 
 /* handlers */

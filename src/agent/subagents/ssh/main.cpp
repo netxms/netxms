@@ -111,7 +111,7 @@ static NX_CFG_TEMPLATE s_cfgTemplate[] =
    { _T("ConfigFile"), CT_MB_STRING, 0, 0, MAX_PATH, 0, g_sshConfigFile },
    { _T("ConnectTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshConnectTimeout },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshSessionIdleTimeout },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
@@ -167,7 +167,7 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-   { _T("SSH.CheckConnection(*)"), H_SSHConnection, nullptr, DCI_DT_STRING, _T("Result of connectivity check") }, // TODO DIMA add to docks
+   { _T("SSH.CheckConnection(*)"), H_SSHConnection, nullptr, DCI_DT_STRING, _T("Result of connectivity check") },
 	{ _T("SSH.Command(*)"), H_SSHCommand, nullptr, DCI_DT_STRING, _T("Result of command execution") },
 };
 
