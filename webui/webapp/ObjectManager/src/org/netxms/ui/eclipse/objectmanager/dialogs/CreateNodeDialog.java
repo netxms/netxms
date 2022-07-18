@@ -51,6 +51,7 @@ public class CreateNodeDialog extends Dialog
 	private NXCSession session;
 	
 	private LabeledText objectNameField;
+   private LabeledText objectAliasField;
 	private LabeledText hostNameField;
 	private Spinner agentPortField;
 	private Spinner snmpPortField;
@@ -78,6 +79,7 @@ public class CreateNodeDialog extends Dialog
 	private ZoneSelector zoneSelector;
 	
 	private String objectName = "";
+   private String objectAlias = "";
 	private String hostName = "";
 	private int creationFlags = 0;
 	private long agentProxy = 0;
@@ -158,7 +160,17 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalSpan = 2;
 		objectNameField.setLayoutData(gd);
 		objectNameField.setText(objectName);
-		
+
+      objectAliasField = new LabeledText(dialogArea, SWT.NONE);
+      objectAliasField.setLabel(Messages.get().CreateNodeDialog_Alias);
+      objectAliasField.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      objectAliasField.setLayoutData(gd);
+      objectAliasField.setText(objectAlias);
+
 		final Composite ipAddrGroup = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -401,6 +413,7 @@ public class CreateNodeDialog extends Dialog
       if (checkRemoteManagementNode.getSelection())
          creationFlags |= NXCObjectCreationData.CF_EXTERNAL_GATEWAY;
 
+      objectAlias = objectAliasField.getText().trim();
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();
       etherNetIpPort = etherNetIpPortField.getSelection();
@@ -439,6 +452,23 @@ public class CreateNodeDialog extends Dialog
    public void setObjectName(String objectName)
    {
       this.objectName = objectName;
+   }
+
+   /**
+    * @return the alias
+    */
+   public String getObjectAlias()
+   {
+      return objectAlias;
+   }
+
+   /**
+    * @param objectAlias the objectAlias to set
+    * 
+    */
+   public void setObjectAlias(String objectAlias)
+   {
+      this.objectAlias = objectAlias;
    }
 
    /**

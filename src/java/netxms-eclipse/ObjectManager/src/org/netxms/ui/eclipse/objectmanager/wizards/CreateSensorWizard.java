@@ -77,6 +77,7 @@ public class CreateSensorWizard extends Wizard
    public boolean performFinish()
    {
       cd.setName(first.getObjectName());
+      cd.setObjectAlias(first.getObjectAlias());
       cd.setCommProtocol(first.getCommMethod());
       SensorCommon commonData =  first.getCommonData();
       cd.setMacAddress(commonData.getMacAddress());

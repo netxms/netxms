@@ -72,6 +72,7 @@ public class CreateZone implements IObjectActionDelegate
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_ZONE, dlg.getName(), parentId);
 				cd.setZoneUIN(dlg.getZoneUIN());
+            cd.setObjectAlias(dlg.getAlias());
 				session.createObject(cd);
 			}
 

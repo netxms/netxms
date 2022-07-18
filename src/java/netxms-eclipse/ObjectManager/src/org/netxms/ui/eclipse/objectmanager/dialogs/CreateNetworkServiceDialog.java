@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateNetworkServiceDialog extends Dialog
 {
 	private LabeledText nameField;
+   private LabeledText aliasField;
 	private Combo serviceTypeField;
 	private LabeledText portField;
 	private LabeledText requestField;
@@ -49,6 +50,7 @@ public class CreateNetworkServiceDialog extends Dialog
 	private Button checkCreateDci;
 	
 	private String name;
+   private String alias;
 	private int serviceType;
 	private int port;
 	private String request;
@@ -98,6 +100,15 @@ public class CreateNetworkServiceDialog extends Dialog
 		gd.horizontalSpan = 2;
 		nameField.setLayoutData(gd);
 		
+      aliasField = new LabeledText(dialogArea, SWT.NONE);
+      aliasField.setLabel(Messages.get().CreateNetworkServiceDialog_Alias);
+      aliasField.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      aliasField.setLayoutData(gd);
+
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -175,7 +186,7 @@ public class CreateNetworkServiceDialog extends Dialog
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkServiceDialog_Warning, Messages.get().CreateNetworkServiceDialog_WarningInvalidPort);
 			return;
 		}
-		
+      alias = aliasField.getText().trim();
 		request = requestField.getText();
 		response = responseField.getText();
 		createDci = checkCreateDci.getSelection();
@@ -194,6 +205,13 @@ public class CreateNetworkServiceDialog extends Dialog
 		return name;
 	}
 
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * @return the serviceType

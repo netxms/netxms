@@ -12,6 +12,7 @@ public class Messages extends NLS
    public String ChildObjectListDialog_Name;
    public String ChildObjectListDialog_SelectSubordinate;
    public String CreateObjectDialog_ObjectName;
+   public String CreateObjectDialog_ObjectAlias;
    public String CreateObjectDialog_Title;
    public String CreateObjectDialog_Warning;
    public String CreateObjectDialog_WarningText;

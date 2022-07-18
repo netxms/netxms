@@ -39,6 +39,7 @@ public class SensorGeneralPage extends WizardPage
 {
    private Composite container;
    private LabeledText textObjectName;
+   private LabeledText textObjectAlias;
    private Combo comboCommMethod;
    private SensorCommon commonData;
    
@@ -82,6 +83,21 @@ public class SensorGeneralPage extends WizardPage
          }
       });
       
+      textObjectAlias = new LabeledText(container, SWT.NONE);
+      textObjectAlias.setLabel(Messages.get().General_Alias);
+      textObjectAlias.setText("");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      textObjectAlias.setLayoutData(gd);
+      textObjectAlias.getTextControl().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            getWizard().getContainer().updateButtons();
+         }
+      });
+
       comboCommMethod = (Combo)WidgetHelper.createLabeledCombo(container, SWT.BORDER | SWT.READ_ONLY, Messages.get().SensorWizard_General_CommMethod, 
             WidgetHelper.DEFAULT_LAYOUT_DATA);
       comboCommMethod.setItems(Sensor.COMM_METHOD);
@@ -152,6 +168,14 @@ public class SensorGeneralPage extends WizardPage
    public String getObjectName()
    {
       return textObjectName.getText();
+   }
+
+   /**
+    * @return the textObjectAlias
+    */
+   public String getObjectAlias()
+   {
+      return textObjectAlias.getText();
    }
 
    /**

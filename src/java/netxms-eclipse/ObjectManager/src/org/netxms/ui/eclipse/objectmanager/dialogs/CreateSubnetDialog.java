@@ -41,9 +41,11 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateSubnetDialog extends Dialog
 {
    private String objectName = "";
+   private String objectAlias = "";
    private InetAddressEx ipAddress;
    
    private LabeledText objectNameText;
+   private LabeledText objectAliasText;
    private LabeledText ipAddressText;
    private LabeledText maskText;
    
@@ -95,6 +97,16 @@ public class CreateSubnetDialog extends Dialog
       objectNameText.setLayoutData(gd);
       objectNameText.setText(objectName);
       
+      objectAliasText = new LabeledText(dialogArea, SWT.NONE);
+      objectAliasText.setLabel("Alias");
+      objectAliasText.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      objectAliasText.setLayoutData(gd);
+      objectAliasText.setText(objectAlias);
+
       ipAddressText = new LabeledText(dialogArea, SWT.NONE);
       ipAddressText.setLabel("IP address");
       ipAddressText.getTextControl().setTextLimit(64);
@@ -131,6 +143,7 @@ public class CreateSubnetDialog extends Dialog
       try
       {
          objectName = objectNameText.getText().trim();
+         objectAlias = objectAliasText.getText().trim();
          InetAddress addr = InetAddress.getByName(ipAddressText.getText().trim());
          int maskBits;
          try
@@ -163,6 +176,14 @@ public class CreateSubnetDialog extends Dialog
    public String getObjectName()
    {
       return objectName;
+   }
+
+   /**
+    * @return the objectAlias
+    */
+   public String getObjectAlias()
+   {
+      return objectAlias;
    }
 
    /**

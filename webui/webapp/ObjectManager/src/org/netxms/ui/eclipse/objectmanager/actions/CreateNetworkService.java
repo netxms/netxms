@@ -71,6 +71,7 @@ public class CreateNetworkService implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKSERVICE, dlg.getName(), parentId);
+            cd.setObjectAlias(dlg.getAlias());
 				cd.setServiceType(dlg.getServiceType());
 				cd.setIpPort(dlg.getPort());
 				cd.setRequest(dlg.getRequest());

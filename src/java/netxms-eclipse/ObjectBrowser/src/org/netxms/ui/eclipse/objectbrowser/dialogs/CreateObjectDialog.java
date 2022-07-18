@@ -37,7 +37,9 @@ public class CreateObjectDialog extends Dialog
 {
 	private String objectClassName;
 	private String objectName;
+   private String objectAlias;
 	private Text textName;
+   private Text textAlias;
 
 	/**
 	 * Constructor
@@ -80,6 +82,9 @@ public class CreateObjectDialog extends Dialog
       textName.setTextLimit(63);
       textName.setFocus();
       
+      textAlias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateObjectDialog_ObjectAlias, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+      textAlias.setTextLimit(255);
+
 		return dialogArea;
 	}
 
@@ -95,6 +100,7 @@ public class CreateObjectDialog extends Dialog
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateObjectDialog_Warning, Messages.get().CreateObjectDialog_WarningText);
 			return;
 		}
+      objectAlias = textAlias.getText().trim();
 		super.okPressed();
 	}
 
@@ -105,4 +111,12 @@ public class CreateObjectDialog extends Dialog
 	{
 		return objectName;
 	}
+
+   /**
+    * @return the objectAlias
+    */
+   public String getObjectAlias()
+   {
+      return objectAlias;
+   }
 }

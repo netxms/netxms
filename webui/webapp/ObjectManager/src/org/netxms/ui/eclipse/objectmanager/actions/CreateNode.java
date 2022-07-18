@@ -72,6 +72,7 @@ public class CreateNode implements IObjectActionDelegate
    		
          final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
          cd.setCreationFlags(dlg.getCreationFlags());
+         cd.setObjectAlias(dlg.getObjectAlias());
          cd.setPrimaryName(dlg.getHostName());
          cd.setAgentPort(dlg.getAgentPort());
          cd.setSnmpPort(dlg.getSnmpPort());

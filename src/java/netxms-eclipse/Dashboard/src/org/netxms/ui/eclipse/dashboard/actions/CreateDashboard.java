@@ -28,10 +28,10 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -74,6 +74,7 @@ public class CreateDashboard implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
+            cd.setObjectAlias(dlg.getObjectAlias());
 				session.createObject(cd);
 			}
 

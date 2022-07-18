@@ -36,9 +36,11 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateMobileDeviceDialog extends Dialog
 {
 	private LabeledText nameField;
+   private LabeledText aliasField;
 	private LabeledText deviceIdField;
 	
 	private String name;
+   private String alias;
 	private String deviceId;
 	
 	/**
@@ -82,6 +84,14 @@ public class CreateMobileDeviceDialog extends Dialog
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
 		
+      aliasField = new LabeledText(dialogArea, SWT.NONE);
+      aliasField.setLabel(Messages.get().CreateMobileDeviceDialog_Alias);
+      aliasField.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      nameField.setLayoutData(gd);
+
 		deviceIdField = new LabeledText(dialogArea, SWT.NONE);
 		deviceIdField.setLabel(Messages.get().CreateMobileDeviceDialog_DeviceID);
 		deviceIdField.getTextControl().setTextLimit(64);
@@ -106,7 +116,7 @@ public class CreateMobileDeviceDialog extends Dialog
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateMobileDeviceDialog_Warning, Messages.get().CreateMobileDeviceDialog_WarningEmptyName);
 			return;
 		}
-		
+      alias = aliasField.getText().trim();
 		super.okPressed();
 	}
 
@@ -117,6 +127,14 @@ public class CreateMobileDeviceDialog extends Dialog
 	{
 		return name;
 	}
+
+   /**
+    * @return object alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * @return device ID

@@ -164,6 +164,7 @@ public class Messages extends NLS
    public static String CreateContainer_JobTitle;
    public static String CreateInterface_JobError;
    public static String CreateInterface_JobTitle;
+   public static String CreateInterfaceDialog_Alias;
    public static String CreateInterfaceDialog_Error;
    public static String CreateInterfaceDialog_IPAddr;
    public static String CreateInterfaceDialog_IPNetMak;
@@ -177,6 +178,7 @@ public class Messages extends NLS
    public static String CreateMobileDevice_JobTitle;
    public static String CreateMobileDeviceDialog_DeviceID;
    public static String CreateMobileDeviceDialog_Name;
+   public static String CreateMobileDeviceDialog_Alias;
    public static String CreateMobileDeviceDialog_Title;
    public static String CreateMobileDeviceDialog_Warning;
    public static String CreateMobileDeviceDialog_WarningEmptyName;
@@ -184,6 +186,7 @@ public class Messages extends NLS
    public static String CreateNetworkService_JobTitle;
    public static String CreateNetworkServiceDialog_CreateStatusDCI;
    public static String CreateNetworkServiceDialog_Name;
+   public static String CreateNetworkServiceDialog_Alias;
    public static String CreateNetworkServiceDialog_Port;
    public static String CreateNetworkServiceDialog_Request;
    public static String CreateNetworkServiceDialog_Response;
@@ -204,6 +207,7 @@ public class Messages extends NLS
    public static String CreateNode_JobTitle;
    public static String CreateNodeDialog_AgentPort;
    public static String CreateNodeDialog_AgentProxy;
+   public static String CreateNodeDialog_Alias;
    public static String CreateNodeDialog_CreateUnmanaged;
    public static String CreateNodeDialog_DisableAgent;
    public static String CreateNodeDialog_DisableICMP;
@@ -232,6 +236,7 @@ public class Messages extends NLS
    public static String CreateZone_JobError;
    public static String CreateZone_JobTitle;
    public static String CreateZoneDialog_Name;
+   public static String CreateZoneDialog_Alias;
    public static String CreateZoneDialog_Title;
    public static String CreateZoneDialog_Warning;
    public static String CreateZoneDialog_WarningEmptyName;

@@ -28,8 +28,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
@@ -72,6 +72,7 @@ public class CreateZone implements IObjectActionDelegate
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_ZONE, dlg.getName(), parentId);
 				cd.setZoneUIN(dlg.getZoneUIN());
+            cd.setObjectAlias(dlg.getAlias());
 				session.createObject(cd);
 			}
 

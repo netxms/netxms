@@ -38,10 +38,12 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateChassisDialog extends Dialog
 {
 	private LabeledText objectNameField;
+   private LabeledText objectAliasField;
 	private ObjectSelector controllerSelector;
 	private Button checkCreateAnother;
 	
 	private String objectName;
+   private String objectAlias;
 	private long controllerId = 0;
 	private boolean showAgain = false;
 	
@@ -94,6 +96,15 @@ public class CreateChassisDialog extends Dialog
 		gd.horizontalSpan = 2;
 		objectNameField.setLayoutData(gd);
 		
+      objectAliasField = new LabeledText(dialogArea, SWT.NONE);
+      objectAliasField.setLabel("Alias");
+      objectAliasField.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      objectAliasField.setLayoutData(gd);
+
 		final Composite ipAddrGroup = new Composite(dialogArea, SWT.NONE);
 		layout = new GridLayout();
 		layout.marginHeight = 0;
@@ -135,7 +146,7 @@ public class CreateChassisDialog extends Dialog
          MessageDialogHelper.openWarning(getShell(), "Warning", "Please provide non-empty object name");
          return;
       }
-      
+      objectAlias = objectAliasField.getText().trim();
 		controllerId = controllerSelector.getObjectId();
 		showAgain = checkCreateAnother.getSelection();
 		super.okPressed();
@@ -148,6 +159,14 @@ public class CreateChassisDialog extends Dialog
 	{
 		return objectName;
 	}
+
+   /**
+    * @return the alias
+    */
+   public String getObjectAlias()
+   {
+      return objectAlias;
+   }
 
    /**
     * @return the controllerId

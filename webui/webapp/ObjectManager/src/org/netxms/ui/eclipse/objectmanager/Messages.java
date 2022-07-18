@@ -167,6 +167,7 @@ public class Messages extends NLS
    public String CreateContainer_JobTitle;
    public String CreateInterface_JobError;
    public String CreateInterface_JobTitle;
+   public String CreateInterfaceDialog_Alias;
    public String CreateInterfaceDialog_Error;
    public String CreateInterfaceDialog_IPAddr;
    public String CreateInterfaceDialog_IPNetMak;
@@ -180,6 +181,7 @@ public class Messages extends NLS
    public String CreateMobileDevice_JobTitle;
    public String CreateMobileDeviceDialog_DeviceID;
    public String CreateMobileDeviceDialog_Name;
+   public String CreateMobileDeviceDialog_Alias;
    public String CreateMobileDeviceDialog_Title;
    public String CreateMobileDeviceDialog_Warning;
    public String CreateMobileDeviceDialog_WarningEmptyName;
@@ -187,6 +189,7 @@ public class Messages extends NLS
    public String CreateNetworkService_JobTitle;
    public String CreateNetworkServiceDialog_CreateStatusDCI;
    public String CreateNetworkServiceDialog_Name;
+   public String CreateNetworkServiceDialog_Alias;
    public String CreateNetworkServiceDialog_Port;
    public String CreateNetworkServiceDialog_Request;
    public String CreateNetworkServiceDialog_Response;
@@ -207,6 +210,7 @@ public class Messages extends NLS
    public String CreateNode_JobTitle;
    public String CreateNodeDialog_AgentPort;
    public String CreateNodeDialog_AgentProxy;
+   public String CreateNodeDialog_Alias;
    public String CreateNodeDialog_CreateUnmanaged;
    public String CreateNodeDialog_DisableAgent;
    public String CreateNodeDialog_DisableICMP;
@@ -235,6 +239,7 @@ public class Messages extends NLS
    public String CreateZone_JobError;
    public String CreateZone_JobTitle;
    public String CreateZoneDialog_Name;
+public static String CreateZoneDialog_Alias;
    public String CreateZoneDialog_Title;
    public String CreateZoneDialog_Warning;
    public String CreateZoneDialog_WarningEmptyName;

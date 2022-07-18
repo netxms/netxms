@@ -28,8 +28,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -72,6 +72,7 @@ public class CreateMobileDevice implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_MOBILEDEVICE, dlg.getName(), parentId);
+            cd.setObjectAlias(dlg.getAlias());
 				cd.setDeviceId(dlg.getDeviceId());
 				session.createObject(cd);
 			}

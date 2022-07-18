@@ -63,6 +63,7 @@
 #define MAX_NC_DESCRIPTION          256
 #define MAX_NC_ERROR_MESSAGE        1024
 #define MAX_2FA_DESCRIPTION         256
+#define MAX_OBJECT_ALIAS_LEN        256
 
 /**
  * NetXMS agent authentication methods

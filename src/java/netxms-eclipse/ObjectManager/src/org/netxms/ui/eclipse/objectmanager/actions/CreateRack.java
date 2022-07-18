@@ -28,8 +28,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
@@ -73,6 +73,7 @@ public class CreateRack implements IObjectActionDelegate
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_RACK, dlg.getObjectName(), parentId);
 				cd.setHeight(42);
+            cd.setObjectAlias(dlg.getObjectAlias());
 				session.createObject(cd);
 			}
 

@@ -47,6 +47,7 @@ public class NXCObjectCreationData
 
 	private int objectClass;
 	private String name;
+   private String alias;
 	private long parentId;
 	private String comments;
 	private int creationFlags;
@@ -123,6 +124,7 @@ public class NXCObjectCreationData
 		}
 		
 		primaryName = null;
+      alias = null;
       agentPort = 4700;
       snmpPort = 161;
       etherNetIpPort = 44818;
@@ -175,6 +177,8 @@ public class NXCObjectCreationData
 	public void updateFromMofidyData(NXCObjectModificationData data)
 	{
 	   if (data.getPrimaryName() != null) primaryName = data.getPrimaryName();
+      if (data.getAlias() != null)
+         alias = data.getAlias();
 	   if (data.getAgentPort() != null) agentPort = data.getAgentPort();
       if (data.getSnmpPort() != null) snmpPort = data.getSnmpPort();
       if (data.getEtherNetIPPort() != null) etherNetIpPort = data.getEtherNetIPPort();
@@ -552,6 +556,22 @@ public class NXCObjectCreationData
 	{
 		this.primaryName = primaryName;
 	}
+
+   /**
+    * @param alias the alias to set
+    */
+   public void setObjectAlias(String alias)
+   {
+      this.alias = alias;
+   }
+
+   /**
+    * @return the alias
+    */
+   public String getObjectAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * @return the template

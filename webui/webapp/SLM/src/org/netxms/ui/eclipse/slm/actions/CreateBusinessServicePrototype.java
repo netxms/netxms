@@ -73,6 +73,7 @@ public class CreateBusinessServicePrototype implements IObjectActionDelegate
 			{
             NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, dlg.getName(), parentId);
             cd.setInstanceDiscoveryMethod(dlg.getInstanceDiscoveyMethod());
+            cd.setObjectAlias(dlg.getAlias());
             session.createObject(cd);
 			}
 

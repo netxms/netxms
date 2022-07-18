@@ -28,14 +28,14 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.Activator;
 import org.netxms.ui.eclipse.slm.Messages;
-import org.netxms.ui.eclipse.slm.dialogs.CreateBusinessServiceDialog;
 
 /**
  * Create business service object
@@ -62,22 +62,24 @@ public class CreateBusinessService implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateBusinessServiceDialog dlg = new CreateBusinessServiceDialog(window.getShell());
-		if (dlg.open() != Window.OK)
-			return;
+      final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CreateBusinessServiceDialog_Title);
+      if (dlg.open() != Window.OK)
+         return;
 		
       final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().CreateBusinessService_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.createObject(new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICE, dlg.getName(), parentId));
+            NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICE, dlg.getObjectName(), parentId);
+            cd.setObjectAlias(dlg.getObjectAlias());
+            session.createObject(cd);
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.get().CreateBusinessService_JobError, dlg.getName());
+            return String.format(Messages.get().CreateBusinessService_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

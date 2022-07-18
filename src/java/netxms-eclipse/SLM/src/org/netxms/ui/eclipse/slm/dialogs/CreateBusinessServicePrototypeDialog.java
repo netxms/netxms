@@ -16,9 +16,11 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateBusinessServicePrototypeDialog extends Dialog
 {
    private LabeledText nameField;
+   private LabeledText aliasField;
    private Combo instanceDiscoveyMethodCombo;
    
    private String name;
+   private String alias;
    private String instanceDiscoveyMethod;
 
    public CreateBusinessServicePrototypeDialog(Shell parentShell)
@@ -59,6 +61,14 @@ public class CreateBusinessServicePrototypeDialog extends Dialog
       gd.widthHint = 300;
       nameField.setLayoutData(gd);
 
+      aliasField = new LabeledText(dialogArea, SWT.NONE);
+      aliasField.setLabel("Alias");
+      aliasField.getTextControl().setTextLimit(63);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      aliasField.setLayoutData(gd);
+
       instanceDiscoveyMethodCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Instance discovery type", new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       for(String type : InstanceDiscovery.DISCOVERY_TYPES)
@@ -84,6 +94,7 @@ public class CreateBusinessServicePrototypeDialog extends Dialog
          MessageDialogHelper.openWarning(getShell(), "Warning", "Object name cannot be empty");
          return;
       }
+      alias = aliasField.getText().trim();
       super.okPressed();
    }
 
@@ -93,6 +104,14 @@ public class CreateBusinessServicePrototypeDialog extends Dialog
    public String getName()
    {
       return name;
+   }
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
    }
 
    /**

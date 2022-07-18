@@ -70,6 +70,7 @@ public class CreateChassis implements IObjectActionDelegate
    			return;
    		
          final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CHASSIS, dlg.getObjectName(), parentId);
+         cd.setObjectAlias(dlg.getObjectAlias());
          cd.setControllerId(dlg.getControllerId());
    		
    		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

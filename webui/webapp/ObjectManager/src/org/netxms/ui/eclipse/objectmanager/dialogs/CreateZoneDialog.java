@@ -37,9 +37,11 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateZoneDialog extends Dialog
 {
 	private LabeledText nameField;
+   private LabeledText aliasField;
 	private LabeledText uinField;
 	
 	private String name;
+   private String alias;
 	private int zoneUIN;
 	
 	/**
@@ -83,6 +85,14 @@ public class CreateZoneDialog extends Dialog
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
 		
+      aliasField = new LabeledText(dialogArea, SWT.NONE);
+      aliasField.setLabel(Messages.get().CreateZoneDialog_Alias);
+      aliasField.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      aliasField.setLayoutData(gd);
+
 		uinField = new LabeledText(dialogArea, SWT.NONE);
 		uinField.setLabel(Messages.get().CreateZoneDialog_ZoneId);
 		uinField.getTextControl().setTextLimit(10);
@@ -124,6 +134,7 @@ public class CreateZoneDialog extends Dialog
 	   }
 		
 		name = nameField.getText().trim();
+      alias = aliasField.getText().trim();
 		if (name.isEmpty())
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateZoneDialog_Warning, Messages.get().CreateZoneDialog_WarningEmptyName);
@@ -140,6 +151,14 @@ public class CreateZoneDialog extends Dialog
 	{
 		return name;
 	}
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * Get zone UIN

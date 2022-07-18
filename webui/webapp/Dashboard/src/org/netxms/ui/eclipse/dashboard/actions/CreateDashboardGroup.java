@@ -61,6 +61,7 @@ public class CreateDashboardGroup implements IObjectActionDelegate
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARDGROUP, dlg.getObjectName(), parentId);
+            cd.setObjectAlias(dlg.getObjectAlias());
             session.createObject(cd);
          }
 

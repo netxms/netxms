@@ -28,9 +28,9 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -72,6 +72,7 @@ public class CreateNode implements IObjectActionDelegate
    		
          final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
          cd.setCreationFlags(dlg.getCreationFlags());
+         cd.setObjectAlias(dlg.getObjectAlias());
          cd.setPrimaryName(dlg.getHostName());
          cd.setAgentPort(dlg.getAgentPort());
          cd.setSnmpPort(dlg.getSnmpPort());

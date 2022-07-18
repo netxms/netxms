@@ -66,6 +66,7 @@ public class Messages extends NLS
 	public String CreateNetworkMapDialog_L2Topology;
 	public String CreateNetworkMapDialog_MapType;
 	public String CreateNetworkMapDialog_Name;
+   public static String CreateNetworkMapDialog_Alias;
 	public String CreateNetworkMapDialog_PleaseEnterName;
 	public String CreateNetworkMapDialog_PleaseSelectSeed;
 	public String CreateNetworkMapDialog_SeedNode;

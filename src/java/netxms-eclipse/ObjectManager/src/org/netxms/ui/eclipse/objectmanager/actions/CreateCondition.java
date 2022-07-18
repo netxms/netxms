@@ -28,8 +28,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
@@ -72,6 +72,7 @@ public class CreateCondition implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CONDITION, dlg.getObjectName(), parentId);
+            cd.setObjectAlias(dlg.getObjectAlias());
 				session.createObject(cd);
 			}
 

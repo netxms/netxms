@@ -55,6 +55,7 @@ public class CreateInterfaceDialog extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(CreateInterfaceDialog.class);
 
 	private LabeledText nameField;
+   private LabeledText aliasField;
 	private LabeledText macAddrField;
 	private LabeledText ipAddrField;
 	private LabeledText ipMaskField;
@@ -63,6 +64,7 @@ public class CreateInterfaceDialog extends Dialog
 	private LabeledText portField;
 	
 	private String name;
+   private String alias;
 	private MacAddress macAddress;
 	private InetAddressEx ipAddress;
 	private int ifIndex;
@@ -115,6 +117,15 @@ public class CreateInterfaceDialog extends Dialog
 		gd.horizontalSpan = 2;
 		nameField.setLayoutData(gd);
 		
+      aliasField = new LabeledText(dialogArea, SWT.NONE);
+      aliasField.setLabel(i18n.tr("Alias"));
+      aliasField.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      aliasField.setLayoutData(gd);
+
 		macAddrField = new LabeledText(dialogArea, SWT.NONE);
       macAddrField.setLabel(i18n.tr("MAC address"));
 		gd = new GridData();
@@ -199,6 +210,7 @@ public class CreateInterfaceDialog extends Dialog
 		try
 		{
 			name = nameField.getText().trim();
+         alias = aliasField.getText().trim();
 			macAddress = macAddrField.getText().trim().isEmpty() ? new MacAddress() : MacAddress.parseMacAddress(macAddrField.getText());
 			InetAddress addr = ipAddrField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipAddrField.getText()); //$NON-NLS-1$
 			ipAddress = new InetAddressEx(addr, getMaskBits(ipMaskField.getText().trim(), addr instanceof Inet4Address ? 32 : 128));
@@ -251,6 +263,14 @@ public class CreateInterfaceDialog extends Dialog
 	{
 		return name;
 	}
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * @return the port

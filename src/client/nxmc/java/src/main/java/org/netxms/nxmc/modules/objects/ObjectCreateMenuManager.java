@@ -138,6 +138,7 @@ public class ObjectCreateMenuManager extends MenuManager
                {
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, dlg.getName(), parentId);
                   cd.setInstanceDiscoveryMethod(dlg.getInstanceDiscoveyMethod());
+                  cd.setObjectAlias(dlg.getAlias());
                   session.createObject(cd);
                }
 
@@ -167,6 +168,7 @@ public class ObjectCreateMenuManager extends MenuManager
 
                final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CHASSIS, dlg.getObjectName(), parentId);
                cd.setControllerId(dlg.getControllerId());
+	       cd.setObjectAlias(dlg.getObjectAlias());
 
                new Job(i18n.tr("Creating chassis"), view) {
                   @Override
@@ -206,6 +208,7 @@ public class ObjectCreateMenuManager extends MenuManager
                protected void run(IProgressMonitor monitor) throws Exception
                {
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_INTERFACE, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());                  
                   cd.setMacAddress(dlg.getMacAddress());
                   cd.setIpAddress(dlg.getIpAddress());
                   cd.setPhysicalPort(dlg.isPhysicalPort());
@@ -241,6 +244,7 @@ public class ObjectCreateMenuManager extends MenuManager
                {
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_MOBILEDEVICE, dlg.getName(), parentId);
                   cd.setDeviceId(dlg.getDeviceId());
+                  cd.setObjectAlias(dlg.getAlias());
                   session.createObject(cd);
                }
 
@@ -272,6 +276,7 @@ public class ObjectCreateMenuManager extends MenuManager
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKMAP, dlg.getName(), parentId);
                   cd.setMapType(dlg.getType());
                   cd.setSeedObjectId(dlg.getSeedObject());
+                  cd.setObjectAlias(dlg.getAlias());
                   session.createObject(cd);
                }
 
@@ -303,6 +308,7 @@ public class ObjectCreateMenuManager extends MenuManager
                final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
                cd.setCreationFlags(dlg.getCreationFlags());
                cd.setPrimaryName(dlg.getHostName());
+	           cd.setObjectAlias(dlg.getObjectAlias());
                cd.setAgentPort(dlg.getAgentPort());
                cd.setSnmpPort(dlg.getSnmpPort());
                cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
@@ -316,6 +322,7 @@ public class ObjectCreateMenuManager extends MenuManager
                cd.setZoneUIN(dlg.getZoneUIN());
                cd.setSshLogin(dlg.getSshLogin());
                cd.setSshPassword(dlg.getSshPassword());
+               cd.setObjectAlias(dlg.getObjectAlias());
 
                final NXCSession session = Registry.getSession();
                new Job(i18n.tr("Creating node"), view, null) {
@@ -388,7 +395,8 @@ public class ObjectCreateMenuManager extends MenuManager
             protected void run(IProgressMonitor monitor) throws Exception
             {
                NXCObjectCreationData cd = new NXCObjectCreationData(objectClass, dlg.getObjectName(), parentId);
-               session.createObject(cd);
+               cd.setObjectAlias(dlg.getObjectAlias());
+	       session.createObject(cd);
             }
 
             @Override

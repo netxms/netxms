@@ -72,6 +72,7 @@ public class CreateMobileDevice implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_MOBILEDEVICE, dlg.getName(), parentId);
+            cd.setObjectAlias(dlg.getAlias());
 				cd.setDeviceId(dlg.getDeviceId());
 				session.createObject(cd);
 			}

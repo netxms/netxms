@@ -72,6 +72,7 @@ public class CreateCondition implements IObjectActionDelegate
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CONDITION, dlg.getObjectName(), parentId);
+            cd.setObjectAlias(dlg.getObjectAlias());
 				session.createObject(cd);
 			}
 

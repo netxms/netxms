@@ -73,6 +73,7 @@ public class CreateSubnet extends AbstractHandler
          return null;
       
       final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_SUBNET, dlg.getObjectName(), parentId);
+      cd.setObjectAlias(dlg.getObjectAlias());
       cd.setIpAddress(dlg.getIpAddress());
       cd.setZoneUIN(zoneUin);
       

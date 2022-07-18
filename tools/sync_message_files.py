@@ -7,6 +7,7 @@ import collections
 locales = ['ar', 'cs', 'de', 'es', 'fr', 'iw', 'pt_BR', 'ru']
 
 def readPropertyFile(name):
+    print("Reading message file %s" % (name))
     data = {}
     try:
         f = open(name)

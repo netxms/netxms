@@ -73,6 +73,7 @@ public class CreateRack implements IObjectActionDelegate
 			{
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_RACK, dlg.getObjectName(), parentId);
 				cd.setHeight(42);
+            cd.setObjectAlias(dlg.getObjectAlias());
 				session.createObject(cd);
 			}
 

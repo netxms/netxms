@@ -5949,6 +5949,13 @@ void ClientSession::createObject(const NXCPMessage& request)
                         MemFree(comments);
                      }
 
+                     if (request.isFieldExist(VID_ALIAS))
+                     {
+                        TCHAR alias[MAX_OBJECT_ALIAS_LEN];
+                        request.getFieldAsString(VID_ALIAS, alias, MAX_OBJECT_ALIAS_LEN);
+                        object->setAlias(alias);
+                     }
+
                      object->unhide();
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      msg.setField(VID_OBJECT_ID, object->getId());

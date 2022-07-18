@@ -43,9 +43,11 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class CreateNetworkMapDialog extends Dialog
 {
 	private Text textName;
+   private Text textAlias;
 	private Combo mapType;
 	private ObjectSelector seedObjectSelector;
 	private String name;
+   private String alias;
 	private int type;
 	private long seedObject;
 	
@@ -84,6 +86,10 @@ public class CreateNetworkMapDialog extends Dialog
                                                 WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       
+      textAlias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateNetworkMapDialog_Alias, "", //$NON-NLS-1$
+            WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textAlias.getShell().setMinimumSize(300, 0);
+
       mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().CreateNetworkMapDialog_MapType, WidgetHelper.DEFAULT_LAYOUT_DATA);
       mapType.add(Messages.get().CreateNetworkMapDialog_Custom);
       mapType.add(Messages.get().CreateNetworkMapDialog_L2Topology);
@@ -128,6 +134,7 @@ public class CreateNetworkMapDialog extends Dialog
 	protected void okPressed()
 	{
 		name = textName.getText().trim();
+      alias = textAlias.getText().trim();
 		if (name.isEmpty())
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkMapDialog_Warning, Messages.get().CreateNetworkMapDialog_PleaseEnterName);
@@ -155,6 +162,14 @@ public class CreateNetworkMapDialog extends Dialog
 	{
 		return name;
 	}
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * @return the type

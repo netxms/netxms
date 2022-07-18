@@ -39,9 +39,11 @@ public class CreateMobileDeviceDialog extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(CreateMobileDeviceDialog.class);
 
 	private LabeledText nameField;
+   private LabeledText aliasField;
 	private LabeledText deviceIdField;
 	
 	private String name;
+   private String alias;
 	private String deviceId;
 	
 	/**
@@ -84,6 +86,14 @@ public class CreateMobileDeviceDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
+		
+      aliasField = new LabeledText(dialogArea, SWT.NONE);
+      aliasField.setLabel(i18n.tr("Alias"));
+      aliasField.getTextControl().setTextLimit(255);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      nameField.setLayoutData(gd);
 
 		deviceIdField = new LabeledText(dialogArea, SWT.NONE);
       deviceIdField.setLabel(i18n.tr("Device ID"));
@@ -109,6 +119,7 @@ public class CreateMobileDeviceDialog extends Dialog
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Object name cannot be empty"));
 			return;
 		}
+      alias = aliasField.getText().trim();
 		super.okPressed();
 	}
 
@@ -119,6 +130,14 @@ public class CreateMobileDeviceDialog extends Dialog
 	{
 		return name;
 	}
+
+   /**
+    * @return object alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * @return device ID

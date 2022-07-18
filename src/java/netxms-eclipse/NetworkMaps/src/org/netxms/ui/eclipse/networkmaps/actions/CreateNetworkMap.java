@@ -75,6 +75,7 @@ public class CreateNetworkMap implements IObjectActionDelegate
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKMAP, dlg.getName(), parentId);
 				cd.setMapType(dlg.getType());
 				cd.setSeedObjectId(dlg.getSeedObject());
+            cd.setObjectAlias(dlg.getAlias());
 				session.createObject(cd);
 			}
 
