@@ -35,7 +35,6 @@ import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
@@ -120,24 +119,24 @@ public class TableComparisonChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		checkTranslucent.setLayoutData(gd);
 		
-		if ((config instanceof TableBarChartConfig) || (config instanceof TableTubeChartConfig))
+      if (config instanceof TableBarChartConfig)
 		{
 			checkTransposed = new Button(optionsGroup, SWT.CHECK);
 			checkTransposed.setText(Messages.get().TableComparisonChart_Transposed);
-			checkTransposed.setSelection((config instanceof TableBarChartConfig) ? ((TableBarChartConfig)config).isTransposed() : ((TableTubeChartConfig)config).isTransposed());
+         checkTransposed.setSelection(((TableBarChartConfig)config).isTransposed());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			checkTransposed.setLayoutData(gd);
 		}
-		
+
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().TableComparisonChart_RefreshInterval, 1, 10000, gd);
 		refreshRate.setSelection(config.getRefreshRate());
-		
+
       if (!(config instanceof TablePieChartConfig))
       {
          yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
@@ -149,7 +148,7 @@ public class TableComparisonChart extends PropertyPage
          yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(),
                                  config.getMinYScaleValue(), config.getMaxYScaleValue());
       }
-      
+
       drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       drillDownObject.setLabel("Drill-down object");
       drillDownObject.setObjectClass(AbstractObject.class);
@@ -212,10 +211,6 @@ public class TableComparisonChart extends PropertyPage
 		if (config instanceof TableBarChartConfig)
 		{
 			((TableBarChartConfig)config).setTransposed(checkTransposed.getSelection());
-		}
-		else if (config instanceof TableTubeChartConfig)
-		{
-			((TableTubeChartConfig)config).setTransposed(checkTransposed.getSelection());
 		}
 		return true;
 	}

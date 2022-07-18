@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.dashboard.propertypages.helpers;
+package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,17 +26,17 @@ import org.slf4j.LoggerFactory;
 /**
  * Rack view
  */
-public enum RackView
+public enum RackDisplayMode
 {
    FULL(0),
    FRONT(1),
    BACK(2);
-   
-   private static final Logger logger = LoggerFactory.getLogger(RackView.class);
-   private static final Map<Integer, RackView> lookupTable = new HashMap<Integer, RackView>();
+
+   private static final Logger logger = LoggerFactory.getLogger(RackDisplayMode.class);
+   private static final Map<Integer, RackDisplayMode> lookupTable = new HashMap<Integer, RackDisplayMode>();
    static
    {
-      for(RackView element : RackView.values())
+      for(RackDisplayMode element : RackDisplayMode.values())
       {
          lookupTable.put(element.value, element);
       }
@@ -49,7 +49,7 @@ public enum RackView
     *  
     * @param value integer value
     */
-   private RackView(int value)
+   private RackDisplayMode(int value)
    {
       this.value = value;
    }
@@ -70,9 +70,9 @@ public enum RackView
     * @param value integer value
     * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
-   public static RackView getByValue(int value)
+   public static RackDisplayMode getByValue(int value)
    {
-      final RackView element = lookupTable.get(value);
+      final RackDisplayMode element = lookupTable.get(value);
       if (element == null)
       {
          logger.warn("Unknown element " + value);

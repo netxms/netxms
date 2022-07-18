@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,13 +64,13 @@ public class IdMatchingDialog extends Dialog
 	public static final int COLUMN_SOURCE_NAME = 1;
 	public static final int COLUMN_DESTINATION_ID = 2;
 	public static final int COLUMN_DESTINATION_NAME = 3;
-	
+
 	private SortableTreeViewer viewer;
 	private Map<Long, ObjectIdMatchingData> objects;
 	private Map<Long, DciIdMatchingData> dcis;
 	private Action actionMap;
 	private boolean showFilterToolTip;
-	
+
 	/**
 	 * @param parentShell
 	 * @param objects
@@ -84,9 +84,9 @@ public class IdMatchingDialog extends Dialog
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -106,7 +106,7 @@ public class IdMatchingDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
-		
+
 		Label label = new Label(dialogArea, SWT.WRAP);
 		label.setText(Messages.get().IdMatchingDialog_HelpText);
 		GridData gd = new GridData();
@@ -114,7 +114,7 @@ public class IdMatchingDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 0;
 		label.setLayoutData(gd);
-		
+
 		final String[] names = { Messages.get().IdMatchingDialog_ColumnOriginalID, Messages.get().IdMatchingDialog_ColumnName, Messages.get().IdMatchingDialog_ColumnMatchID, Messages.get().IdMatchingDialog_ColumnMatchName };
 		final int[] widths = { 100, 300, 80, 300 };
 		viewer = new SortableTreeViewer(dialogArea, names, widths, 0, SWT.UP, SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION);
@@ -134,7 +134,7 @@ public class IdMatchingDialog extends Dialog
 
 		createActions();
 		createPopupMenu();
-		
+
 		return dialogArea;
 	}
 	
@@ -171,22 +171,13 @@ public class IdMatchingDialog extends Dialog
 		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
-				fillContextMenu(mgr);
+            mgr.add(actionMap);
 			}
 		});
 
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-	}
-
-	/**
-	 * Fill context menu
-	 * @param mgr Menu manager
-	 */
-	protected void fillContextMenu(IMenuManager manager)
-	{
-		manager.add(actionMap);
 	}
 	
 	/**
@@ -255,7 +246,7 @@ public class IdMatchingDialog extends Dialog
 		if (objData.dcis.size() == 0)
 			return;
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().IdMatchingDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -302,7 +293,7 @@ public class IdMatchingDialog extends Dialog
 	{
 		if (data.dstNodeId == 0)
 			return;
-		
+
 		SelectNodeDciDialog dlg = new SelectNodeDciDialog(getShell(), data.dstNodeId);
 		if (dlg.open() == Window.OK)
 		{
@@ -316,33 +307,37 @@ public class IdMatchingDialog extends Dialog
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 		// check if all elements have a match
 		boolean ok = true;
 		for(ObjectIdMatchingData o : objects.values())
+      {
 			if (o.dstId == 0)
 			{
 				ok = false;
 				break;
 			}
+      }
 		for(DciIdMatchingData d : dcis.values())
+      {
 			if ((d.dstNodeId == 0) || (d.dstDciId == 0))
 			{
 				ok = false;
 				break;
 			}
-		
+      }
+
 		if (!ok)
 		{
 			if (!MessageDialogHelper.openQuestion(getShell(), Messages.get().IdMatchingDialog_MatchingErrors, Messages.get().IdMatchingDialog_ConfirmationText))
 				return;
 		}
-		
+
 		super.okPressed();
 	}
 }

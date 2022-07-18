@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,9 +78,9 @@ public class ImportDashboard implements IObjectActionDelegate
 	private long parentId = -1;
 	private String objectName;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
@@ -88,9 +88,9 @@ public class ImportDashboard implements IObjectActionDelegate
 		window = targetPart.getSite().getWorkbenchWindow();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
@@ -114,19 +114,19 @@ public class ImportDashboard implements IObjectActionDelegate
 		action.setEnabled(parentId != -1);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
 		final ImportDashboardDialog dlg = new ImportDashboardDialog(window.getShell());
 		if (dlg.open() != Window.OK)
 			return;
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		final Display display = Display.getCurrent();
-		
+
 		new ConsoleJob(Messages.get().ImportDashboard_JobTitle, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -138,11 +138,11 @@ public class ImportDashboard implements IObjectActionDelegate
 				Element root = dom.getDocumentElement();
 				if (!root.getNodeName().equals("dashboard")) //$NON-NLS-1$
 					throw new Exception(Messages.get().ImportDashboard_InvalidFile);
-				
+
 				root.normalize();
-				
+
 				List<DashboardElement> dashboardElements = new ArrayList<DashboardElement>(); 
-				
+
 				NodeList elementsRoot = root.getElementsByTagName("elements"); //$NON-NLS-1$
 				for(int i = 0; i < elementsRoot.getLength(); i++)
 				{
@@ -183,7 +183,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Map node and DCI ID from source system to destination system
 	 * @throws Exception 
@@ -326,7 +326,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		}
 		return objects;
 	}
-	
+
 	/**
 	 * Read source DCI from XML document
 	 * 
@@ -352,7 +352,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		}
 		return dcis;
 	}
-	
+
 	/**
 	 * Get value of given node as integer.
 	 * 
@@ -366,7 +366,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		NodeList l = parent.getElementsByTagName(tag);
 		if ((l.getLength() == 0) || (l.item(0).getNodeType() != Node.ELEMENT_NODE))
 			return defaultValue;
-		
+
 		try
 		{
 			return Integer.parseInt(((Element)l.item(0)).getTextContent());
@@ -376,7 +376,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			return defaultValue;
 		}
 	}
-	
+
 	/**
 	 * Get value of given attribute as integer.
 	 * 
@@ -396,7 +396,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			return defaultValue;
 		}
 	}
-	
+
 	/**
 	 * Get node value as XML document.
 	 * 
@@ -413,7 +413,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			return "<" + tag + "></" + tag + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		return nodeToString(l.item(0));
 	}
-	
+
 	/**
 	 * Convert DOM tree node to string (XML document).
 	 * 

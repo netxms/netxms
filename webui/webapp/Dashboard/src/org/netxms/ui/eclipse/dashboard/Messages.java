@@ -50,8 +50,6 @@ public class Messages extends NLS
 	public String AddDashboardElementDlg_StatusIndicator;
    public String AddDashboardElementDlg_StatusMap;
 	public String AddDashboardElementDlg_TableValue;
-   public String AddDashboardElementDlg_TubeChart;
-	public String AddDashboardElementDlg_TubeChartForTable;
 	public String AddDashboardElementDlg_WebPage;
 	public String AlarmViewer_RootObject;
    public String AlarmViewer_SeverityFilter;
