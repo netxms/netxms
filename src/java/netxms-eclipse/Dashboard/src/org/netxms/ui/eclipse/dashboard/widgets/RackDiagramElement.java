@@ -45,8 +45,8 @@ import org.netxms.client.constants.RackOrientation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
-import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDisplayMode;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.widgets.RackWidget;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.ElementSelectionListener;
@@ -153,9 +153,9 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
             }
          });
 
-         if (config.getView() == RackView.FULL || config.getView() == RackView.FRONT)
+         if (config.getDisplayMode() == RackDisplayMode.FULL || config.getDisplayMode() == RackDisplayMode.FRONT)
             setRackFrontWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.FRONT));
-         if (config.getView() == RackView.FULL || config.getView() == RackView.BACK)
+         if (config.getDisplayMode() == RackDisplayMode.FULL || config.getDisplayMode() == RackDisplayMode.BACK)
             setRackRearWidget(new RackWidget(rackArea, SWT.NONE, rack, RackOrientation.REAR));
 
          scroller.setContent(rackArea);

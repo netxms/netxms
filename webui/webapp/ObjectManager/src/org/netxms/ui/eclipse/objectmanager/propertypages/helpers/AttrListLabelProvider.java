@@ -159,6 +159,7 @@ public class AttrListLabelProvider extends LabelProvider implements ITableLabelP
    /**
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
+   @SuppressWarnings("rawtypes")
    @Override
    public Color getForeground(Object element)
    {

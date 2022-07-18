@@ -26,9 +26,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
 import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDiagramConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.RackDisplayMode;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -38,12 +38,12 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class RackDiagram extends PropertyPage
 {
-   private final static String[] RACK_VIEWS = { "Full", "Front", "Back" };
+   private final static String[] RACK_DISPLAY_MODES = { "Full", "Front", "Back" };
 
    private RackDiagramConfig config;
    private ObjectSelector objectSelector;
    private TitleConfigurator title;
-   private Combo view;
+   private Combo displayMode;
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -81,10 +81,10 @@ public class RackDiagram extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
-      view = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "View", gd);
-      view.setItems(RACK_VIEWS); 
-      view.setText(RACK_VIEWS[config.getView().getValue()]);
-      
+      displayMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Display mode", gd);
+      displayMode.setItems(RACK_DISPLAY_MODES); 
+      displayMode.setText(RACK_DISPLAY_MODES[config.getDisplayMode().getValue()]);
+
       return dialogArea;
    }
 
@@ -96,7 +96,7 @@ public class RackDiagram extends PropertyPage
    {
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
-      config.setView(RackView.getByValue(view.getSelectionIndex()));
+      config.setDisplayMode(RackDisplayMode.getByValue(displayMode.getSelectionIndex()));
       return true;
    }
 }

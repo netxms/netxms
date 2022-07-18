@@ -23,18 +23,17 @@ import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
-import org.netxms.ui.eclipse.dashboard.propertypages.helpers.RackView;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 public class RackDiagramConfig extends DashboardElementConfig
 {
-   @Element(required=true)
+   @Element(required = true)
    private long objectId = 0;
 
-   @Element(required=false)
-   private RackView view = RackView.FULL;
+   @Element(required = false)
+   private RackDisplayMode view = RackDisplayMode.FULL; // Named "view" to maintain compatibility with older versions
 
    /**
     * Create rack diagram settings object from XML document
@@ -103,7 +102,7 @@ public class RackDiagramConfig extends DashboardElementConfig
    /**
     * @return the view
     */
-   public RackView getView()
+   public RackDisplayMode getDisplayMode()
    {
       return view;
    }
@@ -111,7 +110,7 @@ public class RackDiagramConfig extends DashboardElementConfig
    /**
     * @param view the view to set
     */
-   public void setView(RackView view)
+   public void setDisplayMode(RackDisplayMode view)
    {
       this.view = view;
    }

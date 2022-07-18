@@ -59,7 +59,6 @@ public class ElementCreationMenuManager extends MenuManager
       chartsMenu.add(new Separator());
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_BarChartForTable, DashboardElement.TABLE_BAR_CHART);
       addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_PieChartForTable, DashboardElement.TABLE_PIE_CHART);
-      addTypeToSelectionMenu(chartsMenu, Messages.get().AddDashboardElementDlg_TubeChartForTable, DashboardElement.TABLE_TUBE_CHART);
       chartsMenu.add(new Separator());
       addTypeToSelectionMenu(chartsMenu, "Scripted bar chart", DashboardElement.SCRIPTED_BAR_CHART);
       addTypeToSelectionMenu(chartsMenu, "Scripted pie chart", DashboardElement.SCRIPTED_PIE_CHART);

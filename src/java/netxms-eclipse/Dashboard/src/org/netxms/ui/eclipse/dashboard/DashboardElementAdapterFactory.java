@@ -48,9 +48,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SyslogMonitorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.WebPageConfig;
 
 /**
@@ -98,6 +96,7 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 					case DashboardElement.ALARM_VIEWER:
 						return AlarmViewerConfig.createFromXml(element.getData());
 					case DashboardElement.BAR_CHART:
+               case DashboardElement.TUBE_CHART:
 						return BarChartConfig.createFromXml(element.getData());
 					case DashboardElement.CUSTOM:
 						return CustomWidgetConfig.createFromXml(element.getData());
@@ -140,15 +139,12 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 					case DashboardElement.STATUS_MAP:
 						return StatusMapConfig.createFromXml(element.getData());
 					case DashboardElement.TABLE_BAR_CHART:
+               case DashboardElement.TABLE_TUBE_CHART:
 						return TableBarChartConfig.createFromXml(element.getData());
 					case DashboardElement.TABLE_PIE_CHART:
 						return TablePieChartConfig.createFromXml(element.getData());
-					case DashboardElement.TABLE_TUBE_CHART:
-						return TableTubeChartConfig.createFromXml(element.getData());
 					case DashboardElement.TABLE_VALUE:
 						return TableValueConfig.createFromXml(element.getData());
-					case DashboardElement.TUBE_CHART:
-						return TubeChartConfig.createFromXml(element.getData());
 					case DashboardElement.WEB_PAGE:
 						return WebPageConfig.createFromXml(element.getData());
 					default:
