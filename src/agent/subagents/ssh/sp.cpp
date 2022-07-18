@@ -33,7 +33,7 @@ static THREAD s_housekeeperThread = INVALID_THREAD_HANDLE;
 /**
  * Acquire SSH session
  */
-SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
+SSHSession *AcquireSession(const InetAddress& addr, uint16_t port, const TCHAR *user, const TCHAR *password, const shared_ptr<KeyPair>& keys)
 {
    s_lock.lock();
    for(int i = 0; i < s_sessions.size(); i++)
@@ -53,7 +53,7 @@ SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *us
    if (!session->connect(user, password, keys))
    {
       delete session;
-      return NULL;
+      return nullptr;
    }
    nxlog_debug_tag(DEBUG_TAG, 7, _T("AcquireSession: created new session %s"), session->getName());
 
@@ -82,13 +82,13 @@ void ReleaseSession(SSHSession *session)
 /**
  * Housekeeping thread
  */
-static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
+static void HousekeeperThread()
 {
    ObjectArray<SSHSession> deleteList(16, 16, Ownership::True);
    while(!s_shutdownCondition.wait(30000))
    {
       s_lock.lock();
-      time_t now = time(NULL);
+      time_t now = time(nullptr);
       for(int i = 0; i < s_sessions.size(); i++)
       {
          SSHSession *s = s_sessions.get(i);
@@ -103,7 +103,6 @@ static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
       s_lock.unlock();
       deleteList.clear();
    }
-   return THREAD_OK;
 }
 
 /**
@@ -111,7 +110,7 @@ static THREAD_RESULT THREAD_CALL HousekeeperThread(void *arg)
  */
 void InitializeSessionPool()
 {
-   s_housekeeperThread = ThreadCreateEx(HousekeeperThread, 0, NULL);
+   s_housekeeperThread = ThreadCreateEx(HousekeeperThread);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("InitializeSessionPool: connection pool initialized"));
 }
 

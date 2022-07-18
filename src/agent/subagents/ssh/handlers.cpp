@@ -37,7 +37,7 @@ LONG H_SSHConnection(const TCHAR* param, const TCHAR* arg, TCHAR* value, Abstrac
    }
 
    uint16_t port = 22;
-   TCHAR* p = _tcschr(hostName, _T(':'));
+   TCHAR *p = _tcschr(hostName, _T(':'));
    if (p != nullptr)
    {
       *p = 0;
