@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <entity_mib.h>
+#include <netxms-version.h>
 
 /**
  * Externals
@@ -1353,7 +1354,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          DumpUsers(pCtx);
       }
-      else if (IsCommand(_T("VLANS"), szBuffer, 1))
+      else if (IsCommand(_T("VERSION"), szBuffer, 2))
+      {
+         ConsolePrintf(pCtx,_T("NetXMS Server Version %s  Build %s  %s \n"), NETXMS_VERSION_STRING, NETXMS_BUILD_TAG, IS_UNICODE_BUILD_STRING);
+         String ciphers = NXCPGetSupportedCiphersAsText();
+         ConsolePrintf(pCtx,_T("NXCP: %d.%d.%d.%d (%s)\n"), NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.cstr());
+         ConsolePrintf(pCtx,_T("Built with: %hs\n"), CPP_COMPILER_VERSION);
+      }
+      else if (IsCommand(_T("VLANS"), szBuffer, 2))
       {
          ExtractWord(pArg, szBuffer);
          uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
@@ -1701,6 +1709,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show topology <node>              - Collect and show link layer topology for node\n")
             _T("   show tunnels                      - Show active agent tunnels\n")
             _T("   show users                        - Show users\n")
+            _T("   show version                      - Show NetXMS server version\n")
             _T("   show vlans <node>                 - Show cached VLAN information for node\n")
             _T("   show watchdog                     - Display watchdog information\n")
             _T("   trace <node1> <node2>             - Show network path trace between two nodes\n")
