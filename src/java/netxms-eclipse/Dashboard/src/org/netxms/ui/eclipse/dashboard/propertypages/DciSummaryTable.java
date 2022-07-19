@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
-import org.netxms.ui.eclipse.dashboard.dialogs.DCISummaryTableSortColumnSelectionDialog;
+import org.netxms.ui.eclipse.dashboard.dialogs.SortingColumnSelectionDialog;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.SortColumnTableLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
@@ -361,7 +361,7 @@ public class DciSummaryTable extends PropertyPage
     */
    private void add()
    {
-      DCISummaryTableSortColumnSelectionDialog dlg = new DCISummaryTableSortColumnSelectionDialog(getShell(), null, false, tableSelector.getTableId());
+      SortingColumnSelectionDialog dlg = new SortingColumnSelectionDialog(getShell(), null, false, tableSelector.getTableId());
       if (dlg.open() == Window.OK)
       {
          String s = dlg.getColumnName();
@@ -383,7 +383,7 @@ public class DciSummaryTable extends PropertyPage
          return;
 
       String element = (String)selection.getFirstElement();
-      DCISummaryTableSortColumnSelectionDialog dlg = new DCISummaryTableSortColumnSelectionDialog(getShell(), element.substring(1), element.charAt(0) == '>' ? true : false, tableSelector.getTableId());
+      SortingColumnSelectionDialog dlg = new SortingColumnSelectionDialog(getShell(), element.substring(1), element.charAt(0) == '>' ? true : false, tableSelector.getTableId());
       if (dlg.open() == Window.OK)
       {
          String s = dlg.getColumnName();

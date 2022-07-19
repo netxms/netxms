@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.ui.eclipse.dashboard.Activator;
-import org.netxms.ui.eclipse.dashboard.widgets.DCISummaryTableColumnSelector;
+import org.netxms.ui.eclipse.dashboard.widgets.TableColumnSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -38,22 +38,22 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 /**
  * Dialog for selecting sorting column in DCI summary table widget
  */
-public class DCISummaryTableSortColumnSelectionDialog extends Dialog
+public class SortingColumnSelectionDialog extends Dialog
 {
-   private DCISummaryTableColumnSelector columnSelector;
+   private TableColumnSelector columnSelector;
    private Button checkDescending;
    private DciSummaryTable sourceSummaryTable;
    private int summaryTableId;
    private String columnName = "";
    private boolean descending;
-   
+
    /**
     * @param parentShell
     * @param columnName
     * @param descending
     * @param summaryTableId
     */
-   public DCISummaryTableSortColumnSelectionDialog(Shell parentShell, String columnName, boolean descending, int summaryTableId)
+   public SortingColumnSelectionDialog(Shell parentShell, String columnName, boolean descending, int summaryTableId)
    {
       super(parentShell);
       this.columnName = columnName;
@@ -61,17 +61,17 @@ public class DCISummaryTableSortColumnSelectionDialog extends Dialog
       this.summaryTableId = summaryTableId;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Edit Sorting Column");
+      newShell.setText("Select Sorting Column");
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -79,64 +79,52 @@ public class DCISummaryTableSortColumnSelectionDialog extends Dialog
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Get summary table configuration by id", null, Activator.PLUGIN_ID, null) {
-         
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Reading summary table configuration", null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             sourceSummaryTable = session.getDciSummaryTable(summaryTableId);
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {
-                  refresh();
+                  columnSelector.setSummaryTable(sourceSummaryTable);
                }
             });
-            
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return "Unable to get summary table configuration";
          }
       }.start();
-      
+
       GridLayout layout = new GridLayout(); 
       dialogArea.setLayout(layout);
-      
-      columnSelector = new DCISummaryTableColumnSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON, columnName, null, sourceSummaryTable);
+
+      columnSelector = new TableColumnSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON, columnName, null, sourceSummaryTable);
       columnSelector.setLabel("Column");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 500;
       columnSelector.setLayoutData(gd);
-      
+
       checkDescending = new Button(dialogArea, SWT.CHECK);
       checkDescending.setText("Descending order");
       checkDescending.setSelection(descending);
-      
+
       return dialogArea;
    }
-   
-   /**
-    * 
-    */
-   private void refresh()
-   {
-      columnSelector.setSummaryTbale(sourceSummaryTable);
-   }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override
    protected void okPressed()
    {
-      // TODO Auto-generated method stub
       columnName = (checkDescending.getSelection() ? ">" : "<") + columnSelector.getColumnName();
       super.okPressed();
    }
