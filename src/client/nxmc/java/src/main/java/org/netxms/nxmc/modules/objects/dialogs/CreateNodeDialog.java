@@ -472,6 +472,7 @@ public class CreateNodeDialog extends Dialog
       this.objectAlias = objectAlias;
    }
 
+    /**
 	 * @return the hostName
 	 */
 	public String getHostName()
