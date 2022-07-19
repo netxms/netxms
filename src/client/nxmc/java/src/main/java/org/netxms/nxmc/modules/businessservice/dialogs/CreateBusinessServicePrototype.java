@@ -38,9 +38,11 @@ public class CreateBusinessServicePrototype extends Dialog
    private I18n i18n = LocalizationHelper.getI18n(CreateBusinessServicePrototype.class);
    
    private LabeledText nameField;
+   private LabeledText aliasField;
    private Combo instanceDiscoveyMethodCombo;
    
    private String name;
+   private String alias;
    private String instanceDiscoveyMethod;
 
    public CreateBusinessServicePrototype(Shell parentShell)
@@ -81,6 +83,14 @@ public class CreateBusinessServicePrototype extends Dialog
       gd.widthHint = 300;
       nameField.setLayoutData(gd);
 
+      aliasField = new LabeledText(dialogArea, SWT.NONE);
+      aliasField.setLabel(i18n.tr("Alias"));
+      aliasField.getTextControl().setTextLimit(63);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      aliasField.setLayoutData(gd);
+
       instanceDiscoveyMethodCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Instance discovery type"), new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       for (String type : InstanceDiscovery.DISCOVERY_TYPES)
@@ -100,6 +110,7 @@ public class CreateBusinessServicePrototype extends Dialog
    protected void okPressed()
    {
       instanceDiscoveyMethod = instanceDiscoveyMethodCombo.getText();
+      alias = aliasField.getText().trim();
       name = nameField.getText().trim();
       if (name.isEmpty())
       {
@@ -115,6 +126,14 @@ public class CreateBusinessServicePrototype extends Dialog
    public String getName()
    {
       return name;
+   }
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
    }
 
    /**

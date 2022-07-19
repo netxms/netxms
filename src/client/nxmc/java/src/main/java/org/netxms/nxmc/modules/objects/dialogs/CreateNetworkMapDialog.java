@@ -45,9 +45,11 @@ public class CreateNetworkMapDialog extends Dialog
    private final I18n i18n = LocalizationHelper.getI18n(CreateNetworkMapDialog.class);
 
 	private Text textName;
+   private Text textAlias;
 	private Combo mapType;
 	private ObjectSelector seedObjectSelector;
 	private String name;
+   private String alias;
 	private int type;
 	private long seedObject;
 	
@@ -84,6 +86,9 @@ public class CreateNetworkMapDialog extends Dialog
 		
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Name"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
+
+      textAlias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Alias"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textAlias.getShell().setMinimumSize(300, 0);
 
       mapType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Map type"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       mapType.add(i18n.tr("Custom"));
@@ -123,6 +128,7 @@ public class CreateNetworkMapDialog extends Dialog
 	protected void okPressed()
 	{
 		name = textName.getText().trim();
+      alias = textAlias.getText().trim();
 		if (name.isEmpty())
 		{
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Object name cannot be empty"));
@@ -150,6 +156,14 @@ public class CreateNetworkMapDialog extends Dialog
 	{
 		return name;
 	}
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
+   }
 
 	/**
 	 * @return the type
