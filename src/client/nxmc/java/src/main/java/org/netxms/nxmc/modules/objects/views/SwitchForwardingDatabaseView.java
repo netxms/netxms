@@ -30,11 +30,13 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -64,6 +66,8 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	private SortableTableViewer viewer;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
+   private Action actionCopyRowToClipboard;
+   private Action actionCopyMACToClipboard;
 
    /**
     * Default constructor
@@ -110,6 +114,22 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	 */
    private void createActions()
 	{
+      actionCopyRowToClipboard = new CopyTableRowsAction(viewer, true);
+      actionCopyMACToClipboard = new Action(i18n.tr("Copy MAC address to clipboard")) {
+         @Override
+         public void run()
+         {
+            TableItem[] selection = viewer.getTable().getSelection();
+            StringBuilder macAddress = new StringBuilder();
+            for(TableItem item : selection)
+         {
+               if (macAddress.length() > 0)
+                  macAddress.append('\t');
+               macAddress.append(item.getText(0));
+            }
+            WidgetHelper.copyToClipboard(macAddress.toString());
+         }
+      };
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
@@ -140,7 +160,9 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(actionExportToCsv);
+      manager.add(actionCopyRowToClipboard);
+      manager.add(actionCopyMACToClipboard);
+      manager.add(actionExportToCsv);
       manager.add(actionExportAllToCsv);
 	}
 
