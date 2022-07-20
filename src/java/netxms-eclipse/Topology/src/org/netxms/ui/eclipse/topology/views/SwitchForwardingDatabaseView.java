@@ -40,6 +40,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -49,6 +50,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.FdbEntry;
+import org.netxms.ui.eclipse.actions.CopyTableRowsAction;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -83,6 +85,8 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private Action actionShowFilter;
+   private Action actionCopyRowToClipboard;
+   private Action actionCopyMACToClipboard;
 	
 	private Composite resultArea;
 	private FilterText filterText;
@@ -275,6 +279,22 @@ public class SwitchForwardingDatabaseView extends ViewPart
 		};
 
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+      actionCopyRowToClipboard = new CopyTableRowsAction(viewer, true);
+      actionCopyMACToClipboard = new Action(Messages.get().SwitchForwardingDatabaseView_ActionCopyValue) {
+         @Override
+         public void run()
+         {
+            TableItem[] selection = viewer.getTable().getSelection();
+            StringBuilder macAddress = new StringBuilder();
+            for(TableItem item : selection)
+            {
+               if (macAddress.length() > 0)
+                  macAddress.append('\t');
+               macAddress.append(item.getText(0));
+            }
+            WidgetHelper.copyToClipboard(macAddress.toString());
+         }
+      };
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 		
 		actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
@@ -356,7 +376,9 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(actionExportToCsv);
+      manager.add(actionCopyRowToClipboard);
+      manager.add(actionCopyMACToClipboard);
+      manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}

@@ -98,6 +98,7 @@ public class Messages extends NLS
    public static String SwitchForwardingDatabaseView_JobError;
    public static String SwitchForwardingDatabaseView_JobTitle;
    public static String SwitchForwardingDatabaseView_Title;
+   public static String SwitchForwardingDatabaseView_ActionCopyValue;
    public static String VlanView_ColumnID;
    public static String VlanView_ColumnName;
    public static String VlanView_ColumnPorts;
