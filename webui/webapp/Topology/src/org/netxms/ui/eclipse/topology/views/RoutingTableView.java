@@ -40,6 +40,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.Route;
+import org.netxms.ui.eclipse.actions.CopyTableRowsAction;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -69,6 +70,7 @@ public class RoutingTableView extends ViewPart
 	private Action actionRefresh;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
+   private Action actionCopyRowToClipboard;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -130,7 +132,7 @@ public class RoutingTableView extends ViewPart
 				refresh();
 			}
 		};
-
+      actionCopyRowToClipboard = new CopyTableRowsAction(viewer, true);
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
@@ -200,6 +202,7 @@ public class RoutingTableView extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+      manager.add(actionCopyRowToClipboard);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
