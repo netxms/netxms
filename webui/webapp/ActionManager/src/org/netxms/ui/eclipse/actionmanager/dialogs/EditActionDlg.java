@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -207,13 +208,16 @@ public class EditActionDlg extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		subject.setLayoutData(gd);
 		
-		data = new LabeledText(dialogArea, SWT.NONE);
-		data.setLabel(getDataLabel(action.getType()));
-		data.setText(action.getData());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		data.setLayoutData(gd);
+      data = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
+      data.setLabel(getDataLabel(action.getType()));
+      data.getTextControl().setFont(JFaceResources.getTextFont());
+      data.setText(action.getData());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.heightHint = 200;
+      gd.widthHint = 400;
+      data.setLayoutData(gd);
 
       final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Get list of notification channels", null, Activator.PLUGIN_ID, null) {
