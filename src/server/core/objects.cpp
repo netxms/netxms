@@ -1797,14 +1797,16 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
    switch(object.getObjectClass())
    {
       case OBJECT_NODE:
-         ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: 0x%08X (isSNMP=%d isAgent=%d isBridge=%d isRouter=%d)\n   SNMP ObjectId.......: %s\n"),
+         ConsolePrintf(console, _T("   Primary IP..........: %s\n   Primary hostname....: %s\n   Capabilities........: 0x%08X (isSNMP=%d isAgent=%d isEIP=%d isBridge=%d isRouter=%d isMgmt=%d)\n   SNMP ObjectId.......: %s\n"),
                        static_cast<const Node&>(object).getIpAddress().toString(buffer),
                        static_cast<const Node&>(object).getPrimaryHostName().cstr(),
                        static_cast<const Node&>(object).getCapabilities(),
                        static_cast<const Node&>(object).isSNMPSupported(),
                        static_cast<const Node&>(object).isNativeAgent(),
+                       static_cast<const Node&>(object).isEthernetIPSupported(),
                        static_cast<const Node&>(object).isBridge(),
                        static_cast<const Node&>(object).isRouter(),
+                       static_cast<const Node&>(object).isLocalManagement(),
                        static_cast<const Node&>(object).getSNMPObjectId().cstr());
          PrintObjectInfo(console, object.getAssignedZoneProxyId(false), _T("   Primary zone proxy..:"));
          PrintObjectInfo(console, object.getAssignedZoneProxyId(true), _T("   Backup zone proxy...:"));
