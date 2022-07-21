@@ -1139,6 +1139,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          ShowMemoryUsage(pCtx);
       }
+      else if (IsCommand(_T("MGMTNODE"), szBuffer, 2))
+      {
+         shared_ptr<NetObj> n = FindObjectById(g_dwMgmtNode, OBJECT_NODE);
+         pCtx->printf(_T("[%u] %s\n"), g_dwMgmtNode, (n != nullptr) ? n->getName() : _T("(invalid management node ID)"));
+      }
       else if (IsCommand(_T("MODULES"), szBuffer, 3))
       {
          ConsoleWrite(pCtx, _T("Loaded server modules:\n"));
@@ -1343,7 +1348,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("VERSION"), szBuffer, 2))
       {
-         ConsolePrintf(pCtx,_T("NetXMS Server Version %s  Build %s  %s \n"), NETXMS_VERSION_STRING, NETXMS_BUILD_TAG, IS_UNICODE_BUILD_STRING);
+         ConsolePrintf(pCtx,_T("NetXMS Server Version %s Build %s %s\n"), NETXMS_VERSION_STRING, NETXMS_BUILD_TAG, IS_UNICODE_BUILD_STRING);
          String ciphers = NXCPGetSupportedCiphersAsText();
          ConsolePrintf(pCtx,_T("NXCP: %d.%d.%d.%d (%s)\n"), NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.cstr());
          ConsolePrintf(pCtx,_T("Built with: %hs\n"), CPP_COMPILER_VERSION);

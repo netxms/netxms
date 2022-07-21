@@ -949,6 +949,13 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t
          time_t originTimestamp, uint32_t sourceId, uint32_t dciId, const TCHAR *eventTag, const StringSet *eventTags,
          const StringMap *namedArgs, const char *format, const TCHAR **names, va_list args, NXSL_VM *vm)
 {
+   // Check that source object exists
+   if ((sourceId == 0) || (FindObjectById(sourceId) == nullptr))
+   {
+      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u"), sourceId);
+      return false;
+   }
+
    s_eventTemplatesLock.readLock();
    shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(eventCode);
    s_eventTemplatesLock.unlock();

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,12 +43,12 @@ void ShowServerStats(CONSOLE_CTX console)
 	int dciCount = 0;
 	g_idxObjectById.forEach(DciCountCallback, &dciCount);
 
-	UINT32 s = static_cast<UINT32>(time(NULL) - g_serverStartTime);
-   UINT32 d = s / 86400;
+	uint32_t s = static_cast<uint32_t>(time(nullptr) - g_serverStartTime);
+	uint32_t d = s / 86400;
    s -= d * 86400;
-   UINT32 h = s / 3600;
+   uint32_t h = s / 3600;
    s -= h * 3600;
-   UINT32 m = s / 60;
+   uint32_t m = s / 60;
    s -= m * 60;
 
    TCHAR uptime[128];
