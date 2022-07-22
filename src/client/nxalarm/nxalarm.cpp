@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxalarm - manage alarms from command line
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,13 +35,13 @@ static TCHAR m_outFormat[MAX_DB_STRING] = _T("%I %S %H %m");
 /**
  * List alarms
  */
-static UINT32 ListAlarms(NXCSession *session)
+static uint32_t ListAlarms(NXCSession *session)
 {
-	UINT32 rcc = ((EventController *)session->getController(CONTROLLER_EVENTS))->syncEventTemplates();
+	uint32_t rcc = static_cast<EventController*>(session->getController(CONTROLLER_EVENTS))->syncEventTemplates();
 	if (rcc != RCC_SUCCESS)
 		_tprintf(_T("WARNING: cannot load event database (%s)\n"), NXCGetErrorText(rcc));
 
-   AlarmController *ctrl = (AlarmController *)session->getController(CONTROLLER_ALARMS);
+   auto ctrl = static_cast<AlarmController*>(session->getController(CONTROLLER_ALARMS));
 
    ObjectArray<NXC_ALARM> *alarms;
    rcc = ctrl->getAll(&alarms);
@@ -51,7 +51,7 @@ static UINT32 ListAlarms(NXCSession *session)
 		{
          TCHAR *text = ctrl->formatAlarmText(alarms->get(i), m_outFormat);
 			_tprintf(_T("%s\n"), text);
-			free(text);
+			MemFree(text);
 		}
       _tprintf(_T("\n%d active alarms\n"), alarms->size());
       delete alarms;
@@ -66,9 +66,9 @@ static UINT32 ListAlarms(NXCSession *session)
 /**
  * Callback function for debug printing
  */
-static void DebugCallback(const TCHAR *pMsg)
+static void DebugCallback(const TCHAR *msg)
 {
-   _tprintf(_T("NXCL: %s\n"), pMsg);
+   _tprintf(_T("NXCL: %s\n"), msg);
 }
 
 #ifdef _WIN32
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
    TCHAR password[MAX_DB_STRING] = _T("");
 	char *eptr;
 	bool isDebug = false, isEncrypt = false, isSticky = false;
-	UINT32 rcc, alarmId;
+	uint32_t rcc, alarmId;
    int timeout = 3, ackTimeout = 0;
 	int ch;
 
@@ -251,9 +251,9 @@ int main(int argc, char *argv[])
 #endif
 
    NXCSession *session = new NXCSession();
-   static UINT32 protocolVersions[] = { CPV_INDEX_ALARMS };
+   static uint32_t protocolVersions[] = { CPV_INDEX_ALARMS };
    rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxalarm/") NETXMS_VERSION_STRING, 
-                          protocolVersions, sizeof(protocolVersions) / sizeof(UINT32));
+                          protocolVersions, sizeof(protocolVersions) / sizeof(uint32_t));
 	if (rcc != RCC_SUCCESS)
 	{
 		_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-	session->setCommandTimeout((UINT32)timeout * 1000);
+	session->setCommandTimeout(static_cast<uint32_t>(timeout) * 1000);
 
 	// Execute command
 	if (!stricmp(argv[optind + 1], "list"))
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 
-      AlarmController *ctrl = (AlarmController *)session->getController(CONTROLLER_ALARMS);
+      auto ctrl = static_cast<AlarmController*>(session->getController(CONTROLLER_ALARMS));
 		if (!stricmp(argv[optind + 1], "ack"))
 		{
          rcc = ctrl->acknowledge(alarmId, isSticky, (UINT32)ackTimeout * 60);

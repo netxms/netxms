@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,43 +26,41 @@
 /**
  * Push data
  */
-UINT32 DataCollectionController::pushData(ObjectArray<NXCPushData> *data, time_t timestamp, UINT32 *failedIndex)
+uint32_t DataCollectionController::pushData(ObjectArray<NXCPushData> *data, time_t timestamp, uint32_t *failedIndex)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_PUSH_DCI_DATA);
-   msg.setId(m_session->createMessageId());
-   msg.setFieldFromTime(VID_TIMESTAMP, timestamp);
-   msg.setField(VID_NUM_ITEMS, (INT32)data->size());
+   NXCPMessage request(CMD_PUSH_DCI_DATA, m_session->createMessageId());
+   request.setFieldFromTime(VID_TIMESTAMP, timestamp);
+   request.setField(VID_NUM_ITEMS, (INT32)data->size());
 
-   UINT32 id = VID_PUSH_DCI_DATA_BASE;
+   uint32_t id = VID_PUSH_DCI_DATA_BASE;
    for(int i = 0; i < data->size(); i++)
    {
       NXCPushData *d = data->get(i);
-      msg.setField(id++, d->nodeId);
+      request.setField(id++, d->nodeId);
       if (d->nodeId == 0)
       {
-         msg.setField(id++, d->nodeName);
+         request.setField(id++, d->nodeName);
       }
 
-      msg.setField(id++, d->dciId);
+      request.setField(id++, d->dciId);
       if (d->dciId == 0)
       {
-         msg.setField(id++, d->dciName);
+         request.setField(id++, d->dciName);
       }
 
-      msg.setField(id++, d->value);
+      request.setField(id++, d->value);
    }
 
-   m_session->sendMessage(&msg);
+   m_session->sendMessage(&request);
 
-   UINT32 rcc;
-   NXCPMessage *response = m_session->waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-   if (response != NULL)
+   uint32_t rcc;
+   NXCPMessage *response = m_session->waitForMessage(CMD_REQUEST_COMPLETED, request.getId());
+   if (response != nullptr)
    {
       rcc = response->getFieldAsUInt32(VID_RCC);
       if (rcc != RCC_SUCCESS)
       {
-         if (failedIndex != NULL)
+         if (failedIndex != nullptr)
             *failedIndex = response->getFieldAsUInt32(VID_FAILED_DCI_INDEX);
       }
       delete response;
@@ -70,7 +68,7 @@ UINT32 DataCollectionController::pushData(ObjectArray<NXCPushData> *data, time_t
    else
    {
       rcc = RCC_TIMEOUT;
-      if (failedIndex != NULL)
+      if (failedIndex != nullptr)
          *failedIndex = 0;
    }
    return rcc;
