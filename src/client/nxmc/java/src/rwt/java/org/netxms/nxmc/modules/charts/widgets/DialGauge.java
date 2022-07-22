@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,10 +40,10 @@ public class DialGauge extends GenericGauge
 	private static final int NEEDLE_PIN_RADIUS = 8;
 	private static final int SCALE_OFFSET = 30;	// In percents
 	private static final int SCALE_WIDTH = 10;	// In percents
-	
+
 	private Font[] scaleFonts = null;
 	private Font[] valueFonts = null;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -114,25 +114,25 @@ public class DialGauge extends GenericGauge
 			rect.x += (rect.width - rect.height) / 2;
 			rect.width = rect.height;
 		}
-		
+
       double maxValue = configuration.getMaxYScaleValue();
       double minValue = configuration.getMinYScaleValue();
 
-		double angleValue = (maxValue - minValue) / 270;
+      double angleValue = (maxValue - minValue) / 270.0;
 		int outerRadius = (rect.width + 1) / 2;
 		int scaleOuterOffset = ((rect.width / 2) * SCALE_OFFSET / 100);
 		int scaleInnerOffset = ((rect.width / 2) * (SCALE_OFFSET + SCALE_WIDTH) / 100);
-		
+
 		int cx = rect.x + rect.width / 2 + 1;
 		int cy = rect.y + rect.height / 2 + 1;
       gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 		gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
-		
+
 		// Draw zones
       switch(GaugeColorMode.getByValue(configuration.getGaugeColorMode()))
 		{
 		   case ZONE:
-		      int startAngle = 225;
+            double startAngle = 225;
             startAngle = drawZone(gc, rect, startAngle, minValue, configuration.getLeftRedZone(), angleValue, RED_ZONE_COLOR);
             startAngle = drawZone(gc, rect, startAngle, configuration.getLeftRedZone(), configuration.getLeftYellowZone(), angleValue, YELLOW_ZONE_COLOR);
             startAngle = drawZone(gc, rect, startAngle, configuration.getLeftYellowZone(), configuration.getRightYellowZone(), angleValue, GREEN_ZONE_COLOR);
@@ -153,7 +153,7 @@ public class DialGauge extends GenericGauge
 		gc.setLineWidth(2);
 		gc.drawArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 		gc.setLineWidth(1);
-		
+
 		// Draw scale
       Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
       Color scaleTextColor = chart.getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
@@ -185,7 +185,7 @@ public class DialGauge extends GenericGauge
       gc.setForeground(scaleColor);
 		gc.drawArc(rect.x + scaleOuterOffset, rect.y + scaleOuterOffset, rect.width - scaleOuterOffset * 2, rect.height - scaleOuterOffset * 2, -45, 270);
 		gc.drawArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, -45, 270);
-		
+
 		// Draw needle
       gc.setBackground(chart.getColorFromPreferences("Chart.Colors.DialNeedle")); //$NON-NLS-1$
       double dciValue = data.getCurrentValue();
@@ -201,7 +201,7 @@ public class DialGauge extends GenericGauge
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS, cy - NEEDLE_PIN_RADIUS, NEEDLE_PIN_RADIUS * 2 - 1, NEEDLE_PIN_RADIUS * 2 - 1, 0, 360);
       gc.setBackground(chart.getColorFromPreferences("Chart.Colors.DialNeedlePin")); //$NON-NLS-1$
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, NEEDLE_PIN_RADIUS - 1, NEEDLE_PIN_RADIUS - 1, 0, 360);
-		
+
 		// Draw current value
       String value = getValueAsDisplayString(dci, data);
 		gc.setFont(WidgetHelper.getMatchingSizeFont(valueFonts, markFont));
@@ -212,7 +212,7 @@ public class DialGauge extends GenericGauge
 		gc.fillRoundRectangle(cx - boxW / 2, cy + rect.height / 4, boxW, ext.y + 6, 3, 3);
       gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialValueText")); //$NON-NLS-1$
 		gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
-		
+
       // Draw labels
       if (configuration.areLabelsVisible())
 		{
@@ -242,20 +242,20 @@ public class DialGauge extends GenericGauge
 	 * @param color color
 	 * @return
 	 */
-	private int drawZone(GC gc, Rectangle rect, int startAngle, double minValue, double maxValue, double angleValue, RGB color)
+   private double drawZone(GC gc, Rectangle rect, double startAngle, double minValue, double maxValue, double angleValue, RGB color)
 	{
 		if (minValue >= maxValue)
 			return startAngle;	// Ignore incorrect zone settings
-		
-		int angle = (int)((maxValue - minValue) / angleValue);
+
+      double angle = (maxValue - minValue) / angleValue;
 		if (angle <= 0)
 			return startAngle;
-		
+
 		int offset = ((rect.width / 2) * SCALE_OFFSET / 100);
-		
+
       gc.setBackground(chart.getColorCache().create(color));
-		gc.fillArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, startAngle, -angle);
-		return startAngle - angle;
+      gc.fillArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, (int)Math.ceil(startAngle), (int)-Math.ceil(angle));
+      return startAngle - angle;
 	}
 
 	/**
@@ -272,7 +272,7 @@ public class DialGauge extends GenericGauge
 	{
 		return new Point((int)(radius * Math.cos(Math.toRadians(angle)) + cx), (int)(radius * -Math.sin(Math.toRadians(angle)) + cy));
 	}
-	
+
    /**
     * Get minimal element size
     * 
