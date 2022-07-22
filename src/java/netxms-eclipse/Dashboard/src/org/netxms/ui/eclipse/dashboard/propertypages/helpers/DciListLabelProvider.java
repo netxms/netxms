@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.propertypages.DataSources;
@@ -43,28 +42,28 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	private NXCSession session;
 	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
 	private List<ChartDciConfig> elementList;
-	
+
 	/**
 	 * The constructor
 	 */
 	public DciListLabelProvider(List<ChartDciConfig> elementList)
 	{
 		this.elementList = elementList;
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -74,8 +73,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			case DataSources.COLUMN_POSITION:
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case DataSources.COLUMN_NODE:
-				AbstractObject object = session.findObjectById(dci.nodeId);
-				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+            return session.getObjectName(dci.nodeId);
 			case DataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(dci.dciId);
 				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
@@ -86,7 +84,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Resolve DCI names for given collection of condition DCIs and add to cache
 	 * 
@@ -116,7 +114,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			}
 		}.runInForeground();
 	}
-	
+
 	/**
 	 * Add single cache entry
 	 * 

@@ -239,7 +239,7 @@ public class Messages extends NLS
    public String CreateZone_JobError;
    public String CreateZone_JobTitle;
    public String CreateZoneDialog_Name;
-public static String CreateZoneDialog_Alias;
+   public String CreateZoneDialog_Alias;
    public String CreateZoneDialog_Title;
    public String CreateZoneDialog_Warning;
    public String CreateZoneDialog_WarningEmptyName;
