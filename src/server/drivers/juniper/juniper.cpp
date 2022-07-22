@@ -230,6 +230,19 @@ void JuniperDriver::getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverD
 }
 
 /**
+ * Returns true if lldpRemTable uses ifIndex instead of bridge port number for referencing interfaces.
+ * Default implementation always return false;
+ *
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if lldpRemTable uses ifIndex instead of bridge port number
+ */
+bool JuniperDriver::isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData)
+{
+   return true;
+}
+
+/**
  * Driver module entry point
  */
 NDD_BEGIN_DRIVER_LIST

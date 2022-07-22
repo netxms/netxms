@@ -428,7 +428,7 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
             //         IEEE 802.1D or an IEEE 802.1Q bridge, the LldpPortNumber
             //         will have the same value as the corresponding interface's
             //         InterfaceIndex object.
-            if (node->isBridge())
+            if (node->isBridge() && !node->getDriver()->isLldpRemTableUsingIfIndex(node, node->getDriverData()))
             {
                shared_ptr<Interface> localIf = node->findBridgePort(localPort);
                info.ifLocal = (localIf != nullptr) ? localIf->getIfIndex() : 0;

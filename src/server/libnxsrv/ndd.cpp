@@ -168,7 +168,7 @@ const TCHAR *NetworkDeviceDriver::getVersion()
  */
 const TCHAR *NetworkDeviceDriver::getCustomTestOID()
 {
-	return NULL;
+	return nullptr;
 }
 
 /**
@@ -764,6 +764,19 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
  * @return true if interface identification provided
  */
 bool NetworkDeviceDriver::lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id)
+{
+   return false;
+}
+
+/**
+ * Returns true if lldpRemTable uses ifIndex instead of bridge port number for referencing interfaces.
+ * Default implementation always return false;
+ *
+ * @param node Node
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @return true if lldpRemTable uses ifIndex instead of bridge port number
+ */
+bool NetworkDeviceDriver::isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData)
 {
    return false;
 }
