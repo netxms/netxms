@@ -209,9 +209,9 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
 
    m_connected = true;
    m_msgWaitQueue = new MsgWaitQueue();
-   m_receiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
+   m_receiverThread = ThreadCreateEx(this, &NXCSession::receiverThread);
    
-   UINT32 rcc = RCC_COMM_FAILURE;
+   uint32_t rcc = RCC_COMM_FAILURE;
 
    // Query server information
    NXCPMessage msg;
@@ -220,7 +220,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
    if (sendMessage(&msg))
    {
       NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
-      if (response != NULL)
+      if (response != nullptr)
       {
          rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == RCC_SUCCESS)
@@ -242,7 +242,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
             if (rcc == RCC_SUCCESS)
             {
                response->getFieldAsInt32Array(VID_PROTOCOL_VERSION_EX, m_protocolVersions);
-               if (cpvIndexList != NULL)
+               if (cpvIndexList != nullptr)
                {
                   static UINT32 currentProtocolVersions[] = {
                      CLIENT_PROTOCOL_VERSION_BASE,
@@ -385,7 +385,7 @@ bool NXCSession::sendMessage(NXCPMessage *msg)
 /**
  * Wait for message
  */
-NXCPMessage *NXCSession::waitForMessage(UINT16 code, UINT32 id, UINT32 timeout)
+NXCPMessage *NXCSession::waitForMessage(uint16_t code, uint32_t id, uint32_t timeout)
 {
    if (!m_connected)
       return nullptr;
@@ -396,24 +396,15 @@ NXCPMessage *NXCSession::waitForMessage(UINT16 code, UINT32 id, UINT32 timeout)
 /**
  * Wait for CMD_REQUEST_COMPLETED message and return RCC
  */
-UINT32 NXCSession::waitForRCC(UINT32 id, UINT32 timeout)
+uint32_t NXCSession::waitForRCC(uint32_t id, uint32_t timeout)
 {
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, id, timeout);
-   if (response == NULL)
+   if (response == nullptr)
       return RCC_TIMEOUT;
 
-   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
    delete response;
    return rcc;
-}
-
-/**
- * Starter for receiver thread
- */
-THREAD_RESULT THREAD_CALL NXCSession::receiverThreadStarter(void *arg)
-{
-   ((NXCSession *)arg)->receiverThread();
-   return THREAD_OK;
 }
 
 /**
@@ -448,7 +439,7 @@ void NXCSession::receiverThread()
       switch(msg->getCode())
       {
          case CMD_REQUEST_SESSION_KEY:
-            if (m_encryptionContext == NULL)
+            if (m_encryptionContext == nullptr)
             {
                NXCPMessage *response;
                NXCPEncryptionContext *encryptionContext = nullptr;
@@ -468,7 +459,7 @@ void NXCSession::receiverThread()
             if (!handleMessage(msg))
             {
                m_msgWaitQueue->put(msg);
-               msg = NULL;    // prevent destruction
+               msg = nullptr;    // prevent destruction
             }
             break;
       }

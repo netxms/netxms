@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library API
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -76,7 +76,7 @@ struct NXCPushData
 /**
  * Debug callback
  */
-typedef void (* NXC_DEBUG_CALLBACK)(const TCHAR *msg);
+typedef void (*NXC_DEBUG_CALLBACK)(const TCHAR *msg);
 
 class NXCSession;
 
@@ -153,7 +153,7 @@ class LIBNXCLIENT_EXPORTABLE DataCollectionController : public Controller
 public:
    DataCollectionController(NXCSession *session) : Controller(session) { }
 
-   UINT32 pushData(ObjectArray<NXCPushData> *data, time_t timestamp = 0, UINT32 *failedIndex = NULL);
+   uint32_t pushData(ObjectArray<NXCPushData> *data, time_t timestamp = 0, uint32_t *failedIndex = nullptr);
 };
 
 /**
@@ -162,23 +162,27 @@ public:
 class LIBNXCLIENT_EXPORTABLE EventTemplate
 {
 private:
-   UINT32 m_code;
+   uint32_t m_code;
+   uuid m_guid;
    TCHAR m_name[MAX_EVENT_NAME];
    int m_severity;
-   UINT32 m_flags;
+   uint32_t m_flags;
    TCHAR *m_messageTemplate;
    TCHAR *m_description;
+   TCHAR *m_tags;
 
 public:
-   EventTemplate(NXCPMessage *msg);
+   EventTemplate(const NXCPMessage& msg, uint32_t baseId);
    ~EventTemplate();
 
-   UINT32 getCode() { return m_code; }
-   const TCHAR *getName() { return m_name; }
-   int getSeverity() { return m_severity; }
-   UINT32 getFlags() { return m_flags; }
-   const TCHAR *getMessageTemplate() { return CHECK_NULL_EX(m_messageTemplate); }
-   const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
+   uint32_t getCode() const { return m_code; }
+   const uuid& getGuid() const { return m_guid; }
+   const TCHAR *getName() const { return m_name; }
+   int getSeverity() const { return m_severity; }
+   uint32_t getFlags() const { return m_flags; }
+   const TCHAR *getMessageTemplate() const { return CHECK_NULL_EX(m_messageTemplate); }
+   const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
+   const TCHAR *getTags() const { return CHECK_NULL_EX(m_tags); }
 };
 
 /**
@@ -194,11 +198,11 @@ public:
    EventController(NXCSession *session);
    virtual ~EventController();
 
-   UINT32 syncEventTemplates();
-   UINT32 getEventTemplates(ObjectArray<EventTemplate> *templates);
-   TCHAR *getEventName(UINT32 code, TCHAR *buffer, size_t bufferSize);
+   uint32_t syncEventTemplates();
+   uint32_t getEventTemplates(ObjectArray<EventTemplate> *templates);
+   TCHAR *getEventName(uint32_t code, TCHAR *buffer, size_t bufferSize);
 
-   UINT32 sendEvent(UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv, const TCHAR *userTag);
+   uint32_t sendEvent(uint32_t code, const TCHAR *name, uint32_t objectId, int argc, TCHAR **argv, const TCHAR *userTag);
 };
 
 struct ObjectCacheEntry;
@@ -250,7 +254,6 @@ private:
    THREAD m_receiverThread;
    SocketMessageReceiver *m_receiver;
 
-   static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *arg);
    void receiverThread();
 
 protected:
@@ -292,8 +295,8 @@ public:
 
    uint32_t createMessageId() { return InterlockedIncrement(&m_msgId); }
    bool sendMessage(NXCPMessage *msg);
-   NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout = 0);
-   UINT32 waitForRCC(UINT32 id, UINT32 timeout = 0);
+   NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout = 0);
+   uint32_t waitForRCC(uint32_t id, uint32_t timeout = 0);
 
    void setCommandTimeout(uint32_t timeout) { m_commandTimeout = timeout; }
    uint32_t getCommandTimeout() const { return m_commandTimeout; }

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@
  */
 EventController::EventController(NXCSession *session) : Controller(session), m_eventTemplateLock(MutexType::FAST)
 {
-   m_eventTemplates = NULL;
+   m_eventTemplates = nullptr;
 }
 
 /**
@@ -42,10 +42,10 @@ EventController::~EventController()
 /**
  * Synchronize event templates
  */
-UINT32 EventController::syncEventTemplates()
+uint32_t EventController::syncEventTemplates()
 {
    ObjectArray<EventTemplate> *list = new ObjectArray<EventTemplate>(256, 256, Ownership::True);
-   UINT32 rcc = getEventTemplates(list);
+   uint32_t rcc = getEventTemplates(list);
    if (rcc != RCC_SUCCESS)
    {
       delete list;
@@ -62,48 +62,42 @@ UINT32 EventController::syncEventTemplates()
 /**
  * Get configured event templates
  */
-UINT32 EventController::getEventTemplates(ObjectArray<EventTemplate> *templates)
+uint32_t EventController::getEventTemplates(ObjectArray<EventTemplate> *templates)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_LOAD_EVENT_DB);
-   msg.setId(m_session->createMessageId());
+   NXCPMessage msg(CMD_LOAD_EVENT_DB, m_session->createMessageId());
 
    if (!m_session->sendMessage(&msg))
       return RCC_COMM_FAILURE;
 
-   UINT32 rcc = m_session->waitForRCC(msg.getId());
-   if (rcc != RCC_SUCCESS)
-      return rcc;
+   NXCPMessage *response = m_session->waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
+   if (response == nullptr)
+      return RCC_TIMEOUT;
 
-   while(true)
+   uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
+   if (rcc != RCC_SUCCESS)
    {
-      NXCPMessage *response = m_session->waitForMessage(CMD_EVENT_DB_RECORD, msg.getId());
-      if (response != NULL)
-      {
-         if (response->isEndOfSequence())
-         {
-            delete response;
-            break;
-         }
-         templates->add(new EventTemplate(response));
-         delete response;
-      }
-      else
-      {
-         rcc = RCC_TIMEOUT;
-         break;
-      }
+      delete response;
+      return rcc;
    }
-   return rcc;
+
+   int count = response->getFieldAsInt32(VID_NUM_EVENTS);
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < count; i++)
+   {
+      templates->add(new EventTemplate(*response, fieldId));
+      fieldId += 10;
+   }
+   delete response;
+   return RCC_SUCCESS;
 }
 
 /**
  * Get event name by code
  */
-TCHAR *EventController::getEventName(UINT32 code, TCHAR *buffer, size_t bufferSize)
+TCHAR *EventController::getEventName(uint32_t code, TCHAR *buffer, size_t bufferSize)
 {
    m_eventTemplateLock.lock();
-   if (m_eventTemplates != NULL)
+   if (m_eventTemplates != nullptr)
    {
       for(int i = 0; i < m_eventTemplates->size(); i++)
       {
@@ -124,12 +118,9 @@ TCHAR *EventController::getEventName(UINT32 code, TCHAR *buffer, size_t bufferSi
 /**
  * Send event to server
  */
-UINT32 EventController::sendEvent(UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv, const TCHAR *userTag)
+uint32_t EventController::sendEvent(uint32_t code, const TCHAR *name, uint32_t objectId, int argc, TCHAR **argv, const TCHAR *userTag)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_TRAP);
-   msg.setId(m_session->createMessageId());
+   NXCPMessage msg(CMD_TRAP, m_session->createMessageId());
    msg.setField(VID_EVENT_CODE, code);
    msg.setField(VID_EVENT_NAME, name);
    msg.setField(VID_OBJECT_ID, objectId);
@@ -146,14 +137,16 @@ UINT32 EventController::sendEvent(UINT32 code, const TCHAR *name, UINT32 objectI
 /**
  * Event template constructor
  */
-EventTemplate::EventTemplate(NXCPMessage *msg)
+EventTemplate::EventTemplate(const NXCPMessage& msg, uint32_t baseId)
 {
-   m_code = msg->getFieldAsUInt32(VID_EVENT_CODE);
-   msg->getFieldAsString(VID_NAME, m_name, MAX_EVENT_NAME);
-   m_severity = msg->getFieldAsInt32(VID_SEVERITY);
-   m_flags = msg->getFieldAsUInt32(VID_FLAGS);
-   m_messageTemplate = msg->getFieldAsString(VID_MESSAGE);
-   m_description = msg->getFieldAsString(VID_DESCRIPTION);
+   m_code = msg.getFieldAsUInt32(baseId + 1);
+   m_description = msg.getFieldAsString(baseId + 2);
+   msg.getFieldAsString(baseId + 3, m_name, MAX_EVENT_NAME);
+   m_severity = msg.getFieldAsInt32(baseId + 4);
+   m_flags = msg.getFieldAsUInt32(baseId + 5);
+   m_messageTemplate = msg.getFieldAsString(baseId + 6);
+   m_tags = msg.getFieldAsString(baseId + 7);
+   m_guid = msg.getFieldAsGUID(baseId + 8);
 }
 
 /**
@@ -163,4 +156,5 @@ EventTemplate::~EventTemplate()
 {
    MemFree(m_messageTemplate);
    MemFree(m_description);
+   MemFree(m_tags);
 }
