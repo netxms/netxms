@@ -368,6 +368,7 @@ public:
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
             int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
    virtual bool lldpNameToInterfaceId(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *lldpName, InterfaceId *id);
+   virtual bool isLldpRemTableUsingIfIndex(const NObject *node, DriverData *driverData);
    virtual VlanList *getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual int getModulesOrientation(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
    virtual void getModuleLayout(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
