@@ -40,7 +40,7 @@ public class ImageCache implements DisposeListener
 	public ImageCache()
 	{
 	}
-	
+
 	/**
     * Create image cache associated with given control. All images in a cache will be disposed when associated control gets
     * disposed.

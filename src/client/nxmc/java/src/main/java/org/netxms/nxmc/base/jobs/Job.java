@@ -145,7 +145,7 @@ public abstract class Job
                @Override
                public void run()
                {
-                  messageArea.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getMessage());
+                  messageArea.addMessage(MessageArea.ERROR, getErrorMessage() + ": " + e.getLocalizedMessage());
                }
             });
          }

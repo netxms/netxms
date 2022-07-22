@@ -300,10 +300,9 @@ public class SummaryTableManager extends ConfigurationView
 	{
 	   PreferenceManager pm = new PreferenceManager();
 	   pm.addToRoot(new PreferenceNode("general", new SummaryTableGeneral(t)));
-      pm.addToRoot(new PreferenceNode("Filter", new SummaryTableFilterPropertyPage(t)));
+      pm.addToRoot(new PreferenceNode("filter", new SummaryTableFilterPropertyPage(t)));
       if (!t.isTableSoure())
          pm.addToRoot(new PreferenceNode("columns", new SummaryTableColumns(t)));
-	   
 
       PropertyDialog dlg = new PropertyDialog(getWindow().getShell(), pm, 
             isNew ? i18n.tr("Create DCI Summary Table") : i18n.tr("Edit Summary Table"));
