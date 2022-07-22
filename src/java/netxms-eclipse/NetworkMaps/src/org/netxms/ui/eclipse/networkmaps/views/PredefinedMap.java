@@ -193,7 +193,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
 			}
 		}
 
@@ -905,7 +905,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			public void run()
 			{
 				if (guid.equals(mapObject.getBackground()))
-					viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid));
+               viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid), mapObject.isCenterBackgroundImage());
 				
 				final String guidText = guid.toString();
 				for(NetworkMapElement e : mapPage.getElements())
@@ -951,7 +951,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		{
 			if (mapObject.getBackground().equals(NXCommon.EMPTY_GUID))
 			{
-				viewer.setBackgroundImage(null);
+            viewer.setBackgroundImage(null, false);
 			}
 			else if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
 			{
@@ -960,7 +960,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
 			}
 		}
 
@@ -989,7 +989,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
 			}
 		}
 

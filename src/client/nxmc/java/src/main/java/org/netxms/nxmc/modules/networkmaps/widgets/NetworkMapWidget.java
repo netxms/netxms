@@ -285,7 +285,7 @@ public class NetworkMapWidget extends Composite
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
 			}
 		}
 

@@ -60,6 +60,7 @@ public class MapBackground extends PropertyPage
 	private Button radioTypeImage;
 	private Button radioTypeGeoMap;
 	private ImageSelector image;
+   private Button checkCenterImage;
 	private LabeledText latitude;
 	private LabeledText longitude;
 	private Scale zoomScale;
@@ -143,6 +144,10 @@ public class MapBackground extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       image.setLayoutData(gd);
       
+      checkCenterImage = new Button(dialogArea, SWT.CHECK);
+      checkCenterImage.setText("Center image");
+      checkCenterImage.setSelection(object.isCenterBackgroundImage());
+
       if (!disableGeolocationBackground)
       {
          Group geomapGroup = new Group(dialogArea, SWT.NONE);
@@ -279,7 +284,7 @@ public class MapBackground extends PropertyPage
 	protected boolean applyChanges(final boolean isApply)
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		
+
 		if (radioTypeNone.getSelection())
 		{
 			md.setMapBackground(NXCommon.EMPTY_GUID, new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));
@@ -287,6 +292,7 @@ public class MapBackground extends PropertyPage
 		else if (radioTypeImage.getSelection())
 		{
 			md.setMapBackground(image.getImageGuid(), new GeoLocation(false), 0, ColorConverter.rgbToInt(backgroundColor.getColorValue()));
+         md.setObjectFlags(checkCenterImage.getSelection() ? NetworkMap.MF_CENTER_BKGND_IMAGE : 0, NetworkMap.MF_CENTER_BKGND_IMAGE);
 		}
 		else if (!disableGeolocationBackground && radioTypeGeoMap.getSelection())
 		{

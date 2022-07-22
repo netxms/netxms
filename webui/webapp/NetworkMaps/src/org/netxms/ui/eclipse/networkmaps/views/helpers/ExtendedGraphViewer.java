@@ -33,6 +33,7 @@ import org.eclipse.draw2d.Layer;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.SWTEventDispatcher;
+import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.ScalableFigure;
 import org.eclipse.draw2d.ToolTipHelper;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -48,11 +49,14 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
@@ -109,7 +113,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	private Image iconBack;
 	private OverlayButton backButton = null;
 	private boolean draggingEnabled = true;
-	
+   private boolean centeredBackground = false;
+
 	/**
 	 * @param composite
 	 * @param style
@@ -178,7 +183,16 @@ public class ExtendedGraphViewer extends GraphViewer
 				graph.getDisplay().timerExec(1000, timer);
 			}
 		});
-		
+
+      graph.addControlListener(new ControlAdapter() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            if (backgroundImage != null && centeredBackground)
+               centerBackgroundImage();
+         }
+      });
+
 		graph.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -389,26 +403,45 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 
 	/**
-	 * Set background image for graph
-	 * 
-	 * @param image new image or null to clear background
-	 */
-	public void setBackgroundImage(Image image)
-	{
-		backgroundImage = image;
-		if (image != null)
-		{
-			Rectangle r = image.getBounds();
-			backgroundFigure.setSize(r.width, r.height);
-		}
-		else
-		{
-			backgroundFigure.setSize(10, 10);
-		}
-		backgroundLocation = null;
+    * Set background image for graph
+    * 
+    * @param image new image or null to clear background
+    * @param centered true to center background image
+    */
+   public void setBackgroundImage(Image image, boolean centered)
+   {
+      backgroundImage = image;
+      if (image != null)
+      {
+         Rectangle r = image.getBounds();
+         backgroundFigure.setSize(r.width, r.height);
+         centeredBackground = centered;
+         if (centered)
+            centerBackgroundImage();
+         else
+            backgroundFigure.setLocation(new org.eclipse.draw2d.geometry.Point(0, 0));
+      }
+      else
+      {
+         backgroundFigure.setSize(10, 10);
+         centeredBackground = false;
+      }
+      backgroundLocation = null;
 		graph.redraw();
 	}
-	
+
+   /**
+    * Calculate x,y for image centered position
+    */
+   private void centerBackgroundImage()
+   {
+      int backgroundLayerWidth = backgroundLayer.getSize().width();
+      int backgroundLayerHeight = backgroundLayer.getSize().height();
+      int x = (backgroundLayerWidth / 2) - (backgroundImage.getBounds().width / 2);
+      int y = (backgroundLayerHeight / 2) - (backgroundImage.getBounds().height / 2);
+      backgroundFigure.setLocation(new org.eclipse.draw2d.geometry.Point(x, y));
+   }
+
 	/**
 	 * @param location
 	 * @param zoom
@@ -417,11 +450,13 @@ public class ExtendedGraphViewer extends GraphViewer
 	{
 		if ((backgroundLocation != null) && (backgroundImage != null))
 			backgroundImage.dispose();
-		
+
 		backgroundImage = null;
+      centeredBackground = false;
 		backgroundLocation = location;
 		backgroundZoom = zoom;
 		backgroundFigure.setSize(10, 10);
+      backgroundFigure.setLocation(new org.eclipse.draw2d.geometry.Point(0, 0));
 		graph.redraw();
 		reloadMapBackground();
 	}
@@ -798,7 +833,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		protected void paintFigure(Graphics gc)
 		{
 			if (backgroundImage != null)
-				gc.drawImage(backgroundImage, 0, 0);
+				gc.drawImage(backgroundImage, getLocation());
 			if (backgroundTiles != null)
 				drawTiles(gc, backgroundTiles);
 		}

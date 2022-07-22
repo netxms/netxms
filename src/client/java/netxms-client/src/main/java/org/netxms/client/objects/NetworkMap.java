@@ -56,6 +56,7 @@ public class NetworkMap extends GenericObject
    public static final int MF_FILTER_OBJECTS         = 0x000020;
    public static final int MF_SHOW_LINK_DIRECTION    = 0x000040;
    public static final int MF_USE_L1_TOPOLOGY        = 0x000080;
+   public static final int MF_CENTER_BKGND_IMAGE     = 0x000100;
 
 	private int mapType;
 	private MapLayoutAlgorithm layout;
@@ -275,5 +276,16 @@ public class NetworkMap extends GenericObject
       Set<String> strings = super.getStrings();
       addString(strings, filter);
       return strings;
+   }
+
+   /**
+    * Returns the MF_CENTER_BKGND_IMAGE flag status
+    * 
+    * @return
+    */
+   public boolean isCenterBackgroundImage()
+   {
+      return ((getFlags() & NetworkMap.MF_CENTER_BKGND_IMAGE) > 0);
+
    }
 }

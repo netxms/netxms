@@ -239,8 +239,8 @@ public class NetworkMapWidget extends Composite
    private void onObjectChange(final AbstractObject object)
    {
       if (mapPage == null)
-         return ;
-      
+         return;
+
       NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
       if (element != null)
          viewer.refresh(element, true);
@@ -295,7 +295,7 @@ public class NetworkMapWidget extends Composite
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
 			}
 		}
 
