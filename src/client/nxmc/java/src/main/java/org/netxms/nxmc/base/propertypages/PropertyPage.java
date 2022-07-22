@@ -53,7 +53,7 @@ public abstract class PropertyPage extends PreferencePage
    {
       if (!isControlCreated())
          return;
-      
+
       changed = true;
       applyChanges(true);
       super.performApply();
@@ -67,7 +67,7 @@ public abstract class PropertyPage extends PreferencePage
    {
       if (!isControlCreated())
          return true;
-      
+
       if (!applyChanges(false))
          return false;
       changed = true;
