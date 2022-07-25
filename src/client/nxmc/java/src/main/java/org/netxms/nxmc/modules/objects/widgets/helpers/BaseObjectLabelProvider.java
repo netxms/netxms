@@ -88,4 +88,15 @@ public class BaseObjectLabelProvider extends LabelProvider
    {
       return ((AbstractObject)element).getNameWithAlias();
    }
+
+   /**
+    * Get default image for given object class.
+    *
+    * @param objectClass object class ID
+    * @return default image for given object class
+    */
+   public Image getObjectClassImage(int objectClass)
+   {
+      return images.get(objectClass);
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,6 +49,8 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
@@ -57,7 +59,7 @@ import org.netxms.nxmc.tools.ColorCache;
 /**
  * Generic chart widget
  */
-public class Chart extends Composite
+public class Chart extends Composite implements MessageAreaHolder
 {
    private ChartType type = ChartType.LINE;
    private ChartConfiguration configuration;
@@ -606,13 +608,51 @@ public class Chart extends Composite
     */
    public void addError(String message)
    {
-      // FIXME: implement
+      addMessage(MessageArea.ERROR, message);
    }
 
    /**
     * Clear errors
     */
    public void clearErrors()
+   {
+      clearMessages();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String)
+    */
+   @Override
+   public int addMessage(int level, String text)
+   {
+      // FIXME: implement
+      return -1;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean)
+    */
+   @Override
+   public int addMessage(int level, String text, boolean sticky)
+   {
+      // FIXME: implement
+      return -1;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#deleteMessage(int)
+    */
+   @Override
+   public void deleteMessage(int id)
+   {
+      // FIXME: implement
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#clearMessages()
+    */
+   @Override
+   public void clearMessages()
    {
       // FIXME: implement
    }
@@ -624,7 +664,8 @@ public class Chart extends Composite
     */
    public void adjustXAxis(boolean repaint)
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).adjustXAxis(repaint);
    }
 
    /**
@@ -634,7 +675,8 @@ public class Chart extends Composite
     */
    public void adjustYAxis(boolean repaint)
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).adjustYAxis(repaint);
    }
 
    /**
@@ -642,7 +684,8 @@ public class Chart extends Composite
     */
    public void zoomIn()
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).zoomIn();
    }
 
    /**
@@ -650,7 +693,8 @@ public class Chart extends Composite
     */
    public void zoomOut()
    {
-      // FIXME: implement
+      if (plotArea instanceof LineChart)
+         ((LineChart)plotArea).zoomOut();
    }
 
    /**

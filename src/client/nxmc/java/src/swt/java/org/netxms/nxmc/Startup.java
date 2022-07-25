@@ -54,6 +54,7 @@ import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.objects.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -136,10 +137,12 @@ public class Startup
 
       if (doLogin(display, args))
       {
+         NXCSession session = Registry.getSession();
          DataCollectionDisplayInfo.init();
-         MibCache.init(Registry.getSession(), display);
+         MibCache.init(session, display);
          ObjectToolsCache.init();
-         ObjectToolsCache.attachSession(Registry.getSession());
+         ObjectToolsCache.attachSession(session);
+         SummaryTablesCache.attachSession(session);
 
          MainWindow w = new MainWindow(null);
          Registry.getInstance().setMainWindow(w);

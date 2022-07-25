@@ -32,6 +32,8 @@ import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DashboardGroup;
+import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
@@ -69,6 +71,8 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateCluster;
    private Action actionCreateCondition;
    private Action actionCreateContainer;
+   private Action actionCreateDashboard;
+   private Action actionCreateDashboardGroup;
    private Action actionCreateInterface;
    private Action actionCreateMobileDevice;
    private Action actionCreateNetworkMap;
@@ -95,13 +99,15 @@ public class ObjectCreateMenuManager extends MenuManager
       setMenuText(i18n.tr("&Create"));     
 
       createActions();
-      
+
       addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
       addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
       addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCluster, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateCondition, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateContainer, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateDashboard, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
+      addAction(this, actionCreateDashboardGroup, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateInterface, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateNetworkMap, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
@@ -168,7 +174,7 @@ public class ObjectCreateMenuManager extends MenuManager
 
                final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CHASSIS, dlg.getObjectName(), parentId);
                cd.setControllerId(dlg.getControllerId());
-	       cd.setObjectAlias(dlg.getObjectAlias());
+               cd.setObjectAlias(dlg.getObjectAlias());
 
                new Job(i18n.tr("Creating chassis"), view) {
                   @Override
@@ -190,6 +196,8 @@ public class ObjectCreateMenuManager extends MenuManager
       actionCreateCluster = new GenericObjectCreationAction(i18n.tr("C&luster..."), AbstractObject.OBJECT_CLUSTER, i18n.tr("Cluster"));
       actionCreateCondition = new GenericObjectCreationAction(i18n.tr("C&ondition..."), AbstractObject.OBJECT_CONDITION, i18n.tr("Condition"));
       actionCreateContainer = new GenericObjectCreationAction(i18n.tr("&Container..."), AbstractObject.OBJECT_CONTAINER, i18n.tr("Container"));
+      actionCreateDashboard = new GenericObjectCreationAction(i18n.tr("&Dashboard..."), AbstractObject.OBJECT_DASHBOARD, i18n.tr("Dashboard"));
+      actionCreateDashboardGroup = new GenericObjectCreationAction(i18n.tr("Dashboard &group..."), AbstractObject.OBJECT_DASHBOARDGROUP, i18n.tr("Dashboard Group"));
 
       actionCreateInterface = new Action(i18n.tr("&Interface...")) {
          @Override
@@ -269,7 +277,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating network map"), view, null) {
+            new Job(i18n.tr("Creating network map"), view) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -308,7 +316,7 @@ public class ObjectCreateMenuManager extends MenuManager
                final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
                cd.setCreationFlags(dlg.getCreationFlags());
                cd.setPrimaryName(dlg.getHostName());
-	           cd.setObjectAlias(dlg.getObjectAlias());
+               cd.setObjectAlias(dlg.getObjectAlias());
                cd.setAgentPort(dlg.getAgentPort());
                cd.setSnmpPort(dlg.getSnmpPort());
                cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
@@ -396,7 +404,7 @@ public class ObjectCreateMenuManager extends MenuManager
             {
                NXCObjectCreationData cd = new NXCObjectCreationData(objectClass, dlg.getObjectName(), parentId);
                cd.setObjectAlias(dlg.getObjectAlias());
-	       session.createObject(cd);
+               session.createObject(cd);
             }
 
             @Override

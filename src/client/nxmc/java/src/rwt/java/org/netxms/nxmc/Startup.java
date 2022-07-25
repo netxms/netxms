@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.objects.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -114,10 +115,12 @@ public class Startup implements EntryPoint, StartupParameters
          return 0;
       }
 
+      NXCSession session = Registry.getSession();
       DataCollectionDisplayInfo.init();
-      MibCache.init(Registry.getSession(), display);
+      MibCache.init(session, display);
       ObjectToolsCache.init();
-      ObjectToolsCache.attachSession(Registry.getSession());
+      ObjectToolsCache.attachSession(session));
+      SummaryTablesCache.attachSession(session);
 
       MainWindow w = new MainWindow(shell);
       Registry.getInstance().setMainWindow(w);

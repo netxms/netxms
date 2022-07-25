@@ -107,7 +107,7 @@ public class RadialObjectStatusMap extends AbstractObjectStatusMap
                setSelection(new StructuredSelection());
             }
          }
-         
+
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
