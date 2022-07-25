@@ -71,11 +71,11 @@ public class TableLastValuesView extends ObjectView
    {
       super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), 
             buildId(contextObject, dciId), true);
-      
+
       contextId = contextObject.getObjectId();
       this.ownerId = ownerId;
       this.dciId = dciId;
-      
+
       String nodeName = contextObject.getObjectName();
       fullName = nodeName + ": [" + Long.toString(dciId) + "]";
       setName(Long.toString(dciId));
@@ -112,14 +112,16 @@ public class TableLastValuesView extends ObjectView
       return fullName;
    }
 
-
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
 	{
 		viewer = new TableValueViewer(parent, SWT.NONE, this, null, false);
 		setFilterClient(viewer.getViewer(), viewer.getFilter());
 		createActions();
-	
+
 		viewer.setObject(ownerId, dciId);
 		refresh();
 	}
@@ -166,12 +168,15 @@ public class TableLastValuesView extends ObjectView
       return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == contextId);
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#contextChanged(java.lang.Object, java.lang.Object)
+    */
    @Override
    protected void contextChanged(Object oldContext, Object newContext)
    {
       if ((newContext == null) || !(newContext instanceof AbstractObject) || (((AbstractObject)newContext).getObjectId() != contextId))
          return;
-      
+
       refresh();
    }
 

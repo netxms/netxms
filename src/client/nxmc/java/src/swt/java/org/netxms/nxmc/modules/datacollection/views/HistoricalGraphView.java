@@ -445,7 +445,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                   {
                      chart.setTimeRange(configuration.getTimeFrom(), configuration.getTimeTo());
                      setChartData(data, thresholds);
-                     chart.clearErrors();
+                     clearMessages();
                   }
                   updateInProgress = false;
                }
@@ -462,13 +462,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          protected void jobFailureHandler(Exception e)
          {
             updateInProgress = false;
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-               }
-            });
          }
       };
       job.setUser(false);

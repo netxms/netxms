@@ -551,6 +551,12 @@
          <scope>${lib.scope}</scope>
       </dependency>
       <dependency>
+         <groupId>com.google.code.gson</groupId>
+         <artifactId>gson</artifactId>
+         <version>2.8.5</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
          <groupId>io.nayuki</groupId>
          <artifactId>qrcodegen</artifactId>
          <version>1.7.0</version>

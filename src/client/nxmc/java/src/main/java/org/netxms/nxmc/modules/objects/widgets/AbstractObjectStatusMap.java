@@ -254,7 +254,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    {
       // TODO: implement switch to object
    }
- 
+
    /**
     * @return the textFilter
     */

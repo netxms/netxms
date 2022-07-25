@@ -42,6 +42,7 @@ import org.netxms.nxmc.modules.objects.propertypages.ClusterResources;
 import org.netxms.nxmc.modules.objects.propertypages.Comments;
 import org.netxms.nxmc.modules.objects.propertypages.Communication;
 import org.netxms.nxmc.modules.objects.propertypages.CustomAttributes;
+import org.netxms.nxmc.modules.objects.propertypages.DashboardElements;
 import org.netxms.nxmc.modules.objects.propertypages.Dashboards;
 import org.netxms.nxmc.modules.objects.propertypages.EtherNetIP;
 import org.netxms.nxmc.modules.objects.propertypages.ExternalResources;
@@ -99,6 +100,7 @@ public class ObjectPropertiesManager
       pageClasses.add(Communication.class);
       pageClasses.add(CustomAttributes.class);
       pageClasses.add(Dashboards.class);
+      pageClasses.add(DashboardElements.class);
       pageClasses.add(EtherNetIP.class);
       pageClasses.add(ExternalResources.class);
       pageClasses.add(General.class);

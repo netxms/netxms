@@ -61,11 +61,13 @@ public class TableValueViewer extends BaseTableValueViewer
    /**
     * @param parent
     * @param style
-    * @param viewPart
+    * @param view
+    * @param configSubId
+    * @param saveTableSettings
     */
-   public TableValueViewer(Composite parent, int style, ObjectView viewPart, String configSubId, boolean saveTableSettings)
+   public TableValueViewer(Composite parent, int style, ObjectView view, String configSubId, boolean saveTableSettings)
    {
-      super(parent, style, viewPart, configSubId, saveTableSettings);
+      super(parent, style, view, configSubId, saveTableSettings);
    }
    
    /**
@@ -161,10 +163,8 @@ public class TableValueViewer extends BaseTableValueViewer
       ViewerCell[] cells = cellSelectionManager.getSelectedCells();
       if (cells.length == 0)
          return;
-      
 
-      Perspective p = viewPart.getPerspective();   
-      
+      Perspective p = view.getPerspective();
       for(int i = 0; i < cells.length; i++)
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
@@ -215,8 +215,8 @@ public class TableValueViewer extends BaseTableValueViewer
          
       }
 
-      AbstractObject object = viewPart.getObject();
-      Perspective p = viewPart.getPerspective();
+      AbstractObject object = view.getObject();
+      Perspective p = view.getPerspective();
       if (p != null)
       {
          p.addMainView(new HistoricalGraphView(object, items), true, false);
@@ -252,7 +252,7 @@ public class TableValueViewer extends BaseTableValueViewer
                instance, column.getName(), "%s"));  
       }
 
-      Perspective p = viewPart.getPerspective();
+      Perspective p = view.getPerspective();
       if (p != null)
       {
          p.addMainView(new DataComparisonView(items, chartType), true, false);
@@ -296,7 +296,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return (currentData != null) ? currentData.getTitle() : ("[" + dciId + "]");  
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#readData()
     */
    @Override
@@ -305,7 +305,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return session.getTableLastValues(objectId, dciId);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#getReadJobName()
     */
    @Override
@@ -314,7 +314,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return String.format(i18n.tr("Loading data for table DCI %d"), dciId);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#getReadJobErrorMessage()
     */
    @Override

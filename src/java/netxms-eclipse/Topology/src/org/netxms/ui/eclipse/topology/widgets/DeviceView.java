@@ -164,9 +164,9 @@ public class DeviceView extends DashboardComposite
 			ports.put(iface.getObjectId(), p);
 			sv.addPort(p);
 		}
-		
+
 		layout();
-		
+
 		for(SlotView sv : slots.values())
 		{
 			sv.setMenu(getMenu());

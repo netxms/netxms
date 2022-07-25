@@ -57,7 +57,7 @@ import org.xnap.commons.i18n.I18n;
 public class DataComparisonView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
-	
+
    private Chart chart;
 	protected NXCSession session;
 	private boolean updateInProgress = false;
@@ -405,7 +405,7 @@ public class DataComparisonView extends ObjectView
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}
-				
+
 				final Threshold[][] thresholds = new Threshold[items.size()][];
             if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
 				{
@@ -424,7 +424,7 @@ public class DataComparisonView extends ObjectView
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);
-						chart.clearErrors();
+                  clearMessages();
 						updateInProgress = false;
 					}
 				});
@@ -433,13 +433,7 @@ public class DataComparisonView extends ObjectView
 			@Override
 			protected void jobFailureHandler(Exception e)
 			{
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						chart.addError(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); 
-					}
-				});
+            updateInProgress = false;
 			}
 		};
 		job.setUser(false);

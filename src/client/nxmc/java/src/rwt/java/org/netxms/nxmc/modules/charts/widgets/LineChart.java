@@ -19,9 +19,8 @@
 package org.netxms.nxmc.modules.charts.widgets;
 
 import java.text.DateFormat;
+import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Date;
 import java.util.List;
 import org.eclipse.swt.SWT;
@@ -420,7 +419,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		getAxisSet().getXAxis(0).setRange(new Range(timeFrom, timeTo));
 
 		int seconds = (int)((timeTo - timeFrom) / 1000);
-      DateFormat format;
+      Format format;
       int angle;
 		if (seconds <= 600)
 		{
@@ -434,7 +433,7 @@ public class LineChart extends org.eclipse.swtchart.Chart implements PlotArea
 		}
 		else if (seconds <= 86400 * 7)
 		{
-         format = new SimpleDateFormat("E " + DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT));
+         format = new SimpleDateFormat("E " + ((SimpleDateFormat)DateFormat.getTimeInstance(DateFormat.SHORT)).toPattern());
 			angle = 0;
 		}
 		else

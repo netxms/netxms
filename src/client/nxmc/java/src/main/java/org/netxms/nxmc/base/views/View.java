@@ -655,7 +655,7 @@ public abstract class View implements MessageAreaHolder
       }
       else
       {
-         filterText.setText(""); //$NON-NLS-1$
+         filterText.setText("");
          onFilterModify();
       }
       PreferenceStore.getInstance().set(getBaseId() + ".showFilter", enable);

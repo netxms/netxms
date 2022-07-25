@@ -35,13 +35,13 @@ public class DateFormatFactory
 	public static final int DATETIME_FORMAT_SERVER = 0;
 	public static final int DATETIME_FORMAT_JVM = 1;
 	public static final int DATETIME_FORMAT_CUSTOM = 2;
-	
+
    private static I18n i18n = LocalizationHelper.getI18n(DateFormatFactory.class);
 	private static int dateTimeFormat = DATETIME_FORMAT_SERVER;
 	private static String dateFormatString;
 	private static String timeFormatString;
 	private static String shortTimeFormatString;
-	
+
 	/**
 	 * Update from preferences
 	 */

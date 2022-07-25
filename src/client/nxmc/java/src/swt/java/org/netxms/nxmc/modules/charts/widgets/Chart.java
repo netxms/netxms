@@ -51,8 +51,6 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.widgets.MessageArea;
-import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
@@ -61,7 +59,7 @@ import org.netxms.nxmc.tools.ColorCache;
 /**
  * Generic chart widget
  */
-public class Chart extends Composite implements MessageAreaHolder
+public class Chart extends Composite
 {
    private ChartType type = ChartType.LINE;
    private ChartConfiguration configuration;
@@ -601,62 +599,6 @@ public class Chart extends Composite implements MessageAreaHolder
    {
       if (plotArea instanceof LineChart)
          ((LineChart)plotArea).setTimeRange(from, to);
-   }
-
-   /**
-    * Add information about error. Chart implementation should display error notification in some way.
-    * 
-    * @param message error message
-    */
-   public void addError(String message)
-   {
-      addMessage(MessageArea.ERROR, message);
-   }
-
-   /**
-    * Clear errors
-    */
-   public void clearErrors()
-   {
-      clearMessages();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String)
-    */
-   @Override
-   public int addMessage(int level, String text)
-   {
-      // FIXME: implement
-      return -1;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String, boolean)
-    */
-   @Override
-   public int addMessage(int level, String text, boolean sticky)
-   {
-      // FIXME: implement
-      return -1;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#deleteMessage(int)
-    */
-   @Override
-   public void deleteMessage(int id)
-   {
-      // FIXME: implement
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#clearMessages()
-    */
-   @Override
-   public void clearMessages()
-   {
-      // FIXME: implement
    }
 
    /**

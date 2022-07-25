@@ -89,7 +89,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
     */
    public BusinessServiceAvailabilityView()
    {
-      super(i18n.tr("Availability"), ResourceManager.getImageDescriptor("icons/object-views/availability_chart.png"), "BusinessServiceAvailability", false);
+      super(i18n.tr("Availability"), ResourceManager.getImageDescriptor("icons/object-views/availability_chart.png"), ID, false);
    }
 
    /**
@@ -294,7 +294,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
                   chart.updateParameter(0, availability, false);
                   chart.updateParameter(1, 100.0 - availability, true);
                   chart.refresh();
-                  chart.clearErrors();
+                  clearMessages();
                }
             });
          }

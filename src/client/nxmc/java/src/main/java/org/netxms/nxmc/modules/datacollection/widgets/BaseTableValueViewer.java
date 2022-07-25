@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.nxmc.modules.datacollection.widgets;
 
@@ -40,7 +55,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 public abstract class BaseTableValueViewer extends Composite
 {
    protected NXCSession session;
-   protected ObjectView viewPart;
+   protected ObjectView view;
    protected String configId;
    protected TableValueFilter filter;
    protected Table currentData = null;
@@ -56,21 +71,21 @@ public abstract class BaseTableValueViewer extends Composite
     * @param parent
     * @param style
     */
-   public BaseTableValueViewer(Composite parent, int style, ObjectView viewPart, String configSubId)
+   public BaseTableValueViewer(Composite parent, int style, ObjectView view, String configSubId)
    {
-      this(parent, style, viewPart, configSubId, false);
+      this(parent, style, view, configSubId, false);
    }
 
    /**
     * @param parent
     * @param style
     */
-   public BaseTableValueViewer(Composite parent, int style, ObjectView viewPart, String configSubId, boolean saveTableSettings)
+   public BaseTableValueViewer(Composite parent, int style, ObjectView view, String configSubId, boolean saveTableSettings)
    {
       super(parent, style);
-      this.viewPart = viewPart;
+      this.view = view;
       this.saveTableSettings = saveTableSettings;
-      
+
       configId = buildConfigId(configSubId);
       session = Registry.getSession();
 
@@ -249,7 +264,7 @@ public abstract class BaseTableValueViewer extends Composite
    public void refresh(final Runnable postRefreshHook)
    {
       viewer.setInput(null);
-      Job job = new Job(getReadJobName(), viewPart) {
+      Job job = new Job(getReadJobName(), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

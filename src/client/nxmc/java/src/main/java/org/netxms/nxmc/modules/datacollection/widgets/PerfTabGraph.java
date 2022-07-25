@@ -265,7 +265,6 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 			return;
 
 		updateInProgress = true;
-		chart.clearErrors();
 
       Job job = new Job(i18n.tr("Updating performance view"), view) {
 			private PerfTabDci currentDci;
@@ -306,21 +305,13 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 			@Override
 			protected String getErrorMessage()
 			{
-            return String.format(i18n.tr("Cannot get value for DCI %s (%s)"), currentDci.getId(), currentDci.getDescription());
+            return String.format(i18n.tr("Cannot get value for DCI %d (%s)"), currentDci.getId(), currentDci.getDescription());
 			}
 
 			@Override
          protected void jobFailureHandler(Exception e)
 			{
 				updateInProgress = false;
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!chart.isDisposed())
-                     chart.addError(getErrorMessage());
-               }
-            });
 			}
 		};
 		job.setUser(false);
