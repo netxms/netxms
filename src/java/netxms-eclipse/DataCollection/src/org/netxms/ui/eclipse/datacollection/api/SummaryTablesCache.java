@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,19 +33,40 @@ import org.netxms.ui.eclipse.datacollection.SourceProvider;
  */
 public class SummaryTablesCache
 {
-	private static Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
-	private static NXCSession session = null;
-	
-	/**
-	 * Initialize object tools cache. Should be called when connection with
-	 * the server already established.
-	 */
-	public static void init(NXCSession session)
-	{
-		SummaryTablesCache.session = session;
-		
+   private static SummaryTablesCache instance = null;
+
+   private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
+   private NXCSession session;
+
+   /**
+    * Attach session to cache
+    * 
+    * @param session session object
+    */
+   public static void attachSession(NXCSession session)
+   {
+      instance = new SummaryTablesCache(session);
+   }
+
+   /**
+    * Get cache instance
+    * 
+    * @return
+    */
+   public static SummaryTablesCache getInstance()
+   {
+      return instance;
+   }
+
+   /**
+    * Initialize object tools cache. Should be called when connection with the server already established.
+    */
+   private SummaryTablesCache(NXCSession session)
+   {
+      this.session = session;
+
 		reload();
-		
+
 		session.addListener(new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -66,7 +87,7 @@ public class SummaryTablesCache
 	/**
 	 * Reload tables from server
 	 */
-	private static void reload()
+   private void reload()
 	{
 		try
 		{
@@ -92,7 +113,7 @@ public class SummaryTablesCache
 	 * 
 	 * @param tableId ID of changed table
 	 */
-	private static void onTableChange(final int tableId)
+   private void onTableChange(final int tableId)
 	{
 		new Thread() {
 			@Override
@@ -108,7 +129,7 @@ public class SummaryTablesCache
 	 * 
 	 * @param tableId ID of deleted table
 	 */
-	private static void onTableDelete(final int tableId)
+   private void onTableDelete(final int tableId)
 	{
 		synchronized(tables)
 		{
@@ -123,7 +144,7 @@ public class SummaryTablesCache
 	 * 
 	 * @return current set of DCI summary tables
 	 */
-	public static DciSummaryTableDescriptor[] getTables()
+   public DciSummaryTableDescriptor[] getTables()
 	{
 		synchronized(tables)
 		{
@@ -134,7 +155,7 @@ public class SummaryTablesCache
 	/**
 	 * @return
 	 */
-	public static boolean isEmpty(boolean menuOnly)
+   public boolean isEmpty(boolean menuOnly)
 	{
       synchronized(tables)
       {

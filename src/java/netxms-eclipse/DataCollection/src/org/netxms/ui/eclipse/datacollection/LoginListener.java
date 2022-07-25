@@ -34,7 +34,7 @@ public class LoginListener implements ConsoleLoginListener
 	@Override
 	public void afterLogin(NXCSession session, Display display)
 	{
-		SummaryTablesCache.init(session);
+		SummaryTablesCache.attachSession(session);
 		try
       {
 		   // will cause session to cache list of prediction engines

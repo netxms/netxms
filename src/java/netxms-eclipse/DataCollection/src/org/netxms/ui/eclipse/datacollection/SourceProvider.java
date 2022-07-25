@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,8 +64,8 @@ public class SourceProvider extends AbstractSourceProvider
       instance = this;
       display = Display.getCurrent();
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.ISourceProvider#getProvidedSourceNames()
     */
    @Override
@@ -74,7 +74,7 @@ public class SourceProvider extends AbstractSourceProvider
       return PROVIDED_SOURCE_NAMES;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISourceProvider#getCurrentState()
     */
    @Override
@@ -92,7 +92,7 @@ public class SourceProvider extends AbstractSourceProvider
          @Override
          public void run()
          {
-            stateMap.put(SUMMARY_TABLES_EXIST, !SummaryTablesCache.isEmpty(true));
+            stateMap.put(SUMMARY_TABLES_EXIST, !SummaryTablesCache.getInstance().isEmpty(true));
             fireSourceChanged(ISources.WORKBENCH, getCurrentState());
          }
       });

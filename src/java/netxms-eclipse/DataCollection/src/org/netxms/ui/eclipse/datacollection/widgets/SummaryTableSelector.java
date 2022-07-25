@@ -79,7 +79,7 @@ public class SummaryTableSelector extends AbstractSelector
    public void setTableId(int id)
    {
       table = null;
-      for(DciSummaryTableDescriptor t : SummaryTablesCache.getTables())
+      for(DciSummaryTableDescriptor t : SummaryTablesCache.getInstance().getTables())
       {
          if (t.getId() == id)
          {

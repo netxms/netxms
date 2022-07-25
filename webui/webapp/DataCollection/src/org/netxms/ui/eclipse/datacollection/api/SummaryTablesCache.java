@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,14 +35,14 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class SummaryTablesCache
 {
-	private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
-	private NXCSession session;
-	private Display display;
-	
+   private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
+   private NXCSession session;
+   private Display display;
+
    /**
     * Attach session to cache
     * 
-    * @param session
+    * @param session session object
     */
    public static void attachSession(Display display, NXCSession session)
    {
@@ -61,16 +61,15 @@ public class SummaryTablesCache
    }
 
    /**
-	 * Initialize object tools cache. Should be called when connection with
-	 * the server already established.
-	 */
-	private SummaryTablesCache(Display display, NXCSession session)
-	{
-		this.session = session;
+    * Initialize object tools cache. Should be called when connection with the server already established.
+    */
+   private SummaryTablesCache(Display display, NXCSession session)
+   {
+      this.session = session;
       this.display = display;
-		
+
 		reload();
-		
+
 		session.addListener(new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -91,7 +90,7 @@ public class SummaryTablesCache
 	/**
 	 * Reload tables from server
 	 */
-	private void reload()
+   private void reload()
 	{
 		try
 		{
@@ -112,7 +111,7 @@ public class SummaryTablesCache
 		}
 		catch(Exception e)
 		{
-		   Activator.logError("Exception in SummaryTablesCache.reload()", e);
+		   Activator.logError("Exception in SummaryTablesCache.reload()", e); //$NON-NLS-1$
 		}
 	}
 	
@@ -121,7 +120,7 @@ public class SummaryTablesCache
 	 * 
 	 * @param tableId ID of changed table
 	 */
-	private void onTableChange(final int tableId)
+   private void onTableChange(final int tableId)
 	{
 		new Thread() {
 			@Override
@@ -137,7 +136,7 @@ public class SummaryTablesCache
 	 * 
 	 * @param tableId ID of deleted table
 	 */
-	private void onTableDelete(final int tableId)
+   private void onTableDelete(final int tableId)
 	{
 		synchronized(tables)
 		{
@@ -152,7 +151,7 @@ public class SummaryTablesCache
 	 * 
 	 * @return current set of DCI summary tables
 	 */
-	public DciSummaryTableDescriptor[] getTables()
+   public DciSummaryTableDescriptor[] getTables()
 	{
 		synchronized(tables)
 		{
@@ -163,7 +162,7 @@ public class SummaryTablesCache
 	/**
 	 * @return
 	 */
-	public boolean isEmpty(boolean menuOnly)
+   public boolean isEmpty(boolean menuOnly)
 	{
       synchronized(tables)
       {

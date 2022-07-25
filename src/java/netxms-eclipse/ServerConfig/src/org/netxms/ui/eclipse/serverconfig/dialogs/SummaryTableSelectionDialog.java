@@ -93,7 +93,7 @@ public class SummaryTableSelectionDialog extends Dialog
             return n1.compareToIgnoreCase(n2);
          }
       });
-      viewer.setInput(SummaryTablesCache.getTables());
+      viewer.setInput(SummaryTablesCache.getInstance().getTables());
       
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
