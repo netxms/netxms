@@ -28,7 +28,7 @@ public class ObjectToolSelector extends AbstractSelector
       toolId = 0;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
     */
    @Override
@@ -42,7 +42,7 @@ public class ObjectToolSelector extends AbstractSelector
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
     */
    @Override

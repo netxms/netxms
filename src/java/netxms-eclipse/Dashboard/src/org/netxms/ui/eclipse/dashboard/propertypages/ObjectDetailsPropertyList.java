@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -63,24 +63,24 @@ public class ObjectDetailsPropertyList extends PropertyPage
    private Button deleteButton;
    private Button upButton;
    private Button downButton;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createContents(Composite parent)
    {
       config = (ObjectDetailsConfig)getElement().getAdapter(ObjectDetailsConfig.class);
-      
+
       Composite dialogArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       layout.horizontalSpacing = WidgetHelper.BUTTON_WIDTH_HINT / 2;
       dialogArea.setLayout(layout);
-      
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Properties to display");
-      
+
       final String[] names = { "Name", "Display name", "Type" };
       final int[] widths = { 150, 250, 90 };
       viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -122,13 +122,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
-      upButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      upButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -142,13 +136,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
-      downButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      downButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -172,13 +160,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -191,13 +173,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
-      editButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      editButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -210,13 +186,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      deleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -224,19 +194,19 @@ public class ObjectDetailsPropertyList extends PropertyPage
          }
       });
       deleteButton.setEnabled(false);
-      
+
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
             editButton.setEnabled(selection.size() == 1);
             deleteButton.setEnabled(selection.size() > 0);
             upButton.setEnabled(selection.size() == 1);
             downButton.setEnabled(selection.size() == 1);
          }
       });
-      
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -244,7 +214,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
             editProperty();
          }
       });
-      
+
       return dialogArea;
    }
 
@@ -253,7 +223,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
     */
    protected void moveDown()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() == 1)
       {
          Object element = selection.getFirstElement();
@@ -272,7 +242,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
     */
    protected void moveUp()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() == 1)
       {
          Object element = selection.getFirstElement();
@@ -291,7 +261,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
     */
    protected void deletePropertiess()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       for(Object o : selection.toList())
          properties.remove(o);
       viewer.setInput(properties.toArray());
@@ -315,7 +285,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
     */
    protected void editProperty()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
@@ -326,7 +296,7 @@ public class ObjectDetailsPropertyList extends PropertyPage
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
    @Override
