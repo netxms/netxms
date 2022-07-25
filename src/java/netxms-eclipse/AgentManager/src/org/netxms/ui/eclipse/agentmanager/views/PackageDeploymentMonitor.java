@@ -25,15 +25,22 @@ import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.packages.PackageDeploymentListener;
+import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.helpers.DeploymentStatus;
@@ -60,6 +67,8 @@ public class PackageDeploymentMonitor extends ViewPart
 	private long packageId;
 	private Map<Long, DeploymentStatus> statusList = new HashMap<Long, DeploymentStatus>();
 	private Action actionRedeploy;
+   private Action actionExportSelectionToCsv;
+   private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -76,6 +85,7 @@ public class PackageDeploymentMonitor extends ViewPart
 		
 	   createActions();
 		contributeToActionBars();
+      createPopupMenu();
 	}
 
 	/* (non-Javadoc)
@@ -117,6 +127,8 @@ public class PackageDeploymentMonitor extends ViewPart
 	
 	private void createActions()
 	{
+      actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+      actionExportSelectionToCsv = new ExportToCsvAction(this, viewer, true);
 	   actionRedeploy = new Action(Messages.get().PackageDeploymentMonitor_RestartFailedInstallation, SharedIcons.RESTART) { 
          @Override
          public void run()
@@ -198,6 +210,7 @@ public class PackageDeploymentMonitor extends ViewPart
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
+      manager.add(actionExportAllToCsv);
       manager.add(actionRedeploy);
    }
    
@@ -207,6 +220,7 @@ public class PackageDeploymentMonitor extends ViewPart
     */
    private void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionExportAllToCsv);
       manager.add(actionRedeploy);
    }
 
@@ -217,4 +231,39 @@ public class PackageDeploymentMonitor extends ViewPart
    {
       this.packageId = packageId;
    }
+
+   /**
+    * Create pop-up menu
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
+
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param manager
+    */
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      manager.add(actionExportSelectionToCsv);
+      manager.add(actionExportAllToCsv);
+      manager.add(new Separator());
+      manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+   }
+
 }

@@ -24,14 +24,19 @@ import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -63,6 +68,8 @@ public class PackageDeploymentMonitor extends ObjectView
 	private long packageId;
 	private Set<Long> applicableObjects;
 	private Action actionRedeploy;
+   private Action actionExportSelectionToCsv;
+   private Action actionExportAllToCsv;
 	private PackageDeployment listener;
    private RefreshTimer refreshTimer;
 
@@ -117,6 +124,7 @@ public class PackageDeploymentMonitor extends ObjectView
       listener.addMonitor(this);
 		
 	   createActions();
+      createPopupMenu();
 	}
 
 	/* (non-Javadoc)
@@ -143,6 +151,8 @@ public class PackageDeploymentMonitor extends ObjectView
 	 */
 	private void createActions()
 	{
+      actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+      actionExportSelectionToCsv = new ExportToCsvAction(this, viewer, true);
 	   actionRedeploy = new Action(i18n.tr("Restart failed installation"), SharedIcons.RESTART) { 
          @Override
          public void run()
@@ -188,6 +198,7 @@ public class PackageDeploymentMonitor extends ObjectView
    @Override
    protected void fillLocalToolbar(ToolBarManager manager)
    {
+      manager.add(actionExportAllToCsv);
       manager.add(actionRedeploy);
       manager.add(new Separator());
       super.fillLocalToolbar(manager);
@@ -209,6 +220,37 @@ public class PackageDeploymentMonitor extends ObjectView
       this.applicableObjects = objects;
    }
    
+   /**
+    * Create pop-up menu
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param manager
+    */
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      manager.add(actionExportSelectionToCsv);
+      manager.add(actionExportAllToCsv);
+   }
+
    /**
     * Set update listener
     * 
