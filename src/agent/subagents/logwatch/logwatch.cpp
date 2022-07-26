@@ -300,13 +300,14 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
 			for (int i = 0; i < parsers->size(); i++)
 			{
 				LogParser *parser = parsers->get(i);
-				if (parser->getFileName() != nullptr)
+				const TCHAR *parserName = parser->getFileName();
+				if (parserName != nullptr && parserName[0] != 0)
 				{
-               if (_tcscspn(parser->getFileName() + 1, _T("*?")) != _tcslen(parser->getFileName() + 1))
+               if (_tcscspn(parserName + 1, _T("*?")) != _tcslen(parserName + 1))
                {
                   parser->setGuid(guid);
                   s_templateParsers.add(parser);
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file template \"%s\" (GUID = %s)"), parser->getFileName(), guid.toString().cstr());
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file template \"%s\" (GUID = %s)"), parserName, guid.toString().cstr());
                }
                else
                {
@@ -315,7 +316,7 @@ static void AddParserFromConfig(const TCHAR *file, const uuid& guid)
                   parser->setActionCallback(ExecuteAction);
                   parser->setGuid(guid);
                   s_parsers.add(parser);
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\" (GUID = %s)"), parser->getFileName(), guid.toString().cstr());
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("Registered parser for file \"%s\" (GUID = %s)"), parserName, guid.toString().cstr());
 #ifdef _WIN32
                   nxlog_debug_tag(DEBUG_TAG, 5, _T("Process RSS after parser creation is ") INT64_FMT _T(" bytes"), GetProcessRSS());
 #endif
