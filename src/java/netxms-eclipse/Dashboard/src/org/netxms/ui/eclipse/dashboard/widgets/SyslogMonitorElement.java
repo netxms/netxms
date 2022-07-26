@@ -59,7 +59,7 @@ public class SyslogMonitorElement extends ElementWidget
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         Activator.logError("Cannot parse dashboard element configuration", e);
          config = new SyslogMonitorConfig();
       }
 
@@ -67,7 +67,7 @@ public class SyslogMonitorElement extends ElementWidget
 
       session = ConsoleSharedData.getSession();
 
-      new ConsoleJob(String.format("Subscribing to channel ", NXCSession.CHANNEL_SYSLOG), viewPart, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format("Subscribing to channel %s", NXCSession.CHANNEL_SYSLOG), viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -77,7 +77,7 @@ public class SyslogMonitorElement extends ElementWidget
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot subscribe to channel ", NXCSession.CHANNEL_SYSLOG);
+            return String.format("Cannot subscribe to channel %s", NXCSession.CHANNEL_SYSLOG);
          }
       }.start();
 
@@ -110,7 +110,7 @@ public class SyslogMonitorElement extends ElementWidget
     */
    private void unsubscribe()
    {
-      ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel ", NXCSession.CHANNEL_SYSLOG), null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel %s", NXCSession.CHANNEL_SYSLOG), null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -120,7 +120,7 @@ public class SyslogMonitorElement extends ElementWidget
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot unsubscribe from channel ", NXCSession.CHANNEL_SYSLOG);
+            return String.format("Cannot unsubscribe from channel %s", NXCSession.CHANNEL_SYSLOG);
          }
       };
       job.setUser(false);
