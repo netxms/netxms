@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,9 @@ import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
- * Label provider for NetXMS table
+ * Label provider for summary table content
  */
-public class TableLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
+public class SummaryTableItemLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
    private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
    private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
@@ -43,18 +43,18 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
    private boolean useMultipliers = false;
    private DataType[] columnDataTypes = null;
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -66,7 +66,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
             : row.get(columnIndex).getValue();
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
     */
    @Override
@@ -81,7 +81,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       return (cell.getStatus() >= 0) && (cell.getStatus() < FOREGROUND_COLORS.length) ? FOREGROUND_COLORS[cell.getStatus()] : null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
     */
    @Override

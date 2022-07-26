@@ -57,7 +57,7 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.ObjectSelectionProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.SummaryTableContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.SummaryTableItemComparator;
-import org.netxms.ui.eclipse.datacollection.widgets.internal.TableLabelProvider;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.SummaryTableItemLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objects.ObjectWrapper;
@@ -77,7 +77,7 @@ public class SummaryTableWidget extends Composite
    private long baseObjectId;
    private IViewPart viewPart;
    private SortableTreeViewer viewer;
-   private TableLabelProvider labelProvider;
+   private SummaryTableItemLabelProvider labelProvider;
    private Action actionExportToCsv;
    private Action actionUseMultipliers;
    private Action actionForcePollAll;
@@ -110,7 +110,7 @@ public class SummaryTableWidget extends Composite
 
       viewer = new SortableTreeViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new SummaryTableContentProvider());
-      labelProvider = new TableLabelProvider();
+      labelProvider = new SummaryTableItemLabelProvider();
       labelProvider.setUseMultipliers(useMultipliers);
       viewer.setLabelProvider(labelProvider);
       
@@ -269,7 +269,7 @@ public class SummaryTableWidget extends Composite
    {
       viewer.setInput(null);
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob(Messages.get().SummaryTable_JobName, viewPart, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(Messages.get().SummaryTable_JobName, viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -289,7 +289,9 @@ public class SummaryTableWidget extends Composite
          {
             return Messages.get().SummaryTable_JobError;
          }
-      }.start();
+      };
+      job.setUser(false);
+      job.start();
    }
    
    /**
