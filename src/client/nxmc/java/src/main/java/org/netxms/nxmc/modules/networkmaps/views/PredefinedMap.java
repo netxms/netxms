@@ -224,11 +224,13 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
       labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
       labelProvider.setShowLinkDirection((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_LINK_DIRECTION) > 0);
+      labelProvider.setTranslucentLabelBkgnd(mapObject.isTranslucentLblBkgnd());
 
       actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
       actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
       actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
       actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
    }
 
    /**
@@ -730,6 +732,10 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          flags |= NetworkMap.MF_SHOW_LINK_DIRECTION;
       else
          flags &= ~NetworkMap.MF_SHOW_LINK_DIRECTION;
+      if (labelProvider.isTranslucentLabelBkgnd())
+         flags |= NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
+      else
+         flags &= ~NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
 		md.setObjectFlags(flags);
 
       new Job(String.format(i18n.tr("Save network map %s"), getObjectName()), this) {
@@ -880,6 +886,13 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
       labelProvider.setShowLinkDirection((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_LINK_DIRECTION) > 0);
+      labelProvider.setTranslucentLabelBkgnd(mapObject.isTranslucentLblBkgnd());
+
+      actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
+      actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
+      actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
+      actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
 		
       syncObjects();//refresh will be done after sync
 	}

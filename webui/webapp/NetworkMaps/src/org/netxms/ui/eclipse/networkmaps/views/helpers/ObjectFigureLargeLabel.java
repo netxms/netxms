@@ -54,7 +54,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
 	{
 		super(element, labelProvider);
 
-		setOpaque(true);
+      setOpaque(true);
 		
       setBorder(new MarginBorder(3));
       GridLayout layout = new GridLayout(2, false);
@@ -104,7 +104,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
          }
       }
       additionalInfo.setText(sb.toString());
-      
+
       if (object instanceof Node)
       {
          DciValue[] values = labelProvider.getNodeLastValues(object.getObjectId());
@@ -137,10 +137,16 @@ public class ObjectFigureLargeLabel extends ObjectFigure
 		rect.height -= BORDER_WIDTH;
 		gc.setLineWidth(BORDER_WIDTH);
 
-		gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
-		gc.setAlpha(32);
-		gc.fillRoundRectangle(rect, 8, 8);
-		gc.setAlpha(255);
+      if (!labelProvider.isTranslucentLabelBkgnd())
+      {
+         gc.setBackgroundColor(SOLID_WHITE);
+         gc.fillRoundRectangle(rect, 8, 8);
+      }
+      gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
+      gc.setAlpha(32);
+
+      gc.fillRoundRectangle(rect, 8, 8);
+      gc.setAlpha(255);
 
 		gc.setForegroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
       gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);

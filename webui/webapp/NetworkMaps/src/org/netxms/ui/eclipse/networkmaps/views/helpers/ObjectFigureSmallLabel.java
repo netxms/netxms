@@ -54,8 +54,8 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 		label.setLabelAlignment(PositionConstants.CENTER);
 		label.setIcon(labelProvider.getWorkbenchIcon(object));
 		add(label, BorderLayout.CENTER);
-		
-		setOpaque(true);
+
+      setOpaque(true);
 		
 		updateSize();
 	}
@@ -83,7 +83,12 @@ public class ObjectFigureSmallLabel extends ObjectFigure
       
 		gc.setAntialias(SWT.ON);
 		
-		gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
+      if (!labelProvider.isTranslucentLabelBkgnd())
+      {
+         gc.setBackgroundColor(SOLID_WHITE);
+         gc.fillRoundRectangle(rect, 8, 8);
+      }
+      gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
       gc.setAlpha(32);
       gc.fillRoundRectangle(rect, 8, 8);
       gc.setAlpha(255);

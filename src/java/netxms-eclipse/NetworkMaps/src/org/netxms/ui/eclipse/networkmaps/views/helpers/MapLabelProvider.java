@@ -112,6 +112,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
    private boolean showLinkDirection = true;
+   private boolean translucentLabelBkgnd = true;
 	private boolean enableLongObjectName = false;
 	private boolean connectionLabelsVisible = true;
 	private boolean connectionsVisible = true;
@@ -167,6 +168,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame"); //$NON-NLS-1$
 		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground"); //$NON-NLS-1$
 		showLinkDirection = store.getBoolean("NetMap.ShowLinkDirection");
+      translucentLabelBkgnd = store.getBoolean("NetMap.TranslucentLabelBkgnd");
 		
 		colors = new ColorCache();
 		
@@ -431,6 +433,22 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	   this.showLinkDirection = showLinkDirection;
 	}
 
+   /**
+    * @return translucentLabelBkgnd
+    */
+   public boolean isTranslucentLabelBkgnd()
+   {
+      return translucentLabelBkgnd;
+   }
+
+   /**
+    * @param translucentLabelBkgnd
+    */
+   public void setTranslucentLabelBkgnd(boolean translucentLabelBkgnd)
+   {
+      this.translucentLabelBkgnd = translucentLabelBkgnd;
+   }
+
 	/**
 	 * Check if given element selected in the viewer
 	 * 
@@ -479,7 +497,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       
 		if (showLinkDirection)
 		   ((PolylineConnection)connection.getConnectionFigure()).setSourceDecoration(new PolylineDecoration());
-      
+
 		IFigure owner = ((PolylineConnection)connection.getConnectionFigure()).getTargetAnchor().getOwner();
       ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link)); 
       owner = ((PolylineConnection)connection.getConnectionFigure()).getSourceAnchor().getOwner();     

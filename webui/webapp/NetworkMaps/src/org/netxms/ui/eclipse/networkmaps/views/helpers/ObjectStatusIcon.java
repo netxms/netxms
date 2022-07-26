@@ -44,7 +44,7 @@ public class ObjectStatusIcon extends ObjectFigure
    public ObjectStatusIcon(NetworkMapObject element, MapLabelProvider labelProvider)
    {
       super(element, labelProvider);      
-      setLayoutManager(new BorderLayout());      
+      setLayoutManager(new BorderLayout());
       setOpaque(false);
       updateSize(labelProvider);
    }

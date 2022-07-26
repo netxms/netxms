@@ -113,6 +113,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    private boolean showStatusBackground = true;
    private boolean showStatusFrame = true;
    private boolean showLinkDirection = true;
+   private boolean translucentLabelBkgnd = true;
 	private boolean longObjectNames = false;
 	private boolean connectionLabelsVisible = true;
 	private boolean connectionsVisible = true;
@@ -164,6 +165,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       showStatusBackground = settings.getAsBoolean("NetMap.ShowStatusBackground", true);
       showLinkDirection = settings.getAsBoolean("NetMap.ShowLinkDirection", true);
       longObjectNames = settings.getAsBoolean("NetMap.LongObjectNames", false);
+      translucentLabelBkgnd = settings.getAsBoolean("NetMap.TranslucentLabelBkgnd", true);
 
 		colors = new ColorCache();
 		dciValueProvider = LinkDciValueProvider.getInstance();
@@ -426,6 +428,22 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 	   this.showLinkDirection = showLinkDirection;
 	}
+
+   /**
+    * @return translucentLabelBkgnd
+    */
+   public boolean isTranslucentLabelBkgnd()
+   {
+      return translucentLabelBkgnd;
+   }
+
+   /**
+    * @param translucentLabelBkgnd
+    */
+   public void setTranslucentLabelBkgnd(boolean translucentLabelBkgnd)
+   {
+      this.translucentLabelBkgnd = translucentLabelBkgnd;
+   }
 
 	/**
 	 * Check if given element selected in the viewer

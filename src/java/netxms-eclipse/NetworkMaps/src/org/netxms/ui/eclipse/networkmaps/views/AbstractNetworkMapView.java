@@ -167,6 +167,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionShowStatusBackground;
 	protected Action actionShowStatusFrame;
 	protected Action actionShowLinkDirection;
+   protected Action actionTranslucentLabelBkgnd;
 	protected Action actionZoomIn;
 	protected Action actionZoomOut;
 	protected Action actionZoomFit;
@@ -625,6 +626,18 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
+      actionTranslucentLabelBkgnd = new Action(Messages.get().AbstractNetworkMapView_TranslucentLabelBkgnd, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            labelProvider.setTranslucentLabelBkgnd(actionTranslucentLabelBkgnd.isChecked());
+            updateObjectPositions();
+            saveLayout();
+            viewer.refresh();
+         }
+      };
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
+
 		actionZoomIn = new Action(Messages.get().AbstractNetworkMapView_ZoomIn, SharedIcons.ZOOM_IN) {
 			@Override
 			public void run()
@@ -952,6 +965,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(actionShowLinkDirection);
+      manager.add(actionTranslucentLabelBkgnd);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());
@@ -1098,6 +1112,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(actionShowLinkDirection);
+      manager.add(actionTranslucentLabelBkgnd);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());

@@ -42,6 +42,7 @@ public class Messages extends NLS
    public String AbstractNetworkMapView_SmallLabels;
    public String AbstractNetworkMapView_SnapToGrid;
    public String AbstractNetworkMapView_StatusIcons;
+ public String AbstractNetworkMapView_TranslucentLabelBkgnd;
    public String AbstractNetworkMapView_Zoom;
    public String AbstractNetworkMapView_ZoomFit;
    public String AbstractNetworkMapView_ZoomIn;
@@ -133,6 +134,7 @@ public class Messages extends NLS
    public String GeneralMapPreferences_ShowBkgnd;
 	public String GeneralMapPreferences_ShowFrame;
 	public String GeneralMapPreferences_ShowIcon;
+public String GeneralMapPreferences_TranslucentLabelBkgnd;
 	public String IPNeighbors_PartName;
    public String IPRouteMap_JobError;
    public String IPRouteMap_JobTitle;
@@ -206,6 +208,7 @@ public class Messages extends NLS
    public String MapOptions_StatusIcons;
    public String MapOptions_TopoDiscoRadius;
    public String MapOptions_TopologyOptions;
+public String MapOptions_TranslucentLabelBkgnd;
    public String NetworkMapOpenHandler_Error;
 	public String NetworkMapOpenHandler_ErrorText;
 	public String ObjectTooltip_Channel;

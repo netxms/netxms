@@ -49,5 +49,6 @@ public class GeneralMapPreferences extends FieldEditorPreferencePage implements 
 		addField(new BooleanFieldEditor("NetMap.ShowStatusIcon", Messages.get().GeneralMapPreferences_ShowIcon, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new BooleanFieldEditor("NetMap.ShowStatusFrame", Messages.get().GeneralMapPreferences_ShowFrame, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new BooleanFieldEditor("NetMap.ShowStatusBackground", Messages.get().GeneralMapPreferences_ShowBkgnd, getFieldEditorParent())); //$NON-NLS-1$
+      addField(new BooleanFieldEditor("NetMap.TranslucentLabelBkgnd", Messages.get().GeneralMapPreferences_TranslucentLabelBkgnd, getFieldEditorParent()));
 	}
 }

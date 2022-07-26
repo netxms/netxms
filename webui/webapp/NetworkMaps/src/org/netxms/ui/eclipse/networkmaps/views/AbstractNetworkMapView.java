@@ -60,11 +60,18 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -112,6 +119,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.perfview.views.HistoricalGraphView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -159,6 +167,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionShowStatusBackground;
 	protected Action actionShowStatusFrame;
 	protected Action actionShowLinkDirection;
+   protected Action actionTranslucentLabelBkgnd;
 	protected Action actionZoomIn;
 	protected Action actionZoomOut;
 	protected Action actionZoomFit;
@@ -178,6 +187,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
+	protected Action actionCopyImage;
+   protected Action actionSaveImage;
    protected Action actionHideLinkLabels;
    protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
@@ -615,6 +626,18 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
+      actionTranslucentLabelBkgnd = new Action(Messages.get().AbstractNetworkMapView_TranslucentLabelBkgnd, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            labelProvider.setTranslucentLabelBkgnd(actionTranslucentLabelBkgnd.isChecked());
+            updateObjectPositions();
+            saveLayout();
+            viewer.refresh();
+         }
+      };
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
+
 		actionZoomIn = new Action(Messages.get().AbstractNetworkMapView_ZoomIn, SharedIcons.ZOOM_IN) {
 			@Override
 			public void run()
@@ -923,6 +946,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(actionShowLinkDirection);
+      manager.add(actionTranslucentLabelBkgnd);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());
@@ -1064,6 +1088,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(actionShowLinkDirection);
+      manager.add(actionTranslucentLabelBkgnd);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());

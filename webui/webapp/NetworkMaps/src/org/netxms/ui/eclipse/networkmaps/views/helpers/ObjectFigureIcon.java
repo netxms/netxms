@@ -55,8 +55,7 @@ public class ObjectFigureIcon extends ObjectFigure
    	label.setFont(labelProvider.getLabelFont());
    	label.setLabelAlignment(PositionConstants.CENTER);
    	add(label, BorderLayout.BOTTOM);
-		
-		setOpaque(false);
+      setOpaque(false);
 
 		updateSize(labelProvider);
 		invalidateTree();
@@ -108,8 +107,13 @@ public class ObjectFigureIcon extends ObjectFigure
 			rect.width = imageWidth + BACKGROUND_MARGIN_X * 2;
 			rect.height = imageWidth + BACKGROUND_MARGIN_Y * 2;
 			
-			gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
-			gc.setAlpha(64);
+         if (!labelProvider.isTranslucentLabelBkgnd())
+         {
+            gc.setBackgroundColor(SOLID_WHITE);
+            gc.fillRoundRectangle(rect, 16, 16);
+         }
+         gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
+         gc.setAlpha(32);
 			gc.fillRoundRectangle(rect, 16, 16);
 			gc.setAlpha(255);
 

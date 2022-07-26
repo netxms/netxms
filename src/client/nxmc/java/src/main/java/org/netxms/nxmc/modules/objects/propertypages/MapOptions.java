@@ -48,13 +48,15 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MapOptions extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MapOptions.class);
+   private static final int FLAG_MASK = (NetworkMap.MF_SHOW_END_NODES | NetworkMap.MF_SHOW_STATUS_ICON | NetworkMap.MF_SHOW_STATUS_FRAME | NetworkMap.MF_SHOW_STATUS_BKGND |
+         NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY);
 
    private NetworkMap map;
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
    private Button checkShowStatusBkgnd;
    private Button checkShowLinkDirection;
+   private Button checkTranslucentLabelBkgnd;
    private Button checkUseL1Topology;
    private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
@@ -149,6 +151,10 @@ public class MapOptions extends ObjectPropertyPage
       checkShowLinkDirection.setText("Show link direction");
       checkShowLinkDirection.setSelection((map.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
       
+      checkTranslucentLabelBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
+      checkTranslucentLabelBkgnd.setText(i18n.tr("Translucent label background"));
+      checkTranslucentLabelBkgnd.setSelection(map.isTranslucentLblBkgnd());
+
 		/**** default link appearance ****/
 		Group linkGroup = new Group(dialogArea, SWT.NONE);
 		linkGroup.setText(i18n.tr("Default connection options"));
@@ -273,6 +279,7 @@ public class MapOptions extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		
 		int flags = 0;
+
 		if ((checkIncludeEndNodes != null) && checkIncludeEndNodes.getSelection())
 			flags |= NetworkMap.MF_SHOW_END_NODES;
 		if (checkShowStatusIcon.getSelection())
@@ -285,9 +292,11 @@ public class MapOptions extends ObjectPropertyPage
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
 		if (checkShowLinkDirection.getSelection())
 		   flags |= NetworkMap.MF_SHOW_LINK_DIRECTION;
+      if (checkTranslucentLabelBkgnd.getSelection())
+         flags |= NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
       if ((checkUseL1Topology != null) && checkUseL1Topology.getSelection())
          flags |= NetworkMap.MF_USE_L1_TOPOLOGY;
-      md.setObjectFlags(flags, 0xDF);
+      md.setObjectFlags(flags, FLAG_MASK);
 
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);

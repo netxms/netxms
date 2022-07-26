@@ -57,6 +57,7 @@ public class NetworkMap extends GenericObject
    public static final int MF_SHOW_LINK_DIRECTION    = 0x000040;
    public static final int MF_USE_L1_TOPOLOGY        = 0x000080;
    public static final int MF_CENTER_BKGND_IMAGE     = 0x000100;
+   public static final int MF_TRANSLUCENT_LABEL_BKGND = 0x000200;
 
 	private int mapType;
 	private MapLayoutAlgorithm layout;
@@ -286,6 +287,17 @@ public class NetworkMap extends GenericObject
    public boolean isCenterBackgroundImage()
    {
       return ((getFlags() & NetworkMap.MF_CENTER_BKGND_IMAGE) > 0);
+
+   }
+
+   /**
+    * Returns the MF_TRANSLUCENT_LABEL_BKGND flag status
+    * 
+    * @return
+    */
+   public boolean isTranslucentLblBkgnd()
+   {
+      return ((getFlags() & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) > 0);
 
    }
 }

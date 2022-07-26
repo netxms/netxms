@@ -314,7 +314,8 @@ public class NetworkMapWidget extends Composite
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
-		
+      labelProvider.setTranslucentLabelBkgnd(mapObject.isTranslucentLblBkgnd());
+
 		mapPage = mapObject.createMapPage();
       addDciToRequestList();	
 		viewer.setInput(mapPage);
