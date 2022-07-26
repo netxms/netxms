@@ -67,7 +67,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
 
       session = ConsoleSharedData.getSession();
 
-      new ConsoleJob(String.format("Subscribing to channel ", NXCSession.CHANNEL_SNMP_TRAPS), viewPart, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format("Subscribing to channel %s", NXCSession.CHANNEL_SNMP_TRAPS), viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -77,7 +77,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot subscribe to channel ", NXCSession.CHANNEL_SNMP_TRAPS);
+            return String.format("Cannot subscribe to channel %s", NXCSession.CHANNEL_SNMP_TRAPS);
          }
       }.start();
 
@@ -110,7 +110,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
     */
    private void unsubscribe()
    {
-      ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel ", NXCSession.CHANNEL_SNMP_TRAPS), null,
+      ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel %s", NXCSession.CHANNEL_SNMP_TRAPS), null,
             Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -121,7 +121,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot unsubscribe from channel ", NXCSession.CHANNEL_SNMP_TRAPS);
+            return String.format("Cannot unsubscribe from channel %s", NXCSession.CHANNEL_SNMP_TRAPS);
          }
       };
       job.setUser(false);

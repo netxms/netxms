@@ -37,7 +37,7 @@ public class CustomWidgetElement extends ElementWidget
 	 */
 	public CustomWidgetElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
-		super(parent, SWT.NONE, element, viewPart);
+      super(parent, SWT.NONE, element, viewPart);
 		
 		CustomWidgetConfig config;
 		try
