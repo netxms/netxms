@@ -30,11 +30,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
@@ -55,19 +51,18 @@ public abstract class AbstractTraceWidget extends Composite
    private static final I18n i18n = LocalizationHelper.getI18n(AbstractTraceWidget.class);
 
 	private static final int MAX_ELEMENTS = 500;
-	
-   private View view;
-	private FilterText filterText;
-	private TableViewer viewer;
+
+   protected View view;
+   protected TableViewer viewer;
+   protected AbstractTraceViewFilter filter = null;
+
 	private LinkedList<Object> data = new LinkedList<Object>();
-	private AbstractTraceViewFilter filter = null;
 	private boolean paused = false;
-	private boolean filterEnabled = true;
    private long lastUpdated = 0;
    private boolean updateScheduled = false;
 	private Action actionPause;
 	private Action actionCopy;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -79,17 +74,8 @@ public abstract class AbstractTraceWidget extends Composite
 		
       this.view = view;
 		
-		setLayout(new FormLayout());
+      setLayout(new FillLayout());
 
-		filterText = new FilterText(this, SWT.NONE);
-		filterText.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				onFilterModify();
-			}
-		});
-		
 		viewer = new TableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.getTable().setHeaderVisible(true);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -102,26 +88,13 @@ public abstract class AbstractTraceWidget extends Composite
             WidgetHelper.saveColumnSettings(viewer.getTable(), getConfigPrefix());
 			}
 		});
-	
-		// Setup layout
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(filterText);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		viewer.getTable().setLayoutData(fd);
-		
-		fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		filterText.setLayoutData(fd);
-		
+
+      filter = createFilter();
+      viewer.addFilter(filter);
+
 		createActions();
 		createPopupMenu();
-		
-		enableFilter(filterEnabled);
-		
+
 		addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -201,6 +174,13 @@ public abstract class AbstractTraceWidget extends Composite
 	 */
 	protected abstract void setupViewer(TableViewer viewer);
 
+   /**
+    * Create filter for viewer.
+    *
+    * @return filter for viewer
+    */
+   protected abstract AbstractTraceViewFilter createFilter();
+
 	/**
 	 * Add column to viewer
 	 * 
@@ -259,16 +239,16 @@ public abstract class AbstractTraceWidget extends Composite
 	}
 	
 	/**
-	 * Refresh viewer
-	 */
-	protected void refresh()
-	{
-		viewer.refresh();
-	}
+    * Refresh viewer
+    */
+   public void refresh()
+   {
+      viewer.refresh();
+   }
 
-	/**
-	 * @return the paused
-	 */
+   /**
+    * @return the paused
+    */
 	protected boolean isPaused()
 	{
 		return paused;
@@ -299,78 +279,38 @@ public abstract class AbstractTraceWidget extends Composite
 	}
 
 	/**
-	 * Enable or disable filter
-	 * 
-	 * @param enable New filter state
-	 */
-	public void enableFilter(boolean enable)
-	{
-		filterEnabled = enable;
-		filterText.setVisible(filterEnabled);
-		FormData fd = (FormData)viewer.getTable().getLayoutData();
-		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
-		layout(true, true);
-		if (enable)
-			filterText.setFocus();
-		else
-			setFilter(""); //$NON-NLS-1$
-	}
-
-	/**
-    * @return the filterEnabled
-    */
-   public boolean isFilterEnabled()
-   {
-      return filterEnabled;
-   }
-	
-	/**
-	 * Set filter text
-	 * 
-	 * @param text New filter text
-	 */
-	protected void setFilter(final String text)
-	{
-		filterText.setText(text);
-		onFilterModify();
-	}
-
-	/**
-	 * Handler for filter modification
-	 */
-	private void onFilterModify()
-	{
-		final String text = filterText.getText();
-		if (filter != null)
-		{
-			filter.setFilterString(text);
-			viewer.refresh(false);
-		}
-	}
-
-	/**
 	 * @param filter the filter to set
 	 */
 	protected void setFilter(AbstractTraceViewFilter filter)
 	{
 		if (this.filter != null)
 			viewer.removeFilter(this.filter);
-		
+
 		this.filter = filter;
 		viewer.addFilter(filter);
 	}
-	
-	/**
-    * Set action to be executed when user press "Close" button in filter.
-    * Default implementation will hide filter area without notifying parent.
-    * 
-    * @param action
+
+   /**
+    * Get viewer filter.
+    *
+    * @return viewer filter
     */
-   public void setFilterCloseAction(Action action)
+   public AbstractTraceViewFilter getFilter()
    {
-      filterText.setCloseAction(action);
+      return filter;
    }
-	
+
+   /**
+    * Set root object ID.
+    *
+    * @param objectId new root object ID or 0
+    */
+   public void setRootObject(long objectId)
+   {
+      filter.setRootObject(objectId);
+      viewer.refresh();
+   }
+
 	/**
 	 * @param runnable
 	 */
@@ -378,7 +318,7 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 		getDisplay().asyncExec(runnable);
 	}
-	
+
 	/**
 	 * Copy selection in the list to clipboard
 	 */

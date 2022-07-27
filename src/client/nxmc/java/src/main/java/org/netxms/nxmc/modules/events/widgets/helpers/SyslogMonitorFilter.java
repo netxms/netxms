@@ -20,45 +20,51 @@ package org.netxms.nxmc.modules.events.widgets.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
-import org.netxms.client.events.Event;
+import org.netxms.client.events.SyslogRecord;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.helpers.AbstractTraceViewFilter;
 
 /**
- * Filter for event monitor
+ * Filter for syslog monitor
  */
-public class EventMonitorFilter extends AbstractTraceViewFilter
+public class SyslogMonitorFilter extends AbstractTraceViewFilter
 {
    private NXCSession session = Registry.getSession();
-
-   /**
-    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-    */
+	
+	/**
+	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+	 */
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-      Event event = (Event)element;
+      SyslogRecord record = (SyslogRecord)element;
 
-      if ((rootObjectId != 0) && (rootObjectId != event.getSourceId()))
+      if ((rootObjectId != 0) && (rootObjectId != record.getSourceObjectId()))
       {
-         AbstractObject object = session.findObjectById(event.getSourceId());
+         AbstractObject object = session.findObjectById(record.getSourceObjectId());
          if ((object == null) || !object.isChildOf(rootObjectId))
             return false;
       }
 
-      if ((filterString == null) || (filterString.isEmpty()))
-         return true;
+		if ((filterString == null) || filterString.isEmpty())
+			return true;
+		
+      if (record.getMessage().toLowerCase().contains(filterString))
+			return true;
+		
+      if (record.getHostname().toLowerCase().contains(filterString))
+			return true;
+		
+      if (record.getTag().toLowerCase().contains(filterString))
+			return true;
+		
+      AbstractObject object = session.findObjectById(record.getSourceObjectId());
+		if (object != null)
+		{
+			return object.getObjectName().toLowerCase().contains(filterString);
+		}
 
-      if (event.getMessage().toLowerCase().contains(filterString))
-         return true;
-
-      AbstractObject object = session.findObjectById(event.getSourceId());
-      if (object != null)
-      {
-         return object.getObjectName().toLowerCase().contains(filterString);
-      }
-
-      return false;
+		return false;
 	}
 }

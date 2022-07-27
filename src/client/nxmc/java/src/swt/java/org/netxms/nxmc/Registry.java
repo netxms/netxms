@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
+import org.netxms.nxmc.base.views.MonitorPerspective;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinboardPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -145,14 +146,15 @@ public final class Registry
    private Registry()
    {
       perspectives.add(new AlarmsPerspective());
-      perspectives.add(new NetworkPerspective());
+      perspectives.add(new BusinessServicesPerspective());
+      perspectives.add(new ConfigurationPerspective());
+      perspectives.add(new DashboardsPerspective());
       perspectives.add(new InfrastructurePerspective());
       perspectives.add(new MapsPerspective());
-      perspectives.add(new DashboardsPerspective());
-      perspectives.add(new TemplatesPerspective());
-      perspectives.add(new BusinessServicesPerspective());      
-      perspectives.add(new ConfigurationPerspective());
+      perspectives.add(new MonitorPerspective());
+      perspectives.add(new NetworkPerspective());
       perspectives.add(new PinboardPerspective());
+      perspectives.add(new TemplatesPerspective());
       perspectives.add(new WorldMapPerspective());
    }
 

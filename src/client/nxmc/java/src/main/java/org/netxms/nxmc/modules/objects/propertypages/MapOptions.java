@@ -48,7 +48,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MapOptions extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(MapOptions.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(MapOptions.class);
    private static final int FLAG_MASK = (NetworkMap.MF_SHOW_END_NODES | NetworkMap.MF_SHOW_STATUS_ICON | NetworkMap.MF_SHOW_STATUS_FRAME | NetworkMap.MF_SHOW_STATUS_BKGND |
          NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY);
 

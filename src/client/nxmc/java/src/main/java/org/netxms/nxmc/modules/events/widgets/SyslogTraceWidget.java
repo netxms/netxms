@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2021 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,34 +32,38 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.AbstractTraceWidget;
 import org.netxms.nxmc.base.widgets.helpers.AbstractTraceViewFilter;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.events.widgets.helpers.EventLabelProvider;
-import org.netxms.nxmc.modules.events.widgets.helpers.EventMonitorFilter;
+import org.netxms.nxmc.modules.events.widgets.helpers.SyslogLabelProvider;
+import org.netxms.nxmc.modules.events.widgets.helpers.SyslogMonitorFilter;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Event trace widget
+ * Syslog trace widget
  */
-public class EventTraceWidget extends AbstractTraceWidget implements SessionListener
+public class SyslogTraceWidget extends AbstractTraceWidget implements SessionListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventTraceWidget.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(SyslogTraceWidget.class);
 
 	public static final int COLUMN_TIMESTAMP = 0;
 	public static final int COLUMN_SOURCE = 1;
 	public static final int COLUMN_SEVERITY = 2;
-	public static final int COLUMN_EVENT = 3;
-	public static final int COLUMN_MESSAGE = 4;
+	public static final int COLUMN_FACILITY = 3;
+	public static final int COLUMN_HOSTNAME = 4;
+	public static final int COLUMN_TAG = 5;
+	public static final int COLUMN_MESSAGE = 6;
 
 	private NXCSession session;
-	private Action actionShowColor; 
+	private Action actionShowColor;
 	private Action actionShowIcons;
-	private EventLabelProvider labelProvider;
+	private SyslogLabelProvider labelProvider;
 
-	/**
-	 * @param parent
-	 * @param style
-	 * @param viewPart
-	 */
-   public EventTraceWidget(Composite parent, int style, View view)
+   /**
+    * Create syslog trace widget.
+    *
+    * @param parent parent composite
+    * @param style composite style
+    * @param view owning view
+    */
+   public SyslogTraceWidget(Composite parent, int style, View view)
 	{
       super(parent, style, view);
 
@@ -69,7 +73,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				session.removeListener(EventTraceWidget.this);
+				session.removeListener(SyslogTraceWidget.this);
 			}
 		});
 	}
@@ -80,17 +84,19 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	@Override
 	protected void setupViewer(TableViewer viewer)
 	{
-		labelProvider = new EventLabelProvider();
+		labelProvider = new SyslogLabelProvider();
 		viewer.setLabelProvider(labelProvider);
-		
-      final PreferenceStore settings = PreferenceStore.getInstance();
-      labelProvider.setShowColor(settings.getAsBoolean("EventMonitor.showColor", true));
-      labelProvider.setShowIcons(settings.getAsBoolean("EventMonitor.showIcons", false));
+
+      final PreferenceStore ps = PreferenceStore.getInstance();
+      labelProvider.setShowColor(ps.getAsBoolean("SyslogMonitor.showColor", labelProvider.isShowColor()));
+      labelProvider.setShowIcons(ps.getAsBoolean("SyslogMonitor.showIcons", labelProvider.isShowIcons()));
 
       addColumn(i18n.tr("Timestamp"), 150);
       addColumn(i18n.tr("Source"), 200);
       addColumn(i18n.tr("Severity"), 90);
-      addColumn(i18n.tr("Event"), 200);
+      addColumn(i18n.tr("Facility"), 90);
+      addColumn(i18n.tr("Host name"), 130);
+      addColumn(i18n.tr("Tag"), 90);
       addColumn(i18n.tr("Message"), 600);
 	}
 
@@ -100,8 +106,17 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
    @Override
    protected AbstractTraceViewFilter createFilter()
    {
-      return new EventMonitorFilter();
+      return new SyslogMonitorFilter();
    }
+
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
+    */
+	@Override
+	protected String getConfigPrefix()
+	{
+      return "SyslogMonitor";
+	}
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#saveConfig()
@@ -111,18 +126,9 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	{
 		super.saveConfig();
 
-      final PreferenceStore ps = PreferenceStore.getInstance();
-      ps.set("EventMonitor.showColor", labelProvider.isShowColor());
-      ps.set("EventMonitor.showIcons", labelProvider.isShowIcons());
-	}
-
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#getConfigPrefix()
-    */
-	@Override
-	protected String getConfigPrefix()
-	{
-		return "EventMonitor"; //$NON-NLS-1$
+      PreferenceStore ps = PreferenceStore.getInstance();
+      ps.set("SyslogMonitor.showColor", labelProvider.isShowColor());
+      ps.set("SyslogMonitor.showIcons", labelProvider.isShowIcons());
 	}
 
    /**
@@ -132,7 +138,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	protected void createActions()
 	{
 		super.createActions();
-		
+
       actionShowColor = new Action(i18n.tr("Show status &colors"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -142,7 +148,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 			}
 		};
 		actionShowColor.setChecked(labelProvider.isShowColor());
-		
+
       actionShowIcons = new Action(i18n.tr("Show status &icons"), Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -157,21 +163,20 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
    /**
     * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
     */
-   @Override
-   public void notificationHandler(final SessionNotification n)
-   {
-      if (n.getCode() == SessionNotification.NEW_EVENTLOG_RECORD)
-      {
-         runInUIThread(new Runnable() {
-            @Override
-            public void run()
-            {
-               if (!isDisposed())
-                  addElement(n.getObject());
-            }
-         });
-      }
-   }
+	@Override
+	public void notificationHandler(final SessionNotification n)
+	{
+		if (n.getCode() == SessionNotification.NEW_SYSLOG_RECORD)
+		{
+			getDisplay().asyncExec(new Runnable() {
+				@Override
+				public void run()
+				{
+					addElement(n.getObject());
+				}
+			});
+		}
+	}
 
 	/**
 	 * @return the actionShowColor
