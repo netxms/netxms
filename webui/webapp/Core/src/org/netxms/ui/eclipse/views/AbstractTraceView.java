@@ -46,15 +46,15 @@ import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
 public abstract class AbstractTraceView extends ViewPart
 {
    protected NXCSession session = ConsoleSharedData.getSession();
-   
+
 	protected AbstractTraceWidget traceWidget;
 	private Action actionClear;
 	protected Action actionShowFilter;
 	protected boolean initShowFilter = true;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -86,7 +86,7 @@ public abstract class AbstractTraceView extends ViewPart
 
 	/**
 	 * Activate context
-	 */
+	*/ 
 	protected void activateContext()
 	{
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
@@ -149,8 +149,8 @@ public abstract class AbstractTraceView extends ViewPart
 		manager.add(new Separator());
 		manager.add(traceWidget.getActionPause());
 		manager.add(actionClear);
-		//manager.add(new Separator());
-		//manager.add(traceWidget.getActionCopy());
+		manager.add(new Separator());
+		manager.add(traceWidget.getActionCopy());
 	}
 
 	/**

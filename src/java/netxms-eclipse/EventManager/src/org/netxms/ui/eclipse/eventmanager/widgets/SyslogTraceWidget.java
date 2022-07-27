@@ -48,7 +48,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	public static final int COLUMN_HOSTNAME = 4;
 	public static final int COLUMN_TAG = 5;
 	public static final int COLUMN_MESSAGE = 6;
-	
+
 	private NXCSession session;
 	private Action actionShowColor;
 	private Action actionShowIcons;

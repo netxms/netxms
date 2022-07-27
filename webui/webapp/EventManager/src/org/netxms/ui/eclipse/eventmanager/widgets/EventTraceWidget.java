@@ -81,11 +81,11 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	{
 		labelProvider = new EventLabelProvider();
 		viewer.setLabelProvider(labelProvider);
-		
+
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		labelProvider.setShowColor(ps.getBoolean("EventMonitor.showColor")); //$NON-NLS-1$
 		labelProvider.setShowIcons(ps.getBoolean("EventMonitor.showIcons")); //$NON-NLS-1$
-		
+
 		addColumn(Messages.get().EventMonitor_ColTimestamp, 150);
 		addColumn(Messages.get().EventMonitor_ColSource, 200);
 		addColumn(Messages.get().EventMonitor_ColSeverity, 90);
