@@ -252,7 +252,7 @@
          point="org.netxms.ui.eclipse.objectview.tabs">
       <tab
             class="org.netxms.ui.eclipse.topology.objecttabs.Ports"
-            icon="icons/ports.gif"
+            icon="icons/ports.png"
             id="org.netxms.ui.eclipse.topology.objecttabs.Ports"
             name="%tab.name.Ports"
             order="70">
