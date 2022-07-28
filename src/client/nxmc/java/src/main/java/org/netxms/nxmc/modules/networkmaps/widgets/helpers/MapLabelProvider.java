@@ -86,7 +86,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    private static final Color COLOR_SNMP_PROXY = new Color(Display.getDefault(), new RGB(255, 255, 0));
    private static final Color COLOR_SSH_PROXY = new Color(Display.getDefault(), new RGB(0, 255, 255));
    private static final Color COLOR_ZONE_PROXY = new Color(Display.getDefault(), new RGB(255, 0, 255));
-   
+
 	private NXCSession session;
 	private ExtendedGraphViewer viewer;
 	private Image[] statusImages;
@@ -113,8 +113,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    private boolean showStatusBackground = true;
    private boolean showStatusFrame = true;
    private boolean showLinkDirection = true;
-   private boolean translucentLabelBkgnd = true;
-	private boolean longObjectNames = false;
+   private boolean translucentLabelBackground = true;
+	private boolean enableLongObjectName = false;
 	private boolean connectionLabelsVisible = true;
 	private boolean connectionsVisible = true;
 	private MapObjectDisplayMode objectFigureType = MapObjectDisplayMode.ICON;
@@ -164,8 +164,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       showStatusFrame = settings.getAsBoolean("NetMap.ShowStatusFrame", true);
       showStatusBackground = settings.getAsBoolean("NetMap.ShowStatusBackground", true);
       showLinkDirection = settings.getAsBoolean("NetMap.ShowLinkDirection", true);
-      longObjectNames = settings.getAsBoolean("NetMap.LongObjectNames", false);
-      translucentLabelBkgnd = settings.getAsBoolean("NetMap.TranslucentLabelBkgnd", true);
+      enableLongObjectName = settings.getAsBoolean("NetMap.LongObjectNames", false);
+      translucentLabelBackground = settings.getAsBoolean("NetMap.TranslucentLabelBkgnd", true);
 
 		colors = new ColorCache();
 		dciValueProvider = LinkDciValueProvider.getInstance();
@@ -432,17 +432,17 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    /**
     * @return translucentLabelBkgnd
     */
-   public boolean isTranslucentLabelBkgnd()
+   public boolean isTranslucentLabelBackground()
    {
-      return translucentLabelBkgnd;
+      return translucentLabelBackground;
    }
 
    /**
-    * @param translucentLabelBkgnd
+    * @param translucent
     */
-   public void setTranslucentLabelBkgnd(boolean translucentLabelBkgnd)
+   public void setTranslucentLabelBackground(boolean translucent)
    {
-      this.translucentLabelBkgnd = translucentLabelBkgnd;
+      translucentLabelBackground = translucent;
    }
 
 	/**
@@ -493,7 +493,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       
 		if (showLinkDirection)
 		   ((PolylineConnection)connection.getConnectionFigure()).setSourceDecoration(new PolylineDecoration());
-      
+
 		IFigure owner = ((PolylineConnection)connection.getConnectionFigure()).getTargetAnchor().getOwner();
       ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link)); 
       owner = ((PolylineConnection)connection.getConnectionFigure()).getSourceAnchor().getOwner();     
@@ -762,7 +762,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
     */
    public boolean areLongObjectNamesEnabled()
    {
-      return longObjectNames;
+      return enableLongObjectName;
    }
 
    /**

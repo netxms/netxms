@@ -121,7 +121,7 @@ public class NetworkMapWidget extends Composite
 		         session.removeListener(sessionListener);
 			}
 		});
-		
+
       sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(final SessionNotification n)
@@ -168,7 +168,7 @@ public class NetworkMapWidget extends Composite
          }
       });
 	}
-	
+
 	/**
 	 * Open drill-down object for currently selected object
 	 * 
@@ -201,7 +201,7 @@ public class NetworkMapWidget extends Composite
          /* FIXME: implement dashboard open */
       }
 	}
-	
+
 	/**
 	 * Go back map history
 	 */
@@ -220,7 +220,7 @@ public class NetworkMapWidget extends Composite
 	   if (history.isEmpty())
 	      viewer.hideBackButton();
 	}
-	
+
    /**
     * Called by session listener when NetXMS object was changed.
     * 
@@ -229,8 +229,8 @@ public class NetworkMapWidget extends Composite
    private void onObjectChange(final AbstractObject object)
    {
       if (mapPage == null)
-         return ;
-      
+         return;
+
       NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
       if (element != null)
          viewer.refresh(element, true);
@@ -240,7 +240,7 @@ public class NetworkMapWidget extends Composite
          for(NetworkMapLink l : links)
             viewer.refresh(l);
    }
-	
+
 	/**
 	 * Set content from map page
 	 * 
@@ -252,7 +252,7 @@ public class NetworkMapWidget extends Composite
       addDciToRequestList();
 		viewer.setInput(page);		
 	}
-	
+
 	/**
 	 * Set content from preconfigured map object
 	 * 
@@ -262,7 +262,7 @@ public class NetworkMapWidget extends Composite
 	{
 	   setContent(mapObject, true);
 	}
-	
+
    /**
     * Set content from preconfigured map object
     * 
@@ -299,23 +299,23 @@ public class NetworkMapWidget extends Composite
 			defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
 			labelProvider.setDefaultLinkColor(defaultLinkColor);
 		}
-		
+
       labelProvider.setObjectFigureType(mapObject.getObjectDisplayMode());
-		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
-		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
-		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
-      labelProvider.setTranslucentLabelBkgnd(mapObject.isTranslucentLblBkgnd());
-		
+      labelProvider.setShowStatusBackground(mapObject.isShowStatusBackground());
+      labelProvider.setShowStatusFrame(mapObject.isShowStatusFrame());
+      labelProvider.setShowStatusIcons(mapObject.isShowStatusIcon());
+      labelProvider.setTranslucentLabelBackground(mapObject.isTranslucentLabelBackground());
+
 		mapPage = mapObject.createMapPage();
       addDciToRequestList();	
 		viewer.setInput(mapPage);
-		
+
 		if (resetHistory)
 		{
 		   history.clear();
 		}
 	}
-   
+
    /**
     * Synchronize objects, required when interface objects are placed on the map
     */
@@ -349,7 +349,7 @@ public class NetworkMapWidget extends Composite
       job.setUser(false);
       job.start();
    }
-	
+
 	/**
 	 * @param layout
 	 */

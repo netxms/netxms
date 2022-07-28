@@ -85,7 +85,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    private static final Color COLOR_SNMP_PROXY = new Color(Display.getDefault(), new RGB(255, 255, 0));
    private static final Color COLOR_SSH_PROXY = new Color(Display.getDefault(), new RGB(0, 255, 255));
    private static final Color COLOR_ZONE_PROXY = new Color(Display.getDefault(), new RGB(255, 0, 255));
-   
+
 	private NXCSession session;
 	private ExtendedGraphViewer viewer;
 	private Image[] statusImages;
@@ -108,11 +108,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgResCluster;
 	private Font fontLabel;
 	private Font fontTitle;
-	private boolean showStatusIcons = true;
-	private boolean showStatusBackground = false;
-	private boolean showStatusFrame = false;
+   private boolean showStatusIcons = false;
+   private boolean showStatusBackground = true;
+   private boolean showStatusFrame = true;
    private boolean showLinkDirection = true;
-   private boolean translucentLabelBkgnd = true;
+   private boolean translucentLabelBackground = true;
 	private boolean enableLongObjectName = false;
 	private boolean connectionLabelsVisible = true;
 	private boolean connectionsVisible = true;
@@ -130,11 +130,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public MapLabelProvider(ExtendedGraphViewer viewer)
 	{
 		this.viewer = viewer;
-		session = (NXCSession)ConsoleSharedData.getSession();
-		
+		session = ConsoleSharedData.getSession();
+
 		// Initiate loading of object browser plugin if it was not loaded before
 		Platform.getAdapterManager().loadAdapter(new UnknownObject(99, session), "org.eclipse.ui.model.IWorkbenchAdapter"); //$NON-NLS-1$
-		
+
 		workbenchLabelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 
 		statusImages = new Image[9];
@@ -168,10 +168,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		showStatusFrame = store.getBoolean("NetMap.ShowStatusFrame"); //$NON-NLS-1$
 		showStatusBackground = store.getBoolean("NetMap.ShowStatusBackground"); //$NON-NLS-1$
 		showLinkDirection = store.getBoolean("NetMap.ShowLinkDirection");
-      translucentLabelBkgnd = store.getBoolean("NetMap.TranslucentLabelBkgnd");
-		
+      translucentLabelBackground = store.getBoolean("NetMap.TranslucentLabelBkgnd");
+
 		colors = new ColorCache();
-		
+
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME"); //$NON-NLS-1$
 		dciValueProvider = LinkDciValueProvider.getInstance();
@@ -208,7 +208,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 				{
 					return ImageProvider.getInstance().getImage(objectImageGuid);
 				}
-				
+
 				// Try registered network map image providers
 				Image img = MapImageProvidersManager.getInstance().getMapImage(object);
 				if (img != null)
@@ -355,14 +355,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgInterface.dispose();
 		imgOther.dispose();
 		imgUnknown.dispose();
-		
+
 		imgResCluster.dispose();
-		
+
 		fontLabel.dispose();
 		fontTitle.dispose();
-		
+
 		colors.dispose();
-		
+
 		workbenchLabelProvider.dispose();
 		super.dispose();
 	}
@@ -436,17 +436,17 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    /**
     * @return translucentLabelBkgnd
     */
-   public boolean isTranslucentLabelBkgnd()
+   public boolean isTranslucentLabelBackground()
    {
-      return translucentLabelBkgnd;
+      return translucentLabelBackground;
    }
 
    /**
-    * @param translucentLabelBkgnd
+    * @param translucent
     */
-   public void setTranslucentLabelBkgnd(boolean translucentLabelBkgnd)
+   public void setTranslucentLabelBackground(boolean translucent)
    {
-      this.translucentLabelBkgnd = translucentLabelBkgnd;
+      translucentLabelBackground = translucent;
    }
 
 	/**
@@ -502,10 +502,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
       ((PolylineConnection)connection.getConnectionFigure()).setTargetAnchor(new MultiConnectionAnchor(owner, link)); 
       owner = ((PolylineConnection)connection.getConnectionFigure()).getSourceAnchor().getOwner();     
       ((PolylineConnection)connection.getConnectionFigure()).setSourceAnchor(new MultiConnectionAnchor(owner, link));
-		
+
 		boolean hasDciData = link.hasDciData();
       boolean hasName = link.hasName();
-      
+
       if (link.getColorSource() == NetworkMapLink.COLOR_SOURCE_OBJECT_STATUS)
       {
          ObjectStatus status = ObjectStatus.UNKNOWN;
@@ -690,7 +690,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		this.showStatusFrame = showStatusFrame;
 	}
-	
+
 	/**
 	 * @param object
 	 * @return
@@ -724,7 +724,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return colors;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider#selfStyleNode(java.lang.Object, org.eclipse.gef4.zest.core.widgets.GraphNode)
 	 */
 	@Override
@@ -760,9 +760,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	}
 
    /**
-    * @return
+    * Check if long object names are enabled.
+    *
+    * @return true if long object names are enabled
     */
-   public boolean isLongObjectNameEnabled()
+   public boolean areLongObjectNamesEnabled()
    {
       return enableLongObjectName;
    }
@@ -770,7 +772,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    /**
     * @return the connectionLabelsVisible
     */
-   public boolean isConnectionLabelsVisible()
+   public boolean areConnectionLabelsVisible()
    {
       return connectionLabelsVisible;
    }
@@ -786,7 +788,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    /**
     * @return the connectionsVisible
     */
-   public boolean isConnectionsVisible()
+   public boolean areConnectionsVisible()
    {
       return connectionsVisible;
    }

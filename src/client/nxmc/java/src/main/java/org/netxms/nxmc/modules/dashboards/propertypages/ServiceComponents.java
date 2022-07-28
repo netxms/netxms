@@ -63,6 +63,7 @@ public class ServiceComponents extends DashboardElementPropertyPage
    private Button checkShowStatusIcon;
    private Button checkShowStatusFrame;
    private Button checkShowStatusBkgnd;
+   private Button checkTranslucentLabelBkgnd;
    private Combo objectDisplayMode;
    private Combo routingAlgorithm;
    private Combo layoutAlgorithm;
@@ -225,6 +226,10 @@ public class ServiceComponents extends DashboardElementPropertyPage
       checkShowStatusBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusBkgnd.setText(i18n.tr("Show status background"));
       checkShowStatusBkgnd.setSelection((config.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
+      
+      checkTranslucentLabelBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
+      checkTranslucentLabelBkgnd.setText("Translucent label background");
+      checkTranslucentLabelBkgnd.setSelection((config.getFlags() & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) != 0);
 
       /**** default link appearance ****/
       Group linkGroup = new Group(dialogArea, SWT.NONE);
@@ -300,6 +305,11 @@ public class ServiceComponents extends DashboardElementPropertyPage
          config.setFlags(config.getFlags() | NetworkMap.MF_SHOW_STATUS_BKGND);
       else
          config.setFlags(config.getFlags() & ~NetworkMap.MF_SHOW_STATUS_BKGND);
+      if (checkTranslucentLabelBkgnd.getSelection())
+         config.setFlags(config.getFlags() | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND);
+      else
+         config.setFlags(config.getFlags() & ~NetworkMap.MF_TRANSLUCENT_LABEL_BKGND);
+
       config.setDefaultLinkRouting(routingAlgorithm.getSelectionIndex() + 1);
       if (radioColorDefault.getSelection())
          config.setDefaultLinkColor(-1);

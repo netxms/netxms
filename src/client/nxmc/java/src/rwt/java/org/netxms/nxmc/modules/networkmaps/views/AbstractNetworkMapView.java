@@ -41,11 +41,8 @@ import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IContributionItem;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
@@ -110,7 +107,6 @@ import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -155,7 +151,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	protected Action actionShowStatusBackground;
 	protected Action actionShowStatusFrame;
 	protected Action actionShowLinkDirection;
-	protected Action actionTranslucentLabelBkgnd;
+   protected Action actionTranslucentLabelBkgnd;
 	protected Action actionZoomIn;
 	protected Action actionZoomOut;
 	protected Action actionZoomFit;
@@ -558,19 +554,18 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
-		 actionTranslucentLabelBkgnd = new Action(i18n.tr("Translucent label background"), Action.AS_CHECK_BOX) {
-	         @Override
-	         public void run()
-	         {
-	            labelProvider.setTranslucentLabelBkgnd(actionTranslucentLabelBkgnd.isChecked());
-	            updateObjectPositions();
-	            saveLayout();
-	            viewer.refresh();
-	         }
-	      };
-	      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
+      actionTranslucentLabelBkgnd = new Action(i18n.tr("Translucent label background"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            labelProvider.setTranslucentLabelBackground(actionTranslucentLabelBkgnd.isChecked());
+            updateObjectPositions();
+            saveLayout();
+            viewer.refresh();
+         }
+      };
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBackground());
 
-		
       actionZoomIn = new Action(i18n.tr("Zoom &in"), SharedIcons.ZOOM_IN) {
 			@Override
 			public void run()
@@ -874,7 +869,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(actionShowLinkDirection);
-		manager.add(actionTranslucentLabelBkgnd);
+      manager.add(actionTranslucentLabelBkgnd);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());
@@ -1010,7 +1005,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		manager.add(actionShowStatusIcon);
 		manager.add(actionShowStatusFrame);
 		manager.add(actionShowLinkDirection);
-		manager.add(actionTranslucentLabelBkgnd);
+      manager.add(actionTranslucentLabelBkgnd);
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());

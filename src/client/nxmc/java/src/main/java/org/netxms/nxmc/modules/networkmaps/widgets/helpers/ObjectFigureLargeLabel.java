@@ -137,7 +137,7 @@ public class ObjectFigureLargeLabel extends ObjectFigure
 		rect.height -= BORDER_WIDTH;
 		gc.setLineWidth(BORDER_WIDTH);
 
-      if (!labelProvider.isTranslucentLabelBkgnd())
+      if (!labelProvider.isTranslucentLabelBackground())
       {
          gc.setBackgroundColor(SOLID_WHITE);
          gc.fillRoundRectangle(rect, 8, 8);

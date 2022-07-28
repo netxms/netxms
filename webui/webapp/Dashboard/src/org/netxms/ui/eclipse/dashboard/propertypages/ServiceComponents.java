@@ -163,7 +163,7 @@ public class ServiceComponents extends PropertyPage
       layoutAlgorithm.add("Vertical tree");
       layoutAlgorithm.add("Sparse vertical tree");
       layoutAlgorithm.select(config.getDefaultLayoutAlgorithm().getValue());
-      
+
       /**** object display ****/
       Group objectDisplayGroup = new Group(dialogArea, SWT.NONE);
       objectDisplayGroup.setText("Default display options");
@@ -184,15 +184,15 @@ public class ServiceComponents extends PropertyPage
       objectDisplayMode.add("Large labels");
       objectDisplayMode.add("Status icons");
       objectDisplayMode.select(config.getObjectDisplayMode().getValue());
-      
+
       checkShowStatusIcon = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusIcon.setText("Show status icon");
       checkShowStatusIcon.setSelection((config.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
-      
+
       checkShowStatusFrame = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusFrame.setText("Show status frame");
       checkShowStatusFrame.setSelection((config.getFlags() & NetworkMap.MF_SHOW_STATUS_FRAME) != 0);
-      
+
       checkShowStatusBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusBkgnd.setText("Show status background");
       checkShowStatusBkgnd.setSelection((config.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
@@ -233,7 +233,7 @@ public class ServiceComponents extends PropertyPage
             widgetSelected(e);
          }
       };
-      
+
       radioColorDefault = new Button(linkGroup, SWT.RADIO);
       radioColorDefault.setText("Default color");
       radioColorDefault.setSelection(config.getDefaultLinkColor() < 0);

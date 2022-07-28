@@ -106,7 +106,7 @@ public class ObjectFigureIcon extends ObjectFigure
 			rect.width = imageWidth + BACKGROUND_MARGIN_X * 2;
 			rect.height = imageWidth + BACKGROUND_MARGIN_Y * 2;
 			
-         if (!labelProvider.isTranslucentLabelBkgnd())
+         if (!labelProvider.isTranslucentLabelBackground())
          {
             gc.setBackgroundColor(SOLID_WHITE);
             gc.fillRoundRectangle(rect, 16, 16);

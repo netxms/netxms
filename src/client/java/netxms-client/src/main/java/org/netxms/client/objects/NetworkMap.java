@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
  * Network map object
- *
  */
 public class NetworkMap extends GenericObject
 {
@@ -48,15 +47,15 @@ public class NetworkMap extends GenericObject
 	public static final int TYPE_IP_TOPOLOGY = 2;
    public static final int TYPE_INTERNAL_TOPOLOGY = 3;
 
-	public static final int MF_SHOW_STATUS_ICON       = 0x000001;
-	public static final int MF_SHOW_STATUS_FRAME      = 0x000002;
-	public static final int MF_SHOW_STATUS_BKGND      = 0x000004;
-	public static final int MF_SHOW_END_NODES         = 0x000008;
-	public static final int MF_CALCULATE_STATUS       = 0x000010;
-   public static final int MF_FILTER_OBJECTS         = 0x000020;
-   public static final int MF_SHOW_LINK_DIRECTION    = 0x000040;
-   public static final int MF_USE_L1_TOPOLOGY        = 0x000080;
-   public static final int MF_CENTER_BKGND_IMAGE     = 0x000100;
+	public static final int MF_SHOW_STATUS_ICON        = 0x000001;
+	public static final int MF_SHOW_STATUS_FRAME       = 0x000002;
+	public static final int MF_SHOW_STATUS_BKGND       = 0x000004;
+	public static final int MF_SHOW_END_NODES          = 0x000008;
+	public static final int MF_CALCULATE_STATUS        = 0x000010;
+   public static final int MF_FILTER_OBJECTS          = 0x000020;
+   public static final int MF_SHOW_LINK_DIRECTION     = 0x000040;
+   public static final int MF_USE_L1_TOPOLOGY         = 0x000080;
+   public static final int MF_CENTER_BKGND_IMAGE      = 0x000100;
    public static final int MF_TRANSLUCENT_LABEL_BKGND = 0x000200;
 
 	private int mapType;
@@ -280,14 +279,73 @@ public class NetworkMap extends GenericObject
    }
 
    /**
+    * Returns the MF_SHOW_STATUS_ICON flag status
+    * 
+    * @return
+    */
+   public boolean isShowStatusIcon()
+   {
+      return (flags & NetworkMap.MF_SHOW_STATUS_ICON) != 0;
+   }
+
+   /**
+    * Returns the MF_SHOW_STATUS_FRAME flag status
+    * 
+    * @return
+    */
+   public boolean isShowStatusFrame()
+   {
+      return (flags & NetworkMap.MF_SHOW_STATUS_FRAME) != 0;
+   }
+
+   /**
+    * Returns the MF_SHOW_STATUS_BKGND flag status
+    * 
+    * @return
+    */
+   public boolean isShowStatusBackground()
+   {
+      return (flags & NetworkMap.MF_SHOW_STATUS_BKGND) != 0;
+   }
+
+   /**
+    * Returns the MF_SHOW_END_NODES flag status
+    * 
+    * @return
+    */
+   public boolean isShowEndNodes()
+   {
+      return (flags & NetworkMap.MF_SHOW_END_NODES) != 0;
+   }
+
+   /**
+    * Returns the MF_SHOW_LINK_DIRECTION flag status
+    * 
+    * @return
+    */
+   public boolean isShowLinkDirection()
+   {
+      return (flags & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0;
+   }
+
+   /**
+    * Returns the MF_CALCULATE_STATUS flag status
+    * 
+    * @return
+    */
+   public boolean isCalculateStatus()
+   {
+      return (flags & NetworkMap.MF_CALCULATE_STATUS) != 0;
+   }
+
+   /**
     * Returns the MF_CENTER_BKGND_IMAGE flag status
     * 
     * @return
     */
    public boolean isCenterBackgroundImage()
    {
-      return ((getFlags() & NetworkMap.MF_CENTER_BKGND_IMAGE) > 0);
-
+      return (flags & NetworkMap.MF_CENTER_BKGND_IMAGE) != 0;
    }
 
    /**
@@ -295,9 +353,8 @@ public class NetworkMap extends GenericObject
     * 
     * @return
     */
-   public boolean isTranslucentLblBkgnd()
+   public boolean isTranslucentLabelBackground()
    {
-      return ((getFlags() & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) > 0);
-
+      return (flags & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) != 0;
    }
 }

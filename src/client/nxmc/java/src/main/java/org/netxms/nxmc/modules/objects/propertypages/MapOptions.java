@@ -154,7 +154,7 @@ public class MapOptions extends ObjectPropertyPage
       
       checkTranslucentLabelBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkTranslucentLabelBkgnd.setText(i18n.tr("Translucent label background"));
-      checkTranslucentLabelBkgnd.setSelection(map.isTranslucentLblBkgnd());
+      checkTranslucentLabelBkgnd.setSelection(map.isTranslucentLabelBackground());
 
 		/**** default link appearance ****/
 		Group linkGroup = new Group(dialogArea, SWT.NONE);

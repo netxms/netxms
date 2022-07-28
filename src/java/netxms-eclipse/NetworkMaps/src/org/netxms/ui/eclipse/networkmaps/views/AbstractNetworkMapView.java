@@ -630,13 +630,13 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          @Override
          public void run()
          {
-            labelProvider.setTranslucentLabelBkgnd(actionTranslucentLabelBkgnd.isChecked());
+            labelProvider.setTranslucentLabelBackground(actionTranslucentLabelBkgnd.isChecked());
             updateObjectPositions();
             saveLayout();
             viewer.refresh();
          }
       };
-      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBackground());
 
 		actionZoomIn = new Action(Messages.get().AbstractNetworkMapView_ZoomIn, SharedIcons.ZOOM_IN) {
 			@Override

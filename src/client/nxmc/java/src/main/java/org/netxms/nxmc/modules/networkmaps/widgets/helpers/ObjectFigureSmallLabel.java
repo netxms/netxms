@@ -83,7 +83,7 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 
 		gc.setAntialias(SWT.ON);
 
-      if (!labelProvider.isTranslucentLabelBkgnd())
+      if (!labelProvider.isTranslucentLabelBackground())
       {
          gc.setBackgroundColor(SOLID_WHITE);
          gc.fillRoundRectangle(rect, 8, 8);

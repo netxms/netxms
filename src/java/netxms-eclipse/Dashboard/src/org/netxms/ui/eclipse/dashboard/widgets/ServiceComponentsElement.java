@@ -74,7 +74,7 @@ public class ServiceComponentsElement extends ElementWidget
 
       session = ConsoleSharedData.getSession();
       AbstractObject rootObject = session.findObjectById(config.getObjectId());
-      
+
       mapPage = new NetworkMapPage(ServiceComponents.ID + rootObject.getObjectId());
       long elementId = mapPage.createElementId();
       mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
@@ -89,7 +89,7 @@ public class ServiceComponentsElement extends ElementWidget
          mapWidget.getLabelProvider().setShowStatusIcons((config.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
          mapWidget.getLabelProvider().setShowStatusFrame((config.getFlags() & NetworkMap.MF_SHOW_STATUS_FRAME) != 0);
          mapWidget.getLabelProvider().setShowStatusBackground((config.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
-         mapWidget.getLabelProvider().setTranslucentLabelBkgnd((config.getFlags() & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) != 0);
+         mapWidget.getLabelProvider().setTranslucentLabelBackground((config.getFlags() & NetworkMap.MF_TRANSLUCENT_LABEL_BKGND) != 0);
          mapWidget.setConnectionRouter(config.getDefaultLinkRouting());
          if (config.getDefaultLinkColor() >= 0)
             mapWidget.getLabelProvider().setDefaultLinkColor(new Color(mapWidget.getControl().getDisplay(), ColorConverter.rgbFromInt(config.getDefaultLinkColor())));

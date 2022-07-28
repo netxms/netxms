@@ -212,7 +212,7 @@ public class ObjectFloorPlan extends ObjectFigure
       gc.setLineStyle(isElementSelected() ? SWT.LINE_DOT : SWT.LINE_SOLID);
       gc.drawRoundRectangle(rect, 8, 8);
 
-      if (!labelProvider.isTranslucentLabelBkgnd())
+      if (!labelProvider.isTranslucentLabelBackground())
       {
          gc.setBackgroundColor(SOLID_WHITE);
          gc.fillRoundRectangle(getBounds(), 8, 8);

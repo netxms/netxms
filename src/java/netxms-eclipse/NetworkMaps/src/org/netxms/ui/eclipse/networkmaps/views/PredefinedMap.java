@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,21 +205,21 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
 			labelProvider.setDefaultLinkColor(defaultLinkColor);
 		}
-		
+
       setObjectDisplayMode(mapObject.getObjectDisplayMode(), false);
-		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
-		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
-		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
-      labelProvider.setShowLinkDirection((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_LINK_DIRECTION) > 0);
-      labelProvider.setTranslucentLabelBkgnd(mapObject.isTranslucentLblBkgnd());
-		
-		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
-		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
-		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
-		actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
-      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
+      labelProvider.setShowStatusBackground(mapObject.isShowStatusBackground());
+      labelProvider.setShowStatusFrame(mapObject.isShowStatusFrame());
+      labelProvider.setShowStatusIcons(mapObject.isShowStatusIcon());
+      labelProvider.setShowLinkDirection(mapObject.isShowLinkDirection());
+      labelProvider.setTranslucentLabelBackground(mapObject.isTranslucentLabelBackground());
+
+      actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
+      actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
+      actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
+      actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBackground());
 	}
-	
+
 	/**
 	 * Add drop support
 	 */
@@ -286,7 +286,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		mapPage = mapObject.createMapPage();
       addDciToRequestList();
 	}
-	
+
 	/**
 	 * Synchronize objects, required when interface objects are placed on the map
 	 */
@@ -397,7 +397,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             editImageDecoration();
          }
       };
-		
+
 		actionLinkObjects = new Action(Messages.get().PredefinedMap_LinkObjects, Activator.getImageDescriptor("icons/link_add.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
@@ -845,7 +845,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          flags |= NetworkMap.MF_SHOW_LINK_DIRECTION;
       else
          flags &= ~NetworkMap.MF_SHOW_LINK_DIRECTION;
-      if (labelProvider.isTranslucentLabelBkgnd())
+      if (labelProvider.isTranslucentLabelBackground())
          flags |= NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
       else
          flags &= ~NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
@@ -947,10 +947,10 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	protected void onObjectChange(final AbstractObject object)
 	{
 	   super.onObjectChange(object);
-		
+
 		if (object.getObjectId() != mapObject.getObjectId())
 			return;
-		
+
 		UUID oldBackground = mapObject.getBackground();
 		mapObject = (org.netxms.client.objects.NetworkMap)object;
 		if (!oldBackground.equals(mapObject.getBackground()) || mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
@@ -1001,17 +1001,17 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 
 		setLayoutAlgorithm(mapObject.getLayout(), false);
 		setObjectDisplayMode(mapObject.getObjectDisplayMode(), false);
-		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
-		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
-		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
-      labelProvider.setShowLinkDirection((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_LINK_DIRECTION) > 0);
-      labelProvider.setTranslucentLabelBkgnd(mapObject.isTranslucentLblBkgnd());
+      labelProvider.setShowStatusBackground(mapObject.isShowStatusBackground());
+      labelProvider.setShowStatusFrame(mapObject.isShowStatusFrame());
+      labelProvider.setShowStatusIcons(mapObject.isShowStatusIcon());
+      labelProvider.setShowLinkDirection(mapObject.isShowLinkDirection());
+      labelProvider.setTranslucentLabelBackground(mapObject.isTranslucentLabelBackground());
 
       actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
       actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
       actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
       actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
-      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBkgnd());
+      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBackground());
 		
       syncObjects();//refresh will be done after sync
 	}
@@ -1034,15 +1034,15 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             saveMap();
       }
    }
-   
+
    /**
     * Show DCI Image properties
     */
    private void showDCIImageProperties()
    {
       updateObjectPositions();
-      
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIImage))
          return;
       NetworkMapDCIImage container = (NetworkMapDCIImage)selection.getFirstElement();
@@ -1053,15 +1053,15 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             saveMap();
       }
    }
-	
+
 	/**
 	 * Show properties for currently selected link
 	 */
 	private void showLinkProperties()
 	{
 		updateObjectPositions();
-		
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapLink))
 			return;
 		LinkEditor link = new LinkEditor((NetworkMapLink)selection.getFirstElement(), mapPage);
@@ -1080,8 +1080,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private void showTextBoxProperties()
 	{
       updateObjectPositions();
-      
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapTextBox))
          return;
 
@@ -1091,7 +1091,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 
       saveMap();
 	}
-	
+
 	/**
 	 * Edit image decoration
 	 */
@@ -1099,7 +1099,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
       updateObjectPositions();
       
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDecoration))
          return;
       
@@ -1124,11 +1124,11 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	private void editGroupBox()
 	{
       updateObjectPositions();
-      
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDecoration))
          return;
-      
+
       NetworkMapDecoration groupBox = (NetworkMapDecoration)selection.getFirstElement();
       EditGroupBoxDialog dlg = new EditGroupBoxDialog(getSite().getShell(), groupBox);
       if (dlg.open() == Window.OK)

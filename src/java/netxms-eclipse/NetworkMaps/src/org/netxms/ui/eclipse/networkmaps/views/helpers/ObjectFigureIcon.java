@@ -59,7 +59,7 @@ public class ObjectFigureIcon extends ObjectFigure
 
 		updateSize(labelProvider);
 	}
-	
+
 	/**
 	 * Update figure's size
 	 */
@@ -77,9 +77,9 @@ public class ObjectFigureIcon extends ObjectFigure
 			imageWidth = 32;
 			imageHeight = 32;
 		}
-		
+
 		Dimension ls = label.getPreferredSize(-1, -1);
-		if(!labelProvider.isLongObjectNameEnabled())
+      if (!labelProvider.areLongObjectNamesEnabled())
 		{
    		if (ls.width > imageWidth * 2)
    			ls.width = imageWidth * 2; 
@@ -87,9 +87,9 @@ public class ObjectFigureIcon extends ObjectFigure
 		setSize(Math.max(Math.max(ls.width, imageWidth), imageWidth + BACKGROUND_MARGIN_X * 2 + FRAME_LINE_WIDTH), imageHeight + IMAGE_MARGIN_Y * 2 + ls.height);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
-	 */
+   /**
+    * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+    */
 	@Override
 	protected void paintFigure(Graphics gc)
 	{
@@ -106,7 +106,7 @@ public class ObjectFigureIcon extends ObjectFigure
 			rect.width = imageWidth + BACKGROUND_MARGIN_X * 2;
 			rect.height = imageWidth + BACKGROUND_MARGIN_Y * 2;
 			
-         if (!labelProvider.isTranslucentLabelBkgnd())
+         if (!labelProvider.isTranslucentLabelBackground())
          {
             gc.setBackgroundColor(SOLID_WHITE);
             gc.fillRoundRectangle(rect, 16, 16);

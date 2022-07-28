@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.networkmaps.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -48,15 +49,15 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class MapOptions extends PropertyPage
 {
-   private static final int FLAG_MASK = (NetworkMap.MF_SHOW_END_NODES | NetworkMap.MF_SHOW_STATUS_ICON | NetworkMap.MF_SHOW_STATUS_FRAME | NetworkMap.MF_SHOW_STATUS_BKGND |
-         NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY);
+   private static final int FLAG_MASK = NetworkMap.MF_SHOW_END_NODES | NetworkMap.MF_SHOW_STATUS_ICON | NetworkMap.MF_SHOW_STATUS_FRAME | NetworkMap.MF_SHOW_STATUS_BKGND |
+         NetworkMap.MF_CALCULATE_STATUS | NetworkMap.MF_SHOW_LINK_DIRECTION | NetworkMap.MF_TRANSLUCENT_LABEL_BKGND | NetworkMap.MF_USE_L1_TOPOLOGY;
 
    private NetworkMap object;
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
-   private Button checkShowStatusBkgnd;
+   private Button checkShowStatusBackground;
    private Button checkShowLinkDirection;
-   private Button checkTranslucentLabelBkgnd;
+   private Button checkTranslucentLabelBackground;
    private Button checkUseL1Topology;
    private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
@@ -75,7 +76,7 @@ public class MapOptions extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		object = (NetworkMap)getElement().getAdapter(NetworkMap.class);
 
 		GridLayout layout = new GridLayout();
@@ -84,7 +85,7 @@ public class MapOptions extends PropertyPage
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
+
 		/**** object display ****/
 		Group objectDisplayGroup = new Group(dialogArea, SWT.NONE);
 		objectDisplayGroup.setText(Messages.get().MapOptions_DefaultDispOptions);
@@ -109,23 +110,23 @@ public class MapOptions extends PropertyPage
 
       checkShowStatusIcon = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusIcon.setText(Messages.get().MapOptions_ShowStatusIcon);
-      checkShowStatusIcon.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
-      
+      checkShowStatusIcon.setSelection(object.isShowStatusIcon());
+
       checkShowStatusFrame = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusFrame.setText(Messages.get().MapOptions_ShowStatusFrame);
-      checkShowStatusFrame.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_FRAME) != 0);
-      
-      checkShowStatusBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
-      checkShowStatusBkgnd.setText(Messages.get().MapOptions_ShowStatusBkgnd);
-      checkShowStatusBkgnd.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
-      
+      checkShowStatusFrame.setSelection(object.isShowStatusFrame());
+
+      checkShowStatusBackground = new Button(objectDisplayGroup, SWT.CHECK);
+      checkShowStatusBackground.setText(Messages.get().MapOptions_ShowStatusBkgnd);
+      checkShowStatusBackground.setSelection(object.isShowStatusBackground());
+
       checkShowLinkDirection = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowLinkDirection.setText("Show link direction");
       checkShowLinkDirection.setSelection((object.getFlags() & NetworkMap.MF_SHOW_LINK_DIRECTION) != 0);
-      
-      checkTranslucentLabelBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
-      checkTranslucentLabelBkgnd.setText(Messages.get().MapOptions_TranslucentLabelBkgnd);
-      checkTranslucentLabelBkgnd.setSelection(object.isTranslucentLblBkgnd());
+
+      checkTranslucentLabelBackground = new Button(objectDisplayGroup, SWT.CHECK);
+      checkTranslucentLabelBackground.setText(Messages.get().MapOptions_TranslucentLabelBkgnd);
+      checkTranslucentLabelBackground.setSelection(object.isTranslucentLabelBackground());
 
 		/**** default link appearance ****/
 		Group linkGroup = new Group(dialogArea, SWT.NONE);
@@ -146,17 +147,11 @@ public class MapOptions extends PropertyPage
 		routingAlgorithm.add(Messages.get().MapOptions_Manhattan);
 		routingAlgorithm.select(object.getDefaultLinkRouting() - 1);
 
-		final SelectionListener listener = new SelectionListener() {
+      final SelectionAdapter listener = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				linkColor.setEnabled(radioColorCustom.getSelection());
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		};
 		
@@ -195,7 +190,7 @@ public class MapOptions extends PropertyPage
 
          checkIncludeEndNodes = new Button(topoGroup, SWT.CHECK);
          checkIncludeEndNodes.setText(Messages.get().MapOptions_IncludeEndNodes);
-         checkIncludeEndNodes.setSelection((object.getFlags() & NetworkMap.MF_SHOW_END_NODES) != 0);
+         checkIncludeEndNodes.setSelection(object.isShowEndNodes());
 
          checkUseL1Topology = new Button(topoGroup, SWT.CHECK);
          checkUseL1Topology.setText("Use &physical link information");
@@ -258,13 +253,13 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_SHOW_STATUS_ICON;
 		if (checkShowStatusFrame.getSelection())
 			flags |= NetworkMap.MF_SHOW_STATUS_FRAME;
-		if (checkShowStatusBkgnd.getSelection())
+		if (checkShowStatusBackground.getSelection())
 			flags |= NetworkMap.MF_SHOW_STATUS_BKGND;
 		if (checkCalculateStatus.getSelection())
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
 		if (checkShowLinkDirection.getSelection())
 		   flags |= NetworkMap.MF_SHOW_LINK_DIRECTION;
-      if (checkTranslucentLabelBkgnd.getSelection())
+      if (checkTranslucentLabelBackground.getSelection())
          flags |= NetworkMap.MF_TRANSLUCENT_LABEL_BKGND;
       if ((checkUseL1Topology != null) && checkUseL1Topology.getSelection())
          flags |= NetworkMap.MF_USE_L1_TOPOLOGY;
@@ -326,18 +321,18 @@ public class MapOptions extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
 		return applyChanges(false);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
