@@ -558,6 +558,12 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);
 
+   poller->setStatus(_T("autobind"));
+   if (ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false))
+      applyTemplates();
+   if (ConfigReadBoolean(_T("Objects.AccessPoints.ContainerAutoBind"), false))
+      updateContainerMembership();
+
    sendPollerMsg(_T("Finished configuration poll of access point %s\r\n"), m_name);
 
    lockProperties();

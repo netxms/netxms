@@ -2313,6 +2313,9 @@ protected:
 
    NXSL_VM *runDataCollectionScript(const TCHAR *param, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
 
+   void applyTemplates();
+   void updateContainerMembership();
+
    DataCollectionError queryWebService(const TCHAR *param, WebServiceRequestType queryType, TCHAR *buffer, size_t bufSize, StringList *list);
 
    void getItemDciValuesSummary(SummaryTable *tableDefinition, Table *tableData, uint32_t userId);
@@ -3236,6 +3239,8 @@ protected:
 
    void buildInternalCommunicationTopologyInternal(NetworkMapObjectList *topology, uint32_t seedNode, bool agentConnectionOnly, bool checkAllProxies);
    bool checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
+
+   void updateClusterMembership();
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;

@@ -669,6 +669,13 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
       else
          InterlockedAnd64(&g_flags, ~AF_ENABLE_NXSL_CONTAINER_FUNCTIONS);
    }
+   else if (!_tcscmp(name, _T("Objects.AutobindOnConfigurationPoll")))
+   {
+      if (_tcstol(value, nullptr, 0))
+         InterlockedOr64(&g_flags, AF_AUTOBIND_ON_CONF_POLL);
+      else
+         InterlockedAnd64(&g_flags, ~AF_AUTOBIND_ON_CONF_POLL);
+   }
    else if (!_tcscmp(name, _T("Objects.AutobindPollingInterval")))
    {
       g_autobindPollingInterval = ConvertToUint32(value, 3600);

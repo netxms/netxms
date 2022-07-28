@@ -1721,7 +1721,7 @@ void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *co
    ResolveUserId(userId, userName, true);
 
    DbgPrintf(4, _T("Entering maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
-   UINT64 eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "sds", CHECK_NULL_EX(comments), userId, userName);
+   uint64_t eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "sds", CHECK_NULL_EX(comments), userId, userName);
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
@@ -1963,6 +1963,110 @@ void DataCollectionTarget::removeTemplate(const shared_ptr<ScheduledTaskParamete
       {
          static_cast<DataCollectionTarget&>(*target).removeTemplate(templateObject.get());
       }
+   }
+}
+
+/**
+ * Filter for selecting templates from objects
+ */
+static bool TemplateSelectionFilter(NetObj *object, void *userData)
+{
+   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && static_cast<Template*>(object)->isAutoBindEnabled();
+}
+
+/**
+ * Apply templates
+ */
+void DataCollectionTarget::applyTemplates()
+{
+   if (IsShutdownInProgress() || !(g_flags & AF_AUTOBIND_ON_CONF_POLL))
+      return;
+
+   sendPollerMsg(_T("Processing template autoapply rules\r\n"));
+   unique_ptr<SharedObjectArray<NetObj>> templates = g_idxObjectById.getObjects(TemplateSelectionFilter);
+   for(int i = 0; i < templates->size(); i++)
+   {
+      Template *templateObject = static_cast<Template*>(templates->get(i));
+      NXSL_VM *cachedFilterVM = nullptr;
+      AutoBindDecision decision = templateObject->isApplicable(&cachedFilterVM, self());
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!templateObject->isDirectChild(m_id))
+         {
+            sendPollerMsg(_T("   Applying template %s\r\n"), templateObject->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
+                      templateObject->getId(), templateObject->getName(), m_id, m_name);
+            templateObject->applyToTarget(self());
+            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
+         {
+            sendPollerMsg(_T("   Removing template %s\r\n"), templateObject->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
+                      templateObject->getId(), templateObject->getName(), m_id, m_name);
+            templateObject->deleteChild(*this);
+            deleteParent(*templateObject);
+            templateObject->queueRemoveFromTarget(m_id, true);
+            PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
+         }
+      }
+      delete cachedFilterVM;
+   }
+}
+
+/**
+ * Filter for selecting containers from objects
+ */
+static bool ContainerSelectionFilter(NetObj *object, void *userData)
+{
+   return (object->getObjectClass() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
+}
+
+/**
+ * Update container membership
+ */
+void DataCollectionTarget::updateContainerMembership()
+{
+   if (IsShutdownInProgress() || !(g_flags & AF_AUTOBIND_ON_CONF_POLL))
+      return;
+
+   sendPollerMsg(_T("Processing container autobind rules\r\n"));
+   unique_ptr<SharedObjectArray<NetObj>> containers = g_idxObjectById.getObjects(ContainerSelectionFilter);
+   for(int i = 0; i < containers->size(); i++)
+   {
+      Container *container = static_cast<Container*>(containers->get(i));
+      NXSL_VM *cachedFilterVM = nullptr;
+      AutoBindDecision decision = container->isApplicable(&cachedFilterVM, self());
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!container->isDirectChild(m_id))
+         {
+            sendPollerMsg(_T("   Binding to container %s\r\n"), container->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): binding object %d \"%s\" to container %d \"%s\""),
+                      m_id, m_name, container->getId(), container->getName());
+            container->addChild(self());
+            addParent(container->self());
+            PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, container->getId(), container->getName());
+            container->calculateCompoundStatus();
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (container->isAutoUnbindEnabled() && container->isDirectChild(m_id))
+         {
+            sendPollerMsg(_T("   Removing from container %s\r\n"), container->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::updateContainerMembership(): removing object %d \"%s\" from container %d \"%s\""),
+                      m_id, m_name, container->getId(), container->getName());
+            container->deleteChild(*this);
+            deleteParent(*container);
+            PostSystemEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, container->getId(), container->getName());
+            container->calculateCompoundStatus();
+         }
+      }
+      delete cachedFilterVM;
    }
 }
 

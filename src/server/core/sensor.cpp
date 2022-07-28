@@ -583,6 +583,12 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), rqId);
 
+   poller->setStatus(_T("autobind"));
+   if (ConfigReadBoolean(_T("Objects.Sensors.TemplateAutoApply"), false))
+      applyTemplates();
+   if (ConfigReadBoolean(_T("Objects.Sensors.ContainerAutoBind"), false))
+      updateContainerMembership();
+
    sendPollerMsg(_T("Finished configuration poll of sensor %s\r\n"), m_name);
    sendPollerMsg(_T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 

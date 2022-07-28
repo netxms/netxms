@@ -117,9 +117,7 @@ static bool H_UpgradeFromV12()
    CHK_EXEC(CreateConfigParam(_T("Server.Security.RestrictLocalConsoleAccess"),
          _T("1"),
          _T("If enabled, restrict access to local server console only to authenticated users with server console access rights."),
-         _T("days"),
-         'B', true, false, false, false));
-
+         nullptr, 'B', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }

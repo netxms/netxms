@@ -438,6 +438,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
    if (ConfigReadBoolean(_T("Objects.Security.CheckTrustedNodes"), false))
       g_flags |= AF_CHECK_TRUSTED_NODES;
+   if (ConfigReadBoolean(_T("Objects.AutobindOnConfigurationPoll"), true))
+      g_flags |= AF_AUTOBIND_ON_CONF_POLL;
    if (ConfigReadBoolean(_T("NetworkDiscovery.EnableParallelProcessing"), false))
       g_flags |= AF_PARALLEL_NETWORK_DISCOVERY;
    if (ConfigReadBoolean(_T("NetworkDiscovery.MergeDuplicateNodes"), false))

@@ -131,10 +131,6 @@ json_t *AbstractContainer::toJson()
  */
 bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
-   UINT32 i;
-
    m_id = dwId;
 
    if (!loadCommonProperties(hdb))
@@ -146,15 +142,16 @@ bool AbstractContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    // Load child list for later linkage
    if (!m_isDeleted)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
+      TCHAR query[256];
+      _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%u"), m_id);
+      DB_RESULT hResult = DBSelect(hdb, query);
+      if (hResult != nullptr)
       {
          m_dwChildIdListSize = DBGetNumRows(hResult);
          if (m_dwChildIdListSize > 0)
          {
-            m_pdwChildIdList = (UINT32 *)malloc(sizeof(UINT32) * m_dwChildIdListSize);
-            for(i = 0; i < m_dwChildIdListSize; i++)
+            m_pdwChildIdList = MemAllocArrayNoInit<uint32_t>(m_dwChildIdListSize);
+            for(uint32_t i = 0; i < m_dwChildIdListSize; i++)
                m_pdwChildIdList[i] = DBGetFieldULong(hResult, i, 0);
          }
          DBFreeResult(hResult);
@@ -175,7 +172,7 @@ bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_modified & MODIFY_OTHER))
    {
-      static const TCHAR *columns[] = { _T("object_class"), NULL };
+      static const TCHAR *columns[] = { _T("object_class"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_containers"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
@@ -197,7 +194,7 @@ bool AbstractContainer::saveToDatabase(DB_HANDLE hdb)
       if (success && !getChildList().isEmpty())
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO container_members (container_id,object_id) VALUES (?,?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             for(int i = 0; (i < getChildList().size()) && success; i++)
@@ -259,7 +256,7 @@ bool Container::saveToDatabase(DB_HANDLE hdb)
       if (!IsDatabaseRecordExist(hdb, _T("object_containers"), _T("id"), m_id))
       {
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO object_containers (id) VALUES (?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
             success = DBExecute(hStmt);

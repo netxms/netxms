@@ -4197,6 +4197,13 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       poller->setStatus(_T("hook"));
       executeHookScript(_T("ConfigurationPoll"), rqId);
 
+      POLL_CANCELLATION_CHECKPOINT();
+
+      poller->setStatus(_T("autobind"));
+      applyTemplates();
+      updateContainerMembership();
+      updateClusterMembership();
+
       sendPollerMsg(_T("Finished configuration poll of node %s\r\n"), m_name);
       sendPollerMsg(_T("Node configuration was%schanged after poll\r\n"), (modified != 0) ? _T(" ") : _T(" not "));
 
@@ -11570,4 +11577,57 @@ bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocate
       return true;
    }
    return false;
+}
+
+/**
+ * Filter for selecting clusters from objects
+ */
+static bool ClusterSelectionFilter(NetObj *object, void *userData)
+{
+   return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isAutoBindEnabled();
+}
+
+/**
+ * Update cluster membership
+ */
+void Node::updateClusterMembership()
+{
+   if (IsShutdownInProgress() || !(g_flags & AF_AUTOBIND_ON_CONF_POLL))
+      return;
+
+   sendPollerMsg(_T("Processing cluster autobind rules\r\n"));
+   unique_ptr<SharedObjectArray<NetObj>> clusters = g_idxObjectById.getObjects(ClusterSelectionFilter);
+   for(int i = 0; i < clusters->size(); i++)
+   {
+      Cluster *cluster = static_cast<Cluster*>(clusters->get(i));
+      NXSL_VM *cachedFilterVM = nullptr;
+      AutoBindDecision decision = cluster->isApplicable(&cachedFilterVM, self());
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!cluster->isDirectChild(m_id))
+         {
+            sendPollerMsg(_T("   Binding to cluster %s\r\n"), cluster->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("Node::updateClusterMembership(): binding node %s [%u] to cluster %s [%u]"),
+                      m_name, m_id, cluster->getName(), cluster->getId());
+            cluster->addChild(self());
+            addParent(cluster->self());
+            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", m_id, m_name, cluster->getId(), cluster->getName());
+            cluster->calculateCompoundStatus();
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (cluster->isAutoUnbindEnabled() && cluster->isDirectChild(m_id))
+         {
+            sendPollerMsg(_T("   Removing from cluster %s\r\n"), cluster->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("Node::updateClusterMembership(): removing node %s [%u] from cluster %s [%u]"),
+                      m_name, m_id, cluster->getName(), cluster->getId());
+            cluster->deleteChild(*this);
+            deleteParent(*cluster);
+            PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, cluster->getId(), cluster->getName());
+            cluster->calculateCompoundStatus();
+         }
+      }
+      delete cachedFilterVM;
+   }
 }

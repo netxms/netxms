@@ -23,6 +23,19 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.2 to 42.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.AutobindOnConfigurationPoll"),
+         _T("1"),
+         _T("Enable/disable automatic object binding on configuration polls."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 42.1 to 42.2
  */
 static bool H_UpgradeFromV1()
@@ -60,6 +73,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  42, 3,  H_UpgradeFromV2  },
    { 1,  42, 2,  H_UpgradeFromV1  },
    { 0,  42, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

@@ -491,6 +491,14 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, uin
    poller->setStatus(_T("hook"));
    executeHookScript(_T("ConfigurationPoll"), requestId);
 
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterConfPoll(%s): applying templates"), m_name);
+   if (ConfigReadBoolean(_T("Objects.Clusters.TemplateAutoApply"), false))
+      applyTemplates();
+
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterConfPoll(%s): Updating container bindings"), m_name);
+   if (ConfigReadBoolean(_T("Objects.Clusters.ContainerAutoBind"), false))
+      updateContainerMembership();
+
    sendPollerMsg(_T("Configuration poll finished\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): finished"), m_name);
 
