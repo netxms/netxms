@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # vim: ts=3 sw=3 expandtab
 # Parameters:
 #   1) artifact id
@@ -6,7 +6,7 @@
 #   3) artifact group (optional, defaults to org.netxms)
 #   4) additional build parameters (optional)
 
-if [ -z $2 ]; then
+if [ -z "$2" ]; then
    echo Usage: $0 '<artifactId> <version> [groupId] [build parameters]'
    exit 1
 fi
