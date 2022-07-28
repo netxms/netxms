@@ -123,6 +123,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
    private Action actionActivate;
    private Action actionDisable;
    private Action actionBulkUpdate;
+   private Action actionHideTemplateItems;
 
    /**
     * Constructor
@@ -175,6 +176,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
       viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
       dcFilter = new DciFilter();
       setFilterClient(viewer, dcFilter); 
+      dcFilter.setHideTemplateItems(ds.getAsBoolean(configPrefix + ".hideTemplateItems", false));
       viewer.addFilter(dcFilter);
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix); //$NON-NLS-1$
 
@@ -222,6 +224,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
          {
             WidgetHelper.saveTableViewerSettings(viewer, configPrefix); //$NON-NLS-1$
             ds.set(configPrefix + ".hideModificationWarnings", hideModificationWarnings);
+            ds.set(configPrefix + ".hideTemplateItems", actionHideTemplateItems.isChecked());
          }
       });
       
@@ -417,6 +420,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
          manager.add(actionExportToCsv);
          manager.add(actionExportAllToCsv);
          manager.add(new Separator());
+         manager.add(actionHideTemplateItems);
          manager.add(actionForcePoll);
          manager.add(actionRecalculateData);
          manager.add(actionClearData);
@@ -546,6 +550,15 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
       }; 
       actionToggleEditMode.setChecked(editMode);
       addKeyBinding("Ctrl+E", actionToggleEditMode);
+
+      actionHideTemplateItems = new Action(i18n.tr("Hide template items"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            setHideTemplateItems(actionHideTemplateItems.isChecked());
+         }
+      };
+      actionHideTemplateItems.setChecked(PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideTemplateItems", false));
    }
 
    /**
@@ -1169,6 +1182,10 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
          manager.add(new Separator());
          manager.add(actionToggleEditMode);
       }
+      if (actionToggleEditMode.isChecked())
+      {
+         manager.add(actionHideTemplateItems);
+      }
    }
 
    /**
@@ -1215,5 +1232,15 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
    public void update(DataCollectionObject object)
    {
       viewer.update(object, null);
+   }
+   /**
+    * Set visibility mode for template items
+    * 
+    * @param isChecked
+    */
+   private void setHideTemplateItems(boolean isChecked)
+   {
+      dcFilter.setHideTemplateItems(isChecked);
+      viewer.refresh(false);
    }
 }

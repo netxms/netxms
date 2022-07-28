@@ -140,6 +140,7 @@ public class DataCollectionEditor extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private Action actionBulkUpdate;
+   private Action actionHideTemplateItems;
 	private boolean hideModificationWarnings;
 	private RemoteChangeListener changeListener;
 
@@ -243,6 +244,7 @@ public class DataCollectionEditor extends ViewPart
 		viewer.setLabelProvider(new DciLabelProvider());
 		viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
 		filter = new DciFilter();
+      filter.setHideTemplateItems(getBooleanFromSettings("DataCollectionEditor.hideTemplateItems", false));
 		viewer.addFilter(filter);
       WidgetHelper.restoreTableViewerSettings(viewer, settings, "DataCollectionEditor.V3"); //$NON-NLS-1$
 		
@@ -429,6 +431,7 @@ public class DataCollectionEditor extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionShowFilter);
+      manager.add(actionHideTemplateItems);
 		manager.add(new Separator());
 		manager.add(actionCreateItem);
 		manager.add(actionCreateTable);
@@ -484,6 +487,7 @@ public class DataCollectionEditor extends ViewPart
          manager.add(actionConvert);
 		manager.add(actionDuplicate);
 		manager.add(actionExportToCsv);
+      manager.add(actionHideTemplateItems);
 		manager.add(new Separator());
 		manager.add(actionActivate);
 		manager.add(actionDisable);
@@ -624,6 +628,16 @@ public class DataCollectionEditor extends ViewPart
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+
+      actionHideTemplateItems = new Action("Hide template items", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            setHideTemplateItems(actionHideTemplateItems.isChecked());
+         }
+      };
+      actionHideTemplateItems.setChecked(getBooleanFromSettings("DataCollectionEditor.hideTemplateItems", false)); // default // is
+                                                                                                                  // turned off
 	}
 	
 	/**
@@ -1165,7 +1179,19 @@ public class DataCollectionEditor extends ViewPart
 		filter.setFilterString(text);
 		viewer.refresh(false);
 	}
-   
+
+   /**
+    * Set visibility mode for template items
+    * 
+    * @param isChecked
+    */
+   private void setHideTemplateItems(boolean isChecked)
+   {
+      filter.setHideTemplateItems(isChecked);
+      viewer.refresh(false);
+      settings.put("DataCollectionEditor.hideTemplateItems", isChecked);
+   }
+
    /**
     * Display message with information about policy deploy
     */

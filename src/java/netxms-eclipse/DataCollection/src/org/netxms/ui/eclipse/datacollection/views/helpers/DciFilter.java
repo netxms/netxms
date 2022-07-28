@@ -28,6 +28,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 public class DciFilter extends ViewerFilter
 {
 	private String filterString = null;
+   private boolean hideTemplateItems = false;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -35,10 +36,13 @@ public class DciFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
-		
-		final DataCollectionObject dci = (DataCollectionObject)element;
+      final DataCollectionObject dci = (DataCollectionObject)element;
+      if (hideTemplateItems && dci.getTemplateId() != 0)
+         return false;
+
+      if ((filterString == null) || (filterString.isEmpty()))
+         return true;
+
 		return dci.getDescription().toLowerCase().contains(filterString) || dci.getName().toLowerCase().contains(filterString) || Long.toString(dci.getId()).contains(filterString);
 	}
 
@@ -57,4 +61,12 @@ public class DciFilter extends ViewerFilter
 	{
 		this.filterString = filterString.toLowerCase();
 	}
+
+   /**
+    * @param hideTemplateItems the hideTemplateItems to set
+    */
+   public void setHideTemplateItems(boolean hideTemplateItems)
+   {
+      this.hideTemplateItems = hideTemplateItems;
+   }
 }
