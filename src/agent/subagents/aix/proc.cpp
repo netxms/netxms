@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2019 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -267,55 +267,48 @@ static bool MatchProcess(PROCENTRY *proc, const char *processNameFilter, const c
 /**
  * Handler for Process.Count(*), Process.CountEx(*) parameters
  */
-LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   LONG nRet;
-   PROCENTRY *pList;
-   int i, nSysProcCount, nProcCount;
-   char processNameFilter[MAX_PATH] = "", cmdLineFilter[MAX_PATH] = "", userNameFilter[256] = "";
-
-   if (!AgentGetParameterArgA(pszParam, 1, processNameFilter, 256))
-   {
+   char processNameFilter[256] = "", cmdLineFilter[256] = "", userNameFilter[256] = "";
+   if (!AgentGetParameterArgA(param, 1, processNameFilter, sizeof(processNameFilter)))
       return SYSINFO_RC_UNSUPPORTED;
+
+   bool extended = (*arg == _T('E'));
+   if (extended)
+   {
+      AgentGetParameterArgA(param, 2, cmdLineFilter, sizeof(cmdLineFilter));
+      AgentGetParameterArgA(param, 3, userNameFilter, sizeof(userNameFilter));
    }
 
-   if (*pArg == _T('E'))
+   int sysProcCount;
+   PROCENTRY *pList = GetProcessList(&sysProcCount);
+   if (pList == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   if (!extended && (*processNameFilter == 0))
    {
-      AgentGetParameterArgA(pszParam, 2, cmdLineFilter, sizeof(cmdLineFilter));
-      AgentGetParameterArgA(pszParam, 3, userNameFilter, sizeof(userNameFilter));
+      MemFree(pList);
+      ret_uint(value, sysProcCount);
+      return SYSINFO_RC_SUCCESS;
    }
 
-   pList = GetProcessList(&nSysProcCount);
-   if (pList != NULL)
+   int procCount = 0;
+   for (int i = 0; i < sysProcCount; i++)
    {
-      for (i = 0, nProcCount = 0; i < nSysProcCount; i++)
+      if (extended) // Process.CountEx()
       {
-         if (*pArg == _T('E')) // Process.CountEx()
-         {
-            if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
-               nProcCount++;
-         }
-         else // Process.Count()
-         {
-            if (*processNameFilter != 0)
-            {
-               if (strcmp(pList[i].pi_comm, processNameFilter))
-               {
-                  nProcCount++;
-               }
-            }
-         }
+         if (MatchProcess(&pList[i], processNameFilter, cmdLineFilter, userNameFilter))
+            procCount++;
       }
-      free(pList);
-      ret_uint(pValue, nProcCount);
-      nRet = SYSINFO_RC_SUCCESS;
+      else // Process.Count()
+      {
+         if (!strcmp(pList[i].pi_comm, processNameFilter))
+            procCount++;
+      }
    }
-   else
-   {
-      nRet = SYSINFO_RC_ERROR;
-   }
-
-   return nRet;
+   MemFree(pList);
+   ret_uint(value, procCount);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -328,8 +321,8 @@ LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abst
    char processNameFilter[128] = "", cmdLineFilter[128] = "", userNameFilter[128] = "";
    int i, nProcCount, nType, nCount;
    PROCENTRY *pList;
-   QWORD qwValue, qwCurrVal;
-   static const char *pszTypeList[] = { "min", "max", "avg", "sum", NULL };
+   uint64_t qwValue, qwCurrVal;
+   static const char *pszTypeList[] = { "min", "max", "avg", "sum", nullptr };
 
    // Get parameter type arguments
    AgentGetParameterArgA(pszParam, 2, szBuffer, sizeof(szBuffer));
