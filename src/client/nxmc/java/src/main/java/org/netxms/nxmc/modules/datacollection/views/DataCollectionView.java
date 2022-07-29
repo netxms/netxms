@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ public class DataCollectionView extends BaseDataCollectionView
 
    // Columns for "data collection configuration" mode
    public static final int DC_COLUMN_ID = 0;
-public static final int DC_COLUMN_DESCRIPTION = 1;
+   public static final int DC_COLUMN_DESCRIPTION = 1;
    public static final int DC_COLUMN_ORIGIN = 2;
    public static final int DC_COLUMN_PARAMETER = 3;
    public static final int DC_COLUMN_DATATYPE = 4;
@@ -420,10 +420,11 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
          manager.add(actionExportToCsv);
          manager.add(actionExportAllToCsv);
          manager.add(new Separator());
-         manager.add(actionHideTemplateItems);
          manager.add(actionForcePoll);
          manager.add(actionRecalculateData);
          manager.add(actionClearData);
+         manager.add(new Separator());
+         manager.add(actionHideTemplateItems);
       }
    }
 
@@ -434,7 +435,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
    protected void createActions()
    {
       super.createActions();      
-      
+
       actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
@@ -443,7 +444,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
          }
       };
       actionEdit.setEnabled(false);
-      
+
       actionBulkUpdate = new Action("&Bulk update...") {
          @Override
          public void run()
@@ -499,7 +500,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
       };
       actionDuplicate.setEnabled(false);
 
-      actionActivate = new Action(i18n.tr("&Activate"), ResourceManager.getImageDescriptor("icons/dci/active.gif")) { //$NON-NLS-1$
+      actionActivate = new Action(i18n.tr("&Activate"), ResourceManager.getImageDescriptor("icons/dci/active.gif")) {
          @Override
          public void run()
          {
@@ -510,7 +511,7 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
       };
       actionActivate.setEnabled(false);
 
-      actionDisable = new Action(i18n.tr("D&isable"), ResourceManager.getImageDescriptor("icons/dci/disabled.gif")) { //$NON-NLS-1$
+      actionDisable = new Action(i18n.tr("D&isable"), ResourceManager.getImageDescriptor("icons/dci/disabled.gif")) {
          @Override
          public void run()
          {
@@ -549,16 +550,18 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
          }
       }; 
       actionToggleEditMode.setChecked(editMode);
-      addKeyBinding("Ctrl+E", actionToggleEditMode);
+      addKeyBinding("M1+E", actionToggleEditMode);
 
-      actionHideTemplateItems = new Action(i18n.tr("Hide template items"), Action.AS_CHECK_BOX) {
+      actionHideTemplateItems = new Action(i18n.tr("Hide &template items"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
             setHideTemplateItems(actionHideTemplateItems.isChecked());
          }
       };
+      actionHideTemplateItems.setImageDescriptor(ResourceManager.getImageDescriptor("icons/ignore-template-objects.png"));
       actionHideTemplateItems.setChecked(PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideTemplateItems", false));
+      addKeyBinding("M1+M2+T", actionHideTemplateItems);
    }
 
    /**
@@ -1162,6 +1165,10 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
    {
       manager.add(actionCreateItem);
       super.fillLocalToolbar(manager);
+      if (editMode)
+      {
+         manager.add(actionHideTemplateItems);
+      }
       if (!(getObject() instanceof Template))
       {
          manager.add(actionToggleEditMode);
@@ -1177,14 +1184,14 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
       manager.add(actionCreateItem);
       manager.add(new Separator());
       super.fillLocalMenu(manager);
+      if (editMode)
+      {
+         manager.add(actionHideTemplateItems);
+      }
       if (!(getObject() instanceof Template))
       {
          manager.add(new Separator());
          manager.add(actionToggleEditMode);
-      }
-      if (actionToggleEditMode.isChecked())
-      {
-         manager.add(actionHideTemplateItems);
       }
    }
 
@@ -1233,14 +1240,15 @@ public static final int DC_COLUMN_DESCRIPTION = 1;
    {
       viewer.update(object, null);
    }
+
    /**
     * Set visibility mode for template items
     * 
-    * @param isChecked
+    * @param hide true to hide template items
     */
-   private void setHideTemplateItems(boolean isChecked)
+   private void setHideTemplateItems(boolean hide)
    {
-      dcFilter.setHideTemplateItems(isChecked);
+      dcFilter.setHideTemplateItems(hide);
       viewer.refresh(false);
    }
 }

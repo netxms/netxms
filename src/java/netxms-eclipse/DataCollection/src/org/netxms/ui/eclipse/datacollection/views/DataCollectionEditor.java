@@ -463,10 +463,11 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+      manager.add(actionCreateItem);
       manager.add(actionShowFilter);
-		manager.add(actionCreateItem);
+      manager.add(actionHideTemplateItems);
+      manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
-		manager.add(actionExportAllToCsv);
 	}
 
 	/**
@@ -487,7 +488,6 @@ public class DataCollectionEditor extends ViewPart
          manager.add(actionConvert);
 		manager.add(actionDuplicate);
 		manager.add(actionExportToCsv);
-      manager.add(actionHideTemplateItems);
 		manager.add(new Separator());
 		manager.add(actionActivate);
 		manager.add(actionDisable);
@@ -495,6 +495,8 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
+      manager.add(new Separator());
+      manager.add(actionHideTemplateItems);
 	}
 
 	/**
@@ -512,7 +514,7 @@ public class DataCollectionEditor extends ViewPart
 			}
 		};
 
-		actionCreateItem = new Action(Messages.get().DataCollectionEditor_NewParam, Activator.getImageDescriptor("icons/new.png")) { //$NON-NLS-1$
+      actionCreateItem = new Action(Messages.get().DataCollectionEditor_NewParam, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
@@ -629,15 +631,15 @@ public class DataCollectionEditor extends ViewPart
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 
-      actionHideTemplateItems = new Action("Hide template items", Action.AS_CHECK_BOX) {
+      actionHideTemplateItems = new Action("Hide &template items", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
             setHideTemplateItems(actionHideTemplateItems.isChecked());
          }
       };
-      actionHideTemplateItems.setChecked(getBooleanFromSettings("DataCollectionEditor.hideTemplateItems", false)); // default // is
-                                                                                                                  // turned off
+      actionHideTemplateItems.setImageDescriptor(Activator.getImageDescriptor("icons/ignore-template-objects.png"));
+      actionHideTemplateItems.setChecked(getBooleanFromSettings("DataCollectionEditor.hideTemplateItems", false));
 	}
 	
 	/**
