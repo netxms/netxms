@@ -896,7 +896,7 @@ static bool H_UpgradeFromV69()
          _T(""),
          'C', true, false, false, false));
    CHK_EXEC(CreateConfigParam(_T("BusinessServices.History.RetentionTime"),
-         _T("1"),
+         _T("90"),
          _T("Retention time for business service historical data"),
          _T("days"),
          'I', true, false, false, false));
