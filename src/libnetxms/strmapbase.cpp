@@ -214,13 +214,32 @@ void *StringMapBase::unlink(const TCHAR *key)
  * Enumerate entries
  * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
  */
-EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const
+EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *context) const
 {
    EnumerationCallbackResult result = _CONTINUE;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData) == _STOP)
+      if (cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value, context) == _STOP)
+      {
+         result = _STOP;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
+ * Enumerate entries
+ * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
+ */
+EnumerationCallbackResult StringMapBase::forEach(std::function<EnumerationCallbackResult (const TCHAR*, const void*)> cb) const
+{
+   EnumerationCallbackResult result = _CONTINUE;
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value) == _STOP)
       {
          result = _STOP;
          break;
@@ -232,13 +251,31 @@ EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)
 /**
  * Find entry
  */
-const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const
+const void *StringMapBase::findElement(bool (*comparator)(const TCHAR*, const void*, void*), void *context) const
 {
    const void *result = nullptr;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (comparator(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
+      if (comparator(m_ignoreCase ? entry->originalKey : entry->key, entry->value, context))
+      {
+         result = entry->value;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
+ * Find entry
+ */
+const void *StringMapBase::findElement(std::function<bool (const TCHAR*, const void*)> comparator) const
+{
+   const void *result = nullptr;
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (comparator(m_ignoreCase ? entry->originalKey : entry->key, entry->value))
       {
          result = entry->value;
          break;

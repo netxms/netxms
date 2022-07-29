@@ -27,7 +27,6 @@
 #include <nms_threads.h>
 #include <nxqueue.h>
 #include <math.h>
-#include <functional>
 
 /**
  * Maximum name length for gauge

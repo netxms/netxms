@@ -46,6 +46,10 @@
 #include <base32.h>
 #include <base64.h>
 
+#ifdef __cplusplus
+#include <functional>
+#endif
+
 /*** Byte swapping ***/
 #if WORDS_BIGENDIAN
 #define htonq(x) (x)
@@ -1870,8 +1874,10 @@ public:
    bool contains(const TCHAR *key) const { return (key != nullptr) ? (find(key, _tcslen(key) * sizeof(TCHAR)) != nullptr) : false; }
    bool contains(const TCHAR *key, size_t len) const { return (key != nullptr) ? (find(key, len * sizeof(TCHAR)) != nullptr) : false; }
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const;
-   const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const;
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR*, const void*, void*), void *userData) const;
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult (const TCHAR*, const void*)> cb) const;
+   const void *findElement(bool (*comparator)(const TCHAR*, const void*, void*), void *userData) const;
+   const void *findElement(std::function<bool (const TCHAR*, const void*)> comparator) const;
 
    StructArray<KeyValuePair<void>> *toArray(bool (*filter)(const TCHAR *, const void *, void *) = nullptr, void *userData = nullptr) const;
    StringList *keys() const;
