@@ -23,6 +23,22 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.4 to 42.5
+ */
+static bool H_UpgradeFromV4()
+{
+   if (GetSchemaLevelForMajorVersion(41) < 19)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='90' WHERE var_name='BusinessServices.History.RetentionTime'")));
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='90' WHERE var_name='BusinessServices.History.RetentionTime' AND var_value=1")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(41, 19));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
+
+/**
  * Upgrade from 42.3 to 42.4
  */
 static bool H_UpgradeFromV3()
@@ -100,6 +116,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  42, 5,  H_UpgradeFromV4  },
    { 3,  42, 4,  H_UpgradeFromV3  },
    { 2,  42, 3,  H_UpgradeFromV2  },
    { 1,  42, 2,  H_UpgradeFromV1  },
