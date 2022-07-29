@@ -27,7 +27,7 @@
  */
 static bool H_UpgradeFromV3()
 {
-   DB_RESULT hResult = SQLSelect(_T("SELECT network_maps.id, object_properties.flags FROM network_maps INNER JOIN object_properties ON network_maps.id = object_properties.object_id "));
+   DB_RESULT hResult = SQLSelect(_T("SELECT network_maps.id, object_properties.flags FROM network_maps INNER JOIN object_properties ON network_maps.id=object_properties.object_id"));
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
@@ -36,7 +36,7 @@ static bool H_UpgradeFromV3()
         uint32_t flags = DBGetFieldULong(hResult, i, 1);
         flags |= MF_TRANSLUCENT_LABEL_BKGND;
         TCHAR query[1024];
-        _sntprintf(query, 1024, _T("UPDATE object_properties SET flags=%u WHERE object_id=%u"), flags,DBGetFieldULong(hResult, i, 0));
+        _sntprintf(query, 1024, _T("UPDATE object_properties SET flags=%u WHERE object_id=%u"), flags, DBGetFieldULong(hResult, i, 0));
         CHK_EXEC(SQLQuery(query));
       }
       DBFreeResult(hResult);
@@ -48,7 +48,6 @@ static bool H_UpgradeFromV3()
    CHK_EXEC(SetMinorSchemaVersion(4));
    return true;
 }
-
 
 /**
  * Upgrade from 42.2 to 42.3
