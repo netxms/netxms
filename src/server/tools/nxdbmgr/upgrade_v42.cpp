@@ -23,6 +23,34 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.3 to 42.4
+ */
+static bool H_UpgradeFromV3()
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT network_maps.id, object_properties.flags FROM network_maps INNER JOIN object_properties ON network_maps.id = object_properties.object_id "));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+        uint32_t flags = DBGetFieldULong(hResult, i, 1);
+        flags |= MF_TRANSLUCENT_LABEL_BKGND;
+        TCHAR query[1024];
+        _sntprintf(query, 1024, _T("UPDATE object_properties SET flags=%u WHERE object_id=%u"), flags,DBGetFieldULong(hResult, i, 0));
+        CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+
+/**
  * Upgrade from 42.2 to 42.3
  */
 static bool H_UpgradeFromV2()
@@ -73,6 +101,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  42, 4,  H_UpgradeFromV3  },
    { 2,  42, 3,  H_UpgradeFromV2  },
    { 1,  42, 2,  H_UpgradeFromV1  },
    { 0,  42, 1,  H_UpgradeFromV0  },
