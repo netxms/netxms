@@ -915,6 +915,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_FQDN_FOR_NODE_NAMES));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DEBUG_CONSOLE_DISABLED));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_AUTOBIND_ON_CONF_POLL));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_WRITE_FULL_DUMP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
@@ -932,7 +933,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SYSLOG_DISCOVERY));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CACHE_DB_ON_STARTUP));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NXSL_FILE_IO_FUNCTIONS));
-         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_EMBEDDED_PYTHON));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_SUPPORTS_MERGE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PARALLEL_NETWORK_DISCOVERY));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SINGLE_TABLE_PERF_DATA));
