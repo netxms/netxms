@@ -38,7 +38,7 @@ static bool H_UpgradeFromV19()
 static bool H_UpgradeFromV18()
 {
    CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='90' WHERE var_name='BusinessServices.History.RetentionTime'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='90' WHERE var_name='BusinessServices.History.RetentionTime' AND var_value=1")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='90' WHERE var_name='BusinessServices.History.RetentionTime' AND var_value='1'")));
    CHK_EXEC(SetMinorSchemaVersion(19));
    return true;
 }
