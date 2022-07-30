@@ -25,6 +25,8 @@
 
 #ifdef __cplusplus
 
+#include <functional>
+
 #define NMS_THREADS_H_INCLUDED
 
 extern LIBNETXMS_EXPORTABLE_VAR(int g_defaultThreadStackSize);
@@ -1500,6 +1502,56 @@ template <typename R1, typename R2, typename R3, typename R4> inline void Thread
 template <typename R1, typename R2, typename R3, typename R4> inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, void (*f)(R1, R2, R3, R4), R1 arg1, R2 arg2, R3 arg3, R4 arg4)
 {
    ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Wrapper_4F<R1, R2, R3, R4>, new __ThreadPoolExecute_WrapperData_4F<R1, R2, R3, R4>(f, arg1, arg2, arg3, arg4));
+}
+
+/**
+ * Wrapper for ThreadPoolExecute with shared_ptr argument
+ */
+static inline void __ThreadPoolExecute_Callable_Wrapper(void *arg)
+{
+   auto f = static_cast<std::function<void ()>*>(arg);
+   (*f)();
+   delete f;
+}
+
+/**
+ * Wrapper for ThreadPoolExecute to use std::function
+ */
+static inline void ThreadPoolExecute(ThreadPool *p, const std::function<void ()>& f)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+}
+
+/**
+ * Wrapper for ThreadPoolExecuteSerialized to use std::function
+ */
+static inline void ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, const std::function<void ()>& f)
+{
+   ThreadPoolExecuteSerialized(p, key, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsolute to use std::function
+ */
+static inline void ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, const std::function<void ()>& f)
+{
+   ThreadPoolScheduleAbsolute(p, runTime, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleAbsoluteMs to use std::function
+ */
+static inline void ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t runTime, const std::function<void ()>& f)
+{
+   ThreadPoolScheduleAbsoluteMs(p, runTime, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
+}
+
+/**
+ * Wrapper for ThreadPoolScheduleRelative to use std::function
+ */
+static inline void ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, const std::function<void ()>& f)
+{
+   ThreadPoolScheduleRelative(p, delay, __ThreadPoolExecute_Callable_Wrapper, new std::function<void ()>(f));
 }
 
 /**
