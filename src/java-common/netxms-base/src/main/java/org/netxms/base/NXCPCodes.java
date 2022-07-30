@@ -448,7 +448,7 @@ public class NXCPCodes
    public static final int CMD_2FA_PREPARE_CHALLENGE = 0x01AE;
    public static final int CMD_2FA_VALIDATE_RESPONSE = 0x01AF;
    public static final int CMD_2FA_GET_METHODS = 0x01B0;
-   public static final int CMD_2FA_GET_METHOD_DETAILS = 0x01B1;
+   // public static final int CMD_2FA_GET_METHOD_DETAILS = 0x01B1;
    public static final int CMD_2FA_MODIFY_METHOD = 0x01B2;
    public static final int CMD_2FA_DELETE_METHOD = 0x01B3;
    public static final int CMD_2FA_GET_USER_BINDINGS = 0x01B4;

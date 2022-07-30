@@ -673,7 +673,7 @@ typedef struct
 #define CMD_2FA_PREPARE_CHALLENGE         0x01AE
 #define CMD_2FA_VALIDATE_RESPONSE         0x01AF
 #define CMD_2FA_GET_METHODS               0x01B0
-#define CMD_2FA_GET_METHOD_DETAILS        0x01B1
+// unused: #define CMD_2FA_GET_METHOD_DETAILS        0x01B1
 #define CMD_2FA_MODIFY_METHOD             0x01B2
 #define CMD_2FA_DELETE_METHOD             0x01B3
 #define CMD_2FA_GET_USER_BINDINGS         0x01B4

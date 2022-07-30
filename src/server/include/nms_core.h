@@ -872,7 +872,6 @@ private:
    void generateSshKey(const NXCPMessage& request);
    void get2FADrivers(const NXCPMessage& request);
    void get2FAMethods(const NXCPMessage& request);
-   void get2FAMethodDetails(const NXCPMessage& request);
    void modify2FAMethod(const NXCPMessage& request);
    void rename2FAMethod(const NXCPMessage& request);
    void delete2FAMethod(const NXCPMessage& request);

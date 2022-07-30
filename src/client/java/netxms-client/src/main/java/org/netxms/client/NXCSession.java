@@ -12971,22 +12971,6 @@ public class NXCSession
    }
 
    /**
-    * Get details of configured two-factor authentication method.
-    *
-    * @param name method name
-    * @return details of configured two-factor authentication method
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public TwoFactorAuthenticationMethod get2FAMethodDetails(String name) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_2FA_GET_METHOD_DETAILS);
-      msg.setField(NXCPCodes.VID_NAME, name);
-      sendMessage(msg);
-      return new TwoFactorAuthenticationMethod(waitForRCC(msg.getMessageId()));
-   }
-
-   /**
     * Modify existing two-factor authentication method or create new one.
     *
     * @param method method definition

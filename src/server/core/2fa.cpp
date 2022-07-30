@@ -83,12 +83,13 @@ class TwoFactorAuthenticationMethod
 protected:
    TCHAR m_methodName[MAX_OBJECT_NAME];
    TCHAR m_description[MAX_2FA_DESCRIPTION];
+   char *m_configuration;
    bool m_isValid;
 
-   TwoFactorAuthenticationMethod(const TCHAR* name, const TCHAR* description, const Config& config);
+   TwoFactorAuthenticationMethod(const TCHAR *name, const TCHAR *description, char *configuration);
 
 public:
-   virtual ~TwoFactorAuthenticationMethod() = default;
+   virtual ~TwoFactorAuthenticationMethod();
 
    virtual const TCHAR *getDriverName() const = 0;
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) = 0;
@@ -97,10 +98,11 @@ public:
    virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const = 0;
 
    bool isValid() const { return m_isValid; };
-   const TCHAR* getName() const { return m_methodName; };
-   const TCHAR* getDescription() const { return m_description; };
+   const TCHAR *getName() const { return m_methodName; };
+   const TCHAR *getDescription() const { return m_description; };
+   const char *getConfiguration() const { return m_configuration; }
 
-   bool saveToDatabase(const char *configuration) const;
+   bool saveToDatabase() const;
 };
 
 static StringObjectMap<TwoFactorAuthenticationMethod> s_methods(Ownership::True);
@@ -109,17 +111,26 @@ static Mutex s_authMethodListLock;
 /**
  * Authentication method base constructor
  */
-TwoFactorAuthenticationMethod::TwoFactorAuthenticationMethod(const TCHAR* name, const TCHAR* description, const Config& config)
+TwoFactorAuthenticationMethod::TwoFactorAuthenticationMethod(const TCHAR *name, const TCHAR *description, char *configuration)
 {
    m_isValid = false;
    _tcslcpy(m_methodName, name, MAX_OBJECT_NAME);
-   _tcslcpy(m_description, description, MAX_OBJECT_NAME);
+   _tcslcpy(m_description, description, MAX_2FA_DESCRIPTION);
+   m_configuration = configuration;
+}
+
+/**
+ * Authentication method base destructor
+ */
+TwoFactorAuthenticationMethod::~TwoFactorAuthenticationMethod()
+{
+   MemFree(m_configuration);
 }
 
 /**
  * Save 2FA method to database
  */
-bool TwoFactorAuthenticationMethod::saveToDatabase(const char *configuration) const
+bool TwoFactorAuthenticationMethod::saveToDatabase() const
 {
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -136,7 +147,7 @@ bool TwoFactorAuthenticationMethod::saveToDatabase(const char *configuration) co
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, getDriverName(), DB_BIND_STATIC);
       DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, configuration, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_configuration, DB_BIND_STATIC);
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_methodName, DB_BIND_STATIC);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -152,13 +163,13 @@ bool TwoFactorAuthenticationMethod::saveToDatabase(const char *configuration) co
 class TOTPAuthMethod : public TwoFactorAuthenticationMethod
 {
 public:
-   TOTPAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config) : TwoFactorAuthenticationMethod(name, description, config)
+   TOTPAuthMethod(const TCHAR* name, const TCHAR* description, char *configuration) : TwoFactorAuthenticationMethod(name, description, configuration)
    {
       m_isValid = true;
    }
 
    virtual const TCHAR *getDriverName() const override { return _T("TOTP"); }
-   virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
+   virtual TwoFactorAuthenticationToken *prepareChallenge(uint32_t userId) override;
    virtual bool validateResponse(TwoFactorAuthenticationToken* token, const TCHAR* response, uint32_t userId) override;
    virtual unique_ptr<StringMap> extractBindingConfiguration(const Config& binding) const override;
    virtual void updateBindingConfiguration(Config* binding, const StringMap& updates) const override;
@@ -167,7 +178,7 @@ public:
 /**
  * Preparing challenge for user with TOTP
  */
-TwoFactorAuthenticationToken* TOTPAuthMethod::prepareChallenge(uint32_t userId)
+TwoFactorAuthenticationToken *TOTPAuthMethod::prepareChallenge(uint32_t userId)
 {
    TwoFactorAuthenticationToken* token = nullptr;
    shared_ptr<Config> binding = GetUser2FAMethodBinding(userId, m_methodName);
@@ -259,7 +270,7 @@ private:
    TCHAR m_channelName[MAX_OBJECT_NAME];
 
 public:
-   MessageAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config);
+   MessageAuthMethod(const TCHAR *name, const TCHAR *description, char *configuration);
 
    virtual const TCHAR *getDriverName() const override { return _T("Message"); }
    virtual TwoFactorAuthenticationToken* prepareChallenge(uint32_t userId) override;
@@ -271,17 +282,27 @@ public:
 /**
  * Notification channel authentication class constructor
  */
-MessageAuthMethod::MessageAuthMethod(const TCHAR* name, const TCHAR* description, const Config& config) : TwoFactorAuthenticationMethod(name, description, config)
+MessageAuthMethod::MessageAuthMethod(const TCHAR *name, const TCHAR *description, char *configuration) : TwoFactorAuthenticationMethod(name, description, configuration)
 {
-   const TCHAR* channelName = config.getValue(_T("/MethodConfiguration/ChannelName"));
-   if (channelName != nullptr)
+   m_channelName[0] = 0;
+
+   Config parsedConfiguration;
+   if (parsedConfiguration.loadConfigFromMemory(configuration, strlen(configuration), _T("MethodConfiguration"), nullptr, true, false))
    {
-      _tcslcpy(m_channelName, channelName, MAX_OBJECT_NAME);
-      m_isValid = true;
+      const TCHAR *channelName = parsedConfiguration.getValue(_T("/MethodConfiguration/ChannelName"));
+      if (channelName != nullptr)
+      {
+         _tcslcpy(m_channelName, channelName, MAX_OBJECT_NAME);
+         m_isValid = true;
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Missing channel name in configuration of 2FA method \"%s\""), name);
+      }
    }
    else
    {
-      m_channelName[0] = 0;
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Configuration parsing failed for two-factor authentication method \"%s\" (configuration: %hs)"), name, configuration);
    }
 }
 
@@ -343,87 +364,30 @@ void MessageAuthMethod::updateBindingConfiguration(Config* binding, const String
 /**
  * Create new two-factor authentication driver instance based on configuration data
  */
-static TwoFactorAuthenticationMethod* CreateAuthenticationMethod(const TCHAR* name, const TCHAR* driver, const TCHAR* description, const char* configData)
+static TwoFactorAuthenticationMethod *CreateAuthenticationMethod(const TCHAR *name, const TCHAR *driver, const TCHAR *description, char *configuration)
 {
-   TwoFactorAuthenticationMethod* method = nullptr;
-   Config config;
-   if (config.loadConfigFromMemory(configData, strlen(configData), _T("MethodConfiguration"), nullptr, true, false))
+   TwoFactorAuthenticationMethod *method;
+   if (!_tcscmp(driver, _T("TOTP")))
    {
-      if (!_tcscmp(driver, _T("TOTP")))
-      {
-         method = new TOTPAuthMethod(name, description, config);
-      }
-      else if (!_tcscmp(driver, _T("Message")))
-      {
-         method = new MessageAuthMethod(name, description, config);
-      }
-
-      if (method == nullptr)
-      {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot find driver \"%s\" for two-factor authentication method \"%s\""), driver, name);
-      }
-      else if (!method->isValid())
-      {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Two-factor authentication method \"%s\" (driver = \"%s\") initialization failed"), name, driver);
-      }
+      method = new TOTPAuthMethod(name, description, configuration);
+   }
+   else if (!_tcscmp(driver, _T("Message")))
+   {
+      method = new MessageAuthMethod(name, description, configuration);
    }
    else
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Configuration parsing failed for two-factor authentication method \"%s\" (configuration: %hs)"), name, configData);
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot find driver \"%s\" for two-factor authentication method \"%s\""), driver, name);
+      MemFree(configuration);
+      method = nullptr;
    }
+
+   if ((method != nullptr) && !method->isValid())
+   {
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Two-factor authentication method \"%s\" (driver = \"%s\") initialization failed"), name, driver);
+   }
+
    return method;
-}
-
-/**
- * 2FA method information
- */
-class TwoFactorAuthMethodInfo
-{
-private:
-   TCHAR m_name[MAX_OBJECT_NAME];
-   TCHAR m_driver[MAX_OBJECT_NAME];
-   TCHAR m_description[MAX_2FA_DESCRIPTION];
-   char *m_configuration;
-
-public:
-   TwoFactorAuthMethodInfo(DB_RESULT hResult, int row)
-   {
-      DBGetField(hResult, row, 0, m_name, MAX_OBJECT_NAME);
-      DBGetField(hResult, row, 1, m_driver, MAX_OBJECT_NAME);
-      DBGetField(hResult, row, 2, m_description, MAX_2FA_DESCRIPTION);
-      m_configuration = DBGetFieldUTF8(hResult, row, 3, nullptr, 0);
-   }
-
-   ~TwoFactorAuthMethodInfo()
-   {
-      MemFree(m_configuration);
-   }
-
-   const TCHAR *getName() const { return m_name; };
-   const TCHAR *getDriver() const { return m_driver; };
-   const TCHAR *getDescription() const { return m_description; };
-   const char *getConfiguration() const { return m_configuration; };
-};
-
-/**
- * Reading 2FA methods info from DB
- */
-unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> Load2FAMethodsInfoFromDB()
-{
-   auto methods = make_unique<ObjectArray<TwoFactorAuthMethodInfo>>(0, 32, Ownership::True);
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT name,driver,description,configuration FROM two_factor_auth_methods"));
-   if (hResult != nullptr)
-   {
-      int numRows = DBGetNumRows(hResult);
-      for (int i = 0; i < numRows; i++)
-      {
-         methods->add(new TwoFactorAuthMethodInfo(hResult, i));
-      }
-      DBFreeResult(hResult);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-   return methods;
 }
 
 /**
@@ -431,44 +395,54 @@ unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> Load2FAMethodsInfoFromDB()
  */
 void LoadTwoFactorAuthenticationMethods()
 {
-   int numberOfAddedMethods = 0;
-   unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> methodsInfo = Load2FAMethodsInfoFromDB();
-   for (int i = 0; i < methodsInfo->size(); i++)
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   int loaded = 0;
+   int initialized = 0;
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT name,driver,description,configuration FROM two_factor_auth_methods"));
+   if (hResult != nullptr)
    {
-      TwoFactorAuthMethodInfo *info = methodsInfo->get(i);
-      if (info->getConfiguration() != nullptr)
+      int count = DBGetNumRows(hResult);
+      for (int i = 0; i < count; i++)
       {
-         TwoFactorAuthenticationMethod *am = CreateAuthenticationMethod(info->getName(), info->getDriver(), info->getDescription(), info->getConfiguration());
+         TCHAR name[MAX_OBJECT_NAME], driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
+         DBGetField(hResult, i, 0, name, MAX_OBJECT_NAME);
+         DBGetField(hResult, i, 1, driver, MAX_OBJECT_NAME);
+         DBGetField(hResult, i, 2, description, MAX_2FA_DESCRIPTION);
+         char *configuration = DBGetFieldUTF8(hResult, i, 3, nullptr, 0);  // Will be passed to method object or deallocated by CreateAuthenticationMethod
+         TwoFactorAuthenticationMethod *am = CreateAuthenticationMethod(name, driver, description, configuration);
          if (am != nullptr)
          {
             s_authMethodListLock.lock();
-            s_methods.set(info->getName(), am);
+            s_methods.set(name, am);
             s_authMethodListLock.unlock();
-            numberOfAddedMethods++;
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Two-factor authentication method \"%s\" successfully created"), info->getName());
-         }
-         else
-         {
-            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Two-factor authentication method \"%s\" creation failed"), info->getName());
+            loaded++;
+            if (am->isValid())
+            {
+               initialized++;
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Two-factor authentication method \"%s\" successfully loaded and initialized"), name);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("Two-factor authentication method \"%s\" loaded but failed initialization"), name);
+            }
          }
       }
-      else
-      {
-         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unable to read configuration for two-factor authentication method \"%s\""), info->getName());
-      }
+      DBFreeResult(hResult);
    }
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("%d two-factor authentication methods added"), numberOfAddedMethods);
+   DBConnectionPoolReleaseConnection(hdb);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("%d two-factor authentication methods loaded, %d successfully initialized"), loaded, initialized);
 }
 
 /**
  * Prepare 2FA challenge for user using selected method
  */
-TwoFactorAuthenticationToken* Prepare2FAChallenge(const TCHAR* methodName, uint32_t userId)
+TwoFactorAuthenticationToken *Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId)
 {
-   TwoFactorAuthenticationToken* token = nullptr;
+   TwoFactorAuthenticationToken *token = nullptr;
    s_authMethodListLock.lock();
    TwoFactorAuthenticationMethod *am = s_methods.get(methodName);
-   if (am != nullptr)
+   if ((am != nullptr) && am->isValid())
    {
       token = am->prepareChallenge(userId);
    }
@@ -479,14 +453,14 @@ TwoFactorAuthenticationToken* Prepare2FAChallenge(const TCHAR* methodName, uint3
 /**
  * Validate 2FA response
  */
-bool Validate2FAResponse(TwoFactorAuthenticationToken* token, TCHAR *response, uint32_t userId)
+bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId)
 {
    bool success = false;
    s_authMethodListLock.lock();
    if (token != nullptr)
    {
       TwoFactorAuthenticationMethod *am = s_methods.get(token->getMethodName());
-      if (am != nullptr)
+      if ((am != nullptr) && am->isValid())
       {
          success = am->validateResponse(token, response, userId);
       }
@@ -496,84 +470,40 @@ bool Validate2FAResponse(TwoFactorAuthenticationToken* token, TCHAR *response, u
 }
 
 /**
- * Adds 2FA method details info from DB to message
- */
-void Get2FAMethodDetails(const TCHAR* name, NXCPMessage *msg)
-{
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelectFormatted(hdb, _T("SELECT driver,description,configuration FROM two_factor_auth_methods WHERE name=%s"), DBPrepareString(hdb, name).cstr());
-   if (result != nullptr)
-   {
-      if (DBGetNumRows(result) > 0)
-      {
-         TCHAR driver[MAX_OBJECT_NAME], description[MAX_2FA_DESCRIPTION];
-         DBGetField(result, 0, 0, driver, MAX_OBJECT_NAME);
-         DBGetField(result, 0, 1, description, MAX_2FA_DESCRIPTION);
-         TCHAR *configuration = DBGetField(result, 0, 2, nullptr, 0);
-
-         msg->setField(VID_NAME, name);
-         msg->setField(VID_DRIVER_NAME, driver);
-         msg->setField(VID_DESCRIPTION, description);
-         msg->setField(VID_CONFIG_FILE_DATA, configuration);
-
-         s_authMethodListLock.lock();
-         msg->setField(VID_IS_ACTIVE, s_methods.contains(name));
-         s_authMethodListLock.unlock();
-
-         MemFree(configuration);
-      }
-      DBFreeResult(result);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-}
-
-/**
  * Fills message with 2FA methods list
  */
 void Get2FAMethods(NXCPMessage *msg)
 {
-   unique_ptr<ObjectArray<TwoFactorAuthMethodInfo>> methodsInfo = Load2FAMethodsInfoFromDB();
    uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
    s_authMethodListLock.lock();
-   for (int i = 0; i < methodsInfo->size(); i++)
-   {
-      TwoFactorAuthMethodInfo *method = methodsInfo->get(i);
-      msg->setField(fieldId++, method->getName());
-      msg->setField(fieldId++, method->getDescription());
-      msg->setField(fieldId++, method->getDriver());
-      msg->setFieldFromUtf8String(fieldId++, method->getConfiguration());
-      msg->setField(fieldId++, s_methods.contains(method->getName()));
+   s_methods.forEach([msg, &fieldId](const TCHAR *name, const void *method) -> EnumerationCallbackResult {
+      msg->setField(fieldId++, name);
+      msg->setField(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->getDescription());
+      msg->setField(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->getDriverName());
+      msg->setFieldFromUtf8String(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->getConfiguration());
+      msg->setField(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->isValid());
       fieldId += 5;
-   }
+      return _CONTINUE;
+   });
+   msg->setField(VID_2FA_METHOD_COUNT, s_methods.size());
    s_authMethodListLock.unlock();
-   msg->setField(VID_2FA_METHOD_COUNT, methodsInfo->size());
 }
 
 /**
  * Updates or creates new authentication method
  */
-uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR* description, const char *configuration)
+uint32_t Modify2FAMethod(const TCHAR *name, const TCHAR *driver, const TCHAR *description, char *configuration)
 {
-   uint32_t rcc = RCC_NO_SUCH_2FA_DRIVER;
-   TwoFactorAuthenticationMethod* am = CreateAuthenticationMethod(name, methodType, description, configuration);
+   uint32_t rcc;
+   TwoFactorAuthenticationMethod *am = CreateAuthenticationMethod(name, driver, description, configuration);
    if (am != nullptr)
    {
-      if (am->saveToDatabase(configuration))
+      if (am->saveToDatabase())
       {
-         if (am->isValid())
-         {
-            s_authMethodListLock.lock();
-            s_methods.set(name, am);
-            s_authMethodListLock.unlock();
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Two-factor authentication method \"%s\" successfully registered"), name);
-         }
-         else
-         {
-            s_authMethodListLock.lock();
-            s_methods.remove(name);
-            s_authMethodListLock.unlock();
-            delete am;
-         }
+         s_authMethodListLock.lock();
+         s_methods.set(name, am);
+         s_authMethodListLock.unlock();
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Two-factor authentication method \"%s\" successfully registered"), name);
          rcc = RCC_SUCCESS;
          NotifyClientSessions(NX_NOTIFY_2FA_METHOD_CHANGED, 0);
       }
@@ -585,7 +515,7 @@ uint32_t Modify2FAMethod(const TCHAR* name, const TCHAR* methodType, const TCHAR
    }
    else
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Two-factor authentication method \"%s\" creation failed"), name);
+      rcc = RCC_NO_SUCH_2FA_DRIVER;
    }
    return rcc;
 }

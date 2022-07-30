@@ -1826,9 +1826,6 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_2FA_GET_METHODS:
          get2FAMethods(*request);
          break;
-      case CMD_2FA_GET_METHOD_DETAILS:
-         get2FAMethodDetails(*request);
-         break;
       case CMD_2FA_MODIFY_METHOD:
          modify2FAMethod(*request);
          break;
@@ -15522,27 +15519,6 @@ void ClientSession::get2FAMethods(const NXCPMessage& request)
 }
 
 /**
- * Returns 2FA method with method name, description, configuration and method loading status
- */
-void ClientSession::get2FAMethodDetails(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_2FA_METHODS)
-   {
-      TCHAR name[MAX_OBJECT_NAME];
-      request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-      Get2FAMethodDetails(name, &response);
-      response.setField(VID_RCC, RCC_SUCCESS);
-   }
-   else
-   {
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on getting 2FA method information"));
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   sendMessage(response);
-}
-
-/**
  * API call for creating or modifying 2FA method
  */
 void ClientSession::modify2FAMethod(const NXCPMessage& request)
@@ -15554,9 +15530,9 @@ void ClientSession::modify2FAMethod(const NXCPMessage& request)
       request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
       request.getFieldAsString(VID_DRIVER_NAME, driver, MAX_OBJECT_NAME);
       request.getFieldAsString(VID_DESCRIPTION, description, MAX_2FA_DESCRIPTION);
-      char *configuration = request.getFieldAsUtf8String(VID_CONFIG_FILE_DATA);
-      response.setField(VID_RCC, Modify2FAMethod(name, driver, description, configuration));
-      MemFree(configuration);
+      char *config = request.getFieldAsUtf8String(VID_CONFIG_FILE_DATA); // will be freed by Modify2FAMethod
+      uint32_t rcc = Modify2FAMethod(name, driver, description, config);
+      response.setField(VID_RCC, rcc);
    }
    else
    {

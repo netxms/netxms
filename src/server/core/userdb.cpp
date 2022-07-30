@@ -838,24 +838,28 @@ uint32_t NXCORE_EXPORTABLE ModifyUserDatabaseObject(const NXCPMessage& msg, json
 }
 
 /**
- * Mark user database object as modified
+ * Mark user database object as modified.
+ * Executed in background thread to avoid possible deadlocks if called from code that is within low-level lock on user data.
  */
 void MarkUserDatabaseObjectAsModified(uint32_t id)
 {
-   s_userDatabaseLock.writeLock();
-   UserDatabaseObject *object = s_userDatabase.get(id);
-   if (object != nullptr)
-   {
-      object->setModified();
-   }
-   s_userDatabaseLock.unlock();
+   ThreadPoolExecute(g_mainThreadPool, [id]() -> void {
+      s_userDatabaseLock.writeLock();
+      UserDatabaseObject *object = s_userDatabase.get(id);
+      if (object != nullptr)
+      {
+         object->setModified();
+         SendUserDBUpdate(USER_DB_MODIFY, id, object);
+      }
+      s_userDatabaseLock.unlock();
+   });
 }
 
 /**
  * Check if provided user name is not used or belongs to given user.
  * Access to user DB must be locked when this function is called
  */
-inline bool UserNameIsUnique(const TCHAR *name, User *user)
+static inline bool UserNameIsUnique(const TCHAR *name, User *user)
 {
    User *u = s_users.get(name);
    return (u == nullptr) || ((user != nullptr) && (user->getId() == u->getId()));
@@ -865,7 +869,7 @@ inline bool UserNameIsUnique(const TCHAR *name, User *user)
  * Check if provided group name is not used or belongs to given group.
  * Access to user DB must be locked when this function is called
  */
-inline bool GroupNameIsUnique(const TCHAR *name, Group *group)
+static inline bool GroupNameIsUnique(const TCHAR *name, Group *group)
 {
    Group *g = s_groups.get(name);
    return (g == nullptr) || ((group != nullptr) && (group->getId() == g->getId()));

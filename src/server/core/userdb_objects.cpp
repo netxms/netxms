@@ -842,12 +842,15 @@ void User::modifyFromMessage(const NXCPMessage& msg)
 
    if (fields & USER_MODIFY_2FA_BINDINGS)
    {
+      StringSet currentMethods;
       size_t count = msg.getFieldAsUInt32(VID_2FA_METHOD_COUNT);
       uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
          TCHAR methodName[MAX_OBJECT_NAME];
          msg.getFieldAsString(fieldId, methodName, MAX_OBJECT_NAME);
+         currentMethods.add(methodName);
+
          StringMap configuration(msg, fieldId + 10, fieldId + 9);
          bool newBinding = false;
          shared_ptr<Config> binding = m_2FABindings.getShared(methodName);
@@ -867,6 +870,9 @@ void User::modifyFromMessage(const NXCPMessage& msg)
          }
          fieldId += 1000;
       }
+
+      // Delete existing methods that are no longer configured
+      m_2FABindings.filterElements([](const TCHAR *name, const void *binding, void *context) { return static_cast<StringSet*>(context)->contains(name); }, &currentMethods);
    }
 
    // Clear intruder lockout flag if user is not disabled anymore
