@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -65,7 +67,7 @@ public abstract class AbstractDCIPropertyPage extends PropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.verticalAlignment = SWT.TOP;
          messageArea.setLayoutData(gd);
-         
+
          Label imageLabel = new Label(messageArea, SWT.NONE);
          imageLabel.setBackground(messageArea.getBackground());
          imageLabel.setImage(ResourceManager.getImageDescriptor("icons/warning.png").createImage());
@@ -73,7 +75,14 @@ public abstract class AbstractDCIPropertyPage extends PropertyPage
          gd.horizontalAlignment = SWT.LEFT;
          gd.verticalAlignment = SWT.FILL;
          imageLabel.setLayoutData(gd);
-         
+         imageLabel.addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               imageLabel.getImage().dispose();
+            }
+         });
+
          Label messageLabel = new Label(messageArea, SWT.WRAP);
          messageLabel.setBackground(messageArea.getBackground());
          messageLabel.setForeground(ThemeEngine.getForegroundColor("MessageBar"));
@@ -83,7 +92,7 @@ public abstract class AbstractDCIPropertyPage extends PropertyPage
          gd.verticalAlignment = SWT.CENTER;
          messageLabel.setLayoutData(gd);
       }
-      
+
       Composite content = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
