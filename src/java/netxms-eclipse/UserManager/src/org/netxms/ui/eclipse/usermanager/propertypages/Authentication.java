@@ -20,9 +20,11 @@ package org.netxms.ui.eclipse.usermanager.propertypages;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -282,7 +284,10 @@ public class Authentication extends PropertyPage
     */
    private void addMethod()
    {
-      TwoFactorAuthMethodEditDialog dlg = new TwoFactorAuthMethodEditDialog(getShell(), null, null);
+      Set<String> configuredMethods = new HashSet<>();
+      for(MethodBinding b : twoFactorAuthMethodBindings)
+         configuredMethods.add(b.name);
+      TwoFactorAuthMethodEditDialog dlg = new TwoFactorAuthMethodEditDialog(getShell(), null, null, configuredMethods);
       if (dlg.open() != Window.OK)
          return;
 
@@ -309,7 +314,7 @@ public class Authentication extends PropertyPage
          return;
 
       MethodBinding b = (MethodBinding)selection.getFirstElement();
-      TwoFactorAuthMethodEditDialog dlg = new TwoFactorAuthMethodEditDialog(getShell(), b.name, b.configuration);
+      TwoFactorAuthMethodEditDialog dlg = new TwoFactorAuthMethodEditDialog(getShell(), b.name, b.configuration, null);
       if (dlg.open() != Window.OK)
          return;
 

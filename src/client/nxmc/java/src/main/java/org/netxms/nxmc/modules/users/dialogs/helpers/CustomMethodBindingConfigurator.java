@@ -43,7 +43,7 @@ public class CustomMethodBindingConfigurator extends AbstractMethodBindingConfig
    public CustomMethodBindingConfigurator(Composite parent)
    {
       super(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;

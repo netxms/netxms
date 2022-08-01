@@ -18,11 +18,11 @@
  */
 package org.netxms.ui.eclipse.usermanager.dialogs;
 
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -55,6 +55,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
    private String name;
    private Map<String, String> configuration;
    private Map<String, TwoFactorAuthenticationMethod> availableMethods = new HashMap<>();
+   private Set<String> configuredMethods;
    private Combo methodSelector;
    private Composite configurationArea;
    private AbstractMethodBindingConfigurator methodConfigurator;
@@ -65,12 +66,14 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
     * @param parentShell parent shell
     * @param name name of selected method or null
     * @param configuration configuration for method binding
+    * @param configuredMethods methods that already configured for user and should be excluded from the list
     */
-   public TwoFactorAuthMethodEditDialog(Shell parentShell, String name, Map<String, String> configuration)
+   public TwoFactorAuthMethodEditDialog(Shell parentShell, String name, Map<String, String> configuration, Set<String> configuredMethods)
    {
       super(parentShell);
       this.name = name;
       this.configuration = (configuration != null) ? new HashMap<String, String>(configuration) : null;
+      this.configuredMethods = configuredMethods;
    }
 
    /**
@@ -90,7 +93,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
@@ -133,14 +136,12 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<TwoFactorAuthenticationMethod> methods = session.get2FAMethods();
-            Collections.sort(methods, new Comparator<TwoFactorAuthenticationMethod>() {
-               @Override
-               public int compare(TwoFactorAuthenticationMethod m1, TwoFactorAuthenticationMethod m2)
-               {
-                  return m1.getName().compareToIgnoreCase(m2.getName());
-               }
-            });
+            final List<TwoFactorAuthenticationMethod> methods =
+                  session.get2FAMethods()
+                  .stream()
+                  .filter(m -> (configuredMethods == null) || !configuredMethods.contains(m.getName()))
+                  .sorted((m1, m2) -> m1.getName().compareToIgnoreCase(m2.getName()))
+                  .collect(Collectors.toList());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -154,6 +155,13 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
                         methodSelector.select(methodSelector.getItemCount() - 1);
                         createConfigurator(m.getDriver());
                      }
+                  }
+
+                  // Select first available method if there is no selection already
+                  if ((methodSelector.getSelectionIndex() == -1) && !methods.isEmpty())
+                  {
+                     methodSelector.select(0);
+                     createConfigurator(methods.get(0).getDriver());
                   }
                }
             });
@@ -189,6 +197,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       {
          methodConfigurator = new CustomMethodBindingConfigurator(configurationArea);
       }
+      getShell().layout(true, true);
       getShell().pack();
       if (configuration != null)
          methodConfigurator.setConfiguration(configuration);
