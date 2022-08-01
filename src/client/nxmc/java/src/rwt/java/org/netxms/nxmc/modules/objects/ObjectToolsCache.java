@@ -86,7 +86,7 @@ public class ObjectToolsCache
          }
       });
 	}
-	
+
 	/**
 	 * Get cache instance
 	 * 
@@ -106,7 +106,7 @@ public class ObjectToolsCache
    {
       instance = new ObjectToolsCache(session);
    }
-		
+
 	/**
 	 * Reload object tools from server
 	 */

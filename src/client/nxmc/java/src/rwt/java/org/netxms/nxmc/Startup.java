@@ -119,8 +119,8 @@ public class Startup implements EntryPoint, StartupParameters
       DataCollectionDisplayInfo.init();
       MibCache.init(session, display);
       ObjectToolsCache.init();
-      ObjectToolsCache.attachSession(session));
-      SummaryTablesCache.attachSession(session);
+      ObjectToolsCache.attachSession(session);
+      SummaryTablesCache.attachSession(display, session);
 
       MainWindow w = new MainWindow(shell);
       Registry.getInstance().setMainWindow(w);

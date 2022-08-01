@@ -177,6 +177,17 @@ public final class Registry
       RWT.getUISession().setAttribute("netxms." + name, value);
    }
 
+   /**
+    * Set named property.
+    *
+    * @param name property name
+    * @param value property vakue
+    */
+   public static void setProperty(Display display, String name, Object value)
+   {
+      RWT.getUISession(display).setAttribute("netxms." + name, value);
+   }
+
    private Set<Perspective> perspectives = new HashSet<Perspective>();
    private NXCSession session = null;
    private TimeZone timeZone = null;

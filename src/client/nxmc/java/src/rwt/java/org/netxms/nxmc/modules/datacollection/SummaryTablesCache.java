@@ -26,6 +26,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.nxmc.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,6 @@ public class SummaryTablesCache
 
    private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
    private NXCSession session;
-   private Display display;
 
    /**
     * Attach session to cache
@@ -47,8 +47,8 @@ public class SummaryTablesCache
     */
    public static void attachSession(Display display, NXCSession session)
    {
-      SummaryTablesCache instance = new SummaryTablesCache(display, session);
-      ConsoleSharedData.setProperty(display, "SummaryTablesCache", instance);
+      SummaryTablesCache instance = new SummaryTablesCache(session);
+      Registry.setProperty(display, "SummaryTablesCache", instance);
    }
 
    /**
@@ -58,16 +58,15 @@ public class SummaryTablesCache
     */
    public static SummaryTablesCache getInstance()
    {
-      return (SummaryTablesCache)ConsoleSharedData.getProperty("SummaryTablesCache");
+      return (SummaryTablesCache)Registry.getProperty("SummaryTablesCache");
    }
 
    /**
     * Initialize object tools cache. Should be called when connection with the server already established.
     */
-   private SummaryTablesCache(Display display, NXCSession session)
+   private SummaryTablesCache(NXCSession session)
    {
       this.session = session;
-      this.display = display;
 
 		reload();
 

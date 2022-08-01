@@ -43,9 +43,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.dashboard.Activator;
-import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Edit pane widget for dashboard elements
