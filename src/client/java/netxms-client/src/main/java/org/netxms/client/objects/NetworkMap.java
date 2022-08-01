@@ -281,7 +281,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_SHOW_STATUS_ICON flag status
     * 
-    * @return
+    * @return true if MF_SHOW_STATUS_ICON flag is set
     */
    public boolean isShowStatusIcon()
    {
@@ -291,7 +291,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_SHOW_STATUS_FRAME flag status
     * 
-    * @return
+    * @return true if MF_SHOW_STATUS_FRAME flag is set
     */
    public boolean isShowStatusFrame()
    {
@@ -301,7 +301,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_SHOW_STATUS_BKGND flag status
     * 
-    * @return
+    * @return true if MF_SHOW_STATUS_BKGND flag is set
     */
    public boolean isShowStatusBackground()
    {
@@ -311,7 +311,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_SHOW_END_NODES flag status
     * 
-    * @return
+    * @return true if MF_SHOW_END_NODES flag is set
     */
    public boolean isShowEndNodes()
    {
@@ -321,7 +321,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_SHOW_LINK_DIRECTION flag status
     * 
-    * @return
+    * @return true if MF_SHOW_LINK_DIRECTION flag is set
     */
    public boolean isShowLinkDirection()
    {
@@ -331,7 +331,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_CALCULATE_STATUS flag status
     * 
-    * @return
+    * @return true if MF_CALCULATE_STATUS flag is set
     */
    public boolean isCalculateStatus()
    {
@@ -341,7 +341,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_CENTER_BKGND_IMAGE flag status
     * 
-    * @return
+    * @return true if MF_CENTER_BKGND_IMAGE flag is set
     */
    public boolean isCenterBackgroundImage()
    {
@@ -351,7 +351,7 @@ public class NetworkMap extends GenericObject
    /**
     * Returns the MF_TRANSLUCENT_LABEL_BKGND flag status
     * 
-    * @return
+    * @return true if MF_TRANSLUCENT_LABEL_BKGND flag is set
     */
    public boolean isTranslucentLabelBackground()
    {
