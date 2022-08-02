@@ -309,7 +309,7 @@ public class EditActionDlg extends Dialog
 		action.setDisabled(markDisabled.getSelection());
 
       if (typeNotification.getSelection())
-         action.setChannelName(ncList.get(channelName.getSelectionIndex()).getName());
+         action.setChannelName(notificationChannels.get(channelName.getSelectionIndex()).getName());
 		else
 		   action.setChannelName("");
 
