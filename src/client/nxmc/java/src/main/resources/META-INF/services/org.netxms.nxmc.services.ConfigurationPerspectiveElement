@@ -16,5 +16,6 @@ org.netxms.nxmc.modules.serverconfig.NotificationChannelsElement
 org.netxms.nxmc.modules.serverconfig.ServerConsoleElement
 org.netxms.nxmc.modules.serverconfig.ServerVariableElement
 org.netxms.nxmc.modules.serverconfig.SSHKeysElement
+org.netxms.nxmc.modules.serverconfig.TwoFactorAuthMethodsElement
 org.netxms.nxmc.modules.snmp.SNMPTrapConfigurationElement
 org.netxms.nxmc.modules.users.UserManagerConfigurationElement

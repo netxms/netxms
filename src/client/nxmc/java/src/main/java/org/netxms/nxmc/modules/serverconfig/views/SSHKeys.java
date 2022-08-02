@@ -136,7 +136,7 @@ public class SSHKeys extends ConfigurationView
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();
+            editKey();
          }
       });
 
@@ -237,7 +237,7 @@ public class SSHKeys extends ConfigurationView
    }
 
    /**
-    * @param manager
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
     */
    @Override
    protected void fillLocalToolbar(ToolBarManager manager)
@@ -276,6 +276,7 @@ public class SSHKeys extends ConfigurationView
             editKey();
          }
       };
+      addKeyBinding("M3+ENTER", actionEdit);
 
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
@@ -284,6 +285,7 @@ public class SSHKeys extends ConfigurationView
             deleteKey();
          }
       };
+      addKeyBinding("M1+D", actionDelete);
 
       actionCopyToClipboard = new Action(i18n.tr("&Copy public key to clipboard"), SharedIcons.COPY) {
          @Override
