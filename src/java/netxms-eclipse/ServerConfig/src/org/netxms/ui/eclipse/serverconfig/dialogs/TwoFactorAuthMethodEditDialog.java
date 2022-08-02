@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,17 @@
  */
 package org.netxms.ui.eclipse.serverconfig.dialogs;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -31,6 +36,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
+import org.netxms.client.NotificationChannel;
 import org.netxms.client.users.TwoFactorAuthenticationMethod;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
@@ -47,10 +53,13 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
    private TwoFactorAuthenticationMethod method;
    private LabeledText textName;
    private LabeledText textDescription;
-   private LabeledText textConfiguraiton;
    private Combo comboDriverName;
+   private Composite driverConfigurationArea;
+   private Combo comboChannelName;
    private boolean isNameChanged;
    private String newName;
+   private Properties driverConfiguration = new Properties();
+   private List<NotificationChannel> notificationChannels = null;
 
    /**
     * Create notification channel edit dialog.
@@ -65,13 +74,23 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
    }
 
    /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText(method != null ? "Edit Method" : "Create Method");
+   }
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
@@ -98,23 +117,27 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Driver name", gd);
-      
-      textConfiguraiton = new LabeledText(dialogArea, SWT.NONE, SWT.MULTI | SWT.BORDER);
-      textConfiguraiton.setLabel("Driver Configuration");
-      textConfiguraiton.getTextControl().setFont(JFaceResources.getTextFont());
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.heightHint = 300;
-      gd.widthHint = 900;
-      textConfiguraiton.setLayoutData(gd);          
+      comboDriverName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Driver", gd);
+      comboDriverName.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            updateDriverConfigurationWidgets();
+         }
+      });
 
       if (method != null)
       {
          textName.setText(method.getName());
          textDescription.setText(method.getDescription());
-         textConfiguraiton.setText(method.getConfiguration());
+         try (ByteArrayInputStream in = new ByteArrayInputStream(method.getConfiguration().getBytes("UTF-8")))
+         {
+            driverConfiguration.load(in);
+         }
+         catch(Exception e)
+         {
+            Activator.logError("Cannot parse 2FA driver configuration", e);
+         }
       }
 
       final NXCSession session = ConsoleSharedData.getSession();
@@ -124,6 +147,10 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
          {
             final List<String> drivers = session.get2FADrivers();
             Collections.sort(drivers, String.CASE_INSENSITIVE_ORDER);
+
+            notificationChannels = session.getNotificationChannels();
+            notificationChannels.sort((NotificationChannel c1, NotificationChannel c2) -> c1.getName().compareTo(c2.getName()));
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -155,18 +182,55 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
       {
          comboDriverName.add(drivers.get(i));
          if (method != null && drivers.get(i).equals(method.getDriver()))
+         {
             comboDriverName.select(i);
+            updateDriverConfigurationWidgets();
+         }
+      }
+
+      if ((comboDriverName.getSelectionIndex() == -1) && (comboDriverName.getItemCount() > 0))
+      {
+         comboDriverName.select(0);
+         updateDriverConfigurationWidgets();
       }
    }
 
    /**
-    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    * Update configuration widget(s) for selected driver
     */
-   @Override
-   protected void configureShell(Shell newShell)
+   private void updateDriverConfigurationWidgets()
    {
-      super.configureShell(newShell);
-      newShell.setText(method != null ? "Edit Method" : "Create Method");
+      if (driverConfigurationArea != null)
+         driverConfigurationArea.dispose();
+
+      String driverName = comboDriverName.getText();
+      if (driverName.equals("Message"))
+      {
+         driverConfigurationArea = new Composite((Composite)dialogArea, SWT.NONE);
+         driverConfigurationArea.setLayout(new FillLayout());
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         driverConfigurationArea.setLayoutData(gd);
+
+         comboChannelName = WidgetHelper.createLabeledCombo(driverConfigurationArea, SWT.READ_ONLY, "Notification channel", null);
+         for(NotificationChannel n : notificationChannels)
+         {
+            comboChannelName.add(n.getName());
+            if (n.getName().equals(driverConfiguration.getProperty("ChannelName", "")))
+               comboChannelName.select(comboChannelName.getItemCount() - 1);
+         }
+
+         if ((comboChannelName.getSelectionIndex() == -1) && (comboChannelName.getItemCount() > 0))
+            comboChannelName.select(0);
+      }
+      else
+      {
+         driverConfigurationArea = null;
+      }
+
+      getShell().layout(true, true);
+      getShell().pack();
    }
 
    /**
@@ -181,15 +245,33 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
          return;
       }
 
-      if (comboDriverName.getSelectionIndex() == -1)
+      String driverName = comboDriverName.getText();
+      if (driverName.isEmpty())
       {
          MessageDialogHelper.openWarning(getShell(), "Warning", "Driver should be selected");
          return;
       }
 
+      // Process driver-specific configuration
+      if (driverName.equals("Message"))
+      {
+         driverConfiguration.setProperty("ChannelName", comboChannelName.getText());
+      }
+
+      String configuration = "";
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream())
+      {
+         driverConfiguration.store(out, null);
+         configuration = new String(out.toByteArray(), "UTF-8");
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Error serializing 2FA driver configuration", e);
+      }
+
       if (method == null)
       {
-         method = new TwoFactorAuthenticationMethod(textName.getText(), textDescription.getText(), comboDriverName.getItem(comboDriverName.getSelectionIndex()), textConfiguraiton.getText());
+         method = new TwoFactorAuthenticationMethod(textName.getText(), textDescription.getText(), driverName, configuration);
       }
       else
       {
@@ -200,7 +282,7 @@ public class TwoFactorAuthMethodEditDialog extends Dialog
          }
          method.setDescription(textDescription.getText());
          method.setDriver(comboDriverName.getItem(comboDriverName.getSelectionIndex()));
-         method.setConfiguration(textConfiguraiton.getText());
+         method.setConfiguration(configuration);
       }
 
       super.okPressed();
