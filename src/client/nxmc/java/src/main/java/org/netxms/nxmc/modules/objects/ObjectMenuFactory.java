@@ -44,8 +44,6 @@ import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Sensor;
-import org.netxms.client.objects.ServiceRoot;
-import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objecttools.ObjectTool;
@@ -174,7 +172,7 @@ public final class ObjectMenuFactory
     */
    public static Menu createToolsMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
-      final Set<ObjectContext> nodes = buildNodeSet((IStructuredSelection)selection);
+      final Set<ObjectContext> objects = buildObjectSet((IStructuredSelection)selection);
       final Menu toolsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 
       final ImageCache imageCache = new ImageCache();
@@ -199,7 +197,7 @@ public final class ObjectMenuFactory
       for(int i = 0; i < tools.length; i++)
       {
          boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0;
-         if (enabled && ObjectToolExecutor.isToolAllowed(tools[i], nodes) && ObjectToolExecutor.isToolApplicable(tools[i], nodes))
+         if (enabled && ObjectToolExecutor.isToolAllowed(tools[i], objects) && ObjectToolExecutor.isToolApplicable(tools[i], objects))
          {
             String[] path = tools[i].getName().split("\\-\\>"); //$NON-NLS-1$
 
@@ -229,7 +227,7 @@ public final class ObjectMenuFactory
                @Override
                public void widgetSelected(SelectionEvent e)
                {
-                  ObjectToolExecutor.execute(nodes, (ObjectTool)item.getData(), viewPlacement);
+                  ObjectToolExecutor.execute(objects, (ObjectTool)item.getData(), viewPlacement);
                }
             });
          }
@@ -250,7 +248,7 @@ public final class ObjectMenuFactory
     * @param selection
     * @return
     */
-   private static Set<ObjectContext> buildNodeSet(IStructuredSelection selection)
+   private static Set<ObjectContext> buildObjectSet(IStructuredSelection selection)
    {
       final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
       final NXCSession session = Registry.getSession();
@@ -261,10 +259,11 @@ public final class ObjectMenuFactory
          {
             nodes.add(new ObjectContext((AbstractNode)o, null));
          }
-         else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
+         else if ((o instanceof AbstractObject) && ObjectTool.isContainerObject((AbstractObject)o))
          {
+            nodes.add(new ObjectContext((AbstractObject)o, null));
             for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
-               nodes.add(new ObjectContext((AbstractNode)n, null));
+               nodes.add(new ObjectContext(n, null));
          }
          else if (o instanceof Alarm)
          {

@@ -26,7 +26,12 @@ import java.util.Set;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.InputField;
 import org.netxms.client.ObjectMenuFilter;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Zone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +57,7 @@ public class ObjectTool implements ObjectAction
    public static final int DISABLED                  = 0x00000004;
    public static final int SHOW_IN_COMMANDS          = 0x00000008;
    public static final int SNMP_INDEXED_BY_VALUE     = 0x00000010;
+   public static final int RUN_IN_CONTAINER_CONTEXT  = 0x00000020;
 
    private static final Logger logger = LoggerFactory.getLogger(ObjectTool.class);
 
@@ -199,14 +205,14 @@ public class ObjectTool implements ObjectAction
 	}
 
 	/**
-	 * Check if tool is applicable for given node.
-	 * 
-	 * @param node AbstractNode object
-	 * @return true if tool is applicable for given node
-	 */
-	public boolean isApplicableForNode(AbstractNode node)
-	{
-		return filter.isApplicableForNode(node);
+    * Check if tool is applicable for given object.
+    * 
+    * @param object AbstractObject object
+    * @return true if tool is applicable for given object
+    */
+   public boolean isApplicableForObject(AbstractObject object)
+   {
+      return (isRunInContainerContext() == isContainerObject(object)) && filter.isApplicableForObject(object);
 	}
 
 	/**
@@ -410,5 +416,26 @@ public class ObjectTool implements ObjectAction
    public void setMenuFilter(ObjectMenuFilter filter)
    {
       this.filter = filter;      
+   }
+
+   /**
+    * Returns the RUN_CONTAINER_CONTEXT flag status
+    * 
+    * @return
+    */
+   public boolean isRunInContainerContext()
+   {
+      return (flags & ObjectTool.RUN_IN_CONTAINER_CONTEXT) > 0;
+   }
+
+   /**
+    * Check if given object is container.
+    *
+    * @param object object to test
+    * @return true if given object is a container
+    */
+   public static boolean isContainerObject(AbstractObject object)
+   {
+      return ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster) || (object instanceof Zone));
    }
 }

@@ -43,10 +43,6 @@ import org.netxms.client.events.Alarm;
 import org.netxms.client.events.AlarmHandle;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.ServiceRoot;
-import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objects.ObjectWrapper;
@@ -99,7 +95,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
 
-		final Set<ObjectContext> nodes = buildNodeSet((IStructuredSelection)selection);
+      final Set<ObjectContext> objects = buildNodeSet((IStructuredSelection)selection);
 		final Menu toolsMenu = new Menu(menu);
 
 		final ImageCache imageCache = new ImageCache();
@@ -125,7 +121,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		for(int i = 0; i < tools.length; i++)
 		{
 			boolean enabled = (tools[i].getFlags() & ObjectTool.DISABLED) == 0;
-			if (enabled && ObjectToolExecutor.isToolAllowed(tools[i], nodes) && ObjectToolExecutor.isToolApplicable(tools[i], nodes))
+         if (enabled && ObjectToolExecutor.isToolAllowed(tools[i], objects) && ObjectToolExecutor.isToolApplicable(tools[i], objects))
 			{
 				String[] path = tools[i].getName().split("\\-\\>"); //$NON-NLS-1$
 			
@@ -155,7 +151,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 					@Override
 					public void widgetSelected(SelectionEvent e)
 					{
-					   ObjectToolExecutor.execute(nodes, (ObjectTool)item.getData());
+                  ObjectToolExecutor.execute(objects, (ObjectTool)item.getData());
 					}
 				});
 				
@@ -192,10 +188,11 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			{
 				nodes.add(new ObjectContext((AbstractNode)o, null));
 			}
-			else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
+         else if ((o instanceof AbstractObject) && ObjectTool.isContainerObject((AbstractObject)o))
 			{
-				for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
-               nodes.add(new ObjectContext((AbstractNode)n, null));
+            nodes.add(new ObjectContext((AbstractObject)o, null));
+            for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
+               nodes.add(new ObjectContext(n, null));
 			}
 			else if (o instanceof Alarm)
 			{
@@ -215,8 +212,8 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			else if (o instanceof ObjectWrapper)
 			{
 			   AbstractObject n = ((ObjectWrapper)o).getObject();
-			   if ((n != null) && (n instanceof AbstractNode))
-			      nodes.add(new ObjectContext((AbstractNode)n, null));
+            if ((n != null) && ((n instanceof AbstractNode) || ObjectTool.isContainerObject(n)))
+               nodes.add(new ObjectContext(n, null));
 			}
 		}
 		return nodes;

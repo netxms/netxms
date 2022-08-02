@@ -39,6 +39,9 @@
                      <instanceof
                            value="org.netxms.client.events.AlarmHandle">
                      </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Zone">
+                     </instanceof>
                   </or>
                </iterate>
             </visibleWhen>
@@ -64,6 +67,14 @@
             id="org.netxms.ui.eclipse.objecttools.views.ObjectToolsEditor"
             name="%view.name.ObjectTools"
             restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"
+            name="%view.name.LocalCommand"
+            restorable="false">
       </view>
       <view
             allowMultiple="true"

@@ -2,7 +2,7 @@ package org.netxms.ui.eclipse.objects;
 
 import java.util.Map;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectContextBase;
 import org.netxms.ui.eclipse.console.Messages;
 
@@ -15,7 +15,7 @@ public class ObjectContext extends ObjectContextBase
     * @param object
     * @param alarm
     */
-   public ObjectContext(AbstractNode object, Alarm alarm)
+   public ObjectContext(AbstractObject object, Alarm alarm)
    {
       super(object, alarm);
    }

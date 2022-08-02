@@ -3,22 +3,35 @@ package org.netxms.client.objecttools;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Class to hold information about selected node
  */
 public class ObjectContextBase
 {
-   public AbstractNode object;
+   public AbstractObject object;
    public Alarm alarm;
-   
-   public ObjectContextBase(AbstractNode object, Alarm alarm)
+
+   public ObjectContextBase(AbstractObject object, Alarm alarm)
    {
       this.object = object;
       this.alarm = alarm;
    }
 
-   /* (non-Javadoc)
+   /**
+    * Check if related object is a node.
+    *
+    * @return true if related object is a node
+    */
+   public boolean isNode()
+   {
+      return object instanceof AbstractNode;
+   }
+
+
+
+   /**
     * @see java.lang.Object#hashCode()
     */
    @Override
@@ -31,7 +44,7 @@ public class ObjectContextBase
       return result;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#equals(java.lang.Object)
     */
    @Override

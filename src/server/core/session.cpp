@@ -11931,7 +11931,7 @@ void ClientSession::executeServerCommand(const NXCPMessage& request)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
-			if (object->getObjectClass() == OBJECT_NODE)
+			if (object->getObjectClass() == OBJECT_NODE || OBJECT_CONTAINER || OBJECT_SERVICEROOT|| OBJECT_SUBNET || OBJECT_CLUSTER || OBJECT_ZONE )
 			{
 			   shared_ptr<ServerCommandExecutor> cmd = make_shared<ServerCommandExecutor>(request, this);
             uint32_t taskId = cmd->getId();

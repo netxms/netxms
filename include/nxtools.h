@@ -45,6 +45,7 @@
 #define TF_DISABLED                 ((UINT32)0x00000004)
 #define TF_SHOW_IN_COMMANDS         ((UINT32)0x00000008)
 #define TF_SNMP_INDEXED_BY_VALUE    ((UINT32)0x00000010)
+#define TF_RUN_IN_CONTAINER_CONTEXT ((UINT32)0x00000020)
 
 /**
  * Column formats

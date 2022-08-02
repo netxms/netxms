@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.constants.Severity;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objects.ObjectContext;
@@ -63,7 +63,7 @@ public class ToolExecutionStatusDialog extends Dialog
       for(ObjectContext c : nodes)
       {
          Task task = new Task(c);
-         tasks.put(task.node.getObjectId(), task);
+         tasks.put(task.object.getObjectId(), task);
       }
    }
 
@@ -109,7 +109,7 @@ public class ToolExecutionStatusDialog extends Dialog
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((Task)e1).node.getObjectName().compareToIgnoreCase(((Task)e2).node.getObjectName());
+            return ((Task)e1).object.getObjectName().compareToIgnoreCase(((Task)e2).object.getObjectName());
          }
       });
 
@@ -170,7 +170,7 @@ public class ToolExecutionStatusDialog extends Dialog
 
       Task(ObjectContext context)
       {
-         node = context.object;
+         object = context.object;
          status = RUNNING;
          failureReason = null;
       }
@@ -192,7 +192,7 @@ public class ToolExecutionStatusDialog extends Dialog
          switch(columnIndex)
          {
             case 0:
-               return workbenchLabelProvider.getImage(((Task)element).node);
+               return workbenchLabelProvider.getImage(((Task)element).object);
             case 1:
                switch(((Task)element).status)
                {
@@ -216,7 +216,7 @@ public class ToolExecutionStatusDialog extends Dialog
          switch(columnIndex)
          {
             case 0:
-               return ((Task)element).node.getObjectName();
+               return ((Task)element).object.getObjectName();
             case 1:
                switch(((Task)element).status)
                {

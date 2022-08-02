@@ -81,7 +81,7 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
       int added = 0;
       for(int i = 0; i < templates.length; i++)
       {
-         if (templates[i].isApplicableForNode(node))
+         if (templates[i].isApplicableForObject(node))
          {
             String[] path = templates[i].getName().split("\\-\\>"); //$NON-NLS-1$
             

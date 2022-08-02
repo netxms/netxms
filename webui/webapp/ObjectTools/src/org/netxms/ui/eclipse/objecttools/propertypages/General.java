@@ -65,6 +65,7 @@ public class General extends PreferencePage
 	private Button checkConfirmation;
    private LabeledText textConfirmation;
 	private Button checkDisable;
+   private Button checkRunInContainerContext;
 	private Button checkFollow;
 	private Button checkCommand;
 	private LabeledText textCommandName;
@@ -350,12 +351,27 @@ public class General extends PreferencePage
       textCommandShortName.setLayoutData(gd);
       textCommandShortName.setText(objectTool.getCommandShortName());
       textCommandShortName.setEnabled(checkCommand.getSelection());
-      
-		// Disable option
-		checkDisable = new Button(dialogArea, SWT.CHECK);
+
+      // Disable option
+      checkDisable = new Button(dialogArea, SWT.CHECK);
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      checkDisable.setLayoutData(gd);
 		checkDisable.setText(Messages.get().General_DisableObjectToll);
 		checkDisable.setSelection((objectTool.getFlags() & ObjectTool.DISABLED) > 0);
-		
+
+      // Run in container context
+      if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) || (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) || (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
+            (objectTool.getToolType() == ObjectTool.TYPE_URL))
+      {
+         checkRunInContainerContext = new Button(dialogArea, SWT.CHECK);
+         gd = new GridData();
+         gd.horizontalSpan = 2;
+         checkDisable.setLayoutData(gd);
+         checkRunInContainerContext.setText(Messages.get().General_RunContainerContext);
+         checkRunInContainerContext.setSelection(objectTool.isRunInContainerContext());
+      }
+
 		return dialogArea;
 	}
 	
@@ -547,7 +563,22 @@ public class General extends PreferencePage
       {
          objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.DISABLED);
       }
-		
+      
+      if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
+            (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) ||
+            (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
+            (objectTool.getToolType() == ObjectTool.TYPE_URL))
+      {
+         if (checkRunInContainerContext.getSelection())
+         {
+            objectTool.setFlags(objectTool.getFlags() | ObjectTool.RUN_IN_CONTAINER_CONTEXT);
+         }
+         else
+         {
+            objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.RUN_IN_CONTAINER_CONTEXT);
+         } 
+      }
+
 		if (objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE)
 		{
 			if (radioIndexValue.getSelection())

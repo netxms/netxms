@@ -19,7 +19,7 @@
 package org.netxms.client.objecttools;
 
 import org.netxms.client.ObjectMenuFilter;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Generic interface for user-defined object actions (object tools, graph templates, etc.)
@@ -48,10 +48,10 @@ public interface ObjectAction
    public int getToolType();
 
    /**
-    * Check if this action is applicable to given node
+    * Check if this action is applicable to given object
     *
-    * @param node node object
+    * @param object object
     * @return true if applicable
     */
-   public boolean isApplicableForNode(AbstractNode node);
+   public boolean isApplicableForObject(AbstractObject object);
 }

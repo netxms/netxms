@@ -48,6 +48,7 @@ public class Messages extends NLS
    public static String General_ConfirmationMessage;
    public static String General_Description;
    public static String General_DisableObjectToll;
+   public static String General_RunContainerContext;
    public static String General_Error;
    public static String General_ExecOptions;
    public static String General_FileOptions;

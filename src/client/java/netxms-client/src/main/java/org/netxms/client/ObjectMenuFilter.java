@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import org.netxms.base.Glob;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -95,64 +96,73 @@ public class ObjectMenuFilter
    }
    
    /**
-    * Check if tool is applicable for given node.
+    * Check if tool is applicable for given object.
     * 
-    * @param node AbstractNode object
-    * @return true if tool is applicable for given node
+    * @param object The object to test
+    * @return true if tool is applicable for given object
     */
-   public boolean isApplicableForNode(AbstractNode node)
+   public boolean isApplicableForObject(AbstractObject object)
    {
-      if (((flags & REQUIRES_SNMP) != 0) &&
-          ((node.getCapabilities() & AbstractNode.NC_IS_SNMP) == 0))
-         return false;  // Node does not support SNMP
-      
-      if (((flags & REQUIRES_AGENT) != 0) &&
-             ((node.getCapabilities() & AbstractNode.NC_IS_NATIVE_AGENT) == 0))
-            return false;  // Node does not have NetXMS agent
-      
-      if ((flags & REQUIRES_OID_MATCH) != 0)
+      if (object instanceof AbstractNode)
       {
-         if (!Glob.matchIgnoreCase(snmpOid, node.getSnmpOID()))
-            return false;  // OID does not match
-      }
-      
-      if ((flags & REQUIRES_NODE_OS_MATCH) != 0)
-      {
-	      boolean match = false;
-	      String[] substrings = toolNodeOS.split(",");
-	      for(int i = 0; i < substrings.length; i++)
-	      {
-	         if (Pattern.matches(substrings[i], node.getPlatformName()))
-	         {
-	            match = true;
-	            break;
-	         }
-	      }
-	      if (!match)
-	         return false;  //Not correct type of OS
-      }
-	   
-	   if ((flags & REQUIRES_WORKSTATION_OS_MATCH) != 0)
-      {
-         boolean match = false;
-         String[] substrings = toolWorkstationOS.split(",");
-         for(int i = 0; i < substrings.length; i++)
+         if (((flags & REQUIRES_SNMP) != 0) && (((AbstractNode)object).getCapabilities() & AbstractNode.NC_IS_SNMP) == 0)
+            return false; // Node does not support SNMP
+
+         if (((flags & REQUIRES_AGENT) != 0) && (((AbstractNode)object).getCapabilities() & AbstractNode.NC_IS_NATIVE_AGENT) == 0)
+            return false; // Node does not have NetXMS agent
+
+         if ((flags & REQUIRES_OID_MATCH) != 0)
          {
-            if (Pattern.matches(substrings[i], System.getProperty("os.name")))
-            {
-               match = true;
-               break;
-            }
+            if (!Glob.matchIgnoreCase(snmpOid, ((AbstractNode)object).getSnmpOID()))
+               return false; // OID does not match
          }
-         if (!match)
-            return false;  //Not correct type of OS
+
+         if ((flags & REQUIRES_NODE_OS_MATCH) != 0)
+         {
+            boolean match = false;
+            String[] substrings = toolNodeOS.split(",");
+            for(int i = 0; i < substrings.length; i++)
+            {
+               if (Pattern.matches(substrings[i], ((AbstractNode)object).getPlatformName()))
+               {
+                  match = true;
+                  break;
+               }
+            }
+            if (!match)
+               return false; // Not correct type of OS
+         }
+
+         if ((flags & REQUIRES_WORKSTATION_OS_MATCH) != 0)
+         {
+            boolean match = false;
+            String[] substrings = toolWorkstationOS.split(",");
+            for(int i = 0; i < substrings.length; i++)
+            {
+               if (Pattern.matches(substrings[i], System.getProperty("os.name")))
+               {
+                  match = true;
+                  break;
+               }
+            }
+            if (!match)
+               return false; // Not correct type of OS
+         }
+      }
+      else
+      {
+         if ((flags & (REQUIRES_SNMP | REQUIRES_AGENT | REQUIRES_OID_MATCH | REQUIRES_NODE_OS_MATCH)) != 0)
+            return false;
       }
 
 	   if ((flags & REQUIRES_TEMPLATE_MATCH) != 0)
       {
+         if (!(object instanceof AbstractNode) && !(object instanceof Cluster))
+            return false;
+
          boolean match = false;
          String[] substrings = toolTemplate.split(",");
-         Set<AbstractObject> parents = node.getAllParents(AbstractObject.OBJECT_TEMPLATE);
+         Set<AbstractObject> parents = object.getAllParents(AbstractObject.OBJECT_TEMPLATE);
          for(AbstractObject parent : parents)
          {
             for(int i = 0; i < substrings.length; i++)
@@ -174,7 +184,7 @@ public class ObjectMenuFilter
       {
          boolean match = false;
          String[] substrings = toolCustomAttributes.split(",");
-         for(String attr : node.getCustomAttributes().keySet())
+         for(String attr : object.getCustomAttributes().keySet())
          {
             for(int i = 0; i < substrings.length; i++)
             {

@@ -27,7 +27,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.base.annotations.Internal;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ObjectMenuFilter;
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectAction;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Serializer;
@@ -376,12 +376,12 @@ public class GraphDefinition extends ChartConfiguration implements ObjectAction
    }
 
    /**
-    * @see org.netxms.client.objecttools.ObjectAction#isApplicableForNode(org.netxms.client.objects.AbstractNode)
+    * @see org.netxms.client.objecttools.ObjectAction#isApplicableForObject(org.netxms.client.objects.AbstractObject)
     */
    @Override
-   public boolean isApplicableForNode(AbstractNode node)
+   public boolean isApplicableForObject(AbstractObject object)
    {
-      return filter.isApplicableForNode(node);
+      return filter.isApplicableForObject(object);
    }
 
    /**

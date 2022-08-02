@@ -40,6 +40,7 @@ import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.client.constants.InputFieldType;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -52,10 +53,10 @@ import org.netxms.ui.eclipse.objecttools.dialogs.ToolExecutionStatusDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor;
+import org.netxms.ui.eclipse.objecttools.views.SSHCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerScriptResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
-import org.netxms.ui.eclipse.objecttools.views.SSHCommandResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.views.BrowserView;
@@ -73,22 +74,22 @@ public final class ObjectToolExecutor
    }
 
    /**
-    * Check if tool is allowed for execution on at least one node from set
+    * Check if tool is allowed for execution on at least one object from set
     * 
     * @param tool
-    * @param nodes
+    * @param objects
     * @return
     */
-   public static boolean isToolAllowed(ObjectTool tool, Set<ObjectContext> nodes)
+   public static boolean isToolAllowed(ObjectTool tool, Set<ObjectContext> objects)
    {
       if (tool.getToolType() != ObjectTool.TYPE_INTERNAL)
          return true;
-      
+
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
       {
-         for(ObjectContext n : nodes)
-            if (handler.canExecuteOnNode(n.object, tool))
+         for(ObjectContext n : objects)
+            if (n.isNode() && handler.canExecuteOnNode((AbstractNode)n.object, tool))
                return true;
          return false;
       }
@@ -99,16 +100,16 @@ public final class ObjectToolExecutor
    }
 
    /**
-    * Check if given tool is applicable for at least one nodes in set
+    * Check if given tool is applicable for at least one object in set
     * 
     * @param tool
-    * @param nodes
+    * @param objects
     * @return
     */
-   public static boolean isToolApplicable(ObjectTool tool, Set<ObjectContext> nodes)
+   public static boolean isToolApplicable(ObjectTool tool, Set<ObjectContext> objects)
    {
-      for(ObjectContext n : nodes)
-         if (tool.isApplicableForNode(n.object))
+      for(ObjectContext n : objects)
+         if (tool.isApplicableForObject(n.object))
             return true;
       return false;
    }
@@ -118,7 +119,7 @@ public final class ObjectToolExecutor
     * 
     * @param tool Object tool
     */
-   public static void execute(final Set<ObjectContext> allNodes, final ObjectTool tool)
+   public static void execute(final Set<ObjectContext> allObjects, final ObjectTool tool)
    {
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if ((tool.getToolType() == ObjectTool.TYPE_INTERNAL) && (handler == null))
@@ -128,10 +129,10 @@ public final class ObjectToolExecutor
       }
 
       // Filter allowed and applicable nodes for execution
-      final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
-      for(ObjectContext n : allNodes)
-         if (((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler.canExecuteOnNode(n.object, tool)) && tool.isApplicableForNode(n.object))
-            nodes.add(n);
+      final Set<ObjectContext> objects = new HashSet<ObjectContext>();
+      for(ObjectContext n : allObjects)
+         if (((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || (n.isNode() && handler.canExecuteOnNode((AbstractNode)n.object, tool))) && tool.isApplicableForObject(n.object))
+            objects.add(n);
 
       final List<String> maskedFields = new ArrayList<String>();
       final Map<String, String> inputValues;
@@ -170,7 +171,7 @@ public final class ObjectToolExecutor
             if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
             {
                String message = tool.getConfirmationText();
-               if (nodes.size() == 1)
+               if (objects.size() == 1)
                {
                   // Expand message and action for 1 node, otherwise expansion occurs after confirmation
                   List<String> textToExpand = new ArrayList<String>();
@@ -179,13 +180,13 @@ public final class ObjectToolExecutor
                   {
                      textToExpand.add(tool.getData());
                   }
-                  ObjectContext node = nodes.iterator().next();
+                  ObjectContext node = objects.iterator().next();
                   expandedText = session.substituteMacros(node, textToExpand, inputValues);
                   message = expandedText.remove(0);                  
                }
                else
                {
-                  ObjectContext node = nodes.iterator().next();
+                  ObjectContext node = objects.iterator().next();
                   message = node.substituteMacrosForMultipleNodes(message, inputValues);
                }
 
@@ -196,14 +197,14 @@ public final class ObjectToolExecutor
 
                if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
                {
-                  expandedText = session.substituteMacros(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
+                  expandedText = session.substituteMacros(objects.toArray(new ObjectContext[objects.size()]), tool.getData(), inputValues);
                }
             }
             else
             {
                if ((tool.getToolType() == ObjectTool.TYPE_URL) || (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND))
                {
-                  expandedText = session.substituteMacros(nodes.toArray(new ObjectContext[nodes.size()]), tool.getData(), inputValues);
+                  expandedText = session.substituteMacros(objects.toArray(new ObjectContext[objects.size()]), tool.getData(), inputValues);
                }
             }
 
@@ -241,7 +242,7 @@ public final class ObjectToolExecutor
             }
 
             int i = 0;
-            if ((nodes.size() > 1) &&
+            if ((objects.size() > 1) &&
                   (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND ||
                   tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
             {
@@ -250,7 +251,7 @@ public final class ObjectToolExecutor
                   @Override
                   public void run()
                   {
-                     executeOnMultipleNodes(nodes, tool, inputValues, maskedFields, finalExpandedText);
+                     executeOnMultipleNodes(objects, tool, inputValues, maskedFields, finalExpandedText);
                   }
                });
             }
@@ -258,7 +259,7 @@ public final class ObjectToolExecutor
             {
                // Create execution status dialog if tools may report success or failure messages and executed on multiple nodes
                final ToolExecutionStatusDialog statusDialog;
-               if ((nodes.size() > 1) &&
+               if ((objects.size() > 1) &&
                      (tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND || tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) &&
                      ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0))
                {
@@ -267,7 +268,7 @@ public final class ObjectToolExecutor
                      @Override
                      public void run()
                      {
-                        ToolExecutionStatusDialog dlg = new ToolExecutionStatusDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), nodes);
+                        ToolExecutionStatusDialog dlg = new ToolExecutionStatusDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), objects);
                         container[0] = dlg;
                      }
                   });
@@ -288,7 +289,7 @@ public final class ObjectToolExecutor
                   statusDialog = null;
                }
 
-               for(final ObjectContext n : nodes)
+               for(final ObjectContext n : objects)
                {
                   if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
                   {
@@ -844,7 +845,7 @@ public final class ObjectToolExecutor
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
       {
-         handler.execute(node.object, tool);
+         handler.execute((AbstractNode)node.object, tool);
       }
       else
       {

@@ -33,7 +33,7 @@ public interface ObjectToolHandler
 	 * @param tool object tool to be executed
 	 * @return true if tool can be executed and should be shown in menu
 	 */
-	public abstract boolean canExecuteOnNode(AbstractNode node, ObjectTool tool);
+   public abstract boolean canExecuteOnNode(AbstractNode node, ObjectTool tool);
 	
 	/**
 	 * Execute object tool. This method called on UI thread.
@@ -41,5 +41,5 @@ public interface ObjectToolHandler
 	 * @param node node object on which tool execution was requested
 	 * @param tool object tool to be executed
 	 */
-	public abstract void execute(AbstractNode node, ObjectTool tool);
+   public abstract void execute(AbstractNode node, ObjectTool tool);
 }

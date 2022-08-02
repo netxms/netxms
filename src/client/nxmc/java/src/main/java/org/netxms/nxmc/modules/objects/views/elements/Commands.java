@@ -115,7 +115,7 @@ public class Commands extends OverviewPageElement
 		   ObjectTool[] tools = ObjectToolsCache.getInstance().getTools();
 		   for(final ObjectTool tool : tools)
 		   {
-		      if (!tool.isVisibleInCommands() || !tool.isEnabled() || !tool.isApplicableForNode((AbstractNode)getObject()))
+            if (!tool.isVisibleInCommands() || !tool.isEnabled() || !tool.isApplicableForObject(getObject()))
 		         continue;
 
             final Set<ObjectContext> nodes = new HashSet<ObjectContext>(1);
