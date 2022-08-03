@@ -288,6 +288,8 @@ bool ProcessExecutor::execute()
 
 #else /* UNIX implementation */
 
+   int fd;
+
    if (pipe(m_pipe) == -1)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): pipe() call failed (%s)"), _tcserror(errno));
@@ -305,12 +307,19 @@ bool ProcessExecutor::execute()
       case 0: // child
          setpgid(0, 0); // new process group
          close(m_pipe[0]);
-         close(STDIN_FILENO);
-         close(STDOUT_FILENO);
-         close(STDERR_FILENO);
          dup2(m_pipe[1], STDOUT_FILENO);
          dup2(m_pipe[1], STDERR_FILENO);
          close(m_pipe[1]);
+	 fd = open("/dev/null", O_RDONLY);
+	 if (fd != -1)
+	 {
+            dup2(fd, STDIN_FILENO);
+	    close(fd);
+	 }
+	 else
+	 {
+            close(STDIN_FILENO);
+	 }
          if (m_shellExec)
          {
 #ifdef UNICODE
