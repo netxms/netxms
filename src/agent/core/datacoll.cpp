@@ -860,7 +860,7 @@ bool DataElement::sendToServer(bool reconciliation) const
          break;
       case DCO_TYPE_TABLE:
          m_value.table->setSource(m_origin);
-         m_value.table->fillMessage(msg, 0, -1);
+         m_value.table->fillMessage(&msg, 0, -1);
          break;
    }
    uint32_t rcc = session->doRequest(&msg, 2000);

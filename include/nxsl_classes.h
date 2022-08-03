@@ -442,15 +442,18 @@ public:
  */
 class NXSL_StringValueMap : public StringMapBase
 {
-   DISABLE_COPY_CTOR(NXSL_StringValueMap)
-
 private:
    NXSL_ValueManager *m_vm;
 
    static void destructor(void *object, StringMapBase *map);
 
 public:
-   NXSL_StringValueMap(NXSL_ValueManager *vm, Ownership objectOwner) : StringMapBase(objectOwner) { m_vm = vm; m_objectDestructor = destructor; }
+   NXSL_StringValueMap(NXSL_ValueManager *vm, Ownership objectOwner) : StringMapBase(objectOwner)
+   {
+      m_vm = vm;
+      m_objectDestructor = destructor;
+   }
+   NXSL_StringValueMap(const NXSL_StringValueMap& src) = delete;
 
    void set(const TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, false); }
    void setPreallocated(TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, true); }

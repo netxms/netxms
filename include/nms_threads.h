@@ -1574,8 +1574,8 @@ enum class MutexType
  */
 class LIBNETXMS_EXPORTABLE Mutex
 {
-   DISABLE_COPY_CTOR(Mutex)
-   DISABLE_ASSIGNMENT_OP(Mutex)
+   Mutex(const Mutex& src) = delete;
+   Mutex& operator =(const Mutex& src) = delete;
 
 private:
 #if defined(_WIN32)
@@ -1744,8 +1744,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE Condition
 {
-   DISABLE_COPY_CTOR(Condition)
-   DISABLE_ASSIGNMENT_OP(Condition)
+   Condition(const Condition& src) = delete;
+   Condition& operator =(const Condition& src) = delete;
 
 private:
 #if defined(_WIN32)
@@ -2007,8 +2007,8 @@ public:
  */
 class LIBNETXMS_EXPORTABLE RWLock
 {
-   DISABLE_COPY_CTOR(RWLock)
-   DISABLE_ASSIGNMENT_OP(RWLock)
+   RWLock(const RWLock& src) = delete;
+   RWLock& operator =(const RWLock& src) = delete;
 
 private:
 #if HAVE_PTHREAD_RWLOCK

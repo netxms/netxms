@@ -744,7 +744,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    }
 
    time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
-   UINT32 status = msg->getFieldAsUInt32(VID_STATUS);
+   uint32_t status = msg->getFieldAsUInt32(VID_STATUS);
    bool success = true;
 
    debugPrintf(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d]"),
@@ -762,7 +762,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
                msg->getFieldAsString(VID_VALUE, itemValue, MAX_RESULT_LENGTH);
                break;
             case DCO_TYPE_TABLE:
-               tableValue = make_shared<Table>(msg);
+               tableValue = make_shared<Table>(*msg);
                break;
             default:
                debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),

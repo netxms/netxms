@@ -45,8 +45,6 @@ struct QueueBuffer;
  */
 class LIBNETXMS_EXPORTABLE Queue
 {
-   DISABLE_COPY_CTOR(Queue)
-
 private:
 #if defined(_WIN32)
    CRITICAL_SECTION m_lock;
@@ -87,6 +85,7 @@ protected:
 public:
    Queue();
    Queue(size_t blockSize, Ownership owner);
+   Queue(const Queue& src) = delete;
    virtual ~Queue();
 
    void put(void *object);
@@ -108,8 +107,6 @@ public:
  */
 template<typename T> class ObjectQueue : public Queue
 {
-   DISABLE_COPY_CTOR(ObjectQueue)
-
 private:
    static void destructor(void *object, Queue *queue) { delete static_cast<T*>(object); }
 
@@ -117,6 +114,7 @@ public:
    ObjectQueue() : Queue() { m_destructor = destructor; }
    ObjectQueue(size_t blockSize, Ownership owner) : Queue(blockSize, owner) { m_destructor = destructor; }
    ObjectQueue(size_t blockSize, Ownership owner, void (*customDestructor)(void *, Queue *)) : Queue(blockSize, owner) { m_destructor = customDestructor; }
+   ObjectQueue(const ObjectQueue& src) = delete;
    virtual ~ObjectQueue() { }
 
    T *get() { return (T*)Queue::get(); }
@@ -131,8 +129,6 @@ public:
  */
 template<typename T> class SharedObjectQueue : public Queue
 {
-   DISABLE_COPY_CTOR(SharedObjectQueue)
-
 private:
    SynchronizedObjectMemoryPool<shared_ptr<T>> m_pool;
 
@@ -147,6 +143,7 @@ public:
    {
       m_destructor = destructor;
    }
+   SharedObjectQueue(const SharedObjectQueue& src) = delete;
    virtual ~SharedObjectQueue()
    {
       // Explicit call to clear will cause destruction of any objects remaining in queue.

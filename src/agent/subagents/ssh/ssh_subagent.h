@@ -35,14 +35,13 @@
  */
 struct KeyPair
 {
-   DISABLE_COPY_CTOR(KeyPair)
-
    char *publicKey;
    char *pubKeySource;
    enum ssh_keytypes_e type;
    char *privateKey;
 
    KeyPair(char *privateKey, char *publicKey);
+   KeyPair(const KeyPair& src) = delete;
    ~KeyPair();
 };
 

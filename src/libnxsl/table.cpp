@@ -259,32 +259,32 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("columns"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
-      ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
-      for(int i = 0; i < cd->size(); i++)
+      const ObjectArray<TableColumnDefinition>& cd = table->getColumnDefinitions();
+      for(int i = 0; i < cd.size(); i++)
       {
-         columns->set(i, vm->createValue(vm->createObject(&g_nxslTableColumnClass, new TableColumnDefinition(cd->get(i)))));
+         columns->set(i, vm->createValue(vm->createObject(&g_nxslTableColumnClass, new TableColumnDefinition(*cd.get(i)))));
       }
       value = vm->createValue(columns);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("instanceColumns"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
-      ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
-      for(int i = 0, j = 0; i < cd->size(); i++)
+      const ObjectArray<TableColumnDefinition>& cd = table->getColumnDefinitions();
+      for(int i = 0, j = 0; i < cd.size(); i++)
       {
-         auto column = cd->get(i);
+         auto column = cd.get(i);
          if (column->isInstanceColumn())
-            columns->set(j++, vm->createValue(vm->createObject(&g_nxslTableColumnClass, new TableColumnDefinition(column))));
+            columns->set(j++, vm->createValue(vm->createObject(&g_nxslTableColumnClass, new TableColumnDefinition(*column))));
       }
       value = vm->createValue(columns);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("instanceColumnIndexes"))
    {
       NXSL_Array *columns = new NXSL_Array(vm);
-      ObjectArray<TableColumnDefinition> *cd = table->getColumnDefinitions();
-      for(int i = 0, j = 0; i < cd->size(); i++)
+      const ObjectArray<TableColumnDefinition>& cd = table->getColumnDefinitions();
+      for(int i = 0, j = 0; i < cd.size(); i++)
       {
-         auto column = cd->get(i);
+         auto column = cd.get(i);
          if (column->isInstanceColumn())
             columns->set(j++, vm->createValue(i));
       }

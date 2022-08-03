@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -84,17 +84,17 @@ Array::Array(const void *data, int initial, int grow, size_t elementSize)
 /**
  * Copy constructor
  */
-Array::Array(const Array *src)
+Array::Array(const Array& src)
 {
-   m_size = src->m_size;
-   m_grow = src->m_grow;
-   m_allocated = src->m_allocated;
-   m_elementSize = src->m_elementSize;
-   m_data = (src->m_data != nullptr) ? MemCopyBlock(src->m_data, m_elementSize * m_allocated) : nullptr;
-   m_objectOwner = src->m_objectOwner;
-   m_objectDestructor = src->m_objectDestructor;
-   m_storePointers = src->m_storePointers;
-   m_context = src->m_context;
+   m_size = src.m_size;
+   m_grow = src.m_grow;
+   m_allocated = src.m_allocated;
+   m_elementSize = src.m_elementSize;
+   m_data = (src.m_data != nullptr) ? MemCopyBlock(src.m_data, m_elementSize * m_allocated) : nullptr;
+   m_objectOwner = src.m_objectOwner;
+   m_objectDestructor = src.m_objectDestructor;
+   m_storePointers = src.m_storePointers;
+   m_context = src.m_context;
 }
 
 /**

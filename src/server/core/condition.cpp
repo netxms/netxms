@@ -343,7 +343,7 @@ void ConditionObject::check()
    // while holding lock on condition object properties
    lockProperties();
    int iOldStatus = m_status;
-   StructArray<INPUT_DCI> dciList(&m_dciList);
+   StructArray<INPUT_DCI> dciList(m_dciList);
    ScriptVMHandle vm = CreateServerScriptVM(m_script, self());
    unlockProperties();
 

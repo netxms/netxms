@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -742,8 +742,6 @@ public:
  */
 class LIBNXAGENT_EXPORTABLE AbstractCommSession
 {
-   DISABLE_COPY_CTOR(AbstractCommSession)
-
    template <class C, typename... Args> friend shared_ptr<C> MakeSharedCommSession(Args&&... args);
 
 private:
@@ -762,6 +760,7 @@ protected:
 
 public:
    AbstractCommSession();
+   AbstractCommSession(const AbstractCommSession& src) = delete;
    virtual ~AbstractCommSession();
 
 #ifdef _WIN32

@@ -954,7 +954,7 @@ void CommSession::getTable(NXCPMessage *request, NXCPMessage *response)
    response->setField(VID_RCC, rcc);
    if (rcc == ERR_SUCCESS)
    {
-		value.fillMessage(*response, 0, -1);	// no row limit
+		value.fillMessage(response, 0, -1);	// no row limit
    }
    MemFree(name);
 }

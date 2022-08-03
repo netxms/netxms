@@ -1598,14 +1598,14 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
                }
                row = tableData->getNumRows() - 1;
             }
-            tableData->setStatusAt(row, i + offset, ((DCItem *)object)->getThresholdSeverity());
+            tableData->setStatusAt(row, i + offset, static_cast<DCItem*>(object)->getThresholdSeverity());
             tableData->setCellObjectIdAt(row, i + offset, object->getId());
-            tableData->getColumnDefinitions()->get(i + offset)->setDataType(((DCItem *)object)->getDataType());
+            tableData->getColumnDefinitions().get(i + offset)->setDataType(static_cast<DCItem*>(object)->getDataType());
             if (tableDefinition->getAggregationFunction() == DCI_AGG_LAST)
             {
                if (tc->m_flags & COLUMN_DEFINITION_MULTIVALUED)
                {
-                  StringList *values = String(((DCItem *)object)->getLastValue()).split(tc->m_separator);
+                  StringList *values = String(static_cast<DCItem*>(object)->getLastValue()).split(tc->m_separator);
                   tableData->setAt(row, i + offset, values->get(0));
                   for(int r = 1; r < values->size(); r++)
                   {
@@ -1616,19 +1616,19 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
                         tableData->setBaseRow(row);
                      }
                      tableData->setAt(row + r, i + offset, values->get(r));
-                     tableData->setStatusAt(row + r, i + offset, ((DCItem *)object)->getThresholdSeverity());
+                     tableData->setStatusAt(row + r, i + offset, static_cast<DCItem*>(object)->getThresholdSeverity());
                      tableData->setCellObjectIdAt(row + r, i + offset, object->getId());
                   }
                }
                else
                {
-                  tableData->setAt(row, i + offset, ((DCItem *)object)->getLastValue());
+                  tableData->setAt(row, i + offset, static_cast<DCItem*>(object)->getLastValue());
                }
             }
             else
             {
                tableData->setPreallocatedAt(row, i + offset,
-                  ((DCItem *)object)->getAggregateValue(
+                  static_cast<DCItem*>(object)->getAggregateValue(
                      tableDefinition->getAggregationFunction(),
                      tableDefinition->getPeriodStart(),
                      tableDefinition->getPeriodEnd()));
@@ -1669,7 +1669,7 @@ void DataCollectionTarget::getTableDciValuesSummary(SummaryTable *tableDefinitio
             {
                int columnIndex = tableData->getColumnIndex(lastValue->getColumnName(k));
                if (columnIndex == -1)
-                  columnIndex = tableData->addColumn(lastValue->getColumnDefinition(k));
+                  columnIndex = tableData->addColumn(*lastValue->getColumnDefinition(k));
                tableData->set(columnIndex, lastValue->getAsString(j, k));
             }
          }

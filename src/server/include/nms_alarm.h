@@ -64,10 +64,10 @@ private:
    TCHAR m_helpDeskRef[MAX_HELPDESK_REF_LEN];
    TCHAR *m_impact;
    uint32_t m_commentCount;     // Number of comments added to alarm
-   IntegerArray<uint64_t> *m_relatedEvents;
+   IntegerArray<uint64_t> m_relatedEvents;
    IntegerArray<uint32_t> m_alarmCategoryList;
    uint32_t m_notificationCode; // notification code used when sending client notifications
-   IntegerArray<uint32_t> *m_subordinateAlarms;
+   IntegerArray<uint32_t> m_subordinateAlarms;
 
    StringBuffer categoryListToString();
 
@@ -121,8 +121,8 @@ public:
    void clearTimeout() { m_timeout = 0; }
    void onAckTimeoutExpiration() { m_ackTimeout = 0; m_state = ALARM_STATE_OUTSTANDING; }
 
-   void addRelatedEvent(UINT64 eventId) { if (m_relatedEvents != NULL) m_relatedEvents->add(eventId); }
-   bool isEventRelated(UINT64 eventId) const { return (m_relatedEvents != NULL) && m_relatedEvents->contains(eventId); }
+   void addRelatedEvent(uint64_t eventId) { m_relatedEvents.add(eventId); }
+   bool isEventRelated(uint64_t eventId) const { return m_relatedEvents.contains(eventId); }
 
    void updateFromEvent(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription, int state, int severity, uint32_t timeout,
             uint32_t timeoutEvent, uint32_t ackTimeout, const TCHAR *message, const TCHAR *impact, const IntegerArray<uint32_t>& alarmCategoryList);

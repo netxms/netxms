@@ -3109,7 +3109,7 @@ unique_ptr<StructArray<ResponsibleUser>> NetObj::getAllResponsibleUsers(const TC
 {
    lockResponsibleUsersList();
    auto responsibleUsers = (m_responsibleUsers != nullptr) ?
-            ((tag == nullptr) ? new StructArray<ResponsibleUser>(m_responsibleUsers) : new StructArray<ResponsibleUser>(m_responsibleUsers->size(), 16)) : new StructArray<ResponsibleUser>(0, 16);
+            ((tag == nullptr) ? new StructArray<ResponsibleUser>(*m_responsibleUsers) : new StructArray<ResponsibleUser>(m_responsibleUsers->size(), 16)) : new StructArray<ResponsibleUser>(0, 16);
    if ((tag != nullptr) && (m_responsibleUsers != nullptr))
    {
       for(int i = 0; i < m_responsibleUsers->size(); i++)

@@ -563,7 +563,7 @@ uint32_t ExternalSubagent::getTable(const TCHAR *name, Table *value)
 		{
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
-				value->updateFromMessage(response);
+				value->updateFromMessage(*response);
 			delete response;
 		}
 		else

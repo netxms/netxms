@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1044,11 +1044,7 @@ using std::make_unique;
 #else
 template<class T, class... Args> unique_ptr<T> make_unique(Args&&... args)
 {
-#if HAVE_STD_FORWARD
    return unique_ptr<T>(new T(std::forward<Args>(args)...));
-#else
-   return unique_ptr<T>(new T(args...));
-#endif
 }
 #endif
 
@@ -1278,31 +1274,6 @@ enum class Ownership : bool
    False = false,
    True = true
 };
-
-/**
- * Disable copy constructor if compiler supports it
- */
-#if CAN_DELETE_COPY_CTOR
-#define DISABLE_COPY_CTOR(c) c (const c &s) = delete;
-#define DISABLE_ASSIGNMENT_OP(c) c& operator =(const c &s) = delete;
-#else
-#define DISABLE_COPY_CTOR(c)
-#define DISABLE_ASSIGNMENT_OP(c)
-#endif
-
-/**
- * "final" specifier if compiler does not support it
- */
-#if !HAVE_FINAL_SPECIFIER
-#define final
-#endif
-
-/**
- * "override" specifier if compiler does not support it
- */
-#if !HAVE_OVERRIDE_SPECIFIER
-#define override
-#endif
 
 #endif
 

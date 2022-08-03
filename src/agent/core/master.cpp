@@ -61,7 +61,7 @@ static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 /**
  * Handler for CMD_GET_TABLE command
  */
-static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
+static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *msg)
 {
    TCHAR name[MAX_RUNTIME_PARAM_NAME];
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_RUNTIME_PARAM_NAME);
@@ -69,15 +69,15 @@ static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
    Table value;
    VirtualSession session(0);
    uint32_t rcc = GetTableValue(name, &value, &session);
-   pMsg->setField(VID_RCC, rcc);
+   msg->setField(VID_RCC, rcc);
    if (rcc == ERR_SUCCESS)
-		value.fillMessage(*pMsg, 0, -1);
+		value.fillMessage(msg, 0, -1);
 }
 
 /**
  * Handler for CMD_GET_LIST command
  */
-static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
+static void H_GetList(NXCPMessage *pRequest, NXCPMessage *msg)
 {
    TCHAR name[MAX_RUNTIME_PARAM_NAME];
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_RUNTIME_PARAM_NAME);
@@ -85,12 +85,12 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
    StringList value;
    VirtualSession session(0);
    uint32_t rcc = GetListValue(name, &value, &session);
-   pMsg->setField(VID_RCC, rcc);
+   msg->setField(VID_RCC, rcc);
    if (rcc == ERR_SUCCESS)
    {
-		pMsg->setField(VID_NUM_STRINGS, (UINT32)value.size());
+		msg->setField(VID_NUM_STRINGS, (UINT32)value.size());
 		for(int i = 0; i < value.size(); i++)
-			pMsg->setField(VID_ENUM_VALUE_BASE + i, value.get(i));
+			msg->setField(VID_ENUM_VALUE_BASE + i, value.get(i));
    }
 }
 

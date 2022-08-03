@@ -31,11 +31,10 @@
 /**
  * Create empty table row
  */
-TableRow::TableRow(int columnCount)
+TableRow::TableRow(int columnCount) : m_cells(columnCount, 8, Ownership::True)
 {
-   m_cells = new ObjectArray<TableCell>(columnCount, 8, Ownership::True);
    for(int i = 0; i < columnCount; i++)
-      m_cells->add(new TableCell());
+      m_cells.add(new TableCell());
    m_objectId = 0;
    m_baseRow = -1;
 }
@@ -43,50 +42,44 @@ TableRow::TableRow(int columnCount)
 /**
  * Table row copy constructor
  */
-TableRow::TableRow(TableRow *src)
+TableRow::TableRow(const TableRow& src) : m_cells(src.m_cells.size(), 8, Ownership::True)
 {
-   m_cells = new ObjectArray<TableCell>(src->m_cells->size(), 8, Ownership::True);
-   for(int i = 0; i < src->m_cells->size(); i++)
-      m_cells->add(new TableCell(src->m_cells->get(i)));
-   m_objectId = src->m_objectId;
-   m_baseRow = src->m_baseRow;
+   for(int i = 0; i < src.m_cells.size(); i++)
+      m_cells.add(new TableCell(*src.m_cells.get(i)));
+   m_objectId = src.m_objectId;
+   m_baseRow = src.m_baseRow;
 }
 
 /**
  * Create empty table
  */
-Table::Table()
+Table::Table() : m_data(32, 32, Ownership::True), m_columns(8, 8, Ownership::True)
 {
-   m_data = new ObjectArray<TableRow>(32, 32, Ownership::True);
    m_title = nullptr;
    m_source = DS_INTERNAL;
-   m_columns = new ObjectArray<TableColumnDefinition>(8, 8, Ownership::True);
    m_extendedFormat = false;
 }
 
 /**
  * Create table from NXCP message
  */
-Table::Table(const NXCPMessage *msg)
+Table::Table(const NXCPMessage& msg) : m_data(32, 32, Ownership::True), m_columns(8, 8, Ownership::True)
 {
-   m_columns = new ObjectArray<TableColumnDefinition>(8, 8, Ownership::True);
    createFromMessage(msg);
 }
 
 /**
  * Copy constructor
  */
-Table::Table(const Table *src)
+Table::Table(const Table& src) : m_data(src.m_data.size(), 32, Ownership::True), m_columns(src.m_columns.size(), 8, Ownership::True)
 {
-   m_extendedFormat = src->m_extendedFormat;
-   m_data = new ObjectArray<TableRow>(src->m_data->size(), 32, Ownership::True);
-   for(int i = 0; i < src->m_data->size(); i++)
-      m_data->add(new TableRow(src->m_data->get(i)));
-   m_title = MemCopyString(src->m_title);
-   m_source = src->m_source;
-   m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, Ownership::True);
-   for(int i = 0; i < src->m_columns->size(); i++)
-      m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
+   m_extendedFormat = src.m_extendedFormat;
+   for(int i = 0; i < src.m_data.size(); i++)
+      m_data.add(new TableRow(*src.m_data.get(i)));
+   m_title = MemCopyString(src.m_title);
+   m_source = src.m_source;
+   for(int i = 0; i < src.m_columns.size(); i++)
+      m_columns.add(new TableColumnDefinition(*src.m_columns.get(i)));
 }
 
 /**
@@ -94,18 +87,6 @@ Table::Table(const Table *src)
  */
 Table::~Table()
 {
-   destroy();
-   delete m_columns;
-   delete m_data;
-}
-
-/**
- * Destroy table data
- */
-void Table::destroy()
-{
-   m_columns->clear();
-   m_data->clear();
    MemFree(m_title);
 }
 
@@ -355,17 +336,17 @@ TCHAR *Table::createXML() const
                               (const TCHAR *)EscapeStringForXML2(m_title, -1));
    xml.append(_T("<columns>\r\n"));
    int i;
-   for(i = 0; i < m_columns->size(); i++)
+   for(i = 0; i < m_columns.size(); i++)
       xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\"/>\r\n"),
-                  (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getName(), -1),
-                  (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getDisplayName(), -1),
-                  m_columns->get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns->get(i)->getDataType());
+                  (const TCHAR *)EscapeStringForXML2(m_columns.get(i)->getName(), -1),
+                  (const TCHAR *)EscapeStringForXML2(m_columns.get(i)->getDisplayName(), -1),
+                  m_columns.get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns.get(i)->getDataType());
    xml.append(_T("</columns>\r\n"));
    xml.append(_T("<data>\r\n"));
-   for(i = 0; i < m_data->size(); i++)
+   for(i = 0; i < m_data.size(); i++)
    {
-      uint32_t objectId = m_data->get(i)->getObjectId();
-      int baseRow = m_data->get(i)->getBaseRow();
+      uint32_t objectId = m_data.get(i)->getObjectId();
+      int baseRow = m_data.get(i)->getBaseRow();
       if (objectId != DEFAULT_OBJECT_ID)
       {
          if (baseRow != -1)
@@ -380,9 +361,9 @@ TCHAR *Table::createXML() const
          else
             xml.append(_T("<tr>\r\n"));
       }
-      for(int j = 0; j < m_columns->size(); j++)
+      for(int j = 0; j < m_columns.size(); j++)
       {
-         int status = m_data->get(i)->getStatus(j);
+         int status = m_data.get(i)->getStatus(j);
          if (status != DEFAULT_STATUS)
          {
             xml.append(_T("<td status=\""));
@@ -393,7 +374,7 @@ TCHAR *Table::createXML() const
          {
             xml.append(_T("<td>"));
          }
-         xml.append((const TCHAR *)EscapeStringForXML2(m_data->get(i)->getValue(j), -1));
+         xml.append((const TCHAR *)EscapeStringForXML2(m_data.get(i)->getValue(j), -1));
          xml.append(_T("</td>\r\n"));
       }
       xml.append(_T("</tr>\r\n"));
@@ -433,54 +414,53 @@ char *Table::createPackedXML() const
 /**
  * Create table from NXCP message
  */
-void Table::createFromMessage(const NXCPMessage *msg)
+void Table::createFromMessage(const NXCPMessage& msg)
 {
-   int rows = msg->getFieldAsUInt32(VID_TABLE_NUM_ROWS);
-   int columns = msg->getFieldAsUInt32(VID_TABLE_NUM_COLS);
-   m_title = msg->getFieldAsString(VID_TABLE_TITLE);
-   m_source = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
-   m_extendedFormat = msg->getFieldAsBoolean(VID_TABLE_EXTENDED_FORMAT);
+   int rows = msg.getFieldAsUInt32(VID_TABLE_NUM_ROWS);
+   int columns = msg.getFieldAsUInt32(VID_TABLE_NUM_COLS);
+   m_title = msg.getFieldAsString(VID_TABLE_TITLE);
+   m_source = msg.getFieldAsInt16(VID_DCI_SOURCE_TYPE);
+   m_extendedFormat = msg.getFieldAsBoolean(VID_TABLE_EXTENDED_FORMAT);
 
    uint32_t dwId = VID_TABLE_COLUMN_INFO_BASE;
    for(int i = 0; i < columns; i++, dwId += 10)
    {
-      m_columns->add(new TableColumnDefinition(msg, dwId));
+      m_columns.add(new TableColumnDefinition(msg, dwId));
    }
 
-   if (msg->isFieldExist(VID_INSTANCE_COLUMN))
+   if (msg.isFieldExist(VID_INSTANCE_COLUMN))
    {
       TCHAR name[MAX_COLUMN_NAME];
-      msg->getFieldAsString(VID_INSTANCE_COLUMN, name, MAX_COLUMN_NAME);
-      for(int i = 0; i < m_columns->size(); i++)
+      msg.getFieldAsString(VID_INSTANCE_COLUMN, name, MAX_COLUMN_NAME);
+      for(int i = 0; i < m_columns.size(); i++)
       {
-         if (!_tcsicmp(m_columns->get(i)->getName(), name))
+         if (!_tcsicmp(m_columns.get(i)->getName(), name))
          {
-            m_columns->get(i)->setInstanceColumn(true);
+            m_columns.get(i)->setInstanceColumn(true);
             break;
          }
       }
    }
 
-   m_data = new ObjectArray<TableRow>(rows, 32, Ownership::True);
    dwId = VID_TABLE_DATA_BASE;
    for(int i = 0; i < rows; i++)
    {
       TableRow *row = new TableRow(columns);
-      m_data->add(row);
+      m_data.add(row);
       if (m_extendedFormat)
       {
-         row->setObjectId(msg->getFieldAsUInt32(dwId++));
-         if (msg->isFieldExist(dwId))
-            row->setBaseRow(msg->getFieldAsInt32(dwId));
+         row->setObjectId(msg.getFieldAsUInt32(dwId++));
+         if (msg.isFieldExist(dwId))
+            row->setBaseRow(msg.getFieldAsInt32(dwId));
          dwId += 9;
       }
       for(int j = 0; j < columns; j++)
       {
-         TCHAR *value = msg->getFieldAsString(dwId++);
+         TCHAR *value = msg.getFieldAsString(dwId++);
          if (m_extendedFormat)
          {
-            int status = msg->getFieldAsInt16(dwId++);
-            UINT32 objectId = msg->getFieldAsUInt32(dwId++);
+            int status = msg.getFieldAsInt16(dwId++);
+            UINT32 objectId = msg.getFieldAsUInt32(dwId++);
             row->setPreallocated(j, value, status, objectId);
             dwId += 7;
          }
@@ -495,83 +475,84 @@ void Table::createFromMessage(const NXCPMessage *msg)
 /**
  * Update table from NXCP message
  */
-void Table::updateFromMessage(NXCPMessage *msg)
+void Table::updateFromMessage(const NXCPMessage& msg)
 {
-	destroy();
-   delete m_data; // will be re-created by createFromMessage
+   m_columns.clear();
+   m_data.clear();
+   MemFree(m_title);
 	createFromMessage(msg);
 }
 
 /**
  * Fill NXCP message with table data
  */
-int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
+int Table::fillMessage(NXCPMessage *msg, int offset, int rowLimit) const
 {
-	msg.setField(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
-   msg.setField(VID_DCI_SOURCE_TYPE, static_cast<uint16_t>(m_source));
-   msg.setField(VID_TABLE_EXTENDED_FORMAT, (UINT16)(m_extendedFormat ? 1 : 0));
+	msg->setField(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
+   msg->setField(VID_DCI_SOURCE_TYPE, static_cast<uint16_t>(m_source));
+   msg->setField(VID_TABLE_EXTENDED_FORMAT, (UINT16)(m_extendedFormat ? 1 : 0));
 
 	if (offset == 0)
 	{
-		msg.setField(VID_TABLE_NUM_ROWS, (UINT32)m_data->size());
-		msg.setField(VID_TABLE_NUM_COLS, (UINT32)m_columns->size());
+		msg->setField(VID_TABLE_NUM_ROWS, (UINT32)m_data.size());
+		msg->setField(VID_TABLE_NUM_COLS, (UINT32)m_columns.size());
 
       uint32_t id = VID_TABLE_COLUMN_INFO_BASE;
-      for(int i = 0; i < m_columns->size(); i++, id += 10)
-         m_columns->get(i)->fillMessage(&msg, id);
+      for(int i = 0; i < m_columns.size(); i++, id += 10)
+         m_columns.get(i)->fillMessage(msg, id);
 	}
-	msg.setField(VID_TABLE_OFFSET, (UINT32)offset);
+	msg->setField(VID_TABLE_OFFSET, (UINT32)offset);
 
-	int stopRow = (rowLimit == -1) ? m_data->size() : std::min(m_data->size(), offset + rowLimit);
+	int stopRow = (rowLimit == -1) ? m_data.size() : std::min(m_data.size(), offset + rowLimit);
    uint32_t id = VID_TABLE_DATA_BASE;
 	for(int row = offset; row < stopRow; row++)
 	{
-      TableRow *r = m_data->get(row);
+      TableRow *r = m_data.get(row);
       if (m_extendedFormat)
       {
-			msg.setField(id++, r->getObjectId());
-         msg.setField(id++, r->getBaseRow());
+			msg->setField(id++, r->getObjectId());
+         msg->setField(id++, r->getBaseRow());
          id += 8;
       }
-		for(int col = 0; col < m_columns->size(); col++)
+		for(int col = 0; col < m_columns.size(); col++)
 		{
 			const TCHAR *tmp = r->getValue(col);
-			msg.setField(id++, CHECK_NULL_EX(tmp));
+			msg->setField(id++, CHECK_NULL_EX(tmp));
          if (m_extendedFormat)
          {
-            msg.setField(id++, (UINT16)r->getStatus(col));
-            msg.setField(id++, r->getCellObjectId(col));
+            msg->setField(id++, (UINT16)r->getStatus(col));
+            msg->setField(id++, r->getCellObjectId(col));
             id += 7;
          }
 		}
 	}
-	msg.setField(VID_NUM_ROWS, (UINT32)(stopRow - offset));
+	msg->setField(VID_NUM_ROWS, (UINT32)(stopRow - offset));
 
-	if (stopRow == m_data->size())
-		msg.setEndOfSequence();
+	if (stopRow == m_data.size())
+		msg->setEndOfSequence();
 	return stopRow;
 }
 
 /**
  * Add new column
  */
-int Table::addColumn(const TCHAR *name, INT32 dataType, const TCHAR *displayName, bool isInstance)
+int Table::addColumn(const TCHAR *name, int32_t dataType, const TCHAR *displayName, bool isInstance)
 {
-   m_columns->add(new TableColumnDefinition(name, displayName, dataType, isInstance));
-   for(int i = 0; i < m_data->size(); i++)
-      m_data->get(i)->addColumn();
-	return m_columns->size() - 1;
+   m_columns.add(new TableColumnDefinition(name, displayName, dataType, isInstance));
+   for(int i = 0; i < m_data.size(); i++)
+      m_data.get(i)->addColumn();
+	return m_columns.size() - 1;
 }
 
 /**
  * Add new column
  */
-int Table::addColumn(const TableColumnDefinition *d)
+int Table::addColumn(const TableColumnDefinition& d)
 {
-   m_columns->add(new TableColumnDefinition(d));
-   for(int i = 0; i < m_data->size(); i++)
-      m_data->get(i)->addColumn();
-   return m_columns->size() - 1;
+   m_columns.add(new TableColumnDefinition(d));
+   for(int i = 0; i < m_data.size(); i++)
+      m_data.get(i)->addColumn();
+   return m_columns.size() - 1;
 }
 
 /**
@@ -582,8 +563,8 @@ int Table::addColumn(const TableColumnDefinition *d)
  */
 int Table::getColumnIndex(const TCHAR *name) const
 {
-   for(int i = 0; i < m_columns->size(); i++)
-      if (!_tcsicmp(name, m_columns->get(i)->getName()))
+   for(int i = 0; i < m_columns.size(); i++)
+      if (!_tcsicmp(name, m_columns.get(i)->getName()))
          return i;
    return -1;
 }
@@ -593,7 +574,7 @@ int Table::getColumnIndex(const TCHAR *name) const
  */
 int Table::addRow()
 {
-   return m_data->add(new TableRow(m_columns->size()));
+   return m_data.add(new TableRow(m_columns.size()));
 }
 
 /**
@@ -601,7 +582,7 @@ int Table::addRow()
  */
 void Table::deleteRow(int row)
 {
-   m_data->remove(row);
+   m_data.remove(row);
 }
 
 /**
@@ -609,12 +590,12 @@ void Table::deleteRow(int row)
  */
 void Table::deleteColumn(int col)
 {
-   if ((col < 0) || (col >= m_columns->size()))
+   if ((col < 0) || (col >= m_columns.size()))
       return;
 
-   m_columns->remove(col);
-   for(int i = 0; i < m_data->size(); i++)
-      m_data->get(i)->deleteColumn(col);
+   m_columns.remove(col);
+   for(int i = 0; i < m_data.size(); i++)
+      m_data.get(i)->deleteColumn(col);
 }
 
 /**
@@ -622,7 +603,7 @@ void Table::deleteColumn(int col)
  */
 void Table::setAt(int nRow, int nCol, const TCHAR *value)
 {
-   TableRow *r = m_data->get(nRow);
+   TableRow *r = m_data.get(nRow);
    if (r != NULL)
    {
       r->setValue(nCol, value);
@@ -634,7 +615,7 @@ void Table::setAt(int nRow, int nCol, const TCHAR *value)
  */
 void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *value)
 {
-   TableRow *r = m_data->get(nRow);
+   TableRow *r = m_data.get(nRow);
    if (r != NULL)
    {
       r->setPreallocatedValue(nCol, value);
@@ -700,7 +681,7 @@ void Table::setAt(int nRow, int nCol, double value)
  */
 const TCHAR *Table::getAsString(int nRow, int nCol, const TCHAR *defaultValue) const
 {
-   const TableRow *r = m_data->get(nRow);
+   const TableRow *r = m_data.get(nRow);
    if (r == nullptr)
       return defaultValue;
    const TCHAR *v = r->getValue(nCol);
@@ -757,7 +738,7 @@ double Table::getAsDouble(int nRow, int nCol) const
  */
 void Table::setStatusAt(int row, int col, int status)
 {
-   TableRow *r = m_data->get(row);
+   TableRow *r = m_data.get(row);
    if (r != nullptr)
    {
       r->setStatus(col, status);
@@ -769,7 +750,7 @@ void Table::setStatusAt(int row, int col, int status)
  */
 int Table::getStatus(int nRow, int nCol) const
 {
-   const TableRow *r = m_data->get(nRow);
+   const TableRow *r = m_data.get(nRow);
    return (r != nullptr) ? r->getStatus(nCol) : -1;
 }
 
@@ -778,7 +759,7 @@ int Table::getStatus(int nRow, int nCol) const
  */
 void Table::setCellObjectIdAt(int row, int col, uint32_t objectId)
 {
-   TableRow *r = m_data->get(row);
+   TableRow *r = m_data.get(row);
    if (r != nullptr)
    {
       r->setCellObjectId(col, objectId);
@@ -790,7 +771,7 @@ void Table::setCellObjectIdAt(int row, int col, uint32_t objectId)
  */
 void Table::setBaseRowAt(int row, int baseRow)
 {
-   TableRow *r = m_data->get(row);
+   TableRow *r = m_data.get(row);
    if (r != nullptr)
    {
       r->setBaseRow(baseRow);
@@ -805,16 +786,16 @@ void Table::setBaseRowAt(int row, int baseRow)
  */
 void Table::addAll(const Table *src)
 {
-   int numColumns = std::min(m_columns->size(), src->m_columns->size());
-   for(int i = 0; i < src->m_data->size(); i++)
+   int numColumns = std::min(m_columns.size(), src->m_columns.size());
+   for(int i = 0; i < src->m_data.size(); i++)
    {
-      TableRow *dstRow = new TableRow(m_columns->size());
-      TableRow *srcRow = src->m_data->get(i);
+      TableRow *dstRow = new TableRow(m_columns.size());
+      TableRow *srcRow = src->m_data.get(i);
       for(int j = 0; j < numColumns; j++)
       {
          dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j), srcRow->getCellObjectId(j));
       }
-      m_data->add(dstRow);
+      m_data.add(dstRow);
    }
 }
 
@@ -823,19 +804,19 @@ void Table::addAll(const Table *src)
  */
 int Table::copyRow(const Table *src, int row)
 {
-   TableRow *srcRow = src->m_data->get(row);
+   TableRow *srcRow = src->m_data.get(row);
    if (srcRow == NULL)
       return -1;
 
-   int numColumns = std::min(m_columns->size(), src->m_columns->size());
-   TableRow *dstRow = new TableRow(m_columns->size());
+   int numColumns = std::min(m_columns.size(), src->m_columns.size());
+   TableRow *dstRow = new TableRow(m_columns.size());
 
    for(int j = 0; j < numColumns; j++)
    {
       dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j), srcRow->getCellObjectId(j));
    }
 
-   return m_data->add(dstRow);
+   return m_data.add(dstRow);
 }
 
 /**
@@ -844,28 +825,28 @@ int Table::copyRow(const Table *src, int row)
 void Table::merge(const Table *src)
 {
    // Create column index translation and add missing columns
-   int numSrcColumns = src->m_columns->size();
+   int numSrcColumns = src->m_columns.size();
    int *tran = static_cast<int*>(MemAllocLocal(numSrcColumns * sizeof(int)));
    for(int i = 0; i < numSrcColumns; i++)
    {
-      TableColumnDefinition *sc = src->m_columns->get(i);
+      TableColumnDefinition *sc = src->m_columns.get(i);
       int idx = getColumnIndex(sc->getName());
       if (idx == -1)
       {
-         idx = addColumn(sc);
+         idx = addColumn(*sc);
       }
       tran[i] = idx;
    }
 
-   for(int r = 0; r < src->m_data->size(); r++)
+   for(int r = 0; r < src->m_data.size(); r++)
    {
-      TableRow *dstRow = new TableRow(m_columns->size());
-      TableRow *srcRow = src->m_data->get(r);
+      TableRow *dstRow = new TableRow(m_columns.size());
+      TableRow *srcRow = src->m_data.get(r);
       for(int c = 0; c < numSrcColumns; c++)
       {
          dstRow->set(tran[c], srcRow->getValue(c), srcRow->getStatus(c), srcRow->getCellObjectId(c));
       }
-      m_data->add(dstRow);
+      m_data.add(dstRow);
    }
 
    MemFreeLocal(tran);
@@ -876,32 +857,32 @@ void Table::merge(const Table *src)
  */
 int Table::mergeRow(const Table *src, int row)
 {
-   TableRow *srcRow = src->m_data->get(row);
+   TableRow *srcRow = src->m_data.get(row);
    if (srcRow == NULL)
       return -1;
 
    // Create column index translation and add missing columns
-   int numSrcColumns = src->m_columns->size();
+   int numSrcColumns = src->m_columns.size();
    int *tran = static_cast<int*>(MemAllocLocal(numSrcColumns * sizeof(int)));
    for(int i = 0; i < numSrcColumns; i++)
    {
-      TableColumnDefinition *sc = src->m_columns->get(i);
+      TableColumnDefinition *sc = src->m_columns.get(i);
       int idx = getColumnIndex(sc->getName());
       if (idx == -1)
       {
-         idx = addColumn(sc);
+         idx = addColumn(*sc);
       }
       tran[i] = idx;
    }
 
-   TableRow *dstRow = new TableRow(m_columns->size());
+   TableRow *dstRow = new TableRow(m_columns.size());
    for(int c = 0; c < numSrcColumns; c++)
    {
       dstRow->set(tran[c], srcRow->getValue(c), srcRow->getStatus(c), srcRow->getCellObjectId(c));
    }
 
    MemFreeLocal(tran);
-   return m_data->add(dstRow);
+   return m_data.add(dstRow);
 }
 
 /**
@@ -909,7 +890,7 @@ int Table::mergeRow(const Table *src, int row)
  */
 void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
 {
-   TableRow *r = m_data->get(row);
+   TableRow *r = m_data.get(row);
    if (r == NULL)
    {
       buffer[0] = 0;
@@ -918,9 +899,9 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
 
    StringBuffer instance;
    bool first = true;
-   for(int i = 0; i < m_columns->size(); i++)
+   for(int i = 0; i < m_columns.size(); i++)
    {
-      if (m_columns->get(i)->isInstanceColumn())
+      if (m_columns.get(i)->isInstanceColumn())
       {
          if (!first)
             instance += _T("~~~");
@@ -945,7 +926,7 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
  */
 int Table::findRowByInstance(const TCHAR *instance)
 {
-   for(int i = 0; i < m_data->size(); i++)
+   for(int i = 0; i < m_data.size(); i++)
    {
       TCHAR currInstance[256];
       buildInstanceString(i, currInstance, 256);
@@ -960,9 +941,9 @@ int Table::findRowByInstance(const TCHAR *instance)
  */
 int Table::findRow(void *key, bool (*comparator)(const TableRow *, void *))
 {
-   for(int i = 0; i < m_data->size(); i++)
+   for(int i = 0; i < m_data.size(); i++)
    {
-      if (comparator(m_data->get(i), key))
+      if (comparator(m_data.get(i), key))
          return i;
    }
    return -1;
@@ -974,12 +955,12 @@ int Table::findRow(void *key, bool (*comparator)(const TableRow *, void *))
 void Table::writeToTerminal() const
 {
    // calculate column widths and print headers
-   int *widths = MemAllocArray<int>(m_columns->size());
+   int *widths = MemAllocArray<int>(m_columns.size());
    WriteToTerminal(_T("\x1b[1m|"));
-   for(int c = 0; c < m_columns->size(); c++)
+   for(int c = 0; c < m_columns.size(); c++)
    {
       widths[c] = (int)_tcslen(getColumnName(c));
-      for(int i = 0; i < m_data->size(); i++)
+      for(int i = 0; i < m_data.size(); i++)
       {
          int len = (int)_tcslen(getAsString(i, c, _T("")));
          if (len > widths[c])
@@ -989,12 +970,12 @@ void Table::writeToTerminal() const
    }
 
    WriteToTerminal(_T("\n"));
-   for(int i = 0; i < m_data->size(); i++)
+   for(int i = 0; i < m_data.size(); i++)
    {
       WriteToTerminal(_T("\x1b[1m|\x1b[0m"));
-      for(int j = 0; j < m_columns->size(); j++)
+      for(int j = 0; j < m_columns.size(); j++)
       {
-         if (m_columns->get(j)->isInstanceColumn())
+         if (m_columns.get(j)->isInstanceColumn())
             WriteToTerminalEx(_T(" \x1b[32;1m%*s\x1b[0m \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j, _T("")));
          else
             WriteToTerminalEx(_T(" %*s \x1b[1m|\x1b[0m"), -widths[j], getAsString(i, j, _T("")));
@@ -1009,13 +990,13 @@ void Table::writeToTerminal() const
  */
 void Table::dump(FILE *out, bool withHeader, TCHAR delimiter) const
 {
-   if (m_columns->isEmpty())
+   if (m_columns.isEmpty())
       return;
 
    if (withHeader)
    {
       _fputts(getColumnName(0), out);
-      for(int c = 1; c < m_columns->size(); c++)
+      for(int c = 1; c < m_columns.size(); c++)
       {
          _fputtc(delimiter, out);
          _fputts(getColumnName(c), out);
@@ -1023,10 +1004,10 @@ void Table::dump(FILE *out, bool withHeader, TCHAR delimiter) const
       _fputtc(_T('\n'), out);
    }
 
-   for(int i = 0; i < m_data->size(); i++)
+   for(int i = 0; i < m_data.size(); i++)
    {
       _fputts(getAsString(i, 0, _T("")), out);
-      for(int j = 1; j < m_columns->size(); j++)
+      for(int j = 1; j < m_columns.size(); j++)
       {
          _fputtc(delimiter, out);
          _fputts(getAsString(i, j, _T("")), out);
@@ -1040,14 +1021,14 @@ void Table::dump(FILE *out, bool withHeader, TCHAR delimiter) const
  */
 void Table::dump(const TCHAR *tag, int level, const TCHAR *prefix, bool withHeader, TCHAR delimiter) const
 {
-   if (m_columns->isEmpty())
+   if (m_columns.isEmpty())
       return;
 
    StringBuffer sb;
    if (withHeader)
    {
       sb.append(getColumnName(0));
-      for (int c = 1; c < m_columns->size(); c++)
+      for (int c = 1; c < m_columns.size(); c++)
       {
          sb.append(delimiter);
          sb.append(getColumnName(c));
@@ -1055,11 +1036,11 @@ void Table::dump(const TCHAR *tag, int level, const TCHAR *prefix, bool withHead
       nxlog_debug_tag(tag, level, _T("%s%s"), prefix, sb.cstr());
    }
 
-   for (int i = 0; i < m_data->size(); i++)
+   for (int i = 0; i < m_data.size(); i++)
    {
       sb.clear();
       sb.append(getAsString(i, 0, _T("")));
-      for (int j = 1; j < m_columns->size(); j++)
+      for (int j = 1; j < m_columns.size(); j++)
       {
          sb.append(delimiter);
          sb.append(getAsString(i, j, _T("")));
@@ -1074,44 +1055,33 @@ void Table::dump(const TCHAR *tag, int level, const TCHAR *prefix, bool withHead
 TableColumnDefinition::TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance)
 {
    _tcslcpy(m_name, CHECK_NULL(name), MAX_COLUMN_NAME);
-   _tcslcpy(m_displayName, (displayName != NULL) ? displayName : m_name, MAX_DB_STRING);
+   _tcslcpy(m_displayName, (displayName != nullptr) ? displayName : m_name, MAX_DB_STRING);
    m_dataType = dataType;
    m_instanceColumn = isInstance;
 }
 
 /**
- * Create copy of existing table column definition
- */
-TableColumnDefinition::TableColumnDefinition(const TableColumnDefinition *src)
-{
-   _tcscpy(m_name, src->m_name);
-   _tcscpy(m_displayName, src->m_displayName);
-   m_dataType = src->m_dataType;
-   m_instanceColumn = src->m_instanceColumn;
-}
-
-/**
  * Create table column definition from NXCP message
  */
-TableColumnDefinition::TableColumnDefinition(const NXCPMessage *msg, UINT32 baseId)
+TableColumnDefinition::TableColumnDefinition(const NXCPMessage& msg, uint32_t baseId)
 {
-   msg->getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
-   m_dataType = msg->getFieldAsInt32(baseId + 1);
-   msg->getFieldAsString(baseId + 2, m_displayName, MAX_DB_STRING);
+   msg.getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
+   m_dataType = msg.getFieldAsInt32(baseId + 1);
+   msg.getFieldAsString(baseId + 2, m_displayName, MAX_DB_STRING);
    if (m_displayName[0] == 0)
       _tcscpy(m_displayName, m_name);
-   m_instanceColumn = msg->getFieldAsUInt16(baseId + 3) ? true : false;
+   m_instanceColumn = msg.getFieldAsBoolean(baseId + 3);
 }
 
 /**
  * Fill message with table column definition data
  */
-void TableColumnDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+void TableColumnDefinition::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId, m_name);
-   msg->setField(baseId + 1, (UINT32)m_dataType);
+   msg->setField(baseId + 1, m_dataType);
    msg->setField(baseId + 2, m_displayName);
-   msg->setField(baseId + 3, (WORD)(m_instanceColumn ? 1 : 0));
+   msg->setField(baseId + 3, m_instanceColumn);
 }
 
 /**

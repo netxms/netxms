@@ -991,10 +991,8 @@ public:
  */
 template <class T> class ObjectLock
 {
-#if CAN_DELETE_COPY_CTOR
-   ObjectLock(const ObjectLock<T> &src) = delete;
-   ObjectLock<T>& operator =(const ObjectLock<T> &src) = delete;
-#endif
+   ObjectLock(const ObjectLock& src) = delete;
+   ObjectLock& operator =(const ObjectLock& src) = delete;
 
 private:
    Mutex m_mutex;
@@ -1400,8 +1398,6 @@ template<class T> shared_ptr<T> SharedPtrIterator<T>::m_null = shared_ptr<T>();
  */
 class LIBNETXMS_EXPORTABLE Array
 {
-   DISABLE_COPY_CTOR(Array)
-
 private:
 	int m_size;
 	int m_allocated;
@@ -1419,7 +1415,7 @@ protected:
 	void (*m_objectDestructor)(void *, Array *);
 
    Array(const void *data, int initial, int grow, size_t elementSize);
-   Array(const Array *src);
+   Array(const Array& src);
    Array(Array&& src);
 
    void *__getBuffer() const { return m_data; }
@@ -1491,14 +1487,13 @@ public:
  */
 template <class T> class ObjectArray : public Array
 {
-   DISABLE_COPY_CTOR(ObjectArray)
-
 private:
 	static void destructor(void *object, Array *array) { delete static_cast<T*>(object); }
 
 public:
 	ObjectArray(int initial = 0, int grow = 16, Ownership owner = Ownership::False) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
 	ObjectArray(ObjectArray&& src) : Array(std::move(src)) { }
+   ObjectArray(const ObjectArray& src) = delete;
 	virtual ~ObjectArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
@@ -1552,14 +1547,13 @@ public:
  */
 template <class T> class ObjectRefArray : public Array
 {
-   DISABLE_COPY_CTOR(ObjectRefArray)
-
 private:
 	static void destructor(void *object, Array *array) { }
 
 public:
 	ObjectRefArray(int initial = 0, int grow = 16) : Array(initial, grow, Ownership::False) { m_objectDestructor = destructor; }
 	ObjectRefArray(ObjectRefArray&& src) : Array(std::move(src)) { }
+   ObjectRefArray(const ObjectRefArray& src) = delete;
 	virtual ~ObjectRefArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
@@ -1614,8 +1608,7 @@ private:
 
 public:
 	IntegerArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
-	IntegerArray(const IntegerArray<T> *src) : Array(src) { }
-   IntegerArray(const IntegerArray<T>& src) : Array(&src) { }
+   IntegerArray(const IntegerArray<T>& src) : Array(src) { }
    IntegerArray(IntegerArray<T>&& src) : Array(std::move(src)) { }
 	virtual ~IntegerArray() { }
 
@@ -1662,15 +1655,13 @@ template class LIBNETXMS_EXPORTABLE IntegerArray<uint64_t>;
  */
 template <class T> class StructArray : public Array
 {
-   DISABLE_COPY_CTOR(StructArray)
-
 private:
 	static void destructor(void *element, Array *array) { }
 
 public:
 	StructArray(int initial = 0, int grow = 16) : Array(nullptr, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(const T *data, int size, int grow = 16) : Array(data, size, grow, sizeof(T)) { m_objectDestructor = destructor; }
-	StructArray(const StructArray<T> *src) : Array(src) { }
+   StructArray(const StructArray<T>& src) : Array(src) { }
 	StructArray(StructArray<T>&& src) : Array(std::move(src)) { }
 	virtual ~StructArray() { }
 
@@ -1985,13 +1976,12 @@ public:
  */
 template <class T> class StringObjectMap : public StringMapBase
 {
-   DISABLE_COPY_CTOR(StringObjectMap)
-
 private:
 	static void destructor(void *object, StringMapBase *map) { delete (T*)object; }
 
 public:
 	StringObjectMap(Ownership objectOwner, void (*_destructor)(void *, StringMapBase *) = destructor) : StringMapBase(objectOwner, _destructor) { }
+	StringObjectMap(const StringObjectMap& src) = delete;
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	void setPreallocated(TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, true); }
@@ -2044,8 +2034,6 @@ public:
  */
 template <class T> class SharedStringObjectMap final
 {
-   DISABLE_COPY_CTOR(SharedStringObjectMap)
-
 private:
    ObjectMemoryPool<shared_ptr<T>> m_pool;
    StringObjectMap<shared_ptr<T>> m_data;
@@ -2059,6 +2047,7 @@ private:
 
 public:
    SharedStringObjectMap() : m_pool(64), m_data(Ownership::True, SharedStringObjectMap<T>::destructor) { m_data.setContext(this); }
+   SharedStringObjectMap(const SharedStringObjectMap& src) = delete;
 
    void set(const TCHAR *key, shared_ptr<T> object) { m_data.set(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
    void set(const TCHAR *key, T *object) { m_data.set(key, new(m_pool.allocate()) shared_ptr<T>(object)); }
@@ -2583,8 +2572,6 @@ public:
  */
 template <class K, class V> class SynchronizedHashMap
 {
-   DISABLE_COPY_CTOR(SynchronizedHashMap)
-
 private:
    HashMap<K, V> m_data;
    Mutex m_mutex;
@@ -2594,6 +2581,7 @@ public:
    {
       m_data.setContext(this);
    }
+   SynchronizedHashMap(const SynchronizedHashMap& src) = delete;
    virtual ~SynchronizedHashMap() { }
 
    void set(const K& key, V *element)
@@ -2673,8 +2661,6 @@ public:
  */
 template <class K, class V> class SharedHashMap final
 {
-   DISABLE_COPY_CTOR(SharedHashMap)
-
    // Note: member order is important because m_data allocates memory from m_pool
 private:
    ObjectMemoryPool<shared_ptr<V>> m_pool;
@@ -2696,6 +2682,7 @@ private:
 
 public:
    SharedHashMap() : m_pool(64), m_data(Ownership::True, SharedHashMap<K, V>::destructor) { m_data.setContext(this); }
+   SharedHashMap(const SharedHashMap& src) = delete;
    virtual ~SharedHashMap() { }
 
    void set(const K& key, shared_ptr<V> element) { m_data.set(key, new(m_pool.allocate()) shared_ptr<V>(element)); }
@@ -2742,8 +2729,6 @@ template <class K, class V> shared_ptr<V> SharedHashMap<K, V>::m_null = shared_p
  */
 template <class K, class V> class SynchronizedSharedHashMap final
 {
-   DISABLE_COPY_CTOR(SynchronizedSharedHashMap)
-
    // Note: member order is important because m_data allocates memory from m_pool
 private:
    ObjectMemoryPool<shared_ptr<V>> m_pool;
@@ -2776,6 +2761,7 @@ public:
    {
       m_data.setContext(this);
    }
+   SynchronizedSharedHashMap(const SynchronizedSharedHashMap& src) = delete;
    virtual ~SynchronizedSharedHashMap() { }
 
    void set(const K& key, shared_ptr<V> element)
@@ -2859,8 +2845,6 @@ template <class K, class V> shared_ptr<V> SynchronizedSharedHashMap<K, V>::m_nul
  */
 class LIBNETXMS_EXPORTABLE RingBuffer
 {
-   DISABLE_COPY_CTOR(RingBuffer)
-
 private:
    BYTE *m_data;
    size_t m_size;
@@ -2873,6 +2857,7 @@ private:
 
 public:
    RingBuffer(size_t initial = 8192, size_t allocationStep = 8192);
+   RingBuffer(const RingBuffer& src) = delete;
    ~RingBuffer();
 
    void write(const BYTE *data, size_t dataSize);
@@ -2929,8 +2914,6 @@ public:
  */
 class LIBNETXMS_EXPORTABLE ByteStream
 {
-   DISABLE_COPY_CTOR(ByteStream)
-
 private:
    BYTE *m_data;
    size_t m_size;
@@ -2948,6 +2931,7 @@ private:
 public:
    ByteStream(size_t initial = 8192);
    ByteStream(const void *data, size_t size);
+   ByteStream(const ByteStream& src) = delete;
    virtual ~ByteStream();
 
    static ByteStream *load(const TCHAR *file);
@@ -3156,22 +3140,22 @@ class LIBNETXMS_EXPORTABLE TableColumnDefinition
 private:
    TCHAR m_name[MAX_COLUMN_NAME];
    TCHAR m_displayName[MAX_DB_STRING];
-   INT32 m_dataType;
+   int32_t m_dataType;
    bool m_instanceColumn;
 
 public:
-   TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance);
-   TableColumnDefinition(const NXCPMessage *msg, UINT32 baseId);
-   TableColumnDefinition(const TableColumnDefinition *src);
+   TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, int32_t dataType, bool isInstance);
+   TableColumnDefinition(const NXCPMessage& msg, uint32_t baseId);
+   TableColumnDefinition(const TableColumnDefinition& src) = default;
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDisplayName() const { return m_displayName; }
-   INT32 getDataType() const { return m_dataType; }
+   int32_t getDataType() const { return m_dataType; }
    bool isInstanceColumn() const { return m_instanceColumn; }
 
-   void setDataType(INT32 type) { m_dataType = type; }
+   void setDataType(int32_t type) { m_dataType = type; }
    void setInstanceColumn(bool isInstance) { m_instanceColumn = isInstance; }
    void setDisplayName(const TCHAR *name);
 };
@@ -3181,26 +3165,67 @@ public:
  */
 class TableCell
 {
-   DISABLE_COPY_CTOR(TableCell)
-
 private:
    TCHAR *m_value;
    int m_status;
-   UINT32 m_objectId;
+   uint32_t m_objectId;
 
 public:
-   TableCell() { m_value = NULL; m_status = -1; m_objectId = 0; }
-   TableCell(const TCHAR *value) { m_value = MemCopyString(value); m_status = -1; m_objectId = 0; }
-   TableCell(const TCHAR *value, int status) { m_value = MemCopyString(value); m_status = status; m_objectId = 0; }
-   TableCell(TableCell *src) { m_value = MemCopyString(src->m_value); m_status = src->m_status; m_objectId = src->m_objectId; }
-   ~TableCell() { MemFree(m_value); }
+   TableCell()
+   {
+      m_value = nullptr;
+      m_status = -1;
+      m_objectId = 0;
+   }
+   TableCell(const TCHAR *value)
+   {
+      m_value = MemCopyString(value);
+      m_status = -1;
+      m_objectId = 0;
+   }
+   TableCell(const TCHAR *value, int status)
+   {
+      m_value = MemCopyString(value);
+      m_status = status;
+      m_objectId = 0;
+   }
+   TableCell(const TableCell& src)
+   {
+      m_value = MemCopyString(src.m_value);
+      m_status = src.m_status;
+      m_objectId = src.m_objectId;
+   }
+   ~TableCell()
+   {
+      MemFree(m_value);
+   }
 
-   void set(const TCHAR *value, int status, UINT32 objectId) { MemFree(m_value); m_value = MemCopyString(value); m_status = status; m_objectId = objectId; }
-   void setPreallocated(TCHAR *value, int status, UINT32 objectId) { MemFree(m_value); m_value = value; m_status = status; m_objectId = objectId; }
+   void set(const TCHAR *value, int status, uint32_t objectId)
+   {
+      MemFree(m_value);
+      m_value = MemCopyString(value);
+      m_status = status;
+      m_objectId = objectId;
+   }
+   void setPreallocated(TCHAR *value, int status, uint32_t objectId)
+   {
+      MemFree(m_value);
+      m_value = value;
+      m_status = status;
+      m_objectId = objectId;
+   }
 
    const TCHAR *getValue() const { return m_value; }
-   void setValue(const TCHAR *value) { MemFree(m_value); m_value = MemCopyString(value); }
-   void setPreallocatedValue(TCHAR *value) { MemFree(m_value); m_value = value; }
+   void setValue(const TCHAR *value)
+   {
+      MemFree(m_value);
+      m_value = MemCopyString(value);
+   }
+   void setPreallocatedValue(TCHAR *value)
+   {
+      MemFree(m_value);
+      m_value = value;
+   }
 
    int getStatus() const { return m_status; }
    void setStatus(int status) { m_status = status; }
@@ -3214,40 +3239,82 @@ public:
  */
 class TableRow
 {
-   DISABLE_COPY_CTOR(TableRow)
-
 private:
-   ObjectArray<TableCell> *m_cells;
-   UINT32 m_objectId;
+   ObjectArray<TableCell> m_cells;
+   uint32_t m_objectId;
    int m_baseRow;
 
 public:
    TableRow(int columnCount);
-   TableRow(TableRow *src);
-   ~TableRow() { delete m_cells; }
+   TableRow(const TableRow& src);
+   ~TableRow() = default;
 
-   void addColumn() { m_cells->add(new TableCell); }
-   void deleteColumn(int index) { m_cells->remove(index); }
+   void addColumn() { m_cells.add(new TableCell); }
+   void deleteColumn(int index) { m_cells.remove(index); }
 
-   void set(int index, const TCHAR *value, int status, UINT32 objectId) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status, objectId); }
-   void setPreallocated(int index, TCHAR *value, int status, UINT32 objectId) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status, objectId); }
+   void set(int index, const TCHAR *value, int status, uint32_t objectId)
+   {
+      TableCell *c = m_cells.get(index);
+      if (c != nullptr)
+         c->set(value, status, objectId);
+   }
+   void setPreallocated(int index, TCHAR *value, int status, uint32_t objectId)
+   {
+      TableCell *c = m_cells.get(index);
+      if (c != nullptr)
+         c->setPreallocated(value, status, objectId);
+   }
 
-   void setValue(int index, const TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setValue(value); }
-   void setPreallocatedValue(int index, TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocatedValue(value); else free(value); }
+   void setValue(int index, const TCHAR *value)
+   {
+      TableCell *c = m_cells.get(index);
+      if (c != nullptr)
+         c->setValue(value);
+   }
+   void setPreallocatedValue(int index, TCHAR *value)
+   {
+      TableCell *c = m_cells.get(index);
+      if (c != nullptr)
+         c->setPreallocatedValue(value);
+      else
+         MemFree(value);
+   }
 
-   void setStatus(int index, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setStatus(status); }
+   void setStatus(int index, int status)
+   {
+      TableCell *c = m_cells.get(index);
+      if (c != nullptr)
+         c->setStatus(status);
+   }
 
-   const TCHAR *getValue(int index) const { const TableCell *c = m_cells->get(index); return (c != NULL) ? c->getValue() : NULL; }
-   int getStatus(int index) const { const TableCell *c = m_cells->get(index); return (c != NULL) ? c->getStatus() : -1; }
+   const TCHAR *getValue(int index) const
+   {
+      const TableCell *c = m_cells.get(index);
+      return (c != nullptr) ? c->getValue() : nullptr;
+   }
+   int getStatus(int index) const
+   {
+      const TableCell *c = m_cells.get(index);
+      return (c != nullptr) ? c->getStatus() : -1;
+   }
 
-   UINT32 getObjectId() const { return m_objectId; }
-   void setObjectId(UINT32 id) { m_objectId = id; }
+   uint32_t getObjectId() const { return m_objectId; }
+   void setObjectId(uint32_t id) { m_objectId = id; }
 
    int getBaseRow() const { return m_baseRow; }
    void setBaseRow(int baseRow) { m_baseRow = baseRow; }
 
-   UINT32 getCellObjectId(int index) const { const TableCell *c = m_cells->get(index); return (c != NULL) ? c->getObjectId() : 0; }
-   void setCellObjectId(int index, UINT32 id) { TableCell *c = m_cells->get(index); if (c != NULL) c->setObjectId(id); }
+   uint32_t getCellObjectId(int index) const
+   {
+      const TableCell *c = m_cells.get(index);
+      return (c != nullptr) ? c->getObjectId() : 0;
+   }
+   void setCellObjectId(int index, uint32_t id)
+   {
+      TableCell *c = m_cells.get(index);
+      if (c != nullptr)
+         c->setObjectId(id);
+   }
 };
 
 /**
@@ -3255,52 +3322,53 @@ public:
  */
 class LIBNETXMS_EXPORTABLE Table
 {
-   DISABLE_COPY_CTOR(Table)
-
 private:
-   ObjectArray<TableRow> *m_data;
-   ObjectArray<TableColumnDefinition> *m_columns;
+   ObjectArray<TableRow> m_data;
+   ObjectArray<TableColumnDefinition> m_columns;
    TCHAR *m_title;
    int m_source;
    bool m_extendedFormat;
 
-   void createFromMessage(const NXCPMessage *msg);
-   void destroy();
+   void createFromMessage(const NXCPMessage& msg);
    bool parseXML(const char *xml);
 
 public:
    Table();
-   Table(const Table *src);
-   Table(const NXCPMessage *msg);
+   Table(const NXCPMessage& msg);
+   Table(const Table& src);
    ~Table();
 
-   int fillMessage(NXCPMessage &msg, int offset, int rowLimit);
-   void updateFromMessage(NXCPMessage *msg);
+   int fillMessage(NXCPMessage* msg, int offset, int rowLimit) const;
+   void updateFromMessage(const NXCPMessage& msg);
 
    void addAll(const Table *src);
    int copyRow(const Table *src, int row);
    void merge(const Table *src);
    int mergeRow(const Table *src, int row);
 
-   int getNumRows() const { return m_data->size(); }
-   int getNumColumns() const { return m_columns->size(); }
+   int getNumRows() const { return m_data.size(); }
+   int getNumColumns() const { return m_columns.size(); }
    const TCHAR *getTitle() const { return CHECK_NULL_EX(m_title); }
    int getSource() const { return m_source; }
 
    bool isExtendedFormat() { return m_extendedFormat; }
    void setExtendedFormat(bool ext) { m_extendedFormat = ext; }
 
-   const TCHAR *getColumnName(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : nullptr; }
-   int32_t getColumnDataType(int col) const { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
-   const TableColumnDefinition *getColumnDefinition(int col) const { return m_columns->get(col); }
+   const TCHAR *getColumnName(int col) const { return ((col >= 0) && (col < m_columns.size())) ? m_columns.get(col)->getName() : nullptr; }
+   int32_t getColumnDataType(int col) const { return ((col >= 0) && (col < m_columns.size())) ? m_columns.get(col)->getDataType() : 0; }
+   const TableColumnDefinition *getColumnDefinition(int col) const { return m_columns.get(col); }
 	int getColumnIndex(const TCHAR *name) const;
-   ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
+   const ObjectArray<TableColumnDefinition>& getColumnDefinitions() { return m_columns; }
 
    void setTitle(const TCHAR *title) { MemFree(m_title); m_title = MemCopyString(title); }
    void setSource(int source) { m_source = source; }
-   int addColumn(const TCHAR *name, INT32 dataType = 0, const TCHAR *displayName = NULL, bool isInstance = false);
-   int addColumn(const TableColumnDefinition *d);
-   void setColumnDataType(int col, INT32 dataType) { if ((col >= 0) && (col < m_columns->size())) m_columns->get(col)->setDataType(dataType); }
+   int addColumn(const TCHAR *name, int32_t dataType = 0, const TCHAR *displayName = nullptr, bool isInstance = false);
+   int addColumn(const TableColumnDefinition& d);
+   void setColumnDataType(int col, int32_t dataType)
+   {
+      if ((col >= 0) && (col < m_columns.size()))
+         m_columns.get(col)->setDataType(dataType);
+   }
    int addRow();
 
    void deleteRow(int row);
@@ -3344,17 +3412,34 @@ public:
 
    int findRow(void *key, bool (*comparator)(const TableRow *, void *));
 
-   uint32_t getObjectId(int row) const { const TableRow *r = m_data->get(row); return (r != nullptr) ? r->getObjectId() : 0; }
-   void setObjectIdAt(int row, uint32_t id) { TableRow *r = m_data->get(row); if (r != nullptr) r->setObjectId(id); }
+   uint32_t getObjectId(int row) const
+   {
+      const TableRow *r = m_data.get(row);
+      return (r != nullptr) ? r->getObjectId() : 0;
+   }
+   void setObjectIdAt(int row, uint32_t id)
+   {
+      TableRow *r = m_data.get(row);
+      if (r != nullptr)
+         r->setObjectId(id);
+   }
    void setObjectId(uint32_t id) { setObjectIdAt(getNumRows() - 1, id); }
 
    void setCellObjectIdAt(int row, int col, uint32_t objectId);
    void setCellObjectId(int col, uint32_t objectId) { setCellObjectIdAt(getNumRows() - 1, col, objectId); }
-   uint32_t getCellObjectId(int row, int col) const { const TableRow *r = m_data->get(row); return (r != nullptr) ? r->getCellObjectId(col) : 0; }
+   uint32_t getCellObjectId(int row, int col) const
+   {
+      const TableRow *r = m_data.get(row);
+      return (r != nullptr) ? r->getCellObjectId(col) : 0;
+   }
 
    void setBaseRowAt(int row, int baseRow);
    void setBaseRow(int baseRow) { setBaseRowAt(getNumRows() - 1, baseRow); }
-   int getBaseRow(int row) const { const TableRow *r = m_data->get(row); return (r != nullptr) ? r->getBaseRow() : 0; }
+   int getBaseRow(int row) const
+   {
+      const TableRow *r = m_data.get(row);
+      return (r != nullptr) ? r->getBaseRow() : 0;
+   }
 
    void writeToTerminal() const;
    void dump(FILE *out, bool withHeader = true, TCHAR delimiter = _T(',')) const;
@@ -3754,8 +3839,6 @@ template class LIBNETXMS_EXPORTABLE ObjectArray<InetAddress>;
  */
 class LIBNETXMS_EXPORTABLE InetAddressList
 {
-   DISABLE_COPY_CTOR(InetAddressList)
-
 private:
    ObjectArray<InetAddress> m_list;
 
@@ -3763,6 +3846,7 @@ private:
 
 public:
    InetAddressList() : m_list(0, 8, Ownership::True) { }
+   InetAddressList(const InetAddressList& src) = delete;
 
    void add(const InetAddress& addr);
    void add(const InetAddressList& addrList);
@@ -3796,8 +3880,6 @@ public:
  */
 class LIBNETXMS_EXPORTABLE SocketConnection
 {
-   DISABLE_COPY_CTOR(SocketConnection)
-
 protected:
 	SOCKET m_socket;
 	char m_data[4096];   // cached data
@@ -3810,6 +3892,7 @@ protected:
 
 public:
    SocketConnection(SOCKET s);
+   SocketConnection(const SocketConnection& src) = delete;
 	virtual ~SocketConnection();
 
 	bool connectTCP(const TCHAR *hostName, uint16_t port, uint32_t timeout);
@@ -3835,10 +3918,9 @@ public:
  */
 class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
 {
-   DISABLE_COPY_CTOR(TelnetConnection)
-
 protected:
    TelnetConnection() : SocketConnection() { }
+   TelnetConnection(const TelnetConnection& src) = delete;
 
    virtual ssize_t readFromSocket(void *buffer, size_t size, uint32_t timeout) override;
 
@@ -3863,8 +3945,6 @@ public:
  */
 class LIBNETXMS_EXPORTABLE SocketPoller
 {
-   DISABLE_COPY_CTOR(SocketPoller)
-
 private:
    bool m_write;
    int m_count;
@@ -3881,6 +3961,7 @@ private:
 
 public:
    SocketPoller(bool write = false);
+   SocketPoller(const SocketPoller& src) = delete;
    ~SocketPoller();
 
    bool add(SOCKET s);
@@ -3935,8 +4016,6 @@ template class LIBNETXMS_EXPORTABLE SynchronizedObjectMemoryPool<BackgroundSocke
  */
 class LIBNETXMS_EXPORTABLE BackgroundSocketPoller
 {
-   DISABLE_COPY_CTOR(BackgroundSocketPoller)
-
 private:
    SynchronizedObjectMemoryPool<BackgroundSocketPollRequest> m_memoryPool;
    THREAD m_workerThread;
@@ -3951,6 +4030,7 @@ private:
 
 public:
    BackgroundSocketPoller();
+   BackgroundSocketPoller(const BackgroundSocketPoller& src) = delete;
    ~BackgroundSocketPoller();
 
    void poll(SOCKET socket, uint32_t timeout, void (*callback)(BackgroundSocketPollResult, SOCKET, void*), void *context);
@@ -4011,10 +4091,9 @@ template<typename C> void AbstractCommChannel_PollWrapperCallback(BackgroundSock
  */
 class LIBNETXMS_EXPORTABLE AbstractCommChannel
 {
-   DISABLE_COPY_CTOR(AbstractCommChannel)
-
 public:
    AbstractCommChannel();
+   AbstractCommChannel(const AbstractCommChannel& src) = delete;
    virtual ~AbstractCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, Mutex* mutex = nullptr) = 0;
@@ -4043,8 +4122,6 @@ template class LIBNETXMS_EXPORTABLE shared_ptr<AbstractCommChannel>;
  */
 class LIBNETXMS_EXPORTABLE SocketCommChannel : public AbstractCommChannel
 {
-   DISABLE_COPY_CTOR(SocketCommChannel)
-
 private:
    SOCKET m_socket;
    bool m_owner;
@@ -4055,6 +4132,7 @@ private:
 
 public:
    SocketCommChannel(SOCKET socket, BackgroundSocketPollerHandle *socketPoller = nullptr, Ownership owner = Ownership::True);
+   SocketCommChannel(const SocketCommChannel& src) = delete;
    virtual ~SocketCommChannel();
 
    virtual ssize_t send(const void *data, size_t size, Mutex* mutex = nullptr) override;

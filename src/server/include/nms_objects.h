@@ -262,8 +262,6 @@ struct INDEX_HEAD;
  */
 class NXCORE_EXPORTABLE AbstractIndexBase
 {
-   DISABLE_COPY_CTOR(AbstractIndexBase)
-
 protected:
    INDEX_HEAD* volatile m_primary;
    INDEX_HEAD* volatile m_secondary;
@@ -288,6 +286,7 @@ protected:
 
 public:
    AbstractIndexBase(Ownership owner);
+   AbstractIndexBase(const AbstractIndexBase& src) = delete;
    ~AbstractIndexBase();
 
    size_t size() const;
@@ -320,8 +319,6 @@ public:
  */
 template<typename T> class SharedPointerIndex : public AbstractIndexBase
 {
-   DISABLE_COPY_CTOR(SharedPointerIndex)
-
 private:
    SynchronizedObjectMemoryPool<shared_ptr<T>> m_pool;
 
@@ -350,6 +347,7 @@ public:
    {
       this->m_objectDestructor = destructor;
    }
+   SharedPointerIndex(const SharedPointerIndex& src) = delete;
    ~SharedPointerIndex<T>()
    {
       clear(); // Delete all entries before memory pool is destroyed
@@ -424,12 +422,9 @@ public:
  */
 template<typename T> class AbstractIndex : public AbstractIndexBase
 {
-   DISABLE_COPY_CTOR(AbstractIndex)
-
 public:
-   AbstractIndex<T>(Ownership owner) : AbstractIndexBase(owner)
-   {
-   }
+   AbstractIndex<T>(Ownership owner) : AbstractIndexBase(owner) { }
+   AbstractIndex(const AbstractIndex& src) = delete;
 
    bool put(uint64_t key, T *object)
    {
@@ -479,8 +474,6 @@ public:
  */
 template<typename T> class AbstractIndexWithDestructor : public AbstractIndex<T>
 {
-   DISABLE_COPY_CTOR(AbstractIndexWithDestructor)
-
 private:
    static void destructor(void *object, AbstractIndexBase *index)
    {
@@ -492,6 +485,7 @@ public:
    {
       this->m_objectDestructor = destructor;
    }
+   AbstractIndexWithDestructor(const AbstractIndexWithDestructor& src) = delete;
 };
 
 #ifdef _WIN32
@@ -503,10 +497,9 @@ template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<NetObj>
  */
 class NXCORE_EXPORTABLE ObjectIndex : public SharedPointerIndex<NetObj>
 {
-   DISABLE_COPY_CTOR(ObjectIndex)
-
 public:
    ObjectIndex() : SharedPointerIndex<NetObj>() { }
+   ObjectIndex(const ObjectIndex& src) = delete;
 
    unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr);
 
@@ -1076,8 +1069,6 @@ class NXCORE_EXPORTABLE NetObj : public NObject
    friend class Pollable;
    friend class VersionableObject;
 
-   DISABLE_COPY_CTOR(NetObj)
-
 private:
    typedef NObject super;
    time_t m_creationTime; //Object creation time
@@ -1178,6 +1169,7 @@ protected:
 
 public:
    NetObj();
+   NetObj(const NetObj& src) = delete;
    virtual ~NetObj();
 
    shared_ptr<NetObj> self() { return static_pointer_cast<NetObj>(NObject::self()); }

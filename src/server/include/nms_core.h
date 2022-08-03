@@ -1350,8 +1350,8 @@ void CreateTrapExportRecord(StringBuffer &xml, UINT32 id);
 UINT32 ResolveTrapGuid(const uuid& guid);
 void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
 
-BOOL IsTableTool(UINT32 dwToolId);
-BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
+bool IsTableTool(uint32_t toolId);
+bool CheckObjectToolAccess(uint32_t toolId, uint32_t userId);
 uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session);
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
 UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);

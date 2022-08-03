@@ -531,8 +531,6 @@ template class LIBNXSRV_EXPORTABLE StringObjectMap<CustomAttribute>;
  */
 class LIBNXSRV_EXPORTABLE NObject : public enable_shared_from_this<NObject>
 {
-   DISABLE_COPY_CTOR(NObject)
-
 private:
    SharedObjectArray<NObject> m_childList;     // Array of pointers to child objects
    SharedObjectArray<NObject> m_parentList;    // Array of pointers to parent objects
@@ -594,6 +592,7 @@ protected:
 
 public:
    NObject();
+   NObject(const NObject& src) = delete;
    virtual ~NObject();
 
    shared_ptr<NObject> self() { return shared_from_this(); }

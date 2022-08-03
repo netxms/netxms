@@ -1149,7 +1149,7 @@ Group::Group(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
  */
 Group::Group(const Group *src) : UserDatabaseObject(src)
 {
-   m_members = new IntegerArray<uint32_t>(src->m_members);
+   m_members = new IntegerArray<uint32_t>(*src->m_members);
 }
 
 /**

@@ -3511,31 +3511,31 @@ void ClientSession::sendUserDB(const NXCPMessage& request)
  */
 void ClientSession::getSelectedUsers(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(msg);
-   msg.deleteAllFields();
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+   response.deleteAllFields();
 
    IntegerArray<uint32_t> userIds;
    request.getFieldAsInt32Array(VID_OBJECT_LIST, &userIds);
 
    // Prepare message
-   msg.setCode(CMD_USER_DATA);
+   response.setCode(CMD_USER_DATA);
 
    // Send user database
-   unique_ptr<ObjectArray<UserDatabaseObject>> users = FindUserDBObjects(&userIds);
+   unique_ptr<ObjectArray<UserDatabaseObject>> users = FindUserDBObjects(userIds);
    for (int i = 0; i < users->size(); i++)
    {
       UserDatabaseObject *object = users->get(i);
-      msg.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
-      object->fillMessage(&msg);
-      sendMessage(&msg);
-      msg.deleteAllFields();
+      response.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
+      object->fillMessage(&response);
+      sendMessage(response);
+      response.deleteAllFields();
    }
 
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(msg);
+   response.setCode(CMD_REQUEST_COMPLETED);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
 }
 
 /**
@@ -3543,36 +3543,36 @@ void ClientSession::getSelectedUsers(const NXCPMessage& request)
  */
 void ClientSession::createUser(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check user rights
-   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-   }
-   else
-   {
-      TCHAR szUserName[MAX_USER_NAME];
-      request.getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
-      if (IsValidObjectName(szUserName))
+      TCHAR userName[MAX_USER_NAME];
+      request.getFieldAsString(VID_USER_NAME, userName, MAX_USER_NAME);
+      if (IsValidObjectName(userName))
       {
          bool isGroup = request.getFieldAsBoolean(VID_IS_GROUP);
          uint32_t userId;
-         uint32_t rcc = CreateNewUser(szUserName, isGroup, &userId);
-         msg.setField(VID_RCC, rcc);
+         uint32_t rcc = CreateNewUser(userName, isGroup, &userId);
+         response.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
          {
-            msg.setField(VID_USER_ID, userId);   // Send id of new user to client
-            writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);
+            response.setField(VID_USER_ID, userId);   // Send id of new user to client
+            writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), userName);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_NAME);
       }
    }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
 
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -4866,7 +4866,7 @@ static void ProcessTableDataSelectResults(DB_UNBUFFERED_RESULT hResult, ClientSe
          if (table != nullptr)
          {
             msg.setField(VID_TIMESTAMP, DBGetFieldULong(hResult, 0));
-            table->fillMessage(msg, 0, -1);
+            table->fillMessage(&msg, 0, -1);
             delete table;
             session->sendMessage(msg);
             msg.deleteAllFields();
@@ -5825,7 +5825,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                         {
                            IntegerArray<uint32_t> seeds;
                            request.getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
-                           object = make_shared<NetworkMap>((int)request.getFieldAsUInt16(VID_MAP_TYPE), &seeds);
+                           object = make_shared<NetworkMap>((int)request.getFieldAsUInt16(VID_MAP_TYPE), seeds);
                            object->setName(objectName);
                            NetObjInsert(object, true, false);
                         }
@@ -7125,7 +7125,7 @@ void ClientSession::queryAgentTable(const NXCPMessage& request)
 				response.setField(VID_RCC, rcc);
 				if (rcc == RCC_SUCCESS)
 				{
-					table->fillMessage(response, 0, -1);
+					table->fillMessage(&response, 0, -1);
 				}
          }
          else
@@ -11303,7 +11303,7 @@ void ClientSession::getServerLogQueryData(const NXCPMessage& request)
 		do
 		{
 			response.deleteAllFields();
-			offset = data->fillMessage(response, offset, 200);
+			offset = data->fillMessage(&response, offset, 200);
 			sendMessage(response);
 		} while(offset < data->getNumRows());
 		delete data;
@@ -12906,7 +12906,7 @@ void ClientSession::querySummaryTable(const NXCPMessage& request)
    {
       debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
       response.setField(VID_RCC, RCC_SUCCESS);
-      result->fillMessage(response, 0, -1);
+      result->fillMessage(&response, 0, -1);
       delete result;
    }
    else
@@ -12932,7 +12932,7 @@ void ClientSession::queryAdHocSummaryTable(const NXCPMessage& request)
    {
       debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
       response.setField(VID_RCC, RCC_SUCCESS);
-      result->fillMessage(response, 0, -1);
+      result->fillMessage(&response, 0, -1);
       delete result;
    }
    else

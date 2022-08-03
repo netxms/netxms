@@ -131,7 +131,7 @@ DCTable::DCTable(const DCTable *src, bool shadowCopy) : DCObject(src, shadowCopy
 		m_thresholds->add(new DCTableThreshold(src->m_thresholds->get(i), shadowCopy));
 	if (shadowCopy && (src->m_lastValue != nullptr))
 	{
-	   m_lastValue = make_shared<Table>(src->m_lastValue.get());
+	   m_lastValue = make_shared<Table>(*src->m_lastValue);
 	}
 }
 
@@ -841,7 +841,7 @@ void DCTable::fillLastValueMessage(NXCPMessage *msg)
 	if (m_lastValue != nullptr)
 	{
       msg->setFieldFromTime(VID_TIMESTAMP, m_lastValueTimestamp);
-      m_lastValue->fillMessage(*msg, 0, -1);
+      m_lastValue->fillMessage(msg, 0, -1);
 	}
 	else
 	{
@@ -1064,7 +1064,7 @@ void DCTable::updateResultColumns(const shared_ptr<Table>& t)
       int index = t->getColumnIndex(col->getName());
       if (index != -1)
       {
-         TableColumnDefinition *cd = t->getColumnDefinitions()->get(index);
+         TableColumnDefinition *cd = t->getColumnDefinitions().get(index);
          if (cd != nullptr)
          {
             cd->setDataType(col->getDataType());

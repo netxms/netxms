@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ struct SNMP_ENUM_ARGS
 {
    uint32_t dwNumCols;
    TCHAR **ppszOidList;
-   LONG *pnFormatList;
+   int32_t *pnFormatList;
    uint32_t dwFlags;
    shared_ptr<Node> pNode;
 	Table *table;
@@ -80,28 +80,26 @@ static uint32_t ReturnDBFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 /**
  * Check if tool with given id exist and is a table tool
  */
-BOOL IsTableTool(UINT32 toolId)
+bool IsTableTool(uint32_t toolId)
 {
-   DB_RESULT hResult;
-   LONG nType;
-   BOOL bResult = FALSE;
-
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_type FROM object_tools WHERE tool_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
-      return RCC_DB_FAILURE;
+      return false;
    }
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
 
-   hResult = DBSelectPrepared(hStmt);
+   bool bResult = false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         nType = DBGetFieldLong(hResult, 0, 0);
-         bResult = ((nType == TOOL_TYPE_SNMP_TABLE) || (nType == TOOL_TYPE_AGENT_TABLE) || (nType == TOOL_TYPE_AGENT_LIST));
+         int type = DBGetFieldLong(hResult, 0, 0);
+         bResult = ((type == TOOL_TYPE_SNMP_TABLE) || (type == TOOL_TYPE_AGENT_TABLE) || (type == TOOL_TYPE_AGENT_LIST));
       }
       DBFreeResult(hResult);
    }
@@ -113,51 +111,48 @@ BOOL IsTableTool(UINT32 toolId)
 /**
  * Check if user has access to the tool
  */
-BOOL CheckObjectToolAccess(UINT32 toolId, UINT32 userId)
+bool CheckObjectToolAccess(uint32_t toolId, uint32_t userId)
 {
-   DB_RESULT hResult;
-	int i, nRows;
-	UINT32 dwId;
-   BOOL bResult = FALSE;
-
    if (userId == 0)
-      return TRUE;
+      return true;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=?"));
    if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
-      return RCC_DB_FAILURE;
+      return false;
    }
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
 
-   hResult = DBSelectPrepared(hStmt);
+   bool result = false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != nullptr)
    {
-		nRows = DBGetNumRows(hResult);
-      for(i = 0; i < nRows; i++)
+		int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-			dwId = DBGetFieldULong(hResult, i, 0);
-			if ((dwId == userId) || (dwId == GROUP_EVERYONE))
+			uint32_t id = DBGetFieldULong(hResult, i, 0);
+			if ((id == userId) || (id == GROUP_EVERYONE))
 			{
-				bResult = TRUE;
+				result = true;
 				break;
 			}
-			if (dwId & GROUP_FLAG)
+			if (id & GROUP_FLAG)
 			{
-				if (CheckUserMembership(userId, dwId))
+				if (CheckUserMembership(userId, id))
 				{
-					bResult = TRUE;
+					result = true;
 					break;
 				}
 			}
       }
       DBFreeResult(hResult);
    }
-   DBConnectionPoolReleaseConnection(hdb);
    DBFreeStatement(hStmt);
-   return bResult;
+   DBConnectionPoolReleaseConnection(hdb);
+   return result;
 }
 
 /**
@@ -203,7 +198,7 @@ static void GetAgentTable(ToolStartupInfo *toolData)
 
             msg.setField(VID_RCC, RCC_SUCCESS);
             table->setTitle(toolData->toolData);
-            table->fillMessage(msg, 0, -1);
+            table->fillMessage(&msg, 0, -1);
             delete table;
          }
          else
@@ -222,7 +217,7 @@ static void GetAgentTable(ToolStartupInfo *toolData)
    }
 
    // Send response to client
-   toolData->session->sendMessage(&msg);
+   toolData->session->sendMessage(msg);
    delete toolData;
 }
 
@@ -318,7 +313,7 @@ static void GetAgentList(ToolStartupInfo *toolData)
                         delete values;
 
                         msg.setField(VID_RCC, RCC_SUCCESS);
-                        table.fillMessage(msg, 0, -1);
+                        table.fillMessage(&msg, 0, -1);
                      }
                      else
                      {
@@ -361,7 +356,7 @@ static void GetAgentList(ToolStartupInfo *toolData)
    }
 
    // Send response to client
-   toolData->session->sendMessage(&msg);
+   toolData->session->sendMessage(msg);
    delete toolData;
 }
 
@@ -482,17 +477,13 @@ static uint32_t TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, SN
  */
 static void GetSNMPTable(ToolStartupInfo *toolData)
 {
-   NXCPMessage msg;
-   UINT32 i, dwNumCols;
    TCHAR buffer[256];
    SNMP_ENUM_ARGS args;
 	Table table;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   // Prepare data message
-   msg.setCode(CMD_TABLE_DATA);
-   msg.setId(toolData->requestId);
+   NXCPMessage msg(CMD_TABLE_DATA, toolData->requestId);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format FROM object_tools_table_columns WHERE tool_id=? ORDER BY col_number"));
    if (hStmt != nullptr)
@@ -502,16 +493,16 @@ static void GetSNMPTable(ToolStartupInfo *toolData)
       DB_RESULT hResult = DBSelectPrepared(hStmt);
       if (hResult != nullptr)
       {
-         dwNumCols = DBGetNumRows(hResult);
-         if (dwNumCols > 0)
+         int numColumns = DBGetNumRows(hResult);
+         if (numColumns > 0)
          {
-            args.dwNumCols = dwNumCols;
-            args.ppszOidList = (TCHAR **)malloc(sizeof(TCHAR *) * dwNumCols);
-            args.pnFormatList = (LONG *)malloc(sizeof(LONG) * dwNumCols);
+            args.dwNumCols = numColumns;
+            args.ppszOidList = MemAllocArrayNoInit<TCHAR*>(numColumns);
+            args.pnFormatList = MemAllocArrayNoInit<int32_t>(numColumns);
             args.dwFlags = toolData->flags;
             args.pNode = toolData->node;
             args.table = &table;
-            for(i = 0; i < dwNumCols; i++)
+            for(int i = 0; i < numColumns; i++)
             {
                DBGetField(hResult, i, 0, buffer, 256);
                args.ppszOidList[i] = DBGetField(hResult, i, 1, nullptr, 0);
@@ -525,7 +516,7 @@ static void GetSNMPTable(ToolStartupInfo *toolData)
                // Fill in message with results
                msg.setField(VID_RCC, RCC_SUCCESS);
                table.setTitle(toolData->toolData);
-               table.fillMessage(msg, 0, -1);
+               table.fillMessage(&msg, 0, -1);
             }
             else
             {
@@ -533,10 +524,10 @@ static void GetSNMPTable(ToolStartupInfo *toolData)
             }
 
             // Cleanup
-            for(i = 0; i < dwNumCols; i++)
+            for(int i = 0; i < numColumns; i++)
                MemFree(args.ppszOidList[i]);
-            free(args.ppszOidList);
-            free(args.pnFormatList);
+            MemFree(args.ppszOidList);
+            MemFree(args.pnFormatList);
          }
          else
          {
@@ -557,7 +548,7 @@ static void GetSNMPTable(ToolStartupInfo *toolData)
    DBConnectionPoolReleaseConnection(hdb);
 
    // Send response to client
-   toolData->session->sendMessage(&msg);
+   toolData->session->sendMessage(msg);
    delete toolData;
 }
 

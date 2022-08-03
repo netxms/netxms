@@ -173,33 +173,26 @@ static void NotifyClientsInBackground(Alarm *alarm)
  */
 struct AlarmBackgroundProcessingData
 {
-   IntegerArray<uint32_t> *alarms;
+   IntegerArray<uint32_t> alarms;
    bool terminate;
    bool sticky;
    bool includeSubordinates;
    uint32_t ackTime;
 
-   AlarmBackgroundProcessingData(IntegerArray<uint32_t> *_alarms, bool _terminate, bool _includeSubordinates)
+   AlarmBackgroundProcessingData(const IntegerArray<uint32_t>& _alarms, bool _terminate, bool _includeSubordinates) : alarms(_alarms)
    {
-      alarms = new IntegerArray<uint32_t>(_alarms);
       terminate = _terminate;
       sticky = false;
       ackTime = 0;
       includeSubordinates = _includeSubordinates;
    }
 
-   AlarmBackgroundProcessingData(IntegerArray<uint32_t> *_alarms, bool _sticky, uint32_t _ackTime, bool _includeSubordinates)
+   AlarmBackgroundProcessingData(const IntegerArray<uint32_t>& _alarms, bool _sticky, uint32_t _ackTime, bool _includeSubordinates) : alarms(_alarms)
    {
-      alarms = new IntegerArray<uint32_t>(_alarms);
       terminate = false;
       sticky = _sticky;
       ackTime = _ackTime;
       includeSubordinates = _includeSubordinates;
-   }
-
-   ~AlarmBackgroundProcessingData()
-   {
-      delete alarms;
    }
 };
 
@@ -210,7 +203,7 @@ static void ResolveAlarmsInBackground(AlarmBackgroundProcessingData *data)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Processing background alarm %s"), data->terminate ? _T("termination") : _T("resolution"));
    IntegerArray<uint32_t> failIds, failCodes;
-   ResolveAlarmsById(*data->alarms, &failIds, &failCodes, nullptr, data->terminate, data->includeSubordinates);
+   ResolveAlarmsById(data->alarms, &failIds, &failCodes, nullptr, data->terminate, data->includeSubordinates);
    delete data;
 }
 
@@ -220,9 +213,9 @@ static void ResolveAlarmsInBackground(AlarmBackgroundProcessingData *data)
 static void AckAlarmsInBackground(AlarmBackgroundProcessingData *data)
 {
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Processing background alarm acknowledgment"));
-   for(int i = 0; i < data->alarms->size(); i++)
+   for(int i = 0; i < data->alarms.size(); i++)
    {
-      AckAlarmById(data->alarms->get(i), nullptr, data->sticky, data->ackTime, data->includeSubordinates);
+      AckAlarmById(data->alarms.get(i), nullptr, data->sticky, data->ackTime, data->includeSubordinates);
    }
    delete data;
 }
@@ -254,7 +247,7 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
  */
 Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
          const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
-         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList)
+         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList), m_relatedEvents(16, 16)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_parentAlarmId = parentAlarmId;
@@ -291,18 +284,16 @@ Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, c
    m_ackByUser = INVALID_UID;
    m_resolvedByUser = INVALID_UID;
    m_termByUser = INVALID_UID;
-   m_relatedEvents = new IntegerArray<uint64_t>(16, 16);
-   m_relatedEvents->add(event->getId());
+   m_relatedEvents.add(event->getId());
    _tcslcpy(m_message, message, MAX_EVENT_MSG_LENGTH);
    _tcslcpy(m_key, key, MAX_DB_STRING);
    m_notificationCode = 0;
-   m_subordinateAlarms = new IntegerArray<uint32_t>(0, 16);
 }
 
 /**
  * Create alarm object from database record
  */
-Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
+Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_relatedEvents(16, 16)
 {
    m_alarmId = DBGetFieldULong(hResult, row, 0);
    m_sourceObject = DBGetFieldULong(hResult, row, 1);
@@ -346,11 +337,8 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
    m_impact = DBGetField(hResult, row, 27, nullptr, 0);
    m_lastStateChangeTime = DBGetFieldULong(hResult, row, 28);
    m_notificationCode = 0;
-
    m_commentCount = GetCommentCount(hdb, m_alarmId);
-
    m_termByUser = 0;
-   m_relatedEvents = new IntegerArray<uint64_t>(16, 16);
 
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT event_id FROM alarm_events WHERE alarm_id=%d"), (int)m_alarmId);
@@ -360,18 +348,16 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
       int count = DBGetNumRows(eventResult);
       for(int j = 0; j < count; j++)
       {
-         m_relatedEvents->add(DBGetFieldUInt64(eventResult, j, 0));
+         m_relatedEvents.add(DBGetFieldUInt64(eventResult, j, 0));
       }
       DBFreeResult(eventResult);
    }
-
-   m_subordinateAlarms = new IntegerArray<uint32_t>(0, 16);
 }
 
 /**
  * Copy constructor
  */
-Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_alarmCategoryList(src->m_alarmCategoryList)
+Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_alarmCategoryList(src->m_alarmCategoryList), m_relatedEvents(16, 16), m_subordinateAlarms(src->m_subordinateAlarms)
 {
    m_sourceEventId = src->m_sourceEventId;
    m_alarmId = src->m_alarmId;
@@ -403,16 +389,11 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_a
    _tcscpy(m_helpDeskRef, src->m_helpDeskRef);
    m_impact = MemCopyString(src->m_impact);
    m_commentCount = src->m_commentCount;
-   if (copyEvents && (src->m_relatedEvents != nullptr))
+   if (copyEvents)
    {
-      m_relatedEvents = new IntegerArray<uint64_t>(src->m_relatedEvents);
-   }
-   else
-   {
-      m_relatedEvents = nullptr;
+      m_relatedEvents.addAll(src->m_relatedEvents);
    }
    m_notificationCode = notificationCode;
-   m_subordinateAlarms = new IntegerArray<uint32_t>(src->m_subordinateAlarms);
 }
 
 /**
@@ -420,9 +401,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_a
  */
 Alarm::~Alarm()
 {
-   delete m_relatedEvents;
    MemFree(m_eventTags);
-   delete m_subordinateAlarms;
    MemFree(m_impact);
    MemFree(m_rcaScriptName);
 }
@@ -462,9 +441,7 @@ void Alarm::executeHookScript()
  */
 uint64_t Alarm::getMemoryUsage() const
 {
-   uint64_t mu = sizeof(Alarm) + m_alarmCategoryList.memoryUsage() + m_subordinateAlarms->memoryUsage() + sizeof(IntegerArray<uint32_t>);
-   if (m_relatedEvents != nullptr)
-      mu += m_relatedEvents->memoryUsage() + sizeof(IntegerArray<uint32_t>);
+   uint64_t mu = sizeof(Alarm) + m_alarmCategoryList.memoryUsage() + m_subordinateAlarms.memoryUsage() + m_relatedEvents.memoryUsage();
    if (m_rcaScriptName != nullptr)
       mu += (_tcslen(m_rcaScriptName) + 1) * sizeof(TCHAR);
    if (m_impact != nullptr)
@@ -479,8 +456,8 @@ uint64_t Alarm::getMemoryUsage() const
  */
 void Alarm::addSubordinateAlarm(uint32_t alarmId)
 {
-   if (!m_subordinateAlarms->contains(alarmId))
-      m_subordinateAlarms->add(alarmId);
+   if (!m_subordinateAlarms.contains(alarmId))
+      m_subordinateAlarms.add(alarmId);
 }
 
 /**
@@ -489,7 +466,7 @@ void Alarm::addSubordinateAlarm(uint32_t alarmId)
 void Alarm::removeSubordinateAlarm(uint32_t alarmId)
 {
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Removing subordinate alarm %u from alarm %u"), alarmId, m_alarmId);
-   m_subordinateAlarms->remove(m_subordinateAlarms->indexOf(alarmId));
+   m_subordinateAlarms.remove(m_subordinateAlarms.indexOf(alarmId));
    ThreadPoolExecute(g_mainThreadPool, NotifyClientsInBackground, new Alarm(this, false, NX_NOTIFY_ALARM_CHANGED));
 }
 
@@ -1043,7 +1020,7 @@ uint32_t Alarm::acknowledge(ClientSession *session, bool sticky, uint32_t acknow
    updateInDatabase();
    executeHookScript();
 
-   if (includeSubordinates && !m_subordinateAlarms->isEmpty())
+   if (includeSubordinates && !m_subordinateAlarms.isEmpty())
       ThreadPoolExecute(g_mainThreadPool, AckAlarmsInBackground, new AlarmBackgroundProcessingData(m_subordinateAlarms, sticky, acknowledgmentActionTime, true));
 
    return RCC_SUCCESS;
@@ -1104,7 +1081,7 @@ uint32_t NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *se
  */
 void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, bool includeSubordinates)
 {
-   if (includeSubordinates && !m_subordinateAlarms->isEmpty())
+   if (includeSubordinates && !m_subordinateAlarms.isEmpty())
       ThreadPoolExecute(g_mainThreadPool, ResolveAlarmsInBackground, new AlarmBackgroundProcessingData(m_subordinateAlarms, terminate, true));
 
    if (event != nullptr)
@@ -1126,10 +1103,10 @@ void Alarm::resolve(uint32_t userId, Event *event, bool terminate, bool notify, 
    updateInDatabase();
    executeHookScript();
 
-   if (!terminate && (event != nullptr) && (m_relatedEvents != nullptr) && !m_relatedEvents->contains(event->getId()))
+   if (!terminate && (event != nullptr) && !m_relatedEvents.contains(event->getId()))
    {
       // Add record to alarm_events table if alarm is resolved
-      m_relatedEvents->add(event->getId());
+      m_relatedEvents.add(event->getId());
 
       TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
       const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, event->getName(), valSeverity, valSource, valTimestamp, event->getMessage() };

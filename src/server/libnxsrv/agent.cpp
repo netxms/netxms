@@ -1538,40 +1538,37 @@ bool AgentConnection::processCustomMessage(NXCPMessage *pMsg)
  */
 uint32_t AgentConnection::getList(const TCHAR *param, StringList **list)
 {
-   uint32_t rcc;
    *list = nullptr;
-   if (m_isConnected)
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   NXCPMessage msg(CMD_GET_LIST, generateRequestId(), m_nProtocolVersion);
+   msg.setField(VID_PARAMETER, param);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
    {
-      NXCPMessage msg(CMD_GET_LIST, generateRequestId(), m_nProtocolVersion);
-      msg.setField(VID_PARAMETER, param);
-      if (sendMessage(&msg))
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_commandTimeout);
+      if (response != nullptr)
       {
-         NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), m_commandTimeout);
-         if (response != nullptr)
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
          {
-            rcc = response->getFieldAsUInt32(VID_RCC);
-            if (rcc == ERR_SUCCESS)
-            {
-               *list = new StringList();
-               int count = response->getFieldAsInt32(VID_NUM_STRINGS);
-               for(int i = 0; i < count; i++)
-                  (*list)->addPreallocated(response->getFieldAsString(VID_ENUM_VALUE_BASE + i));
-            }
-            delete response;
+            *list = new StringList();
+            int count = response->getFieldAsInt32(VID_NUM_STRINGS);
+            for(int i = 0; i < count; i++)
+               (*list)->addPreallocated(response->getFieldAsString(VID_ENUM_VALUE_BASE + i));
          }
-         else
-         {
-            rcc = ERR_REQUEST_TIMEOUT;
-         }
+         delete response;
       }
       else
       {
-         rcc = ERR_CONNECTION_BROKEN;
+         rcc = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      rcc = ERR_NOT_CONNECTED;
+      rcc = ERR_CONNECTION_BROKEN;
    }
 
    return rcc;
@@ -1582,44 +1579,38 @@ uint32_t AgentConnection::getList(const TCHAR *param, StringList **list)
  */
 uint32_t AgentConnection::getTable(const TCHAR *pszParam, Table **table)
 {
-   NXCPMessage msg(m_nProtocolVersion), *pResponse;
-   uint32_t dwRqId, dwRetCode;
+   *table = nullptr;
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
 
-	*table = nullptr;
-   if (m_isConnected)
+   uint32_t requestId = generateRequestId();
+   NXCPMessage msg(CMD_GET_TABLE, requestId, m_nProtocolVersion);
+   msg.setField(VID_PARAMETER, pszParam);
+
+   uint32_t rcc;
+   if (sendMessage(&msg))
    {
-      dwRqId = generateRequestId();
-      msg.setCode(CMD_GET_TABLE);
-      msg.setId(dwRqId);
-      msg.setField(VID_PARAMETER, pszParam);
-      if (sendMessage(&msg))
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+      if (response != nullptr)
       {
-         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_commandTimeout);
-         if (pResponse != nullptr)
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
          {
-            dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
-            if (dwRetCode == ERR_SUCCESS)
-            {
-					*table = new Table(pResponse);
-            }
-            delete pResponse;
+            *table = new Table(*response);
          }
-         else
-         {
-            dwRetCode = ERR_REQUEST_TIMEOUT;
-         }
+         delete response;
       }
       else
       {
-         dwRetCode = ERR_CONNECTION_BROKEN;
+         rcc = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwRetCode = ERR_NOT_CONNECTED;
+      rcc = ERR_CONNECTION_BROKEN;
    }
 
-   return dwRetCode;
+   return rcc;
 }
 
 /**

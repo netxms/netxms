@@ -824,7 +824,7 @@ uint32_t Cluster::collectAggregatedData(DCTable *table, shared_ptr<Table> *resul
    uint32_t rcc = DCE_SUCCESS;
    if (!values.isEmpty())
    {
-      *result = make_shared<Table>(values.get(0));
+      *result = make_shared<Table>(*values.get(0));
       for(int i = 1; i < values.size(); i++)
          table->mergeValues(result->get(), values.get(i), i);
    }

@@ -1976,55 +1976,6 @@ fi
 
 AC_LANG_PUSH([C++])
 
-AC_MSG_CHECKING(whether C++ compiler supports deletion of copy constructor)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-class A {
-public:
-   A(const A &s) = delete;
-};
-]],[[ ]])
-],[
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(CAN_DELETE_COPY_CTOR,1,Define to 1 if C++ compiler supports copy constructor deletion)
-],[
-	AC_MSG_RESULT(no)
-	AC_DEFINE(CAN_DELETE_COPY_CTOR,0,Define to 1 if C++ compiler supports copy constructor deletion)
-])
-
-AC_MSG_CHECKING(whether C++ compiler supports "override" specifier)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-class A {
-public:
-   virtual void test();
-};
-class B : public A {
-public:
-   virtual void test() override;
-};
-]],[[ ]])
-],[
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,1,Define to 1 if C++ compiler supports "override" specifier)
-],[
-	AC_MSG_RESULT(no)
-	AC_DEFINE(HAVE_OVERRIDE_SPECIFIER,0,Define to 1 if C++ compiler supports "override" specifier)
-])
-
-AC_MSG_CHECKING(whether C++ compiler supports "final" specifier)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-class A final {
-public:
-   int x;
-};
-]],[[ ]])
-],[
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(HAVE_FINAL_SPECIFIER,1,Define to 1 if C++ compiler supports "final" specifier)
-],[
-	AC_MSG_RESULT(no)
-	AC_DEFINE(HAVE_FINAL_SPECIFIER,0,Define to 1 if C++ compiler supports "final" specifier)
-])
-
 AC_MSG_CHECKING(whether C++ compiler supports std::make_unique)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <memory>
@@ -2038,45 +1989,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 ],[
         AC_MSG_RESULT(no)
         AC_DEFINE(HAVE_STD_MAKE_UNIQUE,0,Define to 1 if std::make_unique is available)
-])
-
-AC_MSG_CHECKING(whether C++ compiler supports std::forward)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <utility>
-struct X
-{
-	int f;
-};
-int F(X arg)
-{
-	return arg.f;
-}
-]],[[
-	X a;
-	return F(std::forward<X>(a));
-]])
-],[
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(HAVE_STD_FORWARD,1,Define to 1 if std::forward is available)
-],[
-        AC_MSG_RESULT(no)
-        AC_DEFINE(HAVE_STD_FORWARD,0,Define to 1 if std::forward is available)
-])
-
-AC_MSG_CHECKING(whether C++ compiler supports std::atomic)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <atomic>
-std::atomic<int> a;
-]],[[
-	a.store(1);
-	return 0;
-]])
-],[
-        AC_MSG_RESULT(yes)
-        AC_DEFINE(HAVE_STD_ATOMIC,1,Define to 1 if std::atomic is available)
-],[
-        AC_MSG_RESULT(no)
-        AC_DEFINE(HAVE_STD_ATOMIC,0,Define to 1 if std::atomic is available)
 ])
 
 AC_LANG_POP([C++])
