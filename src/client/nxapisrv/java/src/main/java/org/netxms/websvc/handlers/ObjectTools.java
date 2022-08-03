@@ -29,7 +29,6 @@ import org.json.JSONObject;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
@@ -59,7 +58,7 @@ public class ObjectTools extends AbstractObjectHandler
          throw new NXCException(RCC.INVALID_OBJECT_ID);
 
       List<ObjectTool> objectTools = session.getObjectTools();
-      objectTools.removeIf(tool -> !tool.isApplicableForNode((AbstractNode)object));
+      objectTools.removeIf(tool -> !tool.isApplicableForObject(object));
 
       return new ResponseContainer("root", createToolTree(objectTools));
    }
