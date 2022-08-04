@@ -81,7 +81,7 @@ public abstract class AbstractFragmentActivity extends FragmentActivity implemen
      */
     @Override
     protected void onPause() {
-        super.onStop();
+        super.onPause();
         NXApplication.activityPaused();
     }
 

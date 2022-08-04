@@ -205,7 +205,7 @@ public class NodeBrowser extends AbstractClientActivity {
                         case ObjectTool.TYPE_ACTION:
                         case ObjectTool.TYPE_SERVER_COMMAND:
                         case ObjectTool.TYPE_SERVER_SCRIPT:
-                            if (tool.isApplicableForNode((Node) selectedObject))
+                            if (tool.isApplicableForObject(selectedObject))
                                 subMenu.add(Menu.NONE, (int) tool.getId(), 0, tool.getDisplayName());
                             break;
                     }

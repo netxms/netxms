@@ -76,7 +76,7 @@ public abstract class AbstractClientActivity extends Activity implements Service
      */
     @Override
     protected void onPause() {
-        super.onStop();
+        super.onPause();
         NXApplication.activityPaused();
     }
 
