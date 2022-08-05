@@ -40,7 +40,7 @@ NXSL_METHOD_DEFINITION(ByteStream, seek)
       return NXSL_ERR_NOT_INTEGER;
 
    ByteStream* bs = static_cast<ByteStream*>(object->getData());
-   *result = vm->createValue(static_cast<int64_t>(bs->seek(argv[0]->getValueAsInt64(), (argc > 1) ? argv[1]->getValueAsInt32() : SEEK_SET)));
+   *result = vm->createValue(static_cast<int64_t>(bs->seek(argv[0]->getValueAsInt32(), (argc > 1) ? argv[1]->getValueAsInt32() : SEEK_SET)));
    return 0;
 }
 

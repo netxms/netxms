@@ -6,7 +6,7 @@
 %x COMMENT
 %x STR
 %x STR2
-%x TEXT
+%x TXT
 
 whitespace	[[:blank:]\t\r]+
 identifier	[A-Za-z_\$][A-Za-z_\$0-9]*
@@ -186,7 +186,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL>"\\"	return T_IDIV;
 
 <INITIAL>"/*"     { yyextra->m_commentLevel = 1; BEGIN COMMENT; }
-<INITIAL>"\"\"\"" { yyextra->m_text.clear(); BEGIN TEXT; }
+<INITIAL>"\"\"\"" { yyextra->m_text.clear(); BEGIN TXT; }
 <INITIAL>\"       { yyextra->m_stringSize = 0; BEGIN STR; }
 <INITIAL>\'       { yyextra->m_stringSize = 0; BEGIN STR2; }
 
@@ -308,15 +308,15 @@ static inline uint32_t StringToUInt32(const char *s)
 			}
 		}
 
-<TEXT>"\"\"\""		{
+<TXT>"\"\"\""		{
 			BEGIN INITIAL;
 			yyextra->m_text.write(static_cast<char>(0));
 			yylval->valStr = MemCopyStringA(reinterpret_cast<const char*>(yyextra->m_text.buffer()));
 			return T_STRING;
 		}
-<TEXT>\r		;
-<TEXT>\n		{ yyextra->m_text.write('\n'); yyextra->m_currLine++; }
-<TEXT>.		{ yyextra->m_text.write(*yytext); }
+<TXT>\r		;
+<TXT>\n		{ yyextra->m_text.write('\n'); yyextra->m_currLine++; }
+<TXT>.		{ yyextra->m_text.write(*yytext); }
 
 <COMMENT>"/*"	yyextra->m_commentLevel++;
 <COMMENT>"*/"	{ yyextra->m_commentLevel--; if (yyextra->m_commentLevel == 0) BEGIN INITIAL; }

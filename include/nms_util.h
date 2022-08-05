@@ -3234,6 +3234,10 @@ public:
    void setObjectId(UINT32 id) { m_objectId = id; }
 };
 
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE ObjectArray<TableCell>;
+#endif
+
 /**
  * Table row
  */
@@ -3316,6 +3320,11 @@ public:
          c->setObjectId(id);
    }
 };
+
+#ifdef _WIN32
+template class LIBNETXMS_EXPORTABLE ObjectArray<TableRow>;
+template class LIBNETXMS_EXPORTABLE ObjectArray<TableColumnDefinition>;
+#endif
 
 /**
  * Class for table data storage

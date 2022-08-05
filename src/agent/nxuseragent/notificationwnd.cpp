@@ -12,8 +12,6 @@ uint32_t g_notificationTimeout = 60000;
  */
 class NotificationWindow
 {
-   DISABLE_COPY_CTOR(NotificationWindow)
-
 private:
    HWND m_hWnd;
    UserAgentNotification *m_notification;
@@ -34,6 +32,7 @@ private:
 
 public:
    NotificationWindow(const UserAgentNotification *notification);
+   NotificationWindow(const NotificationWindow& src) = delete;
    ~NotificationWindow();
 
    bool open(int baseY);

@@ -98,8 +98,6 @@ struct UserSession
  */
 class MenuItem
 {
-   DISABLE_COPY_CTOR(MenuItem)
-
 protected:
    TCHAR *m_name;
    TCHAR *m_displayName;
@@ -123,6 +121,7 @@ public:
    MenuItem(const TCHAR *text, bool symbol);
    MenuItem(MenuItem *parent);
    MenuItem(MenuItem *parent, ConfigEntry *config, const TCHAR *rootPath);
+   MenuItem(const MenuItem& src) = delete;
    virtual ~MenuItem();
 
    void loadRootMenu(ConfigEntry *config) { if (*m_path == 0) { m_subItems->clear(); loadSubItems(config); } }
@@ -155,8 +154,6 @@ public:
  */
 class Button
 {
-   DISABLE_COPY_CTOR(Button)
-
 protected:
    TCHAR *m_text;
    HWND m_hWnd;
@@ -175,6 +172,7 @@ protected:
 
 public:
    Button(HWND parent, RECT pos, const TCHAR *text, bool symbol, void (*handler)(void*) = nullptr, void *context = nullptr);
+   Button(const Button& src) = delete;
    virtual ~Button();
 
    void setSelected(bool selected);
@@ -217,7 +215,7 @@ POINT GetMenuPosition();
 POINT GetTextExtent(HDC hdc, const TCHAR *text, HFONT font = NULL);
 void UpdateAddressList();
 int GetAddressListSize();
-StructArray<InetAddress> *GetAddressList();
+unique_ptr<StructArray<InetAddress>> GetAddressList();
 UINT GetHotKey(UINT *modifiers);
 void TakeScreenshot(NXCPMessage *response);
 void StartAgentConnector();

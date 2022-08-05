@@ -53,10 +53,10 @@ int GetAddressListSize()
 /**
  * Get address list
  */
-StructArray<InetAddress> *GetAddressList()
+unique_ptr<StructArray<InetAddress>> GetAddressList()
 {
    s_addressListLock.lock();
-   StructArray<InetAddress> *list = new StructArray<InetAddress>(&s_addressList);
+   auto list = make_unique<StructArray<InetAddress>>(s_addressList);
    s_addressListLock.unlock();
    return list;
 }

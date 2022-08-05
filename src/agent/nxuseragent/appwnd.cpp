@@ -136,7 +136,7 @@ static void PaintWindow(HWND hWnd, HDC hdc)
 
    PrintText(hdc, s_sessionInfoPosLeft.x, y, GetApplicationColor(APP_COLOR_HIGHLIGHT), _T("IP addresses"));
    y += s_infoLineHeight;
-   StructArray<InetAddress> *addrList = GetAddressList();
+   unique_ptr<StructArray<InetAddress>> addrList = GetAddressList();
    for (int i = 0; i < addrList->size(); i++)
    {
       TCHAR buffer[64];
