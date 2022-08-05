@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Westerstrand clocks
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -88,6 +88,8 @@ bool WesterstrandDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *n
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.100.1.1.0")));  // Product name
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.100.1.2.0")));  // Firmware version
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.1.0")));  // Product name (ANOC MIB)
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.25281.130.10.2.0")));  // Firmware version (ANOC MIB)
 
    SNMP_PDU *response;
    uint32_t rc;
@@ -105,12 +107,30 @@ bool WesterstrandDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *n
       _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product name \"%s\""), node->getName(), buffer);
    }
+   else
+   {
+      v = response->getVariable(2);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product name \"%s\""), node->getName(), buffer);
+      }
+   }
 
    v = response->getVariable(1);
    if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
    {
       _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
       nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product version \"%s\""), node->getName(), buffer);
+   }
+   else
+   {
+      v = response->getVariable(3);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): retrieved product version \"%s\""), node->getName(), buffer);
+      }
    }
 
    delete response;
