@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,7 +24,7 @@
 #define _symbol_visibility_h_
 
 #ifndef _nms_common_h_
-#if !defined(_WIN32) && !defined(UNDER_CE)
+#ifndef _WIN32
 #include <config.h>
 #endif
 #endif

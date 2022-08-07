@@ -33,10 +33,6 @@ extern LIBNETXMS_EXPORTABLE_VAR(int g_defaultThreadStackSize);
 
 #if defined(_WIN32)
 
-#ifndef UNDER_CE
-#include <process.h>
-#endif
-
 #include "winmutex.h"
 #include "winrwlock.h"
 
@@ -67,21 +63,21 @@ typedef struct netxms_thread_t *THREAD;
 // Inline functions
 //
 
-inline void InitThreadLibrary()
+static inline void InitThreadLibrary()
 {
 }
 
-inline void ThreadSleep(int seconds)
+static inline void ThreadSleep(int seconds)
 {
    Sleep(static_cast<uint32_t>(seconds) * 1000);   // Convert to milliseconds
 }
 
-inline void ThreadSleepMs(uint32_t milliseconds)
+static inline void ThreadSleepMs(uint32_t milliseconds)
 {
    Sleep(milliseconds);
 }
 
-inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
+static inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
 {
    THREAD_ID dwThreadId;
    HANDLE hThread = (HANDLE)_beginthreadex(nullptr, (stackSize != 0) ? stackSize : g_defaultThreadStackSize, startAddress, args, 0, &dwThreadId);
@@ -90,7 +86,7 @@ inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
    return (hThread != nullptr);
 }
 
-inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *args)
+static inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *args)
 {
    THREAD thread = MemAllocStruct<netxms_thread_t>();
    thread->handle = (HANDLE)_beginthreadex(nullptr, (stackSize != 0) ? stackSize : g_defaultThreadStackSize, startAddress, args, 0, &thread->id);
@@ -120,7 +116,7 @@ void LIBNETXMS_EXPORTABLE ThreadSetName(THREAD thread, const char *name);
 /**
  * Set name for current thread
  */
-inline void ThreadSetName(const char *name)
+static inline void ThreadSetName(const char *name)
 {
    ThreadSetName(INVALID_THREAD_HANDLE, name);
 }
@@ -128,16 +124,12 @@ inline void ThreadSetName(const char *name)
 /**
  * Exit thread
  */
-inline void ThreadExit()
+static inline void ThreadExit()
 {
-#ifdef UNDER_CE
-   ExitThread(0);
-#else
    _endthreadex(0);
-#endif
 }
 
-inline bool ThreadJoin(THREAD thread)
+static inline bool ThreadJoin(THREAD thread)
 {
    if (thread == INVALID_THREAD_HANDLE)
       return false;
@@ -148,7 +140,7 @@ inline bool ThreadJoin(THREAD thread)
    return success;
 }
 
-inline void ThreadDetach(THREAD thread)
+static inline void ThreadDetach(THREAD thread)
 {
    if (thread != INVALID_THREAD_HANDLE)
    {
@@ -157,7 +149,7 @@ inline void ThreadDetach(THREAD thread)
    }
 }
 
-inline THREAD_ID ThreadId(THREAD thread)
+static inline THREAD_ID ThreadId(THREAD thread)
 {
    return (thread != INVALID_THREAD_HANDLE) ? thread->id : 0;
 }
@@ -192,7 +184,7 @@ extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
 // Inline functions
 //
 
-inline void InitThreadLibrary()
+static inline void InitThreadLibrary()
 {
    if (!pth_init())
    {
@@ -201,17 +193,17 @@ inline void InitThreadLibrary()
    }
 }
 
-inline void ThreadSleep(int nSeconds)
+static inline void ThreadSleep(int nSeconds)
 {
    pth_sleep(nSeconds);
 }
 
-inline void ThreadSleepMs(uint32_t milliseconds)
+static inline void ThreadSleepMs(uint32_t milliseconds)
 {
 	pth_usleep(milliseconds * 1000);
 }
 
-inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
+static inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id;
 
@@ -226,7 +218,7 @@ inline bool ThreadCreate(ThreadFunction start_address, int stack_size, void *arg
 	}
 }
 
-inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
+static inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void *args)
 {
 	THREAD id;
 
@@ -243,14 +235,14 @@ inline THREAD ThreadCreateEx(ThreadFunction start_address, int stack_size, void 
 /**
  * Set thread name
  */
-inline void ThreadSetName(THREAD thread, const char *name)
+static inline void ThreadSetName(THREAD thread, const char *name)
 {
 }
 
 /**
  * Set name for current thread
  */
-inline void ThreadSetName(const char *name)
+static inline void ThreadSetName(const char *name)
 {
    ThreadSetName(INVALID_THREAD_HANDLE, name);
 }
@@ -258,19 +250,19 @@ inline void ThreadSetName(const char *name)
 /**
  * Exit thread
  */
-inline void ThreadExit(void)
+static inline void ThreadExit(void)
 {
    pth_exit(nullptr);
 }
 
-inline bool ThreadJoin(THREAD hThread)
+static inline bool ThreadJoin(THREAD hThread)
 {
    if (hThread == INVALID_THREAD_HANDLE)
       return false;
    return pth_join(hThread, NULL) != -1;
 }
 
-inline void ThreadDetach(THREAD hThread)
+static inline void ThreadDetach(THREAD hThread)
 {
    if (hThread == INVALID_THREAD_HANDLE)
       return;
@@ -362,11 +354,11 @@ extern "C" typedef THREAD_RESULT (THREAD_CALL *ThreadFunction)(void *);
 // Inline functions
 //
 
-inline void InitThreadLibrary()
+static inline void InitThreadLibrary()
 {
 }
 
-inline void ThreadSleep(int nSeconds)
+static inline void ThreadSleep(int nSeconds)
 {
 	struct timeval tv;
 	tv.tv_sec = nSeconds;
@@ -374,7 +366,7 @@ inline void ThreadSleep(int nSeconds)
 	select(1, NULL, NULL, NULL, &tv);
 }
 
-inline void ThreadSleepMs(uint32_t milliseconds)
+static inline void ThreadSleepMs(uint32_t milliseconds)
 {
 #if HAVE_NANOSLEEP && HAVE_DECL_NANOSLEEP
 	struct timespec interval, remainder;
@@ -386,7 +378,7 @@ inline void ThreadSleepMs(uint32_t milliseconds)
 #endif
 }
 
-inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *args)
+static inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *args)
 {
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
@@ -403,7 +395,7 @@ inline THREAD ThreadCreateEx(ThreadFunction startAddress, int stackSize, void *a
 	return id;
 }
 
-inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
+static inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
 {
 	THREAD id = ThreadCreateEx(startAddress, stackSize, args);
 	if (id != INVALID_THREAD_HANDLE)
@@ -417,7 +409,7 @@ inline bool ThreadCreate(ThreadFunction startAddress, int stackSize, void *args)
 /**
  * Set thread name
  */
-inline void ThreadSetName(THREAD thread, const char *name)
+static inline void ThreadSetName(THREAD thread, const char *name)
 {
 #if HAVE_PTHREAD_SETNAME_NP
 #if PTHREAD_SETNAME_NP_2ARGS
@@ -432,7 +424,7 @@ inline void ThreadSetName(THREAD thread, const char *name)
 /**
  * Set name for current thread
  */
-inline void ThreadSetName(const char *name)
+static inline void ThreadSetName(const char *name)
 {
    ThreadSetName(INVALID_THREAD_HANDLE, name);
 }
@@ -440,19 +432,19 @@ inline void ThreadSetName(const char *name)
 /**
  * Exit thread
  */
-inline void ThreadExit()
+static inline void ThreadExit()
 {
-   pthread_exit(NULL);
+   pthread_exit(nullptr);
 }
 
-inline bool ThreadJoin(THREAD hThread)
+static inline bool ThreadJoin(THREAD hThread)
 {
    if (hThread == INVALID_THREAD_HANDLE)
       return false;
-   return pthread_join(hThread, NULL) == 0;
+   return pthread_join(hThread, nullptr) == 0;
 }
 
-inline void ThreadDetach(THREAD hThread)
+static inline void ThreadDetach(THREAD hThread)
 {
    if (hThread != INVALID_THREAD_HANDLE)
       pthread_detach(hThread);

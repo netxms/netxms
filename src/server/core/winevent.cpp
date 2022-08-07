@@ -386,7 +386,6 @@ static void WindowsEventProcessingThread()
       else
          delete event;
    }
-
 }
 
 /**

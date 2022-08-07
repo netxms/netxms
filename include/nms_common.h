@@ -583,29 +583,6 @@ using std::wcsncasecmp;
 
 #if !HAVE_INT64_T || !HAVE_UINT64_T
 
-// We have to use long as INT64 on HP-UX - otherwise
-// there will be compilation errors because of type redefinition in
-// system includes
-#ifdef _HPUX
-
-#ifdef __LP64__
-#if !HAVE_INT64_T
-typedef long int64_t;
-#endif
-#if !HAVE_UINT64_T
-typedef unsigned long uint64_t;
-#endif
-#else
-#if !HAVE_INT64_T
-typedef long long int64_t;
-#endif
-#if !HAVE_UINT64_T
-typedef unsigned long long uint64_t;
-#endif
-#endif
-
-#else    /* _HPUX */
-
 #if !HAVE_INT64_T
 #if HAVE_LONG_LONG && (SIZEOF_LONG_LONG == 8)
 typedef long long int64_t;
@@ -627,8 +604,6 @@ typedef unsigned long uint64_t;
 #error Target system does not have unsigned 64bit integer type
 #endif
 #endif
-
-#endif   /* _HPUX */
 
 #endif
 
@@ -844,11 +819,7 @@ inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd
 
 // Shared library suffix
 #ifndef SHLIB_SUFFIX
-#if defined(_HPUX) && !defined(__64BIT__)
-#define SHLIB_SUFFIX	_T(".sl")
-#else
 #define SHLIB_SUFFIX	_T(".so")
-#endif
 #endif
 
 typedef struct hostent HOSTENT;

@@ -974,7 +974,7 @@ AC_ARG_WITH(dist,
 	MODULES="appagent jansson java-common libexpat libstrophe zlib libnetxms libnxjava install sqlite snmp ethernetip flow-collector libnxsl libnxmb libnxlp libnxpython libnxcc db client server ncdrivers agent nxscript nxcproxy mobile-agent"
 	TEST_MODULES="test-libnxcc test-libnxsl test-libnxsnmp"
 	TOOLS="nxlptest"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix hpux informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
 	NCDRV_MODULES="anysms googlechat kannel mqtt msteams mymobile nexmo nxagent slack smseagle telegram text2reach twilio websms xmpp"
    HDLINK_DIRS="jira redmine"
@@ -1157,11 +1157,6 @@ if test $? = 0; then
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/aix/aix.la"
 			STATIC_SUBAGENT_LIST="aix $STATIC_SUBAGENT_LIST"
 			;;
-		HP-UX)
-			SUBAGENT_DIRS="$SUBAGENT_DIRS hpux"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/hpux/hpux.la"
-			STATIC_SUBAGENT_LIST="hpux $STATIC_SUBAGENT_LIST"
-			;;
 		Darwin)
 			SUBAGENT_DIRS="$SUBAGENT_DIRS darwin"
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/darwin/darwin.la"
@@ -1203,9 +1198,6 @@ if test $? = 0; then
 		AIX)
 			SUBAGENT_DIRS="$SUBAGENT_DIRS aix"
 			;;
-		HP-UX)
-			SUBAGENT_DIRS="$SUBAGENT_DIRS hpux"
-      ;;
 		Darwin)
 			SUBAGENT_DIRS="$SUBAGENT_DIRS darwin"
 			;;
@@ -1366,10 +1358,6 @@ MODULES="$MODULES tools"
 # Check for programs
 #--------------------------------------------------------------------
 
-if test "x$PLATFORM" = "xHP-UX"; then
-	AC_CHECK_PROG([CC], [aCC], [aCC])
-	AC_CHECK_PROG([CCC], [aCC], [aCC])
-fi
 if test "x$PLATFORM" = "xAIX"; then
 	AC_CHECK_PROG([CC], [xlclang], [xlclang])
 	AC_CHECK_PROG([CC], [xlc_r], [xlc_r])
@@ -1450,18 +1438,6 @@ case "$PLATFORM" in
       LDFLAGS_PREFIX="-no-undefined -Wl,-brtl $LDFLAGS"
       LIBNXAGENT_LIBS="-lodm -lcfg"
       ;;
-   HP-UX)
-      CPPFLAGS="$CPPFLAGS -D_HPUX -D_HPUX_SOURCE -D_POSIX_PTHREAD_SEMANTICS -D_XOPEN_SOURCE=500 -D_XOPEN_SOURCE_EXTENDED=1 -D_REENTRANT -D_INCLUDE_LONGLONG -D_LARGEFILE64_SOURCE"
-      if test "x$CXX" = "xaCC"; then
-         CPPFLAGS="$CPPFLAGS -D_HP_ATOMIC_INLINE"
-	 CFLAGS="$CFLAGS -AC99"
-         CXXFLAGS="-mt $CXXFLAGS +W749 +W829 +W4232"
-         LDFLAGS="$LDFLAGS -mt"
-      fi
-      if test `uname -m` != 'ia64'; then
-         AC_MSG_ERROR(Only Itanium architeture is supported)
-      fi
-      ;;
    SunOS)
       CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D__EXTENSIONS__"
       AC_CPP_CHECK_OPTION(-O2)
@@ -1487,7 +1463,6 @@ esac
 # C++ compiler tuning:
 #  * Set correct language level
 #  * Disable C++ exceptions and RTTI
-#  * Turn on 64bit mode on HP-UX/Itanium
 #  * Turn on 64bit mode on AIX
 #  * Turn on 64bit mode on Solaris
 #  * Disable inconsistent C/C++ linkage warnings for Solaris Studio
@@ -1574,36 +1549,6 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	MACHINE=`uname -m`
 	if test "x$MACHINE" = "xi686" -o "x$MACHINE" = "xi586"; then
 		AC_CPP_CHECK_OPTION(-march=$MACHINE)
-	fi
-
-	if test "x$PLATFORM" = "xHP-UX"; then
-		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
-			AC_MSG_CHECKING(whether C compiler accepts -milp32)
-			OLD_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="$CPPFLAGS -milp32"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
-					LDFLAGS="-milp32 $LDFLAGS"
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
-					CPPFLAGS="$OLD_CPPFLAGS"
-					AC_MSG_RESULT(no)
-				])
-		else
-			AC_MSG_CHECKING(whether C compiler accepts -mlp64)
-			OLD_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="$CPPFLAGS -mlp64"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-				[ 
-					LDFLAGS="-mlp64 -L/usr/lib/hpux64 -L/usr/local/lib/hpux64 $LDFLAGS"
-					AC_MSG_RESULT(yes) 
-				], 
-				[ 
-					CPPFLAGS="$OLD_CPPFLAGS"
-					AC_MSG_RESULT(no)
-				])
-		fi
 	fi
 
 	if test "x$PLATFORM" = "xAIX"; then
@@ -1716,58 +1661,6 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 		AC_CPP_CHECK_OPTION(-ggdb3)
 		AC_CPP_CHECK_OPTION(-fno-omit-frame-pointer)
 	fi
-fi
-
-if test "x$CXX" = "xaCC" ; then
-	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
-		ARCHFLAG="+DD32"
-		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ 
-				LDFLAGS="$ARCHFLAG $LDFLAGS"
-				CCASFLAGS="$ARCHFLAG $CCASFLAGS"
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-			])
-	else
-		ARCHFLAG="+DD64"
-		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ 
-				LDFLAGS="$ARCHFLAG $LDFLAGS"
-				CCASFLAGS="$ARCHFLAG $CCASFLAGS"
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-			])
-	fi
-
-	if test "x$DISABLE_VISIBILITY_CONTROL" != "xyes"; then
-		AC_MSG_CHECKING(whether C compiler supports symbol visibility control)
-		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="$CPPFLAGS -Bhidden_def"
-		AC_RUN_IFELSE([AC_LANG_PROGRAM([[ int __declspec(dllexport) z = 0; ]], [[ ]])],
-			[ 
-				AC_DEFINE(DLL_DECLSPEC_SUPPORTED, 1, Define to 1 if compiler supports MSVC compatible __declspec dllexport/dllimport attributes)
-				LDFLAGS="$LDFLAGS -Wl,-ashared_archive"
-				AC_MSG_RESULT(yes) 
-			], 
-			[ 
-				CPPFLAGS="$OLD_CPPFLAGS"
-				AC_MSG_RESULT(no)
-			])
-	fi
-
-	AC_CXX_CHECK_OPTION(+std=c++11)
 fi
 
 if test "x$CXX" = "xxlC_r" ; then
@@ -2034,34 +1927,32 @@ fi
 # Additional include and library directories
 #--------------------------------------------------------------------
 
-if test "x$CXX" != "xaCC"; then
-	if test -d /usr/local/include; then
-		if test "x$ac_compiler_gnu" = "xyes"; then
-			AC_MSG_CHECKING(whether -I/usr/local/include needed)
-			OLD_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="$CPPFLAGS -Werror -I/usr/local/include"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[])],
-				[
-					CPPFLAGS="$OLD_CPPFLAGS -I/usr/local/include"
-					AC_MSG_RESULT(yes)
-				],
-				[
-					CPPFLAGS="$OLD_CPPFLAGS"
-					AC_MSG_RESULT(no)
-				]
-			)
-		else
-			CPPFLAGS="$CPPFLAGS -I/usr/local/include"
-		fi
+if test -d /usr/local/include; then
+	if test "x$ac_compiler_gnu" = "xyes"; then
+		AC_MSG_CHECKING(whether -I/usr/local/include needed)
+		OLD_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS -Werror -I/usr/local/include"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[])],
+			[
+				CPPFLAGS="$OLD_CPPFLAGS -I/usr/local/include"
+				AC_MSG_RESULT(yes)
+			],
+			[
+				CPPFLAGS="$OLD_CPPFLAGS"
+				AC_MSG_RESULT(no)
+			]
+		)
+	else
+		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 	fi
+fi
 
-	if test -d /usr/kerberos/include; then
-		CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
-	fi
+if test -d /usr/kerberos/include; then
+	CPPFLAGS="$CPPFLAGS -I/usr/kerberos/include"
+fi
 
-	if test -d /usr/local/lib; then
-		LDFLAGS="$LDFLAGS -L/usr/local/lib"
-	fi
+if test -d /usr/local/lib; then
+	LDFLAGS="$LDFLAGS -L/usr/local/lib"
 fi
 
 
@@ -2107,42 +1998,32 @@ if test "x$USE_PTH" = "xyes"; then
 else
 	AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
-	if test "x$CXX" = "xaCC"; then
-		PTHREAD_LIBS=""
-	else
-		PTHREAD_LIBS="error"
-		AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
-		AC_EGREP_CPP(yes,
-			[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
-				yes
-			#endif
-			], [
-				AC_MSG_RESULT(yes)
-				PTHREAD_LIBS="-pthread"
-				if test "x$CXX" = "xc++"; then
-					# Quash clang's "-pthread unused during compilation" warnings
-					PTHREAD_LDFLAGS="-Wc,-Qunused-arguments"
-				fi
-			],
-			AC_MSG_RESULT(no))
-		if test "x$PTHREAD_LIBS" = "xerror"; then
-			AC_CHECK_LIB(pthread, pthread_attr_init,
-				PTHREAD_LIBS="-lpthread")
-		fi
-		# On HP-UX (at least 11.00) pthread library contains
-		# __pthread_attr_init_system instead of pthread_attr_init
-		if test "x$PTHREAD_LIBS" = "xerror"; then
-			AC_CHECK_LIB(pthread, __pthread_attr_init_system,
-				PTHREAD_LIBS="-lpthread")
-		fi
-		if test "x$PTHREAD_LIBS" = "xerror"; then
-			AC_CHECK_LIB(pthreads, pthread_attr_init,
-				PTHREAD_LIBS="-lpthreads")
-		fi
-		if test "x$PTHREAD_LIBS" = "xerror"; then
-			AC_CHECK_FUNC(pthread_attr_init,
-				PTHREAD_LIBS="")
-		fi
+	PTHREAD_LIBS="error"
+	AC_MSG_CHECKING(for old style FreeBSD -pthread flag)
+	AC_EGREP_CPP(yes,
+		[#if defined(__FreeBSD_cc_version) || defined(__OpenBSD__)
+			yes
+		#endif
+		], [
+			AC_MSG_RESULT(yes)
+			PTHREAD_LIBS="-pthread"
+			if test "x$CXX" = "xc++"; then
+				# Quash clang's "-pthread unused during compilation" warnings
+				PTHREAD_LDFLAGS="-Wc,-Qunused-arguments"
+			fi
+		],
+		AC_MSG_RESULT(no))
+	if test "x$PTHREAD_LIBS" = "xerror"; then
+		AC_CHECK_LIB(pthread, pthread_attr_init,
+			PTHREAD_LIBS="-lpthread")
+	fi
+	if test "x$PTHREAD_LIBS" = "xerror"; then
+		AC_CHECK_LIB(pthreads, pthread_attr_init,
+			PTHREAD_LIBS="-lpthreads")
+	fi
+	if test "x$PTHREAD_LIBS" = "xerror"; then
+		AC_CHECK_FUNC(pthread_attr_init,
+			PTHREAD_LIBS="")
 	fi
 
 	if test "x$PTHREAD_LIBS" = "xerror"; then
@@ -3295,44 +3176,6 @@ fi
 
 
 #--------------------------------------------------------------------
-# HP-UX specific checks
-#--------------------------------------------------------------------
-
-if test "x$PLATFORM" = "xHP-UX"; then
-	AC_CHECK_HEADERS([atomic.h sys/mib.h],,,[[ ]])
-	AC_CHECK_DECLS([SIOCGIFNAME, SIOCGIFINDEX],,,[
-#if HAVE_NET_IF_H
-#include <net/if.h>
-#endif
-	])
-	AC_CHECK_DECLS([ID_ifXEntry, open_mib_64],,,[
-#if HAVE_SYS_MIB_H
-#include <sys/mib.h>
-#endif
-	])
-
-	AC_MSG_CHECKING(if pst_diskinfo has read/write stats fields)
-	AC_LANG_PUSH([C++])
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ 
-#include <sys/pstat.h>
-			]], [[ 
-pst_diskinfo d;
-int x;
-x = (int)d.psd_dkread;
-x = (int)d.psd_dkwrite;
-			]])],
-		[ 
-			AC_DEFINE([HAVE_DISKINFO_RWSTATS],[1],[Define to 1 if pst_diskinfo has read/write stats fields])
-			AC_MSG_RESULT(yes) 
-		], 
-		[ 
-			AC_MSG_RESULT(no)
-		])
-	AC_LANG_POP([C++])
-fi
-
-
-#--------------------------------------------------------------------
 # *BSD specific checks
 #--------------------------------------------------------------------
 
@@ -3803,9 +3646,6 @@ if test "x$ac_found_iconv" = "xyes"; then
    # Check if iconv uses const in prototype declaration
 	AC_LANG_PUSH([C++])
 	OLD_CXXFLAGS="$CXXFLAGS"
-	if test "x$CXX" = "xaCC"; then
-		CXXFLAGS="$CXXFLAGS +We"
-	fi
 	AC_CACHE_CHECK(for iconv declaration, ac_cv_iconv_const,
 		[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
@@ -4858,7 +4698,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/gps/Makefile
-	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/informix/Makefile
 	src/agent/subagents/java/Makefile
 	src/agent/subagents/java/java/Makefile
@@ -5061,11 +4900,6 @@ AC_OUTPUT
 
 echo "Updating libtool"
 sed 's,$SED -e "/${host}-//g",$SED -e "s/${host}-//g",g' < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
-
-# On HP-UX, libtool passes +b instead of -Wl,+b even if gcc/g++ used as linker 
-if test "x$ac_compiler_gnu" = "xyes" && test "x$PLATFORM" = "xHP-UX"; then
-	sed "s,hardcode_libdir_flag_spec_ld=,#hardcode_libdir_flag_spec_ld=,g" < ./libtool > libtool.new && mv libtool.new libtool && chmod +x ./libtool
-fi
 
 # On AIX, correct OBJECT_MODE must be set before linking
 # To avoid manual setting by user, we add this to libtool script
