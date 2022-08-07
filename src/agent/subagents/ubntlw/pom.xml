@@ -83,10 +83,10 @@
             <configuration>
                <archive>
                   <manifest>
-                        </manifest>
-                  <manifestEntries>
-                     <NetXMS-Plugin-Classname>com.rfelements.LigowaveApCollector;com.rfelements.LigowaveClientCollector;com.rfelements.UbiquitiApCollector;com.rfelements.UbiquitiClientCollector</NetXMS-Plugin-Classname>
-                  </manifestEntries>
+                     <manifestEntries>
+                        <NetXMS-Plugin-Classname>com.rfelements.LigowaveApCollector;com.rfelements.LigowaveClientCollector;com.rfelements.UbiquitiApCollector;com.rfelements.UbiquitiClientCollector</NetXMS-Plugin-Classname>
+                     </manifestEntries>
+                  </manifest>
                </archive>
                <descriptorRefs>
                   <descriptorRef>jar-with-dependencies</descriptorRef>
