@@ -23,6 +23,24 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.5 to 42.6
+ */
+static bool H_UpgradeFromV5()
+{
+   if (GetSchemaLevelForMajorVersion(41) < 20)
+   {
+      CHK_EXEC(CreateConfigParam(_T("DBWriter.RawDataFlushInterval"), _T("30"), _T("Interval between writes of accumulated raw DCI data to database."), _T("seconds"), 'I', true, true, false, false));
+
+      // The following update needed for situation when parameter was already created by user
+      CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='30',units='seconds',data_type='I',need_server_restart=1,description='Interval between writes of accumulated raw DCI data to database.' WHERE var_name='DBWriter.RawDataFlushInterval'")));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(41, 20));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 42.4 to 42.5
  */
 static bool H_UpgradeFromV4()
@@ -46,13 +64,12 @@ static bool H_UpgradeFromV3()
    DB_RESULT hResult = SQLSelect(_T("SELECT network_maps.id, object_properties.flags FROM network_maps INNER JOIN object_properties ON network_maps.id=object_properties.object_id"));
    if (hResult != nullptr)
    {
+      TCHAR query[1024];
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-        uint32_t flags = DBGetFieldULong(hResult, i, 1);
-        flags |= MF_TRANSLUCENT_LABEL_BKGND;
-        TCHAR query[1024];
-        _sntprintf(query, 1024, _T("UPDATE object_properties SET flags=%u WHERE object_id=%u"), flags, DBGetFieldULong(hResult, i, 0));
+        _sntprintf(query, 1024, _T("UPDATE object_properties SET flags=%u WHERE object_id=%u"),
+              DBGetFieldULong(hResult, i, 1) | MF_TRANSLUCENT_LABEL_BKGND, DBGetFieldULong(hResult, i, 0));
         CHK_EXEC(SQLQuery(query));
       }
       DBFreeResult(hResult);
@@ -116,6 +133,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  42, 6,  H_UpgradeFromV5  },
    { 4,  42, 5,  H_UpgradeFromV4  },
    { 3,  42, 4,  H_UpgradeFromV3  },
    { 2,  42, 3,  H_UpgradeFromV2  },

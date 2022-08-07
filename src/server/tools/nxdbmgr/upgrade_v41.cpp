@@ -24,11 +24,25 @@
 #include <nxevent.h>
 
 /**
- * Upgrade from 41.19 to 42.0
+ * Upgrade from 41.20 to 42.0
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(SetMajorSchemaVersion(42, 0));
+   return true;
+}
+
+/**
+ * Upgrade from 41.19 to 41.20
  */
 static bool H_UpgradeFromV19()
 {
-   CHK_EXEC(SetMajorSchemaVersion(42, 0));
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.RawDataFlushInterval"), _T("30"), _T("Interval between writes of accumulated raw DCI data to database."), _T("seconds"), 'I', true, true, false, false));
+
+   // The following update needed for situation when parameter was already created by user
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET default_value='30',units='seconds',data_type='I',need_server_restart=1,description='Interval between writes of accumulated raw DCI data to database.' WHERE var_name='DBWriter.RawDataFlushInterval'")));
+
+   CHK_EXEC(SetMinorSchemaVersion(20));
    return true;
 }
 
@@ -532,7 +546,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 19, 42, 0,  H_UpgradeFromV19 },
+   { 20, 42, 0,  H_UpgradeFromV20 },
+   { 19, 41, 20, H_UpgradeFromV19 },
    { 18, 41, 19, H_UpgradeFromV18 },
    { 17, 41, 18, H_UpgradeFromV17 },
    { 16, 41, 17, H_UpgradeFromV16 },
