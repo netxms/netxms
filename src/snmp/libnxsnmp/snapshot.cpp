@@ -106,21 +106,18 @@ SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const TCHAR *oid) const
 }
 
 /**
- * Snapshot creation callback
- */
-uint32_t SNMP_Snapshot::callback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
-{
-   static_cast<SNMP_Snapshot*>(context)->m_values->add(new SNMP_Variable(var));
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Create snapshot (using text OID)
  */
 SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *baseOid)
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
-   if (SnmpWalk(transport, baseOid, SNMP_Snapshot::callback, s) == SNMP_ERR_SUCCESS)
+
+   uint32_t rc = SnmpWalk(transport, baseOid, [s](SNMP_Variable *var) {
+      s->m_values->add(new SNMP_Variable(var));
+      return SNMP_ERR_SUCCESS;
+   });
+
+   if (rc == SNMP_ERR_SUCCESS)
       s->buildIndex();
    else
       delete_and_null(s);
@@ -133,7 +130,13 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
 SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const UINT32 *baseOid, size_t oidLen)
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
-   if (SnmpWalk(transport, baseOid, oidLen, SNMP_Snapshot::callback, s) == SNMP_ERR_SUCCESS)
+
+   uint32_t rc = SnmpWalk(transport, baseOid, oidLen, [s](SNMP_Variable *var) {
+      s->m_values->add(new SNMP_Variable(var));
+      return SNMP_ERR_SUCCESS;
+   });
+
+   if (rc == SNMP_ERR_SUCCESS)
       s->buildIndex();
    else
       delete_and_null(s);

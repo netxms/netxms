@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -849,8 +849,6 @@ private:
    ObjectArray<SNMP_Variable> *m_values;
    SNMP_SnapshotIndexEntry *m_index;
 
-   static uint32_t callback(SNMP_Variable *var, SNMP_Transport *transport, void *context);
-
    void buildIndex();
    SNMP_SnapshotIndexEntry *find(const uint32_t *oid, size_t oidLen) const;
    SNMP_SnapshotIndexEntry *find(const TCHAR *oid) const;
@@ -909,20 +907,35 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetProtocolErrorText(SNMP_ErrorCode errorC
 uint32_t LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
 void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(uint32_t timeout);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
-uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr,
-      const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t dwFlags);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen,
       void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen = nullptr, const char *codepage = nullptr);
 bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, const TCHAR *oid, int32_t value);
-uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
-      uint32_t (* handler)(SNMP_Variable *, SNMP_Transport *, void *), void *context, bool logErrors = false, bool failOnShutdown = false);
-uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen,
-      uint32_t (* handler)(SNMP_Variable*, SNMP_Transport*, void*), void *context, bool logErrors = false, bool failOnShutdown = false);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen, std::function<uint32_t (SNMP_Variable*)> handler, bool logErrors = false, bool failOnShutdown = false);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen);
 int LIBNXSNMP_EXPORTABLE SnmpWalkCount(SNMP_Transport *transport, const TCHAR *rootOid);
 
 uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, SNMP_Version snmpVersion,
       const char *community, void (*callback)(const InetAddress&, uint32_t, void*), void *context);
+
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root
+ */
+static inline uint32_t SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
+         uint32_t (*handler)(SNMP_Variable*, SNMP_Transport*, void*), void *context, bool logErrors = false, bool failOnShutdown = false)
+{
+   return SnmpWalk(transport, rootOid, [transport, handler, context](SNMP_Variable *v) -> uint32_t { return handler(v, transport, context); }, logErrors, failOnShutdown);
+}
+
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root
+ */
+static inline uint32_t SnmpWalk(SNMP_Transport *transport, const uint32_t *rootOid, size_t rootOidLen,
+         uint32_t (*handler)(SNMP_Variable*, SNMP_Transport*, void*), void *context, bool logErrors = false, bool failOnShutdown = false)
+{
+   return SnmpWalk(transport, rootOid, rootOidLen, [transport, handler, context](SNMP_Variable *v) -> uint32_t { return handler(v, transport, context); }, logErrors, failOnShutdown);
+}
 
 /**
  * Wrapper function for calling SnmpWalk with specific context type

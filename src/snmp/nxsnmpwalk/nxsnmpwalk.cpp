@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpwalk - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
    }
 
    int iExit = 0;
-   result = SnmpWalk(transport, pszRootOid, WalkCallback, NULL);
+   result = SnmpWalk(transport, pszRootOid, WalkCallback, nullptr);
    if (result != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("SNMP Error: %s\n"), SNMPGetErrorText(result));
