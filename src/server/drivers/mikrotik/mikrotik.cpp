@@ -23,13 +23,6 @@
 #include "mikrotik.h"
 #include <netxms-version.h>
 
-#define DEBUG_TAG _T("ndd.mikrotik")
-
-/**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("MIKROTIK");
-
 /**
  * Driver version
  */
@@ -40,7 +33,7 @@ static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
  */
 const TCHAR *MikrotikDriver::getName()
 {
-   return s_driverName;
+   return _T("MIKROTIK");
 }
 
 /**
@@ -86,10 +79,10 @@ bool MikrotikDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  */
 void MikrotikDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
-   if (*driverData == NULL)
+   if (*driverData == nullptr)
    {
       *driverData = new MikrotikDriverData();
-      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 8, _T("MikrotikDriver::analyzeDevice: new Mikrotik Driver Data object created."));
+      nxlog_debug_tag(DEBUG_TAG, 8, _T("MikrotikDriver::analyzeDevice: new driver data object created."));
    }
    static_cast<MikrotikDriverData*>(*driverData)->updateDeviceInfo(snmp);
    node->setCustomAttribute(_T(".mikrotik.fdbUsesIfIndex"),
@@ -411,20 +404,19 @@ ObjectArray<AgentParameterDefinition> *MikrotikDriver::getAvailableMetrics(SNMP_
  */
 DataCollectionError MikrotikDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
-   if (driverData == NULL)
+   if (driverData == nullptr)
       return DCE_COLLECTION_ERROR;
 
-   nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
    MikrotikDriverData *d = static_cast<MikrotikDriverData*>(driverData);
-
    TCHAR oid[64];
-   if (!d->getMetric(name, snmp, oid))
+   if (!d->getMetricOID(name, snmp, oid))
    {
-      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): data collection error, oid= \"%s\""), driverData->getNodeName(), driverData->getNodeId(), oid);
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): OID for metric \"%s\" not found"), driverData->getNodeName(), driverData->getNodeId(), name);
       return DCE_NOT_SUPPORTED;
    }
-   nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): metric object \"%s\" found, oid= \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name, oid);
-   return (SnmpGetEx(snmp, oid, nullptr, 0, value, size * sizeof(TCHAR), SG_STRING_RESULT, NULL) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
+
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("MikrotikDriver::getMetric(%s [%u]): metric name \"%s\" resolved to OID %s"), driverData->getNodeName(), driverData->getNodeId(), name, oid);
+   return (SnmpGetEx(snmp, oid, nullptr, 0, value, size * sizeof(TCHAR), SG_STRING_RESULT) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 
 /**

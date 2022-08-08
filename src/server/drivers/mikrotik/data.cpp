@@ -23,8 +23,6 @@
 #include "mikrotik.h"
 #include <netxms-version.h>
 
-
-
 /**
  * public function to update device information with mutex lock here
  */
@@ -35,8 +33,6 @@ void MikrotikDriverData::updateDeviceInfo(SNMP_Transport *snmp)
    m_cacheLock.unlock();
 }
 
-
-
 /**
  * private function to update device information without mutex lock here
  */
@@ -45,9 +41,9 @@ void MikrotikDriverData::updateDeviceInfoInternal(SNMP_Transport *snmp)
    m_oidCache.clear();
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.3.100.1.2"), this, &MikrotikDriverData::metricInfoWalkCallback) == SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriverData::updateDeviceInfoInternal: updated device information successfully"));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("MikrotikDriverData::updateDeviceInfoInternal: updated device information successfully"));
    }
-   m_cacheTimestamp = time(NULL);
+   m_cacheTimestamp = time(nullptr);
 }
 
 /**
@@ -57,13 +53,12 @@ uint32_t MikrotikDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Trans
 {
    SNMP_ObjectId oid = v->getName();
 
-   oid.changeElement(12, 3); // change 12th element to 3, to get the gauge
+   oid.changeElement(12, 3);
    TCHAR name[MAX_OBJECT_NAME];
    v->getValueAsString(name, MAX_OBJECT_NAME);
    m_oidCache.set(name, oid.toString());
    return SNMP_ERR_SUCCESS;
 }
-
 
 /**
  * Register driver's metrics
@@ -74,35 +69,30 @@ void MikrotikDriverData::registerMetrics(ObjectArray<AgentParameterDefinition> *
    StringList *keyList = m_oidCache.keys();
    for (int i = 0; i < keyList->size(); i++)
    {
-      metrics->add(new AgentParameterDefinition(keyList->get(i), keyList->get(i), DCI_DT_UINT ));
+      metrics->add(new AgentParameterDefinition(keyList->get(i), keyList->get(i), DCI_DT_UINT));
    }
-   nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriverData::registerMetrics: %d new metrics registered "), keyList->size());
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("MikrotikDriverData::registerMetrics: %d metrics registered "), keyList->size());
    delete keyList;
    m_cacheLock.unlock();
-
 }
 
 /**
- * Get metric information by name
- * Metric name expected in form bus/position/variable
+ * Get metric OID by name
  */
-bool MikrotikDriverData::getMetric(const TCHAR *name, SNMP_Transport *snmp, TCHAR *metric)
+bool MikrotikDriverData::getMetricOID(const TCHAR *name, SNMP_Transport *snmp, TCHAR *oid)
 {
    m_cacheLock.lock();
    if ((m_cacheTimestamp == 0) || (time(nullptr) - m_cacheTimestamp > 3600))
    {
       updateDeviceInfoInternal(snmp);
    }
-   const TCHAR *oid = m_oidCache.get(name); //returns oid
-   if (oid == nullptr)
+   const TCHAR *cachedOID = m_oidCache.get(name);
+   if (cachedOID == nullptr)
    {
-      nxlog_debug_tag(MIKROTIK_DEBUG_TAG, 7, _T("MikrotikDriverData::getMetric(%s): metric object NOT found"), name);
       m_cacheLock.unlock();
       return false;
    }
-   _tcscpy(metric,oid);
+   _tcscpy(oid, cachedOID);
    m_cacheLock.unlock();
    return true;
 }
-
-

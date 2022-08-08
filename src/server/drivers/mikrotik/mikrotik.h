@@ -26,7 +26,7 @@
 
 #include <nddrv.h>
 
-#define MIKROTIK_DEBUG_TAG   _T("ndd.mikrotik")
+#define DEBUG_TAG _T("ndd.mikrotik")
 
 /**
  * Driver's class
@@ -63,14 +63,13 @@ private:
    StringMap m_oidCache;
    time_t m_cacheTimestamp = 0;
    Mutex m_cacheLock;
-   void updateDeviceInfoInternal(SNMP_Transport *snmp); //
+   void updateDeviceInfoInternal(SNMP_Transport *snmp);
    uint32_t metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transport *snmp);
 
 public:
-   bool getMetric(const TCHAR *name, SNMP_Transport *snmp, TCHAR *metric); //receives name, writes value into *metric
-   void updateDeviceInfo(SNMP_Transport *snmp); //function to renew mapping
+   bool getMetricOID(const TCHAR *name, SNMP_Transport *snmp, TCHAR *oid);
+   void updateDeviceInfo(SNMP_Transport *snmp);
    void registerMetrics(ObjectArray<AgentParameterDefinition> *metrics);
-
 };
 
 #endif
