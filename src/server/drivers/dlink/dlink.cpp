@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for D-Link switches
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,17 +23,14 @@
 #include "dlink.h"
 #include <netxms-version.h>
 
-/**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("DLINK");
+#define DEBUG_TAG _T("ndd.dlink")
 
 /**
  * Get driver name
  */
 const TCHAR *DLinkDriver::getName()
 {
-	return s_driverName;
+	return _T("DLINK");
 }
 
 /**
@@ -76,6 +73,32 @@ bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
 	node->setCustomAttribute(_T(".dlink.slotSize"), 48);
+
+	// Check if device returns incorrect values for ifHighSpeed
+	bool ifHighSpeedInBps = false;
+	SnmpWalk(snmp, _T(".1.3.6.1.2.1.31.1.1.1.15"), [snmp, node, &ifHighSpeedInBps](SNMP_Variable *v) {
+	   uint32_t ifHighSpeed = v->getValueAsUInt();
+	   if (ifHighSpeed != 0)
+      {
+	      uint32_t ifIndex = v->getName().getLastElement();
+
+	      TCHAR oid[256];
+	      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.5.%u"), ifIndex);
+
+	      uint32_t ifSpeed;
+	      if (SnmpGetEx(snmp, oid, nullptr, 0, &ifSpeed, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+         {
+	         if (ifSpeed == ifHighSpeed)
+            {
+	            ifHighSpeedInBps = true;
+	            nxlog_debug_tag(DEBUG_TAG, 5, _T("DLinkDriver::analyzeDevice(%s): ifSpeed == ifHighSpeed for interface %u, assuming that ifHighSpeed reports values in bps"), node->getName(), ifIndex);
+	            return SNMP_ERR_ABORTED;
+            }
+         }
+      }
+	   return SNMP_ERR_SUCCESS;
+	});
+   node->setCustomAttribute(_T(".dlink.ifHighSpeedInBps"), ifHighSpeedInBps ? _T("true") : _T("false"), StateChange::CLEAR);
 }
 
 /**
@@ -88,10 +111,10 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	if (ifList == nullptr)
+		return nullptr;
 
-	UINT32 slotSize = node->getCustomAttributeAsUInt32(_T(".dlink.slotSize"), 48);
+	uint32_t slotSize = node->getCustomAttributeAsUInt32(_T(".dlink.slotSize"), 48);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)
@@ -103,6 +126,24 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
 			iface->location.module = (iface->index / slotSize) + 1;
 			iface->location.port = iface->index % slotSize;
 		}
+	}
+
+	if (node->getCustomAttributeAsBoolean(_T(".dlink.ifHighSpeedInBps"), false))
+	{
+	   uint32_t ifHighSpeed;
+      uint32_t oid[] = { 1, 3, 6, 1, 2, 1, 31, 1, 1, 1, 15, 0 };
+	   for(int i = 0; i < ifList->size(); i++)
+	   {
+	      InterfaceInfo *iface = ifList->get(i);
+	      if (iface->speed != 0)
+	      {
+	         oid[11] = iface->index;
+	         if (SnmpGetEx(snmp, nullptr, oid, 12, &ifHighSpeed, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
+	         {
+	            iface->speed = ifHighSpeed;
+	         }
+	      }
+	   }
 	}
 
 	return ifList;
