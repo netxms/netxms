@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -140,11 +140,11 @@ public class GeneralChart extends PreferencePage
       checkStacked = new Button(optionsGroup, SWT.CHECK);
       checkStacked.setText(i18n.tr("Stacked"));
       checkStacked.setSelection(config.isStacked());
-      
+
       checkTranslucent= new Button(optionsGroup, SWT.CHECK);
       checkTranslucent.setText(i18n.tr("Translucent"));
       checkTranslucent.setSelection(config.isTranslucent());
-      
+
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(i18n.tr("Show &legend"));
       checkShowLegend.setSelection(config.isLegendVisible());
@@ -163,12 +163,12 @@ public class GeneralChart extends PreferencePage
             widgetSelected(e);
          }
       });
-      
+
       checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText(i18n.tr("Show &host names"));
       checkShowHostNames.setSelection(config.isShowHostNames());
       checkShowHostNames.setEnabled(config.isLegendVisible());
-      
+
       gd = new GridData();
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -190,11 +190,11 @@ public class GeneralChart extends PreferencePage
       checkAreaChart = new Button(optionsGroup, SWT.CHECK);
       checkAreaChart.setText(i18n.tr("Area chart"));
       checkAreaChart.setSelection(config.isArea());         
-      
+
       checkUseMultipliers = new Button(optionsGroup, SWT.CHECK);
       checkUseMultipliers.setText(i18n.tr("Use multipliers"));
       checkUseMultipliers.setSelection(config.isUseMultipliers());
-      
+
       Composite refreshGroup = new Composite(optionsGroup, SWT.NONE);
       layout = new GridLayout();
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
@@ -289,7 +289,18 @@ public class GeneralChart extends PreferencePage
 		});
       refreshIntervalSpinner.setEnabled(config.isAutoRefresh()); 
 
-      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.getTimePeriod());
+      Group timeSelectorGroup = new Group(dialogArea, SWT.NONE);
+      timeSelectorGroup.setText(i18n.tr("Time Period"));
+      layout = new GridLayout();
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      timeSelectorGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      timeSelectorGroup.setLayoutData(gd);
+
+      timeSelector = new TimePeriodSelector(timeSelectorGroup, SWT.NONE, config.getTimePeriod());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

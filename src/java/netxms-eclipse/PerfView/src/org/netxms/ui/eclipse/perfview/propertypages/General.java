@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.widgets.TimePeriodSelector;
  */
 public class General extends PreferencePage
 {
-	private ChartConfiguration config;
+   private ChartConfiguration config;
 	private LabeledText title;
 	private Button checkShowGrid;
 	private Button checkShowLegend;
@@ -334,12 +334,12 @@ public class General extends PreferencePage
 		checkUseMultipliers.setSelection(true);
 		legendLocation.select(3);
 		lineWidth.setSelection(2);
-		
+
 		yAxisRange.setSelection(true, false, 0, 100);
-		
+
 		refreshIntervalScale.setSelection(30);
 		refreshIntervalSpinner.setSelection(30);
-		
+
 		timeSelector.setDefaults();
 	}
 
@@ -351,8 +351,8 @@ public class General extends PreferencePage
 	protected void applyChanges(final boolean isApply)
 	{
 		config.setTitle(title.getText());
-		config.setGridVisible(checkShowGrid.getSelection());
-		config.setLegendVisible(checkShowLegend.getSelection());
+      config.setGridVisible(checkShowGrid.getSelection());
+      config.setLegendVisible(checkShowLegend.getSelection());
 		config.setAutoScale(yAxisRange.isAuto());
 		config.setShowHostNames(checkShowHostNames.getSelection());
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
@@ -387,7 +387,7 @@ public class General extends PreferencePage
 						}
 					});
 				}
-				
+
 				@Override
 				protected String getErrorMessage()
 				{
