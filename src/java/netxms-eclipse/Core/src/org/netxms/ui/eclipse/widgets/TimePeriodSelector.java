@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,14 +22,12 @@ import java.util.Date;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.TimePeriod;
 import org.netxms.client.constants.TimeFrameType;
@@ -49,23 +47,19 @@ public class TimePeriodSelector extends Composite
    private Combo timeUnits;
    private DateTimeSelector timeFrom;
    private DateTimeSelector timeTo;
-   
+
    public TimePeriodSelector(Composite parent, int style, TimePeriod period)
    {
-      super(parent, style);
-      
-      setLayout(new FillLayout());
-      
-      Group timeGroup = new Group(parent, SWT.NONE);
-      timeGroup.setText(Messages.get().TimePeriodSelector_TimePeriod);
+      super(parent, style & ~(SWT.VERTICAL | SWT.HORIZONTAL));
+
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
       layout.horizontalSpacing = 16;
       layout.makeColumnsEqualWidth = true;
-      layout.numColumns = 2;
-      timeGroup.setLayout(layout);
-      
+      layout.numColumns = ((style & SWT.VERTICAL) != 0) ? 1 : 2;
+      setLayout(layout);
+
       final SelectionListener listener = new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -75,7 +69,7 @@ public class TimePeriodSelector extends Composite
             timeFrom.setEnabled(radioFixedInterval.getSelection());
             timeTo.setEnabled(radioFixedInterval.getSelection());
          }
-         
+
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
@@ -83,17 +77,20 @@ public class TimePeriodSelector extends Composite
          }
       };
 
-      radioBackFromNow = new Button(timeGroup, SWT.RADIO);
+      radioBackFromNow = new Button(this, SWT.RADIO);
       radioBackFromNow.setText(Messages.get().TimePeriodSelector_BackFromNow);
       radioBackFromNow.setSelection(period.getTimeFrameType() == TimeFrameType.BACK_FROM_NOW);
       radioBackFromNow.addSelectionListener(listener);
 
-      radioFixedInterval = new Button(timeGroup, SWT.RADIO);
-      radioFixedInterval.setText(Messages.get().TimePeriodSelector_FixedTimeFrame);
-      radioFixedInterval.setSelection(period.getTimeFrameType() == TimeFrameType.FIXED);
-      radioFixedInterval.addSelectionListener(listener);
+      if ((style & SWT.VERTICAL) == 0)
+      {
+         radioFixedInterval = new Button(this, SWT.RADIO);
+         radioFixedInterval.setText(Messages.get().TimePeriodSelector_FixedTimeFrame);
+         radioFixedInterval.setSelection(period.getTimeFrameType() == TimeFrameType.FIXED);
+         radioFixedInterval.addSelectionListener(listener);
+      }
 
-      Composite timeBackGroup = new Composite(timeGroup, SWT.NONE);
+      Composite timeBackGroup = new Composite(this, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -105,11 +102,11 @@ public class TimePeriodSelector extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.TOP;
       timeBackGroup.setLayoutData(gd);
-      
+
       timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, Messages.get().TimePeriodSelector_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeRange.setSelection(period.getTimeRange());
       timeRange.setEnabled(radioBackFromNow.getSelection());
-      
+
       timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, Messages.get().TimePeriodSelector_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeUnits.add(Messages.get().TimePeriodSelector_Minutes);
       timeUnits.add(Messages.get().TimePeriodSelector_Hours);
@@ -117,7 +114,20 @@ public class TimePeriodSelector extends Composite
       timeUnits.select(period.getTimeUnit().getValue());
       timeUnits.setEnabled(radioBackFromNow.getSelection());
 
-      Composite timeFixedGroup = new Composite(timeGroup, SWT.NONE);
+      if ((style & SWT.VERTICAL) != 0)
+      {
+         Composite filler = new Composite(this, SWT.NONE);
+         gd = new GridData();
+         gd.heightHint = 11;
+         filler.setLayoutData(gd);
+
+         radioFixedInterval = new Button(this, SWT.RADIO);
+         radioFixedInterval.setText(Messages.get().TimePeriodSelector_FixedTimeFrame);
+         radioFixedInterval.setSelection(period.getTimeFrameType() == TimeFrameType.FIXED);
+         radioFixedInterval.addSelectionListener(listener);
+      }
+
+      Composite timeFixedGroup = new Composite(this, SWT.NONE);
       layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
@@ -128,7 +138,7 @@ public class TimePeriodSelector extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.TOP;
       timeFixedGroup.setLayoutData(gd);
-      
+
       final WidgetFactory factory = new WidgetFactory() {
          @Override
          public Control createControl(Composite parent, int style)
@@ -136,7 +146,7 @@ public class TimePeriodSelector extends Composite
             return new DateTimeSelector(parent, style);
          }
       };
-      
+
       timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().TimePeriodSelector_8, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeFrom.setValue(period.getTimeFrom());
       timeFrom.setEnabled(radioFixedInterval.getSelection());
@@ -145,7 +155,26 @@ public class TimePeriodSelector extends Composite
       timeTo.setValue(period.getTimeTo());
       timeTo.setEnabled(radioFixedInterval.getSelection());
    }
-   
+
+   /**
+    * Set time period
+    *
+    * @param period new time period
+    */
+   public void setTimePeriod(TimePeriod period)
+   {
+      radioBackFromNow.setSelection(period.getTimeFrameType() == TimeFrameType.BACK_FROM_NOW);
+      radioFixedInterval.setSelection(period.getTimeFrameType() == TimeFrameType.FIXED);
+      timeRange.setSelection(period.getTimeRange());
+      timeRange.setEnabled(radioBackFromNow.getSelection());
+      timeUnits.select(period.getTimeUnit().getValue());
+      timeUnits.setEnabled(radioBackFromNow.getSelection());
+      timeFrom.setValue(period.getTimeFrom());
+      timeFrom.setEnabled(radioFixedInterval.getSelection());
+      timeTo.setValue(period.getTimeTo());
+      timeTo.setEnabled(radioFixedInterval.getSelection());
+   }
+
    /**
     * Get selected time period.
     *
@@ -181,7 +210,7 @@ public class TimePeriodSelector extends Composite
    {
       return timeRange.getSelection();
    }
-   
+
    /**
     * Get time unit.
     *
@@ -191,7 +220,7 @@ public class TimePeriodSelector extends Composite
    {
       return TimeUnit.getByValue(timeUnits.getSelectionIndex());
    }
-   
+
    /**
     * Get start time
     *
@@ -201,7 +230,7 @@ public class TimePeriodSelector extends Composite
    {
       return timeFrom.getValue();
    }
-   
+
    /**
     * Get end time
     * 
@@ -211,7 +240,7 @@ public class TimePeriodSelector extends Composite
    {
       return timeTo.getValue();
    }
-   
+
    /**
     * Set default values
     */
