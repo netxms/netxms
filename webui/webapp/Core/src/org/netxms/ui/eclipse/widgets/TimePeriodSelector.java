@@ -79,14 +79,12 @@ public class TimePeriodSelector extends Composite
 
       radioBackFromNow = new Button(this, SWT.RADIO);
       radioBackFromNow.setText(Messages.get().TimePeriodSelector_BackFromNow);
-      radioBackFromNow.setSelection(period.getTimeFrameType() == TimeFrameType.BACK_FROM_NOW);
       radioBackFromNow.addSelectionListener(listener);
 
       if ((style & SWT.VERTICAL) == 0)
       {
          radioFixedInterval = new Button(this, SWT.RADIO);
          radioFixedInterval.setText(Messages.get().TimePeriodSelector_FixedTimeFrame);
-         radioFixedInterval.setSelection(period.getTimeFrameType() == TimeFrameType.FIXED);
          radioFixedInterval.addSelectionListener(listener);
       }
 
@@ -104,14 +102,12 @@ public class TimePeriodSelector extends Composite
       timeBackGroup.setLayoutData(gd);
 
       timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, Messages.get().TimePeriodSelector_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeRange.setSelection(period.getTimeRange());
       timeRange.setEnabled(radioBackFromNow.getSelection());
 
       timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, Messages.get().TimePeriodSelector_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeUnits.add(Messages.get().TimePeriodSelector_Minutes);
       timeUnits.add(Messages.get().TimePeriodSelector_Hours);
       timeUnits.add(Messages.get().TimePeriodSelector_Days);
-      timeUnits.select(period.getTimeUnit().getValue());
       timeUnits.setEnabled(radioBackFromNow.getSelection());
 
       if ((style & SWT.VERTICAL) != 0)
@@ -148,12 +144,12 @@ public class TimePeriodSelector extends Composite
       };
 
       timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().TimePeriodSelector_8, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeFrom.setValue(period.getTimeFrom());
       timeFrom.setEnabled(radioFixedInterval.getSelection());
 
       timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().TimePeriodSelector_9, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeTo.setValue(period.getTimeTo());
       timeTo.setEnabled(radioFixedInterval.getSelection());
+      
+      setTimePeriod(period);
    }
 
    /**

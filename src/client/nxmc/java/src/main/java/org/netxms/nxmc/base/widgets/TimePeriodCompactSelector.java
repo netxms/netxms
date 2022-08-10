@@ -16,10 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.widgets;
+package org.netxms.nxmc.base.widgets;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -42,8 +43,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.TimePeriod;
 import org.netxms.client.constants.TimeFrameType;
 import org.netxms.client.constants.TimeUnit;
-import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Compact selector for time period. Displays time period description with drop down button to open full size selector.
@@ -180,8 +182,17 @@ public class TimePeriodCompactSelector extends Composite
       gd.verticalIndent = 6;
       buttonBar.setLayoutData(gd);
 
-      Button buttonApply = new Button(buttonBar, SWT.PUSH | SWT.DEFAULT);
-      Button buttonCancel = new Button(buttonBar, SWT.PUSH);
+      Button buttonApply, buttonCancel;
+      if (Registry.IS_WEB_CLIENT || SystemUtils.IS_OS_WINDOWS)
+      {
+         buttonApply = new Button(buttonBar, SWT.PUSH | SWT.DEFAULT);
+         buttonCancel = new Button(buttonBar, SWT.PUSH);
+      }
+      else
+      {
+         buttonCancel = new Button(buttonBar, SWT.PUSH);
+         buttonApply = new Button(buttonBar, SWT.PUSH | SWT.DEFAULT);
+      }
       selectorShell.setDefaultButton(buttonApply);
 
       buttonApply.setText("&Apply");
@@ -288,9 +299,9 @@ public class TimePeriodCompactSelector extends Composite
       }
       else
       {
-         sb.append(RegionalSettings.getDateTimeFormat().format(p.getPeriodStart()));
+         sb.append(DateFormatFactory.getDateTimeFormat().format(p.getPeriodStart()));
          sb.append(" \u2013 ");
-         sb.append(RegionalSettings.getDateTimeFormat().format(p.getPeriodEnd()));
+         sb.append(DateFormatFactory.getDateTimeFormat().format(p.getPeriodEnd()));
       }
       return sb.toString();
    }
