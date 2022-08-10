@@ -32,14 +32,14 @@ public class TimeSelectionDialog extends Dialog
 {
    private TimePeriodSelector timeSelector;
    private TimePeriod timePeriod;
-   
+
    public TimeSelectionDialog(Shell parentShell, TimePeriod tp)
    {
       super(parentShell);  
       timePeriod = tp;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
@@ -48,24 +48,25 @@ public class TimeSelectionDialog extends Dialog
       super.configureShell(newShell);
       newShell.setText(Messages.get().TimeSelectionDialog_Title);  
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
+
       timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, timePeriod);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       timeSelector.setLayoutData(gd); 
-      
+
       return dialogArea;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override

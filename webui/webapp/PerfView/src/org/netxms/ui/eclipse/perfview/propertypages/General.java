@@ -287,7 +287,18 @@ public class General extends PreferencePage
 		});
       refreshIntervalSpinner.setEnabled(config.isAutoRefresh()); 
 
-      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.getTimePeriod());
+      Group timeSelectorGroup = new Group(dialogArea, SWT.NONE);
+      timeSelectorGroup.setText("Time Period");
+      layout = new GridLayout();
+      layout.marginWidth = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = WidgetHelper.OUTER_SPACING;
+      timeSelectorGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      timeSelectorGroup.setLayoutData(gd);
+
+      timeSelector = new TimePeriodSelector(timeSelectorGroup, SWT.NONE, config.getTimePeriod());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
