@@ -251,7 +251,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       return value;
 
    NXSL_VM *vm = object->vm();
-   shared_ptr<Table> table(*static_cast<shared_ptr<Table>*>(object->getData()));
+   Table *table = (object->getData() != nullptr) ? static_cast<shared_ptr<Table>*>(object->getData())->get() : nullptr;
    if (NXSL_COMPARE_ATTRIBUTE_NAME("columnCount"))
    {
       value = vm->createValue((LONG)table->getNumColumns());
@@ -299,7 +299,7 @@ NXSL_Value *NXSL_TableClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
       NXSL_Array *rows = new NXSL_Array(vm);
       for(int i = 0; i < table->getNumRows(); i++)
       {
-         rows->set(i, vm->createValue(vm->createObject(&g_nxslTableRowClass, new TableRowReference(table, i))));
+         rows->set(i, vm->createValue(vm->createObject(&g_nxslTableRowClass, new TableRowReference(*static_cast<shared_ptr<Table>*>(object->getData()), i))));
       }
       value = vm->createValue(rows);
    }
@@ -373,11 +373,11 @@ NXSL_METHOD_DEFINITION(TableRow, get)
 
    int columnIndex = argv[0]->isInteger() ?
       argv[0]->getValueAsInt32() :
-      ((TableRowReference *)object->getData())->getTable()->getColumnIndex(argv[0]->getValueAsCString());
+      static_cast<TableRowReference*>(object->getData())->getTable()->getColumnIndex(argv[0]->getValueAsCString());
 
-   const TCHAR *value = ((TableRowReference *)object->getData())->get(columnIndex);
+   const TCHAR *value = static_cast<TableRowReference*>(object->getData())->get(columnIndex);
    *result = (value != nullptr) ? vm->createValue(value) : vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -390,11 +390,11 @@ NXSL_METHOD_DEFINITION(TableRow, set)
 
    int columnIndex = argv[0]->isInteger() ?
       argv[0]->getValueAsInt32() :
-      ((TableRowReference *)object->getData())->getTable()->getColumnIndex(argv[0]->getValueAsCString());
+      static_cast<TableRowReference*>(object->getData())->getTable()->getColumnIndex(argv[0]->getValueAsCString());
 
-   ((TableRowReference *)object->getData())->set(columnIndex, argv[1]->getValueAsCString());
+   static_cast<TableRowReference*>(object->getData())->set(columnIndex, argv[1]->getValueAsCString());
    *result = vm->createValue();
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }
 
 /**
@@ -463,5 +463,5 @@ NXSL_Value *NXSL_TableRowClass::getAttr(NXSL_Object *object, const NXSL_Identifi
 int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    *result = vm->createValue(vm->createObject(&g_nxslTableClass, new shared_ptr<Table>(new Table())));
-   return 0;
+   return NXSL_ERR_SUCCESS;
 }

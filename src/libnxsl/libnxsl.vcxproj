@@ -214,7 +214,6 @@
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="library.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="network.cpp" />
     <ClCompile Include="parser.tab.cpp" />
     <ClCompile Include="program.cpp" />
     <ClCompile Include="selectors.cpp" />

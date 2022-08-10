@@ -38,8 +38,8 @@ NXSL_JsonArrayClass LIBNXSL_EXPORTABLE g_nxslJsonArrayClass;
  */
 static NXSL_Value *ValueFromJson(NXSL_VM *vm, json_t *json)
 {
-   NXSL_Value *value = NULL;
-   if (json != NULL)
+   NXSL_Value *value = nullptr;
+   if (json != nullptr)
    {
       switch(json_typeof(json))
       {
