@@ -96,7 +96,6 @@ public class TimePeriodCompactSelector extends Composite
 
       description = new Button(this, SWT.PUSH | SWT.FLAT);
       description.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-      description.setBackground(getBackground());
       description.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       description.addSelectionListener(new SelectionAdapter() {
          @Override

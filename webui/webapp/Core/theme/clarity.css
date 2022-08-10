@@ -126,7 +126,7 @@ Button[ARROW]:disabled, Button[PUSH]:disabled, Button[TOGGLE]:disabled {
 }
 
 Button[ARROW]:default:hover, Button[PUSH]:default:hover, Button[TOGGLE]:default:hover {
-   background-color: #00567A;
+   background-color: #49AEDA;
 }
 
 Button[ARROW]:hover, Button[PUSH]:hover, Button[TOGGLE]:hover {
@@ -134,7 +134,7 @@ Button[ARROW]:hover, Button[PUSH]:hover, Button[TOGGLE]:hover {
 }
 
 Button[ARROW]:default:pressed, Button[PUSH]:default:pressed, Button[TOGGLE]:default:pressed {
-   background-color: #00567A;
+   background-color: #49AEDA;
 }
 
 Button[ARROW]:pressed, Button[PUSH]:pressed, Button[TOGGLE]:pressed {
@@ -142,22 +142,13 @@ Button[ARROW]:pressed, Button[PUSH]:pressed, Button[TOGGLE]:pressed {
 }
 
 Button[TOGGLE]:selected {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e0e0e0 ),
-    color-stop( 30%, #f0f0f0 ),
-    color-stop( 70%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
+  color: #ffffff;
+  background-color: #0072A3;
 }
 
 Button[TOGGLE]:selected:hover {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e0e0e0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
+  color: #ffffff;
+  background-color: #49AEDA;
 }
 
 Button[CHECK], Button[RADIO] {
@@ -1964,7 +1955,7 @@ Button.login[PUSH]:default {
    font: 18px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
    background-image: none;
    color: #D8E3E9;
-   background-color: #00364D;
+   background-color: #0072A3;
    border-radius: 4px;
    border: none;
 }
@@ -1974,7 +1965,7 @@ Button.login[PUSH]:hover {
 }
 
 Button.login[PUSH]:hover:default {
-   background-color: #79C6E6;
+   background-color: #49AEDA;
 }
 
 Button.login[PUSH]:pressed {
@@ -1982,7 +1973,7 @@ Button.login[PUSH]:pressed {
 }
 
 Button.login[PUSH]:pressed:default {
-   background-color: #79C6E6;
+   background-color: #49AEDA;
 }
 
 Button.loginSelector[PUSH] {
