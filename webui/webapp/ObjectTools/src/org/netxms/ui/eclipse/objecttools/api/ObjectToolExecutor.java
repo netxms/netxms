@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objecttools.api;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,16 +51,13 @@ import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.ToolExecutionStatusDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
-import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor;
 import org.netxms.ui.eclipse.objecttools.views.SSHCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerScriptResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
-import org.netxms.ui.eclipse.objecttools.views.SSHCommandResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.views.BrowserView;
 
 /**
  * Executor for object tool

@@ -164,7 +164,7 @@ public class ToolExecutionStatusDialog extends Dialog
       static final int COMPLETED = 1;
       static final int FAILED = 2;
 
-      AbstractNode node;
+      AbstractObject object;
       int status;
       String failureReason;
 
