@@ -79,13 +79,11 @@ int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -204,8 +202,6 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "ReadPersistentStorage", F_ReadPersistentStorage, 1 },
 	{ "SecondsToUptime", F_SecondsToUptime, 1 },
    { "SplitString", F_SplitString, 2 },
-	{ "TCPConnector", F_tcpConnector, 2 },
-	{ "UDPConnector", F_udpConnector, 2 },
    { "WritePersistentStorage", F_WritePersistentStorage, 2 }
 };
 

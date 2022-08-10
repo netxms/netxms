@@ -1573,7 +1573,6 @@ extern NXSL_MetaClass LIBNXSL_EXPORTABLE g_nxslMetaClass;
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_TableRowClass LIBNXSL_EXPORTABLE g_nxslTableRowClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
-extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 extern NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;
 extern NXSL_InetAddressClass LIBNXSL_EXPORTABLE g_nxslInetAddressClass;
 extern NXSL_JsonObjectClass LIBNXSL_EXPORTABLE g_nxslJsonObjectClass;
