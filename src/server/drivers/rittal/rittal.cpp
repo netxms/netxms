@@ -101,7 +101,7 @@ bool RittalDriver::hasMetrics()
  */
 DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
-   if (driverData == NULL)
+   if (driverData == nullptr)
       return DCE_COLLECTION_ERROR;
 
    nxlog_debug_tag(RITTAL_DEBUG_TAG, 7, _T("RittalDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
@@ -118,7 +118,7 @@ DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, NObject *node,
    TCHAR oidText[256];
    nxlog_debug_tag(RITTAL_DEBUG_TAG, 7, _T("RittalDriver::getMetric(%s [%u]): metric object found, OID=\"%s\""),
             driverData->getNodeName(), driverData->getNodeId(), SNMPConvertOIDToText(15, metric.oid, oidText, 256));
-   return (SnmpGetEx(snmp, NULL, metric.oid, 15, value, size * sizeof(TCHAR), SG_STRING_RESULT, NULL) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
+   return (SnmpGetEx(snmp, nullptr, metric.oid, 15, value, size * sizeof(TCHAR), SG_STRING_RESULT, nullptr) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 
 /**

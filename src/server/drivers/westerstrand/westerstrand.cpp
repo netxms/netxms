@@ -26,21 +26,11 @@
 #define DEBUG_TAG _T("ndd.westerstrand")
 
 /**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("WESTERSTRAND");
-
-/**
- * Driver version
- */
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
-/**
  * Get driver name
  */
 const TCHAR *WesterstrandDriver::getName()
 {
-	return s_driverName;
+	return _T("WESTERSTRAND");
 }
 
 /**
@@ -48,7 +38,7 @@ const TCHAR *WesterstrandDriver::getName()
  */
 const TCHAR *WesterstrandDriver::getVersion()
 {
-	return s_driverVersion;
+	return NETXMS_VERSION_STRING;
 }
 
 /**

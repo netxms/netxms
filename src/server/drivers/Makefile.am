@@ -109,7 +109,7 @@ moxa_la_LIBADD = ../../libnetxms/libnetxms.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
 	../libnxsrv/libnxsrv.la
 
-net_snmp_la_SOURCES = net-snmp/net-snmp.cpp
+net_snmp_la_SOURCES = net-snmp/generic.cpp net-snmp/net-snmp.cpp net-snmp/teltonika.cpp
 net_snmp_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 net_snmp_la_LDFLAGS = -module -avoid-version
 net_snmp_la_LIBADD = ../../libnetxms/libnetxms.la \

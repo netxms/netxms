@@ -714,6 +714,7 @@ mibs_DATA = \
 	T11-FC-NAME-SERVER-MIB.txt \
 	T11-TC-MIB.txt \
 	TCP-MIB.txt \
+	TELTONIKA-MIB.txt \
 	TIME-MIB.txt \
 	TIMERANGE-MIB.txt \
 	TOKEN-RING-RMON-MIB.txt \

@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for NetSNMP agents
- * Copyright (C) 2017-2020 Raden Solutions
+ * Copyright (C) 2017-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,53 +26,6 @@
 #define DEBUG_TAG _T("ndd.net-snmp")
 
 /**
- * Driver name
- */
-static TCHAR s_driverName[] = _T("NET-SNMP");
-
-/**
- * Driver version
- */
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
-
-/**
- * Get driver name
- */
-const TCHAR *NetSnmpDriver::getName()
-{
-   return s_driverName;
-}
-
-/**
- * Get driver version
- */
-const TCHAR *NetSnmpDriver::getVersion()
-{
-   return s_driverVersion;
-}
-
-/**
- * Check if given device can be potentially supported by driver
- *
- * @param oid Device OID
- */
-int NetSnmpDriver::isPotentialDevice(const TCHAR *oid)
-{
-	return !_tcsncmp(oid, _T(".1.3.6.1.4.1.8072.3.2"), 21) ? 254 : 0;
-}
-
-/**
- * Check if given device is supported by driver
- *
- * @param snmp SNMP transport
- * @param oid Device OID
- */
-bool NetSnmpDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
-{
-	return true;
-}
-
-/**
  * Do additional checks on the device required by driver.
  * Driver can set device's custom attributes and driver's data from within this method.
  * If driver's data was set on previous call, same pointer will be passed on all subsequent calls.
@@ -84,9 +37,9 @@ bool NetSnmpDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param node Node
  * @param driverData pointer to pointer to driver-specific data
  */
-void NetSnmpDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
+void NetSnmpBaseDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData)
 {
-   if (*driverData == NULL)
+   if (*driverData == nullptr)
       *driverData = new NetSnmpDriverData();
    static_cast<NetSnmpDriverData*>(*driverData)->updateStorageCache(snmp);
 }
@@ -94,7 +47,7 @@ void NetSnmpDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObjec
 /**
  * Check if driver can provide additional metrics
  */
-bool NetSnmpDriver::hasMetrics()
+bool NetSnmpBaseDriver::hasMetrics()
 {
    return true;
 }
@@ -110,12 +63,12 @@ bool NetSnmpDriver::hasMetrics()
  * @param size buffer size
  * @return data collection error code
  */
-DataCollectionError NetSnmpDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
+DataCollectionError NetSnmpBaseDriver::getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size)
 {
    if (driverData == NULL)
       return DCE_COLLECTION_ERROR;
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("NetSnmpDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("NetSnmpBaseDriver::getMetric(%s [%u]): Requested metric \"%s\""), driverData->getNodeName(), driverData->getNodeId(), name);
    NetSnmpDriverData *d = static_cast<NetSnmpDriverData*>(driverData);
 
    DataCollectionError rc = getHostMibMetric(snmp, d, name, value, size);
@@ -142,7 +95,7 @@ DataCollectionError NetSnmpDriver::getMetric(SNMP_Transport *snmp, NObject *node
    if (e == NULL)
       return DCE_COLLECTION_ERROR;
 
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("NetSnmpDriver::getMetric(%s [%u]): Storage entry found (name=%s, size=%u, used=%u, unit=%u)"),
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("NetSnmpBaseDriver::getMetric(%s [%u]): Storage entry found (name=%s, size=%u, used=%u, unit=%u)"),
             driverData->getNodeName(), driverData->getNodeId(), e->name, e->size, e->used, e->unitSize);
    return e->getMetric(suffix, value, size) ? DCE_SUCCESS : DCE_NOT_SUPPORTED;
 }
@@ -155,7 +108,7 @@ DataCollectionError NetSnmpDriver::getMetric(SNMP_Transport *snmp, NObject *node
  * @param driverData driver-specific data previously created in analyzeDevice
  * @return list of metrics supported by driver or NULL on error
  */
-ObjectArray<AgentParameterDefinition> *NetSnmpDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
+ObjectArray<AgentParameterDefinition> *NetSnmpBaseDriver::getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AgentParameterDefinition> *metrics = new ObjectArray<AgentParameterDefinition>(16, 16, Ownership::True);
    registerHostMibMetrics(metrics);
@@ -175,7 +128,11 @@ ObjectArray<AgentParameterDefinition> *NetSnmpDriver::getAvailableMetrics(SNMP_T
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(NetSnmpDriver);
+NDD_BEGIN_DRIVER_LIST
+NDD_DRIVER(NetSnmpDriver)
+NDD_DRIVER(TeltonikaDriver)
+NDD_END_DRIVER_LIST
+DECLARE_NDD_MODULE_ENTRY_POINT
 
 /**
  * DLL entry point

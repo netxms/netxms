@@ -911,7 +911,7 @@ void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(uint32_t timeout);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr,
       const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t dwFlags);
-uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen,
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen,
       void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen = nullptr, const char *codepage = nullptr);
 bool LIBNXSNMP_EXPORTABLE CheckSNMPIntegerValue(SNMP_Transport *snmpTransport, const TCHAR *oid, int32_t value);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,

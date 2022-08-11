@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@
  */
 void HostMibStorageEntry::getFree(TCHAR *buffer, size_t len) const
 {
-   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(size - used) * static_cast<uint64_t>(unitSize));
+   _sntprintf(buffer, len, UINT64_FMT, static_cast<uint64_t>(size - used) * static_cast<uint64_t>(unitSize));
 }
 
 /**
@@ -45,7 +45,7 @@ void HostMibStorageEntry::getFreePerc(TCHAR *buffer, size_t len) const
  */
 void HostMibStorageEntry::getTotal(TCHAR *buffer, size_t len) const
 {
-   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(size) * static_cast<uint64_t>(unitSize));
+   _sntprintf(buffer, len, UINT64_FMT, static_cast<uint64_t>(size) * static_cast<uint64_t>(unitSize));
 }
 
 /**
@@ -53,7 +53,7 @@ void HostMibStorageEntry::getTotal(TCHAR *buffer, size_t len) const
  */
 void HostMibStorageEntry::getUsed(TCHAR *buffer, size_t len) const
 {
-   _sntprintf(buffer, len, UINT64_FMT, static_cast<UINT64>(used) * static_cast<uint64_t>(unitSize));
+   _sntprintf(buffer, len, UINT64_FMT, static_cast<uint64_t>(used) * static_cast<uint64_t>(unitSize));
 }
 
 /**
@@ -153,7 +153,7 @@ void HostMibDriverData::updateStorageCache(SNMP_Transport *snmp)
    m_storageCacheMutex.lock();
    m_storage.clear();
    SnmpWalk(snmp, _T(".1.3.6.1.2.1.25.2.3.1.3"), this, &HostMibDriverData::updateStorageCacheCallback);
-   m_storageCacheTimestamp = time(NULL);
+   m_storageCacheTimestamp = time(nullptr);
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Storage cache updated for node %s [%u]:"), m_nodeName, m_nodeId);
    for(int i = 0; i < m_storage.size(); i++)
    {
