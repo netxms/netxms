@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for NetSNMP agents
- * Copyright (C) 2017 Raden Solutions
+ * Copyright (C) 2017-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -41,20 +41,42 @@ public:
 };
 
 /**
- * Driver's class
+ * Base driver for Net-SNMP compatible devices
  */
-class NetSnmpDriver : public NetworkDeviceDriver
+class NetSnmpBaseDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData) override;
+   virtual bool hasMetrics() override;
+   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size) override;
+   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData) override;
+};
 
-	virtual int isPotentialDevice(const TCHAR *oid);
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject *node, DriverData **driverData);
-   virtual bool hasMetrics();
-   virtual DataCollectionError getMetric(SNMP_Transport *snmp, NObject *node, DriverData *driverData, const TCHAR *name, TCHAR *value, size_t size);
-   virtual ObjectArray<AgentParameterDefinition> *getAvailableMetrics(SNMP_Transport *snmp, NObject *node, DriverData *driverData);
+/**
+ * Generic driver for Net-SNMP compatible devices
+ */
+class NetSnmpDriver : public NetSnmpBaseDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+};
+
+/**
+ * Driver for Teltonika modems
+ */
+class TeltonikaDriver : public NetSnmpBaseDriver
+{
+public:
+   virtual const TCHAR *getName() override;
+   virtual const TCHAR *getVersion() override;
+
+   virtual int isPotentialDevice(const TCHAR *oid) override;
+   virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+   virtual bool getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo) override;
 };
 
 #endif

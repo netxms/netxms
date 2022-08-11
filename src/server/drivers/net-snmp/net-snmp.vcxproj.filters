@@ -15,7 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="generic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="net-snmp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="teltonika.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

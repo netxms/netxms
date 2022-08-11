@@ -171,7 +171,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="generic.cpp" />
     <ClCompile Include="net-snmp.cpp" />
+    <ClCompile Include="teltonika.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\nddrv.h" />
