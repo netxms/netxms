@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -228,15 +228,27 @@ public class ReportExecutionForm extends Composite
 			{
             if (n.getCode() == SessionNotification.SCHEDULE_UPDATE)
 				{
-					refreshScheduleList();
+               getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     refreshScheduleList();
+                  }
+               });
 				} 
 				else if (n.getCode() == SessionNotification.RS_RESULTS_MODIFIED) 
 				{
-					refreshResultList();
+               getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     refreshResultList();
+                  }
+               });
 				}
 			}
 		});
-		
+
 		refreshScheduleList();
 		refreshResultList();
 	}
@@ -604,7 +616,6 @@ public class ReportExecutionForm extends Composite
 		if (fileName == null)
 		   return;
 		
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Rendering report", workbenchPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -704,8 +715,7 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void refreshResultList()
 	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Refresh result list for report " + report.getName(), workbenchPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Refresh result list for report %s", report.getName()), workbenchPart, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -715,9 +725,7 @@ public class ReportExecutionForm extends Composite
 					public void run()
 					{
 						if (ReportExecutionForm.this.isDisposed())
-						{
 							return;
-						}
 
 						resultList.setInput(results.toArray());
 						ReportExecutionForm.this.getParent().layout(true, true);
@@ -731,7 +739,6 @@ public class ReportExecutionForm extends Composite
 				return String.format("Cannot get result list for report %s", report.getName());
 			}
 		}.start();
-
 	}
 	
 	/**
@@ -739,7 +746,7 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void refreshScheduleList()
 	{
-		new ConsoleJob(String.format("Refresh schedule list for report %s", report.getName()), workbenchPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Refresh schedule list for report %s", report.getName()), workbenchPart, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -760,7 +767,6 @@ public class ReportExecutionForm extends Composite
 				return String.format("Cannot get schedule list for report %s", report.getName());
 			}
 		}.start();
-
 	}
 
 	/**
@@ -785,7 +791,6 @@ public class ReportExecutionForm extends Composite
 			resultIdList.add(((ReportResult)o).getJobId());
 		}
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob("Delete report execution results", workbenchPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
