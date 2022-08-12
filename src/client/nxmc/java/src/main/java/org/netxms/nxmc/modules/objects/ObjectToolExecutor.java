@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ public final class ObjectToolExecutor
    {
       if (tool.getToolType() != ObjectTool.TYPE_INTERNAL)
          return true;
-      
+
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
       {
@@ -106,7 +106,7 @@ public final class ObjectToolExecutor
     * 
     * @param allNodes nodes to execution tool on
     * @param tool Object tool
-    * @param perspective owning perspective
+    * @param viewPlacement view placement information
     */
    public static void execute(final Set<ObjectContext> allNodes, final ObjectTool tool, final ViewPlacement viewPlacement)
    {
@@ -139,7 +139,7 @@ public final class ObjectToolExecutor
          inputValues = readInputFields(tool.getDisplayName(), fields);
          if (inputValues == null)
             return;  // cancelled
-         for(int i = 0; i < fields.length; i++)
+         for (int i = 0; i < fields.length; i++)
          {
             if (fields[i].getType() == InputFieldType.PASSWORD)
             {
@@ -177,7 +177,7 @@ public final class ObjectToolExecutor
                else
                {
                   ObjectContext node = nodes.iterator().next();
-                  message = node.substituteMacrosForMultipleNodes(message, inputValues);
+                  message = node.substituteMacrosForMultipleNodes(message, inputValues, getDisplay());
                }
 
                ConfirmationRunnable runnable = new ConfirmationRunnable(message);
@@ -231,8 +231,9 @@ public final class ObjectToolExecutor
                }
             }
 
-            int i = 0;               
-            if (nodes.size() != 1 && (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND ||
+            int i = 0;
+            if ((nodes.size() > 1) &&
+                  (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND ||
                   tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
             {
                final List<String> finalExpandedText = expandedText;
@@ -250,12 +251,12 @@ public final class ObjectToolExecutor
                {
                   if (tool.getToolType() == ObjectTool.TYPE_URL || tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND)
                   {
-                     final String tmp = expandedText.get(i++);
+                     final String data = expandedText.get(i++);
                      getDisplay().syncExec(new Runnable() {
                         @Override
                         public void run()
                         {
-                           executeOnNode(n, tool, inputValues, maskedFields, tmp, viewPlacement);
+                           executeOnNode(n, tool, inputValues, maskedFields, data, viewPlacement);
                         }
                      });
                   }
@@ -350,6 +351,9 @@ public final class ObjectToolExecutor
          case ObjectTool.TYPE_SERVER_COMMAND:
             executeServerCommand(node, tool, inputValues, maskedFields);
             break;
+         case ObjectTool.TYPE_SSH_COMMAND:
+            executeSshCommand(node, tool, inputValues);
+            break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
             executeServerScript(node, tool, inputValues);
             break;
@@ -372,7 +376,7 @@ public final class ObjectToolExecutor
     * @param inputValues input values
     * @param maskedFields list of input fields to be masked
     * @param expandedToolData expanded tool data
-    * @param perspective owning perspective
+    * @param viewPlacement view placement information
     */
    private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
          List<String> maskedFields, List<String> expandedToolData, ViewPlacement viewPlacement)
@@ -417,6 +421,8 @@ public final class ObjectToolExecutor
    }
    
    /**
+    * Execute agent action.
+    *
     * @param node
     * @param tool
     * @param inputValues
@@ -519,6 +525,85 @@ public final class ObjectToolExecutor
          */
       }
    }
+
+   /**
+    * Execute SSH command
+    * 
+    * @param node target node
+    * @param tool tool information
+    * @param inputValues input values provided by user
+    */
+   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   {
+      final NXCSession session = Registry.getSession();
+
+      if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
+      {
+         new Job(String.format(i18n.tr("Executing SSH command on node %s"), node.object.getObjectName()), null) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               try
+               {
+                  session.executeSshCommand(node.object.getObjectId(), tool.getData(), false, null, null);
+                  /*
+                  if (statusDialog != null)
+                  {
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
+                  }
+                  else
+                  {
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_ToolExecution,
+                                 String.format(Messages.get().ObjectToolsDynamicMenu_ExecSuccess, tool.getData(), node.object.getObjectName()));
+                        }
+                     });
+                  }
+                  */
+               }
+               catch(Exception e)
+               {
+                  /*
+                  if (statusDialog != null)
+                  {
+                     statusDialog.updateExecutionStatus(node.object.getObjectId(), e.getLocalizedMessage());
+                  }
+                  else
+                  {
+                     throw e;
+                  }
+                  */
+               }
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(i18n.tr("Cannot execute SSH command on node %s"), node.object.getObjectName());
+            }
+         }.start();
+      }
+      else
+      {
+         /*
+         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
+         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+         try
+         {
+            SSHCommandResults view = (SSHCommandResults)window.getActivePage().showView(SSHCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+            view.executeSshCommand(tool.getData());
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+         }
+         */
+      }
+   }
+
    
    /**
     * Execute server script

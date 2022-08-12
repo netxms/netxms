@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Soultions
+ * Copyright (C) 2020-2022 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 import java.io.IOException;
 import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
@@ -56,10 +57,10 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal()
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
     */
    @Override
-   protected void executeInternal() throws Exception
+   protected void executeInternal(Display display) throws Exception
    {
       session.executeLibraryScript(nodeId, alarmId, script, inputValues, ServerScriptExecutor.this);
    }

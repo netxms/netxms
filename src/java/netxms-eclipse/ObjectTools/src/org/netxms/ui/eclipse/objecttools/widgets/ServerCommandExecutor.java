@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
@@ -65,10 +66,10 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal()
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
     */
    @Override
-   protected void executeInternal() throws Exception
+   protected void executeInternal(Display display) throws Exception
    {
       session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true, ServerCommandExecutor.this, null);
       out.write(Messages.get().LocalCommandResults_Terminated);

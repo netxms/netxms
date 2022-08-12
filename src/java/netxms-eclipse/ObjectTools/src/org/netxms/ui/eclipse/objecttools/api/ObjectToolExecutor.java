@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,8 +114,9 @@ public final class ObjectToolExecutor
    }
 
    /**
-    * Execute object tool on node set
+    * Execute object tool on object set
     * 
+    * @param allObjects objects to execution tool on
     * @param tool Object tool
     */
    public static void execute(final Set<ObjectContext> allNodes, final ObjectTool tool)
@@ -150,7 +151,7 @@ public final class ObjectToolExecutor
             return;  // cancelled
          for (int i = 0; i < fields.length; i++)
          {
-            if (fields[i].getType() == InputFieldType.PASSWORD)  
+            if (fields[i].getType() == InputFieldType.PASSWORD)
             {
                maskedFields.add(fields[i].getName());
             }
@@ -186,7 +187,7 @@ public final class ObjectToolExecutor
                else
                {
                   ObjectContext node = nodes.iterator().next();
-                  message = node.substituteMacrosForMultipleNodes(message, inputValues);
+                  message = node.substituteMacrosForMultipleNodes(message, inputValues, getDisplay());
                }
 
                ConfirmationRunnable runnable = new ConfirmationRunnable(message);
@@ -320,7 +321,7 @@ public final class ObjectToolExecutor
          {
             return Messages.get().ObjectToolExecutor_PasswordValidationFailed;
          }
-         
+
          class ConfirmationRunnable implements Runnable
          {
             private boolean confirmed;

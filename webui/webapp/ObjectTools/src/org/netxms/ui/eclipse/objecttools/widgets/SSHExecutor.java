@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.objecttools.widgets;
 
 import java.io.IOException;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
@@ -53,13 +54,13 @@ public class SSHExecutor extends AbstractObjectToolExecutor implements TextOutpu
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal()
+    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
     */
    @Override
-   protected void executeInternal() throws Exception
+   protected void executeInternal(Display display) throws Exception
    {
       session.executeSshCommand(nodeId, executionString, true, SSHExecutor.this, null);
-      out.write(Messages.get().LocalCommandResults_Terminated);
+      out.write(Messages.get(display).LocalCommandResults_Terminated);
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.objects;
 
 import java.util.Map;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectContextBase;
@@ -42,23 +43,24 @@ public class ObjectContext extends ObjectContextBase
    }
 
    /**
-    * @param s
-    * @param inputValues
-    * @return
+    * @param source source string
+    * @param inputValues input values provided by user
+    * @param display current display
+    * @return result after macro substitution in source string
     */
-   public String substituteMacrosForMultipleNodes(String s, Map<String, String> inputValues)
+   public String substituteMacrosForMultipleNodes(String source, Map<String, String> inputValues, Display display)
    {
       StringBuilder sb = new StringBuilder();
-      
-      char[] src = s.toCharArray();
-      for(int i = 0; i < s.length(); i++)
+
+      char[] src = source.toCharArray();
+      for(int i = 0; i < source.length(); i++)
       {
          if (src[i] == '%')
          {
             i++;
-            if (i == s.length())
+            if (i == source.length())
                break;   // malformed string
-            
+
             switch(src[i])
             {
                case 'a':
@@ -81,7 +83,7 @@ public class ObjectContext extends ObjectContextBase
                   break;
                case '{':   // object's custom attribute
                   StringBuilder attr = new StringBuilder();
-                  for(i++; i < s.length(); i++)
+                  for(i++; i < source.length(); i++)
                   {
                      if (src[i] == '}')
                         break;
@@ -96,7 +98,7 @@ public class ObjectContext extends ObjectContextBase
                   break;
                case '(':   // input field
                   StringBuilder name = new StringBuilder();
-                  for(i++; i < s.length(); i++)
+                  for(i++; i < source.length(); i++)
                   {
                      if (src[i] == ')')
                         break;
@@ -118,10 +120,10 @@ public class ObjectContext extends ObjectContextBase
             sb.append(src[i]);
          }
       }
-      
+
       return sb.toString();
    }
-   
+
    /**
     * Returns alarm id or 0 if alarm is not set
     * 

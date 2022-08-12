@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Soultions
+ * Copyright (C) 2020-2022 Raden Soultions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -277,7 +277,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
          {
             try
             {
-               executeInternal();
+               executeInternal(getDisplay());
             }
             catch(Exception e)
             {
@@ -320,9 +320,10 @@ public abstract class AbstractObjectToolExecutor extends Composite
    /**
     * Do actual tool execution (called by execute() inside background job).
     *
+    * @param display current display
     * @throws Exception on any error
     */
-   protected abstract void executeInternal() throws Exception;
+   protected abstract void executeInternal(Display display) throws Exception;
 
    /**
     * Check if "terminate" action is supported. Default implementation returns false.
