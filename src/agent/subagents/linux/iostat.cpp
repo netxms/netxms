@@ -494,3 +494,18 @@ LONG H_IoDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstract
    }
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Handler for System.IO.LogicalDevices list
+ */
+LONG H_IoLogicalDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < s_deviceCount; i++)
+   {
+      if (!s_devices[i].isRealDevice) 
+      {
+         value->addMBString(s_devices[i].name);
+      }
+   }
+   return SYSINFO_RC_SUCCESS;
+}
