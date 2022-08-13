@@ -186,6 +186,8 @@ LONG H_HypervisorType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession
 LONG H_HypervisorVersion(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 LONG H_IoDevices(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_IoLogicalDevices(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+
 LONG H_IoStatsCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IoStatsNonCumulative(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IoStatsTotalSectors(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
