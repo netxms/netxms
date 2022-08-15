@@ -160,6 +160,7 @@ protected:
    shared_ptr<AgentTunnel> m_tunnel;
    shared_ptr<AgentTunnel> m_proxyTunnel;
    ClientSession *m_tcpProxySession;
+   int64_t m_dbWriterQueueThreshold;
 
    virtual shared_ptr<AbstractCommChannel> createChannel() override;
    virtual void onTrap(NXCPMessage *msg) override;
@@ -170,8 +171,8 @@ protected:
    virtual void onSnmpTrap(NXCPMessage *pMsg) override;
    virtual void onDisconnect() override;
    virtual void onNotify(NXCPMessage *msg) override;
-   virtual UINT32 processCollectedData(NXCPMessage *msg) override;
-   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) override;
+   virtual uint32_t processCollectedData(NXCPMessage *msg) override;
+   virtual uint32_t processBulkCollectedData(NXCPMessage *request, NXCPMessage *response) override;
    virtual bool processCustomMessage(NXCPMessage *msg) override;
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator) override;
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response) override;

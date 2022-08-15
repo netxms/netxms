@@ -38,6 +38,11 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const InetAddress& ipAddr,
 {
    m_nodeId = nodeId;
    m_tcpProxySession = nullptr;
+
+   // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
+   m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
+   if (m_dbWriterQueueThreshold <= 0)
+      m_dbWriterQueueThreshold = 250000;
 }
 
 /**
@@ -48,6 +53,11 @@ AgentConnectionEx::AgentConnectionEx(uint32_t nodeId, const shared_ptr<AgentTunn
 {
    m_nodeId = nodeId;
    m_tcpProxySession = nullptr;
+
+   // Set DB writer queue threshold to 3/4 of max db writer queue size, or 250000 if queue size is not limited
+   m_dbWriterQueueThreshold = ConfigReadInt64(_T("DBWriter.MaxQueueSize"), 0) * 3 / 4;
+   if (m_dbWriterQueueThreshold <= 0)
+      m_dbWriterQueueThreshold = 250000;
 }
 
 /**
@@ -669,7 +679,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
 /**
  * Process collected data information (for DCI with agent-side cache)
  */
-UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
+uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
    if (IsShutdownInProgress())
       return ERR_INTERNAL_ERROR;
@@ -695,10 +705,10 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    }
 
    // Check that server is not overloaded with DCI data
-   INT64 queueSize = GetIDataWriterQueueSize();
-   if (queueSize > 250000)
+   int64_t queueSize = GetIDataWriterQueueSize();
+   if (queueSize >= m_dbWriterQueueThreshold)
    {
-      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: database writer queue is too large (%d) - cannot accept new data"), queueSize);
+      debugPrintf(5, _T("AgentConnectionEx::processCollectedData: database writer queue is too large (") INT64_FMT _T(") - cannot accept new data"), queueSize);
       return ERR_RESOURCE_BUSY;
    }
 
@@ -799,7 +809,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 /**
  * Process collected data information in bulk mode (for DCI with agent-side cache)
  */
-UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
+uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
 {
    if (IsShutdownInProgress())
       return ERR_INTERNAL_ERROR;
@@ -818,10 +828,10 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
    }
 
    // Check that server is not overloaded with DCI data
-   INT64 queueSize = GetIDataWriterQueueSize();
-   if (queueSize > 250000)
+   int64_t queueSize = GetIDataWriterQueueSize();
+   if (queueSize >= m_dbWriterQueueThreshold)
    {
-      debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: database writer queue is too large (%d) - cannot accept new data"), queueSize);
+      debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: database writer queue is too large (") INT64_FMT _T(") - cannot accept new data"), queueSize);
       return ERR_RESOURCE_BUSY;
    }
 

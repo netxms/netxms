@@ -2953,7 +2953,7 @@ void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
 /**
  * Process collected data information (for DCI with agent-side cache)
  */
-UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
+uint32_t AgentConnection::processCollectedData(NXCPMessage *msg)
 {
    return ERR_NOT_IMPLEMENTED;
 }
@@ -2961,7 +2961,7 @@ UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
 /**
  * Process collected data information in bulk mode (for DCI with agent-side cache)
  */
-UINT32 AgentConnection::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
+uint32_t AgentConnection::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
 {
    return ERR_NOT_IMPLEMENTED;
 }

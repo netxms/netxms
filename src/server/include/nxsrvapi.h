@@ -944,8 +944,8 @@ protected:
    virtual void onNotify(NXCPMessage *msg);
    virtual void onFileDownload(bool success);
    virtual void onDisconnect();
-   virtual UINT32 processCollectedData(NXCPMessage *msg);
-   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
+   virtual uint32_t processCollectedData(NXCPMessage *msg);
+   virtual uint32_t processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *pMsg);
    virtual void processTcpProxyData(uint32_t channelId, const void *data, size_t size, bool errorIndicator);
    virtual void getSshKeys(NXCPMessage *msg, NXCPMessage *response);
