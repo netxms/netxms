@@ -889,11 +889,11 @@ void DataElement::fillReconciliationMessage(NXCPMessage *msg, uint32_t baseId) c
  */
 struct ServerSyncStatus
 {
-   UINT64 serverId;
-   INT32 queueSize;
+   uint64_t serverId;
+   int32_t queueSize;
    time_t lastSync;
 
-   ServerSyncStatus(UINT64 sid)
+   ServerSyncStatus(uint64_t sid)
    {
       serverId = sid;
       queueSize = 0;
@@ -904,7 +904,7 @@ struct ServerSyncStatus
 /**
  * Server sync status information
  */
-static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(Ownership::True);
+static HashMap<uint64_t, ServerSyncStatus> s_serverSyncStatus(Ownership::True);
 static Mutex s_serverSyncStatusLock;
 
 /**
@@ -1085,7 +1085,7 @@ static void ReconciliationThread()
             msg.setField(VID_NUM_ELEMENTS, (INT16)bulkSendList.size());
             msg.setField(VID_TIMEOUT, g_dcReconciliationTimeout);
 
-            UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+            uint32_t fieldId = VID_ELEMENT_LIST_BASE;
             for(int i = 0; i < bulkSendList.size(); i++)
             {
                bulkSendList.get(i)->fillReconciliationMessage(&msg, fieldId);
@@ -1094,7 +1094,7 @@ static void ReconciliationThread()
 
             if (session->sendMessage(&msg))
             {
-               UINT32 rcc;
+               uint32_t rcc;
                do
                {
                   NXCPMessage *response = session->waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), g_dcReconciliationTimeout);
@@ -1132,9 +1132,14 @@ static void ReconciliationThread()
                      {
                         nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: server is processing data (%d%% completed)"), response->getFieldAsInt32(VID_PROGRESS));
                      }
+                     else if (rcc == ERR_RESOURCE_BUSY)
+                     {
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: server is busy"));
+                        count = 0;  // Force long sleep
+                     }
                      else
                      {
-                        nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
+                        nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: bulk send failed (%u)"), rcc);
                      }
                      delete response;
                   }
