@@ -770,6 +770,41 @@ template<typename T, typename B> THREAD ThreadCreateEx(const shared_ptr<T>& obje
 }
 
 /**
+ * Wrapper for ThreadCreate/ThreadCreateEx with std::function argument
+ */
+static inline THREAD_RESULT THREAD_CALL __ThreadCreate_Callable_Wrapper(void *arg)
+{
+   auto f = static_cast<std::function<void ()>*>(arg);
+   (*f)();
+   delete f;
+   return THREAD_OK;
+}
+
+/**
+ * Wrapper for ThreadCreate to use std::function
+ */
+static inline bool ThreadCreate(const std::function<void ()>& f, int stackSize = 0)
+{
+   auto wd = new std::function<void ()>(f);
+   bool success = ThreadCreate(__ThreadCreate_Callable_Wrapper, stackSize, wd);
+   if (!success)
+      delete wd;
+   return success;
+}
+
+/**
+ * Wrapper for ThreadCreateEx to use std::function
+ */
+static inline THREAD ThreadCreateEx(const std::function<void ()>& f, int stackSize = 0)
+{
+   auto wd = new std::function<void ()>(f);
+   THREAD thread = ThreadCreateEx(__ThreadCreate_Callable_Wrapper, stackSize, wd);
+   if (thread == INVALID_THREAD_HANDLE)
+      delete wd;
+   return thread;
+}
+
+/**
  * String list
  */
 class StringList;
