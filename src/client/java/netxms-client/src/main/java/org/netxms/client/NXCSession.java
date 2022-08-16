@@ -10168,7 +10168,6 @@ public class NXCSession
     * @param listener progress listener (can be null)
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
-    * @throws NoSuchAlgorithmException if not able to get MD5 algoritm hash
     */
    public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overwrite, ProgressListener listener) throws IOException, NXCException
    {

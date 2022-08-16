@@ -421,7 +421,7 @@ public class ObjectTool implements ObjectAction
    /**
     * Returns the RUN_CONTAINER_CONTEXT flag status
     * 
-    * @return
+    * @return if object tool capable of running on container
     */
    public boolean isRunInContainerContext()
    {
