@@ -796,7 +796,7 @@ public:
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;
    virtual uint32_t generateRequestId() = 0;
    virtual int getProtocolVersion() = 0;
-   virtual uint32_t openFile(NXCPMessage *response, TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0, uint32_t modifyMode = 0) = 0;
+   virtual void openFile(NXCPMessage *response, TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0, uint32_t modifyMode = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) = 0;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) = 0;
