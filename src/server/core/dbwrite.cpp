@@ -333,10 +333,9 @@ static void DBWriteThread()
 /**
  * Database "lazy" write thread for idata_xxx INSERTs
  */
-static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
+static void IDataWriteThread(IDataWriter *writer)
 {
    ThreadSetName("DBWriter/IData");
-   IDataWriter *writer = static_cast<IDataWriter*>(arg);
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
@@ -418,17 +417,14 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 	}
-
-   return THREAD_OK;
 }
 
 /**
  * Database "lazy" write thread for idata INSERTs - generic version
  */
-static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
+static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
 {
    ThreadSetName("DBWriter/IData");
-   IDataWriter *writer = static_cast<IDataWriter*>(arg);
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
 
    TCHAR query[1024];
@@ -485,17 +481,14 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Generic(void *arg)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
    }
-
-   return THREAD_OK;
 }
 
 /**
  * Database "lazy" write thread for idata INSERTs - PostgreSQL version
  */
-static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *arg)
+static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
 {
    ThreadSetName("DBWriter/IData");
-   IDataWriter *writer = static_cast<IDataWriter*>(arg);
 
    bool convertTimestamps;
    TCHAR queryBase[256];
@@ -599,17 +592,14 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_PostgreSQL(void *ar
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
    }
-
-   return THREAD_OK;
 }
 
 /**
  * Database "lazy" write thread for idata INSERTs - Oracle version
  */
-static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
+static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
 {
    ThreadSetName("DBWriter/IData");
-   IDataWriter *writer = static_cast<IDataWriter*>(arg);
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    while(true)
    {
@@ -673,8 +663,6 @@ static THREAD_RESULT THREAD_CALL IDataWriteThreadSingleTable_Oracle(void *arg)
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
    }
-
-   return THREAD_OK;
 }
 
 /**
@@ -841,12 +829,12 @@ void StartDBWriter()
          case DB_SYNTAX_ORACLE:
             s_idataWriters[0].storageClass = nullptr;
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
-            s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Oracle, 0, &s_idataWriters[0]);
+            s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Oracle, &s_idataWriters[0]);
             break;
          case DB_SYNTAX_PGSQL:
             s_idataWriters[0].storageClass = nullptr;
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
-            s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, 0, &s_idataWriters[0]);
+            s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, &s_idataWriters[0]);
             break;
          case DB_SYNTAX_TSDB:
             s_idataWriterCount = static_cast<int>(DCObjectStorageClass::OTHER) + 1;
@@ -854,13 +842,13 @@ void StartDBWriter()
             {
                s_idataWriters[i].storageClass = DCObject::getStorageClassName(static_cast<DCObjectStorageClass>(i));
                s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
-               s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, 0, &s_idataWriters[i]);
+               s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, &s_idataWriters[i]);
             }
             break;
          default:
             s_idataWriters[0].storageClass = nullptr;
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
-            s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Generic, 0, &s_idataWriters[0]);
+            s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Generic, &s_idataWriters[0]);
             break;
       }
 	}
@@ -876,7 +864,7 @@ void StartDBWriter()
       {
          s_idataWriters[i].storageClass = nullptr;
          s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
-         s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, 0, &s_idataWriters[i]);
+         s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, &s_idataWriters[i]);
       }
 	}
 

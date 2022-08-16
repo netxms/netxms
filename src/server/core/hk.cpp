@@ -228,34 +228,6 @@ static void CleanTimescaleData(DB_HANDLE hdb)
 }
 
 /**
- * Callback for validating template DCIs
- */
-static void QueueTemplateUpdate(NetObj *object, void *data)
-{
-   if (object->getObjectClass() == OBJECT_TEMPLATE)
-      static_cast<Template*>(object)->queueUpdate();
-}
-
-/**
- * Callback for queuing prediction engines training
- */
-static void QueuePredictionEngineTraining(NetObj *object, void *arg)
-{
-   if (s_shutdown || !object->isDataCollectionTarget())
-      return;
-   static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
-}
-
-/**
- * Callback for checking template policy validity
- */
-static void InitiatePolicyValidation(NetObj *object, void *data)
-{
-   if (object->getObjectClass() == OBJECT_TEMPLATE)
-      static_cast<Template*>(object)->initiatePolicyValidation();
-}
-
-/**
  * Construct query with drop_chunks() function
  */
 static void BuildDropChunksQuery(const TCHAR *table, time_t cutoffTime, TCHAR *query, size_t size)
@@ -301,11 +273,11 @@ static void HouseKeeper()
    TCHAR buffer[64];
    ConfigReadStr(_T("Housekeeper.StartTime"), buffer, 64, _T("02:00"));
    TCHAR *p = _tcschr(buffer, _T(':'));
-   if (p != NULL)
+   if (p != nullptr)
    {
       *p = 0;
       p++;
-      minute = _tcstol(p, NULL, 10);
+      minute = _tcstol(p, nullptr, 10);
       if ((minute < 0) || (minute > 59))
       {
          nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid minute value %s"), p);
@@ -316,7 +288,7 @@ static void HouseKeeper()
    {
       minute = 0;
    }
-   hour = _tcstol(buffer, NULL, 10);
+   hour = _tcstol(buffer, nullptr, 10);
    if ((hour < 0) || (hour > 23))
    {
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Invalid hour value %s"), buffer);
@@ -325,7 +297,10 @@ static void HouseKeeper()
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup time is %02d:%02d"), hour, minute);
 
    // Call policy validation for templates
-   g_idxObjectById.forEach(InitiatePolicyValidation, nullptr);
+   g_idxObjectById.forEach([](NetObj *object) {
+      if (object->getObjectClass() == OBJECT_TEMPLATE)
+         static_cast<Template*>(object)->initiatePolicyValidation();
+   });
 
    int sleepTime = GetSleepTime(hour, minute, 0);
    while(!s_shutdown)
@@ -459,7 +434,10 @@ static void HouseKeeper()
       }
 
       // Call policy validation for templates
-      g_idxObjectById.forEach(InitiatePolicyValidation, nullptr);
+      g_idxObjectById.forEach([](NetObj *object) {
+         if (object->getObjectClass() == OBJECT_TEMPLATE)
+            static_cast<Template*>(object)->initiatePolicyValidation();
+      });
 
 	   // Save object runtime data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
@@ -472,7 +450,10 @@ static void HouseKeeper()
 
 		// Validate template DCIs
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue template updates"));
-		g_idxObjectById.forEach(QueueTemplateUpdate, nullptr);
+		g_idxObjectById.forEach([](NetObj *object) {
+		   if (object->getObjectClass() == OBJECT_TEMPLATE)
+		      static_cast<Template*>(object)->queueUpdate();
+		});
 
       // Call hooks in loaded modules
 		ENUMERATE_MODULES(pfHousekeeperHook)
@@ -485,7 +466,11 @@ static void HouseKeeper()
 
 		// Run training on prediction engines
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue prediction engines training"));
-		g_idxObjectById.forEach(QueuePredictionEngineTraining, nullptr);
+		g_idxObjectById.forEach([](NetObj *object) {
+		   if (s_shutdown || !object->isDataCollectionTarget())
+		      return;
+		   static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
+		});
 
       PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
 

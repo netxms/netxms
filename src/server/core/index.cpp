@@ -441,6 +441,27 @@ void *AbstractIndexBase::find(bool (*comparator)(void *, void *), void *data) co
 }
 
 /**
+ * Find object by comparing it with given data using external comparator
+ *
+ * @param comparator comparing function (must return true for object to be found)
+ */
+void *AbstractIndexBase::find(std::function<bool (void*)> comparator) const
+{
+   void *result = nullptr;
+
+   INDEX_HEAD *index = acquireIndex();
+   for(size_t i = 0; i < index->size; i++)
+      if (comparator(index->elements[i].object))
+      {
+         result = index->elements[i].object;
+         break;
+      }
+   ReleaseIndex(index);
+
+   return result;
+}
+
+/**
  * Find all matching elements by comparing it with given data using external comparator
  *
  * @param comparator comparing function (must return true for object to be found)
@@ -458,16 +479,45 @@ void AbstractIndexBase::findAll(Array *resultSet, bool (*comparator)(void *, voi
 }
 
 /**
- * Execute callback for each object. Callback should return true to continue enumeration.
+ * Find all matching elements by comparing it with given data using external comparator
+ *
+ * @param comparator comparing function (must return true for object to be found)
+ */
+void AbstractIndexBase::findAll(Array *resultSet, std::function<bool (void*)> comparator) const
+{
+   INDEX_HEAD *index = acquireIndex();
+   for(size_t i = 0; i < index->size; i++)
+   {
+      if (comparator(index->elements[i].object))
+         resultSet->add(index->elements[i].object);
+   }
+   ReleaseIndex(index);
+}
+
+/**
+ * Execute callback for each object.
  *
  * @param callback
  * @param data user data passed to callback
  */
-void AbstractIndexBase::forEach(void (*callback)(void *, void *), void *data) const
+void AbstractIndexBase::forEach(void (*callback)(void*, void*), void *data) const
 {
    INDEX_HEAD *index = acquireIndex();
 	for(size_t i = 0; i < index->size; i++)
 		callback(index->elements[i].object, data);
+   ReleaseIndex(index);
+}
+
+/**
+ * Execute callback for each object.
+ *
+ * @param callback
+ */
+void AbstractIndexBase::forEach(std::function<void (void*)> callback) const
+{
+   INDEX_HEAD *index = acquireIndex();
+   for(size_t i = 0; i < index->size; i++)
+      callback(index->elements[i].object);
    ReleaseIndex(index);
 }
 

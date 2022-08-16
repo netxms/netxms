@@ -637,7 +637,7 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       uint32_t period = ConvertToUint32(value, 60);
       nxlog_debug_tag(_T("poll.icmp"), 3, _T("Updating ICMP statistic period for configured collectors (new period is %u polls)"), period);
-      g_idxNodeById.forEach([](NetObj *object, void *context) { static_cast<Node*>(object)->updateIcmpStatisticPeriod(CAST_FROM_POINTER(context, uint32_t)); }, CAST_TO_POINTER(period, void*));
+      g_idxNodeById.forEach([period](NetObj *object) { static_cast<Node*>(object)->updateIcmpStatisticPeriod(period); });
    }
    else if (!_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Interval")) ||
             !_tcscmp(name, _T("NetworkDiscovery.ActiveDiscovery.Schedule")))

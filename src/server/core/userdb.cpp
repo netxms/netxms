@@ -158,7 +158,7 @@ uint64_t NXCORE_EXPORTABLE GetEffectiveSystemRights(uint32_t userId)
 /**
  * Upgrade user accounts status in background
  */
-static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
+static void AccountStatusUpdater()
 {
    ThreadSetName("AccountUpdate");
 	nxlog_debug_tag(DEBUG_TAG, 2, _T("User account status update thread started"));
@@ -199,7 +199,6 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 	}
 
 	nxlog_debug_tag(DEBUG_TAG, 2, _T("User account status update thread stopped"));
-	return THREAD_OK;
 }
 
 /**
@@ -209,7 +208,7 @@ void InitUsers()
 {
    s_users.setIgnoreCase((g_flags & AF_CASE_INSENSITIVE_LOGINS) != 0);
    s_groups.setIgnoreCase((g_flags & AF_CASE_INSENSITIVE_LOGINS) != 0);
-	s_statusUpdateThread = ThreadCreateEx(AccountStatusUpdater, 0, NULL);
+	s_statusUpdateThread = ThreadCreateEx(AccountStatusUpdater);
 }
 
 /**

@@ -1863,7 +1863,7 @@ uint64_t GetAlarmMemoryUsage()
 /**
  * Watchdog thread
  */
-static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
+static void WatchdogThread()
 {
    ThreadSetName("AlarmWatchdog");
 
@@ -1923,7 +1923,6 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 		}
 		s_alarmList.unlock();
 	}
-   return THREAD_OK;
 }
 
 /**
@@ -2360,7 +2359,7 @@ void UpdateAlarmExpirationTimes()
 /**
  * Root cause update thread
  */
-static THREAD_RESULT THREAD_CALL RootCauseUpdateThread(void *arg)
+static void RootCauseUpdateThread()
 {
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Root cause update thread started"));
    while(!s_shutdown.wait(60000))
@@ -2426,7 +2425,6 @@ static THREAD_RESULT THREAD_CALL RootCauseUpdateThread(void *arg)
       }
    }
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Root cause update thread stopped"));
-   return THREAD_OK;
 }
 
 /**
@@ -2489,8 +2487,8 @@ bool InitAlarmManager()
       }
    }
 
-   s_watchdogThread = ThreadCreateEx(WatchdogThread, 0, nullptr);
-   s_rootCauseUpdateThread = ThreadCreateEx(RootCauseUpdateThread, 0, nullptr);
+   s_watchdogThread = ThreadCreateEx(WatchdogThread);
+   s_rootCauseUpdateThread = ThreadCreateEx(RootCauseUpdateThread);
    return true;
 }
 

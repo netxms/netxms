@@ -346,8 +346,6 @@ private:
    uint32_t m_refCount;
 	bool m_authenticated;
 
-   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
-
    void readThread();
 
    void processRequest(NXCPMessage *request);

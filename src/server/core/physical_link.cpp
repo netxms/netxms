@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2019-2021 Raden Solutions
+** Copyright (C) 2019-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -272,18 +272,17 @@ bool LoadPhysicalLinks()
 /**
  * Delete physical link from database
  */
-void DeletePhysicalLink(UINT32 *id)
+static void DeletePhysicalLinkFromDB(void *linkId)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM physical_links WHERE id=?"));
    if (hStmt != nullptr)
    {
-      DBBind(hStmt, 1, DB_CTYPE_UINT32, *id);
+      DBBind(hStmt, 1, DB_CTYPE_UINT32, CAST_FROM_POINTER(linkId, uint32_t));
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
-   delete id;
    DBConnectionPoolReleaseConnection(hdb);
 }
 
@@ -469,11 +468,6 @@ bool GetEndNode(LinkPart *part, StringBuffer *routeInformation)
    }
 }
 
-static bool FindAllNodeLinks(PhysicalLink *link, uint32_t *id)
-{
-   return (link->getLeftParentId() == *id) || (link->getRightParentId() == *id);
-}
-
 /**
  * Get physical links for node
  */
@@ -481,7 +475,7 @@ ObjectArray<L1_NEIGHBOR_INFO> GetL1Neighbors(const Node *root)
 {
    ObjectArray<L1_NEIGHBOR_INFO> result(0, 16, Ownership::True);
    uint32_t id = root->getId();
-   unique_ptr<SharedObjectArray<PhysicalLink>> links = s_physicalLinks.findAll(FindAllNodeLinks, &id);
+   unique_ptr<SharedObjectArray<PhysicalLink>> links = s_physicalLinks.findAll([id](PhysicalLink *link) -> bool { return (link->getLeftParentId() == id) || (link->getRightParentId() == id); });
    for (const shared_ptr<PhysicalLink> &link : *links)
    {
       LinkPart localLinkPart(link, false);
@@ -530,7 +524,7 @@ static bool FindPLinksForDeletionCallback2(PhysicalLink *link, std::pair<UINT32,
  * Delete physical links on object delete
  * Should be passed object id: interface or rack
  */
-void DeleteObjectFromPhysicalLinks(UINT32 id)
+void DeleteObjectFromPhysicalLinks(uint32_t id)
 {
    unique_ptr<SharedObjectArray<PhysicalLink>> objectsForDeletion = s_physicalLinks.findAll(FindPLinksForDeletionCallback, &id);
 
@@ -538,7 +532,7 @@ void DeleteObjectFromPhysicalLinks(UINT32 id)
    for(int i = 0; i < objectsForDeletion->size(); i++)
    {
       shared_ptr<PhysicalLink> link = objectsForDeletion->getShared(i);
-      ThreadPoolExecuteSerialized(g_clientThreadPool, PL_THREAD_KEY, DeletePhysicalLink, new UINT32(link->getId()));
+      ThreadPoolExecuteSerialized(g_clientThreadPool, PL_THREAD_KEY, DeletePhysicalLinkFromDB, CAST_TO_POINTER(link->getId(), void*));
       s_physicalLinks.remove(link->getId());
       modified = true;
    }
@@ -551,16 +545,16 @@ void DeleteObjectFromPhysicalLinks(UINT32 id)
  * Delete physical links on patch panel delete
  * Should be passed rack id and patch panel id
  */
-void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId)
+void DeletePatchPanelFromPhysicalLinks(uint32_t rackId, uint32_t patchPanelId)
 {
-   std::pair<UINT32, UINT32> context(rackId, patchPanelId);
+   std::pair<uint32_t, uint32_t> context(rackId, patchPanelId);
    unique_ptr<SharedObjectArray<PhysicalLink>> objectsForDeletion = s_physicalLinks.findAll(FindPLinksForDeletionCallback2, &context);
 
    bool modified = false;
    for(int i = 0; i < objectsForDeletion->size(); i++)
    {
       shared_ptr<PhysicalLink> link = objectsForDeletion->getShared(i);
-      ThreadPoolExecuteSerialized(g_clientThreadPool, PL_THREAD_KEY, DeletePhysicalLink, new UINT32(link->getId()));
+      ThreadPoolExecuteSerialized(g_clientThreadPool, PL_THREAD_KEY, DeletePhysicalLinkFromDB, CAST_TO_POINTER(link->getId(), void*));
       s_physicalLinks.remove(link->getId());
       modified = true;
    }
@@ -572,15 +566,10 @@ void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId)
 /**
  * Check if there is access on object
  */
-static bool CheckAccess(UINT32 objId, UINT32 userId)
+static inline bool CheckAccess(uint32_t objId, uint32_t userId)
 {
-   bool hasAccess = true;
-
    shared_ptr<NetObj> object = FindObjectById(objId);
-   if(object != nullptr)
-      hasAccess = object->checkAccessRights(userId, OBJECT_ACCESS_READ);
-
-   return hasAccess;
+   return (object != nullptr) ? object->checkAccessRights(userId, OBJECT_ACCESS_READ) : true;
 }
 
 /**
@@ -709,6 +698,6 @@ bool DeletePhysicalLink(uint32_t id, uint32_t userId)
    s_physicalLinks.remove(id);
    NotifyClientSessions(NX_NOTIFY_PHYSICAL_LINK_UPDATE, 0);
 
-   ThreadPoolExecuteSerialized(g_clientThreadPool, PL_THREAD_KEY, DeletePhysicalLink, new UINT32(id));
+   ThreadPoolExecuteSerialized(g_clientThreadPool, PL_THREAD_KEY, DeletePhysicalLinkFromDB, CAST_TO_POINTER(id, void*));
    return true;
 }

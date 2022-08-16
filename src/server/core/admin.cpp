@@ -39,10 +39,8 @@ extern Condition g_dbPasswordReady;
 /**
  * Request processing thread
  */
-static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
+static void ProcessingThread(SOCKET sock)
 {
-   SOCKET sock = CAST_FROM_POINTER(arg, SOCKET);
-
    bool isAuthenticated = false;
    bool requireAuthentication = ConfigReadBoolean(_T("Server.Security.RestrictLocalConsoleAccess"), true);
    SocketConsole console(sock);
@@ -136,7 +134,6 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 close_session:
    shutdown(sock, SHUT_RDWR);
    closesocket(sock);
-   return THREAD_OK;
 }
 
 /**
@@ -165,7 +162,7 @@ bool LocalAdminListener::isStopConditionReached()
  */
 ConnectionProcessingResult LocalAdminListener::processConnection(SOCKET s, const InetAddress& peer)
 {
-   ThreadCreate(ProcessingThread, 0, CAST_TO_POINTER(s, void *));
+   ThreadCreate(ProcessingThread, s);
    return CPR_BACKGROUND;
 }
 

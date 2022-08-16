@@ -136,19 +136,11 @@ static void DumpIndex(ServerConsole *console, HashIndex<uuid> *index)
 }
 
 /**
- * Dump index callback (by ID)
- */
-static void DumpIndexCallbackById(NetObj *object, void *context)
-{
-   static_cast<ServerConsole*>(context)->printf(_T("%08X %p %s\n"), object->getId(), object, object->getName());
-}
-
-/**
  * Dump index (by ID)
  */
 static void DumpIndex(ServerConsole *console, ObjectIndex *index)
 {
-   index->forEach(DumpIndexCallbackById, console);
+   index->forEach([console](NetObj *object) { console->printf(_T("%08X %p %s\n"), object->getId(), object, object->getName()); });
 }
 
 /**

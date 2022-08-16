@@ -283,7 +283,8 @@ protected:
 
    static ssize_t findElement(INDEX_HEAD *index, uint64_t key);
 
-   void findAll(Array *resultSet, bool (*comparator)(void *, void *), void *data) const;
+   void findAll(Array *resultSet, bool (*comparator)(void*, void*), void *data) const;
+   void findAll(Array *resultSet, std::function<bool (void*)> comparator) const;
 
 public:
    AbstractIndexBase(Ownership owner);
@@ -298,9 +299,11 @@ public:
    bool contains(uint64_t key) const { return get(key) != nullptr; }
    IntegerArray<uint64_t> keys() const;
 
-   void *find(bool (*comparator)(void *, void *), void *data) const;
+   void *find(bool (*comparator)(void*, void*), void *data) const;
+   void *find(std::function<bool (void*)> comparator) const;
 
-   void forEach(void (*callback)(void *, void *), void *data) const;
+   void forEach(void (*callback)(void*, void*), void *data) const;
+   void forEach(std::function<void (void*)> callback) const;
 
    bool isOwner() const
    {
@@ -389,6 +392,12 @@ public:
       return find(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
 
+   shared_ptr<T> find(std::function<bool (T*)> comparator) const
+   {
+      auto v = static_cast<shared_ptr<T>*>(AbstractIndexBase::find([comparator](void *element) { return comparator(static_cast<shared_ptr<T>*>(element)->get()); }));
+      return (v != nullptr) ? shared_ptr<T>(*v) : shared_ptr<T>();
+   }
+
    unique_ptr<SharedObjectArray<T>> findAll(bool (*comparator)(T *, void *), void *context) const
    {
       std::pair<bool (*)(T*, void*), void*> wrapperData(comparator, context);
@@ -405,6 +414,16 @@ public:
       return findAll(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
 
+   unique_ptr<SharedObjectArray<T>> findAll(std::function<bool (T*)> comparator) const
+   {
+      ObjectArray<shared_ptr<T>> tempResultSet;
+      AbstractIndexBase::findAll(&tempResultSet, [comparator](void *element) { return comparator(static_cast<shared_ptr<T>*>(element)->get()); });
+      auto resultSet = make_unique<SharedObjectArray<T>>(tempResultSet.size());
+      for(int i = 0; i < tempResultSet.size(); i++)
+         resultSet->add(*tempResultSet.get(i));
+      return resultSet;
+   }
+
    void forEach(void (*callback)(T *, void *), void *context) const
    {
       std::pair<void (*)(T*, void*), void*> wrapperData(callback, context);
@@ -415,6 +434,11 @@ public:
    {
       std::pair<void (*)(T*, void*), void*> wrapperData(reinterpret_cast<void (*)(T*, void*)>(callback), context);
       AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(enumeratorWrapper), &wrapperData);
+   }
+
+   void forEach(std::function<void (T*)> callback) const
+   {
+      AbstractIndexBase::forEach([callback](void *element) { callback(static_cast<shared_ptr<T>*>(element)->get()); });
    }
 };
 
@@ -447,6 +471,11 @@ public:
       return static_cast<T*>(AbstractIndexBase::find(reinterpret_cast<bool (*)(void*, void*)>(comparator), (void *)context));
    }
 
+   T *find(std::function<bool (T*)> comparator)
+   {
+      return static_cast<T*>(AbstractIndexBase::find(reinterpret_cast<std::function<bool (void*)>>(comparator)));
+   }
+
    ObjectArray<T> *findAll(bool (*comparator)(T *, void *), void *context)
    {
       ObjectArray<T> *resultSet = new ObjectArray<T>(64, 64, Ownership::False);
@@ -459,6 +488,13 @@ public:
       return findAll(reinterpret_cast<bool (*)(T *, void *)>(comparator), (void *)context);
    }
 
+   ObjectArray<T> *findAll(std::function<bool (T*)> comparator)
+   {
+      ObjectArray<T> *resultSet = new ObjectArray<T>(64, 64, Ownership::False);
+      AbstractIndexBase::findAll(resultSet, reinterpret_cast<std::function<bool (void*)>>(comparator));
+      return resultSet;
+   }
+
    void forEach(void (*callback)(T *, void *), void *context)
    {
       AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), context);
@@ -467,6 +503,11 @@ public:
    template<typename P> void forEach(void (*callback)(T *, P *), P *context)
    {
       AbstractIndexBase::forEach(reinterpret_cast<void (*)(void*, void*)>(callback), context);
+   }
+
+   void forEach(std::function<void (T*)> callback)
+   {
+      AbstractIndexBase::forEach(reinterpret_cast<std::function<void (void*)>>(callback));
    }
 };
 
@@ -4759,8 +4800,8 @@ void DeleteExpiredUserAgentNotifications(DB_HANDLE hdb,UINT32 retentionTime);
 void FillUserAgentNotificationsAll(NXCPMessage *msg, Node *node);
 UserAgentNotificationItem *CreateNewUserAgentNotification(const TCHAR *message, const IntegerArray<uint32_t>& objects, time_t startTime, time_t endTime, bool onStartup, uint32_t userId);
 
-void DeleteObjectFromPhysicalLinks(UINT32 id);
-void DeletePatchPanelFromPhysicalLinks(UINT32 rackId, UINT32 patchPanelId);
+void DeleteObjectFromPhysicalLinks(uint32_t id);
+void DeletePatchPanelFromPhysicalLinks(uint32_t rackId, uint32_t patchPanelId);
 ObjectArray<L1_NEIGHBOR_INFO> GetL1Neighbors(const Node *root);
 
 shared_ptr<ObjectCategory> NXCORE_EXPORTABLE GetObjectCategory(uint32_t id);

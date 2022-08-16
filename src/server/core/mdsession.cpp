@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,21 +43,6 @@
 void UnregisterMobileDeviceSession(int id);
 
 /**
- * Client communication read thread starter
- */
-THREAD_RESULT THREAD_CALL MobileDeviceSession::readThreadStarter(void *pArg)
-{
-   ((MobileDeviceSession *)pArg)->readThread();
-
-   // When MobileDeviceSession::readThread exits, all other session
-   // threads are already stopped, so we can safely destroy
-   // session object
-   UnregisterMobileDeviceSession(((MobileDeviceSession *)pArg)->getId());
-   delete (MobileDeviceSession *)pArg;
-   return THREAD_OK;
-}
-
-/**
  * Mobile device session class constructor
  */
 MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, const InetAddress& addr) : m_condEncryptionSetup(false)
@@ -90,7 +75,14 @@ MobileDeviceSession::~MobileDeviceSession()
  */
 void MobileDeviceSession::run()
 {
-   ThreadCreate(readThreadStarter, 0, this);
+   ThreadCreate([this]() {
+      this->readThread();
+      // When MobileDeviceSession::readThread exits, all other session
+      // threads are already stopped, so we can safely destroy
+      // session object
+      UnregisterMobileDeviceSession(this->getId());
+      delete this;
+   });
 }
 
 /**

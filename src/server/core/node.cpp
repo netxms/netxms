@@ -6800,15 +6800,6 @@ DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *param, TCHAR *b
 }
 
 /**
- * Callback for counting DCIs
- */
-static void DciCountCallback(NetObj *object, void *data)
-{
-   if (object->isDataCollectionTarget())
-      *static_cast<int*>(data) += static_cast<DataCollectionTarget*>(object)->getItemCount();
-}
-
-/**
  * Get value for server's internal table parameter
  */
 DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> *result)
@@ -7286,7 +7277,10 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       else if (!_tcsicmp(name, _T("Server.DataCollectionItems")))
       {
          int dciCount = 0;
-         g_idxObjectById.forEach(DciCountCallback, &dciCount);
+         g_idxObjectById.forEach([&dciCount](NetObj *object) {
+            if (object->isDataCollectionTarget())
+               dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
+         });
          ret_int(buffer, dciCount);
       }
       else if (!_tcsicmp(name, _T("Server.DB.Queries.Failed")))
