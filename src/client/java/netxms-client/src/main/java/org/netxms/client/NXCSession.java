@@ -10211,7 +10211,7 @@ public class NXCSession
                modifyMode = 0;
             }
             
-            if (Arrays.compare(md5RemoteFile, md5LocalFile) == 0)
+            if (Arrays.equals(md5RemoteFile, md5LocalFile))
             {
                //Even if are equals .part file still might need rename
                messageResendRequired = true;
