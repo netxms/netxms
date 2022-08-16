@@ -166,7 +166,7 @@ static char *twoway_memmem(const unsigned char *h, const unsigned char *z, const
 
 void LIBNETXMS_EXPORTABLE *memmem(const void *h0, size_t k, const void *n0, size_t l)
 {
-   const unsigned char *h = h0, *n = n0;
+   const unsigned char *h = (const unsigned char *)h0, *n = (const unsigned char *)n0;
 
    /* Return immediately on empty needle */
    if (!l) return (void *)h;
@@ -175,7 +175,7 @@ void LIBNETXMS_EXPORTABLE *memmem(const void *h0, size_t k, const void *n0, size
    if (k < l) return 0;
 
    /* Use faster algorithms for short needles */
-   h = memchr(h0, *n, k);
+   h = (const unsigned char *)memchr(h0, *n, k);
    if (!h || l == 1) return (void *)h;
    k -= h - (const unsigned char *)h0;
    if (k < l) return 0;
