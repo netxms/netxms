@@ -114,7 +114,7 @@ extern LIBNETXMS_EXPORTABLE int optoptA;
 
 #endif   /* REPLACE_GETOPT */
 
-extern LIBNETXMS_EXPORTABLE WCHAR *optargW;
+extern LIBNETXMS_EXPORTABLE const WCHAR *optargW;
 extern LIBNETXMS_EXPORTABLE int optindW;
 extern LIBNETXMS_EXPORTABLE int opterrW;
 extern LIBNETXMS_EXPORTABLE int optoptW;

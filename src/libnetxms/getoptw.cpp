@@ -67,7 +67,7 @@ int     opterrW = 1;            /* if error message should be printed */
 int     optindW = 1;            /* index into parent argv vector */
 int     optoptW = '?';          /* character checked for validity */
 int     optresetW;              /* reset getopt */
-WCHAR   *optargW;               /* argument associated with option */
+const WCHAR   *optargW;               /* argument associated with option */
 
 #define PRINT_ERROR     ((opterrW) && (*options != ':'))
 
@@ -89,7 +89,7 @@ WCHAR   *optargW;               /* argument associated with option */
 #define W_PREFIX        2
 #endif
 
-static WCHAR *place = EMSG; /* option letter processing */
+static const WCHAR *place = EMSG; /* option letter processing */
 
 /* XXX: set optresetW to 1 rather than these two */
 static int nonopt_start = -1; /* first non option argument (for permute) */
@@ -191,9 +191,9 @@ static int
 parse_long_optionsW(WCHAR * const *nargv, const char *options,
         const struct option *long_options, int *idx, int short_too, int flags)
 {
-        WCHAR *current_argv, *has_equal;
+        const WCHAR *current_argv, *has_equal;
 #ifdef GNU_COMPATIBLE
-        char *current_dash;
+        const char *current_dash;
 #endif
         size_t current_argv_len;
         int i, match, exact_match, second_partial_match;
@@ -355,7 +355,7 @@ static int
 getopt_internalW(int nargc, WCHAR * const *nargv, const char *options,
         const struct option *long_options, int *idx, int flags)
 {
-        char *oli;                              /* option letter list index */
+        const char *oli;                              /* option letter list index */
         int optchar, short_too;
         int posixly_correct;    /* no static, can be changed on the fly */
 

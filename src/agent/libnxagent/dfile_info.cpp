@@ -21,6 +21,7 @@
 **/
 
 #include "libnxagent.h"
+#include "nxstat.h"
 
 /**
  * Constructor for DownloadFileInfo class only stores given data
@@ -48,12 +49,23 @@ DownloadFileInfo::~DownloadFileInfo()
 /**
  * Opens file and returns if it was successfully
  */
-bool DownloadFileInfo::open()
+bool DownloadFileInfo::open(bool append)
 {
    TCHAR tempFileName[MAX_PATH];
    _tcslcpy(tempFileName, m_fileName, MAX_PATH);
    _tcslcat(tempFileName, _T(".part"), MAX_PATH);
-   m_fileHandle = _topen(tempFileName, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+
+   if (append)
+   {
+      NX_STAT_STRUCT fs;
+      if (CALL_STAT(tempFileName, &fs) != 0)
+      {
+         CopyFileOrDirectory(m_fileName, tempFileName);
+      }
+   }
+
+   m_fileHandle = _topen(tempFileName, O_CREAT | O_WRONLY | O_BINARY |
+         (append ? O_APPEND : O_TRUNC), S_IRUSR | S_IWUSR);
    return m_fileHandle != -1;
 }
 
@@ -98,6 +110,46 @@ bool DownloadFileInfo::write(const BYTE *data, size_t dataSize, bool compressedS
    }
 
    return _write(m_fileHandle, uncompressedData, (int)uncompressedDataSize) == uncompressedDataSize;
+}
+
+/**
+ * Closes file and changes it's date if required
+ */
+uint32_t DownloadFileInfo::getFileInfo(NXCPMessage *response, const TCHAR *fileName)
+{
+   TCHAR tempFileName[MAX_PATH];
+   _tcslcpy(tempFileName, fileName, MAX_PATH);
+   _tcslcat(tempFileName, _T(".part"), MAX_PATH);
+
+   uint64_t size = 0;
+   BYTE hash[MD5_DIGEST_SIZE];
+   memset(hash, 0, MD5_DIGEST_SIZE);
+   NX_STAT_STRUCT fs;
+   uint32_t rcc = ERR_SUCCESS;
+
+   if (CALL_STAT(tempFileName, &fs) == 0)
+   {
+      CalculateFileMD5Hash(tempFileName, hash);
+      size = fs.st_size;
+      rcc = ERR_FILE_APPEND_POSSIBLE;
+   }
+   else
+   {
+      if (CALL_STAT(fileName, &fs) == 0)
+      {
+         CalculateFileMD5Hash(fileName, hash);
+         size = fs.st_size;
+         rcc = ERR_FILE_APPEND_POSSIBLE;
+      }
+   }
+
+   if (rcc == ERR_FILE_APPEND_POSSIBLE)
+   {
+      response->setField(VID_HASH_MD5, hash, MD5_DIGEST_SIZE);
+      response->setField(VID_FILE_SIZE, size);
+   }
+   response->setField(VID_RCC, rcc);
+   return rcc;
 }
 
 /**

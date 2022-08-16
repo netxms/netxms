@@ -31,6 +31,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
@@ -1773,10 +1775,11 @@ public class NXCSession
     * @param file                   source file to be sent
     * @param listener               progress listener
     * @param allowStreamCompression true if data stream compression is allowed
+    * @param offset offset to start data send or 0 if from the start
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   protected void sendFile(final long requestId, final File file, ProgressListener listener, boolean allowStreamCompression)
+   protected void sendFile(final long requestId, final File file, ProgressListener listener, boolean allowStreamCompression, long offset)
          throws IOException, NXCException
    {
       if (listener != null)
@@ -1792,7 +1795,7 @@ public class NXCSession
          abortFileTransfer(requestId);
          throw e;
       }
-      sendFileStream(requestId, inputStream, listener, allowStreamCompression && (file.length() > 1024));
+      sendFileStream(requestId, inputStream, listener, allowStreamCompression && (file.length() > 1024), offset);
       inputStream.close();
    }
 
@@ -1812,7 +1815,7 @@ public class NXCSession
       if (listener != null)
          listener.setTotalWorkAmount(data.length);
       final InputStream inputStream = new ByteArrayInputStream(data);
-      sendFileStream(requestId, inputStream, listener, allowStreamCompression);
+      sendFileStream(requestId, inputStream, listener, allowStreamCompression, 0);
       inputStream.close();
    }
 
@@ -1824,14 +1827,16 @@ public class NXCSession
     * @param inputStream            data input stream
     * @param listener               progress listener
     * @param allowStreamCompression true if data stream compression is allowed
+    * @param offset offset to start data send or 0 if from the start
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener,
-         boolean allowStreamCompression) throws IOException, NXCException
+         boolean allowStreamCompression, long offset) throws IOException, NXCException
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
+      inputStream.skip(offset);
 
       Deflater compressor = allowStreamCompression ? new Deflater(9) : null;
       msg.setStream(true, allowStreamCompression);
@@ -1942,7 +1947,7 @@ public class NXCSession
    {
       final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id, timeout);
       final int rcc = msg.getFieldAsInt32(NXCPCodes.VID_RCC);
-      if (rcc != RCC.SUCCESS)
+      if (rcc != RCC.SUCCESS && rcc != RCC.FILE_APPEND_POSSIBLE)
       {
          long[] relatedObjects = msg.getFieldAsUInt32Array(NXCPCodes.VID_OBJECT_LIST);
          String description;
@@ -10136,7 +10141,21 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      sendFile(msg.getMessageId(), localFile, listener, allowCompression);
+      sendFile(msg.getMessageId(), localFile, listener, allowCompression, 0);
+   }
+   
+   private byte[] getFileHash(File file, long size) throws IOException, NoSuchAlgorithmException
+   {
+      InputStream fis = new FileInputStream(file);
+      byte[] buffer = new byte[1024];
+      MessageDigest hash = MessageDigest.getInstance("MD5");
+      long numRead = 0;
+      while ((numRead = fis.read(buffer)) != -1 && size > 0) {
+         hash.update(buffer, 0, (int)Math.min(numRead, size));
+         size -= numRead;
+      };
+      fis.close();
+      return hash.digest();
    }
 
    /**
@@ -10149,23 +10168,68 @@ public class NXCSession
     * @param listener progress listener (can be null)
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws NoSuchAlgorithmException if not able to get MD5 algoritm hash
     */
    public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overwrite, ProgressListener listener) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
-      if ((remoteFileName == null) || remoteFileName.isEmpty())
+      boolean messageResendRequired;
+      //Possible modify methods: 
+      //0 - upload file from scratch 
+      //1 - get file size and hash
+      //2 - append to existing file
+      int modifyMode = 1; 
+      long ofset = 0;
+      NXCPMessage msg = null;
+      NXCPMessage response = null;
+      do 
       {
-         remoteFileName = localFile.getName();
-      }
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
-      msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
-      msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
-      msg.setField(NXCPCodes.VID_REPORT_PROGRESS, true); // Indicate that client can accept intermediate progress reports
-      sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());
+         messageResendRequired = false;
+         msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
+         if ((remoteFileName == null) || remoteFileName.isEmpty())
+         {
+            remoteFileName = localFile.getName();
+         }
+         msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+         msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
+         msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
+         msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
+         msg.setField(NXCPCodes.VID_REPORT_PROGRESS, true); // Indicate that client can accept intermediate progress reports
+         msg.setFieldInt32(NXCPCodes.VID_MODIFICATION_MODE, modifyMode);
+         sendMessage(msg);
+         response = waitForRCC(msg.getMessageId());
+         if (response.getFieldAsInt32(NXCPCodes.VID_RCC) == RCC.FILE_APPEND_POSSIBLE)
+         {
+            byte[] md5RemoteFile = response.getFieldAsBinary(NXCPCodes.VID_HASH_MD5);
+            long sizeRemoteFile = response.getFieldAsInt32(NXCPCodes.VID_FILE_SIZE);
+            byte[] md5LocalFile = new byte[1];
+            try
+            {
+               md5LocalFile = getFileHash(localFile, sizeRemoteFile);
+            }
+            catch(NoSuchAlgorithmException e)
+            {
+               messageResendRequired = true;
+               modifyMode = 0;
+            }
+            
+            if (Arrays.compare(md5RemoteFile, md5LocalFile) == 0)
+            {
+               //Even if are equals .part file still might need rename
+               messageResendRequired = true;
+               modifyMode = 2;
+               ofset = sizeRemoteFile;
+            }
+            else
+            {
+               messageResendRequired = true;
+               modifyMode = 0;
+            }
+         }
+         
+      } while (messageResendRequired);
+
       boolean serverSideProgressReport = response.getFieldAsBoolean(NXCPCodes.VID_REPORT_PROGRESS);
-      sendFile(msg.getMessageId(), localFile, serverSideProgressReport ? null : listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION));
+      sendFile(msg.getMessageId(), localFile, serverSideProgressReport ? null : listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION), ofset);
       if (serverSideProgressReport)
       {
          // Newer protocol variant, receive progress updates from server
@@ -10806,7 +10870,7 @@ public class NXCSession
       final long id = response.getFieldAsInt64(NXCPCodes.VID_PACKAGE_ID);
       try
       {
-         sendFile(msg.getMessageId(), pkgFile, listener, allowCompression);
+         sendFile(msg.getMessageId(), pkgFile, listener, allowCompression, 0);
          waitForRCC(msg.getMessageId());
       }
       catch(IOException e)

@@ -340,7 +340,7 @@ ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags()
 /**
  * Set additional debug writer callback. It will be called for each line written with nxlog_debug.
  */
-extern "C" void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer)
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer)
 {
    s_debugWriter = writer;
 }

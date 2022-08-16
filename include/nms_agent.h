@@ -127,6 +127,7 @@
 #define ERR_INVALID_HTTP_REQUEST_CODE  ((uint32_t)930)
 #define ERR_FILE_HASH_MISMATCH         ((uint32_t)931)
 #define ERR_FUNCTION_NOT_SUPPORTED     ((uint32_t)932)
+#define ERR_FILE_APPEND_POSSIBLE       ((uint32_t)933)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -729,10 +730,11 @@ public:
    DownloadFileInfo(const TCHAR *name, time_t fileModificationTime = 0);
    virtual ~DownloadFileInfo();
 
-   virtual bool open();
+   virtual bool open(bool append = false);
    virtual bool write(const BYTE *data, size_t dataSize, bool compressedStream);
    virtual void close(bool success);
 
+   static uint32_t getFileInfo(NXCPMessage *response, const TCHAR *fileName);
    const TCHAR *getFileName() const { return m_fileName; }
    time_t getLastUpdateTime() const { return m_lastUpdateTime; }
 };
@@ -794,7 +796,7 @@ public:
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;
    virtual uint32_t generateRequestId() = 0;
    virtual int getProtocolVersion() = 0;
-   virtual uint32_t openFile(TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0) = 0;
+   virtual uint32_t openFile(NXCPMessage *response, TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0, uint32_t modifyMode = 0) = 0;
    virtual void debugPrintf(int level, const TCHAR *format, ...) = 0;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) = 0;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) = 0;

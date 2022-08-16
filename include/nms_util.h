@@ -46,9 +46,7 @@
 #include <base32.h>
 #include <base64.h>
 
-#ifdef __cplusplus
 #include <functional>
-#endif
 
 /*** Byte swapping ***/
 #if WORDS_BIGENDIAN
@@ -76,8 +74,6 @@
 #define ntohf(x) bswap_float(x)
 #define SwapUCS2String(x) bswap_array_16((UINT16 *)(x), -1)
 #endif
-
-#ifdef __cplusplus
 
 #if !(HAVE_DECL_BSWAP_16)
 inline UINT16 bswap_16(UINT16 val)
@@ -130,37 +126,10 @@ inline float bswap_float(float val)
    return result;
 }
 
-#else
-
-#if !(HAVE_DECL_BSWAP_16)
-UINT16 LIBNETXMS_EXPORTABLE __bswap_16(UINT16 val);
-#define bswap_16 __bswap_16
-#endif
-
-#if !(HAVE_DECL_BSWAP_32)
-UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 val);
-#define bswap_32 __bswap_32
-#endif
-
-#if !(HAVE_DECL_BSWAP_64)
-UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 val);
-#define bswap_64 __bswap_64
-#endif
-
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 void LIBNETXMS_EXPORTABLE bswap_array_16(UINT16 *v, int len);
 void LIBNETXMS_EXPORTABLE bswap_array_32(UINT32 *v, int len);
-#ifdef __cplusplus
-}
-#endif
 
 /*** toupper/tolower ***/
-#ifdef __cplusplus
-
 #if !HAVE_TOLOWER
 inline char tolower(char c)
 {
@@ -188,8 +157,6 @@ inline WCHAR towupper(WCHAR c)
    return ((c >= L'a') && (c <= L'z')) ? c - (L'a' - L'A') : c;
 }
 #endif
-
-#endif /* __cplusplus */
 
 /*** Serial communications ***/
 #ifdef _WIN32
@@ -269,33 +236,24 @@ inline WCHAR towupper(WCHAR c)
 #define NXLOG_ROTATION_BY_SIZE   2
 
 /**
+ * File upload mode flags
+ */
+#define FILE_UPLOAD_FROMSTART 0
+#define FILE_UPLOAD_INFO      1
+#define FILE_UPLOAD_APPEND    2
+
+/**
  * Custom wcslen()
  */
 #if !HAVE_WCSLEN
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 size_t LIBNETXMS_EXPORTABLE wcslen(const WCHAR *s);
-#ifdef __cplusplus
-}
-#endif
-
 #endif
 
 /**
  * Custom wcsncpy()
  */
 #if !HAVE_WCSNCPY
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n);
-#ifdef __cplusplus
-}
-#endif
-
 #endif
 
 // Some AIX versions have broken wcsdup() so we use internal implementation
@@ -304,10 +262,6 @@ WCHAR LIBNETXMS_EXPORTABLE *wcsncpy(WCHAR *dest, const WCHAR *src, size_t n);
 #endif
 
 /******* UNICODE related conversion and helper functions *******/
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // Basic string functions
 #ifdef UNICODE_UCS2
@@ -457,8 +411,6 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS4String(const UCS4CHAR *src);
 #define TStringFromUTF8String(s) MBStringFromUTF8String(s)
 #endif
 
-#ifdef __cplusplus
-
 /**
  * Convert wide character string to multibyte character string using current system locale
  */
@@ -503,20 +455,12 @@ inline char *UTF8StringFromWideStringEx(const WCHAR *src)
    return (src != nullptr) ? UTF8StringFromWideString(src) : nullptr;
 }
 
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
 /******* end of UNICODE related conversion and helper functions *******/
 
 
 /**
  * Class for serial communications
  */
-#ifdef __cplusplus
-
 #ifndef _WIN32
 enum
 {
@@ -4209,8 +4153,6 @@ public:
    }
 };
 
-#endif   /* __cplusplus */
-
 /**
  * Configuration item template for configuration loader
  */
@@ -4302,8 +4244,6 @@ typedef struct _dir_struc_w
 // Functions
 //
 
-#ifdef __cplusplus
-
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uint32_t timeout, bool *isTimeout = nullptr);
 ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, Mutex* mutex);
 ssize_t LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, uint32_t timeout, SOCKET controlSocket = INVALID_SOCKET);
@@ -4356,13 +4296,6 @@ void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable);
 
 const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int32_t code, CodeLookupElement *lookupTable, const TCHAR *defaultText = _T("Unknown"));
 int LIBNETXMS_EXPORTABLE CodeFromText(const TCHAR *text, CodeLookupElement *lookupTable, int32_t defaultCode = -1);
-
-#endif   /* __cplusplus */
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #ifndef _WIN32
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
@@ -4482,9 +4415,7 @@ int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
 bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime, bool checkSeconds);
 bool LIBNETXMS_EXPORTABLE MatchSchedule(const TCHAR *schedule, bool *withSeconds, struct tm *currTime, time_t now);
 
-#ifdef __cplusplus
 BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
-#endif
 BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
 /* deprecated */ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
 const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName);
@@ -4497,7 +4428,7 @@ typedef unsigned char MD5_STATE[128];
 
 void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t size, BYTE *hash);
 void LIBNETXMS_EXPORTABLE MD5HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
-bool LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *fileName, BYTE *hash);
+bool LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *fileName, BYTE *hash, int64_t size = 0);
 void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state);
 void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE MD5Final(MD5_STATE *state, BYTE *hash);
@@ -4506,7 +4437,7 @@ typedef unsigned char SHA1_STATE[128];
 
 void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const void *data, size_t size, BYTE *hash);
 void LIBNETXMS_EXPORTABLE SHA1HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *fileName, BYTE *hash);
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *fileName, BYTE *hash, int64_t size = 0);
 void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA1Final(SHA1_STATE *state, BYTE *hash);
@@ -4515,7 +4446,7 @@ typedef unsigned char SHA224_STATE[192];
 
 void LIBNETXMS_EXPORTABLE CalculateSHA224Hash(const void *data, size_t size, BYTE *hash);
 void LIBNETXMS_EXPORTABLE SHA224HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA224Hash(const TCHAR *fileName, BYTE *hash);
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA224Hash(const TCHAR *fileName, BYTE *hash, int64_t size = 0);
 void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA224Update(SHA224_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA224Final(SHA224_STATE *state, BYTE *hash);
@@ -4524,7 +4455,7 @@ typedef unsigned char SHA256_STATE[192];
 
 void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const void *data, size_t size, BYTE *hash);
 void LIBNETXMS_EXPORTABLE SHA256HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA256Hash(const TCHAR *fileName, BYTE *hash);
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA256Hash(const TCHAR *fileName, BYTE *hash, int64_t size = 0);
 void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA256Final(SHA256_STATE *state, BYTE *hash);
@@ -4533,7 +4464,7 @@ typedef unsigned char SHA384_STATE[384];
 
 void LIBNETXMS_EXPORTABLE CalculateSHA384Hash(const void *data, size_t size, BYTE *hash);
 void LIBNETXMS_EXPORTABLE SHA384HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA384Hash(const TCHAR *fileName, BYTE *hash);
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA384Hash(const TCHAR *fileName, BYTE *hash, int64_t size = 0);
 void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA384Update(SHA384_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA384Final(SHA384_STATE *state, BYTE *hash);
@@ -4542,7 +4473,7 @@ typedef unsigned char SHA512_STATE[384];
 
 void LIBNETXMS_EXPORTABLE CalculateSHA512Hash(const void *data, size_t size, BYTE *hash);
 void LIBNETXMS_EXPORTABLE SHA512HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash);
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA512Hash(const TCHAR *fileName, BYTE *hash);
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA512Hash(const TCHAR *fileName, BYTE *hash, int64_t size = 0);
 void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state);
 void LIBNETXMS_EXPORTABLE SHA512Update(SHA512_STATE *state, const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE SHA512Final(SHA512_STATE *state, BYTE *hash);
@@ -4846,8 +4777,6 @@ int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag(const TCHAR *tag);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level_tag_object(const TCHAR *tag, UINT32 objectId);
 void LIBNETXMS_EXPORTABLE nxlog_reset_debug_level_tags();
 
-#ifdef __cplusplus
-
 /**
  * Debug tag information
  */
@@ -4864,8 +4793,6 @@ struct DebugTagInfo
 };
 
 ObjectArray<DebugTagInfo> LIBNETXMS_EXPORTABLE *nxlog_get_all_debug_tags();
-
-#endif   /* __cplusplus */
 
 typedef void (*NxLogDebugWriter)(const TCHAR *, const TCHAR *, va_list);
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
@@ -4917,14 +4844,6 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
 
 bool LIBNETXMS_EXPORTABLE InitializeLibCURL();
 const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion();
-
-#ifdef __cplusplus
-}
-#endif
-
-/***** C++ only functions *****/
-
-#ifdef __cplusplus
 
 /**
  * NetXMS directory type
@@ -5275,7 +5194,5 @@ struct LIBNETXMS_EXPORTABLE Color
     */
    static Color parseCSS(const TCHAR *css);
 };
-
-#endif   /* __cplusplus */
 
 #endif   /* _nms_util_h_ */

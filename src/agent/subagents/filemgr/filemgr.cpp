@@ -1005,7 +1005,7 @@ static void CH_Upload(NXCPMessage *request, NXCPMessage *response, AbstractCommS
 
       bool allowOverwirite = request->getFieldAsBoolean(VID_OVERWRITE);
       if (ValidateFileChangeOperation(fullPath, allowOverwirite, response))
-         response->setField(VID_RCC, session->openFile(fullPath, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME)));
+         session->openFile(response, fullPath, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME), request->getFieldAsTime(VID_MODIFICATION_MODE));
    }
    else
    {

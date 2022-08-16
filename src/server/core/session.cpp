@@ -13264,12 +13264,13 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
             {
                request->setField(VID_ALLOW_PATH_EXPANSION, false);   // explicitly disable path expansion
                request->setProtocolVersion(conn->getProtocolVersion());
+
                conn->sendMessage(request);
                response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 10000);
                if (response != nullptr)
                {
                   rcc = response->getFieldAsUInt32(VID_RCC);
-                  if (rcc == RCC_SUCCESS)
+                  if (rcc == ERR_SUCCESS)
                   {
                      writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Started direct upload of file \"%s\" to node %s"), fileName, object->getName());
                      response->setCode(CMD_REQUEST_COMPLETED);
@@ -13277,6 +13278,13 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                      response->setField(VID_REPORT_PROGRESS, true);    // Indicate that server will report transfer progress to client
                      responseMessage = response;
                      m_agentFileTransfers.put(request->getId(), make_shared<AgentFileTransfer>(m_id, request->getId(), conn, request->getFieldAsBoolean(VID_REPORT_PROGRESS)));
+                  }
+                  else if (rcc == ERR_FILE_APPEND_POSSIBLE)
+                  {
+                     response->setCode(CMD_REQUEST_COMPLETED);
+                     response->setField(VID_ENABLE_COMPRESSION, conn->isCompressionAllowed());
+                     response->setField(VID_RCC, RCC_FILE_APPEND_POSSIBLE);
+                     responseMessage = response;
                   }
                   else
                   {

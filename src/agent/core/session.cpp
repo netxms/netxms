@@ -606,9 +606,6 @@ void CommSession::processingThread()
             case CMD_TRANSFER_FILE:
                recvFile(request, &response);
                break;
-            case CMD_MERGE_FILES:
-               mergeFiles(request, &response);
-               break;
             case CMD_INSTALL_PACKAGE:
                response.setField(VID_RCC, installPackage(request));
                break;
@@ -714,7 +711,6 @@ void CommSession::processingThread()
                m_acceptKeepalive = request->getFieldAsBoolean(VID_ACCEPT_KEEPALIVE);
                response.setField(VID_RCC, ERR_SUCCESS);
                response.setField(VID_FLAGS, static_cast<uint16_t>((m_controlServer ? 0x01 : 0x00) | (m_masterServer ? 0x02 : 0x00)));
-               response.setField(VID_ENABLE_FILE_UPLOAD_RESUMING, 1);
                debugPrintf(4, _T("Server capabilities: IPv6: %s; bulk reconciliation: %s; compression: %s"),
                            m_ipv6Aware ? _T("yes") : _T("no"),
                            m_bulkReconciliationSupported ? _T("yes") : _T("no"),
@@ -1005,7 +1001,7 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
       BuildFullPath(szFileName, szFullPath);
 
 		// Check if for some reason we have already opened file
-      pMsg->setField(VID_RCC, openFile(szFullPath, pRequest->getId(), pRequest->getFieldAsTime(VID_MODIFICATION_TIME)));
+      openFile(pMsg, szFullPath, pRequest->getId(), pRequest->getFieldAsTime(VID_MODIFICATION_TIME), pRequest->getFieldAsUInt32(VID_MODIFICATION_MODE));
 	}
 	else
 	{
@@ -1014,89 +1010,28 @@ void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
 }
 
 /**
- * Handler for "merge files" command
- */
-void CommSession::mergeFiles(NXCPMessage *request, NXCPMessage *response)
-{
-   if (m_masterServer)
-   {
-      size_t size;
-      const BYTE *md5 = request->getBinaryFieldPtr(VID_HASH_MD5, &size);
-      if ((md5 != nullptr) && (size == MD5_DIGEST_SIZE))
-      {
-         TCHAR destinationFileName[MAX_PATH], destinationFullPath[MAX_PATH];
-         request->getFieldAsString(VID_DESTINATION_FILE_NAME, destinationFileName, MAX_PATH);
-         BuildFullPath(destinationFileName, destinationFullPath);
-         StringList partFiles(*request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
-         if (!partFiles.isEmpty())
-         {
-            bool success = true;
-            _tremove(destinationFullPath);
-            for(int i = 0; (i < partFiles.size()) && success; i++)
-            {
-               TCHAR sourceFullPath[MAX_PATH];
-               BuildFullPath(partFiles.get(i), sourceFullPath);
-               if (!MergeFiles(sourceFullPath, destinationFullPath))
-               {
-                  response->setField(VID_RCC, ERR_IO_FAILURE);
-                  success = false;
-               }
-            }
-            if (success)
-            {
-               for(int i = 0; i < partFiles.size(); i++)
-               {
-                  TCHAR sourceFullPath[MAX_PATH];
-                  BuildFullPath(partFiles.get(i), sourceFullPath);
-                  _tremove(sourceFullPath);
-               }
-
-               BYTE hash[MD5_DIGEST_SIZE];
-               CalculateFileMD5Hash(destinationFullPath, hash);
-               if (!memcmp(md5, hash, MD5_DIGEST_SIZE))
-               {
-                  response->setField(VID_RCC, ERR_SUCCESS);
-               }
-               else
-               {
-                  response->setField(VID_RCC, ERR_FILE_HASH_MISMATCH);
-               }
-            }
-         }
-         else
-         {
-            response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-         }
-      }
-      else
-      {
-         response->setField(VID_RCC, ERR_BAD_ARGUMENTS);
-      }
-   }
-   else
-   {
-      response->setField(VID_RCC, ERR_ACCESS_DENIED);
-   }
-}
-
-/**
  * Open file for writing
  */
-uint32_t CommSession::openFile(TCHAR *szFullPath, uint32_t requestId, time_t fileModTime)
+void CommSession::openFile(NXCPMessage *response, TCHAR *szFullPath, uint32_t requestId, time_t fileModTime, uint32_t modifyMode)
 {
+   if (modifyMode == FILE_UPLOAD_INFO) //Give info mode
+   {
+      if (DownloadFileInfo::getFileInfo(response, szFullPath) == ERR_FILE_APPEND_POSSIBLE) //do not start download if append is possible
+            return;
+   }
+
    DownloadFileInfo *fInfo = new DownloadFileInfo(szFullPath, fileModTime);
    debugPrintf(4, _T("CommSession::openFile(): Writing to local file \"%s\""), szFullPath);
-
-   if (!fInfo->open())
+   if (!fInfo->open(modifyMode == FILE_UPLOAD_APPEND))
    {
       delete fInfo;
       debugPrintf(3, _T("CommSession::openFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
-      return ERR_IO_FAILURE;
+      response->setField(VID_RCC, ERR_IO_FAILURE);
    }
    else
    {
       m_downloadFileMap.set(requestId, fInfo);
-      return ERR_SUCCESS;
+      response->setField(VID_RCC, ERR_SUCCESS);
    }
 }
 

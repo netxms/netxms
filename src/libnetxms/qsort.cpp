@@ -253,7 +253,7 @@ typedef struct { char * first; char * last; } stack_entry;
 * reach subarrays smaller than |limit|).
 */
 #define PreInsertion(swapper,limit,sz)		\
-  first=base;					\
+  first=(char*)base;					\
   last=first + ((nmemb>limit ? limit : nmemb)-1)*sz;\
   while (last!=base) {				\
     if (compare(context,first,last)>0) first=last;	\

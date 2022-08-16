@@ -3,17 +3,17 @@ lib_LTLIBRARIES = libnetxms.la
 libnetxms_la_SOURCES = \
 	array.cpp base32.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp cc_ucs4.cpp \
 	cc_utf8.cpp cch.cpp cert.cpp config.cpp crypto.cpp debug_tag_tree.cpp \
-	diff.cpp dirw_unix.c geolocation.cpp getopt.c getoptw.c dload.cpp hash.cpp \
+	diff.cpp dirw_unix.cpp geolocation.cpp getopt.cpp getoptw.cpp dload.cpp hash.cpp \
 	hashmapbase.cpp hashsetbase.cpp ice.c icmp.cpp iconv.cpp inet_pton.c \
-	inetaddr.cpp log.cpp lz4.c main.cpp macaddr.cpp md5.cpp memmem.c mempool.cpp \
+	inetaddr.cpp log.cpp lz4.c main.cpp macaddr.cpp md5.cpp memmem.cpp mempool.cpp \
 	message.cpp msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp npipe.cpp npipe_unix.cpp \
-	pa.cpp procexec.cpp qsort.c queue.cpp rbuffer.cpp scandir.c serial.cpp \
+	pa.cpp procexec.cpp qsort.cpp queue.cpp rbuffer.cpp scandir.cpp serial.cpp \
 	sha1.cpp sha2.cpp socket_listener.cpp spoll.cpp strcasestr.cpp streamcomp.cpp \
-	string.cpp stringlist.cpp strlcat.c strlcpy.c strmap.cpp \
-	strmapbase.cpp strptime.c strset.cpp strtoll.c strtoull.c \
-	subproc.cpp table.cpp threads.cpp timegm.c tls_conn.cpp \
-	tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.c wcstoull.c xml.cpp \
-	wcscasecmp.cpp wcscasestr.cpp wcslcat.c wcslcpy.c wcsncasecmp.cpp ztools.cpp
+	string.cpp stringlist.cpp strlcat.cpp strlcpy.cpp strmap.cpp \
+	strmapbase.cpp strptime.cpp strset.cpp strtoll.cpp strtoull.cpp \
+	subproc.cpp table.cpp threads.cpp timegm.cpp tls_conn.cpp \
+	tools.cpp tp.cpp unicode.cpp uuid.cpp wcstoll.cpp wcstoull.cpp xml.cpp \
+	wcscasecmp.cpp wcscasestr.cpp wcslcat.cpp wcslcpy.cpp wcsncasecmp.cpp ztools.cpp
 
 libnetxms_la_CPPFLAGS=-I@top_srcdir@/include -DLIBNETXMS_EXPORTS -I@top_srcdir@/build
 if USE_INTERNAL_EXPAT

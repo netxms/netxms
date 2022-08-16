@@ -514,7 +514,6 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_bulkDataProcessing = 0;
    m_controlServer = false;
    m_masterServer = false;
-   m_fileResumingEnabled = false;
 
    TCHAR buffer[64];
    debugPrintf(5, _T("New connection created (address=%s port=%u compression=%s)"), m_addr.toString(buffer), m_port, allowCompression ? _T("allowed") : _T("forbidden"));
@@ -1256,7 +1255,6 @@ uint32_t AgentConnection::setServerCapabilities()
          m_controlServer = true;
          m_masterServer = true;
       }
-      m_fileResumingEnabled = response->isFieldExist(VID_ENABLE_FILE_UPLOAD_RESUMING);
    }
    delete response;
    return rcc;
@@ -1732,11 +1730,13 @@ static void FileUploadProgressCalback(size_t bytesTransferred, void *_context)
       context->userCallback(bytesTransferred, context->userContext);
 }
 
+
+
 /**
  * Upload file to agent
  */
-uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, uint64_t offset, size_t chunkSize, bool forceBasicTransfer)
+uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
+         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1756,33 +1756,66 @@ uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR
       lastModTime = st.st_mtime;
    }
 
-   // Use core agent if destination file name is not set and file manager subagent otherwise
-   if ((destinationFile == nullptr) || (*destinationFile == 0) || forceBasicTransfer)
-   {
-      msg.setCode(CMD_TRANSFER_FILE);
-      const TCHAR *fname = (destinationFile == nullptr) || (*destinationFile == 0) ? localFile : destinationFile;
-      int i;
-      for(i = (int)_tcslen(fname) - 1; (i >= 0) && (fname[i] != '\\') && (fname[i] != '/'); i--);
-      msg.setField(VID_FILE_NAME, &fname[i + 1]);
-   }
-   else
-   {
-      msg.setCode(CMD_FILEMGR_UPLOAD);
-      msg.setField(VID_OVERWRITE, true);
-		msg.setField(VID_FILE_NAME, destinationFile);
-		msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
-   }
-   msg.setFieldFromTime(VID_MODIFICATION_TIME, lastModTime);
-
+   bool messageResendRequired;
+   uint32_t modifyMode = FILE_UPLOAD_INFO;
    uint32_t rcc;
-   if (sendMessage(&msg))
+   uint64_t offset = 0;
+   do
    {
-      rcc = waitForRCC(requestId, m_commandTimeout);
-   }
-   else
-   {
-      rcc = ERR_CONNECTION_BROKEN;
-   }
+      messageResendRequired = false;
+      // Use core agent if destination file name is not set and file manager subagent otherwise
+      if ((destinationFile == nullptr) || (*destinationFile == 0))
+      {
+         msg.setCode(CMD_TRANSFER_FILE);
+         const TCHAR *fname = (destinationFile == nullptr) || (*destinationFile == 0) ? localFile : destinationFile;
+         int i;
+         for(i = (int)_tcslen(fname) - 1; (i >= 0) && (fname[i] != '\\') && (fname[i] != '/'); i--);
+         msg.setField(VID_FILE_NAME, &fname[i + 1]);
+      }
+      else
+      {
+         msg.setCode(CMD_FILEMGR_UPLOAD);
+         msg.setField(VID_OVERWRITE, true);
+         msg.setField(VID_FILE_NAME, destinationFile);
+         msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
+      }
+      msg.setFieldFromTime(VID_MODIFICATION_TIME, lastModTime);
+      msg.setField(VID_MODIFICATION_MODE, modifyMode);
+
+      if (sendMessage(&msg))
+      {
+         NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
+         rcc = response->getFieldAsInt32(VID_RCC);
+
+         if (rcc == ERR_FILE_APPEND_POSSIBLE)
+         {
+            BYTE localHash[MD5_DIGEST_SIZE];
+            BYTE remoteHash[MD5_DIGEST_SIZE];
+            memset(localHash, 0, sizeof(localHash));
+            memset(remoteHash, 0, sizeof(remoteHash));
+            response->getFieldAsBinary(VID_HASH_MD5, remoteHash, MD5_DIGEST_SIZE);
+            uint64_t remoteSize = response->getFieldAsUInt64(VID_FILE_SIZE);
+            CalculateFileMD5Hash(localFile, localHash, remoteSize);
+            if (!memcmp(remoteHash, localHash, MD5_DIGEST_SIZE))
+            {
+               modifyMode = FILE_UPLOAD_APPEND;
+               messageResendRequired = true;
+               offset = remoteSize;
+               //Even if files are equals .part file might need to be renamed
+            }
+            else
+            {
+               modifyMode = FILE_UPLOAD_FROMSTART;
+               messageResendRequired = true;
+            }
+         }
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_CONNECTION_BROKEN;
+      }
+   } while (messageResendRequired);
 
    if (rcc == ERR_SUCCESS)
    {
@@ -1801,7 +1834,7 @@ uint32_t AgentConnection::uploadFileInternal(const TCHAR *localFile, const TCHAR
          context.lastProbeTime = time(nullptr);
          context.messageCount = 0;
 
-         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, &m_mutexSocketWrite, compMethod, nullptr, chunkSize))
+         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, &m_mutexSocketWrite, compMethod, nullptr, 0))
          {
             rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));  // Wait at least 30 seconds for file transfer confirmation
          }
@@ -1865,118 +1898,6 @@ void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *d
    if (handle != -1)
       _close(handle);
    MemFree(buffer);
-}
-
-/**
- * Upload file to agent
- */
-uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, bool disablePartialTransfer)
-{
-   // If file resuming is enabled, we will try to upload file in chunks, then merge them together
-   // Smaller files should be transferred in one part
-   if (!m_fileResumingEnabled || disablePartialTransfer || (FileSize(localFile) <= FILE_PART_SIZE))
-      return uploadFileInternal(localFile, destinationFile, allowPathExpansion, progressCallback, cbArg, compMethod);
-
-   uint32_t rcc = ERR_SUCCESS;
-
-   // If destination file name is not set, is expected that we won't use File Manager,
-   // even if we can. Instead we will use CMD_FILE_TRANSFER.
-   bool useFileTransfer = (destinationFile == nullptr);
-
-   // We need to set up remote file name. If destinationFile is not set, remote file name will be same as local file name, but without path.
-   const TCHAR* remoteFileName = nullptr;
-   if (useFileTransfer)
-   {
-      remoteFileName = _tcsrchr(localFile, '/');
-      if (remoteFileName != nullptr)
-      {
-         remoteFileName = remoteFileName + 1;
-      }
-      else
-      {
-         remoteFileName = _tcsrchr(localFile, '\\');
-         if (remoteFileName != nullptr)
-         {
-            remoteFileName = remoteFileName + 1;
-         }
-         else
-         {
-            remoteFileName = localFile;
-         }
-      }
-   }
-   else
-   {
-      remoteFileName = destinationFile;
-   }
-
-   // We need to prepare expected file chunk list
-   ObjectArray<FilePartInfo> partInfo(8, 8, Ownership::True);   // Will contain information about file chunks for upload, including file name, size, hash and offset.
-   StringList partNames;                                        // Will contain only file chunks names, used only in getFileSetInfo()
-   prepareFilePartList(localFile, remoteFileName, &partNames, &partInfo);
-
-   // If we can use File Manager on agent, we can get already uploaded file chunk list and skip upload for them.
-   ObjectArray<RemoteFileInfo> *remoteFiles = nullptr;
-   if (!useFileTransfer)
-   {
-      rcc = getFileSetInfo(partNames, allowPathExpansion, &remoteFiles);
-      if (rcc == ERR_UNKNOWN_COMMAND) // Can't find File Manager on agent, switching to File Transfer mode.
-         useFileTransfer = true;
-   }
-
-   // We try to upload file chunks if we got remote files or if we switched in File Transfer mode in process
-   if (rcc == ERR_SUCCESS || useFileTransfer)
-   {
-      for (int i = 0; i < partNames.size(); i++)
-      {
-         bool found = false;
-         FilePartInfo* localFilePart = partInfo.get(i);
-         // If we can't find file chunk on agent with correct name, size and hash - we upload it.
-         if (!localFilePart->isFoundInRemoteFiles(remoteFiles))
-         {
-            rcc = uploadFileInternal(localFile, localFilePart->m_name, allowPathExpansion, progressCallback, cbArg, compMethod, localFilePart->m_offset, localFilePart->m_size, useFileTransfer);
-            if (rcc != ERR_SUCCESS)
-               break;
-         }
-      }
-      //We don't need remote file list anymore
-      delete remoteFiles;
-
-      // If upload successfull - we need to merge file chunks together
-      if (rcc == ERR_SUCCESS)
-      {
-         NXCPMessage request(m_nProtocolVersion);
-         request.setId(generateRequestId());
-
-         // We have two merge methods - in core agent and in file manager.
-         // We should use core agent merge if files are uploaded by File Transfer,
-         // and File Manager merge if file chunks are uploaded by File Manager.
-         if (useFileTransfer)
-         {
-            request.setCode(CMD_MERGE_FILES);
-         }
-         else
-         {
-            request.setCode(CMD_FILEMGR_MERGE_FILES);
-         }
-         request.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
-         request.setField(VID_DESTINATION_FILE_NAME, remoteFileName);
-         partNames.fillMessage(&request, VID_FILE_LIST_BASE, VID_FILE_COUNT);
-         BYTE hash[MD5_DIGEST_SIZE];
-         CalculateFileMD5Hash(localFile, hash);
-         request.setField(VID_HASH_MD5, hash, MD5_DIGEST_SIZE);
-         if (sendMessage(&request))
-         {
-            rcc = waitForRCC(request.getId(), m_commandTimeout);
-         }
-         else
-         {
-            rcc = ERR_CONNECTION_BROKEN;
-         }
-      }
-   }
-   return rcc;
 }
 
 /**

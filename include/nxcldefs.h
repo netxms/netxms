@@ -711,6 +711,7 @@ enum SessionState
 #define RCC_INVALID_BUSINESS_CHECK_ID     ((uint32_t)155)
 #define RCC_PROTECTED_IMAGE               ((uint32_t)156)
 #define RCC_INVALID_SSH_PROXY_ID          ((uint32_t)157)
+#define RCC_FILE_APPEND_POSSIBLE          ((uint32_t)158)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

@@ -908,7 +908,6 @@ private:
 	bool m_fileUpdateConnection;
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
-   bool m_fileResumingEnabled;
 
    uint32_t setupEncryption(RSA *pServerKey);
    uint32_t authenticate(BOOL bProxyData);
@@ -918,9 +917,6 @@ private:
    void prepareFilePartList(const TCHAR *localFile, const TCHAR *destinationFile, StringList *partNames, ObjectArray<FilePartInfo> *fileInfo);
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
-   uint32_t uploadFileInternal(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod, uint64_t offset = 0,
-         size_t chunkSize = 0, bool forceBasicTransfer = false);
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
@@ -1005,7 +1001,7 @@ public:
          void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
    uint32_t uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
-            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE, bool disablePartialTransfer = false);
+            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
             void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
             NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);

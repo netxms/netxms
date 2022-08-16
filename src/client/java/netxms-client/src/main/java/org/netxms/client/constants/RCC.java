@@ -186,6 +186,7 @@ public final class RCC
    public static final int INVALID_BUSINESS_CHECK_ID = 155;
    public static final int PROTECTED_IMAGE = 156;
    public static final int INVALID_SSH_PROXY_ID = 157;
+   public static final int FILE_APPEND_POSSIBLE = 158;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

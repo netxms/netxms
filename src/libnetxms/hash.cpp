@@ -528,7 +528,7 @@ void LIBNETXMS_EXPORTABLE SHA512HashForPattern(const void *data, size_t patternS
  * Calculate hash for given file with provided hash function
  */
 template<typename C, void (*__Init)(C*), void (*__Update)(C*, const void*, size_t), void (*__Final)(C*, BYTE*)>
-static inline bool CalculateFileHash(const TCHAR *fileName, BYTE *hash)
+static inline bool CalculateFileHash(const TCHAR *fileName, BYTE *hash, int64_t calculationSize)
 {
    bool success = false;
    FILE *fileHandle = _tfopen(fileName, _T("rb"));
@@ -537,16 +537,18 @@ static inline bool CalculateFileHash(const TCHAR *fileName, BYTE *hash)
       BYTE buffer[FILE_BLOCK_SIZE];
       C context;
       __Init(&context);
+      bool useShorterSize = calculationSize > 0;
       while(true)
       {
-         size_t size = fread(buffer, 1, FILE_BLOCK_SIZE, fileHandle);
-         if (size == 0)
+         size_t size = fread(buffer, 1, useShorterSize ? MIN(calculationSize, FILE_BLOCK_SIZE) : FILE_BLOCK_SIZE , fileHandle);
+         if (size == 0 || (useShorterSize && (calculationSize == 0)))
          {
             __Final(&context, hash);
             success = true;
             break;
          }
          __Update(&context, buffer, static_cast<unsigned int>(size));
+         calculationSize -= size;
       }
       fclose(fileHandle);
    }
@@ -556,47 +558,47 @@ static inline bool CalculateFileHash(const TCHAR *fileName, BYTE *hash)
 /**
  * Calculate MD5 hash for given file
  */
-bool LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *fileName, BYTE *hash)
+bool LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *fileName, BYTE *hash, int64_t size)
 {
-   return CalculateFileHash<MD5_STATE, MD5Init, MD5Update, MD5Final>(fileName, hash);
+   return CalculateFileHash<MD5_STATE, MD5Init, MD5Update, MD5Final>(fileName, hash, size);
 }
 
 /**
  * Calculate SHA1 hash for given file
  */
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *fileName, BYTE *hash)
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *fileName, BYTE *hash, int64_t size)
 {
-   return CalculateFileHash<SHA1_STATE, SHA1Init, SHA1Update, SHA1Final>(fileName, hash);
+   return CalculateFileHash<SHA1_STATE, SHA1Init, SHA1Update, SHA1Final>(fileName, hash, size);
 }
 
 /**
  * Calculate SHA224 hash for given file
  */
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA224Hash(const TCHAR *fileName, BYTE *hash)
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA224Hash(const TCHAR *fileName, BYTE *hash, int64_t size)
 {
-   return CalculateFileHash<SHA224_STATE, SHA224Init, SHA224Update, SHA224Final>(fileName, hash);
+   return CalculateFileHash<SHA224_STATE, SHA224Init, SHA224Update, SHA224Final>(fileName, hash, size);
 }
 
 /**
  * Calculate SHA256 hash for given file
  */
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA256Hash(const TCHAR *fileName, BYTE *hash)
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA256Hash(const TCHAR *fileName, BYTE *hash, int64_t size)
 {
-   return CalculateFileHash<SHA256_STATE, SHA256Init, SHA256Update, SHA256Final>(fileName, hash);
+   return CalculateFileHash<SHA256_STATE, SHA256Init, SHA256Update, SHA256Final>(fileName, hash, size);
 }
 
 /**
  * Calculate SHA384 hash for given file
  */
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA384Hash(const TCHAR *fileName, BYTE *hash)
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA384Hash(const TCHAR *fileName, BYTE *hash, int64_t size)
 {
-   return CalculateFileHash<SHA384_STATE, SHA384Init, SHA384Update, SHA384Final>(fileName, hash);
+   return CalculateFileHash<SHA384_STATE, SHA384Init, SHA384Update, SHA384Final>(fileName, hash, size);
 }
 
 /**
  * Calculate SHA512 hash for given file
  */
-bool LIBNETXMS_EXPORTABLE CalculateFileSHA512Hash(const TCHAR *fileName, BYTE *hash)
+bool LIBNETXMS_EXPORTABLE CalculateFileSHA512Hash(const TCHAR *fileName, BYTE *hash, int64_t size)
 {
-   return CalculateFileHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Final>(fileName, hash);
+   return CalculateFileHash<SHA512_STATE, SHA512Init, SHA512Update, SHA512Final>(fileName, hash, size);
 }

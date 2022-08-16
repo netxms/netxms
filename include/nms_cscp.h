@@ -681,7 +681,7 @@ typedef struct
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
 #define CMD_WEB_SERVICE_CUSTOM_REQUEST    0x01B8
-#define CMD_MERGE_FILES                   0x01B9
+// unused #define CMD_MERGE_FILES                   0x01B9
 #define CMD_FILEMGR_MERGE_FILES           0x01BA
 #define CMD_GET_BIZSVC_CHECK_LIST         0x01BB
 #define CMD_UPDATE_BIZSVC_CHECK           0x01BC
@@ -1475,7 +1475,7 @@ typedef struct
 #define VID_WEBSVC_RESPONSE         ((uint32_t)764)
 #define VID_WEBSVC_ERROR_TEXT       ((uint32_t)765)
 #define VID_REQUEST_DATA            ((uint32_t)766)
-#define VID_ENABLE_FILE_UPLOAD_RESUMING ((uint32_t)767)
+// #define VID_ENABLE_FILE_UPLOAD_RESUMING ((uint32_t)767) unused
 #define VID_CHECK_COUNT             ((uint32_t)768)
 #define VID_CHECK_ID                ((uint32_t)769)
 #define VID_PROTOTYPE_ID            ((uint32_t)770)
@@ -1500,6 +1500,7 @@ typedef struct
 #define VID_HAS_DETAIL_FIELDS       ((uint32_t)789)
 #define VID_IF_ALIAS                ((uint32_t)790)
 #define VID_RESPONSIBLE_USER_TAGS   ((uint32_t)791)
+#define VID_MODIFICATION_MODE       ((uint32_t)792)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

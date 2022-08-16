@@ -31,7 +31,6 @@ NETXMS_EXECUTABLE_HEADER(nxupload)
 /**
  * Static fields
  */
-static bool s_doNotSplit = false;
 static bool s_verbose = true;
 static bool s_install = false;
 static bool s_upgrade = false;
@@ -149,9 +148,6 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          s_install = true;
          s_upgrade = false;
          break;
-      case 'n':   // Do not split file into chunks
-         s_doNotSplit = true;
-         break;
       case 'q':   // Quiet mode
          s_verbose = false;
          break;
@@ -190,7 +186,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
    int64_t elapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("Upload:                 "));
-   uint32_t rcc = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : nullptr, false, s_verbose ? ProgressCallback : nullptr, nullptr, s_compression, s_doNotSplit);
+   uint32_t rcc = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : nullptr, false, s_verbose ? ProgressCallback : nullptr, nullptr, s_compression);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
    elapsedTime = GetCurrentTimeMs() - elapsedTime;
@@ -239,7 +235,6 @@ int main(int argc, char *argv[])
                        _T("   -C <options> : Set package deployment options or command line (depending on package type)\n")
                        _T("   -d <file>    : Fully qualified destination file name\n")
                        _T("   -i           : Start installation of uploaded package.\n")
-                       _T("   -n           : Do not split file into chunks.\n")
                        _T("   -q           : Quiet mode.\n")
                        _T("   -t <type>    : Set package type (default is \"executable\").\n")
                        _T("   -u           : Start agent upgrade from uploaded package.\n")
