@@ -950,6 +950,28 @@ static void ScheduledCRLReload()
 }
 
 /**
+ * Save agent ID to file
+ */
+static void SaveAgentIdToFile()
+{
+   TCHAR agentIdFile[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, agentIdFile);
+   _tcscat(agentIdFile, FS_PATH_SEPARATOR _T("nxagentd.id"));
+   FILE *fp = _tfopen(agentIdFile, _T("w"));
+   if (fp != nullptr)
+   {
+      char buffer[64];
+      fputs(g_agentId.toStringA(buffer), fp);
+      fclose(fp);
+      nxlog_write(NXLOG_INFO, _T("Agent ID backup file updated"));
+   }
+   else
+   {
+      nxlog_write(NXLOG_ERROR, _T("Cannot create agent ID backup file %s (%s)"), agentIdFile, _tcserror(errno));
+   }
+}
+
+/**
  * Agent initialization
  */
 BOOL Initialize()
@@ -1108,14 +1130,50 @@ BOOL Initialize()
       nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_LOCALDB, _T("Local database is disabled"));
    }
 
+   /*** Read agent ID ***/
    TCHAR agentIdText[MAX_DB_STRING];
    if (ReadMetadata(_T("AgentId"), agentIdText) != nullptr)
       g_agentId = uuid::parse(agentIdText);
+
+   // Backup - read agent ID from file
+   uuid backupAgentId;
+   TCHAR agentIdFile[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, agentIdFile);
+   _tcscat(agentIdFile, FS_PATH_SEPARATOR _T("nxagentd.id"));
+   FILE *fp = _tfopen(agentIdFile, _T("r"));
+   if (fp != nullptr)
+   {
+      char buffer[256] = "";
+      fgets(buffer, 256, fp);
+      fclose(fp);
+#ifdef UNICODE
+      WCHAR wbuffer[64];
+      mb_to_wchar(buffer, -1, wbuffer, 63);
+      wbuffer[63] = 0;
+      backupAgentId = uuid::parse(wbuffer);
+#else
+      backupAgentId = uuid::parse(buffer);
+#endif
+   }
+
    if (g_agentId.isNull())
    {
-      g_agentId = uuid::generate();
-      WriteMetadata(_T("AgentId"), g_agentId.toString(agentIdText));
-      nxlog_write(NXLOG_INFO, _T("New agent ID generated"));
+      if (backupAgentId.isNull())
+      {
+         g_agentId = uuid::generate();
+         WriteMetadata(_T("AgentId"), g_agentId.toString(agentIdText));
+         SaveAgentIdToFile();
+         nxlog_write(NXLOG_INFO, _T("New agent ID generated"));
+      }
+      else
+      {
+         g_agentId = backupAgentId;
+         nxlog_write(NXLOG_INFO, _T("Agent ID recovered from backup file"));
+      }
+   }
+   else if (backupAgentId.isNull() || !g_agentId.equals(backupAgentId))
+   {
+      SaveAgentIdToFile();
    }
    nxlog_write(NXLOG_INFO, _T("Agent ID is %s"), g_agentId.toString(agentIdText));
 
@@ -1647,10 +1705,10 @@ void Main()
 /**
  * Do necessary actions on agent restart
  */
-static void DoRestartActions(UINT32 dwOldPID)
+static void DoRestartActions(uint32_t oldPID)
 {
 #if defined(_WIN32)
-   if (dwOldPID == 0)
+   if (oldPID == 0)
    {
       // Service
       StopAgentService();
@@ -1662,7 +1720,7 @@ static void DoRestartActions(UINT32 dwOldPID)
    {
       HANDLE hProcess;
 
-      hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, dwOldPID);
+      hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, oldPID);
       if (hProcess != NULL)
       {
          if (WaitForSingleObject(hProcess, 60000) == WAIT_TIMEOUT)
@@ -1674,24 +1732,24 @@ static void DoRestartActions(UINT32 dwOldPID)
    }
 #else
 #if WITH_SYSTEMD
-   if (RestartService(dwOldPID))
+   if (RestartService(oldPID))
    {
       // successfully restarted agent service using systemd, exit this instance
       exit(0);
    }
 #endif
-   kill(dwOldPID, SIGTERM);
+   kill(oldPID, SIGTERM);
    int i;
    for(i = 0; i < 30; i++)
    {
       sleep(2);
-      if (kill(dwOldPID, SIGCONT) == -1)
+      if (kill(oldPID, SIGCONT) == -1)
          break;
    }
 
    // Kill previous instance of agent if it's still running
    if (i == 30)
-      kill(dwOldPID, SIGKILL);
+      kill(oldPID, SIGKILL);
 #endif
 }
 
@@ -1785,6 +1843,11 @@ static int ResetIdentity()
       _tprintf(_T("Cannot open local database\n"));
       exitCode = 5;
    }
+
+   TCHAR agentIdFile[MAX_PATH];
+   GetNetXMSDirectory(nxDirData, agentIdFile);
+   _tcscat(agentIdFile, FS_PATH_SEPARATOR _T("nxagentd.id"));
+   _tremove(agentIdFile);
 
    ConfigureAgentDirectory(g_certificateDirectory, SUBDIR_CERTIFICATES, _T("Certificate"));
    _TDIR *dir = _topendir(g_certificateDirectory);
@@ -1904,7 +1967,7 @@ int main(int argc, char *argv[])
    Command command = Command::RUN_AGENT;
    int exitCode = 0;
    BOOL bRestart = FALSE;
-   uint32_t dwOldPID, dwMainPID;
+   uint32_t oldPID, dwMainPID;
 	char *eptr;
    TCHAR configSection[MAX_DB_STRING] = DEFAULT_CONFIG_SECTION;
    TCHAR configEntry[MAX_DB_STRING];
@@ -2104,7 +2167,7 @@ int main(int argc, char *argv[])
             break;
          case 'X':   // Agent is being restarted
             bRestart = TRUE;
-            dwOldPID = strtoul(optarg, nullptr, 10);
+            oldPID = strtoul(optarg, nullptr, 10);
             break;
          case 'Z':   // Create configuration file
             command = Command::CREATE_CONFIG;
@@ -2184,7 +2247,7 @@ int main(int argc, char *argv[])
       SearchConfig(_T("nxagentd.conf.d"), g_szConfigIncludeDir);
 
    if (bRestart)
-      DoRestartActions(dwOldPID);
+      DoRestartActions(oldPID);
 
    // Do requested action
    shared_ptr<Config> config;
@@ -2436,11 +2499,9 @@ int main(int argc, char *argv[])
             s_pid = getpid();
             if (Initialize())
             {
-               FILE *fp;
-
                // Write PID file
-               fp = _tfopen(g_szPidFile, _T("w"));
-               if (fp != NULL)
+               FILE *fp = _tfopen(g_szPidFile, _T("w"));
+               if (fp != nullptr)
                {
                   _ftprintf(fp, _T("%d"), s_pid);
                   fclose(fp);
