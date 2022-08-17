@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.6 to 42.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart=0 WHERE var_name='Objects.Subnets.DeleteEmpty'")));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 42.5 to 42.6
  */
 static bool H_UpgradeFromV5()
@@ -133,6 +143,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  42, 7,  H_UpgradeFromV6  },
    { 5,  42, 6,  H_UpgradeFromV5  },
    { 4,  42, 5,  H_UpgradeFromV4  },
    { 3,  42, 4,  H_UpgradeFromV3  },
