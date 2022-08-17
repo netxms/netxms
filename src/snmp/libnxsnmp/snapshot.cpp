@@ -112,7 +112,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const TCHAR *bas
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
-   uint32_t rc = SnmpWalk(transport, baseOid, [s](SNMP_Variable *var) {
+   uint32_t rc = SnmpWalk(transport, baseOid, [s](SNMP_Variable *var) -> uint32_t {
       s->m_values->add(new SNMP_Variable(var));
       return SNMP_ERR_SUCCESS;
    });
@@ -131,7 +131,7 @@ SNMP_Snapshot *SNMP_Snapshot::create(SNMP_Transport *transport, const UINT32 *ba
 {
    SNMP_Snapshot *s = new SNMP_Snapshot();
 
-   uint32_t rc = SnmpWalk(transport, baseOid, oidLen, [s](SNMP_Variable *var) {
+   uint32_t rc = SnmpWalk(transport, baseOid, oidLen, [s](SNMP_Variable *var) -> uint32_t {
       s->m_values->add(new SNMP_Variable(var));
       return SNMP_ERR_SUCCESS;
    });

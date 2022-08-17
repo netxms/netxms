@@ -2946,28 +2946,28 @@ public:
 
    uint16_t readUInt16B()
    {
-      uint16_t n;
+      uint16_t n = 0;
       read(&n, 2);
       return BigEndianToHost16(n);
    }
    
    uint32_t readUInt32B()
    {
-      uint32_t n;
+      uint32_t n = 0;
       read(&n, 4);
       return BigEndianToHost32(n);
    }
 
    uint64_t readUInt64B()
    {
-      uint64_t n;
+      uint64_t n = 0;
       read(&n, 8);
       return BigEndianToHost64(n);
    }
    
    double readDoubleB()
    {
-      double n;
+      double n = 0;
       read(&n, 8);
       return BigEndianToHostD(n);
    }
@@ -2978,28 +2978,28 @@ public:
 
    uint16_t readUInt16L()
    {
-      uint16_t n;
+      uint16_t n = 0;
       read(&n, 2);
       return LittleEndianToHost16(n);
    }
    
    uint32_t readUInt32L()
    {
-      uint32_t n;
+      uint32_t n = 0;
       read(&n, 4);
       return LittleEndianToHost32(n);
    }
 
    uint64_t readUInt64L()
    {
-      uint64_t n;
+      uint64_t n = 0;
       read(&n, 8);
       return LittleEndianToHost64(n);
    }
    
    double readDoubleL()
    {
-      double n;
+      double n = 0;
       read(&n, 8);
       return LittleEndianToHostD(n);
    }
