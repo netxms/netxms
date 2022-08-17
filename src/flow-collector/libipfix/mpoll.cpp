@@ -227,7 +227,7 @@ int mpoll_fdadd ( SOCKET fd, int mask, pcallback_f callback, void *arg )
     else {
         /** alloc new pnode
          */
-        if ( (node=MemAllocZeroed(sizeof(poll_node_t))) ==NULL)
+        if ( (node=MemAllocStruct<poll_node_t>()) ==NULL)
             return -1;
         node->reuse = 0;
     }

@@ -11,10 +11,6 @@
 #ifndef _MPOLL_H
 #define _MPOLL_H
 
-#ifdef   __cplusplus
-extern "C" {
-#endif
-
 #define MPOLL_IN        1
 #define MPOLL_OUT       2
 #define MPOLL_EXCEPT    4
@@ -40,8 +36,5 @@ int       LIBIPFIX_EXPORTABLE mpoll_loop  ( int timeout );
 void      mpoll_break    ( void );
 void      mpoll_cleanup  ( void );
 
-#ifdef   __cplusplus
-}
-#endif
 #endif 
 

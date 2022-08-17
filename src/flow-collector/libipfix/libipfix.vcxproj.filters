@@ -15,13 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gettimeofday.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="libipfix.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="mpoll.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ipfix.cpp">
@@ -34,6 +28,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ipfix_ssl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gettimeofday.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mpoll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
