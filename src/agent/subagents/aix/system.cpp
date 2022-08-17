@@ -368,21 +368,6 @@ LONG H_HardwareProduct(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 }
 
 /**
- * Handler for Hardware.System.SerialNumber
- */
-LONG H_HardwareSerialNumber(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
-{
-   char buffer[MAX_RESULT_LENGTH];
-   if (!ReadAttributeFromSysDevice("systemid", buffer))
-      return SYSINFO_RC_ERROR;
-   if (!strncmp(buffer, "IBM,02", 6))
-      ret_mbstring(value, &buffer[6]);
-   else
-      ret_mbstring(value, buffer);
-   return SYSINFO_RC_SUCCESS;
-}
-
-/**
  * Handler for Hardware.System.MachineId parameter
  */
 LONG H_HardwareMachineId(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)

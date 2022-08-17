@@ -345,6 +345,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_certificateExpirationTime = certificateExpirationTime;
    m_certificateIssueTime = certificateIssueTime;
    m_state = AGENT_TUNNEL_INIT;
+   m_serialNumber = nullptr;
    m_systemName = nullptr;
    m_platformName = nullptr;
    m_systemInfo = nullptr;
@@ -371,6 +372,7 @@ AgentTunnel::~AgentTunnel()
    SSL_CTX_free(m_context);
    SSL_free(m_ssl);
    closesocket(m_socket);
+   MemFree(m_serialNumber);
    MemFree(m_systemName);
    MemFree(m_platformName);
    MemFree(m_systemInfo);
@@ -654,6 +656,12 @@ void AgentTunnel::setup(const NXCPMessage *request)
       size_t size;
       const BYTE *hardwareId = request->getBinaryFieldPtr(VID_HARDWARE_ID, &size);
       m_hardwareId = ((hardwareId != nullptr) && (size == HARDWARE_ID_LENGTH)) ? NodeHardwareId(hardwareId) : NodeHardwareId();
+      m_serialNumber = request->getFieldAsString(VID_SERIAL_NUMBER);
+
+      int count = request->getFieldAsInt32(VID_MAC_ADDR_COUNT);
+      uint32_t fieldId = VID_MAC_ADDR_LIST_BASE;
+      for(int i = 0; i < count; i++)
+         m_macAddressList.add(request->getFieldAsMacAddress(fieldId++));
 
       m_state = (m_nodeId != 0) ? AGENT_TUNNEL_BOUND : AGENT_TUNNEL_UNBOUND;
       response.setField(VID_RCC, ERR_SUCCESS);
@@ -670,6 +678,18 @@ void AgentTunnel::setup(const NXCPMessage *request)
       debugPrintf(4, _T("   System information.......: %s"), m_systemInfo);
       debugPrintf(4, _T("   Platform name............: %s"), m_platformName);
       debugPrintf(4, _T("   Hardware ID..............: %s"), BinToStr(m_hardwareId.value(), HARDWARE_ID_LENGTH, hardwareIdText));
+      debugPrintf(4, _T("   Serial number............: %s"), m_serialNumber);
+      if (!m_macAddressList.isEmpty())
+      {
+         StringBuffer sb;
+         for(int i = 0; i < m_macAddressList.size(); i++)
+         {
+            if (i > 0)
+               sb.append(_T(", "));
+            sb.append(m_macAddressList.get(i)->toString());
+         }
+         debugPrintf(4, _T("   MAC addresses............: %s"), sb.cstr());
+      }
       debugPrintf(4, _T("   Agent ID.................: %s"), m_agentId.toString().cstr());
       debugPrintf(4, _T("   Agent version............: %s"), m_agentVersion);
       debugPrintf(4, _T("   Zone UIN.................: %d"), m_zoneUIN);
@@ -1000,7 +1020,7 @@ ssize_t AgentTunnel::sendChannelData(uint32_t id, const void *data, size_t len)
 /**
  * Fill NXCP message with tunnel data
  */
-void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
+void AgentTunnel::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 {
    msg->setField(baseId, m_id);
    msg->setField(baseId + 1, m_guid);
@@ -1027,6 +1047,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, UINT32 baseId) const
    msg->setField(baseId + 20, m_certificateIssuer);
    msg->setField(baseId + 21, m_certificateSubject);
    msg->setFieldFromTime(baseId + 22, m_startTime);
+   msg->setField(baseId + 23, m_serialNumber);
 }
 
 /**

@@ -68,7 +68,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 
    { _T("Hardware.System.Manufacturer"), H_HardwareManufacturer, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"),      H_HardwareProduct,      NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
-   { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, NULL, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
 
    { _T("System.Uname"),                 H_Uname,           NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
    { _T("System.Uptime"),                H_Uptime,          NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },

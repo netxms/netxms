@@ -1147,12 +1147,26 @@ void LIBNETXMS_EXPORTABLE GetSystemTimeZone(TCHAR *buffer, size_t size)
  * Returns pointer to the next word or to the null character if end
  * of line reached.
  */
-const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
+const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer, int index)
 {
-   const WCHAR *ptr;
+   const WCHAR *ptr = line;
 	WCHAR *bptr;
 
-   for(ptr = line; (*ptr == L' ') || (*ptr == L'\t'); ptr++);  // Skip initial spaces
+   // Skip initial spaces
+   while((*ptr == L' ') || (*ptr == L'\t'))
+      ptr++;
+
+   while(index-- > 0)
+   {
+      // Skip word
+      while((*ptr != L' ') && (*ptr != L'\t') && (*ptr != 0))
+         ptr++;
+
+      // Skip spaces
+      while((*ptr == L' ') || (*ptr == L'\t'))
+         ptr++;
+   }
+
    // Copy word to buffer
    for(bptr = buffer; (*ptr != L' ') && (*ptr != L'\t') && (*ptr != 0); ptr++, bptr++)
       *bptr = *ptr;
@@ -1165,12 +1179,26 @@ const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
  * Returns pointer to the next word or to the null character if end
  * of line reached.
  */
-const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
+const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer, int index)
 {
-   const char *ptr;
+   const char *ptr = line;
 	char *bptr;
 
-   for(ptr = line; (*ptr == ' ') || (*ptr == '\t'); ptr++);  // Skip initial spaces
+	// Skip initial spaces
+   while((*ptr == ' ') || (*ptr == '\t'))
+      ptr++;
+
+	while(index-- > 0)
+	{
+	   // Skip word
+	   while((*ptr != ' ') && (*ptr != '\t') && (*ptr != 0))
+	      ptr++;
+
+	   // Skip spaces
+	   while((*ptr == ' ') || (*ptr == '\t'))
+	      ptr++;
+	}
+
    // Copy word to buffer
    for(bptr = buffer; (*ptr != ' ') && (*ptr != '\t') && (*ptr != 0); ptr++, bptr++)
       *bptr = *ptr;

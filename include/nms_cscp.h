@@ -1501,6 +1501,7 @@ typedef struct
 #define VID_IF_ALIAS                ((uint32_t)790)
 #define VID_RESPONSIBLE_USER_TAGS   ((uint32_t)791)
 #define VID_MODIFICATION_MODE       ((uint32_t)792)
+#define VID_MAC_ADDR_COUNT          ((uint32_t)793)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1737,6 +1738,8 @@ typedef struct
 #define VID_MASKED_FIELD_LIST_BASE  ((UINT32)0x10000000)
 
 #define VID_SSH_KEY_LIST_BASE       ((UINT32)0x10000000)
+
+#define VID_MAC_ADDR_LIST_BASE      ((UINT32)0x30000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)

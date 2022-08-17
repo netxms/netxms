@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
 {
    private static final Color COLOR_BOUND = new Color(Display.getDefault(), new RGB(26, 88, 0));
    private static final Color COLOR_UNBOUND = new Color(Display.getDefault(), new RGB(199, 83, 0));
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
@@ -47,7 +47,7 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
    @Override
@@ -84,6 +84,8 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
             return t.isSnmpTrapProxy() ? "Yes" : "No";
          case TunnelManager.COL_SYSLOG_PROXY:
             return t.isSyslogProxy() ? "Yes" : "No";
+         case TunnelManager.COL_SERIAL_NUMBER:
+            return t.getSerialNumber();
          case TunnelManager.COL_STATE:
             return t.isBound() ? "Bound" : "Unbound";
          case TunnelManager.COL_SYSINFO:
@@ -102,7 +104,7 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
    @Override
@@ -111,7 +113,7 @@ public class TunnelListLabelProvider extends LabelProvider implements ITableLabe
       return ((AgentTunnel)element).isBound() ? COLOR_BOUND : COLOR_UNBOUND;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
     */
    @Override

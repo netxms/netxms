@@ -117,6 +117,7 @@ protected:
    AgentTunnelState m_state;
    time_t m_startTime;
    NodeHardwareId m_hardwareId;
+   TCHAR *m_serialNumber;
    TCHAR *m_systemName;
    TCHAR m_hostname[MAX_DNS_NAME];
    TCHAR *m_platformName;
@@ -133,6 +134,7 @@ protected:
    bool m_snmpTrapProxy;
    bool m_syslogProxy;
    bool m_extProvCertificate;
+   StructArray<MacAddress> m_macAddressList;
    SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
    Mutex m_channelLock;
    shared_ptr<AgentTunnel> m_replacedTunnel; // Tunnel that was replaced by this tunnel
@@ -179,6 +181,7 @@ public:
    uuid getGUID() const { return m_guid; }
    const InetAddress& getAddress() const { return m_address; }
    const NodeHardwareId& getHardwareId() const { return m_hardwareId; }
+   const TCHAR *getSerialNumber() const { return CHECK_NULL_EX(m_serialNumber); }
    const TCHAR *getSystemName() const { return CHECK_NULL_EX(m_systemName); }
    const TCHAR *getHostname() const { return m_hostname; }
    const TCHAR *getDisplayName() const { return (m_hostname[0] != 0) ? m_hostname : CHECK_NULL_EX(m_systemName); }
@@ -192,6 +195,7 @@ public:
    uint32_t getNodeId() const { return m_nodeId; }
    time_t getCertificateExpirationTime() const { return m_certificateExpirationTime; }
    time_t getCertificateIssueTime() const { return m_certificateIssueTime; }
+   const StructArray<MacAddress>& getMacAddressList() const { return m_macAddressList; }
    AgentTunnelState getState() const { return m_state; }
    time_t getStartTime() const { return m_startTime; }
 
@@ -210,7 +214,7 @@ public:
    bool isUserAgentInstalled() const { return m_userAgentInstalled; }
    bool isExtProvCertificate() const { return m_extProvCertificate; }   // Check if certificate is externally provisioned
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 
    void debugPrintf(int level, const TCHAR *format, ...);
 };

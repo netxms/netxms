@@ -3369,6 +3369,13 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const NXSL_Identifier
    {
       value = vm->createValue(tunnel->isUserAgentInstalled());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddresses"))
+   {
+      NXSL_Array *array = new NXSL_Array(vm);
+      for(const MacAddress *m : tunnel->getMacAddressList())
+         array->append(vm->createValue(m->toString()));
+      value = vm->createValue(array);
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("platformName"))
    {
       value = vm->createValue(tunnel->getPlatformName());
@@ -3376,6 +3383,10 @@ NXSL_Value *NXSL_TunnelClass::getAttr(NXSL_Object *object, const NXSL_Identifier
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("startTime"))
    {
       value = vm->createValue(static_cast<int64_t>(tunnel->getStartTime()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("serialNumber"))
+   {
+      value = vm->createValue(tunnel->getSerialNumber());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("systemInfo"))
    {

@@ -296,8 +296,6 @@ LONG H_HardwareSystemInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, Ab
          return GetHardwareInfoFromFile("sys_vendor", value);
       case 'P':
          return GetHardwareInfoFromFile("product_name", value);
-      case 'S':
-         return GetHardwareInfoFromFile("product_serial", value);
       case 'U':
          return GetHardwareInfoFromFile("product_uuid", value);
       case 'V':

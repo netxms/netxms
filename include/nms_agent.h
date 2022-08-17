@@ -1344,6 +1344,7 @@ LONG LIBNXAGENT_EXPORTABLE SMBIOS_ListHandler(const TCHAR *cmd, const TCHAR *arg
 LONG LIBNXAGENT_EXPORTABLE SMBIOS_TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid);
+bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size);
 
 #ifdef _WIN32
 ObjectArray<ProcessInformation> LIBNXAGENT_EXPORTABLE *GetProcessListForUserSession(DWORD sessionId);

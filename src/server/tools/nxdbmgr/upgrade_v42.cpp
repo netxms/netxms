@@ -23,6 +23,17 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.7 to 42.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE script_library SET script_name='Hook::OpenUnboundTunnel' WHERE guid='9c2dba59-493b-4645-9159-2ad7a28ea611'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE script_library SET script_name='Hook::OpenBoundTunnel' WHERE guid='64c90b92-27e9-4a96-98ea-d0e152d71262'")));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 42.6 to 42.7
  */
 static bool H_UpgradeFromV6()
@@ -143,6 +154,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  42, 8,  H_UpgradeFromV7  },
    { 6,  42, 7,  H_UpgradeFromV6  },
    { 5,  42, 6,  H_UpgradeFromV5  },
    { 4,  42, 5,  H_UpgradeFromV4  },

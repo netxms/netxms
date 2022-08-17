@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class TunnelListComparator extends ViewerComparator
 {
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -77,6 +77,9 @@ public class TunnelListComparator extends ViewerComparator
             break;
          case TunnelManager.COL_PLATFORM:
             result = t1.getPlatformName().compareToIgnoreCase(t2.getPlatformName());
+            break;
+         case TunnelManager.COL_SERIAL_NUMBER:
+            result = t1.getSerialNumber().compareToIgnoreCase(t2.getSerialNumber());
             break;
          case TunnelManager.COL_SNMP_PROXY:
             result = Boolean.compare(t1.isSnmpProxy(), t2.isSnmpProxy());

@@ -201,7 +201,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 #ifdef __sparc
    { _T("Hardware.System.Manufacturer"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_PROVIDER, TCHAR *), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_PLATFORM, TCHAR *), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
-   { _T("Hardware.System.SerialNumber"), H_SystemHardwareInfo, CAST_TO_POINTER(SI_HW_SERIAL, TCHAR *), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
 #else
    { _T("Hardware.Baseboard.Manufacturer"), SMBIOS_ParameterHandler, _T("bM"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_MANUFACTURER },
    { _T("Hardware.Baseboard.Product"), SMBIOS_ParameterHandler, _T("bP"), DCI_DT_STRING, DCIDESC_HARDWARE_BASEBOARD_PRODUCT },
@@ -241,7 +240,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Hardware.System.Manufacturer"), SMBIOS_ParameterHandler, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), SMBIOS_ParameterHandler, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
    { _T("Hardware.System.ProductCode"), SMBIOS_ParameterHandler, _T("HC"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCTCODE },
-   { _T("Hardware.System.SerialNumber"), SMBIOS_ParameterHandler, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
    { _T("Hardware.System.Version"), SMBIOS_ParameterHandler, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
    { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
 #endif

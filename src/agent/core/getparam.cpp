@@ -334,6 +334,18 @@ static LONG H_SystemHardwareId(const TCHAR *param, const TCHAR *arg, TCHAR *valu
 }
 
 /**
+ * Handler for Hardware.System.SerialNumber
+ */
+static LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char serial[256];
+   if (!GetHardwareSerialNumber(serial, 256))
+      return SYSINFO_RC_ERROR;
+   ret_mbstring(value, serial);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Forward declarations for handlers
  */
 static LONG H_MetricList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -430,6 +442,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
    { _T("File.Time.Change(*)"), H_FileTime, (TCHAR *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
+   { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
    { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
    { _T("System.CurrentDate"), H_SystemDate, nullptr, DCI_DT_STRING, DCIDESC_SYSTEM_CURRENTDATE },

@@ -34,7 +34,6 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCom
 LONG H_HardwareMachineId(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareManufacturer(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_HardwareProduct(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
-LONG H_HardwareSerialNumber(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *);
 LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -146,7 +145,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Hardware.System.MachineId"), H_HardwareMachineId, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MACHINEID },
    { _T("Hardware.System.Manufacturer"), H_HardwareManufacturer, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), H_HardwareProduct, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
-   { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
 
    { _T("LVM.LogicalVolume.Size(*)"), H_LvmLogicalVolumeInfo, (TCHAR *)LVM_LV_SIZE, DCI_DT_UINT64, DCIDESC_LVM_LV_SIZE },
    { _T("LVM.LogicalVolume.Status(*)"), H_LvmLogicalVolumeInfo, (TCHAR *)LVM_LV_STATUS, DCI_DT_STRING, DCIDESC_LVM_LV_STATUS },

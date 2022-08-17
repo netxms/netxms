@@ -1629,6 +1629,26 @@ public:
    void unlink(const T &element) { Array::unlink((void *)&element); }
 
    T *getBuffer() const { return (T*)__getBuffer(); }
+
+   Iterator<T> begin()
+   {
+      return Iterator<T>(new ArrayIterator(this));
+   }
+
+   ConstIterator<T> begin() const
+   {
+      return ConstIterator<T>(new ArrayIterator(const_cast<StructArray<T>*>(this)));
+   }
+
+   Iterator<T> end()
+   {
+      return Iterator<T>(new ArrayIterator(this, size() - 1));
+   }
+
+   ConstIterator<T> end() const
+   {
+      return ConstIterator<T>(new ArrayIterator(const_cast<StructArray<T>*>(this), size() - 1));
+   }
 };
 
 /**
@@ -4352,8 +4372,8 @@ size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, uint8_t *data, size_t si
 
 TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const uint8_t *data, TCHAR *str);
 
-const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer);
-const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer);
+const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer, int index = 0);
+const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer, int index = 0);
 #ifdef UNICODE
 #define ExtractWord ExtractWordW
 #else

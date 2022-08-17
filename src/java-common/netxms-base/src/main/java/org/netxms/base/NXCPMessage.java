@@ -502,7 +502,7 @@ public class NXCPMessage
    {
       setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT64, (value != null) ? value.getTime() / 1000L : 0L));
    }
-   
+
    /**
     * Set byte field from MacAddress object value. If value is null, field will not be set.
     * 
@@ -527,7 +527,7 @@ public class NXCPMessage
 		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsBinary() : null;
 	}
-	
+
 	/**
 	 * Get field as string
 	 * 
@@ -539,7 +539,7 @@ public class NXCPMessage
 		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsString() : "";
 	}
-	
+
 	/**
 	 * Get field as double
 	 * 

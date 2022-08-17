@@ -70,16 +70,17 @@ public class TunnelManager extends ConfigurationView
    public static final int COL_PLATFORM = 7;
    public static final int COL_SYSINFO = 8;
    public static final int COL_HARDWARE_ID = 9;
-   public static final int COL_AGENT_VERSION = 10;
-   public static final int COL_AGENT_ID = 11;
-   public static final int COL_AGENT_PROXY = 12;
-   public static final int COL_SNMP_PROXY = 13;
-   public static final int COL_SNMP_TRAP_PROXY = 14;
-   public static final int COL_SYSLOG_PROXY = 15;
-   public static final int COL_USER_AGENT = 16;
-   public static final int COL_CERTIFICATE_EXPIRATION = 17;
-   public static final int COL_CONNECTION_TIME = 18;
-   
+   public static final int COL_SERIAL_NUMBER = 10;
+   public static final int COL_AGENT_VERSION = 11;
+   public static final int COL_AGENT_ID = 12;
+   public static final int COL_AGENT_PROXY = 13;
+   public static final int COL_SNMP_PROXY = 14;
+   public static final int COL_SNMP_TRAP_PROXY = 15;
+   public static final int COL_SYSLOG_PROXY = 16;
+   public static final int COL_USER_AGENT = 17;
+   public static final int COL_CERTIFICATE_EXPIRATION = 18;
+   public static final int COL_CONNECTION_TIME = 19;
+
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
    private Action actionCreateNode;
@@ -104,10 +105,10 @@ public class TunnelManager extends ConfigurationView
    {     
       final String[] names = 
          { i18n.tr("ID"), i18n.tr("State"), i18n.tr("Node"), i18n.tr("IP address"), i18n.tr("Channels"), i18n.tr("System name"), i18n.tr("Hostname"),
-           i18n.tr("Platform"), i18n.tr("System information"), i18n.tr("Hardware ID"), i18n.tr("Agent version"), i18n.tr("Agent ID"),
-           i18n.tr("Agent proxy"), i18n.tr("SNMP proxy"), i18n.tr("SNMP trap proxy"), i18n.tr("Syslog proxy"), i18n.tr("User agent"), 
+           i18n.tr("Platform"), i18n.tr("System information"), i18n.tr("Hardware ID"), i18n.tr("Serial number"), i18n.tr("Agent version"),
+           i18n.tr("Agent ID"), i18n.tr("Agent proxy"), i18n.tr("SNMP proxy"), i18n.tr("SNMP trap proxy"), i18n.tr("Syslog proxy"), i18n.tr("User agent"),
            i18n.tr("Certificate expiration"), i18n.tr("Connection time") };
-      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 80, 80, 80, 80, 80, 130, 130 };
+      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 150, 80, 80, 80, 80, 80, 130, 130 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());

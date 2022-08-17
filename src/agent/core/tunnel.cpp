@@ -1089,6 +1089,14 @@ bool Tunnel::connectToServer()
    msg.setField(VID_SYSLOG_PROXY, (g_dwFlags & AF_ENABLE_SYSLOG_PROXY) ? true : false);
    msg.setField(VID_EXTPROV_CERTIFICATE, m_certificate != nullptr);
 
+   BYTE hwid[HARDWARE_ID_LENGTH];
+   if (GetSystemHardwareId(hwid))
+      msg.setField(VID_HARDWARE_ID, hwid, sizeof(hwid));
+
+   char serial[256];
+   if (GetHardwareSerialNumber(serial, sizeof(serial)))
+      msg.setFieldFromMBString(VID_SERIAL_NUMBER, serial);
+
    TCHAR fqdn[256];
    if (GetLocalHostName(fqdn, 256, true))
       msg.setField(VID_HOSTNAME, fqdn);
@@ -1100,9 +1108,23 @@ bool Tunnel::connectToServer()
    if (GetMetricValue(_T("System.UName"), buffer, &session) == ERR_SUCCESS)
       msg.setField(VID_SYS_DESCRIPTION, buffer);
 
-   BYTE hwid[HARDWARE_ID_LENGTH];
-   if (GetSystemHardwareId(hwid))
-      msg.setField(VID_HARDWARE_ID, hwid, sizeof(hwid));
+   StringList ifList;
+   if (GetListValue(_T("Net.InterfaceList"), &ifList, &session) == ERR_SUCCESS)
+   {
+      HashSet<MacAddress> macAddressList;
+      for(int i = 0; i < ifList.size(); i++)
+      {
+         TCHAR buffer[MAX_RESULT_LENGTH];
+         ExtractWord(ifList.get(i), buffer, 3);
+         MacAddress macAddr = MacAddress::parse(buffer);
+         if (macAddr.isValid())
+            macAddressList.put(macAddr);
+      }
+      msg.setField(VID_MAC_ADDR_COUNT, macAddressList.size());
+      uint32_t fieldId = VID_MAC_ADDR_LIST_BASE;
+      for(const MacAddress *m : macAddressList)
+         msg.setField(fieldId++, *m);
+   }
 
    sendMessage(msg);
 

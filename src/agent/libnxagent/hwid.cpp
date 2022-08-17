@@ -48,12 +48,12 @@
 /**
  * Get hardware serial number - Windows
  */
-static bool GetHardwareSerialNumber(char *buffer)
+bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
 {
    const char *hwSerial = SMBIOS_GetHardwareSerialNumber();
    if (*hwSerial == 0)
       return false;
-   strlcpy(buffer, hwSerial, INTERNAL_BUFFER_SIZE);
+   strlcpy(buffer, hwSerial, size);
    return true;
 }
 
@@ -86,7 +86,7 @@ static bool GetUniqueMachineId(char *buffer)
 /**
  * Read attribute from sys0 device using ODM
  */
-static bool ReadAttributeFromSysDevice(const char *attribute, char *buffer)
+static bool ReadAttributeFromSysDevice(const char *attribute, char *buffer, size_t size)
 {
    char query[256];
    snprintf(query, 256, "name='sys0' and attribute='%s'", attribute);
@@ -99,7 +99,7 @@ static bool ReadAttributeFromSysDevice(const char *attribute, char *buffer)
       // Sanity check - some versions of AIX return all attributes despite filter in odm_get_obj
       if (!strcmp(attribute, object.attribute))
       {
-         strlcpy(buffer, object.value, INTERNAL_BUFFER_SIZE);
+         strlcpy(buffer, object.value, size);
          success = true;
          break;
       }
@@ -111,9 +111,13 @@ static bool ReadAttributeFromSysDevice(const char *attribute, char *buffer)
 /**
  * Get hardware serial number - AIX
  */
-static bool GetHardwareSerialNumber(char *buffer)
+bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
 {
-   return ReadAttributeFromSysDevice("systemid", buffer);
+   if (!ReadAttributeFromSysDevice("systemid", buffer, size))
+      return false;
+   if (!strncmp(buffer, "IBM,02", 6))
+      memmove(buffer, &buffer[6], strlen(&buffer[6]) + 1);
+   return true;
 }
 
 /**
@@ -121,7 +125,7 @@ static bool GetHardwareSerialNumber(char *buffer)
  */
 static bool GetHardwareProduct(char *buffer)
 {
-   return ReadAttributeFromSysDevice("modelname", buffer);
+   return ReadAttributeFromSysDevice("modelname", buffer, INTERNAL_BUFFER_SIZE);
 }
 
 /**
@@ -141,18 +145,18 @@ static bool GetUniqueMachineId(char *buffer)
 /**
  * Get hardware serial number - Solaris
  */
-static bool GetHardwareSerialNumber(char *buffer)
+bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
 {
 #ifndef __sparc
    const char *hwSerial = SMBIOS_GetHardwareSerialNumber();
    if (*hwSerial != 0)
    {
-      strlcpy(buffer, hwSerial, INTERNAL_BUFFER_SIZE);
+      strlcpy(buffer, hwSerial, size);
       return true;
    }
 #endif
 
-   return sysinfo(SI_HW_SERIAL, buffer, INTERNAL_BUFFER_SIZE) > 0;
+   return sysinfo(SI_HW_SERIAL, buffer, size) > 0;
 }
 
 /**
@@ -199,9 +203,9 @@ static bool GetUniqueMachineId(char *buffer)
 /**
  * Get hardware serial number - HP-UX
  */
-static bool GetHardwareSerialNumber(char *buffer)
+bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
 {
-   return confstr(_CS_MACHINE_MODEL, buffer, INTERNAL_BUFFER_SIZE) > 0;
+   return confstr(_CS_MACHINE_MODEL, buffer, size) > 0;
 }
 
 /**
@@ -225,16 +229,16 @@ static bool GetUniqueMachineId(char *buffer)
 /**
  * Get hardware serial number - macOS
  */
-static bool GetHardwareSerialNumber(char *buffer)
+bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
 {
    bool success = false;
    io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
    if (platformExpert)
    {
       CFTypeRef serial = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
-      if (serial != NULL)
+      if (serial != nullptr)
       {
-         success = CFStringGetCString((CFStringRef)serial, buffer, INTERNAL_BUFFER_SIZE, kCFStringEncodingUTF8);
+         success = CFStringGetCString((CFStringRef)serial, buffer, size, kCFStringEncodingUTF8);
          CFRelease(serial);
       }
       IOObjectRelease(platformExpert);
@@ -265,21 +269,37 @@ static bool GetUniqueMachineId(char *buffer)
 /**
  * Get hardware serial number - other platforms
  */
-static bool GetHardwareSerialNumber(char *buffer)
+bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
 {
    const char *hwSerial = SMBIOS_GetHardwareSerialNumber();
    if (*hwSerial != 0)
    {
-      strlcpy(buffer, hwSerial, INTERNAL_BUFFER_SIZE);
+      strlcpy(buffer, hwSerial, size);
       return true;
    }
 
-   // Attempt to read serial number from file (works on Raspberry Pi)
+   // Attempt to read serial number from /sys/class/dmi/id/product_serial
    bool success = false;
-   int fh = _open("/sys/firmware/devicetree/base/serial-number", O_RDONLY);
+   int fh = _open("/sys/class/dmi/id/product_serial", O_RDONLY);
    if (fh != -1)
    {
-      int bytes = _read(fh, buffer, INTERNAL_BUFFER_SIZE - 1);
+      int bytes = _read(fh, buffer, size - 1);
+      if (bytes > 0)
+      {
+         buffer[bytes] = 0;
+         TrimA(buffer);
+         success = true;
+      }
+      _close(fh);
+   }
+   if (success)
+      return true;
+
+   // Attempt to read serial number from /sys/firmware/devicetree/base/serial-number (works on Raspberry Pi)
+   fh = _open("/sys/firmware/devicetree/base/serial-number", O_RDONLY);
+   if (fh != -1)
+   {
+      int bytes = _read(fh, buffer, size - 1);
       if (bytes > 0)
       {
          buffer[bytes] = 0;
@@ -287,6 +307,48 @@ static bool GetHardwareSerialNumber(char *buffer)
       }
       _close(fh);
    }
+   if (success)
+      return true;
+
+   // Attempt to read serial number from /etc/config/mnf_info (works on Teltonika modems and possibly other OpenWRT platforms)
+   FILE *fp = fopen("/etc/config/mnf_info", "r");
+   if (fp != nullptr)
+   {
+      char line[1024];
+      while(!feof(fp))
+      {
+         if (fgets(line, 1024, fp) == nullptr)
+            break;
+         TrimA(line);
+         if (!strncmp(line, "option serial_code '", 20))
+         {
+            char *p = strchr(&line[20], '\'');
+            if (p != nullptr)
+            {
+               *p = 0;
+               strlcpy(buffer, &line[20], size);
+               success = true;
+            }
+            break;
+         }
+      }
+      fclose(fp);
+   }
+
+   // Attempt to read serial number from /sys/devices/soc0/serial_number (works on Teltonika modems and possibly other Qualcomm SoC devices)
+   fh = _open("/sys/devices/soc0/serial_number", O_RDONLY);
+   if (fh != -1)
+   {
+      int bytes = _read(fh, buffer, size - 1);
+      if (bytes > 0)
+      {
+         buffer[bytes] = 0;
+         TrimA(buffer);
+         success = true;
+      }
+      _close(fh);
+   }
+
    return success;
 }
 
@@ -357,7 +419,7 @@ bool LIBNXAGENT_EXPORTABLE GetSystemHardwareId(BYTE *hwid)
 
    // Add hardware serial number
    char buffer[INTERNAL_BUFFER_SIZE];
-   if (GetHardwareSerialNumber(buffer))
+   if (GetHardwareSerialNumber(buffer, INTERNAL_BUFFER_SIZE))
    {
       SHA1Update(&ctx, buffer, strlen(buffer));
       success = true;

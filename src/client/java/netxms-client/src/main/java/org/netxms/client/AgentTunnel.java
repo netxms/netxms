@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ public class AgentTunnel
    private InetAddress address;
    private UUID agentId;
    private byte[] hardwareId;
+   private String serialNumber;
    private String systemName;
    private String systemInformation;
    private String platformName;
@@ -78,6 +79,7 @@ public class AgentTunnel
       hardwareId = msg.getFieldAsBinary(baseId + 17);
       syslogProxy = msg.getFieldAsBoolean(baseId + 18);
       connectionTime = msg.getFieldAsDate(baseId + 22);
+      serialNumber = msg.getFieldAsString(baseId + 23);
    }
 
    /**
@@ -162,6 +164,16 @@ public class AgentTunnel
          sb.append(Integer.toString(i, 16));
       }
       return sb.toString();
+   }
+
+   /**
+    * Get node's hardware serial number.
+    *
+    * @return node's hardware serial number
+    */
+   public String getSerialNumber()
+   {
+      return serialNumber;
    }
 
    /**

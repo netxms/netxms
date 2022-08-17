@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,16 +81,17 @@ public class TunnelManager extends ViewPart
    public static final int COL_PLATFORM = 7;
    public static final int COL_SYSINFO = 8;
    public static final int COL_HARDWARE_ID = 9;
-   public static final int COL_AGENT_VERSION = 10;
-   public static final int COL_AGENT_ID = 11;
-   public static final int COL_AGENT_PROXY = 12;
-   public static final int COL_SNMP_PROXY = 13;
-   public static final int COL_SNMP_TRAP_PROXY = 14;
-   public static final int COL_SYSLOG_PROXY = 15;
-   public static final int COL_USER_AGENT = 16;
-   public static final int COL_CERTIFICATE_EXPIRATION = 17;
-   public static final int COL_CONNECTION_TIME = 18;
-   
+   public static final int COL_SERIAL_NUMBER = 10;
+   public static final int COL_AGENT_VERSION = 11;
+   public static final int COL_AGENT_ID = 12;
+   public static final int COL_AGENT_PROXY = 13;
+   public static final int COL_SNMP_PROXY = 14;
+   public static final int COL_SNMP_TRAP_PROXY = 15;
+   public static final int COL_SYSLOG_PROXY = 16;
+   public static final int COL_USER_AGENT = 17;
+   public static final int COL_CERTIFICATE_EXPIRATION = 18;
+   public static final int COL_CONNECTION_TIME = 19;
+
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
    private boolean initShowfilter = true;
@@ -103,14 +104,14 @@ public class TunnelManager extends ViewPart
    private Action actionHideNonProxy;
    private Action actionHideNonUA;
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
    public void createPartControl(Composite parent)
    {
       parent.setLayout(new FormLayout());
-      
+
       // Create filter area
       filterText = new FilterText(parent, SWT.NONE, null, true);
       filterText.addModifyListener(new ModifyListener() {
@@ -128,13 +129,13 @@ public class TunnelManager extends ViewPart
             actionShowFilter.setChecked(false);
          }
       });
-      
+
       final String[] names = 
          { "ID", "State", "Node", "IP address", "Channels", "System name", "Hostname",
-           "Platform", "System information", "Hardware ID", "Agent version", "Agent ID",
-           "Agent proxy", "SNMP proxy", "SNMP trap proxy", "Syslog proxy", "User agent", 
+           "Platform", "System information", "Hardware ID", "Serial number", "Agent version",
+           "Agent ID", "Agent proxy", "SNMP proxy", "SNMP trap proxy", "Syslog proxy", "User agent", 
            "Certificate expiration", "Connection time" };
-      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 80, 80, 80, 80, 80, 130, 130 };
+      final int[] widths = { 80, 80, 140, 150, 80, 150, 150, 250, 300, 180, 150, 150, 150, 80, 80, 80, 80, 80, 130, 130 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TunnelListLabelProvider());

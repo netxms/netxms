@@ -48,7 +48,6 @@ enum
 
 LONG H_HardwareManufacturer(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_HardwareProduct(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-LONG H_HardwareSerialNumber(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

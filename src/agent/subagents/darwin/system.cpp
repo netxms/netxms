@@ -169,28 +169,3 @@ LONG H_HardwareProduct(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
    }
    return SYSINFO_RC_ERROR;
 }
-
-/**
- * Handler for Hardware.System.SerialNumber
- */
-LONG H_HardwareSerialNumber(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
-{
-   LONG rc = SYSINFO_RC_ERROR;
-   io_service_t platformExpert = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
-   if (platformExpert)
-   {
-      CFTypeRef serial = IORegistryEntryCreateCFProperty(platformExpert, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
-      if (serial != NULL)
-      {
-         char buffer[MAX_RESULT_LENGTH];
-         if (CFStringGetCString((CFStringRef)serial, buffer, MAX_RESULT_LENGTH, kCFStringEncodingUTF8))
-         {
-            ret_mbstring(value, buffer);
-            rc = SYSINFO_RC_SUCCESS;
-         }
-         CFRelease(serial);
-      }
-      IOObjectRelease(platformExpert);
-   }
-   return rc;
-}

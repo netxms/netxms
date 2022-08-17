@@ -211,7 +211,6 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Hardware.System.Manufacturer"), H_HardwareSystemInfo, _T("HM"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_MANUFACTURER },
    { _T("Hardware.System.Product"), H_HardwareSystemInfo, _T("HP"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCT },
    { _T("Hardware.System.ProductCode"), H_HardwareSystemInfo, _T("HC"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_PRODUCTCODE },
-   { _T("Hardware.System.SerialNumber"), H_HardwareSystemInfo, _T("HS"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
    { _T("Hardware.System.Version"), H_HardwareSystemInfo, _T("HV"), DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_VERSION },
    { _T("Hardware.WakeUpEvent"), SMBIOS_ParameterHandler, _T("W"), DCI_DT_STRING, DCIDESC_HARDWARE_WAKEUPEVENT },
 
