@@ -71,6 +71,7 @@ struct IDataWriter
    ObjectQueue<DELAYED_IDATA_INSERT> *queue;
    const TCHAR *storageClass;
    int workerCount;   // Number of additional worker threads
+   VolatileCounter pendingRequests;  // Requests taken from queue but not completed yet
 };
 
 /**
@@ -485,9 +486,19 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
 }
 
 /**
+ * Prepared PostgreSQL INSERT statement
+ */
+struct PreparedStatement_PostgreSQL
+{
+   TCHAR *statement;
+   int32_t numRecords;
+};
+
+/**
  * Worker thread that prepares INSERT statements for PostgreSQL database
  */
-static void PostgreSQLQueryPrepareThread(IDataWriter *writer, Queue *statementQueue)
+static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<PreparedStatement_PostgreSQL> *statementQueue,
+      SynchronizedObjectMemoryPool<PreparedStatement_PostgreSQL> *memoryPool)
 {
    ThreadSetName("DBWriter/QPrep");
 
@@ -540,7 +551,11 @@ static void PostgreSQLQueryPrepareThread(IDataWriter *writer, Queue *statementQu
       if (count > 0)
       {
          query.append(_T(" ON CONFLICT DO NOTHING"));
-         statementQueue->put(query.takeBuffer());
+         InterlockedAdd(&writer->pendingRequests, count);
+         PreparedStatement_PostgreSQL *s = memoryPool->allocate();
+         s->statement = query.takeBuffer();
+         s->numRecords = count;
+         statementQueue->put(s);
       }
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -564,16 +579,17 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
    else if (maxRecordsPerTxn % maxRecordsPerStmt != 0)
       maxRecordsPerTxn = (maxRecordsPerTxn / maxRecordsPerStmt + 1) * maxRecordsPerStmt;
 
-   Queue statementQueue(1024, Ownership::True);
+   ObjectQueue<PreparedStatement_PostgreSQL> statementQueue(1024, Ownership::False);
+   SynchronizedObjectMemoryPool<PreparedStatement_PostgreSQL> memoryPool;
 
    int activeWorkers = writer->workerCount;
    THREAD *workerThreads = static_cast<THREAD*>(MemAllocLocal(activeWorkers * sizeof(THREAD)));
    for(int i = 0; i < activeWorkers; i++)
-      workerThreads[i] = ThreadCreateEx(PostgreSQLQueryPrepareThread, writer, &statementQueue);
+      workerThreads[i] = ThreadCreateEx(QueryPrepareThread_PostgreSQL, writer, &statementQueue, &memoryPool);
 
    while(true)
    {
-      TCHAR *statement = static_cast<TCHAR*>(statementQueue.getOrBlock());
+      PreparedStatement_PostgreSQL *statement = statementQueue.getOrBlock();
       if (statement == INVALID_POINTER_VALUE)   // End-of-job indicator
       {
          activeWorkers--;
@@ -606,14 +622,16 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
          int count = 0;
          while(true)
          {
-            bool success = DBQuery(hdb, statement);
-            MemFree(statement);
+            bool success = DBQuery(hdb, statement->statement);
+            count += statement->numRecords;
+            InterlockedAdd(&writer->pendingRequests, -statement->numRecords);
+            MemFree(statement->statement);
+            memoryPool.free(statement);
 
-            count++;
             if (!success || (count >= maxRecordsPerTxn))
                break;
 
-            statement = static_cast<TCHAR*>(statementQueue.getOrBlock(500));
+            statement = statementQueue.getOrBlock(500);
             if ((statement == nullptr) || (statement == INVALID_POINTER_VALUE))
                break;
          }
@@ -621,7 +639,8 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
       }
       else
       {
-         MemFree(statement);
+         MemFree(statement->statement);
+         memoryPool.free(statement);
       }
       DBConnectionPoolReleaseConnection(hdb);
 
@@ -877,12 +896,14 @@ void StartDBWriter()
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Oracle, &s_idataWriters[0]);
             s_idataWriters[0].workerCount = 0;
+            s_idataWriters[0].pendingRequests = 0;
             break;
          case DB_SYNTAX_PGSQL:
             s_idataWriters[0].storageClass = nullptr;
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, &s_idataWriters[0]);
             s_idataWriters[0].workerCount = ConfigReadInt(_T("DBWriter.BackgroundWorkers"), 1);
+            s_idataWriters[0].pendingRequests = 0;
             break;
          case DB_SYNTAX_TSDB:
             s_idataWriterCount = static_cast<int>(DCObjectStorageClass::OTHER) + 1;
@@ -892,6 +913,7 @@ void StartDBWriter()
                s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
                s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, &s_idataWriters[i]);
                s_idataWriters[i].workerCount = ConfigReadInt(_T("DBWriter.BackgroundWorkers"), 1);
+               s_idataWriters[i].pendingRequests = 0;
             }
             break;
          default:
@@ -899,6 +921,7 @@ void StartDBWriter()
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Generic, &s_idataWriters[0]);
             s_idataWriters[0].workerCount = 0;
+            s_idataWriters[0].pendingRequests = 0;
             break;
       }
 	}
@@ -916,6 +939,7 @@ void StartDBWriter()
          s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
          s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, &s_idataWriters[i]);
          s_idataWriters[i].workerCount = 0;
+         s_idataWriters[i].pendingRequests = 0;
       }
 	}
 
@@ -980,7 +1004,7 @@ int64_t GetIDataWriterQueueSize()
 {
    int64_t size = 0;
    for(int i = 0; i < s_idataWriterCount; i++)
-      size += s_idataWriters[i].queue->size();
+      size += s_idataWriters[i].queue->size() + s_idataWriters[i].pendingRequests;
    return size;
 }
 
