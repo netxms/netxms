@@ -34,10 +34,6 @@ using std::atomic;
 #include <sys/atomic.h>
 #endif
 
-#if defined(__HP_aCC) && HAVE_ATOMIC_H
-#include <atomic.h>
-#endif
-
 #ifdef _WIN32
 
 // DLL implementations of atomic<> for standard types (int32_t, double, etc.) should be placed here
@@ -71,6 +67,16 @@ FORCEINLINE LONGLONG InterlockedDecrement64(LONGLONG volatile *v)
    return old - 1;
 }
 
+FORCEINLINE LONGLONG InterlockedAdd64(LONGLONG volatile *v, LONGLONG a)
+{
+   LONGLONG old;
+   do
+   {
+      old = *v;
+   } while(_InterlockedCompareExchange64(v, old + a, old) != old);
+   return old + a;
+}
+
 #endif
 
 #else
@@ -94,6 +100,14 @@ static inline int32_t InterlockedIncrement(VolatileCounter *v)
 static inline int32_t InterlockedDecrement(VolatileCounter *v)
 {
    return atomic_dec_32_nv((volatile uint32_t *)v);
+}
+
+/**
+ * Atomically increment 32-bit values
+ */
+static inline int32_t InterlockedAdd(VolatileCounter *v, int32_t a)
+{
+   return (int32_t)atomic_add_32_nv((volatile uint32_t *)v, a);
 }
 
 /**
@@ -126,6 +140,14 @@ static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
 static inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
 {
    return (int64_t)atomic_dec_64_nv((volatile uint64_t *)v);
+}
+
+/**
+ * Atomically add 64-bit values
+ */
+static inline int64_t InterlockedAdd64(VolatileCounter64 *v, int64_t a)
+{
+   return (int64_t)atomic_add_64_nv((volatile uint64_t *)v, a);
 }
 
 /**
@@ -168,162 +190,7 @@ static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
    atomic_and_64((volatile uint64_t *)target, bits);
 }
 
-#elif defined(__HP_aCC)
-
-typedef volatile int32_t VolatileCounter;
-typedef volatile int64_t VolatileCounter64;
-
-/**
- * Atomically increment 32-bit value by 1
- */
-static inline int32_t InterlockedIncrement(VolatileCounter *v)
-{
-#if HAVE_ATOMIC_H
-   return (int32_t)atomic_inc_32((volatile uint32_t *)v) + 1;
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (int32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
-#endif
-}
-
-/**
- * Atomically decrement 32-bit value by 1
- */
-static inline int32_t InterlockedDecrement(VolatileCounter *v)
-{
-#if HAVE_ATOMIC_H
-   return (int32_t)atomic_dec_32((volatile uint32_t *)v) - 1;
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (int32_t)_Asm_fetchadd(_FASZ_W, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
-#endif
-}
-
-/**
- * Atomically exchange 32-bit values
- */
-static inline int32_t InterlockedCompareExchange(VolatileCounter *target, int32_t exchange, int32_t comparand)
-{
-#if HAVE_ATOMIC_H
-   return (int32_t)atomic_cas_32((volatile uint32_t *)target, (uint32_t)comparand, (uint32_t)exchange);
-#else
-   _Asm_mf(_DFLT_FENCE);
-   _Asm_mov_to_ar(_AREG_CCV, (uint64_t)comparand);
-   return (int32_t)_Asm_cmpxchg(_SZ_W, _SEM_ACQ, (void *)target, (uint64_t)exchange, _LDHINT_NONE);
-#endif
-}
-
-/**
- * Atomically exchange 64-bit values
- */
-static inline int64_t InterlockedCompareExchange64(VolatileCounter64 *target, int64_t exchange, int64_t comparand)
-{
-#if HAVE_ATOMIC_H
-   return (int64_t)atomic_cas_64((volatile uint64_t *)target, (uint64_t)comparand, (uint64_t)exchange);
-#else
-   _Asm_mf(_DFLT_FENCE);
-   _Asm_mov_to_ar(_AREG_CCV, (uint64_t)comparand);
-   return (int64_t)_Asm_cmpxchg(_SZ_D, _SEM_ACQ, (void *)target, (uint64_t)exchange, _LDHINT_NONE);
-#endif
-}
-
-/**
- * Atomically increment 64-bit value by 1
- */
-static inline int64_t InterlockedIncrement64(VolatileCounter64 *v)
-{
-#if HAVE_ATOMIC_H
-   return (int64_t)atomic_inc_64((volatile uint64_t *)v) + 1;
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (int64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, +1, _LDHINT_NONE) + 1;
-#endif
-}
-
-/**
- * Atomically decrement 64-bit value by 1
- */
-static inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
-{
-#if HAVE_ATOMIC_H
-   return (int64_t)atomic_dec_64((volatile uint64_t *)v) - 1;
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (int64_t)_Asm_fetchadd(_FASZ_D, _SEM_ACQ, (void *)v, -1, _LDHINT_NONE) - 1;
-#endif
-}
-
-/**
- * Atomically set pointer
- */
-static inline void *InterlockedExchangePointer(void *volatile *target, void *value)
-{
-#ifdef __64BIT__
-#if HAVE_ATOMIC_H
-   return (void*)atomic_swap_64((uint64_t*)target, (uint64_t)value);
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (void*)_Asm_xchg(_SZ_D, (void*)target, (uint64_t)value, _LDHINT_NONE);
-#endif
-#else /* __64BIT__ */
-#if HAVE_ATOMIC_H
-   return (void*)atomic_swap_32((uint32_t*)target, (uint32_t)value);
-#else
-   _Asm_mf(_DFLT_FENCE);
-   return (void*)_Asm_xchg(_SZ_W, (void*)target, (uint32_t)value, _LDHINT_NONE);
-#endif
-#endif
-}
-
-/**
- * Atomic bitwise OR
- */
-static inline void InterlockedOr(VolatileCounter *target, uint32_t bits)
-{
-   int32_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c | bits), c) != c);
-}
-
-/**
- * Atomic bitwise AND
- */
-static inline void InterlockedAnd(VolatileCounter *target, uint32_t bits)
-{
-   int32_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange(target, (int32_t)((uint32_t)c & bits), c) != c);
-}
-
-/**
- * Atomic bitwise OR 64 bit
- */
-static inline void InterlockedOr64(VolatileCounter64 *target, uint64_t bits)
-{
-   int64_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange64(target, (int64_t)((uint64_t)c | bits), c) != c);
-}
-
-/**
- * Atomic bitwise AND 64 bit
- */
-static inline void InterlockedAnd64(VolatileCounter64 *target, uint64_t bits)
-{
-   int64_t c;
-   do
-   {
-      c = *target;
-   } while(InterlockedCompareExchange64(target, (int64_t)((uint64_t)c & bits), c) != c);
-}
-
-#else /* not Solaris nor HP-UX */
+#else /* not Solaris */
 
 typedef volatile int32_t VolatileCounter;
 typedef volatile int64_t VolatileCounter64;
@@ -357,6 +224,22 @@ static inline int32_t InterlockedDecrement(VolatileCounter *v)
    return __atomic_sub_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_sub_and_fetch(v, 1);
+#endif
+}
+
+/**
+ * Atomically add 32-bit values
+ */
+static inline int32_t InterlockedAdd(VolatileCounter *v, int32_t a)
+{
+#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   VolatileCounter temp = a;
+   __asm__ __volatile__("lock; xaddl %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
+   return temp + a;
+#elif HAVE_ATOMIC_BUILTINS
+   return __atomic_add_fetch(v, a, __ATOMIC_SEQ_CST);
+#else
+   return __sync_add_and_fetch(v, a);
 #endif
 }
 
@@ -404,6 +287,22 @@ static inline int64_t InterlockedDecrement64(VolatileCounter64 *v)
    return __atomic_sub_fetch(v, 1, __ATOMIC_SEQ_CST);
 #else
    return __sync_sub_and_fetch(v, 1);
+#endif
+}
+
+/**
+ * Atomically add 64-bit values
+ */
+static inline int64_t InterlockedAdd64(VolatileCounter64 *v, int64_t a)
+{
+#if defined(__GNUC__) && ((__GNUC__ < 4) || (__GNUC_MINOR__ < 1)) && (defined(__i386__) || defined(__x86_64__))
+   VolatileCounter64 temp = a;
+   __asm__ __volatile__("lock; xaddq %0,%1" : "+r" (temp), "+m" (*v) : : "memory");
+   return temp + a;
+#elif HAVE_ATOMIC_BUILTINS && !defined(__minix)
+   return __atomic_add_fetch(v, a, __ATOMIC_SEQ_CST);
+#else
+   return __sync_add_and_fetch(v, a);
 #endif
 }
 
