@@ -982,16 +982,29 @@ static bool SessionComparator_Reconciliation(AbstractCommSession *session, void 
 }
 
 /**
+ * Calculate next delay value
+ */
+static inline uint32_t NextDelayValue(uint32_t curr)
+{
+   if (curr >= 60000)
+      return curr;
+   if (curr == 0)
+      return 100;
+   return curr + rand() % (curr / 2) + (curr / 2);
+}
+
+/**
  * Data reconciliation thread
  */
 static void ReconciliationThread()
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    uint32_t sleepTime = 30000;
+   uint32_t sendDelay = 0;
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Data reconciliation thread started (block size %d, timeout %d ms)"), g_dcReconciliationBlockSize, g_dcReconciliationTimeout);
 
    bool vacuumNeeded = false;
-   while(!AgentSleepAndCheckForShutdown(sleepTime))
+   while(!AgentSleepAndCheckForShutdown(sleepTime + sendDelay))
    {
       // Check if there is something to sync
       s_serverSyncStatusLock.lock();
@@ -1023,6 +1036,7 @@ static void ReconciliationThread()
             vacuumNeeded = false;
          }
          sleepTime = 30000;
+         sendDelay = 0;
          continue;
       }
 
@@ -1035,6 +1049,7 @@ static void ReconciliationThread()
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
+         sendDelay = 0;
          continue;
       }
 
@@ -1081,8 +1096,8 @@ static void ReconciliationThread()
             nxlog_debug_tag(DEBUG_TAG, 6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
 
             NXCPMessage msg(CMD_DCI_DATA, session->generateRequestId(), session->getProtocolVersion());
-            msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
-            msg.setField(VID_NUM_ELEMENTS, (INT16)bulkSendList.size());
+            msg.setField(VID_BULK_RECONCILIATION, true);
+            msg.setField(VID_NUM_ELEMENTS, static_cast<int16_t>(bulkSendList.size()));
             msg.setField(VID_TIMEOUT, g_dcReconciliationTimeout);
 
             uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -1135,7 +1150,6 @@ static void ReconciliationThread()
                      else if (rcc == ERR_RESOURCE_BUSY)
                      {
                         nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: server is busy"));
-                        count = 0;  // Force long sleep
                      }
                      else
                      {
@@ -1149,10 +1163,12 @@ static void ReconciliationThread()
                      rcc = ERR_REQUEST_TIMEOUT;
                   }
                } while(rcc == ERR_PROCESSING);
+               sendDelay = (rcc == ERR_SUCCESS) ? 0 : NextDelayValue(sendDelay);
             }
             else
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("ReconciliationThread: communication error"));
+               sendDelay = NextDelayValue(sendDelay);
             }
          }
 
@@ -1167,7 +1183,7 @@ static void ReconciliationThread()
                   DataElement *e = deleteList.get(i);
                   DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, e->getServerId());
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, e->getDciId());
-                  DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<INT64>(e->getTimestamp()));
+                  DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, static_cast<int64_t>(e->getTimestamp()));
                   DBExecute(hStmt);
                }
                DBCommit(hdb);
