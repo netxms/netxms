@@ -70,6 +70,7 @@ struct IDataWriter
    THREAD thread;
    ObjectQueue<DELAYED_IDATA_INSERT> *queue;
    const TCHAR *storageClass;
+   int workerCount;   // Number of additional worker threads
 };
 
 /**
@@ -484,11 +485,11 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
 }
 
 /**
- * Database "lazy" write thread for idata INSERTs - PostgreSQL version
+ * Worker thread that prepares INSERT statements for PostgreSQL database
  */
-static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
+static void PostgreSQLQueryPrepareThread(IDataWriter *writer, Queue *statementQueue)
 {
-   ThreadSetName("DBWriter/IData");
+   ThreadSetName("DBWriter/QPrep");
 
    bool convertTimestamps;
    TCHAR queryBase[256];
@@ -503,12 +504,7 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
       convertTimestamps = false;
    }
 
-   int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
-   if (maxRecordsPerTxn < maxRecordsPerStmt)
-      maxRecordsPerTxn = maxRecordsPerStmt;
-   else if (maxRecordsPerTxn % maxRecordsPerStmt != 0)
-      maxRecordsPerTxn = (maxRecordsPerTxn / maxRecordsPerStmt + 1) * maxRecordsPerStmt;
 
    StringBuffer query;
    query.setAllocationStep(65536);
@@ -520,6 +516,71 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
+
+      query = queryBase;
+      int count = 0;
+      while(true)
+      {
+         _sntprintf(data, 1024, convertTimestamps ? _T("%c(%u,to_timestamp(%u),%s,%s)") : _T("%c(%u,%u,%s,%s)"),
+                    (count > 0) ? _T(',') : _T(' '),
+                    rq->dciId, (unsigned int)rq->timestamp,
+                    DBPrepareString(g_dbDriver, rq->transformedValue).cstr(),
+                    DBPrepareString(g_dbDriver, rq->rawValue).cstr());
+         query.append(data);
+         MemFree(rq);
+
+         count++;
+         if (count >= maxRecordsPerStmt)
+            break;
+
+         rq = writer->queue->getOrBlock(500);
+         if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
+            break;
+      }
+      if (count > 0)
+      {
+         query.append(_T(" ON CONFLICT DO NOTHING"));
+         statementQueue->put(query.takeBuffer());
+      }
+
+      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
+         break;
+   }
+
+   statementQueue->put(INVALID_POINTER_VALUE);
+}
+
+/**
+ * Database "lazy" write thread for idata INSERTs - PostgreSQL version
+ */
+static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
+{
+   ThreadSetName("DBWriter/IData");
+
+   int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
+   int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
+   if (maxRecordsPerTxn < maxRecordsPerStmt)
+      maxRecordsPerTxn = maxRecordsPerStmt;
+   else if (maxRecordsPerTxn % maxRecordsPerStmt != 0)
+      maxRecordsPerTxn = (maxRecordsPerTxn / maxRecordsPerStmt + 1) * maxRecordsPerStmt;
+
+   Queue statementQueue(1024, Ownership::True);
+
+   int activeWorkers = writer->workerCount;
+   THREAD *workerThreads = static_cast<THREAD*>(MemAllocLocal(activeWorkers * sizeof(THREAD)));
+   for(int i = 0; i < activeWorkers; i++)
+      workerThreads[i] = ThreadCreateEx(PostgreSQLQueryPrepareThread, writer, &statementQueue);
+
+   while(true)
+   {
+      TCHAR *statement = static_cast<TCHAR*>(statementQueue.getOrBlock());
+      if (statement == INVALID_POINTER_VALUE)   // End-of-job indicator
+      {
+         activeWorkers--;
+         if (activeWorkers == 0) // We should get end-of-job indicator from each worker
+            break;
+         continue;
+      }
 
       bool idataLock;
       if (writer->storageClass == nullptr)   // Lock is not needed for TimescaleDB
@@ -542,56 +603,41 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       if (DBBegin(hdb))
       {
-         query = queryBase;
-         int countTxn = 0, countStmt = 0;
+         int count = 0;
          while(true)
          {
-            _sntprintf(data, 1024, convertTimestamps ? _T("%c(%u,to_timestamp(%u),%s,%s)") : _T("%c(%u,%u,%s,%s)"),
-                       (countStmt > 0) ? _T(',') : _T(' '),
-                       rq->dciId, (unsigned int)rq->timestamp,
-                       (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
-                       (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
-            query.append(data);
-            MemFree(rq);
+            bool success = DBQuery(hdb, statement);
+            MemFree(statement);
 
-            countTxn++;
-            countStmt++;
-
-            if (countStmt >= maxRecordsPerStmt)
-            {
-               countStmt = 0;
-               query.append(_T(" ON CONFLICT DO NOTHING"));
-               if (!DBQuery(hdb, query))
-                  break;
-               query = queryBase;
-            }
-
-            if (countTxn >= maxRecordsPerTxn)
+            count++;
+            if (!success || (count >= maxRecordsPerTxn))
                break;
 
-            rq = writer->queue->getOrBlock(500);
-            if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
+            statement = static_cast<TCHAR*>(statementQueue.getOrBlock(500));
+            if ((statement == nullptr) || (statement == INVALID_POINTER_VALUE))
                break;
-         }
-         if (countStmt > 0)
-         {
-            query.append(_T(" ON CONFLICT DO NOTHING"));
-            DBQuery(hdb, query);
          }
          DBCommit(hdb);
       }
       else
       {
-         MemFree(rq);
+         MemFree(statement);
       }
       DBConnectionPoolReleaseConnection(hdb);
 
       if (idataLock)
          s_idataWriteLock.unlock();
 
-      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
-         break;
+      if (statement == INVALID_POINTER_VALUE)   // End-of-job indicator
+      {
+         activeWorkers--;
+         if (activeWorkers == 0) // We should get end-of-job indicator from each worker
+            break;
+      }
    }
+
+   for(int i = 0; i < writer->workerCount; i++)
+      ThreadJoin(workerThreads[i]);
 }
 
 /**
@@ -623,12 +669,12 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
       {
          int count = 0;
          DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"));
-         if (hStmt != NULL)
+         if (hStmt != nullptr)
          {
             while(true)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
-               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->timestamp));
                DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                bool success = DBExecute(hStmt);
@@ -640,7 +686,7 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
                   break;
 
                rq = writer->queue->getOrBlock(500);
-               if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
+               if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
                   break;
             }
             DBFreeStatement(hStmt);
@@ -830,11 +876,13 @@ void StartDBWriter()
             s_idataWriters[0].storageClass = nullptr;
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Oracle, &s_idataWriters[0]);
+            s_idataWriters[0].workerCount = 0;
             break;
          case DB_SYNTAX_PGSQL:
             s_idataWriters[0].storageClass = nullptr;
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, &s_idataWriters[0]);
+            s_idataWriters[0].workerCount = ConfigReadInt(_T("DBWriter.BackgroundWorkers"), 1);
             break;
          case DB_SYNTAX_TSDB:
             s_idataWriterCount = static_cast<int>(DCObjectStorageClass::OTHER) + 1;
@@ -843,12 +891,14 @@ void StartDBWriter()
                s_idataWriters[i].storageClass = DCObject::getStorageClassName(static_cast<DCObjectStorageClass>(i));
                s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
                s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThreadSingleTable_PostgreSQL, &s_idataWriters[i]);
+               s_idataWriters[i].workerCount = ConfigReadInt(_T("DBWriter.BackgroundWorkers"), 1);
             }
             break;
          default:
             s_idataWriters[0].storageClass = nullptr;
             s_idataWriters[0].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
             s_idataWriters[0].thread = ThreadCreateEx(IDataWriteThreadSingleTable_Generic, &s_idataWriters[0]);
+            s_idataWriters[0].workerCount = 0;
             break;
       }
 	}
@@ -865,6 +915,7 @@ void StartDBWriter()
          s_idataWriters[i].storageClass = nullptr;
          s_idataWriters[i].queue = new ObjectQueue<DELAYED_IDATA_INSERT>(4096, Ownership::True, QueuedRequestDestructor);
          s_idataWriters[i].thread = ThreadCreateEx(IDataWriteThread, &s_idataWriters[i]);
+         s_idataWriters[i].workerCount = 0;
       }
 	}
 
@@ -889,6 +940,8 @@ void StopDBWriter()
    for(int i = 0; i < s_idataWriterCount; i++)
    {
       s_idataWriters[i].queue->put(INVALID_POINTER_VALUE);
+      for(int j = 0; j < s_idataWriters[i].workerCount; j++)
+         s_idataWriters[i].queue->put(INVALID_POINTER_VALUE);  // Additional stop indicator for each worker
       ThreadJoin(s_idataWriters[i].thread);
       delete s_idataWriters[i].queue;
    }

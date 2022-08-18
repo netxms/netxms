@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.8 to 42.9
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.BackgroundWorkers"), _T("1"), _T("Number of background workers for DCI data writer."), nullptr, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade from 42.7 to 42.8
  */
 static bool H_UpgradeFromV7()
@@ -154,6 +164,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  42, 9,  H_UpgradeFromV8  },
    { 7,  42, 8,  H_UpgradeFromV7  },
    { 6,  42, 7,  H_UpgradeFromV6  },
    { 5,  42, 6,  H_UpgradeFromV5  },
