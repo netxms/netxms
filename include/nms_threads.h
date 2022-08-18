@@ -625,6 +625,58 @@ template<typename R1, typename R2> THREAD ThreadCreateEx(void (*function)(R1, R2
 }
 
 /**
+ * Template wrapper data for ThreadCreate/ThreadCreateEx thread functions (3 arguments)
+ */
+template<typename R1, typename R2, typename R3> class ThreadCreate_WrapperData_3
+{
+public:
+   void (*function)(R1, R2, R3);
+   R1 arg1;
+   R2 arg2;
+   R3 arg3;
+
+   ThreadCreate_WrapperData_3(void (*_function)(R1, R2, R3), R1 _arg1, R2 _arg2, R3 _arg3) : arg1(_arg1), arg2(_arg2), arg3(_arg3)
+   {
+      function = _function;
+   }
+};
+
+/**
+ * Template wrapper for ThreadCreate/ThreadCreateEx thread functions (3 arguments)
+ */
+template<typename R1, typename R2, typename R3> THREAD_RESULT THREAD_CALL ThreadCreate_Wrapper_3(void *context)
+{
+   auto wd = static_cast<ThreadCreate_WrapperData_3<R1, R2, R3>*>(context);
+   wd->function(wd->arg1, wd->arg2, wd->arg3);
+   delete wd;
+   return THREAD_OK;
+}
+
+/**
+ * Template wrapper for ThreadCreate (3 arguments)
+ */
+template<typename R1, typename R2, typename R3> bool ThreadCreate(void (*function)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_WrapperData_3<R1, R2, R3>(function, arg1, arg2, arg3);
+   bool success = ThreadCreate(ThreadCreate_Wrapper_3<R1, R2, R3>, stackSize, wd);
+   if (!success)
+      delete wd;
+   return success;
+}
+
+/**
+ * Template wrapper for ThreadCreateEx (3 arguments)
+ */
+template<typename R1, typename R2, typename R3> THREAD ThreadCreateEx(void (*function)(R1, R2, R3), R1 arg1, R2 arg2, R3 arg3, int stackSize = 0)
+{
+   auto wd = new ThreadCreate_WrapperData_3<R1, R2, R3>(function, arg1, arg2, arg3);
+   THREAD thread = ThreadCreateEx(ThreadCreate_Wrapper_3<R1, R2, R3>, stackSize, wd);
+   if (thread == INVALID_THREAD_HANDLE)
+      delete wd;
+   return thread;
+}
+
+/**
  * Wrapper data for ThreadCreate/ThreadCreateEx on object method using pointer to object (no arguments)
  */
 template <typename T> class ThreadCreate_ObjectPtr_WrapperData_0
