@@ -5,7 +5,7 @@ assert(null == gethostbyaddr("169.254.15.16"));
 
 //gethostbyname
 assert("127.0.0.1" == gethostbyname("localhost"));
-assert("5.9.112.213" == gethostbyname("www.netxms.org"));
+assert("5.9.112.213" == gethostbyname("mail.netxms.org"));
 assert(null == gethostbyname("non.existing"));
 
 return 0;
