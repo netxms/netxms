@@ -1834,7 +1834,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          context.lastProbeTime = time(nullptr);
          context.messageCount = 0;
 
-         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, &m_mutexSocketWrite, compMethod, nullptr, 0))
+         if (SendFileOverNXCP(channel.get(), requestId, localFile, ctx.get(), offset, FileUploadProgressCalback, &context, &m_mutexSocketWrite, compMethod, nullptr))
          {
             rcc = waitForRCC(requestId, std::max(m_commandTimeout, static_cast<uint32_t>(30000)));  // Wait at least 30 seconds for file transfer confirmation
          }

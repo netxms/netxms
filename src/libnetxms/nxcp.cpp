@@ -639,7 +639,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, c
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, const TCHAR *fileName, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag, size_t chunkSize)
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
    std::ifstream s;
 #ifdef UNICODE
@@ -652,7 +652,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
    if (s.fail())
       return false;
 
-   bool result = SendFileOverNXCP(channel, requestId, &s, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag, chunkSize);
+   bool result = SendFileOverNXCP(channel, requestId, &s, ectx, offset, progressCallback, cbArg, mutex, compressionMethod, cancellationFlag);
 
    s.close();
    return result;
@@ -673,11 +673,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, uint32_t requestId, s
  * Send file over NXCP
  */
 bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_t requestId, std::istream *stream, NXCPEncryptionContext *ectx, off64_t offset,
-         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag, size_t chunkSize)
+         void (* progressCallback)(size_t, void *), void *cbArg, Mutex *mutex, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
    bool success = false;
    size_t bytesTransferred = 0;
-   size_t bytesRemaining = chunkSize;
 
    stream->seekg(offset, (offset < 0) ? std::ios_base::end : std::ios_base::beg);
    if (!stream->fail())
@@ -692,18 +691,15 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
       msg->flags = htons(MF_BINARY | MF_STREAM |
             ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
 
-      size_t bufferSize = FILE_BUFFER_SIZE;
-
       while(true)
       {
          if ((cancellationFlag != nullptr) && (*cancellationFlag > 0))
             break;
 
          size_t bytes;
-         bufferSize = (chunkSize > 0) ? ((bytesRemaining < FILE_BUFFER_SIZE) ? bytesRemaining : FILE_BUFFER_SIZE) : FILE_BUFFER_SIZE;
          if (compressor != nullptr)
          {
-            stream->read(reinterpret_cast<char*>(compBuffer), bufferSize);
+            stream->read(reinterpret_cast<char*>(compBuffer), FILE_BUFFER_SIZE);
             if (stream->bad())
                break;
             bytes = static_cast<size_t>(stream->gcount());
@@ -720,22 +716,17 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
          }
          else
          {
-            stream->read(reinterpret_cast<char*>(msg->fields), bufferSize);
+            stream->read(reinterpret_cast<char*>(msg->fields), FILE_BUFFER_SIZE);
             if (stream->bad())
                break;
             bytes = static_cast<size_t>(stream->gcount());
-         }
-
-         if (chunkSize > 0)
-         {
-            bytesRemaining -= static_cast<size_t>(stream->gcount());
          }
 
          // Message should be aligned to 8 bytes boundary
          uint32_t padding = (8 - ((static_cast<uint32_t>(bytes) + NXCP_HEADER_SIZE) % 8)) & 7;
          msg->size = htonl(static_cast<uint32_t>(bytes) + NXCP_HEADER_SIZE + padding);
          msg->numFields = htonl(static_cast<uint32_t>(bytes));   // numFields contains actual data size for binary message
-         if (stream->eof() || ((chunkSize > 0) && (bytesRemaining == 0)))
+         if (stream->eof())
             msg->flags |= htons(MF_END_OF_FILE);
 
          if (ectx != nullptr)
@@ -759,7 +750,7 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
             progressCallback(bytesTransferred, cbArg);
          }
 
-         if (stream->eof() || ((chunkSize > 0) && (bytesRemaining == 0)))
+         if (stream->eof())
          {
             // End of file
             success = true;
