@@ -136,3 +136,22 @@ assert(value == null);
 
 //weierstrass
 assert((weierstrass(0.5, 7, 10) . "") == "1.999218");
+
+//NXSL metadata printing
+println("==== Functions ====");
+for(f : NXSL::Functions)
+  println(f);
+println("");
+println("==== Classes ====");
+for(c : NXSL::Classes)
+{
+  println("");
+  println(c->name);
+  println("   " . ArrayToString(c->hierarchy, " :: "));
+  println("   Methods:");
+  for(m : c->methods)
+    println("      " . m);
+  println("   Attributes:");
+  for(a : c->attributes)
+    println("      " . a);
+}
