@@ -10144,17 +10144,27 @@ public class NXCSession
       sendFile(msg.getMessageId(), localFile, listener, allowCompression, 0);
    }
    
-   private byte[] getFileHash(File file, long size) throws IOException, NoSuchAlgorithmException
+   /**
+    * Calculate MD5 hash of given file or it's part
+    * 
+    * @param file file to calculate hash for
+    * @param size size of file part to calculate hash for
+    * @return MD5 hash
+    * @throws IOException
+    * @throws NoSuchAlgorithmException if MD5 algorithm is not available
+    */
+   private static byte[] calculateFileHash(File file, long size) throws IOException, NoSuchAlgorithmException
    {
-      InputStream fis = new FileInputStream(file);
+      InputStream in = new FileInputStream(file);
       byte[] buffer = new byte[1024];
       MessageDigest hash = MessageDigest.getInstance("MD5");
       long numRead = 0;
-      while ((numRead = fis.read(buffer)) != -1 && size > 0) {
+      while((numRead = in.read(buffer)) != -1 && size > 0)
+      {
          hash.update(buffer, 0, (int)Math.min(numRead, size));
          size -= numRead;
-      };
-      fis.close();
+      }
+      in.close();
       return hash.digest();
    }
 
@@ -10171,15 +10181,15 @@ public class NXCSession
     */
    public void uploadLocalFileToAgent(long nodeId, File localFile, String remoteFileName, boolean overwrite, ProgressListener listener) throws IOException, NXCException
    {
-      boolean messageResendRequired;
-      //Possible modify methods: 
-      //0 - upload file from scratch 
-      //1 - get file size and hash
-      //2 - append to existing file
-      int modifyMode = 1; 
-      long ofset = 0;
+      // Possible resume modes
+      // 0 - overwrite
+      // 1 - check if resume is possible
+      // 2 - resume file transfer (append to existing file part)
+      int resumeMode = 1; 
+      long offset = 0;
       NXCPMessage msg = null;
       NXCPMessage response = null;
+      boolean messageResendRequired;
       do 
       {
          messageResendRequired = false;
@@ -10193,42 +10203,41 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_MODIFICATION_TIME, new Date(localFile.lastModified()));
          msg.setField(NXCPCodes.VID_OVERWRITE, overwrite);
          msg.setField(NXCPCodes.VID_REPORT_PROGRESS, true); // Indicate that client can accept intermediate progress reports
-         msg.setFieldInt32(NXCPCodes.VID_MODIFICATION_MODE, modifyMode);
+         msg.setFieldInt16(NXCPCodes.VID_RESUME_MODE, resumeMode);
          sendMessage(msg);
          response = waitForRCC(msg.getMessageId());
          if (response.getFieldAsInt32(NXCPCodes.VID_RCC) == RCC.FILE_APPEND_POSSIBLE)
          {
-            byte[] md5RemoteFile = response.getFieldAsBinary(NXCPCodes.VID_HASH_MD5);
-            long sizeRemoteFile = response.getFieldAsInt32(NXCPCodes.VID_FILE_SIZE);
-            byte[] md5LocalFile = new byte[1];
+            byte[] remoteFileHash = response.getFieldAsBinary(NXCPCodes.VID_HASH_MD5);
+            long remoteFileSize = response.getFieldAsInt32(NXCPCodes.VID_FILE_SIZE);
+            byte[] localFileHash = new byte[1];
             try
             {
-               md5LocalFile = getFileHash(localFile, sizeRemoteFile);
+               localFileHash = calculateFileHash(localFile, remoteFileSize);
             }
             catch(NoSuchAlgorithmException e)
             {
                messageResendRequired = true;
-               modifyMode = 0;
+               resumeMode = 0; // Overwrite existing file
             }
-            
-            if (Arrays.equals(md5RemoteFile, md5LocalFile))
+
+            if (Arrays.equals(remoteFileHash, localFileHash))
             {
-               //Even if are equals .part file still might need rename
+               // Even if are equals .part file still might need rename
                messageResendRequired = true;
-               modifyMode = 2;
-               ofset = sizeRemoteFile;
+               resumeMode = 2; // Resume file transfer
+               offset = remoteFileSize;
             }
             else
             {
                messageResendRequired = true;
-               modifyMode = 0;
+               resumeMode = 0;
             }
          }
-         
       } while (messageResendRequired);
 
       boolean serverSideProgressReport = response.getFieldAsBoolean(NXCPCodes.VID_REPORT_PROGRESS);
-      sendFile(msg.getMessageId(), localFile, serverSideProgressReport ? null : listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION), ofset);
+      sendFile(msg.getMessageId(), localFile, serverSideProgressReport ? null : listener, response.getFieldAsBoolean(NXCPCodes.VID_ENABLE_COMPRESSION), offset);
       if (serverSideProgressReport)
       {
          // Newer protocol variant, receive progress updates from server

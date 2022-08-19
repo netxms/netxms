@@ -1730,8 +1730,6 @@ static void FileUploadProgressCalback(size_t bytesTransferred, void *_context)
       context->userCallback(bytesTransferred, context->userContext);
 }
 
-
-
 /**
  * Upload file to agent
  */
@@ -1757,7 +1755,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
    }
 
    bool messageResendRequired;
-   uint32_t modifyMode = FILE_UPLOAD_INFO;
+   FileTransferResumeMode resumeMode = FileTransferResumeMode::CHECK;
    uint32_t rcc;
    uint64_t offset = 0;
    do
@@ -1780,7 +1778,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
       }
       msg.setFieldFromTime(VID_MODIFICATION_TIME, lastModTime);
-      msg.setField(VID_MODIFICATION_MODE, modifyMode);
+      msg.setField(VID_RESUME_MODE, static_cast<uint16_t>(resumeMode));
 
       if (sendMessage(&msg))
       {
@@ -1798,14 +1796,14 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
             CalculateFileMD5Hash(localFile, localHash, remoteSize);
             if (!memcmp(remoteHash, localHash, MD5_DIGEST_SIZE))
             {
-               modifyMode = FILE_UPLOAD_APPEND;
+               resumeMode = FileTransferResumeMode::RESUME;
                messageResendRequired = true;
                offset = remoteSize;
-               //Even if files are equals .part file might need to be renamed
+               // Even if files are equals .part file might need to be renamed
             }
             else
             {
-               modifyMode = FILE_UPLOAD_FROMSTART;
+               resumeMode = FileTransferResumeMode::OVERWRITE;
                messageResendRequired = true;
             }
          }

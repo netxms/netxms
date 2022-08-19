@@ -46,6 +46,16 @@
 struct MessageField;
 
 /**
+ * File upload append mode
+ */
+enum class FileTransferResumeMode : uint16_t
+{
+   OVERWRITE = 0, // Overwrite existing file
+   CHECK = 1,     // Check if resume is possible
+   RESUME = 2     // Resume file transfer (append to existing file part)
+};
+
+/**
  * Default size hint
  */
 #define NXCP_DEFAULT_SIZE_HINT   (4096)

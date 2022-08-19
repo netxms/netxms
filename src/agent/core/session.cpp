@@ -978,51 +978,51 @@ void CommSession::webServiceCustomRequest(NXCPMessage *request)
 /**
  * Perform action on request
  */
-void CommSession::action(NXCPMessage *pRequest, NXCPMessage *pMsg)
+void CommSession::action(NXCPMessage *request, NXCPMessage *response)
 {
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_controlServer)
-      ExecuteAction(*pRequest, pMsg, self());
+      ExecuteAction(*request, response, self());
    else
-      pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
+      response->setField(VID_RCC, ERR_ACCESS_DENIED);
 }
 
 /**
  * Prepare for receiving file
  */
-void CommSession::recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg)
+void CommSession::recvFile(NXCPMessage *request, NXCPMessage *response)
 {
 	TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
 
 	if (m_masterServer)
 	{
 		szFileName[0] = 0;
-		pRequest->getFieldAsString(VID_FILE_NAME, szFileName, MAX_PATH);
+		request->getFieldAsString(VID_FILE_NAME, szFileName, MAX_PATH);
 		debugPrintf(5, _T("CommSession::recvFile(): Preparing for receiving file \"%s\""), szFileName);
       BuildFullPath(szFileName, szFullPath);
 
 		// Check if for some reason we have already opened file
-      openFile(pMsg, szFullPath, pRequest->getId(), pRequest->getFieldAsTime(VID_MODIFICATION_TIME), pRequest->getFieldAsUInt32(VID_MODIFICATION_MODE));
+      openFile(response, szFullPath, request->getId(), request->getFieldAsTime(VID_MODIFICATION_TIME), static_cast<FileTransferResumeMode>(request->getFieldAsUInt16(VID_RESUME_MODE)));
 	}
 	else
 	{
-		pMsg->setField(VID_RCC, ERR_ACCESS_DENIED);
+		response->setField(VID_RCC, ERR_ACCESS_DENIED);
 	}
 }
 
 /**
  * Open file for writing
  */
-void CommSession::openFile(NXCPMessage *response, TCHAR *szFullPath, uint32_t requestId, time_t fileModTime, uint32_t modifyMode)
+void CommSession::openFile(NXCPMessage *response, TCHAR *szFullPath, uint32_t requestId, time_t fileModTime, FileTransferResumeMode resumeMode)
 {
-   if (modifyMode == FILE_UPLOAD_INFO) //Give info mode
+   if (resumeMode == FileTransferResumeMode::CHECK)
    {
       if (DownloadFileInfo::getFileInfo(response, szFullPath) == ERR_FILE_APPEND_POSSIBLE) //do not start download if append is possible
-            return;
+         return;
    }
 
    DownloadFileInfo *fInfo = new DownloadFileInfo(szFullPath, fileModTime);
    debugPrintf(4, _T("CommSession::openFile(): Writing to local file \"%s\""), szFullPath);
-   if (!fInfo->open(modifyMode == FILE_UPLOAD_APPEND))
+   if (!fInfo->open(resumeMode == FileTransferResumeMode::RESUME))
    {
       delete fInfo;
       debugPrintf(3, _T("CommSession::openFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));

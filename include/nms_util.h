@@ -236,13 +236,6 @@ inline WCHAR towupper(WCHAR c)
 #define NXLOG_ROTATION_BY_SIZE   2
 
 /**
- * File upload mode flags
- */
-#define FILE_UPLOAD_FROMSTART 0
-#define FILE_UPLOAD_INFO      1
-#define FILE_UPLOAD_APPEND    2
-
-/**
  * Custom wcslen()
  */
 #if !HAVE_WCSLEN

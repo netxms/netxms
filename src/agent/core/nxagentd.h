@@ -343,8 +343,8 @@ private:
    void getParameter(NXCPMessage *request, NXCPMessage *response);
    void getList(NXCPMessage *request, NXCPMessage *response);
    void getTable(NXCPMessage *request, NXCPMessage *response);
-   void action(NXCPMessage *pRequest, NXCPMessage *pMsg);
-   void recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void action(NXCPMessage *request, NXCPMessage *response);
+   void recvFile(NXCPMessage *request, NXCPMessage *response);
    uint32_t installPackage(NXCPMessage *request);
    uint32_t upgrade(NXCPMessage *request);
    uint32_t setupProxyConnection(NXCPMessage *pRequest);
@@ -398,7 +398,7 @@ public:
 
    virtual const TCHAR *getDebugTag() const override { return m_debugTag; }
 
-   virtual void openFile(NXCPMessage *response, TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0, uint32_t modifyMode = 0) override;
+   virtual void openFile(NXCPMessage *response, TCHAR *nameOfFile, uint32_t requestId, time_t fileModTime = 0, FileTransferResumeMode resumeMode = FileTransferResumeMode::OVERWRITE) override;
 
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
@@ -454,7 +454,7 @@ public:
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
    virtual uint32_t generateRequestId() override { return 0; }
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
-   virtual void openFile(NXCPMessage *response, TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0, uint32_t modifyMode = 0) override { response->setField(VID_RCC, ERR_INTERNAL_ERROR); }
+   virtual void openFile(NXCPMessage *response, TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0, FileTransferResumeMode resumeMode = FileTransferResumeMode::OVERWRITE) override { response->setField(VID_RCC, ERR_INTERNAL_ERROR); }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }
@@ -508,7 +508,7 @@ public:
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) override { return NULL; }
    virtual uint32_t generateRequestId() override { return 0; }
    virtual int getProtocolVersion() override { return NXCP_VERSION; }
-   virtual void openFile(NXCPMessage *response, TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0, uint32_t modifyMode = 0) override { response->setField(VID_RCC, ERR_INTERNAL_ERROR); }
+   virtual void openFile(NXCPMessage *response, TCHAR *fileName, uint32_t requestId, time_t fileModTime = 0, FileTransferResumeMode resumeMode = FileTransferResumeMode::OVERWRITE) override { response->setField(VID_RCC, ERR_INTERNAL_ERROR); }
    virtual void debugPrintf(int level, const TCHAR *format, ...) override;
    virtual void writeLog(int16_t severity, const TCHAR *format, ...) override;
    virtual void prepareProxySessionSetupMsg(NXCPMessage *msg) override { }

@@ -109,7 +109,7 @@ FileUploadJob::FileUploadJob(const TCHAR *params, const shared_ptr<Node>& node, 
    }
 
    if (fileList.size() == 3)
-      m_retryCount = _tcstol(fileList.get(2), NULL, 0);
+      m_retryCount = _tcstol(fileList.get(2), nullptr, 0);
 
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(fileList.get(0)));
@@ -117,7 +117,7 @@ FileUploadJob::FileUploadJob(const TCHAR *params, const shared_ptr<Node>& node, 
 
 	m_localFile = MemCopyString(fileList.get(0));
 	setLocalFileFullPath();
-	m_remoteFile = fileList.get(1)[0] != 0 ? MemCopyString(fileList.get(1)) : NULL;
+	m_remoteFile = fileList.get(1)[0] != 0 ? MemCopyString(fileList.get(1)) : nullptr;
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(fileList.get(1)));
 	m_info = MemCopyString(buffer);
