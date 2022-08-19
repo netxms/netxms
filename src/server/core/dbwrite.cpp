@@ -339,6 +339,10 @@ static void IDataWriteThread(IDataWriter *writer)
 {
    ThreadSetName("DBWriter/IData");
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
+
+   StringBuffer query;
+   query.setAllocationStep(1024);
+
    while(true)
    {
 		DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
@@ -364,14 +368,17 @@ static void IDataWriteThread(IDataWriter *writer)
 			{
 				bool success;
 
+            query.clear(false);
+
 				// For Oracle preparing statement even for one time execution is preferred
 				// For other databases it will actually slow down inserts
 				if (g_dbSyntax == DB_SYNTAX_ORACLE)
 				{
-	            TCHAR query[256];
-               _sntprintf(query, 256, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"), (int)rq->nodeId);
+				   query.append(_T("INSERT INTO idata_"));
+				   query.append(rq->nodeId);
+				   query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"));
                DB_STATEMENT hStmt = DBPrepare(hdb, query);
-               if (hStmt != NULL)
+               if (hStmt != nullptr)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
@@ -387,11 +394,17 @@ static void IDataWriteThread(IDataWriter *writer)
 				}
 				else
 				{
-               TCHAR query[1024];
-               _sntprintf(query, 1024, _T("INSERT INTO idata_%d (item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%s,%s)"),
-                          (int)rq->nodeId, (int)rq->dciId, (int)rq->timestamp,
-                          (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
-                          (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
+               query.append(_T("INSERT INTO idata_"));
+               query.append(rq->nodeId);
+               query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
+               query.append(rq->dciId);
+               query.append(_T(','));
+               query.append(rq->timestamp);
+               query.append(_T(','));
+               query.append(DBPrepareString(hdb, rq->transformedValue));
+               query.append(_T(','));
+               query.append(DBPrepareString(hdb, rq->rawValue));
+               query.append(_T(')'));
                success = DBQuery(hdb, query);
 				}
 
@@ -429,7 +442,9 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
    ThreadSetName("DBWriter/IData");
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
 
-   TCHAR query[1024];
+   StringBuffer query;
+   query.setAllocationStep(1024);
+
    while(true)
    {
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
@@ -453,10 +468,17 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
          int count = 0;
          while(true)
          {
-            _sntprintf(query, 1024, _T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES (%d,%d,%s,%s)"),
-                       (int)rq->dciId, (int)rq->timestamp,
-                       (const TCHAR *)DBPrepareString(hdb, rq->transformedValue),
-                       (const TCHAR *)DBPrepareString(hdb, rq->rawValue));
+            query.clear(false);
+            query.append(_T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
+            query.append(rq->dciId);
+            query.append(_T(','));
+            query.append(rq->timestamp);
+            query.append(_T(','));
+            query.append(DBPrepareString(hdb, rq->transformedValue));
+            query.append(_T(','));
+            query.append(DBPrepareString(hdb, rq->rawValue));
+            query.append(_T(')'));
+
             bool success = DBQuery(hdb, query);
 
             MemFree(rq);
@@ -466,7 +488,7 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
                break;
 
             rq = writer->queue->getOrBlock(500);
-            if ((rq == NULL) || (rq == INVALID_POINTER_VALUE))
+            if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
                break;
          }
          DBCommit(hdb);
@@ -520,24 +542,34 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
    StringBuffer query;
    query.setAllocationStep(65536);
 
-   TCHAR data[1024];
-
    while(true)
    {
       DELAYED_IDATA_INSERT *rq = writer->queue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
-      query = queryBase;
+      query.append(queryBase);
       int count = 0;
       while(true)
       {
-         _sntprintf(data, 1024, convertTimestamps ? _T("%c(%u,to_timestamp(%u),%s,%s)") : _T("%c(%u,%u,%s,%s)"),
-                    (count > 0) ? _T(',') : _T(' '),
-                    rq->dciId, (unsigned int)rq->timestamp,
-                    DBPrepareString(g_dbDriver, rq->transformedValue).cstr(),
-                    DBPrepareString(g_dbDriver, rq->rawValue).cstr());
-         query.append(data);
+         query.append((count > 0) ? _T(",(") : _T(" ("), 2);
+         query.append(rq->dciId);
+         if (convertTimestamps)
+         {
+            query.append(_T(",to_timestamp("), 14);
+            query.append(rq->timestamp);
+            query.append(_T("),"), 2);
+         }
+         else
+         {
+            query.append(_T(','));
+            query.append(rq->timestamp);
+            query.append(_T(','));
+         }
+         query.append(DBPrepareString(g_dbDriver, rq->transformedValue));
+         query.append(_T(','));
+         query.append(DBPrepareString(g_dbDriver, rq->rawValue));
+         query.append(_T(')'));
          MemFree(rq);
 
          count++;
@@ -548,15 +580,13 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
          if ((rq == nullptr) || (rq == INVALID_POINTER_VALUE))
             break;
       }
-      if (count > 0)
-      {
-         query.append(_T(" ON CONFLICT DO NOTHING"));
-         InterlockedAdd(&writer->pendingRequests, count);
-         PreparedStatement_PostgreSQL *s = memoryPool->allocate();
-         s->statement = query.takeBuffer();
-         s->numRecords = count;
-         statementQueue->put(s);
-      }
+
+      query.append(_T(" ON CONFLICT DO NOTHING"));
+      InterlockedAdd(&writer->pendingRequests, count);
+      PreparedStatement_PostgreSQL *s = memoryPool->allocate();
+      s->statement = query.takeBuffer();
+      s->numRecords = count;
+      statementQueue->put(s);
 
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,7 +190,9 @@ StringBuffer ColumnFilter::generateSql()
 			{
 				if (m_negated)
 					sql.append(_T("NOT "));
-				sql.appendFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_dbDriver, m_value.like));
+				sql.append(m_column);
+            sql.append(_T(" LIKE "));
+            sql.append(DBPrepareString(g_dbDriver, m_value.like));
 			}
 			break;
 		case FILTER_SET:
@@ -234,9 +236,7 @@ StringBuffer ColumnFilter::generateSql()
 						{
 							if (i > 0)
 								sql.append(_T(", "));
-							TCHAR buffer[32];
-							_sntprintf(buffer, 32, _T("%u"), children->get(i)->getId());
-							sql.append(buffer);
+							sql.append(children->get(i)->getId());
 						}
 						sql.append(_T(")"));
 					}

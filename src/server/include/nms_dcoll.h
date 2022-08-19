@@ -200,7 +200,7 @@ public:
    void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
 
-   BOOL saveToDB(DB_HANDLE hdb, UINT32 dwIndex);
+   bool saveToDB(DB_HANDLE hdb, uint32_t index);
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, ItemValue &tvalue, shared_ptr<NetObj> target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 

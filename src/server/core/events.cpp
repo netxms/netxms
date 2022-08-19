@@ -468,19 +468,13 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
                }
                break;
             case 'd':
-               buffer = MemAllocString(16);
-               _sntprintf(buffer, 16, _T("%d"), va_arg(args, int32_t));
-					m_parameters.add(buffer);
+					m_parameters.add(IntegerToString(va_arg(args, int32_t), MemAllocString(16)));
                break;
             case 'D':
-               buffer = MemAllocString(32);
-               _sntprintf(buffer, 32, INT64_FMT, va_arg(args, int64_t));
-					m_parameters.add(buffer);
+               m_parameters.add(IntegerToString(va_arg(args, int64_t), MemAllocString(32)));
                break;
             case 't':
-               buffer = MemAllocString(32);
-               _sntprintf(buffer, 32, INT64_FMT, (INT64)va_arg(args, time_t));
-					m_parameters.add(buffer);
+               m_parameters.add(IntegerToString(static_cast<uint64_t>(va_arg(args, time_t)), MemAllocString(32)));
                break;
             case 'x':
             case 'i':
@@ -494,9 +488,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
                m_parameters.add(buffer);
                break;
             case 'a':   // IPv4 address
-               buffer = MemAllocString(16);
-               IpToStr(va_arg(args, UINT32), buffer);
-					m_parameters.add(buffer);
+					m_parameters.add(IpToStr(va_arg(args, uint32_t), MemAllocString(16)));
                break;
             case 'A':   // InetAddress object
                buffer = MemAllocString(64);

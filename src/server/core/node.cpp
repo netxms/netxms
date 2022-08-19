@@ -920,9 +920,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
 
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
          DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryHostName, DB_BIND_TRANSIENT);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpPort));
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_capabilities);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_snmpVersion);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_snmpVersion));
 #ifdef UNICODE
          DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getCommunity()), DB_BIND_DYNAMIC);
 #else
@@ -958,7 +958,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
          DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_physicalContainer);   // rack ID
          DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_bootTime));
-         DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC, 1);
+         DBBind(hStmt, 32, DB_SQLTYPE_VARCHAR, IntegerToString(m_agentCacheMode, cacheMode), DB_BIND_STATIC, 1);
          DBBind(hStmt, 33, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC, 127);
          DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC, 255);
          DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastAgentCommTime));
@@ -973,7 +973,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 44, DB_SQLTYPE_INTEGER, m_sshProxy);
          DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_portRowCount);
          DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_portNumberingScheme);
-         DBBind(hStmt, 47, DB_SQLTYPE_VARCHAR, _itot(m_agentCompressionMode, compressionMode, 10), DB_BIND_STATIC, 1);
+         DBBind(hStmt, 47, DB_SQLTYPE_VARCHAR, IntegerToString(m_agentCompressionMode, compressionMode), DB_BIND_STATIC, 1);
          DBBind(hStmt, 48, DB_SQLTYPE_VARCHAR, m_tunnelId);
          DBBind(hStmt, 49, DB_SQLTYPE_VARCHAR, m_lldpNodeId, DB_BIND_STATIC);
          DBBind(hStmt, 50, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_failTimeSNMP));

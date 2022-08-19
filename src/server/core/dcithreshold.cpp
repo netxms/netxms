@@ -191,51 +191,38 @@ void Threshold::createId()
 /**
  * Save threshold to database
  */
-BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
+bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
 {
-   // Prepare and execute query
-	DB_STATEMENT hStmt;
-	if (!IsDatabaseRecordExist(hdb, _T("thresholds"), _T("threshold_id"), m_id))
-	{
-		hStmt = DBPrepare(hdb,
-			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
-			_T("check_function,check_operation,sample_count,script,event_code,")
-			_T("sequence_number,current_state,state_before_maint,rearm_event_code,repeat_interval,")
-			_T("current_severity,last_event_timestamp,match_count,last_checked_value,threshold_id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
-	}
-	else
-	{
-		hStmt = DBPrepare(hdb,
-			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
-         _T("check_operation=?,sample_count=?,script=?,event_code=?,")
-         _T("sequence_number=?,current_state=?,state_before_maint=?,rearm_event_code=?,")
-			_T("repeat_interval=?,current_severity=?,last_event_timestamp=?,")
-         _T("match_count=?,last_checked_value=? WHERE threshold_id=?"));
-	}
-	if (hStmt == NULL)
-		return FALSE;
+   static const TCHAR *columns[] = {
+      _T("item_id"), _T("fire_value"), _T("rearm_value"), _T("check_function"), _T("check_operation"), _T("sample_count"),
+      _T("script"), _T("event_code"), _T("sequence_number"), _T("current_state"), _T("state_before_maint"), _T("rearm_event_code"),
+      _T("repeat_interval"), _T("current_severity"), _T("last_event_timestamp"), _T("match_count"), _T("last_checked_value"),
+      nullptr
+   };
+	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("thresholds"), _T("threshold_id"), m_id, columns);
+	if (hStmt == nullptr)
+		return false;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_itemId);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_value.getString(), DB_BIND_STATIC);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_function);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_operation);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_function));
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_operation));
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_sampleCount);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_scriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_eventCode);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, dwIndex);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)(m_isReached ? 1 : 0));
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, index);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_isReached ? 1 : 0));
    DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, (m_wasReachedBeforeMaint ? _T("1") : _T("0")), DB_BIND_STATIC);
 	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_rearmEventCode);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_repeatInterval);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_lastEventTimestamp);
-	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_numMatches);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_repeatInterval);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_currentSeverity));
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastEventTimestamp));
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_numMatches);
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_lastCheckValue.getString(), DB_BIND_STATIC);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_id);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
 
-	BOOL success = DBExecute(hStmt);
+	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 	return success;
 }

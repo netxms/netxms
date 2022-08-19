@@ -366,57 +366,60 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_stateFlags);
    DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
 
-   bool bResult = DBExecute(hStmt);
+   bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
-   // Save thresholds
-   if (bResult && (m_thresholds != nullptr))
-   {
-		for(int i = 0; i < m_thresholds->size(); i++)
-         m_thresholds->get(i)->saveToDB(hdb, i);
-   }
-
    // Delete non-existing thresholds
-	TCHAR query[256];
-   _sntprintf(query, 256, _T("SELECT threshold_id FROM thresholds WHERE item_id=%u"), m_id);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != nullptr)
+   if (getThresholdCount() > 0)
    {
-      int iNumRows = DBGetNumRows(hResult);
-      for(int i = 0; i < iNumRows; i++)
+      // Save thresholds
+      if (success && (m_thresholds != nullptr))
       {
-         UINT32 dwId = DBGetFieldULong(hResult, i, 0);
-			int j;
-			for(j = 0; j < getThresholdCount(); j++)
-				if (m_thresholds->get(j)->getId() == dwId)
-					break;
-         if (j == getThresholdCount())
-         {
-            ExecuteQueryOnObject(hdb, dwId, _T("DELETE FROM thresholds WHERE threshold_id=?"));
-         }
+         for(int i = 0; (i < m_thresholds->size()) && success; i++)
+            success = m_thresholds->get(i)->saveToDB(hdb, i);
       }
-      DBFreeResult(hResult);
+
+      if (success)
+      {
+         StringBuffer query(_T("DELETE FROM thresholds WHERE item_id="));
+         query.append(m_id);
+         query.append(_T(" AND threshold_id NOT IN ("));
+         for(int i = 0; i < getThresholdCount(); i++)
+         {
+            query.append(m_thresholds->get(i)->getId());
+            query.append(_T(','));
+         }
+         query.shrink();
+         query.append(_T(')'));
+         success = DBQuery(hdb, query);
+      }
+   }
+   else if (success)
+   {
+      success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM thresholds WHERE item_id=?"));
    }
 
    // Create record in raw_dci_values if needed
-   if (!IsDatabaseRecordExist(hdb, _T("raw_dci_values"), _T("item_id"), m_id))
+   if (success && !IsDatabaseRecordExist(hdb, _T("raw_dci_values"), _T("item_id"), m_id))
    {
       hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time,cache_timestamp) VALUES (?,?,?,?)"));
-      if (hStmt == nullptr)
+      if (hStmt != nullptr)
       {
-         unlock();
-         return false;
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_tPrevValueTimeStamp));
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
       }
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int64_t>(m_tPrevValueTimeStamp));
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int64_t>((m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0));
-      bResult = DBExecute(hStmt);
-      DBFreeStatement(hStmt);
+      else
+      {
+         success = false;
+      }
    }
 
    unlock();
-	return bResult ? DCObject::saveToDatabase(hdb) : false;
+	return success ? DCObject::saveToDatabase(hdb) : false;
 }
 
 /**
