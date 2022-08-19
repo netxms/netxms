@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.9 to 42.10
+ */
+static bool H_UpgradeFromV9()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.InsertParallelismDegree"), _T("1"), _T("Degree of parallelism for INSERT statements executed by DCI data writer (only valid for TimescaleDB)."), nullptr, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade from 42.8 to 42.9
  */
 static bool H_UpgradeFromV8()
@@ -164,6 +174,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  42, 10, H_UpgradeFromV9  },
    { 8,  42, 9,  H_UpgradeFromV8  },
    { 7,  42, 8,  H_UpgradeFromV7  },
    { 6,  42, 7,  H_UpgradeFromV6  },

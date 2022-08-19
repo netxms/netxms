@@ -602,6 +602,12 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
 {
    ThreadSetName("DBWriter/IData");
 
+   bool idataLock;
+   if (writer->storageClass == nullptr)   // Lock is not needed for TimescaleDB
+      idataLock = ((g_flags & AF_DBWRITER_HK_INTERLOCK) != 0);
+   else
+      idataLock = false;
+
    int maxRecordsPerTxn = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    int maxRecordsPerStmt = ConfigReadInt(_T("DBWriter.MaxRecordsPerStatement"), 100);
    if (maxRecordsPerTxn < maxRecordsPerStmt)
@@ -617,6 +623,28 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
    for(int i = 0; i < activeWorkers; i++)
       workerThreads[i] = ThreadCreateEx(QueryPrepareThread_PostgreSQL, writer, &statementQueue, &memoryPool);
 
+   ThreadPool *writerPool = nullptr;
+   int numWriters = ConfigReadInt(_T("DBWriter.InsertParallelismDegree"), 1);
+   if (numWriters > 1)
+   {
+      if (!idataLock)
+      {
+         TCHAR poolName[64] = _T("DBWRITE");
+         if (writer->storageClass != nullptr)
+         {
+            _tcscat(poolName, _T("/"));
+            _tcscat(poolName, writer->storageClass);
+            _tcsupr(poolName);
+         }
+         writerPool = ThreadPoolCreate(poolName, numWriters, numWriters);
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Using parallel write mode for idata (%d writers)"), numWriters);
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Parallel write disabled because DBWriter/Housekeeper interlock is ON"));
+      }
+   }
+
    while(true)
    {
       PreparedStatement_PostgreSQL *statement = statementQueue.getOrBlock();
@@ -628,65 +656,69 @@ static void IDataWriteThreadSingleTable_PostgreSQL(IDataWriter *writer)
          continue;
       }
 
-      bool idataLock;
-      if (writer->storageClass == nullptr)   // Lock is not needed for TimescaleDB
+      if (writerPool != nullptr)
       {
-         if (g_flags & AF_DBWRITER_HK_INTERLOCK)
-         {
+         ThreadPoolExecute(writerPool,
+            [writer, statement, &memoryPool] ()
+            {
+               DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+               DBQuery(hdb, statement->statement);
+               InterlockedAdd(&writer->pendingRequests, -statement->numRecords);
+               MemFree(statement->statement);
+               memoryPool.free(statement);
+               DBConnectionPoolReleaseConnection(hdb);
+            });
+      }
+      else
+      {
+         if (idataLock)
             s_idataWriteLock.readLock();
-            idataLock = true;
+
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         if (DBBegin(hdb))
+         {
+            int count = 0;
+            while(true)
+            {
+               bool success = DBQuery(hdb, statement->statement);
+               count += statement->numRecords;
+               InterlockedAdd(&writer->pendingRequests, -statement->numRecords);
+               MemFree(statement->statement);
+               memoryPool.free(statement);
+
+               if (!success || (count >= maxRecordsPerTxn))
+                  break;
+
+               statement = statementQueue.getOrBlock(500);
+               if ((statement == nullptr) || (statement == INVALID_POINTER_VALUE))
+                  break;
+            }
+            DBCommit(hdb);
          }
          else
          {
-            idataLock = false;
-         }
-      }
-      else
-      {
-         idataLock = false;
-      }
-
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      if (DBBegin(hdb))
-      {
-         int count = 0;
-         while(true)
-         {
-            bool success = DBQuery(hdb, statement->statement);
-            count += statement->numRecords;
-            InterlockedAdd(&writer->pendingRequests, -statement->numRecords);
             MemFree(statement->statement);
             memoryPool.free(statement);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
 
-            if (!success || (count >= maxRecordsPerTxn))
-               break;
+         if (idataLock)
+            s_idataWriteLock.unlock();
 
-            statement = statementQueue.getOrBlock(500);
-            if ((statement == nullptr) || (statement == INVALID_POINTER_VALUE))
+         if (statement == INVALID_POINTER_VALUE)   // End-of-job indicator
+         {
+            activeWorkers--;
+            if (activeWorkers == 0) // We should get end-of-job indicator from each worker
                break;
          }
-         DBCommit(hdb);
-      }
-      else
-      {
-         MemFree(statement->statement);
-         memoryPool.free(statement);
-      }
-      DBConnectionPoolReleaseConnection(hdb);
-
-      if (idataLock)
-         s_idataWriteLock.unlock();
-
-      if (statement == INVALID_POINTER_VALUE)   // End-of-job indicator
-      {
-         activeWorkers--;
-         if (activeWorkers == 0) // We should get end-of-job indicator from each worker
-            break;
       }
    }
 
    for(int i = 0; i < writer->workerCount; i++)
       ThreadJoin(workerThreads[i]);
+
+   if (writerPool != nullptr)
+      ThreadPoolDestroy(writerPool);
 }
 
 /**
