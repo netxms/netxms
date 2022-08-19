@@ -1137,8 +1137,16 @@ public:
    void setAllocationStep(size_t step) { m_allocationStep = step; }
 
    TCHAR *getBuffer() { return m_buffer; }
-   TCHAR *takeBuffer() { TCHAR *b = m_buffer; m_buffer = NULL; m_allocated = 0; m_length = 0; return b; }
    void setBuffer(TCHAR *buffer);
+   TCHAR *takeBuffer()
+   {
+      TCHAR *b = isInternalBuffer() ? MemCopyString(m_internalBuffer) : m_buffer;
+      m_buffer = m_internalBuffer;
+      m_allocated = 0;
+      m_length = 0;
+      m_buffer[0] = 0;
+      return b;
+   }
 
    StringBuffer& operator =(const TCHAR *str);
    StringBuffer& operator =(const StringBuffer &src);
@@ -1191,7 +1199,7 @@ public:
 
    void insertAsHexString(size_t index, const void *data, size_t len, TCHAR separator = 0);
 
-   void clear();
+   void clear(bool releaseBuffer = true);
 
    void escapeCharacter(int ch, int esc);
    void replace(const TCHAR *pszSrc, const TCHAR *pszDst);
@@ -4717,28 +4725,6 @@ size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCH
 #define wcsftime nx_wcsftime
 #endif
 
-#ifndef _WIN32
-
-#if HAVE_ITOA && !HAVE__ITOA
-#define _itoa itoa
-#undef HAVE__ITOA
-#define HAVE__ITOA 1
-#endif
-#if !HAVE__ITOA && !defined(_WIN32)
-char LIBNETXMS_EXPORTABLE *_itoa(int value, char *str, int base);
-#endif
-
-#if HAVE_ITOW && !HAVE__ITOW
-#define _itow itow
-#undef HAVE__ITOW
-#define HAVE__ITOW 1
-#endif
-#if !HAVE__ITOW && !defined(_WIN32)
-WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base);
-#endif
-
-#endif /* _WIN32 */
-
 #ifdef _WIN32
 #ifdef UNICODE
 DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *path);
@@ -4772,6 +4758,15 @@ int LIBNETXMS_EXPORTABLE scandir(const char *dir, struct dirent ***namelist,
               int (*compar)(const struct dirent **, const struct dirent **));
 int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent **b);
 #endif
+
+char LIBNETXMS_EXPORTABLE *IntegerToString(int32_t value, char *str, int base = 10);
+WCHAR LIBNETXMS_EXPORTABLE *IntegerToString(int32_t value, WCHAR *str, int base = 10);
+char LIBNETXMS_EXPORTABLE *IntegerToString(uint32_t value, char *str, int base = 10);
+WCHAR LIBNETXMS_EXPORTABLE *IntegerToString(uint32_t value, WCHAR *str, int base = 10);
+char LIBNETXMS_EXPORTABLE *IntegerToString(int64_t value, char *str, int base = 10);
+WCHAR LIBNETXMS_EXPORTABLE *IntegerToString(int64_t value, WCHAR *str, int base = 10);
+char LIBNETXMS_EXPORTABLE *IntegerToString(uint64_t value, char *str, int base = 10);
+WCHAR LIBNETXMS_EXPORTABLE *IntegerToString(uint64_t value, WCHAR *str, int base = 10);
 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 

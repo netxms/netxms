@@ -928,27 +928,29 @@ static void TestInetAddress()
 }
 
 /**
- * Test itoa/itow
+ * Test integer to string conversion
  */
-static void TestItoa()
+static void TestIntegerToString()
 {
    char buffer[64];
    WCHAR wbuffer[64];
 
-   StartTest(_T("itoa"));
-   AssertTrue(!strcmp(_itoa(127, buffer, 10), "127"));
-   AssertTrue(!strcmp(_itoa(0, buffer, 10), "0"));
-   AssertTrue(!strcmp(_itoa(-3, buffer, 10), "-3"));
-   AssertTrue(!strcmp(_itoa(0555, buffer, 8), "555"));
-   AssertTrue(!strcmp(_itoa(0xFA48, buffer, 16), "fa48"));
+   StartTest(_T("IntegerToString (ASCII)"));
+   AssertTrue(!strcmp(IntegerToString(127, buffer, 10), "127"));
+   AssertTrue(!strcmp(IntegerToString(0, buffer, 10), "0"));
+   AssertTrue(!strcmp(IntegerToString(-3, buffer, 10), "-3"));
+   AssertTrue(!strcmp(IntegerToString(0555, buffer, 8), "555"));
+   AssertTrue(!strcmp(IntegerToString(0xFA48, buffer, 16), "fa48"));
+   AssertTrue(!strcmp(IntegerToString(_ULL(0xF0F1F20102030405), buffer, 16), "f0f1f20102030405"));
    EndTest();
 
-   StartTest(_T("itow"));
-   AssertTrue(!wcscmp(_itow(127, wbuffer, 10), L"127"));
-   AssertTrue(!wcscmp(_itow(0, wbuffer, 10), L"0"));
-   AssertTrue(!wcscmp(_itow(-3, wbuffer, 10), L"-3"));
-   AssertTrue(!wcscmp(_itow(0555, wbuffer, 8), L"555"));
-   AssertTrue(!wcscmp(_itow(0xFA48, wbuffer, 16), L"fa48"));
+   StartTest(_T("IntegerToString (Unicode)"));
+   AssertTrue(!wcscmp(IntegerToString(127, wbuffer, 10), L"127"));
+   AssertTrue(!wcscmp(IntegerToString(0, wbuffer, 10), L"0"));
+   AssertTrue(!wcscmp(IntegerToString(-3, wbuffer, 10), L"-3"));
+   AssertTrue(!wcscmp(IntegerToString(0555, wbuffer, 8), L"555"));
+   AssertTrue(!wcscmp(IntegerToString(0xFA48, wbuffer, 16), L"fa48"));
+   AssertTrue(!wcscmp(IntegerToString(_ULL(0xF0F1F20102030405), wbuffer, 16), L"f0f1f20102030405"));
    EndTest();
 }
 
@@ -2141,7 +2143,7 @@ int main(int argc, char *argv[])
    TestMsgWaitQueue();
    TestMacAddress();
    TestInetAddress();
-   TestItoa();
+   TestIntegerToString();
    TestQueue();
    TestSharedObjectQueue();
    TestHashMap();

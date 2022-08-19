@@ -213,6 +213,7 @@
     <ClCompile Include="ice.c" />
     <ClCompile Include="icmp.cpp" />
     <ClCompile Include="inetaddr.cpp" />
+    <ClCompile Include="itoa.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="lz4.c" />
     <ClCompile Include="macaddr.cpp" />

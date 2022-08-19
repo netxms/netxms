@@ -84,6 +84,9 @@
     <ClCompile Include="inetaddr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="itoa.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

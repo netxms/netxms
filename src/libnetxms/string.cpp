@@ -496,7 +496,7 @@ StringBuffer& StringBuffer::operator =(const TCHAR *str)
 {
    if (!isInternalBuffer())
       MemFree(m_buffer);
-   m_length = (str != NULL) ? _tcslen(str) : 0;
+   m_length = (str != nullptr) ? _tcslen(str) : 0;
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
       m_allocated = 0;
@@ -804,7 +804,7 @@ void StringBuffer::insert(size_t index, int32_t n, const TCHAR *format)
    }
    else
    {
-      insert(index, _itot(n, buffer, 10));
+      insert(index, IntegerToString(n, buffer));
    }
 }
 
@@ -814,8 +814,15 @@ void StringBuffer::insert(size_t index, int32_t n, const TCHAR *format)
 void StringBuffer::insert(size_t index, uint32_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != nullptr) ? format : _T("%u"), n);
-   insert(index, buffer);
+   if (format != nullptr)
+   {
+      _sntprintf(buffer, 64, format, n);
+      insert(index, buffer);
+   }
+   else
+   {
+      insert(index, IntegerToString(n, buffer));
+   }
 }
 
 /**
@@ -824,8 +831,15 @@ void StringBuffer::insert(size_t index, uint32_t n, const TCHAR *format)
 void StringBuffer::insert(size_t index, int64_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != nullptr) ? format : INT64_FMT, n);
-   insert(index, buffer);
+   if (format != nullptr)
+   {
+      _sntprintf(buffer, 64, format, n);
+      insert(index, buffer);
+   }
+   else
+   {
+      insert(index, IntegerToString(n, buffer));
+   }
 }
 
 /**
@@ -834,8 +848,15 @@ void StringBuffer::insert(size_t index, int64_t n, const TCHAR *format)
 void StringBuffer::insert(size_t index, uint64_t n, const TCHAR *format)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, (format != nullptr) ? format : UINT64_FMT, n);
-   insert(index, buffer);
+   if (format != nullptr)
+   {
+      _sntprintf(buffer, 64, format, n);
+      insert(index, buffer);
+   }
+   else
+   {
+      insert(index, IntegerToString(n, buffer));
+   }
 }
 
 /**
@@ -1047,9 +1068,9 @@ void StringBuffer::shrink(size_t chars)
 /**
  * Clear string
  */
-void StringBuffer::clear()
+void StringBuffer::clear(bool releaseBuffer)
 {
-   if (!isInternalBuffer())
+   if (releaseBuffer && !isInternalBuffer())
    {
       MemFree(m_buffer);
       m_buffer = m_internalBuffer;

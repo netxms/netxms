@@ -574,7 +574,6 @@ using std::wcsncasecmp;
 #endif
 
 #ifdef __minix
-#undef HAVE_ITOA  /* Minix has non-compatible itoa() */
 #undef HAVE_GETHOSTBYNAME2_R
 #endif
 
