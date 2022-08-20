@@ -121,6 +121,7 @@ private:
    Tunnel(const TCHAR *hostname, uint16_t port, const TCHAR *certificate, const TCHAR *pkeyPassword, const BYTE *fingerprint);
 
    bool connectToServer();
+   void processHandshakeError(int sslErr, bool certificateLoaded);
    int sslWrite(const void *data, size_t size);
    bool sendMessage(const NXCPMessage& msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return (m_queue != nullptr) ? m_queue->waitForMessage(code, id, REQUEST_TIMEOUT) : nullptr; }
@@ -879,6 +880,33 @@ bool Tunnel::verifyServerCertificateFingerprint(STACK_OF(X509) * chain)
 }
 
 /**
+ * Process handshake error
+ */
+void Tunnel::processHandshakeError(int sslErr, bool certificateLoaded)
+{
+   char buffer[128];
+   debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
+
+   unsigned long error;
+   while((error = ERR_get_error()) != 0)
+   {
+      ERR_error_string_n(error, buffer, sizeof(buffer));
+      debugPrintf(5, _T("Caused by: %hs"), buffer);
+   }
+
+   if (certificateLoaded)
+   {
+      m_tlsHandshakeFailures++;
+      if (m_tlsHandshakeFailures >= 10)
+      {
+         m_ignoreClientCertificate = true;
+         m_tlsHandshakeFailures = 0;
+         debugPrintf(4, _T("Next connection attempt will ignore agent certificate"));
+      }
+   }
+}
+
+/**
  * Connect to server
  */
 bool Tunnel::connectToServer()
@@ -979,26 +1007,7 @@ bool Tunnel::connectToServer()
          }
          else
          {
-            char buffer[128];
-            debugPrintf(4, _T("TLS handshake failed (%hs)"), ERR_error_string(sslErr, buffer));
-
-            unsigned long error;
-            while((error = ERR_get_error()) != 0)
-            {
-               ERR_error_string_n(error, buffer, sizeof(buffer));
-               debugPrintf(5, _T("Caused by: %hs"), buffer);
-            }
-
-            if (certificateLoaded)
-            {
-               m_tlsHandshakeFailures++;
-               if (m_tlsHandshakeFailures >= 10)
-               {
-                  m_ignoreClientCertificate = true;
-                  m_tlsHandshakeFailures = 0;
-                  debugPrintf(4, _T("Next connection attempt will ignore agent certificate"));
-               }
-            }
+            processHandshakeError(sslErr, certificateLoaded);
             m_stateLock.unlock();
             return false;
          }
@@ -1006,11 +1015,38 @@ bool Tunnel::connectToServer()
       break;
    }
 
+   // Check if TLS connection still valid. If agent's certificate verification fails on server side,
+   // TLS handshake still completes successfully on agent side
+   bool canRead = (SSL_pending(m_ssl) != 0);
+   if (!canRead)
+   {
+      SocketPoller sp;
+      sp.add(m_socket);
+      canRead = (sp.poll(1000) > 0);
+   }
+   if (canRead)
+   {
+      // Server will wait for first message from agent, so we can attempt read here without loosing incoming NXCP messages
+      char buffer[16];
+      int rc = SSL_read(m_ssl, buffer, sizeof(buffer));
+      if (rc <= 0)
+      {
+         int sslErr = SSL_get_error(m_ssl, rc);
+         if ((sslErr != SSL_ERROR_WANT_READ) && (sslErr != SSL_ERROR_WANT_WRITE))
+         {
+            processHandshakeError(sslErr, certificateLoaded);
+            m_stateLock.unlock();
+            return false;
+         }
+      }
+   }
+
+   debugPrintf(6, _T("TLS handshake completed"));
    m_tlsHandshakeFailures = 0;
 
    // Check server certificate
    X509 *cert = SSL_get_peer_certificate(m_ssl);
-   if (cert == NULL)
+   if (cert == nullptr)
    {
       debugPrintf(4, _T("Server certificate not provided"));
       if (m_socket != INVALID_SOCKET)
