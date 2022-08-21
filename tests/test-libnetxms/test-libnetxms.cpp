@@ -686,6 +686,19 @@ static void TestString()
    String os2(MemCopyString(_T("long preallocated string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")), -1, Ownership::True);
    AssertTrue(!_tcscmp(os2, _T("long preallocated string - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
    EndTest();
+
+   StartTest(_T("String - move constructor"));
+   String src1(_T("string to move"));
+   AssertTrue(!_tcscmp(src1, _T("string to move")));
+   String dst1(std::move(src1));
+   AssertTrue(!_tcscmp(dst1, _T("string to move")));
+   AssertTrue(src1.isEmpty());
+   String src2(_T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"));
+   AssertTrue(!_tcscmp(src2, _T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
+   String dst2(std::move(src2));
+   AssertTrue(!_tcscmp(dst2, _T("long string to move - 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")));
+   AssertTrue(src2.isEmpty());
+   EndTest();
 }
 
 /**
