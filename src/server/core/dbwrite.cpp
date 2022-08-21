@@ -44,8 +44,8 @@ struct DELAYED_IDATA_INSERT
    time_t timestamp;
    uint32_t nodeId;
    uint32_t dciId;
-   TCHAR rawValue[MAX_RESULT_LENGTH];
-   TCHAR transformedValue[MAX_RESULT_LENGTH];
+   TCHAR *transformedValue;
+   TCHAR rawValue[2]; // Actual size determined by text part length
 };
 
 /**
@@ -231,12 +231,15 @@ void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const T
    if (s_queueMonitorDiscardFlag)
       return;
 
-	DELAYED_IDATA_INSERT *rq = MemAllocStruct<DELAYED_IDATA_INSERT>();
+   size_t rawValueLength = _tcslen(rawValue);
+   size_t transformedValueLength = _tcslen(transformedValue);
+	auto rq = static_cast<DELAYED_IDATA_INSERT*>(MemAlloc(sizeof(DELAYED_IDATA_INSERT) + (rawValueLength + transformedValueLength) * sizeof(TCHAR)));
 	rq->timestamp = timestamp;
 	rq->nodeId = nodeId;
 	rq->dciId = dciId;
-   _tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
-   _tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
+   rq->transformedValue = rq->rawValue + rawValueLength + 1;
+   memcpy(rq->rawValue, rawValue, (rawValueLength + 1) * sizeof(TCHAR));
+   memcpy(rq->transformedValue, transformedValue, (transformedValueLength + 1) * sizeof(TCHAR));
    if ((g_flags & AF_SINGLE_TABLE_PERF_DATA) && (g_dbSyntax == DB_SYNTAX_TSDB))
    {
       s_idataWriters[static_cast<int>(storageClass)].queue->put(rq);
@@ -381,7 +384,7 @@ static void IDataWriteThread(IDataWriter *writer)
                if (hStmt != nullptr)
                {
                   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, rq->dciId);
-                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
+                  DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int64_t>(rq->timestamp));
                   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
                   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
                   success = DBExecute(hStmt);

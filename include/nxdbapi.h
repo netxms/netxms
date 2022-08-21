@@ -213,21 +213,20 @@ bool LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn, int32_t *major, int32
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn, const TCHAR *fallback = nullptr);
 void LIBNXDB_EXPORTABLE DBSetSyntaxReader(bool (*reader)(DB_HANDLE, TCHAR *));
 
-StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize = -1);
-StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int maxSize = -1);
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, size_t maxSize = 0);
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, size_t maxSize = 0);
 #ifdef UNICODE
-StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize = -1);
-StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int maxSize = -1);
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, size_t maxSize = 0);
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, size_t maxSize = 0);
 #else
 #define DBPrepareStringA DBPrepareString
 #endif
-StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, int maxSize = -1);
-StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *str, int maxSize = -1);
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_HANDLE conn, const char *str, size_t maxSize = 0);
+StringBuffer LIBNXDB_EXPORTABLE DBPrepareStringUTF8(DB_DRIVER drv, const char *str, size_t maxSize = 0);
 
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
-																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
-																int basePoolSize, int maxPoolSize, int cooldownTime,
-																int connTTL);
+      const TCHAR *login, const TCHAR *password, const TCHAR *schema, int basePoolSize, int maxPoolSize,
+      int cooldownTime, int connTTL);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();
 void LIBNXDB_EXPORTABLE DBConnectionPoolReset();
 DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine);

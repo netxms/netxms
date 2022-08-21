@@ -618,7 +618,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
                  (g_dbSyntax == DB_SYNTAX_TSDB) ? _T(")") : _T(""), srcAddr.toString(buffer),
                  (node != nullptr) ? node->getId() : (UINT32)0, (node != nullptr) ? node->getZoneUIN() : zoneUIN,
                  pdu->getTrapId().toString(oidText, 1024),
-                 (const TCHAR *)DBPrepareString(g_dbDriver, varbinds));
+                 DBPrepareString(g_dbDriver, varbinds).cstr());
       QueueSQLRequest(query);
 
       // Notify connected clients

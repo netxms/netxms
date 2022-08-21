@@ -71,154 +71,45 @@ static void UpdateErrorMessage(const char *source, WCHAR *errorText)
 }
 
 /**
- * Update buffer length in PrepareStringW
- */
-#define UPDATE_LENGTH \
-				len++; \
-				if (len >= bufferSize - 1) \
-				{ \
-					bufferSize += 128; \
-					out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR)); \
-				}
-
-/**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
- * (wide string version)
  */
-static WCHAR *PrepareStringW(const WCHAR *str)
+static StringBuffer PrepareString(const TCHAR *str, size_t maxSize)
 {
-	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
-	int bufferSize = len + 128;
-	WCHAR *out = (WCHAR *)MemAlloc(bufferSize * sizeof(WCHAR));
-	out[0] = _T('\'');
-
-	const WCHAR *src = str;
-	int outPos;
-	for(outPos = 1; *src != 0; src++)
-	{
-		switch(*src)
-		{
-			case L'\'':
-				out[outPos++] = L'\'';
-				out[outPos++] = L'\'';
-				UPDATE_LENGTH;
-				break;
-			case L'\r':
-				out[outPos++] = L'\\';
-				out[outPos++] = L'\r';
-				UPDATE_LENGTH;
-				break;
-			case L'\n':
-				out[outPos++] = L'\\';
-				out[outPos++] = L'\n';
-				UPDATE_LENGTH;
-				break;
-			case L'\b':
-				out[outPos++] = L'\\';
-				out[outPos++] = L'\b';
-				UPDATE_LENGTH;
-				break;
-			case L'\t':
-				out[outPos++] = L'\\';
-				out[outPos++] = L'\t';
-				UPDATE_LENGTH;
-				break;
-			case 26:
-				out[outPos++] = L'\\';
-				out[outPos++] = L'Z';
-				break;
-			case L'\\':
-				out[outPos++] = L'\\';
-				out[outPos++] = L'\\';
-				UPDATE_LENGTH;
-				break;
-			default:
-				out[outPos++] = *src;
-				break;
-		}
-	}
-	out[outPos++] = L'\'';
-	out[outPos++] = 0;
-
-	return out;
-}
-
-#undef UPDATE_LENGTH
-
-/**
- * Update buffer length in PrepareStringA
- */
-#define UPDATE_LENGTH \
-				len++; \
-				if (len >= bufferSize - 1) \
-				{ \
-					bufferSize += 128; \
-					out = (char *)realloc(out, bufferSize); \
-				}
-
-/**
- * Prepare string for using in SQL query - enclose in quotes and escape as needed
- * (multibyte string version)
- */
-static char *PrepareStringA(const char *str)
-{
-	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
-	int bufferSize = len + 128;
-	char *out = (char *)MemAlloc(bufferSize);
-	out[0] = _T('\'');
-
-	const char *src = str;
-	int outPos;
-	for(outPos = 1; *src != 0; src++)
+   StringBuffer out;
+	out.append(_T('\''));
+	for(const TCHAR *src = str; (*src != 0) && (maxSize > 0); src++, maxSize--)
 	{
 		switch(*src)
 		{
 			case '\'':
-				out[outPos++] = '\'';
-				out[outPos++] = '\'';
-				UPDATE_LENGTH;
+	         out.append(_T("''"), 2);
 				break;
 			case '\r':
-				out[outPos++] = '\\';
-				out[outPos++] = '\r';
-				UPDATE_LENGTH;
+            out.append(_T("\\r"), 2);
 				break;
 			case '\n':
-				out[outPos++] = '\\';
-				out[outPos++] = '\n';
-				UPDATE_LENGTH;
+            out.append(_T("\\n"), 2);
 				break;
 			case '\b':
-				out[outPos++] = '\\';
-				out[outPos++] = '\b';
-				UPDATE_LENGTH;
+            out.append(_T("\\b"), 2);
 				break;
 			case '\t':
-				out[outPos++] = '\\';
-				out[outPos++] = '\t';
-				UPDATE_LENGTH;
+            out.append(_T("\\t"), 2);
 				break;
 			case 26:
-				out[outPos++] = '\\';
-				out[outPos++] = 'Z';
+            out.append(_T("\\Z"), 2);
 				break;
 			case '\\':
-				out[outPos++] = '\\';
-				out[outPos++] = '\\';
-				UPDATE_LENGTH;
+            out.append(_T("\\\\"), 2);
 				break;
 			default:
-				out[outPos++] = *src;
+	         out.append(*src);
 				break;
 		}
 	}
-	out[outPos++] = '\'';
-	out[outPos++] = 0;
-
+   out.append(_T('\''));
 	return out;
 }
-
-#undef UPDATE_LENGTH
 
 /**
  * Initialize driver
@@ -1359,8 +1250,7 @@ static DBDriverCallTable s_callTable =
    GetColumnName,
    GetColumnCountUnbuffered,
    GetColumnNameUnbuffered,
-   PrepareStringW,
-   PrepareStringA,
+   PrepareString,
    IsTableExist
 };
 

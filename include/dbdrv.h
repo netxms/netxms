@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,11 +24,12 @@
 #define _dbdrv_h_
 
 #include <nms_common.h>
+#include <nms_util.h>
 
 /**
  * API version
  */
-#define DBDRV_API_VERSION           30
+#define DBDRV_API_VERSION           31
 
 /**
  * Database driver entry point declaration
@@ -92,9 +93,8 @@ struct DBDriverCallTable
    const char* (*GetColumnName)(DBDRV_RESULT, int);
    int (*GetColumnCountUnbuffered)(DBDRV_UNBUFFERED_RESULT);
    const char* (*GetColumnNameUnbuffered)(DBDRV_UNBUFFERED_RESULT, int);
-   WCHAR* (*PrepareStringW)(const WCHAR *);
-   char* (*PrepareStringA)(const char *);
-   int (*IsTableExist)(DBDRV_CONNECTION, const WCHAR *);
+   StringBuffer (*PrepareString)(const TCHAR*, size_t);
+   int (*IsTableExist)(DBDRV_CONNECTION, const WCHAR*);
 };
 
 //

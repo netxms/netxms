@@ -11853,7 +11853,7 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
  */
 void ClientSession::listLibraryImages(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	uint32_t rcc = RCC_SUCCESS;
 
@@ -11870,37 +11870,36 @@ void ClientSession::listLibraryImages(const NXCPMessage& request)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   TCHAR query[MAX_DB_STRING * 2];
-	_tcscpy(query, _T("SELECT guid,name,category,mimetype,protected FROM images"));
+   StringBuffer query(_T("SELECT guid,name,category,mimetype,protected FROM images"));
 	if (category[0] != 0)
 	{
-		_tcscat(query, _T(" WHERE category = "));
-      _tcscat(query, (const TCHAR *)DBPrepareString(hdb, category));
+		query.append(_T(" WHERE category="));
+      query.append(DBPrepareString(hdb, category));
 	}
 
 	DB_RESULT result = DBSelect(hdb, query);
 	if (result != nullptr)
 	{
 		int count = DBGetNumRows(result);
-		msg.setField(VID_NUM_RECORDS, static_cast<uint32_t>(count));
+		response.setField(VID_NUM_RECORDS, static_cast<uint32_t>(count));
 
 		TCHAR buffer[MAX_DB_STRING];
 		uint32_t varId = VID_IMAGE_LIST_BASE;
 		for (int i = 0; i < count; i++)
 		{
 			uuid guid = DBGetFieldGUID(result, i, 0);	// guid
-			msg.setField(varId++, guid);
+			response.setField(varId++, guid);
 
 			DBGetField(result, i, 1, buffer, MAX_DB_STRING);	// image name
-			msg.setField(varId++, buffer);
+			response.setField(varId++, buffer);
 
 			DBGetField(result, i, 2, buffer, MAX_DB_STRING);	// category
-			msg.setField(varId++, buffer);
+			response.setField(varId++, buffer);
 
 			DBGetField(result, i, 3, buffer, MAX_DB_STRING);	// mime type
-			msg.setField(varId++, buffer);
+			response.setField(varId++, buffer);
 
-			msg.setField(varId++, static_cast<uint16_t>(DBGetFieldLong(result, i, 4))); // protected flag
+			response.setField(varId++, static_cast<uint16_t>(DBGetFieldLong(result, i, 4))); // protected flag
 		}
 
 		DBFreeResult(result);
@@ -11911,8 +11910,8 @@ void ClientSession::listLibraryImages(const NXCPMessage& request)
 	}
 
    DBConnectionPoolReleaseConnection(hdb);
-	msg.setField(VID_RCC, rcc);
-	sendMessage(&msg);
+	response.setField(VID_RCC, rcc);
+	sendMessage(response);
 }
 
 /**

@@ -108,73 +108,19 @@ static void ClearPendingResults(SQLHSTMT statement)
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
-static WCHAR *PrepareStringW(const WCHAR *str)
+static StringBuffer PrepareString(const TCHAR *str, size_t maxSize)
 {
-	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
-	int bufferSize = len + 128;
-	WCHAR *out = (WCHAR *)malloc(bufferSize * sizeof(WCHAR));
-	out[0] = L'\'';
-
-	const WCHAR *src = str;
-	int outPos;
-	for(outPos = 1; *src != 0; src++)
-	{
-		if (*src == L'\'')
-		{
-			len++;
-			if (len >= bufferSize)
-			{
-				bufferSize += 128;
-				out = (WCHAR *)realloc(out, bufferSize * sizeof(WCHAR));
-			}
-			out[outPos++] = L'\'';
-			out[outPos++] = L'\'';
-		}
-		else
-		{
-			out[outPos++] = *src;
-		}
-	}
-	out[outPos++] = L'\'';
-	out[outPos++] = 0;
-
-	return out;
-}
-
-/**
- * Prepare string for using in SQL query - enclose in quotes and escape as needed
- */
-static char *PrepareStringA(const char *str)
-{
-	int len = (int)strlen(str) + 3;   // + two quotes and \0 at the end
-	int bufferSize = len + 128;
-	char *out = (char *)malloc(bufferSize);
-	out[0] = '\'';
-
-	const char *src = str;
-	int outPos;
-	for(outPos = 1; *src != 0; src++)
-	{
-		if (*src == '\'')
-		{
-			len++;
-			if (len >= bufferSize)
-			{
-				bufferSize += 128;
-				out = (char *)realloc(out, bufferSize);
-			}
-			out[outPos++] = '\'';
-			out[outPos++] = '\'';
-		}
-		else
-		{
-			out[outPos++] = *src;
-		}
-	}
-	out[outPos++] = '\'';
-	out[outPos++] = 0;
-
-	return out;
+   StringBuffer out;
+   out.append(_T('\''));
+   for(const TCHAR *src = str; (*src != 0) && (maxSize > 0); src++, maxSize--)
+   {
+      if (*src == _T('\''))
+         out.append(_T("''"), 2);
+      else
+         out.append(*src);
+   }
+   out.append(_T('\''));
+   return out;
 }
 
 /**
@@ -1196,8 +1142,7 @@ static DBDriverCallTable s_callTable =
    GetColumnName,
    GetColumnCountUnbuffered,
    GetColumnNameUnbuffered,
-   PrepareStringW,
-   PrepareStringA,
+   PrepareString,
    IsTableExist
 };
 

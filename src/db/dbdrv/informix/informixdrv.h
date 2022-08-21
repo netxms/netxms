@@ -65,6 +65,12 @@
 #define TCHAR char
 #endif
 
+#ifdef UNICODE
+#define NETXMS_TCHAR wchar_t
+#else
+#define NETXMS_TCHAR char
+#endif
+
 /**
  * Driver connection handle structure
  */
