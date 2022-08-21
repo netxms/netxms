@@ -34,6 +34,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
 import org.netxms.client.objects.Node;
@@ -51,6 +52,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateZoneDialog;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -82,6 +84,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateTemplate;
    private Action actionCreateTemplateGroup;
    private Action actionCreateVpnConnector;
+   private Action actionCreateZone;
 
    /**
     * Create new menu manager for object's "Create" menu.
@@ -117,6 +120,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
+      addAction(this, actionCreateZone, (AbstractObject o) -> (o instanceof EntireNetwork) && Registry.getSession().isZoningEnabled());
    }
 
    /**
@@ -354,6 +358,37 @@ public class ObjectCreateMenuManager extends MenuManager
       actionCreateTemplate = new GenericObjectCreationAction(i18n.tr("&Template..."), AbstractObject.OBJECT_TEMPLATE, i18n.tr("Template"));
       actionCreateTemplateGroup = new GenericObjectCreationAction(i18n.tr("Template &group..."), AbstractObject.OBJECT_TEMPLATEGROUP, i18n.tr("Template Group"));
       actionCreateVpnConnector = new GenericObjectCreationAction(i18n.tr("&VPN connector..."), AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector"));
+
+      actionCreateZone = new Action(i18n.tr("&Zone...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateZoneDialog dlg = new CreateZoneDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating zone"), view, null) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_ZONE, dlg.getName(), parentId);
+                  cd.setZoneUIN(dlg.getZoneUIN());
+                  cd.setObjectAlias(dlg.getAlias());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create zone object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
    }
 
    /**

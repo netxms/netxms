@@ -77,12 +77,12 @@ public class CreateObjectDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Object name"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Name"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
       textName.setTextLimit(63);
       textName.setFocus();
       
-      textAlias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Object alias"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+      textAlias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Alias"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textAlias.setTextLimit(255);
 
 		return dialogArea;

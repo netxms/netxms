@@ -152,7 +152,7 @@ public class CreateNodeDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		objectNameField = new LabeledText(dialogArea, SWT.NONE);
-		objectNameField.setLabel(i18n.tr("Object Name"));
+      objectNameField.setLabel(i18n.tr("Name"));
 		objectNameField.getTextControl().setTextLimit(255);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -163,7 +163,7 @@ public class CreateNodeDialog extends Dialog
 		objectNameField.setText(objectName);
 
       objectAliasField = new LabeledText(dialogArea, SWT.NONE);
-      objectAliasField.setLabel(i18n.tr("Object Alias"));
+      objectAliasField.setLabel(i18n.tr("Alias"));
       objectAliasField.getTextControl().setTextLimit(255);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ public class CreateMobileDeviceDialog extends Dialog
 	private String name;
    private String alias;
 	private String deviceId;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -51,9 +51,9 @@ public class CreateMobileDeviceDialog extends Dialog
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -61,9 +61,9 @@ public class CreateMobileDeviceDialog extends Dialog
 		newShell.setText(Messages.get().CreateMobileDeviceDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -74,7 +74,7 @@ public class CreateMobileDeviceDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
-		
+
 		nameField = new LabeledText(dialogArea, SWT.NONE);
 		nameField.setLabel(Messages.get().CreateMobileDeviceDialog_Name);
 		nameField.getTextControl().setTextLimit(255);
@@ -83,14 +83,14 @@ public class CreateMobileDeviceDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
 		nameField.setLayoutData(gd);
-		
+
       aliasField = new LabeledText(dialogArea, SWT.NONE);
       aliasField.setLabel(Messages.get().CreateMobileDeviceDialog_Alias);
       aliasField.getTextControl().setTextLimit(255);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      nameField.setLayoutData(gd);
+      aliasField.setLayoutData(gd);
 
 		deviceIdField = new LabeledText(dialogArea, SWT.NONE);
 		deviceIdField.setLabel(Messages.get().CreateMobileDeviceDialog_DeviceID);
@@ -99,13 +99,13 @@ public class CreateMobileDeviceDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		deviceIdField.setLayoutData(gd);
-		
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
