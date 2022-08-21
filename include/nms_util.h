@@ -975,7 +975,8 @@ public:
    String();
    String(const TCHAR *init);
    String(const TCHAR *init, ssize_t len, Ownership takeOwnership = Ownership::False);
-   String(const String &src);
+   String(const String& src);
+   String(String&& src);
    virtual ~String();
 
    operator const TCHAR*() const { return m_buffer; }
@@ -1037,9 +1038,12 @@ public:
    MutableString() : String() { }
    MutableString(const TCHAR *init) : String(init) { }
    MutableString(const TCHAR *init, size_t len) : String(init, len) { }
-   MutableString(const String &src) : String(src) { }
+   MutableString(const String& src) : String(src) { }
+   MutableString(const MutableString& src) : String(src) { }
+   MutableString(MutableString&& src) : String(src) { }
 
    MutableString& operator =(const String &src);
+   MutableString& operator =(const MutableString &src);
    MutableString& operator =(const TCHAR *src);
 };
 
@@ -1057,8 +1061,8 @@ private:
 
 public:
    SharedString() { }
-   SharedString(const SharedString &str) : m_string(str.m_string) { }
-   SharedString(const String &str) { m_string = make_shared<String>(str); }
+   SharedString(const SharedString& str) : m_string(str.m_string) { }
+   SharedString(const String& str) { m_string = make_shared<String>(str); }
    SharedString(const TCHAR *str) { if (str != nullptr) m_string = make_shared<String>(str); }
    SharedString(TCHAR *str, Ownership takeOwnership) { if (str != nullptr) m_string = make_shared<String>(str, -1, takeOwnership); }
 
@@ -1121,9 +1125,10 @@ protected:
 public:
    StringBuffer();
    StringBuffer(const TCHAR *init);
-   StringBuffer(const StringBuffer &src);
-   StringBuffer(const String &src);
-   StringBuffer(const SharedString &src);
+   StringBuffer(const StringBuffer& src);
+   StringBuffer(StringBuffer&& src);
+   StringBuffer(const String& src);
+   StringBuffer(const SharedString& src);
    virtual ~StringBuffer();
 
    size_t getAllocationStep() const { return m_allocationStep; }

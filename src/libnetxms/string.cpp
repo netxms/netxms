@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -42,7 +42,7 @@ String::String()
 /**
  * Copy constructor
  */
-String::String(const String &src)
+String::String(const String& src)
 {
    m_length = src.m_length;
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
@@ -54,6 +54,25 @@ String::String(const String &src)
    {
       m_buffer = MemCopyBlock(src.m_buffer, (m_length + 1) * sizeof(TCHAR));
    }
+}
+
+/**
+ * Move constructor
+ */
+String::String(String&& src)
+{
+   m_length = src.m_length;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_buffer = src.m_buffer;
+      src.m_buffer = src.m_internalBuffer;
+   }
+   src.m_length = 0;
 }
 
 /**
@@ -439,26 +458,51 @@ StringBuffer::StringBuffer() : String()
 /**
  * Copy constructor
  */
-StringBuffer::StringBuffer(const StringBuffer &src) : String()
+StringBuffer::StringBuffer(const StringBuffer& src) : String()
 {
    m_length = src.m_length;
    m_allocationStep = src.m_allocationStep;
+   m_allocated = src.m_allocated;
    if (m_length < STRING_INTERNAL_BUFFER_SIZE)
    {
-      m_allocated = src.m_allocated;
       memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
    }
    else
    {
-      m_allocated = src.m_allocated;
       m_buffer = MemCopyBlock(src.m_buffer, m_allocated * sizeof(TCHAR));
    }
 }
 
 /**
+ * Move constructor
+ */
+StringBuffer::StringBuffer(StringBuffer&& src) : String()
+{
+   m_length = src.m_length;
+   m_allocationStep = src.m_allocationStep;
+   m_allocated = src.m_allocated;
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      memcpy(m_buffer, src.m_buffer, (m_length + 1) * sizeof(TCHAR));
+      if (src.m_buffer != src.m_internalBuffer)
+      {
+         MemFree(src.m_buffer);
+         src.m_buffer = src.m_internalBuffer;
+      }
+   }
+   else
+   {
+      m_buffer = src.m_buffer;
+      src.m_buffer = src.m_internalBuffer;
+   }
+   src.m_allocated = 0;
+   src.m_length = 0;
+}
+
+/**
  * Copy constructor
  */
-StringBuffer::StringBuffer(const String &src) : String(src)
+StringBuffer::StringBuffer(const String& src) : String(src)
 {
    m_allocated = isInternalBuffer() ? 0 : m_length + 1;
    m_allocationStep = 256;
@@ -467,7 +511,7 @@ StringBuffer::StringBuffer(const String &src) : String(src)
 /**
  * Copy constructor
  */
-StringBuffer::StringBuffer(const SharedString &src) : String(src.str())
+StringBuffer::StringBuffer(const SharedString& src) : String(src.str())
 {
    m_allocated = isInternalBuffer() ? 0 : m_length + 1;
    m_allocationStep = 256;
@@ -1083,6 +1127,28 @@ void StringBuffer::clear(bool releaseBuffer)
  * Operator = for mutable string
  */
 MutableString& MutableString::operator =(const String &src)
+{
+   if (&src == this)
+      return *this;
+   if (!isInternalBuffer())
+      MemFree(m_buffer);
+   m_length = src.length();
+   if (m_length < STRING_INTERNAL_BUFFER_SIZE)
+   {
+      m_buffer = m_internalBuffer;
+      memcpy(m_buffer, src.cstr(), (m_length + 1) * sizeof(TCHAR));
+   }
+   else
+   {
+      m_buffer = MemCopyString(src.cstr());
+   }
+   return *this;
+}
+
+/**
+ * Operator = for mutable string
+ */
+MutableString& MutableString::operator =(const MutableString &src)
 {
    if (&src == this)
       return *this;
