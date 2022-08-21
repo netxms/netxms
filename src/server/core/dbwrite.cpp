@@ -402,7 +402,7 @@ static void IDataWriteThread(IDataWriter *writer)
                query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
                query.append(rq->dciId);
                query.append(_T(','));
-               query.append(rq->timestamp);
+               query.append(static_cast<int64_t>(rq->timestamp));
                query.append(_T(','));
                query.append(DBPrepareString(hdb, rq->transformedValue));
                query.append(_T(','));
@@ -475,7 +475,7 @@ static void IDataWriteThreadSingleTable_Generic(IDataWriter *writer)
             query.append(_T("INSERT INTO idata (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
             query.append(rq->dciId);
             query.append(_T(','));
-            query.append(rq->timestamp);
+            query.append(static_cast<int64_t>(rq->timestamp));
             query.append(_T(','));
             query.append(DBPrepareString(hdb, rq->transformedValue));
             query.append(_T(','));
@@ -560,13 +560,13 @@ static void QueryPrepareThread_PostgreSQL(IDataWriter *writer, ObjectQueue<Prepa
          if (convertTimestamps)
          {
             query.append(_T(",to_timestamp("), 14);
-            query.append(rq->timestamp);
+            query.append(static_cast<int64_t>(rq->timestamp));
             query.append(_T("),"), 2);
          }
          else
          {
             query.append(_T(','));
-            query.append(rq->timestamp);
+            query.append(static_cast<int64_t>(rq->timestamp));
             query.append(_T(','));
          }
          query.append(DBPrepareString(g_dbDriver, rq->transformedValue));
