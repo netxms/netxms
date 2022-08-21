@@ -58,8 +58,8 @@ struct DELAYED_RAW_DATA_UPDATE
    time_t cacheTimestamp;
    uint32_t dciId;
    bool deleteFlag;
-   TCHAR rawValue[MAX_RESULT_LENGTH];
-   TCHAR transformedValue[MAX_RESULT_LENGTH];
+   TCHAR *transformedValue;
+   TCHAR rawValue[2];  // Actual size determined by text part length
 };
 
 /**
@@ -261,20 +261,26 @@ void QueueIDataInsert(time_t timestamp, uint32_t nodeId, uint32_t dciId, const T
  */
 void QueueRawDciDataUpdate(time_t timestamp, uint32_t dciId, const TCHAR *rawValue, const TCHAR *transformedValue, time_t cacheTimestamp)
 {
+   size_t rawValueLength = _tcslen(rawValue);
+   size_t transformedValueLength = _tcslen(transformedValue);
+   auto rq = static_cast<DELAYED_RAW_DATA_UPDATE*>(MemAlloc(sizeof(DELAYED_RAW_DATA_UPDATE) + (rawValueLength + transformedValueLength) * sizeof(TCHAR)));
+   rq->dciId = dciId;
+   rq->timestamp = timestamp;
+   rq->cacheTimestamp = cacheTimestamp;
+   rq->deleteFlag = false;
+   rq->transformedValue = rq->rawValue + rawValueLength + 1;
+   memcpy(rq->rawValue, rawValue, (rawValueLength + 1) * sizeof(TCHAR));
+   memcpy(rq->transformedValue, transformedValue, (transformedValueLength + 1) * sizeof(TCHAR));
+
    s_rawDataWriterLock.lock();
-   DELAYED_RAW_DATA_UPDATE *rq;
-   HASH_FIND_INT(s_rawDataWriterQueue, &dciId, rq);
-   if (rq == nullptr)
+   DELAYED_RAW_DATA_UPDATE *curr;
+   HASH_FIND_INT(s_rawDataWriterQueue, &dciId, curr);
+   if (curr != nullptr)
    {
-      rq = MemAllocStruct<DELAYED_RAW_DATA_UPDATE>();
-      rq->dciId = dciId;
-      rq->deleteFlag = false;
-      HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
+      HASH_DEL(s_rawDataWriterQueue, curr);
+      MemFree(curr);
    }
-	rq->timestamp = timestamp;
-	rq->cacheTimestamp = cacheTimestamp;
-	_tcslcpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
-	_tcslcpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
+   HASH_ADD_INT(s_rawDataWriterQueue, dciId, rq);
    g_rawDataWriteRequests++;
    s_rawDataWriterLock.unlock();
 }
