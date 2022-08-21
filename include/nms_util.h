@@ -1155,6 +1155,7 @@ public:
    StringBuffer& operator +=(const String &str) { append(str.cstr()); return *this; }
    StringBuffer& operator +=(const SharedString &str) { append(str.cstr()); return *this; }
 
+   void append(const String& str) { insert(m_length, str.cstr(), str.length()); }
    void append(const TCHAR *str) { if (str != nullptr) append(str, _tcslen(str)); }
    void append(const TCHAR *str, size_t len) { insert(m_length, str, len); }
    void append(const TCHAR c) { append(&c, 1); }
@@ -1176,6 +1177,7 @@ public:
 
    void appendAsHexString(const void *data, size_t len) { insertAsHexString(m_length, data, len); }
 
+   void insert(size_t index, const String& str)  { insert(index, str.cstr(), str.length()); }
    void insert(size_t index, const TCHAR *str)  { if (str != nullptr) insert(index, str, _tcslen(str)); }
    void insert(size_t index, const TCHAR *str, size_t len);
    void insert(size_t index, const TCHAR c) { insert(index, &c, 1); }
