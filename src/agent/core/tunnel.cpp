@@ -1240,18 +1240,18 @@ void Tunnel::checkConnection()
 X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey)
 {
    RSA *key = RSA_new();
-   if (key == NULL)
+   if (key == nullptr)
    {
       debugPrintf(4, _T("call to RSA_new() failed"));
-      return NULL;
+      return nullptr;
    }
 
    BIGNUM *bn = BN_new();
-   if (bn == NULL)
+   if (bn == nullptr)
    {
       debugPrintf(4, _T("call to BN_new() failed"));
       RSA_free(key);
-      return NULL;
+      return nullptr;
    }
 
    BN_set_word(bn, RSA_F4);
@@ -1260,27 +1260,27 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
       debugPrintf(4, _T("call to RSA_generate_key_ex() failed"));
       RSA_free(key);
       BN_free(bn);
-      return NULL;
+      return nullptr;
    }
    BN_free(bn);
 
    X509_REQ *req = X509_REQ_new();
-   if (req != NULL)
+   if (req != nullptr)
    {
       X509_REQ_set_version(req, 1);
       X509_NAME *subject = X509_REQ_get_subject_name(req);
-      if (subject != NULL)
+      if (subject != nullptr)
       {
-         if (country != NULL)
+         if (country != nullptr)
             X509_NAME_add_entry_by_txt(subject, "C", MBSTRING_UTF8, (const BYTE *)country, -1, -1, 0);
          X509_NAME_add_entry_by_txt(subject, "O", MBSTRING_UTF8, (const BYTE *)((org != NULL) ? org : "netxms.org"), -1, -1, 0);
          X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0);
 
          EVP_PKEY *ekey = EVP_PKEY_new();
-         if (ekey != NULL)
+         if (ekey != nullptr)
          {
             EVP_PKEY_assign_RSA(ekey, key);
-            key = NULL; // will be freed by EVP_PKEY_free
+            key = nullptr; // will be freed by EVP_PKEY_free
             X509_REQ_set_pubkey(req, ekey);
             if (X509_REQ_sign(req, ekey, EVP_sha256()) > 0)
             {
@@ -1290,7 +1290,7 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
             {
                debugPrintf(4, _T("call to X509_REQ_sign() failed"));
                X509_REQ_free(req);
-               req = NULL;
+               req = nullptr;
                EVP_PKEY_free(ekey);
             }
          }
@@ -1298,14 +1298,14 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
          {
             debugPrintf(4, _T("call to EVP_PKEY_new() failed"));
             X509_REQ_free(req);
-            req = NULL;
+            req = nullptr;
          }
       }
       else
       {
          debugPrintf(4, _T("call to X509_REQ_get_subject_name() failed"));
          X509_REQ_free(req);
-         req = NULL;
+         req = nullptr;
       }
    }
    else
@@ -1313,7 +1313,7 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
       debugPrintf(4, _T("call to X509_REQ_new() failed"));
    }
 
-   if (key != NULL)
+   if (key != nullptr)
       RSA_free(key);
    return req;
 }
@@ -1324,12 +1324,10 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
 static void BackupFileIfExist(const TCHAR *name)
 {
    if (_taccess(name, 0) != 0)
-   {
      return;
-   }
 
    TCHAR formatedTime[256];
-   time_t t = time(NULL);
+   time_t t = time(nullptr);
 #if HAVE_LOCALTIME_R
    struct tm tmbuffer;
    struct tm *ltm = localtime_r(&t, &tmbuffer);
@@ -1365,7 +1363,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
    _sntprintf(name, MAX_PATH, _T("%s%s.crt"), g_certificateDirectory, prefix);
    BackupFileIfExist(name);
    FILE *f = _tfopen(name, _T("w"));
-   if (f == NULL)
+   if (f == nullptr)
    {
       debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
       return false;
@@ -1381,7 +1379,7 @@ bool Tunnel::saveCertificate(X509 *cert, EVP_PKEY *key)
    _sntprintf(name, MAX_PATH, _T("%s%s.key"), g_certificateDirectory, prefix);
    BackupFileIfExist(name);
    f = _tfopen(name, _T("w"));
-   if (f == NULL)
+   if (f == nullptr)
    {
       debugPrintf(4, _T("Cannot open file \"%s\" (%s)"), name, _tcserror(errno));
       return false;
@@ -1432,14 +1430,14 @@ void Tunnel::processBindRequest(NXCPMessage *request)
          NXCPMessage *certResponse = waitForMessage(CMD_NEW_CERTIFICATE, request->getId());
          if (certResponse != nullptr)
          {
-            UINT32 rcc = certResponse->getFieldAsUInt32(VID_RCC);
+            uint32_t rcc = certResponse->getFieldAsUInt32(VID_RCC);
             if (rcc == ERR_SUCCESS)
             {
                size_t certLen;
                const BYTE *certData = certResponse->getBinaryFieldPtr(VID_CERTIFICATE, &certLen);
                if (certData != nullptr)
                {
-                  X509 *cert = d2i_X509(NULL, &certData, (long)certLen);
+                  X509 *cert = d2i_X509(nullptr, &certData, (long)certLen);
                   if (cert != nullptr)
                   {
                      if (saveCertificate(cert, key))

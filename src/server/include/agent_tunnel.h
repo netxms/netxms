@@ -134,6 +134,7 @@ protected:
    bool m_snmpTrapProxy;
    bool m_syslogProxy;
    bool m_extProvCertificate;
+   bool m_resetPending;
    StructArray<MacAddress> m_macAddressList;
    SharedHashMap<uint32_t, AgentTunnelCommChannel> m_channels;
    Mutex m_channelLock;
@@ -146,7 +147,7 @@ protected:
    static void socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, AgentTunnel *tunnel);
    
    int sslWrite(const void *data, size_t size);
-   bool sendMessage(NXCPMessage *msg);
+   bool sendMessage(const NXCPMessage& msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id) { return m_queue.waitForMessage(code, id, g_agentCommandTimeout); }
 
    void processCertificateRequest(NXCPMessage *request);
@@ -213,6 +214,7 @@ public:
    bool isSyslogProxy() const { return m_syslogProxy; }
    bool isUserAgentInstalled() const { return m_userAgentInstalled; }
    bool isExtProvCertificate() const { return m_extProvCertificate; }   // Check if certificate is externally provisioned
+   bool isResetPending() const { return m_resetPending; }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId) const;
 

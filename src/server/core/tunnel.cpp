@@ -361,6 +361,7 @@ AgentTunnel::AgentTunnel(SSL_CTX *context, SSL *ssl, SOCKET sock, const InetAddr
    m_snmpTrapProxy = false;
    m_syslogProxy = false;
    m_extProvCertificate = false;
+   m_resetPending = false;
 }
 
 /**
@@ -467,7 +468,7 @@ void AgentTunnel::processMessage(NXCPMessage *msg)
       case CMD_KEEPALIVE:
          {
             NXCPMessage response(CMD_KEEPALIVE, msg->getId());
-            sendMessage(&response);
+            sendMessage(response);
          }
          break;
       case CMD_SETUP_AGENT_TUNNEL:
@@ -572,7 +573,7 @@ int AgentTunnel::sslWrite(const void *data, size_t size)
 /**
  * Send message on tunnel
  */
-bool AgentTunnel::sendMessage(NXCPMessage *msg)
+bool AgentTunnel::sendMessage(const NXCPMessage& msg)
 {
    if (m_state == AGENT_TUNNEL_SHUTDOWN)
       return false;
@@ -580,9 +581,9 @@ bool AgentTunnel::sendMessage(NXCPMessage *msg)
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 6)
    {
       TCHAR buffer[64];
-      debugPrintf(6, _T("Sending message %s (%u)"), NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
+      debugPrintf(6, _T("Sending message %s (%u)"), NXCPMessageCodeName(msg.getCode(), buffer), msg.getId());
    }
-   NXCP_MESSAGE *data = msg->serialize(true);
+   NXCP_MESSAGE *data = msg.serialize(true);
    bool success = (sslWrite(data, ntohl(data->size)) == static_cast<int>(ntohl(data->size)));
    MemFree(data);
    return success;
@@ -747,7 +748,7 @@ void AgentTunnel::setup(const NXCPMessage *request)
       response.setField(VID_RCC, ERR_OUT_OF_STATE_REQUEST);
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -775,9 +776,10 @@ uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
    if (rcc == RCC_SUCCESS)
    {
       debugPrintf(4, _T("Bind successful, resetting tunnel"));
+      m_resetPending = true;
       static_cast<Node&>(*node).setNewTunnelBindFlag();
       NXCPMessage msg(CMD_RESET_TUNNEL, InterlockedIncrement(&m_requestId));
-      sendMessage(&msg);
+      sendMessage(msg);
    }
    return rcc;
 }
@@ -815,7 +817,7 @@ uint32_t AgentTunnel::initiateCertificateRequest(const uuid& nodeGuid, uint32_t 
    m_bindRequestId = msg.getId();
    m_bindGuid = nodeGuid;
    m_bindUserId = userId;
-   sendMessage(&msg);
+   sendMessage(msg);
 
    NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
    if (response == nullptr)
@@ -911,7 +913,7 @@ void AgentTunnel::processCertificateRequest(NXCPMessage *request)
       response.setField(VID_RCC, ERR_OUT_OF_STATE_REQUEST);
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -926,7 +928,7 @@ shared_ptr<AgentTunnelCommChannel> AgentTunnel::createChannel()
    }
 
    NXCPMessage request(CMD_CREATE_CHANNEL, InterlockedIncrement(&m_requestId));
-   if (!sendMessage(&request))
+   if (!sendMessage(request))
    {
       debugPrintf(4, _T("createChannel: cannot send setup message"));
       return shared_ptr<AgentTunnelCommChannel>();
@@ -1001,7 +1003,7 @@ void AgentTunnel::closeChannel(AgentTunnelCommChannel *channel)
    // Inform agent that channel is closing
    NXCPMessage msg(CMD_CLOSE_CHANNEL, InterlockedIncrement(&m_requestId));
    msg.setField(VID_CHANNEL_ID, channel->getId());
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -1999,7 +2001,7 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
       shared_ptr<AgentTunnel> t = s_unboundTunnels.getShared(i);
       nxlog_debug_tag(DEBUG_TAG, 9, _T("Checking tunnel from %s (%s): state=%d, startTime=%ld"),
                t->getDisplayName(), (const TCHAR *)t->getAddress().toString(), t->getState(), (long)t->getStartTime());
-      if ((t->getState() == AGENT_TUNNEL_UNBOUND) && (t->getStartTime() + timeout <= now))
+      if ((t->getState() == AGENT_TUNNEL_UNBOUND) && !t->isResetPending() && (t->getStartTime() + timeout <= now))
       {
          processingList.add(t);
       }
@@ -2080,6 +2082,7 @@ void ProcessUnboundTunnels(const shared_ptr<ScheduledTaskParameters>& parameters
                   else
                   {
                      t->shutdown();
+                     node->deleteObject();
                   }
                }
                else
