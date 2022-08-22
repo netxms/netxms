@@ -343,9 +343,9 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
 	if (stmt->allocated < pos)
 	{
 		int newAllocated = std::max(stmt->allocated + 16, pos);
-		stmt->buffers = (char **)realloc(stmt->buffers, sizeof(char *) * newAllocated);
+		stmt->buffers = MemReallocArray(stmt->buffers, newAllocated);
 		for(int i = stmt->allocated; i < newAllocated; i++)
-			stmt->buffers[i] = NULL;
+			stmt->buffers[i] = nullptr;
 		stmt->allocated = newAllocated;
 	}
 	if (stmt->pcount < pos)
@@ -356,38 +356,38 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
 	switch(cType)
 	{
 		case DB_CTYPE_STRING:
-			stmt->buffers[pos - 1] = UTF8StringFromWideString((WCHAR *)buffer);
+			stmt->buffers[pos - 1] = UTF8StringFromWideString(static_cast<WCHAR*>(buffer));
 			break;
       case DB_CTYPE_UTF8_STRING:
          if (allocType == DB_BIND_DYNAMIC)
          {
-            stmt->buffers[pos - 1] = (char *)buffer;
-            buffer = NULL; // prevent deallocation
+            stmt->buffers[pos - 1] = static_cast<char*>(buffer);
+            buffer = nullptr; // prevent deallocation
          }
          else
          {
-            stmt->buffers[pos - 1] = strdup((char *)buffer);
+            stmt->buffers[pos - 1] = MemCopyStringA(static_cast<char*>(buffer));
          }
          break;
 		case DB_CTYPE_INT32:
-			stmt->buffers[pos - 1] = (char *)MemAlloc(16);
-			sprintf(stmt->buffers[pos - 1], "%d", *((int *)buffer));
+			stmt->buffers[pos - 1] = MemAllocStringA(16);
+			IntegerToString(*static_cast<int32_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_UINT32:
-			stmt->buffers[pos - 1] = (char *)MemAlloc(16);
-			sprintf(stmt->buffers[pos - 1], "%u", *((unsigned int *)buffer));
+         stmt->buffers[pos - 1] = MemAllocStringA(16);
+         IntegerToString(*static_cast<uint32_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_INT64:
-			stmt->buffers[pos - 1] = (char *)MemAlloc(32);
-			sprintf(stmt->buffers[pos - 1], INT64_FMTA, *((INT64 *)buffer));
+         stmt->buffers[pos - 1] = MemAllocStringA(32);
+         IntegerToString(*static_cast<int64_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_UINT64:
-			stmt->buffers[pos - 1] = (char *)MemAlloc(32);
-			sprintf(stmt->buffers[pos - 1], UINT64_FMTA, *((QWORD *)buffer));
+         stmt->buffers[pos - 1] = MemAllocStringA(32);
+         IntegerToString(*static_cast<uint64_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_DOUBLE:
-			stmt->buffers[pos - 1] = (char *)MemAlloc(32);
-			sprintf(stmt->buffers[pos - 1], "%f", *((double *)buffer));
+         stmt->buffers[pos - 1] = MemAllocStringA(32);
+			sprintf(stmt->buffers[pos - 1], "%f", *static_cast<double*>(buffer));
 			break;
 		default:
 			stmt->buffers[pos - 1] = MemCopyStringA("");
