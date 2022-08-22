@@ -459,14 +459,14 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *msg, RSA *pServerKey
 RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
 {
 #ifdef _WITH_ENCRYPTION
-   RSA *pKey = NULL;
+   RSA *pKey = nullptr;
    FILE *fp = _tfopen(pszKeyFile, _T("rb"));
    if (fp != NULL)
    {
-      UINT32 dwLen;
-      if (fread(&dwLen, 1, sizeof(UINT32), fp) == sizeof(UINT32) && dwLen < 10 * 1024)
+      uint32_t dwLen;
+      if (fread(&dwLen, 1, sizeof(uint32_t), fp) == sizeof(uint32_t) && dwLen < 10 * 1024)
       {
-         BYTE *pKeyBuffer = (BYTE *)malloc(dwLen);
+         BYTE *pKeyBuffer = (BYTE *)MemAlloc(dwLen);
          if (fread(pKeyBuffer, 1, dwLen, fp) == dwLen)
          {
             BYTE hash[SHA1_DIGEST_SIZE];
@@ -480,7 +480,7 @@ RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile)
                }
             }
          }
-         free(pKeyBuffer);
+         MemFree(pKeyBuffer);
       }
       fclose(fp);
    }

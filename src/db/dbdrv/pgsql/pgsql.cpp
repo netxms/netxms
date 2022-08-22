@@ -30,6 +30,8 @@
 #pragma warning(disable : 4996)
 #endif
 
+typedef Buffer<char, 1024> QueryString;
+
 static bool UnsafeQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 #ifndef _WIN32
@@ -42,34 +44,6 @@ static int (*s_PQsetSingleRowMode)(PGconn *) = nullptr;
 #endif
 
 #define DEBUG_TAG _T("db.drv.pgsql")
-
-/**
- * Convert wide character string to UTF-8 using internal buffer when possible
- */
-inline char *WideStringToUTF8(const WCHAR *str, char *localBuffer, size_t size)
-{
-#ifdef UNICODE_UCS4
-   size_t len = ucs4_utf8len(str, -1);
-#else
-   size_t len = ucs2_utf8len(str, -1);
-#endif
-   char *buffer = (len <= size) ? localBuffer : static_cast<char*>(MemAlloc(len));
-#ifdef UNICODE_UCS4
-   ucs4_to_utf8(str, -1, buffer, len);
-#else
-   ucs2_to_utf8(str, -1, buffer, len);
-#endif
-   return buffer;
-}
-
-/**
- * Free converted string if local buffer was not used
- */
-inline void FreeConvertedString(char *str, char *localBuffer)
-{
-   if (str != localBuffer)
-      MemFree(str);
-}
 
 /**
  * Statement ID
@@ -214,23 +188,41 @@ static void Disconnect(DBDRV_CONNECTION connection)
 }
 
 /**
+ * Convert wide character query string to UTF-8
+ */
+inline QueryString QueryToUTF8(const WCHAR *query)
+{
+#ifdef UNICODE_UCS4
+   size_t len = ucs4_utf8len(query, -1);
+#else
+   size_t len = ucs2_utf8len(query, -1);
+#endif
+   QueryString queryUTF8(len);
+#ifdef UNICODE_UCS4
+   ucs4_to_utf8(query, -1, queryUTF8, len);
+#else
+   ucs2_to_utf8(query, -1, queryUTF8, len);
+#endif
+   return queryUTF8;
+}
+
+/**
  * Convert query from NetXMS portable format to native PostgreSQL format
  */
-static char *ConvertQuery(const WCHAR *query, char *localBuffer, size_t bufferSize)
+static QueryString ConvertQuery(const WCHAR *query)
 {
    int count = NumCharsW(query, '?');
    if (count == 0)
-      return WideStringToUTF8(query, localBuffer, bufferSize);
+      return QueryToUTF8(query);
 
-   char srcQueryBuffer[1024];
-	char *srcQuery = WideStringToUTF8(query, srcQueryBuffer, 1024);
+   QueryString srcQuery = QueryToUTF8(query);
 
 	size_t dstSize = strlen(srcQuery) + count * 3 + 1;
-	char *dstQuery = (dstSize <= bufferSize) ? localBuffer : static_cast<char*>(MemAlloc(dstSize));
+	QueryString dstQuery(dstSize);
 	bool inString = false;
 	int pos = 1;
 	char *src, *dst;
-	for(src = srcQuery, dst = dstQuery; *src != 0; src++)
+	for(src = srcQuery.buffer(), dst = dstQuery.buffer(); *src != 0; src++)
 	{
 		switch(*src)
 		{
@@ -274,29 +266,26 @@ static char *ConvertQuery(const WCHAR *query, char *localBuffer, size_t bufferSi
 		}
 	}
 	*dst = 0;
-	FreeConvertedString(srcQuery, srcQueryBuffer);
 	return dstQuery;
 }
 
 /**
  * Prepare statement
  */
-static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *pwszQuery, bool optimizeForReuse, uint32_t *errorCode, WCHAR *errorText)
+static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *query, bool optimizeForReuse, uint32_t *errorCode, WCHAR *errorText)
 {
-   char localBuffer[1024];
-	char *pszQueryUTF8 = ConvertQuery(pwszQuery, localBuffer, 1024);
-	PG_STATEMENT *hStmt = MemAllocStruct<PG_STATEMENT>();
-	hStmt->connection = static_cast<PG_CONN*>(connection);
+   QueryString queryUTF8 = ConvertQuery(query);
+	auto hStmt = new PG_STATEMENT(static_cast<PG_CONN*>(connection));
 
    if (optimizeForReuse)
    {
       snprintf(hStmt->name, 64, "netxms_stmt_%p_%d", hStmt, (int)InterlockedIncrement(&s_statementId));
 
       static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
-      PGresult	*pResult = PQprepare(static_cast<PG_CONN*>(connection)->handle, hStmt->name, pszQueryUTF8, 0, nullptr);
+      PGresult	*pResult = PQprepare(static_cast<PG_CONN*>(connection)->handle, hStmt->name, queryUTF8, 0, nullptr);
       if ((pResult == nullptr) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
       {
-         MemFreeAndNull(hStmt);
+         delete hStmt;
 
          *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
 
@@ -309,24 +298,16 @@ static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *pwszQue
       }
       else
       {
-         hStmt->query = nullptr;
-         hStmt->allocated = 0;
-         hStmt->pcount = 0;
-         hStmt->buffers = nullptr;
          *errorCode = DBERR_SUCCESS;
       }
       static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
       if (pResult != nullptr)
          PQclear(pResult);
-      FreeConvertedString(pszQueryUTF8, localBuffer);
    }
    else
    {
       hStmt->name[0] = 0;
-      hStmt->query = (pszQueryUTF8 != localBuffer) ? pszQueryUTF8 : MemCopyStringA(pszQueryUTF8);
-      hStmt->allocated = 0;
-      hStmt->pcount = 0;
-      hStmt->buffers = nullptr;
+      hStmt->query = queryUTF8.takeBuffer();
    }
 	return hStmt;
 }
@@ -340,57 +321,57 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
 		return;
 
 	auto stmt = static_cast<PG_STATEMENT*>(hStmt);
-	if (stmt->allocated < pos)
+	if (stmt->buffers.size() < pos)
 	{
-		int newAllocated = std::max(stmt->allocated + 16, pos);
-		stmt->buffers = MemReallocArray(stmt->buffers, newAllocated);
-		for(int i = stmt->allocated; i < newAllocated; i++)
-			stmt->buffers[i] = nullptr;
-		stmt->allocated = newAllocated;
+	   if (stmt->buffers.capacity() < pos)
+	   {
+	      stmt->buffers.reserve(std::max(stmt->buffers.capacity() + 16, static_cast<size_t>(pos)));
+	   }
+	   for(int i = stmt->buffers.size(); i < pos; i++)
+	      stmt->buffers.emplace_back();
 	}
-	if (stmt->pcount < pos)
-		stmt->pcount = pos;
 
-	MemFree(stmt->buffers[pos - 1]);
-
+	size_t utf8len;
 	switch(cType)
 	{
 		case DB_CTYPE_STRING:
-			stmt->buffers[pos - 1] = UTF8StringFromWideString(static_cast<WCHAR*>(buffer));
+		   utf8len = wchar_utf8len(static_cast<WCHAR*>(buffer), -1);
+			stmt->buffers[pos - 1].realloc(utf8len);
+		   wchar_to_utf8(static_cast<WCHAR*>(buffer), -1, stmt->buffers[pos - 1], utf8len);
 			break;
       case DB_CTYPE_UTF8_STRING:
          if (allocType == DB_BIND_DYNAMIC)
          {
-            stmt->buffers[pos - 1] = static_cast<char*>(buffer);
+            stmt->buffers[pos - 1].setPreallocated(static_cast<char*>(buffer), strlen(static_cast<char*>(buffer)) + 1);
             buffer = nullptr; // prevent deallocation
          }
          else
          {
-            stmt->buffers[pos - 1] = MemCopyStringA(static_cast<char*>(buffer));
+            stmt->buffers[pos - 1].set(static_cast<char*>(buffer), strlen(static_cast<char*>(buffer)) + 1);
          }
          break;
 		case DB_CTYPE_INT32:
-			stmt->buffers[pos - 1] = MemAllocStringA(16);
+			stmt->buffers[pos - 1].realloc(16);
 			IntegerToString(*static_cast<int32_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_UINT32:
-         stmt->buffers[pos - 1] = MemAllocStringA(16);
+         stmt->buffers[pos - 1].realloc(16);
          IntegerToString(*static_cast<uint32_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_INT64:
-         stmt->buffers[pos - 1] = MemAllocStringA(32);
+         stmt->buffers[pos - 1].realloc(32);
          IntegerToString(*static_cast<int64_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_UINT64:
-         stmt->buffers[pos - 1] = MemAllocStringA(32);
+         stmt->buffers[pos - 1].realloc(32);
          IntegerToString(*static_cast<uint64_t*>(buffer), stmt->buffers[pos - 1]);
 			break;
 		case DB_CTYPE_DOUBLE:
-         stmt->buffers[pos - 1] = MemAllocStringA(32);
+         stmt->buffers[pos - 1].realloc(32);
 			sprintf(stmt->buffers[pos - 1], "%f", *static_cast<double*>(buffer));
 			break;
 		default:
-			stmt->buffers[pos - 1] = MemCopyStringA("");
+			stmt->buffers[pos - 1].set("", 1);
 			break;
 	}
 
@@ -406,6 +387,10 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
 	uint32_t rc;
    auto stmt = static_cast<PG_STATEMENT*>(hStmt);
 
+   char **values = static_cast<char**>(MemAllocLocal(stmt->buffers.size() * sizeof(char*)));
+   for(int i = 0; i < stmt->buffers.size(); i++)
+      values[i] = stmt->buffers[i].buffer();
+
 	static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
    bool retry;
    int retryCount = 60;
@@ -413,8 +398,8 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
    {
       retry = false;
 	   PGresult	*pResult = (stmt->name[0] != 0) ? 
-         PQexecPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, stmt->pcount, stmt->buffers, nullptr, nullptr, 0) :
-         PQexecParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, stmt->pcount, NULL, stmt->buffers, nullptr, nullptr, 0);
+         PQexecPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, static_cast<int>(stmt->buffers.size()), values, nullptr, nullptr, 0) :
+         PQexecParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, static_cast<int>(stmt->buffers.size()), nullptr, values, nullptr, nullptr, 0);
       if (PQresultStatus(pResult) == PGRES_COMMAND_OK)
       {
          if (errorText != nullptr)
@@ -473,16 +458,7 @@ static void FreeStatement(DBDRV_STATEMENT hStmt)
       UnsafeQuery(stmt->connection, query, nullptr);
       stmt->connection->mutexQueryLock.unlock();
    }
-   else
-   {
-      MemFree(stmt->query);
-   }
-
-	for(int i = 0; i < stmt->allocated; i++)
-	   MemFree(stmt->buffers[i]);
-	MemFree(stmt->buffers);
-
-	MemFree(stmt);
+   delete stmt;
 }
 
 /**
@@ -539,10 +515,9 @@ static uint32_t Query(DBDRV_CONNECTION connection, const WCHAR *query, WCHAR *er
 {
 	uint32_t rc;
 
-	char localBuffer[1024];
-   char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
+	QueryString queryUTF8 = QueryToUTF8(query);
    static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
-	if (UnsafeQuery(static_cast<PG_CONN*>(connection), pszQueryUTF8, errorText))
+	if (UnsafeQuery(static_cast<PG_CONN*>(connection), queryUTF8, errorText))
    {
       rc = DBERR_SUCCESS;
    }
@@ -551,7 +526,6 @@ static uint32_t Query(DBDRV_CONNECTION connection, const WCHAR *query, WCHAR *er
       rc = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
 	static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
-   FreeConvertedString(pszQueryUTF8, localBuffer);
 
 	return rc;
 }
@@ -607,8 +581,7 @@ retry:
  */
 static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
 {
-   char localBuffer[1024];
-   char *queryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
+   QueryString queryUTF8 = QueryToUTF8(query);
    static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
 	DBDRV_RESULT pResult = UnsafeSelect(static_cast<PG_CONN*>(connection), queryUTF8, errorText);
    if (pResult != nullptr)
@@ -620,7 +593,6 @@ static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const WCHAR *query, uint
       *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
    }
    static_cast<PG_CONN*>(connection)->mutexQueryLock.unlock();
-   FreeConvertedString(queryUTF8, localBuffer);
    return pResult;
 }
 
@@ -631,16 +603,20 @@ static DBDRV_RESULT SelectPrepared(DBDRV_CONNECTION connection, DBDRV_STATEMENT 
 {
    auto stmt = static_cast<PG_STATEMENT*>(hStmt);
    PGresult	*result;
-   bool retry;
-   int retryCount = 60;
+
+   char **values = static_cast<char**>(MemAllocLocal(stmt->buffers.size() * sizeof(char*)));
+   for(size_t i = 0; i < stmt->buffers.size(); i++)
+      values[i] = stmt->buffers[i].buffer();
 
    static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
+   bool retry;
+   int retryCount = 60;
    do
    {
       retry = false;
 	   result = (stmt->name[0] != 0) ?
-            PQexecPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, stmt->pcount, stmt->buffers, nullptr, nullptr, 0) :
-            PQexecParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, stmt->pcount, nullptr, stmt->buffers, nullptr, nullptr, 0);
+            PQexecPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, static_cast<int>(stmt->buffers.size()), values, nullptr, nullptr, 0) :
+            PQexecParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, static_cast<int>(stmt->buffers.size()), nullptr, values, nullptr, nullptr, 0);
       if ((PQresultStatus(result) == PGRES_COMMAND_OK) || (PQresultStatus(result) == PGRES_TUPLES_OK))
       {
          if (errorText != nullptr)
@@ -758,7 +734,7 @@ static void FreeResult(DBDRV_RESULT result)
 /**
  * Perform unbuffered SELECT query
  */
-static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, const WCHAR *pwszQuery, uint32_t *errorCode, WCHAR *errorText)
+static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, const WCHAR *query, uint32_t *errorCode, WCHAR *errorText)
 {
 	PG_UNBUFFERED_RESULT *result = MemAllocStruct<PG_UNBUFFERED_RESULT>();
 	result->conn = static_cast<PG_CONN*>(connection);
@@ -771,7 +747,7 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
 	bool retry;
 	int retryCount = 60;
 	char localBuffer[1024];
-   char *queryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
+   QueryString queryUTF8 = QueryToUTF8(query);
    do
    {
       retry = false;
@@ -845,7 +821,6 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
       }
    }
    while(retry);
-   FreeConvertedString(queryUTF8, localBuffer);
 
    if (!success)
    {
@@ -865,6 +840,12 @@ static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connect
    result->fetchBuffer = nullptr;
    result->keepFetchBuffer = true;
 
+   auto stmt = static_cast<PG_STATEMENT*>(hStmt);
+
+   char **values = static_cast<char**>(MemAllocLocal(stmt->buffers.size() * sizeof(char*)));
+   for(int i = 0; i < stmt->buffers.size(); i++)
+      values[i] = stmt->buffers[i].buffer();
+
    static_cast<PG_CONN*>(connection)->mutexQueryLock.lock();
 
    bool success = false;
@@ -873,10 +854,9 @@ static DBDRV_UNBUFFERED_RESULT SelectPreparedUnbuffered(DBDRV_CONNECTION connect
    do
    {
       retry = false;
-      auto stmt = static_cast<PG_STATEMENT*>(hStmt);
       int sendSuccess = (stmt->name[0] != 0) ?
-            PQsendQueryPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, stmt->pcount, stmt->buffers, nullptr, nullptr, 0) :
-            PQsendQueryParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, stmt->pcount, nullptr, stmt->buffers, nullptr, nullptr, 0);
+            PQsendQueryPrepared(static_cast<PG_CONN*>(connection)->handle, stmt->name, static_cast<int>(stmt->buffers.size()), values, nullptr, nullptr, 0) :
+            PQsendQueryParams(static_cast<PG_CONN*>(connection)->handle, stmt->query, static_cast<int>(stmt->buffers.size()), nullptr, values, nullptr, nullptr, 0);
       if (sendSuccess)
       {
 #ifdef _WIN32

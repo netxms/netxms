@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@
 #include <dbdrv.h>
 #include <libpq-fe.h>
 #include <string.h>
+#include <vector>
 
 /**
  * PostgreSQL connection
@@ -67,9 +68,18 @@ struct PG_STATEMENT
 	PG_CONN *connection;
 	char name[64];
    char *query;
-	int pcount;		// Number of parameters
-	int allocated;	// Allocated buffers
-	char **buffers;	
+	std::vector<Buffer<char>> buffers;
+
+	PG_STATEMENT(PG_CONN *c)
+	{
+	   connection = c;
+	   query = nullptr;
+	}
+
+	~PG_STATEMENT()
+	{
+	   MemFree(query);
+	}
 };
 
 /**

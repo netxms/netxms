@@ -27,7 +27,7 @@
  */
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length)
 {
-   if (str == NULL)
+   if (str == nullptr)
       return MemCopyString(_T(""));
 
 	TCHAR *out;
@@ -44,7 +44,7 @@ TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length)
 	outLen++;
 	
 	// Convert string
-	out = (TCHAR *)malloc(outLen * sizeof(TCHAR));
+	out = MemAllocString(outLen);
 	inLen = (length == -1) ? (int)_tcslen(str) : length;
 	for(in = str, pos = 0; inLen > 0; in++, inLen--)
 	{

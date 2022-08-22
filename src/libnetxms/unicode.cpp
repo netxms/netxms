@@ -1279,21 +1279,13 @@ WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t bufl
    int err = 0;
 #endif /* HAVE_POSIX_STRERROR_R */
 
-   char *mbbuf = MemAllocStringA(buflen);
-   if (mbbuf != nullptr)
-   {
+   Buffer<char, 1024> mbbuf(buflen);
 #if HAVE_POSIX_STRERROR_R
-      err = strerror_r(errnum, mbbuf, buflen);
-      MultiByteToWideCharSysLocale(mbbuf, strerrbuf, buflen);
+   err = strerror_r(errnum, mbbuf, buflen);
+   MultiByteToWideCharSysLocale(mbbuf, strerrbuf, buflen);
 #else
-      MultiByteToWideCharSysLocale(strerror_r(errnum, mbbuf, buflen), strerrbuf, buflen);
+   MultiByteToWideCharSysLocale(strerror_r(errnum, mbbuf, buflen), strerrbuf, buflen);
 #endif
-      MemFree(mbbuf);
-   }
-   else
-   {
-      *strerrbuf = 0;
-   }
 
 #if HAVE_POSIX_STRERROR_R
    return err;
@@ -1318,10 +1310,8 @@ WCHAR LIBNETXMS_EXPORTABLE *wcserror_r(int errnum, WCHAR *strerrbuf, size_t bufl
 int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...)
 {
    va_list args;
-   int rc;
-
    va_start(args, format);
-   rc = nx_vwprintf(format, args);
+   int rc = nx_vwprintf(format, args);
    va_end(args);
    return rc;
 }
@@ -1332,10 +1322,8 @@ int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...)
 int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...)
 {
    va_list args;
-   int rc;
-
    va_start(args, format);
-   rc = nx_vfwprintf(fp, format, args);
+   int rc = nx_vfwprintf(fp, format, args);
    va_end(args);
    return rc;
 }
@@ -1346,10 +1334,8 @@ int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...)
 int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...)
 {
    va_list args;
-   int rc;
-
    va_start(args, format);
-   rc = nx_vswprintf(buffer, size, format, args);
+   int rc = nx_vswprintf(buffer, size, format, args);
    va_end(args);
    return rc;
 }
@@ -1360,10 +1346,8 @@ int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *fo
 int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...)
 {
    va_list args;
-   int rc;
-
    va_start(args, format);
-   rc = nx_vwscanf(format, args);
+   int rc = nx_vwscanf(format, args);
    va_end(args);
    return rc;
 }
@@ -1374,10 +1358,8 @@ int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...)
 int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...)
 {
    va_list args;
-   int rc;
-
    va_start(args, format);
-   rc = nx_vfwscanf(fp, format, args);
+   int rc = nx_vfwscanf(fp, format, args);
    va_end(args);
    return rc;
 }
@@ -1388,10 +1370,8 @@ int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...)
 int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...)
 {
    va_list args;
-   int rc;
-
    va_start(args, format);
-   rc = nx_vswscanf(str, format, args);
+   int rc = nx_vswscanf(str, format, args);
    va_end(args);
    return rc;
 }

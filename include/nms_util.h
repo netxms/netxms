@@ -517,6 +517,143 @@ public:
 };
 
 /**
+ * Buffer pointer with small allocation optimization
+ */
+template<typename T, size_t BUFFER_SIZE = 64> class Buffer
+{
+private:
+   T *m_allocatedBuffer;
+   size_t m_size;
+   BYTE m_internalBuffer[BUFFER_SIZE - sizeof(T*) - sizeof(size_t)];
+
+public:
+   Buffer()
+   {
+      m_allocatedBuffer = nullptr;
+      m_size = 0;
+   }
+
+   Buffer(size_t numElements)
+   {
+      m_size = numElements * sizeof(T);
+      if (m_size <= sizeof(m_internalBuffer))
+      {
+         m_allocatedBuffer = nullptr;
+         memset(m_internalBuffer, 0, m_size);
+      }
+      else
+      {
+         m_allocatedBuffer = MemAllocArray<T>(numElements);
+      }
+   }
+
+   Buffer(const T* data, size_t numElements)
+   {
+      m_size = numElements * sizeof(T);
+      if (m_size <= sizeof(m_internalBuffer))
+      {
+         memcpy(m_internalBuffer, data, m_size);
+         m_allocatedBuffer = nullptr;
+      }
+      else
+      {
+         m_allocatedBuffer = MemCopyBlock(data, m_size);
+      }
+   }
+
+   Buffer(const Buffer& src)
+   {
+      m_size = src.m_size;
+      if (src.m_allocatedBuffer != nullptr)
+      {
+         m_allocatedBuffer = MemCopyBlock(src.m_allocatedBuffer, m_size);
+      }
+      else
+      {
+         m_allocatedBuffer = nullptr;
+         memcpy(m_internalBuffer, src.m_internalBuffer, sizeof(m_internalBuffer));
+      }
+   }
+
+   Buffer(Buffer&& src)
+   {
+      m_allocatedBuffer = src.m_allocatedBuffer;
+      m_size = src.m_size;
+      if (m_allocatedBuffer != nullptr)
+      {
+         src.m_allocatedBuffer = nullptr;
+      }
+      else
+      {
+         memcpy(m_internalBuffer, src.m_internalBuffer, sizeof(m_internalBuffer));
+      }
+      src.m_size = 0;
+   }
+
+   ~Buffer()
+   {
+      MemFree(m_allocatedBuffer);
+   }
+
+   T *buffer() { return (m_allocatedBuffer != nullptr) ? m_allocatedBuffer : reinterpret_cast<T*>(m_internalBuffer); }
+   operator T*() { return buffer(); }
+   size_t size() const { return m_size; }
+   size_t numElements() const { return m_size / sizeof(T); }
+
+   void realloc(size_t numElements)
+   {
+      size_t size = numElements * sizeof(T);
+      if (size > sizeof(m_internalBuffer))
+      {
+         if (m_allocatedBuffer == nullptr)
+         {
+            m_allocatedBuffer = MemAllocArrayNoInit<T>(numElements);
+            memcpy(m_allocatedBuffer, m_internalBuffer, m_size);
+         }
+         else
+         {
+            m_allocatedBuffer = MemRealloc(m_allocatedBuffer, size);
+         }
+      }
+      else if (m_allocatedBuffer != nullptr)
+      {
+         memcpy(m_internalBuffer, m_allocatedBuffer, size);
+         MemFreeAndNull(m_allocatedBuffer);
+      }
+      m_size = size;
+   }
+
+   void set(const T *data, size_t numElements)
+   {
+      realloc(numElements);
+      memcpy(buffer(), data, numElements * sizeof(T));
+   }
+
+   void setPreallocated(T *data, size_t numElements)
+   {
+      MemFree(m_allocatedBuffer);
+      m_allocatedBuffer = data;
+      m_size = numElements * sizeof(T);
+   }
+
+   T *takeBuffer()
+   {
+      T *data;
+      if (m_allocatedBuffer != nullptr)
+      {
+         data = m_allocatedBuffer;
+         m_allocatedBuffer = nullptr;
+      }
+      else
+      {
+         data = MemCopyBlock(reinterpret_cast<T*>(m_internalBuffer), m_size);
+      }
+      m_size = 0;
+      return data;
+   }
+};
+
+/**
  * Object memory pool
  */
 template <class T> class ObjectMemoryPool
