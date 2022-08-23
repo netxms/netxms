@@ -160,6 +160,7 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
    threadName[0] = '$';
 #ifdef UNICODE
    wchar_to_ASCII(p->name, -1, &threadName[1], 11);
+   threadName[11] = 0;
 #else
    strlcpy(&threadName[1], p->name, 11);
 #endif
@@ -225,6 +226,7 @@ static void MaintenanceThread(ThreadPool *p)
    threadName[0] = '$';
 #ifdef UNICODE
    wchar_to_ASCII(p->name, -1, &threadName[1], 11);
+   threadName[11] = 0;
 #else
    strlcpy(&threadName[1], p->name, 11);
 #endif
