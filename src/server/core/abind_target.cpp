@@ -252,6 +252,7 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
       return result;
 
    filter->setGlobalVariable("$container", m_this->createNXSLObject(filter));
+   filter->setGlobalVariable("$dashboard", m_this->createNXSLObject(filter));
    filter->setGlobalVariable("$service", m_this->createNXSLObject(filter));
    filter->setGlobalVariable("$template", m_this->createNXSLObject(filter));
    if (dci != nullptr)

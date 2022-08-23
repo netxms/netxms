@@ -297,10 +297,12 @@ static void HouseKeeper()
    nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup time is %02d:%02d"), hour, minute);
 
    // Call policy validation for templates
-   g_idxObjectById.forEach([](NetObj *object) {
-      if (object->getObjectClass() == OBJECT_TEMPLATE)
-         static_cast<Template*>(object)->initiatePolicyValidation();
-   });
+   g_idxObjectById.forEach(
+      [] (NetObj *object)
+      {
+         if (object->getObjectClass() == OBJECT_TEMPLATE)
+            static_cast<Template*>(object)->initiatePolicyValidation();
+      });
 
    int sleepTime = GetSleepTime(hour, minute, 0);
    while(!s_shutdown)
@@ -434,10 +436,12 @@ static void HouseKeeper()
       }
 
       // Call policy validation for templates
-      g_idxObjectById.forEach([](NetObj *object) {
-         if (object->getObjectClass() == OBJECT_TEMPLATE)
-            static_cast<Template*>(object)->initiatePolicyValidation();
-      });
+      g_idxObjectById.forEach(
+         [] (NetObj *object)
+         {
+            if (object->getObjectClass() == OBJECT_TEMPLATE)
+               static_cast<Template*>(object)->initiatePolicyValidation();
+         });
 
 	   // Save object runtime data
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Saving object runtime data"));
@@ -450,10 +454,12 @@ static void HouseKeeper()
 
 		// Validate template DCIs
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue template updates"));
-		g_idxObjectById.forEach([](NetObj *object) {
-		   if (object->getObjectClass() == OBJECT_TEMPLATE)
-		      static_cast<Template*>(object)->queueUpdate();
-		});
+		g_idxObjectById.forEach(
+		   [] (NetObj *object)
+		   {
+            if (object->getObjectClass() == OBJECT_TEMPLATE)
+               static_cast<Template*>(object)->queueUpdate();
+		   });
 
       // Call hooks in loaded modules
 		ENUMERATE_MODULES(pfHousekeeperHook)
@@ -466,11 +472,12 @@ static void HouseKeeper()
 
 		// Run training on prediction engines
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue prediction engines training"));
-		g_idxObjectById.forEach([](NetObj *object) {
-		   if (s_shutdown || !object->isDataCollectionTarget())
-		      return;
-		   static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
-		});
+		g_idxObjectById.forEach(
+		   [] (NetObj *object)
+		   {
+            if (!s_shutdown && object->isDataCollectionTarget())
+               static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
+		   });
 
       PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
 

@@ -829,6 +829,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_BIZSVC_PROPERTIES    0x040000
 #define MODIFY_BIZSVC_CHECKS        0x080000
 #define MODIFY_POLL_TIMES           0x100000
+#define MODIFY_DASHBOARD_LIST       0x200000
 #define MODIFY_ALL                  0xFFFFFF
 
 /**
@@ -1336,6 +1337,9 @@ public:
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
    void executeHookScript(const TCHAR *hookName, uint32_t pollRequestId = 0);
+
+   bool addDashboard(uint32_t id);
+   bool removeDashboard(uint32_t id);
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
@@ -4267,22 +4271,26 @@ template class NXCORE_EXPORTABLE ObjectArray<DashboardElement>;
 /**
  * Dashboard object
  */
-class NXCORE_EXPORTABLE Dashboard : public AbstractContainer
+class NXCORE_EXPORTABLE Dashboard : public AbstractContainer, AutoBindTarget, Pollable
 {
 protected:
    typedef AbstractContainer super;
 
 protected:
    int m_numColumns;
-   uint32_t m_options;
    ObjectArray<DashboardElement> m_elements;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
+   virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+
 public:
    Dashboard();
    Dashboard(const TCHAR *name);
+
+   shared_ptr<Dashboard> self() { return static_pointer_cast<Dashboard>(NObject::self()); }
+   shared_ptr<const Dashboard> self() const { return static_pointer_cast<const Dashboard>(NObject::self()); }
 
    virtual int getObjectClass() const override { return OBJECT_DASHBOARD; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -4294,6 +4302,8 @@ public:
    virtual json_t *toJson() override;
 
    virtual bool showThresholdSummary() const override;
+
+   virtual bool lockForAutobindPoll() override;
 };
 
 /**

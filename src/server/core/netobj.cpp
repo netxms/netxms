@@ -315,7 +315,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Save dashboard associations
-   if (success)
+   if (success && (m_modified & MODIFY_DASHBOARD_LIST))
    {
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM dashboard_associations WHERE object_id=?"));
       if (success && !m_dashboards.isEmpty())
@@ -3136,4 +3136,34 @@ bool NetObj::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAlloca
          return true;
    }
    return false;
+}
+
+/**
+ * Add dashboard to associated dashboard list
+ */
+bool NetObj::addDashboard(uint32_t id)
+{
+   bool added = false;
+   lockProperties();
+   if (!m_dashboards.contains(id))
+   {
+      m_dashboards.add(id);
+      setModified(MODIFY_DASHBOARD_LIST);
+      added = true;
+   }
+   unlockProperties();
+   return added;
+}
+
+/**
+ * Remove dashboard from associated dashboard list
+ */
+bool NetObj::removeDashboard(uint32_t id)
+{
+   lockProperties();
+   bool removed = m_dashboards.remove(id);
+   if (removed)
+      setModified(MODIFY_DASHBOARD_LIST);
+   unlockProperties();
+   return removed;
 }

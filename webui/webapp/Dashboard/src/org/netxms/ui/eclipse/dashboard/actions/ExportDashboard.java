@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,18 +54,18 @@ public class ExportDashboard implements IObjectActionDelegate
 	private Dashboard dashboard = null;
 	private IWorkbenchPart wbPart = null;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
 		wbPart = targetPart;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
@@ -79,9 +79,13 @@ public class ExportDashboard implements IObjectActionDelegate
 		xml.append(dashboard.getObjectName());
 		xml.append("</name>\n\t<columns>"); //$NON-NLS-1$
 		xml.append(dashboard.getNumColumns());
-		xml.append("</columns>\n\t<options>"); //$NON-NLS-1$
-		xml.append(dashboard.getOptions());
-		xml.append("</options>\n\t<elements>\n"); //$NON-NLS-1$
+      xml.append("</columns>\n\t<flags>"); //$NON-NLS-1$
+      xml.append(dashboard.getFlags());
+      xml.append("</flags>\n\t<autoBindFlags>"); //$NON-NLS-1$
+      xml.append(dashboard.getAutoBindFlags());
+      xml.append("</autoBindFlags>\n\t<autoBindFilter>"); //$NON-NLS-1$
+      xml.append(dashboard.getAutoBindFilter().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"));
+      xml.append("</autoBindFilter>\n\t<elements>\n"); //$NON-NLS-1$
 		for(DashboardElement e : dashboard.getElements())
 		{
 			xml.append("\t\t<dashboardElement>\n\t\t\t<type>"); //$NON-NLS-1$
@@ -100,8 +104,8 @@ public class ExportDashboard implements IObjectActionDelegate
 			}
 		}
 		xml.append("\t</elements>\n"); //$NON-NLS-1$
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().ExportDashboard_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -123,7 +127,7 @@ public class ExportDashboard implements IObjectActionDelegate
 					}
 				}
 				xml.append("\t</objectMap>\n\t<dciMap>\n"); //$NON-NLS-1$
-		
+
 				// Add DCI ID mapping
 		      List<Long> nodeList = new ArrayList<Long>();
 		      List<Long> dciList = new ArrayList<Long>();
@@ -144,7 +148,7 @@ public class ExportDashboard implements IObjectActionDelegate
 					xml.append("</dci>\n"); //$NON-NLS-1$
 				}
 				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$
-				
+
 				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(dashboard.getObjectName() + ".xml"), "UTF-8"); //$NON-NLS-1$
 				try
 				{
@@ -167,7 +171,7 @@ public class ExportDashboard implements IObjectActionDelegate
 					}
 				}				
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -176,9 +180,9 @@ public class ExportDashboard implements IObjectActionDelegate
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

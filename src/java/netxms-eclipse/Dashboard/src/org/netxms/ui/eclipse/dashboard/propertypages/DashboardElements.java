@@ -79,6 +79,7 @@ public class DashboardElements extends PropertyPage
 
 	private Dashboard object;
 	private LabeledSpinner columnCount;
+   private Button checkAllTemplateElements;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -112,10 +113,18 @@ public class DashboardElements extends PropertyPage
       columnCount.setLabel(Messages.get().DashboardElements_NumColumns);
       columnCount.setRange(1, 128);
       columnCount.setSelection(object.getNumColumns());
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = SWT.LEFT;
-      gridData.horizontalSpan = 2;
-      columnCount.setLayoutData(gridData);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.verticalAlignment = SWT.BOTTOM;
+      columnCount.setLayoutData(gd);
+
+      checkAllTemplateElements = new Button(dialogArea, SWT.CHECK);
+      checkAllTemplateElements.setText("&All elements are templates by default");
+      checkAllTemplateElements.setSelection((object.getFlags() & Dashboard.ALL_TEMPLATE_ELEMENTS) != 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      gd.verticalAlignment = SWT.BOTTOM;
+      checkAllTemplateElements.setLayoutData(gd);
 
       final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, "Height", "Title" };
       final int[] columnWidths = { 150, 60, 90, 300 };
@@ -126,14 +135,14 @@ public class DashboardElements extends PropertyPage
       elements = copyElements(object.getElements());
       viewer.setInput(elements.toArray());
 
-      gridData = new GridData();
-      gridData.verticalAlignment = GridData.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.heightHint = 0;
-      gridData.horizontalSpan = 2;
-      viewer.getControl().setLayoutData(gridData);
+      gd = new GridData();
+      gd.verticalAlignment = GridData.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalAlignment = GridData.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.heightHint = 0;
+      gd.horizontalSpan = 2;
+      viewer.getControl().setLayoutData(gd);
 
       Composite leftButtons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -142,9 +151,9 @@ public class DashboardElements extends PropertyPage
       buttonLayout.marginWidth = 0;
       buttonLayout.marginLeft = 0;
       leftButtons.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.LEFT;
-      leftButtons.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      leftButtons.setLayoutData(gd);
 
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().DashboardElements_Up);
@@ -175,9 +184,9 @@ public class DashboardElements extends PropertyPage
       buttonLayout.marginWidth = 0;
       buttonLayout.marginRight = 0;
       rightButtons.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.RIGHT;
-      rightButtons.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      rightButtons.setLayoutData(gd);
 
       addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText(Messages.get().DashboardElements_Add);
@@ -275,11 +284,12 @@ public class DashboardElements extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDashboardElements(elements);
 		md.setColumnCount(columnCount.getSelection());
-		
+      md.setObjectFlags(checkAllTemplateElements.getSelection() ? Dashboard.ALL_TEMPLATE_ELEMENTS : 0, Dashboard.ALL_TEMPLATE_ELEMENTS);
+
 		if (isApply)
 			setValid(false);
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().DashboardElements_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -308,7 +318,7 @@ public class DashboardElements extends PropertyPage
 				}
 			}	
 		}.start();
-		
+
 		return true;
 	}
 
@@ -360,7 +370,7 @@ public class DashboardElements extends PropertyPage
       IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() != 1)
 			return;
-		
+
 		DashboardElement element = (DashboardElement)selection.getFirstElement();
 		DashboardElementConfig config = (DashboardElementConfig)AdapterManager.getDefault().getAdapter(element, DashboardElementConfig.class);
 		if (config != null)
@@ -368,11 +378,11 @@ public class DashboardElements extends PropertyPage
 			try
 			{
 				config.setLayout(DashboardElementLayout.createFromXml(element.getLayout()));
-				
+
 				PropertyDialog dlg = PropertyDialog.createDialogOn(getShell(), null, config);
 				if (dlg.open() == Window.CANCEL)
 					return;	// element creation cancelled
-				
+
 				element.setData(config.createXml());
 				element.setLayout(config.getLayout().createXml());
 				viewer.update(element, null);
@@ -387,7 +397,7 @@ public class DashboardElements extends PropertyPage
 			MessageDialogHelper.openError(getShell(), Messages.get().DashboardElements_InternalErrorTitle, Messages.get().DashboardElements_InternalErrorText2);
 		}
 	}
-	
+
 	/**
 	 * Edit selected element's configuration directly as XML
 	 */

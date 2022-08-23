@@ -34,6 +34,8 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -96,7 +98,7 @@ public class Polling extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof PollingTarget);
+      return (object instanceof PollingTarget) && !(object instanceof Container) && !(object instanceof Dashboard);
    }
 
    /**

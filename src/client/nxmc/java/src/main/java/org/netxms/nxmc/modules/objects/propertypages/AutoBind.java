@@ -20,8 +20,8 @@ package org.netxms.nxmc.modules.objects.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -34,6 +34,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.nxmc.Registry;
@@ -49,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
 public class AutoBind extends ObjectPropertyPage
 {
    private static I18n i18n = LocalizationHelper.getI18n(AutoBind.class);
-   
+
    private AutoBindObject autoBindObject;
 	private Button checkboxEnableBind;
 	private Button checkboxEnableUnbind;
@@ -57,7 +58,7 @@ public class AutoBind extends ObjectPropertyPage
    private boolean initialBind;
    private boolean initialUnbind;
 	private String initialAutoBindFilter;
-	
+
    /**
     * Create "auto bind" property page for given object
     *
@@ -65,7 +66,7 @@ public class AutoBind extends ObjectPropertyPage
     */
    public AutoBind(AbstractObject object)
    {
-      super(i18n.tr("Auto Bind"), object);
+      super(i18n.tr("Automatic Bind Rules"), object);
    }
 
    /**
@@ -75,7 +76,7 @@ public class AutoBind extends ObjectPropertyPage
 	protected Control createContents(Composite parent)
 	{
       Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		autoBindObject = (AutoBindObject)object;
 		if (autoBindObject == null)	// Paranoid check
 			return dialogArea;
@@ -83,7 +84,7 @@ public class AutoBind extends ObjectPropertyPage
       initialBind = autoBindObject.isAutoBindEnabled();
       initialUnbind = autoBindObject.isAutoUnbindEnabled();
 		initialAutoBindFilter = autoBindObject.getAutoBindFilter();
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -93,17 +94,13 @@ public class AutoBind extends ObjectPropertyPage
       // Enable/disable check box
       checkboxEnableBind = new Button(dialogArea, SWT.CHECK);
       if (autoBindObject instanceof Cluster)
-         checkboxEnableBind.setText("Automatically add nodes selected by filter to this cluster");
+         checkboxEnableBind.setText(i18n.tr("Automatically add nodes selected by filter to this cluster"));
       else if (autoBindObject instanceof Container)
          checkboxEnableBind.setText(i18n.tr("Automatically bind objects selected by filter to this container"));
+      else if (autoBindObject instanceof Dashboard)
+         checkboxEnableBind.setText(i18n.tr("Automatically add this dashboard to objects selected by filter"));
       checkboxEnableBind.setSelection(autoBindObject.isAutoBindEnabled());
-      checkboxEnableBind.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      checkboxEnableBind.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -120,12 +117,14 @@ public class AutoBind extends ObjectPropertyPage
 				}
 			}
       });
-      
+
       checkboxEnableUnbind = new Button(dialogArea, SWT.CHECK);
       if (autoBindObject instanceof Cluster)
-         checkboxEnableUnbind.setText("Automatically remove nodes from this cluster when they no longer passes filter");
+         checkboxEnableUnbind.setText(i18n.tr("Automatically remove nodes from this cluster when they no longer passes filter"));
       else if (autoBindObject instanceof Container)
          checkboxEnableUnbind.setText(i18n.tr("Automatically unbind objects from this container when they no longer passes filter"));
+      else if (autoBindObject instanceof Dashboard)
+         checkboxEnableUnbind.setText(i18n.tr("Automatically remove this dashboard from objects when they no longer passes filter"));
       checkboxEnableUnbind.setSelection(autoBindObject.isAutoUnbindEnabled());
       checkboxEnableUnbind.setEnabled(autoBindObject.isAutoBindEnabled());
 
@@ -137,8 +136,17 @@ public class AutoBind extends ObjectPropertyPage
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
       label.setLayoutData(gd);
 
-      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
-            "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$container\tthis container object.\r\n\r\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
+      String hints;
+      if (autoBindObject instanceof Cluster)
+         hints = i18n.tr("Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$cluster\tthis cluster object.\r\n\r\nReturn value: true to add node to this cluster, false to remove, null to make no changes.");
+      else if (autoBindObject instanceof Container)
+         hints = i18n.tr("Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$container\tthis container object.\r\n\r\nReturn value: true to bind node to this container, false to unbind, null to make no changes.");
+      else if (autoBindObject instanceof Dashboard)
+         hints = i18n.tr("Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$dashboard\tthis dashboard object.\r\n\r\nReturn value: true to add this dashboard to object, false to remove, null to make no changes.");
+      else
+         hints = "";
+
+      filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, hints);
       filterSource.setText(autoBindObject.getAutoBindFilter());
       filterSource.setEnabled(autoBindObject.isAutoBindEnabled());
 
@@ -169,7 +177,7 @@ public class AutoBind extends ObjectPropertyPage
 
 		if (isApply)
 			setValid(false);
-		
+
 		final NXCSession session =  Registry.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(((GenericObject)autoBindObject).getObjectId());
 		md.setAutoBindFilter(filterSource.getText());
@@ -177,7 +185,7 @@ public class AutoBind extends ObjectPropertyPage
       flags = apply ? flags | AutoBindObject.OBJECT_BIND_FLAG : flags & ~AutoBindObject.OBJECT_BIND_FLAG;  
       flags = remove ? flags | AutoBindObject.OBJECT_UNBIND_FLAG : flags & ~AutoBindObject.OBJECT_UNBIND_FLAG;  
       md.setAutoBindFlags(flags);
-		
+
 		new Job(i18n.tr("Update auto-bind filter"), null, null) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception

@@ -87,9 +87,9 @@ public class Template extends GenericObject implements PollingTarget
       return autoApplyFlags;
    }
 
-	/**
-	 * @return Filter script for automatic apply
-	 */
+   /**
+    * @return Filter script for automatic apply
+    */
 	public String getAutoApplyFilter()
 	{
 		return autoApplyFilter;
@@ -105,8 +105,9 @@ public class Template extends GenericObject implements PollingTarget
 	}
 
 	/**
-	 * @return the flags
-	 */
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
+    */
+   @Override
 	public int getFlags()
 	{
 		return flags;

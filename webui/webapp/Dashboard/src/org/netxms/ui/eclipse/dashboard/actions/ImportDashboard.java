@@ -148,7 +148,7 @@ public class ImportDashboard implements IObjectActionDelegate
 				{
 					if (elementsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 						continue;
-					
+
 					NodeList elements = ((Element)elementsRoot.item(i)).getElementsByTagName("dashboardElement"); //$NON-NLS-1$
 					for(int j = 0; j < elements.getLength(); j++)
 					{
@@ -159,18 +159,18 @@ public class ImportDashboard implements IObjectActionDelegate
 					}
 				}
 
-				root.normalize();
-				
 				objectName = dlg.getObjectName();
-				
+
 				if (doIdMapping(display, session, dashboardElements, root))
 				{
 					NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, objectName, parentId);
 					final long objectId = session.createObject(cd);
-					
+
 					NXCObjectModificationData md = new NXCObjectModificationData(objectId);
 					md.setColumnCount(getNodeValueAsInt(root, "columns", 1)); //$NON-NLS-1$
-					md.setObjectFlags(getNodeValueAsInt(root, "options", 0)); //$NON-NLS-1$
+               md.setObjectFlags(getNodeValueAsInt(root, "flags", 0)); //$NON-NLS-1$
+               md.setAutoBindFlags(getNodeValueAsInt(root, "autoBindFlags", 0));
+               md.setAutoBindFilter(getNodeValueAsString(root, "autoBindFilter", ""));
 					md.setDashboardElements(dashboardElements);
 					session.modifyObject(md);
 				}
@@ -352,6 +352,22 @@ public class ImportDashboard implements IObjectActionDelegate
 		}
 		return dcis;
 	}
+
+   /**
+    * Get value of given node as string.
+    * 
+    * @param parent
+    * @param tag
+    * @param defaultValue
+    * @return
+    */
+   private static String getNodeValueAsString(Element parent, String tag, String defaultValue)
+   {
+      NodeList l = parent.getElementsByTagName(tag);
+      if ((l.getLength() == 0) || (l.item(0).getNodeType() != Node.ELEMENT_NODE))
+         return defaultValue;
+      return ((Element)l.item(0)).getTextContent();
+   }
 
 	/**
 	 * Get value of given node as integer.

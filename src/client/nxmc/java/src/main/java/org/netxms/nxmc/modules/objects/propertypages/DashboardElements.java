@@ -80,6 +80,7 @@ public class DashboardElements extends ObjectPropertyPage
 
 	private Dashboard dashboard;
 	private LabeledSpinner columnCount;
+   private Button checkAllTemplateElements;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -148,10 +149,18 @@ public class DashboardElements extends ObjectPropertyPage
       columnCount.setLabel(i18n.tr("Number of columns"));
       columnCount.setRange(1, 128);
       columnCount.setSelection(dashboard.getNumColumns());
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = SWT.LEFT;
-      gridData.horizontalSpan = 2;
-      columnCount.setLayoutData(gridData);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.verticalAlignment = SWT.BOTTOM;
+      columnCount.setLayoutData(gd);
+
+      checkAllTemplateElements = new Button(dialogArea, SWT.CHECK);
+      checkAllTemplateElements.setText(i18n.tr("&All elements are templates by default"));
+      checkAllTemplateElements.setSelection((dashboard.getFlags() & Dashboard.ALL_TEMPLATE_ELEMENTS) != 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      gd.verticalAlignment = SWT.BOTTOM;
+      checkAllTemplateElements.setLayoutData(gd);
 
       final String[] columnNames = { i18n.tr("Type"), i18n.tr("Span"), i18n.tr("Height"), i18n.tr("Title") };
       final int[] columnWidths = { 150, 60, 90, 300 };
@@ -162,14 +171,14 @@ public class DashboardElements extends ObjectPropertyPage
       elements = copyElements(dashboard.getElements());
       viewer.setInput(elements.toArray());
 
-      gridData = new GridData();
-      gridData.verticalAlignment = GridData.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.heightHint = 0;
-      gridData.horizontalSpan = 2;
-      viewer.getControl().setLayoutData(gridData);
+      gd = new GridData();
+      gd.verticalAlignment = GridData.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalAlignment = GridData.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.heightHint = 0;
+      gd.horizontalSpan = 2;
+      viewer.getControl().setLayoutData(gd);
 
       Composite leftButtons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -178,9 +187,9 @@ public class DashboardElements extends ObjectPropertyPage
       buttonLayout.marginWidth = 0;
       buttonLayout.marginLeft = 0;
       leftButtons.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.LEFT;
-      leftButtons.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      leftButtons.setLayoutData(gd);
 
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(i18n.tr("&Up"));
@@ -211,9 +220,9 @@ public class DashboardElements extends ObjectPropertyPage
       buttonLayout.marginWidth = 0;
       buttonLayout.marginRight = 0;
       rightButtons.setLayout(buttonLayout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = SWT.RIGHT;
-      rightButtons.setLayoutData(gridData);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.RIGHT;
+      rightButtons.setLayoutData(gd);
 
       addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText(i18n.tr("&Add \u25BE"));

@@ -131,7 +131,7 @@
          point="org.eclipse.ui.propertyPages">
       <page
             class="org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements"
-            id="org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DashboardElements#10"
             name="%page.name.DashboardElements">
          <enabledWhen>
             <instanceof
@@ -433,6 +433,16 @@
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedComparisonChartConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.DashboardAutoBind"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DashboardAutoBind#15"
+            name="Automatic Bind Rules">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Dashboard">
             </instanceof>
          </enabledWhen>
       </page>

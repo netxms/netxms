@@ -32,10 +32,12 @@
 void ShowServerStats(CONSOLE_CTX console)
 {
 	int dciCount = 0;
-	g_idxObjectById.forEach([&dciCount] (NetObj *object) {
-	   if (object->isDataCollectionTarget())
-	      dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
-	});
+	g_idxObjectById.forEach(
+	   [&dciCount] (NetObj *object)
+	   {
+         if (object->isDataCollectionTarget())
+            dciCount += static_cast<DataCollectionTarget*>(object)->getItemCount();
+	   });
 
 	uint32_t s = static_cast<uint32_t>(time(nullptr) - g_serverStartTime);
 	uint32_t d = s / 86400;

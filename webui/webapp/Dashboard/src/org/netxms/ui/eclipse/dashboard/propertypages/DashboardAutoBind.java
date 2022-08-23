@@ -16,54 +16,42 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.propertypages;
+package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Template;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.interfaces.AutoBindObject;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
-import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
+import org.netxms.ui.eclipse.dashboard.Activator;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * "Auto apply" property page for template object
+ *
  */
-public class AutoApply extends ObjectPropertyPage
+public class DashboardAutoBind extends PropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(AutoApply.class);
-
-   private Template template;
-	private Button checkboxEnableApply;
+   private Dashboard object;
+	private Button checkboxEnableAdd;
 	private Button checkboxEnableRemove;
 	private ScriptEditor filterSource;
 	private boolean initialBind;
    private boolean initialUnbind;
-	private String initialApplyFilter;
-	
-   /**
-    * Create "auto apply" property page for given object
-    *
-    * @param object object to create property page for
-    */
-   public AutoApply(AbstractObject object)
-   {
-      super(i18n.tr("Automatic Apply Rules"), object);
-   }
+	private String initialBindFilter;
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -73,14 +61,14 @@ public class AutoApply extends ObjectPropertyPage
 	{
       Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-      template = (Template)object;
+      object = (Dashboard)getElement().getAdapter(Dashboard.class);
 		if (object == null)	// Paranoid check
 			return dialogArea;
-		
-		initialBind = template.isAutoApplyEnabled();
-		initialUnbind = template.isAutoRemoveEnabled();
-		initialApplyFilter = template.getAutoApplyFilter();
-		
+
+      initialBind = object.isAutoBindEnabled();
+      initialUnbind = object.isAutoUnbindEnabled();
+      initialBindFilter = object.getAutoBindFilter();
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -88,20 +76,14 @@ public class AutoApply extends ObjectPropertyPage
       dialogArea.setLayout(layout);
 
       // Enable/disable check box
-      checkboxEnableApply = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableApply.setText(i18n.tr("Apply this template automatically to objects selected by filter"));
-      checkboxEnableApply.setSelection(template.isAutoApplyEnabled());
-      checkboxEnableApply.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      checkboxEnableAdd = new Button(dialogArea, SWT.CHECK);
+      checkboxEnableAdd.setText("&Add this dashboard automatically to objects selected by filter");
+      checkboxEnableAdd.setSelection(object.isAutoBindEnabled());
+      checkboxEnableAdd.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				if (checkboxEnableApply.getSelection())
+				if (checkboxEnableAdd.getSelection())
 				{
 					filterSource.setEnabled(true);
 					filterSource.setFocus();
@@ -117,22 +99,22 @@ public class AutoApply extends ObjectPropertyPage
 
       // Enable/disable check box
       checkboxEnableRemove = new Button(dialogArea, SWT.CHECK);
-      checkboxEnableRemove.setText(i18n.tr("Remove this template automatically when object no longer passes through filter"));
-      checkboxEnableRemove.setSelection(template.isAutoRemoveEnabled());
-      checkboxEnableRemove.setEnabled(template.isAutoApplyEnabled());
+      checkboxEnableRemove.setText("&Remove this dashboard automatically when object no longer passes through filter");
+      checkboxEnableRemove.setSelection(object.isAutoUnbindEnabled());
+      checkboxEnableRemove.setEnabled(object.isAutoBindEnabled());
 
       // Filtering script
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(i18n.tr("Filtering script"));
+      label.setText("Filtering script");
 
       GridData gd = new GridData();
       gd.verticalIndent = WidgetHelper.DIALOG_SPACING;
 		label.setLayoutData(gd);
 
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true,
-            "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$template\tthis template object.\r\n\r\nReturn value: true to apply this template to node, false to remove, null to make no changes.");
-		filterSource.setText(template.getAutoApplyFilter());
-		filterSource.setEnabled(template.isAutoApplyEnabled());
+            "Variables:\r\n\t$node\tnode being tested (null if object is not a node).\r\n\t$object\tobject being tested.\r\n\t$dashboard\tthis dashboard object.\r\n\r\nReturn value: true to add this dashboard to node, false to remove, null to make no changes.");
+      filterSource.setText(object.getAutoBindFilter());
+      filterSource.setEnabled(object.isAutoBindEnabled());
 
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -151,33 +133,33 @@ public class AutoApply extends ObjectPropertyPage
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
 	 */
-	protected boolean applyChanges(final boolean isApply)
+	protected void applyChanges(final boolean isApply)
 	{
-	   boolean apply = checkboxEnableApply.getSelection();
+	   boolean apply = checkboxEnableAdd.getSelection();
       boolean remove = checkboxEnableRemove.getSelection();
-			
-		if ((apply == initialBind) && (remove == initialUnbind) && initialApplyFilter.equals(filterSource.getText()))
-			return true;		// Nothing to apply
-		
+
+		if ((apply == initialBind) && (remove == initialUnbind) && initialBindFilter.equals(filterSource.getText()))
+			return;		// Nothing to apply
+
 		if (isApply)
 			setValid(false);
-		
-		final NXCSession session = Registry.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setAutoBindFilter(filterSource.getText());
-      int flags = ((Template)object).getAutoApplyFlags();
+      int flags = object.getAutoBindFlags();
       flags = apply ? flags | AutoBindObject.OBJECT_BIND_FLAG : flags & ~AutoBindObject.OBJECT_BIND_FLAG;  
       flags = remove ? flags | AutoBindObject.OBJECT_UNBIND_FLAG : flags & ~AutoBindObject.OBJECT_UNBIND_FLAG;  
       md.setAutoBindFlags(flags);
-		
-		new Job(i18n.tr("Update auto-apply filter"), null, null) {
+
+      new ConsoleJob("Updating autobind configuration", null, Activator.PLUGIN_ID) {
 			@Override
-			protected void run(IProgressMonitor monitor) throws Exception
+			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-		      initialBind = apply;
-		      initialUnbind = remove;
-				initialApplyFilter = md.getAutoBindFilter();
+            initialBind = apply;
+            initialUnbind = remove;
+				initialBindFilter = md.getAutoBindFilter();
 			}
 
 			@Override
@@ -189,7 +171,7 @@ public class AutoApply extends ObjectPropertyPage
 						@Override
 						public void run()
 						{
-							AutoApply.this.setValid(true);
+							DashboardAutoBind.this.setValid(true);
 						}
 					});
 				}
@@ -198,28 +180,27 @@ public class AutoApply extends ObjectPropertyPage
 			@Override
 			protected String getErrorMessage()
 			{
-				return i18n.tr("Cannot change template automatic apply options");
+            return "Cannot update autobind configuration";
 			}
 		}.start();
-		
+	}
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
+	@Override
+	public boolean performOk()
+	{
+		applyChanges(false);
 		return true;
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getId()
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
     */
-   @Override
-   public String getId()
-   {
-      return "autoApply";
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
-    */
-   @Override
-   public boolean isVisible()
-   {
-      return object instanceof Template;
-   }
+	@Override
+	protected void performApply()
+	{
+		applyChanges(true);
+	}
 }

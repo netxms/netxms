@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.11 to 42.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(DBDropColumn(g_dbHandle, _T("dashboards"), _T("options")));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 42.10 to 42.11
  */
 static bool H_UpgradeFromV10()
@@ -184,6 +194,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 11, 42, 12, H_UpgradeFromV11 },
    { 10, 42, 11, H_UpgradeFromV10 },
    { 9,  42, 10, H_UpgradeFromV9  },
    { 8,  42, 9,  H_UpgradeFromV8  },

@@ -1970,7 +1970,6 @@ CREATE TABLE dashboards
 (
   id integer not null,
   num_columns integer not null,
-  options integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

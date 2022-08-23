@@ -33,7 +33,7 @@ public class Container extends GenericObject implements AutoBindObject, PollingT
 {	
    private int autoBindFlags;
 	private String autoBindFilter;
-	
+
 	/**
     * Create from NXCP message.
     *
@@ -66,24 +66,27 @@ public class Container extends GenericObject implements AutoBindObject, PollingT
    }
 
    /**
-    * @return true if automatic bind is enabled
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoBindEnabled()
     */
+   @Override
    public boolean isAutoBindEnabled()
    {
       return (autoBindFlags & OBJECT_BIND_FLAG) > 0;
    }
 
    /**
-    * @return true if automatic unbind is enabled
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoUnbindEnabled()
     */
+   @Override
    public boolean isAutoUnbindEnabled()
    {
       return (autoBindFlags & OBJECT_UNBIND_FLAG) > 0;
    }
 
-	/**
-	 * @return Filter script for automatic bind
-	 */
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFilter()
+    */
+   @Override
 	public String getAutoBindFilter()
 	{
 		return autoBindFilter;
@@ -99,8 +102,9 @@ public class Container extends GenericObject implements AutoBindObject, PollingT
 	}
 
 	/**
-	 * @return the flags
-	 */
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
+    */
+   @Override
 	public int getFlags()
 	{
 		return flags;

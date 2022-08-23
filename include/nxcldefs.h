@@ -248,6 +248,10 @@
 #define SF_SYNTETIC_MASK               0x00010000
 #define SF_MANUALLY_CREATED            0x00020000
 
+/**
+ * Dashboard flags
+ */
+#define DBF_ALL_TEMPLATE_ELEMENTS      0x00010000
 
 /**
  * Data Collection Target flags (lower bits of flags field)

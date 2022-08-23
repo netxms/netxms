@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,18 +24,22 @@ import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.objects.interfaces.AutoBindObject;
+import org.netxms.client.objects.interfaces.PollingTarget;
 
 /**
  * Dashboard object
  */
-public class Dashboard extends GenericObject
+public class Dashboard extends GenericObject implements AutoBindObject, PollingTarget
 {
-	public static final int EQUAL_WIDTH_COLUMNS = 0x0001;
-	
+   public final static int ALL_TEMPLATE_ELEMENTS = 0x00010000;
+
 	private int numColumns;
-	private int options;
 	private List<DashboardElement> elements;
+   private int autoBindFlags;
+   private String autoBindFilter;
 
 	/**
 	 * Create from NXCP message.
@@ -47,8 +51,9 @@ public class Dashboard extends GenericObject
 	{
 		super(msg, session);
 		numColumns = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
-		options = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
-		
+      autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
+      autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
+
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<DashboardElement>(count);
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -75,20 +80,120 @@ public class Dashboard extends GenericObject
 		return elements;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
-	 */
+   /**
+    * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+    */
 	@Override
 	public String getObjectClassName()
 	{
 		return "Dashboard";
 	}
 
-	/**
-	 * @return the options
-	 */
-	public int getOptions()
-	{
-		return options;
-	}
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoBindEnabled()
+    */
+   @Override
+   public boolean isAutoBindEnabled()
+   {
+      return (autoBindFlags & OBJECT_BIND_FLAG) > 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#isAutoUnbindEnabled()
+    */
+   @Override
+   public boolean isAutoUnbindEnabled()
+   {
+      return (autoBindFlags & OBJECT_UNBIND_FLAG) > 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFilter()
+    */
+   @Override
+   public String getAutoBindFilter()
+   {
+      return autoBindFilter;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFlags()
+    */
+   @Override
+   public int getAutoBindFlags()
+   {
+      return autoBindFlags;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getFlags()
+    */
+   @Override
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getIfXTablePolicy()
+    */
+   @Override
+   public int getIfXTablePolicy()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getAgentCacheMode()
+    */
+   @Override
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return null;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollerNodeId()
+    */
+   @Override
+   public long getPollerNodeId()
+   {
+      return 0;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveAgent()
+    */
+   @Override
+   public boolean canHaveAgent()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHaveInterfaces()
+    */
+   @Override
+   public boolean canHaveInterfaces()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canHavePollerNode()
+    */
+   @Override
+   public boolean canHavePollerNode()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#canUseEtherNetIP()
+    */
+   @Override
+   public boolean canUseEtherNetIP()
+   {
+      return false;
+   }
 }

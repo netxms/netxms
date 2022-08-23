@@ -34,7 +34,7 @@ public class CloneDashboard implements IObjectActionDelegate
 		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CloneDashboard_Dashboard);
 		if (dlg.open() == Window.OK)
 		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.get().CloneDashboard_JobTitle, part, Activator.PLUGIN_ID, null)
 			{
 				@Override
@@ -46,7 +46,9 @@ public class CloneDashboard implements IObjectActionDelegate
 					final NXCObjectModificationData md = new NXCObjectModificationData(newDashboardId);
 					md.setDashboardElements(sourceObject.getElements());
 					md.setColumnCount(sourceObject.getNumColumns());
-					md.setObjectFlags(sourceObject.getOptions());
+               md.setObjectFlags(sourceObject.getFlags());
+               md.setAutoBindFlags(sourceObject.getAutoBindFlags());
+               md.setAutoBindFilter(sourceObject.getAutoBindFilter());
 
 					session.modifyObject(md);
 				}
@@ -60,9 +62,9 @@ public class CloneDashboard implements IObjectActionDelegate
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(final IAction action, final ISelection selection)
 	{
@@ -79,9 +81,9 @@ public class CloneDashboard implements IObjectActionDelegate
 		action.setEnabled(sourceObject != null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(final IAction action, final IWorkbenchPart targetPart)
 	{

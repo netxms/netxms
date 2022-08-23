@@ -108,7 +108,7 @@ void Template::calculateCompoundStatus(bool forcedRecalc)
 bool Template::saveToDatabase(DB_HANDLE hdb)
 {
    bool success = super::saveToDatabase(hdb);
-   if(success)
+   if (success)
    {
       if ((m_modified & MODIFY_OTHER) && !IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_id))
       {

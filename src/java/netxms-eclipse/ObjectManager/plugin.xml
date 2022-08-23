@@ -978,6 +978,23 @@
                style="push">
          </action>
       </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Dashboard"
+            objectClass="org.netxms.client.objects.Dashboard">
+         <menu
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu"
+               label="%menu.label.Poll"
+               path="objectcontrol">
+         </menu>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.AutoBindPoll"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.AutoBindPoll"
+               label="&amp;Automatic bind"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+      </objectContribution>
    </extension>
    <extension
          point="org.eclipse.ui.views">
