@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.10 to 42.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateConfigParam(_T("DBWriter.UpdateParallelismDegree"), _T("1"), _T("Degree of parallelism for UPDATE statements executed by raw DCI data writer."), nullptr, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 42.9 to 42.10
  */
 static bool H_UpgradeFromV9()
@@ -174,6 +184,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10, 42, 11, H_UpgradeFromV10 },
    { 9,  42, 10, H_UpgradeFromV9  },
    { 8,  42, 9,  H_UpgradeFromV8  },
    { 7,  42, 8,  H_UpgradeFromV7  },

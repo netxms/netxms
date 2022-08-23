@@ -107,7 +107,7 @@ ObjectQueue<DELAYED_SQL_REQUEST> g_dbWriterQueue(1024, Ownership::True, WriterQu
  */
 static DELAYED_RAW_DATA_UPDATE *s_rawDataWriterQueue = nullptr;
 static Mutex s_rawDataWriterLock;
-static int s_batchSize = 0;
+static VolatileCounter s_batchSize = 0;
 
 /**
  * Performance counters
@@ -801,24 +801,8 @@ static void IDataWriteThreadSingleTable_Oracle(IDataWriter *writer)
    }
 }
 
-/**
- * Save raw DCI data
- */
-static void SaveRawData(int maxRecords)
+static void SaveRawDataBatch(DELAYED_RAW_DATA_UPDATE *batch, int maxRecords)
 {
-   s_rawDataWriterLock.lock();
-   DELAYED_RAW_DATA_UPDATE *batch = s_rawDataWriterQueue;
-   s_rawDataWriterQueue = nullptr;
-   s_rawDataWriterLock.unlock();
-
-   s_batchSize = HASH_COUNT(batch);
-   if (s_batchSize == 0)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("Empty raw data batch, skipping write cycle"));
-      return;
-   }
-
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("%d records in raw data batch"), s_batchSize);
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    if (DBBegin(hdb))
    {
@@ -857,7 +841,7 @@ static void SaveRawData(int maxRecords)
 
             HASH_DEL(batch, rq);
             MemFree(rq);
-            s_batchSize--;
+            InterlockedDecrement(&s_batchSize);
 
             count++;
             if (count >= maxRecords)
@@ -882,8 +866,34 @@ static void SaveRawData(int maxRecords)
    {
       HASH_DEL(batch, rq);
       MemFree(rq);
+      InterlockedDecrement(&s_batchSize);
    }
-   s_batchSize = 0;
+}
+
+/**
+ * Save raw DCI data
+ */
+static void SaveRawData(int maxRecords, ThreadPool *writerPool)
+{
+   s_rawDataWriterLock.lock();
+   DELAYED_RAW_DATA_UPDATE *batch = s_rawDataWriterQueue;
+   s_rawDataWriterQueue = nullptr;
+   s_rawDataWriterLock.unlock();
+
+   int32_t batchSize = HASH_COUNT(batch);
+   if (batchSize == 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("Empty raw data batch, skipping write cycle"));
+      return;
+   }
+
+   InterlockedAdd(&s_batchSize, batchSize);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("%d records in raw data batch"), batchSize);
+
+   if (writerPool != nullptr)
+      ThreadPoolExecute(writerPool, SaveRawDataBatch, batch, maxRecords);
+   else
+      SaveRawDataBatch(batch, maxRecords);
 }
 
 /**
@@ -894,12 +904,25 @@ static void RawDataWriteThread()
    ThreadSetName("DBWriter/RData");
    int maxRecords = ConfigReadInt(_T("DBWriter.MaxRecordsPerTransaction"), 1000);
    int flushInterval = ConfigReadInt(_T("DBWriter.RawDataFlushInterval"), 30);
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data flush interval is %d seconds"), flushInterval);
+   if (flushInterval < 1)
+      flushInterval = 1;
+
+   ThreadPool *writerPool = nullptr;
+   int numWriters = ConfigReadInt(_T("DBWriter.UpdateParallelismDegree"), 1);
+   if (numWriters > 1)
+   {
+      writerPool = ThreadPoolCreate(_T("DBWRITE/RAW"), numWriters, numWriters);
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data flush interval is %d seconds (%d writer%s)"), flushInterval, (writerPool != nullptr) ? numWriters : 1, (numWriters > 1) ? _T("s") : _T(""));
    while(!SleepAndCheckForShutdown(flushInterval))
    {
-      SaveRawData(maxRecords);
+      SaveRawData(maxRecords, writerPool);
 	}
-   SaveRawData(maxRecords);
+   SaveRawData(maxRecords, writerPool);
+
+   if (writerPool != nullptr)
+      ThreadPoolDestroy(writerPool);
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Raw DCI data writer stopped"));
 }
 
