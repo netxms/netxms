@@ -503,19 +503,19 @@ SharedString LIBNXDB_EXPORTABLE DBGetFieldAsSharedString(DB_RESULT hResult, int 
  * Get field's value as UTF8 string. If buffer is NULL, dynamically allocated string will be returned.
  * Caller is responsible for destroying it by calling free().
  */
-char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, size_t nBufLen)
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int row, int column, char *buffer, size_t bufferSize)
 {
    if (hResult->m_driver->m_callTable.GetFieldUTF8 != nullptr)
    {
-      if (pszBuffer != nullptr)
+      if (buffer != nullptr)
       {
-         *pszBuffer = 0;
-         return hResult->m_driver->m_callTable.GetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, (int)nBufLen);
+         *buffer = 0;
+         return hResult->m_driver->m_callTable.GetFieldUTF8(hResult->m_data, row, column, buffer, (int)bufferSize);
       }
       else
       {
          char *pszTemp;
-         int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, iRow, iColumn);
+         int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, row, column);
          if (nLen == -1)
          {
             pszTemp = nullptr;
@@ -523,24 +523,24 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
          else
          {
             nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
-            pszTemp = (char *)malloc(nLen);
-            hResult->m_driver->m_callTable.GetFieldUTF8(hResult->m_data, iRow, iColumn, pszTemp, nLen);
+            pszTemp = MemAllocStringA(nLen);
+            hResult->m_driver->m_callTable.GetFieldUTF8(hResult->m_data, row, column, pszTemp, nLen);
          }
          return pszTemp;
       }
    }
    else
    {
-      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, iRow, iColumn);
+      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, row, column);
       if (nLen == -1)
          return nullptr;
-      nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
+      nLen = nLen++;
 
-      WCHAR *wtemp = MemAllocStringW(nLen);
-      hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, wtemp, nLen);
-      char *value = (pszBuffer != nullptr) ? pszBuffer : (char *)malloc(nLen);
-      wchar_to_utf8(wtemp, -1, value, (pszBuffer != nullptr) ? (int)nBufLen : nLen);
-      MemFree(wtemp);
+      Buffer<WCHAR, 1024> wtemp(nLen);
+      hResult->m_driver->m_callTable.GetField(hResult->m_data, row, column, wtemp, nLen);
+      size_t utf8len = wchar_utf8len(wtemp, -1);
+      char *value = (buffer != nullptr) ? buffer : MemAllocStringA(utf8len);
+      wchar_to_utf8(wtemp, -1, value, (buffer != nullptr) ? bufferSize : utf8len);
       return value;
    }
 }
@@ -549,54 +549,49 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
  * Get field's value as multibyte string. If buffer is NULL, dynamically allocated string will be returned.
  * Caller is responsible for destroying it by calling MemFree().
  */
-char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, char *pszBuffer, size_t nBufLen)
+char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int row, int column, char *buffer, size_t bufferSize)
 {
-   WCHAR *pwszData, *pwszBuffer;
-   char *pszRet;
-   int nLen;
-
-   if (pszBuffer != nullptr)
+   char *result;
+   if (buffer != nullptr)
    {
-      *pszBuffer = 0;
-      pwszBuffer = MemAllocStringW(nBufLen);
-      pwszData = hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, pwszBuffer, (int)nBufLen);
-      if (pwszData != nullptr)
+      *buffer = 0;
+      Buffer<WCHAR, 1024> wbuffer(bufferSize);
+      WCHAR *value = hResult->m_driver->m_callTable.GetField(hResult->m_data, row, column, wbuffer, (int)bufferSize);
+      if (value != nullptr)
       {
-         wchar_to_mb(pwszData, -1, pszBuffer, (int)nBufLen);
-         pszRet = pszBuffer;
+         wchar_to_mb(value, -1, buffer, (int)bufferSize);
+         result = buffer;
       }
       else
       {
-         pszRet = nullptr;
+         result = nullptr;
       }
-      MemFree(pwszBuffer);
    }
    else
    {
-      nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, iRow, iColumn);
+      int nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, row, column);
       if (nLen == -1)
       {
-         pszRet = nullptr;
+         result = nullptr;
       }
       else
       {
          nLen++;
-         pwszBuffer = MemAllocStringW(nLen);
-         pwszData = hResult->m_driver->m_callTable.GetField(hResult->m_data, iRow, iColumn, pwszBuffer, nLen);
-         if (pwszData != nullptr)
+         Buffer<WCHAR, 1024> wbuffer(bufferSize);
+         WCHAR *value = hResult->m_driver->m_callTable.GetField(hResult->m_data, row, column, wbuffer, nLen);
+         if (value != nullptr)
          {
-            nLen = (int)wcslen(pwszData) + 1;
-            pszRet = (char *)malloc(nLen);
-            wchar_to_mb(pwszData, -1, pszRet, nLen);
+            nLen = (int)wcslen(value) + 1;
+            result = MemAllocStringA(nLen);
+            wchar_to_mb(value, -1, result, nLen);
          }
          else
          {
-            pszRet = nullptr;
+            result = nullptr;
          }
-         MemFree(pwszBuffer);
       }
    }
-   return pszRet;
+   return result;
 }
 
 /**
@@ -968,19 +963,19 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 /**
  * Get field's value from unbuffered SELECT result as UTF-8 string
  */
-char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, size_t iBufSize)
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int column, char *buffer, size_t bufferSize)
 {
    if (hResult->m_driver->m_callTable.GetFieldUTF8 != nullptr)
    {
       if (buffer != nullptr)
       {
          *buffer = 0;
-         return hResult->m_driver->m_callTable.GetFieldUnbufferedUTF8(hResult->m_data, iColumn, buffer, (int)iBufSize);
+         return hResult->m_driver->m_callTable.GetFieldUnbufferedUTF8(hResult->m_data, column, buffer, (int)bufferSize);
       }
       else
       {
          char *pszTemp;
-         int32_t nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, iColumn);
+         int32_t nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, column);
          if (nLen == -1)
          {
             pszTemp = nullptr;
@@ -989,23 +984,23 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColum
          {
             nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
             pszTemp = MemAllocStringA(nLen);
-            hResult->m_driver->m_callTable.GetFieldUnbufferedUTF8(hResult->m_data, iColumn, pszTemp, nLen);
+            hResult->m_driver->m_callTable.GetFieldUnbufferedUTF8(hResult->m_data, column, pszTemp, nLen);
          }
          return pszTemp;
       }
    }
    else
    {
-      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, iColumn);
+      int32_t nLen = hResult->m_driver->m_callTable.GetFieldLengthUnbuffered(hResult->m_data, column);
       if (nLen == -1)
          return nullptr;
-      nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
+      nLen++;
 
-      WCHAR *wtemp = MemAllocStringW(nLen);
-      hResult->m_driver->m_callTable.GetFieldUnbuffered(hResult->m_data, iColumn, wtemp, nLen);
-      char *value = (buffer != nullptr) ? buffer : MemAllocStringA(nLen);
-      wchar_to_utf8(wtemp, -1, value, (buffer != nullptr) ? (int)iBufSize : nLen);
-      MemFree(wtemp);
+      Buffer<WCHAR, 1024> wtemp(nLen);
+      hResult->m_driver->m_callTable.GetFieldUnbuffered(hResult->m_data, column, wtemp, nLen);
+      size_t utf8len = wchar_utf8len(wtemp, -1);
+      char *value = (buffer != nullptr) ? buffer : MemAllocStringA(utf8len);
+      wchar_to_utf8(wtemp, -1, value, (buffer != nullptr) ? bufferSize : utf8len);
       return value;
    }
 }
@@ -1283,16 +1278,16 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 			switch(cType)
 			{
 				case DB_CTYPE_INT32:
-					_sntprintf(text, 64, _T("%d"), *static_cast<const int32_t*>(buffer));
+				   IntegerToString(*static_cast<const int32_t*>(buffer), text);
 					break;
 				case DB_CTYPE_UINT32:
-					_sntprintf(text, 64, _T("%u"), *static_cast<const uint32_t*>(buffer));
+               IntegerToString(*static_cast<const uint32_t*>(buffer), text);
 					break;
 				case DB_CTYPE_INT64:
-					_sntprintf(text, 64, INT64_FMT, *static_cast<const int64_t*>(buffer));
+               IntegerToString(*static_cast<const int64_t*>(buffer), text);
 					break;
 				case DB_CTYPE_UINT64:
-					_sntprintf(text, 64, UINT64_FMT, *static_cast<const uint64_t*>(buffer));
+               IntegerToString(*static_cast<const uint64_t*>(buffer), text);
 					break;
 				case DB_CTYPE_DOUBLE:
 					_sntprintf(text, 64, _T("%f"), *static_cast<const double*>(buffer));
