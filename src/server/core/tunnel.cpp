@@ -1375,7 +1375,9 @@ static long DecodeTLSVersion(int version)
          protoVersion = TLS1_2_VERSION;
          break;
       case 3:
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
          protoVersion = TLS1_3_VERSION;
+#endif
          break;
    }
 #else
@@ -1459,10 +1461,17 @@ static void SetupTunnel(ConnectionRequest *request)
 #endif
 
    version = ConfigReadInt(_T("AgentTunnels.TLS.MinVersion"), 2);
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
+   if (version >= 3)
+   {
+      ReportError(debugPrefix, request->addr, _T("Cannot set minimal TLS version to 1.%d (not supported by server)"), version);
+      goto failure;
+   }
+#endif
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    if (!SSL_CTX_set_min_proto_version(context, static_cast<int>(DecodeTLSVersion(version))))
    {
-      ReportError(debugPrefix, request->addr, _T("Cannot set minimal TLS version"));
+      ReportError(debugPrefix, request->addr, _T("Cannot set minimal TLS version to 1.%d"), version);
       goto failure;
    }
 #else
