@@ -446,6 +446,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.DashboardObjectContext"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DashboardObjectContext#20"
+            name="Object Context">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objects.Dashboard">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

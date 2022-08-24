@@ -6644,6 +6644,11 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_SNMP_CODEPAGE, data.getSNMPCodepage());
       }
 
+      if (data.getDisplayPriority() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_DISPLAY_PRIORITY, data.getDisplayPriority());
+      }
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

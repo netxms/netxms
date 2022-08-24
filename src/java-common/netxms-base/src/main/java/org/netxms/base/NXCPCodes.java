@@ -1274,6 +1274,7 @@ public class NXCPCodes
    public static final long VID_RESUME_MODE = 792;
    public static final long VID_MAC_ADDR_COUNT = 793;
    public static final long VID_DEVELOPMENT_MODE = 794;
+   public static final long VID_DISPLAY_PRIORITY = 795;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

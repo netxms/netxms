@@ -23,6 +23,18 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.12 to 42.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE dashboards ADD display_priority integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE dashboards SET display_priority=0")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("dashboards"), _T("display_priority")));
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 42.11 to 42.12
  */
 static bool H_UpgradeFromV11()
@@ -194,6 +206,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12, 42, 13, H_UpgradeFromV12 },
    { 11, 42, 12, H_UpgradeFromV11 },
    { 10, 42, 11, H_UpgradeFromV10 },
    { 9,  42, 10, H_UpgradeFromV9  },

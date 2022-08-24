@@ -90,6 +90,11 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define BUILTIN_OID_BUSINESSSERVICEROOT   9
 
 /**
+ * Special object ID meaning "context" or "current object"
+ */
+#define BUILTIN_OID_CONTEXT_OBJECT        ((uint32_t)0xFFFFFFFF)
+
+/**
  * "All zones" pseudo-ID
  */
 #define ALL_ZONES ((int32_t)-1)
@@ -4278,6 +4283,7 @@ protected:
 
 protected:
    int m_numColumns;
+   int m_displayPriority;
    ObjectArray<DashboardElement> m_elements;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;

@@ -34,9 +34,10 @@ import org.netxms.client.objects.interfaces.PollingTarget;
  */
 public class Dashboard extends GenericObject implements AutoBindObject, PollingTarget
 {
-   public final static int ALL_TEMPLATE_ELEMENTS = 0x00010000;
+   public final static int SHOW_AS_OBJECT_VIEW = 0x00010000;
 
 	private int numColumns;
+   private int displayPriority;
 	private List<DashboardElement> elements;
    private int autoBindFlags;
    private String autoBindFilter;
@@ -51,6 +52,7 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
 	{
 		super(msg, session);
 		numColumns = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
+      displayPriority = msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_PRIORITY);
       autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
       autoBindFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
 
@@ -73,8 +75,18 @@ public class Dashboard extends GenericObject implements AutoBindObject, PollingT
 	}
 
 	/**
-	 * @return the elements
-	 */
+    * Get dashboard's display priority if it should be shown as object view.
+    *
+    * @return dashboard's display priority
+    */
+   public int getDisplayPriority()
+   {
+      return displayPriority;
+   }
+
+   /**
+    * @return the elements
+    */
 	public List<DashboardElement> getElements()
 	{
 		return elements;

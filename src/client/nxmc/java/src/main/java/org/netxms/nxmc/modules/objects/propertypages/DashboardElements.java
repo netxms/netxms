@@ -80,7 +80,6 @@ public class DashboardElements extends ObjectPropertyPage
 
 	private Dashboard dashboard;
 	private LabeledSpinner columnCount;
-   private Button checkAllTemplateElements;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -151,16 +150,9 @@ public class DashboardElements extends ObjectPropertyPage
       columnCount.setSelection(dashboard.getNumColumns());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
+      gd.horizontalSpan = 2;
       gd.verticalAlignment = SWT.BOTTOM;
       columnCount.setLayoutData(gd);
-
-      checkAllTemplateElements = new Button(dialogArea, SWT.CHECK);
-      checkAllTemplateElements.setText(i18n.tr("&All elements are templates by default"));
-      checkAllTemplateElements.setSelection((dashboard.getFlags() & Dashboard.ALL_TEMPLATE_ELEMENTS) != 0);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.RIGHT;
-      gd.verticalAlignment = SWT.BOTTOM;
-      checkAllTemplateElements.setLayoutData(gd);
 
       final String[] columnNames = { i18n.tr("Type"), i18n.tr("Span"), i18n.tr("Height"), i18n.tr("Title") };
       final int[] columnWidths = { 150, 60, 90, 300 };
@@ -319,7 +311,7 @@ public class DashboardElements extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
 		md.setDashboardElements(elements);
 		md.setColumnCount(columnCount.getSelection());
-		
+
 		if (isApply)
 			setValid(false);
 

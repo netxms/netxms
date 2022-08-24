@@ -28,6 +28,7 @@
 Dashboard::Dashboard() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), m_elements(0, 16, Ownership::True)
 {
 	m_numColumns = 1;
+   m_displayPriority = 0;
 	m_status = STATUS_NORMAL;
 }
 
@@ -37,6 +38,7 @@ Dashboard::Dashboard() : super(), AutoBindTarget(this), Pollable(this, Pollable:
 Dashboard::Dashboard(const TCHAR *name) : super(name, 0), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), m_elements(0, 16, Ownership::True)
 {
 	m_numColumns = 1;
+	m_displayPriority = 0;
 	m_status = STATUS_NORMAL;
 }
 
@@ -65,13 +67,14 @@ bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	m_status = STATUS_NORMAL;
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT num_columns FROM dashboards WHERE id=%u"), id);
+	_sntprintf(query, 256, _T("SELECT num_columns,display_priority FROM dashboards WHERE id=%u"), id);
 	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult == nullptr)
 		return false;
 	if (DBGetNumRows(hResult) > 0)
 	{
 		m_numColumns = DBGetFieldLong(hResult, 0, 0);
+      m_displayPriority = DBGetFieldLong(hResult, 0, 1);
 	}
 	DBFreeResult(hResult);
 
@@ -108,14 +111,15 @@ bool Dashboard::saveToDatabase(DB_HANDLE hdb)
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=?,display_priority=? WHERE id=?"));
       else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboards (num_columns,id) VALUES (?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboards (num_columns,display_priority,id) VALUES (?,?,?)"));
       if (hStmt != nullptr)
       {
          lockProperties();
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_numColumns);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_displayPriority);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
          unlockProperties();
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -181,6 +185,7 @@ void Dashboard::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    AutoBindTarget::fillMessage(msg);
 
 	msg->setField(VID_NUM_COLUMNS, static_cast<uint16_t>(m_numColumns));
+   msg->setField(VID_DISPLAY_PRIORITY, m_displayPriority);
 	msg->setField(VID_NUM_ELEMENTS, static_cast<uint32_t>(m_elements.size()));
 
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
@@ -203,6 +208,9 @@ uint32_t Dashboard::modifyFromMessageInternal(const NXCPMessage& msg)
 
 	if (msg.isFieldExist(VID_NUM_COLUMNS))
 		m_numColumns = msg.getFieldAsInt16(VID_NUM_COLUMNS);
+
+   if (msg.isFieldExist(VID_DISPLAY_PRIORITY))
+      m_displayPriority = msg.getFieldAsInt32(VID_DISPLAY_PRIORITY);
 
 	if (msg.isFieldExist(VID_NUM_ELEMENTS))
 	{
@@ -242,6 +250,7 @@ json_t *Dashboard::toJson()
 
    lockProperties();
    json_object_set_new(root, "numColumns", json_integer(m_numColumns));
+   json_object_set_new(root, "displayPriority", json_integer(m_displayPriority));
    json_object_set_new(root, "elements", json_object_array(m_elements));
    unlockProperties();
 

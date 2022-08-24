@@ -184,6 +184,7 @@ public class NXCObjectModificationData
    private Long sourceNode;
    private String syslogCodepage;
    private String snmpCodepage;
+   private Integer displayPriority;
 
    /**
     * Constructor for creating modification data for given object
@@ -2247,5 +2248,21 @@ public class NXCObjectModificationData
    public String getSNMPCodepage()
    {
       return snmpCodepage;
+   }
+
+   /**
+    * @return the displayPriority
+    */
+   public Integer getDisplayPriority()
+   {
+      return displayPriority;
+   }
+
+   /**
+    * @param displayPriority the displayPriority to set
+    */
+   public void setDisplayPriority(Integer displayPriority)
+   {
+      this.displayPriority = displayPriority;
    }
 }

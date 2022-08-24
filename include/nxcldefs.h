@@ -251,7 +251,7 @@
 /**
  * Dashboard flags
  */
-#define DBF_ALL_TEMPLATE_ELEMENTS      0x00010000
+#define DBF_SHOW_AS_OBJECT_VIEW        0x00010000
 
 /**
  * Data Collection Target flags (lower bits of flags field)
