@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ public class DataFormatter
    private boolean useBinaryMultipliers;
    private DataType dataType;
    private String unitName;
-   private int multiplyerPower;
+   private int multiplierPower;
 
    /**
     * Create new data formatter with binary multipliers option set to off.
@@ -47,7 +47,7 @@ public class DataFormatter
       this.dataType = dataType;
       this.useBinaryMultipliers = false;
       this.unitName = null;
-      this.multiplyerPower = 0;
+      this.multiplierPower = 0;
    }
 
    /**
@@ -56,11 +56,11 @@ public class DataFormatter
     * @param formatString format string
     * @param dataType data type
     * @param unitName name of the unit
-    * @param multiplyerPower fixed power of the multiplication (0 for default)
+    * @param multiplierPower fixed power of the multiplier (0 for automatic selection)
     */
-   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplyerPower)
+   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplierPower)
    {
-      this(formatString, dataType, unitName, multiplyerPower, false);
+      this(formatString, dataType, unitName, multiplierPower, false);
    }
 
    /**
@@ -69,14 +69,14 @@ public class DataFormatter
     * @param formatString format string
     * @param dataType data type
     * @param unitName name of the unit
-    * @param multiplyerPower fixed power of the multiplication (0 for default)
-    * @param usdeDciFormat if DCI parameter configuration should be used 
+    * @param multiplierPower fixed power of the multiplier (0 for automatic selection)
+    * @param usdeDciFormat if DCI parameter configuration should be used
     */
-   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplyerPower, boolean usdeDciFormat)
+   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplierPower, boolean usdeDciFormat)
    {
       this.formatString = formatString;
       this.dataType = dataType;
-      if (unitName != null && (formatString == null || formatString.isEmpty() || usdeDciFormat))
+      if ((unitName != null) && ((formatString == null) || formatString.isEmpty() || usdeDciFormat))
       {
          this.useBinaryMultipliers = unitName.contains(" (IEC)");
          this.unitName = unitName.replace(" (IEC)", "").replace(" (Metric)", "");
@@ -88,7 +88,7 @@ public class DataFormatter
          this.useBinaryMultipliers = false;
          this.unitName = null;         
       }
-      this.multiplyerPower = multiplyerPower;
+      this.multiplierPower = multiplierPower;
    }
 
    /**
@@ -205,9 +205,9 @@ public class DataFormatter
             final long[] multipliers = useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
             Double d = Double.parseDouble(value);
             int i;
-            if (multiplyerPower != 0)
+            if (multiplierPower != 0)
             {
-               i = Integer.min(multiplyerPower, multipliers.length);
+               i = Integer.min(multiplierPower, multipliers.length);
             }
             else
             {
