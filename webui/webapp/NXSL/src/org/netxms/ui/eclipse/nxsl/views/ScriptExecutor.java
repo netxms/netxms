@@ -461,7 +461,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          {
             try
             {
-               session.executeScript(objectId, script, parameters, ScriptExecutor.this);
+               session.executeScript(objectId, script, parameters, ScriptExecutor.this, true);
             }
             catch(NXCException e)
             {

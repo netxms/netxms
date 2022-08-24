@@ -1502,6 +1502,7 @@ typedef struct
 #define VID_RESPONSIBLE_USER_TAGS   ((uint32_t)791)
 #define VID_RESUME_MODE             ((uint32_t)792)
 #define VID_MAC_ADDR_COUNT          ((uint32_t)793)
+#define VID_DEVELOPMENT_MODE        ((uint32_t)794)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
