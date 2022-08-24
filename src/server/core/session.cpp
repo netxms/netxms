@@ -10898,6 +10898,9 @@ void ClientSession::executeScript(const NXCPMessage& request)
          response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
          response.setEndOfSequence();
          sendMessage(response);
+
+         if (!request.getFieldAsBoolean(VID_DEVELOPMENT_MODE))
+            ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), _T("ClientSession::executeScript"));
       }
       delete vm;
    }
@@ -11077,14 +11080,17 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
             response.setField(VID_MESSAGE, buffer);
             response.setField(VID_RCC, RCC_SUCCESS);
             response.setEndOfSequence();
-            sendMessage(&response);
+            sendMessage(response);
          }
          else
          {
             response.setField(VID_ERROR_TEXT, vm->getErrorText());
             response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
             response.setEndOfSequence();
-            sendMessage(&response);
+            sendMessage(response);
+
+            if (!request.getFieldAsBoolean(VID_DEVELOPMENT_MODE))
+               ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), script);
          }
          delete vm;
       }

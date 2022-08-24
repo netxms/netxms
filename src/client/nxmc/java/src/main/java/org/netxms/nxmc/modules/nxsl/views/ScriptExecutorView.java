@@ -453,7 +453,7 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.executeScript(objectId, script, parameters, ScriptExecutorView.this);
+            session.executeScript(objectId, script, parameters, ScriptExecutorView.this, true);
          }
 
          @Override

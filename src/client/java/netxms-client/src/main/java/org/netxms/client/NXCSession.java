@@ -7831,9 +7831,26 @@ public class NXCSession
     */
    public void executeScript(long objectId, String script, String parameters, final TextOutputListener listener) throws IOException, NXCException
    {
+      executeScript(objectId, script, parameters, listener, false);
+   }
+
+   /**
+    * Execute script.
+    *
+    * @param objectId ID of the object to execute script on
+    * @param script script source code
+    * @param listener script output listener
+    * @param parameters script parameter list (can be null)
+    * @param developmentMode true if script should be run in development mode
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeScript(long objectId, String script, String parameters, final TextOutputListener listener, boolean developmentMode) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
+      msg.setField(NXCPCodes.VID_DEVELOPMENT_MODE, developmentMode);
       if (parameters != null)
       {
          msg.setField(NXCPCodes.VID_PARAMETER, parameters);
@@ -7846,16 +7863,33 @@ public class NXCSession
     *
     * @param objectId ID of the object to execute script on
     * @param script script source code
-    * @param listener script output listener
     * @param parameterList script parameter list (can be null)
+    * @param listener script output listener
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void executeScript(long objectId, String script, List<String> parameterList, final TextOutputListener listener) throws IOException, NXCException
    {
+      executeScript(objectId, script, parameterList, listener, false);
+   }
+
+   /**
+    * Execute script.
+    *
+    * @param objectId ID of the object to execute script on
+    * @param script script source code
+    * @param parameterList script parameter list (can be null)
+    * @param listener script output listener
+    * @param developmentMode true if script should be run in development mode
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeScript(long objectId, String script, List<String> parameterList, final TextOutputListener listener, boolean developmentMode) throws IOException, NXCException
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
+      msg.setField(NXCPCodes.VID_DEVELOPMENT_MODE, developmentMode);
       if (parameterList != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, parameterList.size());

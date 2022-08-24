@@ -51,6 +51,7 @@ enum class EventOrigin
 #define SCRIPT_CONTEXT_ALARM        _T("Alarm")
 #define SCRIPT_CONTEXT_AUTOBIND     _T("Autobind")
 #define SCRIPT_CONTEXT_BIZSVC       _T("Business service")
+#define SCRIPT_CONTEXT_CLIENT       _T("Client")
 #define SCRIPT_CONTEXT_DCI          _T("DCI")
 #define SCRIPT_CONTEXT_EVENT_PROC   _T("Event processing")
 #define SCRIPT_CONTEXT_LDAP         _T("LDAP")
