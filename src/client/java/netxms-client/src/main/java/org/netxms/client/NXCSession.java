@@ -7666,6 +7666,85 @@ public class NXCSession
    }
 
    /**
+    * Message handler for script execution updates
+    */
+   private static class ScriptExecutionUpdateHandler extends MessageHandler
+   {
+      private TextOutputListener listener;
+      private int errorCode = 0;
+      private String errorMessage = null;
+
+      ScriptExecutionUpdateHandler(TextOutputListener listener)
+      {
+         this.listener = listener;
+      }
+
+      /**
+       * @see org.netxms.client.MessageHandler#processMessage(org.netxms.base.NXCPMessage)
+       */
+      @Override
+      public boolean processMessage(NXCPMessage m)
+      {
+         int rcc = m.getFieldAsInt32(NXCPCodes.VID_RCC);
+         if (rcc != RCC.SUCCESS)
+         {
+            errorCode = rcc;
+            errorMessage = m.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
+            if (errorMessage == null)
+               errorMessage = "Unspecified sript execution error (RCC=" + rcc + ")";
+
+            if ((listener != null))
+            {
+               listener.messageReceived(errorMessage + "\n\n");
+               listener.onError();
+            }
+         }
+         else
+         {
+            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
+            if ((text != null) && (listener != null))
+            {
+               listener.messageReceived(text);
+            }
+         }
+
+         if (m.isEndOfSequence())
+            setComplete();
+         return true;
+      }
+
+      /**
+       * Check if error was reported
+       * 
+       * @return true if error was reported
+       */
+      public boolean isFailure()
+      {
+         return errorMessage != null;
+      }
+
+      /**
+       * Get error code.
+       *
+       * @return error code
+       */
+      public int getErrorCode()
+      {
+         return errorCode;
+      }
+
+      /**
+       * Get execution error message.
+       *
+       * @return execution error message
+       */
+      public String getErrorMessage()
+      {
+         return errorMessage;
+      }
+   }
+
+   /**
     * Process server script execution.
     *
     * @param msg prepared request message
@@ -7675,53 +7754,21 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private Map<String, String> processScriptExecution(NXCPMessage msg, final TextOutputListener listener, boolean resultAsMap) throws IOException, NXCException
+   private Map<String, String> processScriptExecution(NXCPMessage msg, TextOutputListener listener, boolean resultAsMap) throws IOException, NXCException
    {
       msg.setField(NXCPCodes.VID_RESULT_AS_MAP, resultAsMap);
-      MessageHandler handler = null;
-      if (listener != null)
-      {
-         handler = new MessageHandler() {
-            @Override
-            public boolean processMessage(NXCPMessage m)
-            {
-               if (m.getFieldAsInt32(NXCPCodes.VID_RCC) != RCC.SUCCESS)
-               {
-                  String errorMessage = m.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
-                  if ((listener != null))
-                  {
-                     if (errorMessage != null)
-                     {
-                        listener.messageReceived(errorMessage + "\n\n");
-                     }
-                     listener.onError();
-                  }
-               }
-               else
-               {
-                  String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
-                  if ((text != null) && (listener != null))
-                  {
-                     listener.messageReceived(text);
-                  }
-               }
 
-               if (m.isEndOfSequence())
-                  setComplete();
-               return true;
-            }
-         };
-         handler.setMessageWaitTimeout(commandTimeout);
-         addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId(), handler);
-      }
+      ScriptExecutionUpdateHandler handler = new ScriptExecutionUpdateHandler(listener);
+      handler.setMessageWaitTimeout(commandTimeout);
+      addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId(), handler);
+
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      if (handler != null)
-      {
-         handler.waitForCompletion();
-         if (handler.isExpired())
-            throw new NXCException(RCC.TIMEOUT);
-      }
+      handler.waitForCompletion();
+      if (handler.isExpired())
+         throw new NXCException(RCC.TIMEOUT);
+      if (handler.isFailure())
+         throw new NXCException(handler.getErrorCode(), handler.getErrorMessage());
 
       if (!resultAsMap)
          return null;

@@ -52,9 +52,11 @@ import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.TextOutputListener;
+import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -457,18 +459,23 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.executeScript(objectId, script, parameters, ScriptExecutor.this);
+            try
+            {
+               session.executeScript(objectId, script, parameters, ScriptExecutor.this);
+            }
+            catch(NXCException e)
+            {
+               if (e.getErrorCode() != RCC.NXSL_EXECUTION_ERROR)
+                  throw e;
+            }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return Messages.get().ScriptExecutor_JobError_Execute;
          } 
 
-         /* (non-Javadoc)
-          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
-          */
          @Override
          protected void jobFinalize()
          {
