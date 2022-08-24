@@ -320,7 +320,7 @@ public abstract class AbstractObject
 		      }
 		      else
 		      {
-               logger.error("Unable to find data provider for module " + module);
+               logger.warn("Unable to find data provider for module " + module);
 		      }
 		   }
 		}
