@@ -577,7 +577,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int row, int column, cha
       else
       {
          nLen++;
-         Buffer<WCHAR, 1024> wbuffer(bufferSize);
+         Buffer<WCHAR, 1024> wbuffer(nLen);
          WCHAR *value = hResult->m_driver->m_callTable.GetField(hResult->m_data, row, column, wbuffer, nLen);
          if (value != nullptr)
          {
