@@ -55,7 +55,8 @@ public class DataFormatter
     * 
     * @param formatString format string
     * @param dataType data type
-    * @param useBinaryMultipliers true if binary (Ki/Mi/Gi/...) multipliers should be used
+    * @param unitName name of the unit
+    * @param multiplyerPower fixed power of the multiplication (0 for default)
     */
    public DataFormatter(String formatString, DataType dataType, String unitName, int multiplyerPower)
    {
@@ -67,7 +68,9 @@ public class DataFormatter
     * 
     * @param formatString format string
     * @param dataType data type
-    * @param useBinaryMultipliers true if binary (Ki/Mi/Gi/...) multipliers should be used
+    * @param unitName name of the unit
+    * @param multiplyerPower fixed power of the multiplication (0 for default)
+    * @param usdeDciFormat if DCI parameter configuration should be used 
     */
    public DataFormatter(String formatString, DataType dataType, String unitName, int multiplyerPower, boolean usdeDciFormat)
    {
@@ -92,6 +95,7 @@ public class DataFormatter
     * Format value
     *
     * @param value The value
+    * @param formatter Date and time formatter 
     * @return The format
     */
    public String format(String value, TimeFormatter formatter)
