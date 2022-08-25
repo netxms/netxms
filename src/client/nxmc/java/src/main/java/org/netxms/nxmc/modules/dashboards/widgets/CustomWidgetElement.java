@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.api.CustomDashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.CustomWidgetConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class CustomWidgetElement extends ElementWidget
 	 * @param parent
 	 * @param element
 	 */
-   public CustomWidgetElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public CustomWidgetElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, SWT.NONE, element, view);
 

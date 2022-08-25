@@ -28,7 +28,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.BarChartConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 
 /**
  * Bar chart element
@@ -42,7 +42,7 @@ public class BarChartElement extends ComparisonChartElement
     * @param element
     * @param view
     */
-   public BarChartElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public BarChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

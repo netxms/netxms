@@ -27,7 +27,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.LabelConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontTools;
 
@@ -44,7 +44,7 @@ public class LabelElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public LabelElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public LabelElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

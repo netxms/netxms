@@ -56,7 +56,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.PortViewConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
@@ -89,7 +89,7 @@ public class PortViewElement extends ElementWidget
     * @param element Dashboard element
     * @param view viewPart
     */
-   public PortViewElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public PortViewElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 		

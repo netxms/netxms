@@ -53,13 +53,9 @@ public class DashboardDynamicView extends ViewPart
 	private Composite parentComposite;
 	private RefreshAction actionRefresh;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets
-	 * .Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -68,7 +64,7 @@ public class DashboardDynamicView extends ViewPart
       
 		parentComposite = parent;
 		if (dashboard != null)
-			dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
+         dbc = new DashboardControl(parent, SWT.NONE, dashboard, null, this, selectionProvider, false);
 
 		createActions();
 		contributeToActionBars();
@@ -159,7 +155,7 @@ public class DashboardDynamicView extends ViewPart
 		if (dbc != null)
 			dbc.dispose();
 		dashboard = object;
-		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
+      dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, null, this, selectionProvider, false);
 		parentComposite.layout();
 		setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 	}
@@ -177,7 +173,7 @@ public class DashboardDynamicView extends ViewPart
 		dashboard = (Dashboard)((NXCSession)ConsoleSharedData.getSession()).findObjectById(dashboard.getObjectId(), Dashboard.class);
 		if (dashboard != null)
 		{
-			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
+         dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, null, this, selectionProvider, false);
 			parentComposite.layout();
 			setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 		}

@@ -24,7 +24,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.ScriptedBarChartConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 
 /**
  * Scripted bar chart element
@@ -37,7 +37,7 @@ public class ScriptedBarChartElement extends ScriptedComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-   public ScriptedBarChartElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public ScriptedBarChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

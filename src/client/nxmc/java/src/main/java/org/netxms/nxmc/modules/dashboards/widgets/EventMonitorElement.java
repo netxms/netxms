@@ -30,7 +30,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.EventMonitorConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.events.widgets.EventTraceWidget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class EventMonitorElement extends ElementWidget
     * @param element dashboard element definition
     * @param view owning view part
     */
-   protected EventMonitorElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   protected EventMonitorElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
 

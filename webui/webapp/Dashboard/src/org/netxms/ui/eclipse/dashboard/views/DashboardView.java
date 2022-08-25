@@ -82,6 +82,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private NXCSession session;
 	private SessionListener clientListener;
 	private Dashboard dashboard;
+   private long contextObjectId;
 	private boolean readOnly = true;
 	private IntermediateSelectionProvider selectionProvider;
 	private boolean fullScreenDisplay = false;
@@ -105,9 +106,11 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	{
 		super.init(site);
       session = ConsoleSharedData.getSession();
-      dashboard = session.findObjectById(Long.parseLong(site.getSecondaryId()), Dashboard.class);
+      String[] parts = site.getSecondaryId().split("&");
+      dashboard = session.findObjectById(Long.parseLong(parts[0]), Dashboard.class);
 		if (dashboard == null)
 			throw new PartInitException(Messages.get().DashboardView_InitError);
+      contextObjectId = (parts.length > 0) ? Long.parseLong(parts[1]) : 0;
 		setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 	}
 
@@ -139,7 +142,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          }
       };
       
-      dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
+      dbc = new DashboardControl(parent, SWT.NONE, dashboard, (contextObjectId != 0) ? session.findObjectById(contextObjectId) : null, this, selectionProvider, false);
 
       activateContext();
       createActions();
@@ -460,7 +463,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 
 			if (dashboard != null)
 			{
-				dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
+            dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dashboard, (contextObjectId != 0) ? session.findObjectById(contextObjectId) : null, this, selectionProvider, false);
 				dbc.getParent().layout(true, true);
 				setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 				if (!readOnly)

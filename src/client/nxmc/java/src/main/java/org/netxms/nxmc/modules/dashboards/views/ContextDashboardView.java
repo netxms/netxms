@@ -21,17 +21,15 @@ package org.netxms.nxmc.modules.dashboards.views;
 import org.eclipse.swt.SWT;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.xnap.commons.i18n.I18n;
 
 /**
- * Dashboard view
+ * Context dashboard view
  */
-public class DashboardView extends AbstractDashboardView
+public class ContextDashboardView extends AbstractDashboardView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);
+   private Dashboard dashboard;
 
    /**
     * @param name
@@ -39,9 +37,10 @@ public class DashboardView extends AbstractDashboardView
     * @param id
     * @param hasFilter
     */
-   public DashboardView()
+   public ContextDashboardView(Dashboard dashboard)
    {
-      super(i18n.tr("Dashboard"), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "DashboardView");
+      super(dashboard.getObjectName(), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "ContextDashboard." + dashboard.getObjectId());
+      this.dashboard = dashboard;
    }
 
    /**
@@ -50,7 +49,7 @@ public class DashboardView extends AbstractDashboardView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof Dashboard);
+      return (context != null) && (context instanceof AbstractObject) && ((AbstractObject)context).hasDashboard(dashboard.getObjectId());
    }
 
    /**
@@ -61,7 +60,16 @@ public class DashboardView extends AbstractDashboardView
    {
       if (dbc != null)
          dbc.dispose();
-      dbc = new DashboardControl(viewArea, SWT.NONE, (Dashboard)object, null, this, null, false);
+      dbc = new DashboardControl(viewArea, SWT.NONE, dashboard, object, this, null, false);
       viewArea.layout(true, true);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return (dashboard.getDisplayPriority() > 0) ? dashboard.getDisplayPriority() : super.getPriority();
    }
 }

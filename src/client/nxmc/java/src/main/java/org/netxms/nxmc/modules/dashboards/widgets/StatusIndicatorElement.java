@@ -37,7 +37,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
@@ -63,7 +63,7 @@ public class StatusIndicatorElement extends ElementWidget
 	 * @param parent
 	 * @param element
 	 */
-   protected StatusIndicatorElement(final DashboardControl parent, DashboardElement element, DashboardView view)
+   protected StatusIndicatorElement(final DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

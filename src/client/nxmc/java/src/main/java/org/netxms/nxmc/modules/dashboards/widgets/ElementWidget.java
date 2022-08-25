@@ -38,13 +38,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.IntermediateSelectionProvider;
@@ -59,7 +60,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    private static final Logger logger = LoggerFactory.getLogger(ElementWidget.class);
 
 	protected DashboardElement element;
-   protected DashboardView view;
+   protected AbstractDashboardView view;
 
    private Label title;
    private Composite mainArea;
@@ -79,7 +80,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
     * @param element
     * @param view
     */
-   protected ElementWidget(DashboardControl parent, int style, DashboardElement element, DashboardView view)
+   protected ElementWidget(DashboardControl parent, int style, DashboardElement element, AbstractDashboardView view)
 	{
 		super(parent, style);
 		dbc = parent;
@@ -93,7 +94,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
     * @param element
     * @param view
     */
-   protected ElementWidget(DashboardControl parent, DashboardElement element, DashboardView view)
+   protected ElementWidget(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
 		super(parent, SWT.BORDER);
 		dbc = parent;
@@ -108,7 +109,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
     * @param view
     * @param hasFilter
     */
-   protected ElementWidget(DashboardControl parent, DashboardElement element, DashboardView view, boolean hasFilter)
+   protected ElementWidget(DashboardControl parent, DashboardElement element, AbstractDashboardView view, boolean hasFilter)
    {
       super(parent, SWT.BORDER);
       dbc = parent;
@@ -404,6 +405,16 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    protected long getDashboardObjectId()
    {
       return dbc.getDashboardObject().getObjectId();
+   }
+
+   /**
+    * Get context for owning dashboard.
+    *
+    * @return context for owning dashboard (can be null)
+    */
+   protected AbstractObject getContext()
+   {
+      return dbc.getContext();
    }
 
    /**

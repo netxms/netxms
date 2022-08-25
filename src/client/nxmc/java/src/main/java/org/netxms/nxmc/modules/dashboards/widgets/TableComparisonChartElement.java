@@ -42,7 +42,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.TableComparisonChartConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
 
@@ -66,7 +66,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public TableComparisonChartElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public TableComparisonChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
       session = Registry.getSession();

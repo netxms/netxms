@@ -37,7 +37,16 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Condition;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
@@ -48,11 +57,12 @@ import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigEditorView;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
+import org.netxms.nxmc.modules.dashboards.views.ContextDashboardView;
 import org.netxms.nxmc.modules.dashboards.views.DashboardView;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
+import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
-import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
@@ -203,6 +213,7 @@ public abstract class ObjectsPerspective extends Perspective
          objectName.setText(object.getNameWithAlias());
          updateObjectToolBar(object);
          updateObjectMenuBar(object);
+         updateContextDashboards(object);
       }
       else
       {
@@ -359,5 +370,29 @@ public abstract class ObjectsPerspective extends Perspective
             m.setVisible(true);
          }
       });
+   }
+
+   /**
+    * Update context dashboard views after object selection change.
+    *
+    * @param object selected object
+    */
+   private void updateContextDashboards(AbstractObject object)
+   {
+      if (!((object instanceof DataCollectionTarget) || (object instanceof Container) || (object instanceof Rack) || (object instanceof EntireNetwork) || (object instanceof ServiceRoot) ||
+            (object instanceof Subnet) || (object instanceof Zone) || (object instanceof Condition)))
+         return;
+
+      for(AbstractObject d : object.getDashboards(true))
+      {
+         if ((((Dashboard)d).getFlags() & Dashboard.SHOW_AS_OBJECT_VIEW) == 0)
+            continue;
+
+         String viewId = "ContextDashboard." + d.getObjectId();
+         if (findMainView(viewId) == null)
+         {
+            addMainView(new ContextDashboardView((Dashboard)d));
+         }
+      }
    }
 }

@@ -33,7 +33,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
@@ -60,7 +60,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public ScriptedComparisonChartElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public ScriptedComparisonChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
       session = Registry.getSession();

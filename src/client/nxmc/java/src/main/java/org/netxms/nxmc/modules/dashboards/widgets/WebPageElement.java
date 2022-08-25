@@ -22,7 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.WebPageConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 
 /**
  * Embedded web page element for dashboard
@@ -37,7 +37,7 @@ public class WebPageElement extends ElementWidget
     * @param element
     * @param view
     */
-   public WebPageElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public WebPageElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

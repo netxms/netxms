@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.StatusMapConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.widgets.AbstractObjectStatusMap;
 import org.netxms.nxmc.modules.objects.widgets.FlatObjectStatusMap;
 import org.netxms.nxmc.modules.objects.widgets.RadialObjectStatusMap;
@@ -39,7 +39,7 @@ public class StatusMapElement extends ElementWidget
     * @param element
     * @param view
     */
-   public StatusMapElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public StatusMapElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view, true);
 

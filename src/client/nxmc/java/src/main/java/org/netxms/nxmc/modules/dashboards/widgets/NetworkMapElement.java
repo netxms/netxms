@@ -24,7 +24,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.NetworkMapConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.networkmaps.widgets.NetworkMapWidget;
 
 /**
@@ -41,7 +41,7 @@ public class NetworkMapElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public NetworkMapElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public NetworkMapElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

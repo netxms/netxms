@@ -460,6 +460,17 @@ public abstract class Perspective
    }
 
    /**
+    * Find main view by ID.
+    *
+    * @param id view ID
+    * @return main view or null
+    */
+   public View findMainView(String id)
+   {
+      return (mainFolder != null) ? mainFolder.findView(id) : null;
+   }
+
+   /**
     * Remove view from main folder.
     * 
     * @param id ID of view to remove
@@ -503,6 +514,17 @@ public abstract class Perspective
    }
 
    /**
+    * Find navigation view by ID.
+    *
+    * @param id view ID
+    * @return navigation view or null
+    */
+   public View findNavigationView(String id)
+   {
+      return (navigationFolder != null) ? navigationFolder.findView(id) : null;
+   }
+
+   /**
     * Remove view from navigation folder.
     * 
     * @param id ID of view to remove
@@ -522,6 +544,17 @@ public abstract class Perspective
    {
       if (supplementaryFolder != null)
          supplementaryFolder.addView(view);
+   }
+
+   /**
+    * Find supplementary view by ID.
+    *
+    * @param id view ID
+    * @return supplementary view or null
+    */
+   public View findSupplementaryView(String id)
+   {
+      return (supplementaryFolder != null) ? supplementaryFolder.findView(id) : null;
    }
 
    /**

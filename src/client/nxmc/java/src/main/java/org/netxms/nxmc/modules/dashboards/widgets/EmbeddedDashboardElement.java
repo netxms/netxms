@@ -26,7 +26,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.EmbeddedDashboardConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ViewRefreshController;
 
 /**
@@ -44,7 +44,7 @@ public class EmbeddedDashboardElement extends ElementWidget
     * @param element
     * @param view
     */
-   public EmbeddedDashboardElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public EmbeddedDashboardElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, SWT.NONE, element, view);
 
@@ -89,7 +89,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		else
 		{
 			if ((objects != null) && (objects.length > 0) && (objects[0] != null))
-            new DashboardControl(getContentArea(), SWT.NONE, objects[0], view, getSelectionProvider(), true);
+            new DashboardControl(getContentArea(), SWT.NONE, objects[0], getContext(), view, getSelectionProvider(), true);
 		}
 	}
 
@@ -104,7 +104,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		if (current >= objects.length)
 			current = 0;
 		if (objects[current] != null)
-			control = new DashboardControl(getContentArea(), SWT.NONE, objects[current], view, getSelectionProvider(), true);	/* TODO: set embedded=false if border=true */
+			control = new DashboardControl(getContentArea(), SWT.NONE, objects[current], getContext(), view, getSelectionProvider(), true);	/* TODO: set embedded=false if border=true */
 		else
 			control = null;
 		getParent().layout(true, true);

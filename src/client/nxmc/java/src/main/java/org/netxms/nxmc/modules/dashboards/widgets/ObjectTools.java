@@ -38,7 +38,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.modules.dashboards.config.ObjectToolsConfig;
 import org.netxms.nxmc.modules.dashboards.config.ObjectToolsConfig.Tool;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objects.ObjectToolExecutor;
 import org.netxms.nxmc.modules.objects.ObjectToolsCache;
@@ -56,7 +56,7 @@ public class ObjectTools extends ElementWidget
     * @param element
     * @param view
     */
-   public ObjectTools(DashboardControl parent, DashboardElement element, DashboardView view)
+   public ObjectTools(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
       

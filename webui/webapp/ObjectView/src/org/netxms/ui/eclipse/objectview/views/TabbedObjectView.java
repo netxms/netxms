@@ -38,8 +38,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -129,17 +129,11 @@ public class TabbedObjectView extends ViewPart
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		tabFolder.addSelectionListener(new SelectionListener() {
+      tabFolder.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				onTabSelectionChange((e.item != null) ? (ObjectTab)((CTabItem)e.item).getData() : null);
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		});
 
@@ -373,7 +367,7 @@ public class TabbedObjectView extends ViewPart
 					tab.changeObject(null);
 				}
 			}
-			
+
 			if ((objectId == 0) || (tabFolder.getSelection() == null))
 			{
 				try

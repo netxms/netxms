@@ -23,7 +23,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
 import org.netxms.nxmc.tools.ViewRefreshController;
 
@@ -40,7 +40,7 @@ public class TableValueElement extends ElementWidget
 	 * @param element
 	 * @param viewPart
 	 */
-   public TableValueElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public TableValueElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

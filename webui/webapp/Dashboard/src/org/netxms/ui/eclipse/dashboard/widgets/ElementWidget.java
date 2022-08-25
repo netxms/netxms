@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
@@ -253,7 +254,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	{
 	   dbc.getSelectionProvider().setSelectionProviderDelegate(delegate);
 	}
-	
+
 	/**
 	 * Get intermediate selection provider
 	 * 
@@ -280,5 +281,15 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    protected long getDashboardObjectId()
    {
       return dbc.getDashboardObject().getObjectId();
+   }
+
+   /**
+    * Get context for owning dashboard.
+    *
+    * @return context for owning dashboard (can be null)
+    */
+   protected AbstractObject getContext()
+   {
+      return dbc.getContext();
    }
 }

@@ -34,6 +34,7 @@ import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.dashboard.Activator;
@@ -69,6 +70,7 @@ public class DashboardControl extends Composite
    public static final String DEFAULT_SUMMARY_TABLE_CONFIG = "<element>\n\t<baseObjectId>0</baseObjectId>\n\t<tableId>0</tableId>\n</element>"; //$NON-NLS-1$
 
 	private Dashboard dashboard;
+   private AbstractObject context;
 	private List<DashboardElement> elements;
 	private Map<DashboardElement, ElementWidget> elementWidgets = new HashMap<DashboardElement, ElementWidget>();
    private int columnCount;
@@ -79,26 +81,37 @@ public class DashboardControl extends Composite
 	private IViewPart viewPart;
 	private IntermediateSelectionProvider selectionProvider;
 
-	/**
-	 * @param parent
-	 * @param style
-	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, IViewPart viewPart, IntermediateSelectionProvider selectionProvider, boolean embedded)
+   /**
+    * Create new dashboard control.
+    *
+    * @param parent parent composite
+    * @param style control style
+    * @param dashboard dashboard object
+    * @param context context for dashboard (can be null)
+    * @param viewPart owning view part
+    * @param selectionProvider selection provider
+    * @param embedded true if dashboard control is embedded into another dashboard
+    */
+   public DashboardControl(Composite parent, int style, Dashboard dashboard, AbstractObject context, IViewPart viewPart, IntermediateSelectionProvider selectionProvider, boolean embedded)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
+      this.context = context;
 		this.embedded = embedded;
 		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
       this.columnCount = dashboard.getNumColumns();
-		this.viewPart = viewPart;
+      this.viewPart = viewPart;
 		this.selectionProvider = selectionProvider;
 		createContent();
 	}
 
 	/**
-	 * @param parent
-	 * @param style
-	 */
+    * Create clone of existing dashboard control.
+    *
+    * @param parent parent composite
+    * @param style control style
+    * @param originalControl original dashboard control
+    */
    public DashboardControl(Composite parent, int style, DashboardControl originalControl)
 	{
 		super(parent, style);
@@ -134,10 +147,10 @@ public class DashboardControl extends Composite
 	}
 
 	/**
-	 * Factory method for creating dashboard elements
-	 * 
-	 * @param e
-	 */
+    * Factory method for creating dashboard elements
+    * 
+    * @param e element to create widget for
+    */
 	private ElementWidget createElementWidget(DashboardElement e)
 	{
 		ElementWidget w;
@@ -490,7 +503,7 @@ public class DashboardControl extends Composite
 			setModified();
 		}
 	}
-	
+
 	/**
 	 * @param element
 	 */
@@ -602,11 +615,11 @@ public class DashboardControl extends Composite
    }
 
    /**
-    * Save dashboard layout
+    * Save dashboard
     * 
     * @param viewPart
     */
-	public void saveDashboard(IViewPart viewPart)
+   public void saveDashboard(IViewPart viewPart)
 	{
 		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
 		md.setDashboardElements(new ArrayList<DashboardElement>(elements));
@@ -638,7 +651,7 @@ public class DashboardControl extends Composite
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Set modified flag
 	 */
@@ -705,5 +718,15 @@ public class DashboardControl extends Composite
    public Dashboard getDashboardObject()
    {
       return dashboard;
+   }
+
+   /**
+    * Get context.
+    *
+    * @return context for dashboard (can be null)
+    */
+   public AbstractObject getContext()
+   {
+      return context;
    }
 }

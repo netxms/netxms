@@ -24,7 +24,7 @@ import org.eclipse.swt.events.FocusListener;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
 import org.netxms.nxmc.modules.dashboards.config.AlarmViewerConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 
 /**
  * Alarm viewer element for dashboard
@@ -41,7 +41,7 @@ public class AlarmViewerElement extends ElementWidget
 	 * @param element Dashboard element
 	 * @param viewPart viewPart
 	 */
-   public AlarmViewerElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public AlarmViewerElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

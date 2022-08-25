@@ -48,7 +48,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.ObjectDetailsConfig;
 import org.netxms.nxmc.modules.dashboards.config.ObjectDetailsConfig.ObjectProperty;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.dashboards.widgets.helpers.ObjectDetailsLabelProvider;
 import org.netxms.nxmc.modules.dashboards.widgets.helpers.ObjectSelectionProvider;
 import org.netxms.nxmc.modules.networkmaps.ObjectDoubleClickHandlerRegistry;
@@ -81,7 +81,7 @@ public class ObjectQuery extends ElementWidget
     * @param element
     * @param viewPart
     */
-   public ObjectQuery(DashboardControl parent, DashboardElement element, DashboardView view)
+   public ObjectQuery(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
       session = Registry.getSession();

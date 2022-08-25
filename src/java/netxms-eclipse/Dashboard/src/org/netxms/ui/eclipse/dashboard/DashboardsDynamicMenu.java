@@ -120,7 +120,7 @@ public class DashboardsDynamicMenu extends ContributionItem implements IWorkbenc
 				return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
 			}
 		});
-		
+
       final Menu dashboardsMenu = new Menu(menu);
 		for(AbstractObject d : dashboards)
 		{
@@ -134,7 +134,7 @@ public class DashboardsDynamicMenu extends ContributionItem implements IWorkbenc
                IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                try
                {
-                  window.getActivePage().showView(DashboardView.ID, item.getData().toString(), IWorkbenchPage.VIEW_ACTIVATE);
+                  window.getActivePage().showView(DashboardView.ID, item.getData().toString() + "&" + object.getObjectId(), IWorkbenchPage.VIEW_ACTIVATE);
                }
                catch(PartInitException ex)
                {

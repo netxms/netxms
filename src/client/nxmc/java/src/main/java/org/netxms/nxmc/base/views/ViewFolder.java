@@ -285,6 +285,17 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
+    * Find view with given ID.
+    *
+    * @param id view ID
+    * @return view with given ID or null if not exist
+    */
+   public View findView(String id)
+   {
+      return views.get(id);
+   }
+
+   /**
     * Remove view from folder. View content will be destroyed.
     *
     * @param id ID of view to remove

@@ -34,7 +34,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.ServiceComponentsConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.networkmaps.widgets.NetworkMapWidget;
 import org.netxms.nxmc.tools.ColorConverter;
 
@@ -55,7 +55,7 @@ public class ServiceComponentsElement extends ElementWidget
     * @param element Dashboard element
     * @param view viewPart
     */
-   protected ServiceComponentsElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   protected ServiceComponentsElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
 

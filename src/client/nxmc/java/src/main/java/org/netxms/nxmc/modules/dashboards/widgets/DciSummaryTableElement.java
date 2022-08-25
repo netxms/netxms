@@ -23,7 +23,7 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.DciSummaryTableConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.widgets.SummaryTableWidget;
 
 /**
@@ -38,7 +38,7 @@ public class DciSummaryTableElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public DciSummaryTableElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public DciSummaryTableElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

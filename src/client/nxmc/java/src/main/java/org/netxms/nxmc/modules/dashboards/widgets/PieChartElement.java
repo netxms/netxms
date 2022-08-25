@@ -28,7 +28,7 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.PieChartConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 
 /**
  * Pie chart element
@@ -41,7 +41,7 @@ public class PieChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-   public PieChartElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public PieChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

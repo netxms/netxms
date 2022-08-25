@@ -52,7 +52,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.LineChartConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView.ChartActionType;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView.HistoricalChartOwner;
@@ -82,7 +82,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	 * @param parent
 	 * @param data
 	 */
-   public LineChartElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public LineChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
       session = Registry.getSession();
@@ -149,60 +149,63 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		   createChartContextMenu();
 		}
 	}
-   
- /**
-  * Get DCI info (unit name and multiplier)
-  */
- private void updateDciInfo()
- {
-    List<Long> nodeIds = new ArrayList<Long>();
-    List<Long> dciIds = new ArrayList<Long>();
 
-    for(ChartDciConfig dci : config.getDciList())
-    {
-       if (dci.getDisplayFormat() == null || dci.getDisplayFormat().isEmpty())
-       {
-          nodeIds.add(dci.nodeId);
-          dciIds.add(dci.dciId);
-       }
-    }
+   /**
+    * Get DCI info (unit name and multiplier)
+    */
+   private void updateDciInfo()
+   {
+      List<Long> nodeIds = new ArrayList<Long>();
+      List<Long> dciIds = new ArrayList<Long>();
 
-    Job job = new Job("Get DCI info", null) {
-       @Override
-       protected void run(IProgressMonitor monitor) throws Exception
-       {
-          final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
-          runInUIThread(new Runnable() {
-             @Override
-             public void run()
-             {
-                int i = 0;
-                for(ChartDciConfig dci : config.getDciList())
-                {
-                   GraphItem item = chart.getItem(i);
-                   DciInfo info = result.get(dci.getDciId());
-                   if (info != null)
-                   {
-                      item.setUnitName(info.getUnitName());
-                      item.setMultipierPower(info.getMultipierPower());
-                   }
-                   i++;
-                }
-                chart.rebuild();
-                layout(true, true);
-             }
-          });
-       }
+      for(ChartDciConfig dci : config.getDciList())
+      {
+         if (dci.getDisplayFormat() == null || dci.getDisplayFormat().isEmpty())
+         {
+            nodeIds.add(dci.nodeId);
+            dciIds.add(dci.dciId);
+         }
+      }
 
-       @Override
-       protected String getErrorMessage()
-       {
-          return null;
-       }
-    };
-    job.setUser(false);
-    job.start();
- }
+      Job job = new Job("Get DCI info", null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (chart.isDisposed())
+                     return;
+
+                  int i = 0;
+                  for(ChartDciConfig dci : config.getDciList())
+                  {
+                     GraphItem item = chart.getItem(i);
+                     DciInfo info = result.get(dci.getDciId());
+                     if (info != null)
+                     {
+                        item.setUnitName(info.getUnitName());
+                        item.setMultipierPower(info.getMultipierPower());
+                     }
+                     i++;
+                  }
+                  chart.rebuild();
+                  layout(true, true);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
 
    /**
     * Create actions

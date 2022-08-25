@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.GeoMapConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.worldmap.widgets.ObjectGeoLocationViewer;
 
 /**
@@ -36,7 +36,7 @@ public class GeoMapElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public GeoMapElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public GeoMapElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

@@ -31,7 +31,7 @@ import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.ObjectStatusChartConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 
 /**
@@ -45,7 +45,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-   public ObjectStatusChartElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public ObjectStatusChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 		

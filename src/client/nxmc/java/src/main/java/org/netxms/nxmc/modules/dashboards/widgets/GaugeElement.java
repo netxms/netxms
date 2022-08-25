@@ -35,7 +35,7 @@ import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.GaugeConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 
 /**
  * Dial chart element
@@ -48,7 +48,7 @@ public class GaugeElement extends ComparisonChartElement
 	 * @param parent
 	 * @param data
 	 */
-   public GaugeElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public GaugeElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
 

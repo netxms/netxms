@@ -277,12 +277,12 @@ public abstract class AbstractObject
 			Long[] nodes = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_NODES);
 			trustedNodes.addAll(Arrays.asList(nodes));
 		}
-		
+
 		// Dashboards
 		Long[] d = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_DASHBOARDS);
 		if ((d != null) && (d.length > 0))
 		   dashboards.addAll(Arrays.asList(d));
-		
+
 		// Custom attributes
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 		for(i = 0, id = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++, id += 4)
@@ -855,7 +855,18 @@ public abstract class AbstractObject
     */
    public List<AbstractObject> getDashboards(boolean accessibleOnly)
    {
-      return session.findMultipleObjects(dashboards, true);
+      return session.findMultipleObjects(dashboards, !accessibleOnly);
+   }
+
+   /**
+    * Check if this object has dashboard with give ID in its dashboarsd list
+    *
+    * @param dashboardId dashboard ID to check
+    * @return true if provided dashboard ID is in object's dashboard list
+    */
+   public boolean hasDashboard(long dashboardId)
+   {
+      return dashboards.contains(dashboardId);
    }
 
 	/**

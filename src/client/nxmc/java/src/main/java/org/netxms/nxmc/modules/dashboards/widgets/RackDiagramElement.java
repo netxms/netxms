@@ -43,7 +43,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.RackDiagramConfig;
 import org.netxms.nxmc.modules.dashboards.config.RackDisplayMode;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.widgets.RackWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ElementSelectionListener;
@@ -72,7 +72,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
     * @param element Dashboard element
     * @param view owning view
     */
-   protected RackDiagramElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   protected RackDiagramElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
       super(parent, element, view);
 
