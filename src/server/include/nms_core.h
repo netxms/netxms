@@ -1424,6 +1424,9 @@ X509 *IssueCertificate(X509_REQ *request, const char *ou, const char *cn, int da
 void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, X509 *cert);
 #endif
 void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, INT32 serial);
+String GetServerCertificateExpirationDate();
+int GetServerCertificateDaysUntilExpiration();
+time_t GetServerCertificateExpirationTime();
 
 #ifndef _WIN32
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);

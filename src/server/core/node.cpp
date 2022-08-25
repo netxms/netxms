@@ -7230,6 +7230,18 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          _sntprintf(buffer, size, _T("%u"), g_averageDCIQueuingTime);
       }
+      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationDate")))
+      {
+         ret_string(buffer, GetServerCertificateExpirationDate());
+      }
+      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationInt")))
+      {
+         ret_int(buffer, GetServerCertificateDaysUntilExpiration());
+      }
+      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationTime")))
+      {
+         ret_int64(buffer, GetServerCertificateExpirationTime());
+      }
       else if (!_tcsicmp(name, _T("Server.ClientSessions.Authenticated")))
       {
          _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, -1, nullptr));

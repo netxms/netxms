@@ -655,6 +655,44 @@ void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 
    LogCertificateAction(operation, userId, nodeId, nodeGuid, type, GetCertificateSubjectString(cert), ASN1_INTEGER_get(serial));
 }
 
+/**
+ * Get expiration date for server certificate
+ */
+String GetServerCertificateExpirationDate()
+{
+   if (s_serverCertificate == nullptr)
+      return String();
+
+   time_t e = GetCertificateExpirationTime(s_serverCertificate);
+   TCHAR buffer[64];
+   _tcsftime(buffer, 64, _T("%Y-%m-%d"), localtime(&e));
+   return String(buffer);
+}
+
+/**
+ * Get number of days until server certificate expiration
+ */
+int GetServerCertificateDaysUntilExpiration()
+{
+   if (s_serverCertificate == nullptr)
+      return -1;
+
+   time_t e = GetCertificateExpirationTime(s_serverCertificate);
+   time_t now = time(nullptr);
+   return static_cast<int>((e - now) / 86400);
+}
+
+/**
+ * Get server certificate expiration time
+ */
+time_t GetServerCertificateExpirationTime()
+{
+   if (s_serverCertificate == nullptr)
+      return 0;
+
+   return GetCertificateExpirationTime(s_serverCertificate);
+}
+
 #else		/* _WITH_ENCRYPTION */
 
 /**
@@ -671,6 +709,30 @@ void InitCertificates()
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Get expiration date for server certificate
+ */
+String GetServerCertificateExpirationDate()
+{
+   return String();
+}
+
+/**
+ * Get number of days until server certificate expiration
+ */
+int GetServerCertificateDaysUntilExpiration()
+{
+   return -1;
+}
+
+/**
+ * Get server certificate expiration time
+ */
+time_t GetServerCertificateExpirationTime()
+{
+   return 0;
 }
 
 #endif	/* _WITH_ENCRYPTION */
