@@ -131,14 +131,9 @@ public abstract class DciValue
    public String getFormattedValue(boolean useMultipliers, TimeFormatter formatter)
    {     
       int selection = getMultipliersSelection();
-      String format = null;
-      if (selection == DciValue.MULTIPLIERS_DEFAULT)
-         format = useMultipliers ? "%*s" : "%s";
-      else if (selection == DciValue.MULTIPLIERS_YES)
-         format = "%*s";
-      else
-         format = "%s";
-      return new DataFormatter(format, dataType, unitName, multiplier, true).format(value, formatter);
+      String format = ((selection == DciValue.MULTIPLIERS_DEFAULT) && useMultipliers) || 
+            (selection == DciValue.MULTIPLIERS_YES) ? "%{m,u}s" : "%{u}s" ;
+      return new DataFormatter(format, dataType, unitName, multiplier).format(value, formatter);
    }
 
 	/**

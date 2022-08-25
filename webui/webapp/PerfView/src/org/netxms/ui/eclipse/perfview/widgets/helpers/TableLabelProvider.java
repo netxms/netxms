@@ -89,7 +89,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       if (columnIndex >= row.size())
          return null;
       
-      return new DataFormatter(useMultipliers ? "%*s" : "%s", columns[columnIndex].getDataType(), columns[columnIndex].getUnitName(), columns[columnIndex].getMultiplier(), true).format(row.get(columnIndex).getValue(), RegionalSettings.TIME_FORMATTER);
+      return new DataFormatter(useMultipliers ? "%{u,m}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getUnitName(), columns[columnIndex].getMultiplier()).format(row.get(columnIndex).getValue(), RegionalSettings.TIME_FORMATTER);
 	}
 
 	/* (non-Javadoc)

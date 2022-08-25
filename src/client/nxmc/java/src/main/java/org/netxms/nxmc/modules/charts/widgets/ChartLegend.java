@@ -307,16 +307,9 @@ public class ChartLegend extends Composite
       for(DataSeries s : chart.getDataSeries())
       {
          GraphItem item = chart.getItem(row);
-         String format = item.getDisplayFormat();
-         boolean useDciFormat = false;
-         if (format == null || format.isEmpty())
-         {
-            format = "%.3f";
-            if (useMultipliers)
-               format = "%*.3f";
-            useDciFormat = true;
-         }
-         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getUnitName(), item.getMultiplierPower(), useDciFormat);
+         String format = (item.getDisplayFormat() == null || item.getDisplayFormat().isEmpty()) ? 
+               ((useMultipliers) ? "%{m,u}.3f" : "%{u}.3f") :  item.getDisplayFormat();
+         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getUnitName(), item.getMultiplierPower());
          dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), DateFormatFactory.TIME_FORMATTER));
          if (chart.getType() == ChartType.LINE)
          {

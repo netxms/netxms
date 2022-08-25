@@ -30,9 +30,9 @@ import org.netxms.client.constants.DataType;
 public class DataFormatter
 {
    private String formatString;
-   private boolean useBinaryMultipliers;
+   private boolean useBinaryMultipliers = false;
    private DataType dataType;
-   private String unitName;
+   private String unitName = null;
    private int multiplierPower;
 
    /**
@@ -57,37 +57,19 @@ public class DataFormatter
     * @param dataType data type
     * @param unitName name of the unit
     * @param multiplierPower fixed power of the multiplier (0 for automatic selection)
+    * @param usdeDciFormat if DCI parameter configuration should be used
     */
    public DataFormatter(String formatString, DataType dataType, String unitName, int multiplierPower)
    {
-      this(formatString, dataType, unitName, multiplierPower, false);
-   }
-
-   /**
-    * Create new data formatter.
-    * 
-    * @param formatString format string
-    * @param dataType data type
-    * @param unitName name of the unit
-    * @param multiplierPower fixed power of the multiplier (0 for automatic selection)
-    * @param usdeDciFormat if DCI parameter configuration should be used
-    */
-   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplierPower, boolean usdeDciFormat)
-   {
       this.formatString = formatString;
       this.dataType = dataType;
-      if ((unitName != null) && ((formatString == null) || formatString.isEmpty() || usdeDciFormat))
+      if (unitName != null)
       {
          this.useBinaryMultipliers = unitName.contains(" (IEC)");
          this.unitName = unitName.replace(" (IEC)", "").replace(" (Metric)", "");
-         if (formatString == null || formatString.isEmpty())
-            this.formatString = "%s";
       }
-      else
-      {
-         this.useBinaryMultipliers = false;
-         this.unitName = null;         
-      }
+      if (formatString == null || formatString.isEmpty())
+         this.formatString = "%{m,u}s";
       this.multiplierPower = multiplierPower;
    }
 
@@ -103,17 +85,8 @@ public class DataFormatter
       if (value == null || value.isEmpty())
          return "";
       
-      if (unitName != null) 
-      {                  
-         if (unitName.equals("Uptime"))
-         {
-            return formatter.formatUptime((long)Double.parseDouble(value));
-         }
-         if (unitName.equals("Epoch time"))
-         {
-            return formatter.formatDateAndTime((long)Double.parseDouble(value));
-         }
-      }
+      /*
+      */
       
       StringBuilder sb = new StringBuilder();
       char[] format = formatString.toCharArray();
@@ -129,6 +102,42 @@ public class DataFormatter
             }
             else
             {
+
+               boolean useMultipliers = false;
+               boolean useUnits = false;
+
+               if (format[i] == '*')
+               {
+                  i++;
+                  useMultipliers = true;
+               }
+               else if (format[i] == '{' && (i + 1 != format.length))
+               {    
+                  int end = i;
+                  for(; (end < format.length) && (format[end] != '}'); end++) //find ending part
+                     ;
+                  if (format[end] == '}' && (end + 1 < format.length))
+                  {
+                     if (i+1 != end)
+                     {
+                        String[] items = new String(Arrays.copyOfRange(format, i+1, end)).split(",");
+                        for (String item : items)
+                        {
+                           if ((item.trim().compareToIgnoreCase("u") == 0) || (item.trim().compareToIgnoreCase("units") == 0))
+                           {
+                              useUnits = unitName != null && !unitName.isEmpty();
+                           }
+                           else if ((item.trim().compareToIgnoreCase("m") == 0) || (item.trim().compareToIgnoreCase("multipliers") == 0))
+                           {
+                              useMultipliers = true;
+                           }
+                        }
+                     }
+                     i = end + 1;
+                  }
+                     
+               }
+               
                int j;
                for(j = i; (j < format.length) && !Character.isLetter(format[j]); j++)
                   ;
@@ -136,34 +145,39 @@ public class DataFormatter
                if (j + 1 < format.length && (format[j] == 't' || format[j] == 'T') && Character.isLetter(format[j + 1])) //t or T is prefix for date and time conversion characters
                   j++;
 
-               boolean useMultipliers = false;
-               if (format[i] == '*')
-               {
-                  i++;
-                  useMultipliers = true;
-               }
-
                final String f = "%" + new String(Arrays.copyOfRange(format, i, j + 1));
                i = j;
-               try
-               {
-                  Value v = getValueForFormat(value, useMultipliers, format[j] == 's' || format[j] == 'S', format[j] == 'd');
-                  sb.append(String.format(f, v.value));
-                  sb.append(v.suffix);
-                  if (unitName != null)
-                  {
-                     if (v.suffix.isEmpty())
-                     {
-                        sb.append(" ");
-                     }
-                     sb.append(unitName);
-                  }
+               
+               if (useUnits && unitName.equals("Uptime")) 
+               {      
+                  sb.append(formatter.formatUptime((long)Double.parseDouble(value)));   
                }
-               catch(IndexOutOfBoundsException | IllegalFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
+               else if (useUnits && unitName.equals("Epoch time"))
                {
-                  sb.append("<INVALID FORMAT> (");
-                  sb.append(f.trim()); //trim required in case of out of bound
-                  sb.append(")");
+                  sb.append(formatter.formatDateAndTime((long)Double.parseDouble(value)));
+               }
+               else
+               {
+                  try
+                  {
+                     Value v = getValueForFormat(value, useMultipliers, format[j] == 's' || format[j] == 'S', format[j] == 'd');
+                     sb.append(String.format(f, v.value));
+                     sb.append(v.suffix);
+                     if (useUnits)
+                     {
+                        if (v.suffix.isEmpty())
+                        {
+                           sb.append(" ");
+                        }
+                        sb.append(unitName);
+                     }
+                  }
+                  catch(IndexOutOfBoundsException | IllegalFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
+                  {
+                     sb.append("<INVALID FORMAT> (");
+                     sb.append(f.trim()); //trim required in case of out of bound
+                     sb.append(")");
+                  }
                }
             }
          }

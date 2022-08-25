@@ -77,11 +77,11 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
                   return Long.toString(c.getCapacity()) + " mWh"; 
                case MEMORY_DEVICE:
                case STORAGE_DEVICE:
-                  return new DataFormatter("%*s", DataType.UINT64, "B (IEC)", 0, true).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER); 
+                  return new DataFormatter("%{u,m}s", DataType.UINT64, "B (IEC)", 0).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER); 
                case NETWORK_ADAPTER:
-                  return new DataFormatter("%*s", DataType.UINT64, "bps", 0, true).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER); 
+                  return new DataFormatter("%{u,m}s", DataType.UINT64, "bps", 0).format(Long.toString(c.getCapacity()), RegionalSettings.TIME_FORMATTER); 
                case PROCESSOR:
-                  return new DataFormatter("%*s", DataType.UINT64, "Hz", 0, true).format(Long.toString(c.getCapacity() * 1000000L), RegionalSettings.TIME_FORMATTER);
+                  return new DataFormatter("%{u,m}s", DataType.UINT64, "Hz", 0).format(Long.toString(c.getCapacity() * 1000000L), RegionalSettings.TIME_FORMATTER);
                default:
                   break;
             }
