@@ -57,7 +57,6 @@ public class DataFormatter
     * @param dataType data type
     * @param unitName name of the unit
     * @param multiplierPower fixed power of the multiplier (0 for automatic selection)
-    * @param usdeDciFormat if DCI parameter configuration should be used
     */
    public DataFormatter(String formatString, DataType dataType, String unitName, int multiplierPower)
    {
