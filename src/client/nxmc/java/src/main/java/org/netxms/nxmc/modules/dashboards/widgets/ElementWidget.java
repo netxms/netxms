@@ -418,6 +418,17 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    }
 
    /**
+    * Get ID of context object.
+    *
+    * @return ID of context object or 0 if context is not set
+    */
+   protected long getContextObjectId()
+   {
+      AbstractObject object = dbc.getContext();
+      return (object != null) ? object.getObjectId() : 0;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String)
     */
    @Override

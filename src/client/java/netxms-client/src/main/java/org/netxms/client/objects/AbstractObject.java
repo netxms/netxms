@@ -52,23 +52,25 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractObject
 {
 	/** Entire network */
-	public static final int NETWORK = 1;
+   public static final long NETWORK = 1L;
 	/** Infrastructure Services */
-	public static final int SERVICEROOT = 2;
+   public static final long SERVICEROOT = 2L;
 	/** Templates */
-	public static final int TEMPLATEROOT = 3;
+   public static final long TEMPLATEROOT = 3L;
 	/** Default zone */
-	public static final int ZONE0 = 4;
+   public static final long ZONE0 = 4L;
 	/** Configuration Policies */
-	public static final int POLICYROOT = 5;
+   public static final long POLICYROOT = 5L;
 	/** Network Maps */
-	public static final int NETWORKMAPROOT = 6;
+   public static final long NETWORKMAPROOT = 6L;
 	/** Dashboards */
-	public static final int DASHBOARDROOT = 7;
+   public static final long DASHBOARDROOT = 7L;
 	/** Reports */
-	public static final int REPORTROOT = 8;
+   public static final long REPORTROOT = 8L;
 	/** Business Services */
-	public static final int BUSINESSSERVICEROOT = 9;
+   public static final long BUSINESSSERVICEROOT = 9L;
+   /** Context object indicator */
+   public static final long CONTEXT = 0xFFFFFFFFL;
 
 	// Object classes
 	public static final int OBJECT_GENERIC = 0;
@@ -120,7 +122,7 @@ public abstract class AbstractObject
 	public static final int PROPAGATE_FIXED = 2;
 	public static final int PROPAGATE_RELATIVE = 3;
 	public static final int PROPAGATE_TRANSLATED = 4;
-	
+
    private static final Logger logger = LoggerFactory.getLogger(AbstractObject.class);
 
 	@Internal protected NXCSession session = null;

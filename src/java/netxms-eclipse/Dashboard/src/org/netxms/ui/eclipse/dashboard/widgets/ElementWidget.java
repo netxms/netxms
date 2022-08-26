@@ -292,4 +292,15 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    {
       return dbc.getContext();
    }
+
+   /**
+    * Get ID of context object.
+    *
+    * @return ID of context object or 0 if context is not set
+    */
+   protected long getContextObjectId()
+   {
+      AbstractObject object = dbc.getContext();
+      return (object != null) ? object.getObjectId() : 0;
+   }
 }

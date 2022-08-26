@@ -110,7 +110,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
       dashboard = session.findObjectById(Long.parseLong(parts[0]), Dashboard.class);
 		if (dashboard == null)
 			throw new PartInitException(Messages.get().DashboardView_InitError);
-      contextObjectId = (parts.length > 0) ? Long.parseLong(parts[1]) : 0;
+      contextObjectId = (parts.length > 1) ? Long.parseLong(parts[1]) : 0;
 		setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 	}
 

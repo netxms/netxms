@@ -3161,9 +3161,12 @@ bool NetObj::addDashboard(uint32_t id)
 bool NetObj::removeDashboard(uint32_t id)
 {
    lockProperties();
-   bool removed = m_dashboards.remove(id);
-   if (removed)
+   int index = m_dashboards.indexOf(id);
+   if (index != -1)
+   {
+      m_dashboards.remove(index);
       setModified(MODIFY_DASHBOARD_LIST);
+   }
    unlockProperties();
-   return removed;
+   return index != -1;
 }

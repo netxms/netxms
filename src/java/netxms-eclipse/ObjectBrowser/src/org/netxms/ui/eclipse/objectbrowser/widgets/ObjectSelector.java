@@ -42,16 +42,19 @@ public class ObjectSelector extends AbstractSelector
 	private AbstractObject object = null;
 	private Set<Class<? extends AbstractObject>> objectClassSet = new HashSet<Class<? extends AbstractObject>>();
 	private Set<Integer> classFilter = null;
-	private String emptySelectionName = Messages.get().ObjectSelector_None;
+   private String emptySelectionName = Messages.get().ObjectSelector_None;
+   private String contextSelectionName = "<context>";
    private WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
 
 	/**
-	 * @param parent
-	 * @param style
-	 */
-	public ObjectSelector(Composite parent, int style, boolean showClearButton)
+    * @param parent parent composite
+    * @param style control style
+    * @param showClearButton true to show "Clear" button
+    * @param showContextButton true to show "Context" button
+    */
+   public ObjectSelector(Composite parent, int style, boolean showClearButton, boolean showContextButton)
 	{
-		super(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
+      super(parent, style, (showClearButton ? SHOW_CLEAR_BUTTON : 0) | (showContextButton ? SHOW_CONTEXT_BUTTON : 0));
 		setText(emptySelectionName);
 		objectClassSet.add(Node.class);
       addDisposeListener(new DisposeListener() {
@@ -62,6 +65,16 @@ public class ObjectSelector extends AbstractSelector
          }
       });
 	}
+
+   /**
+    * @param parent parent composite
+    * @param style control style
+    * @param showClearButton true to show "Clear" button
+    */
+   public ObjectSelector(Composite parent, int style, boolean showClearButton)
+   {
+      this(parent, style, showClearButton, false);
+   }
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
@@ -91,6 +104,19 @@ public class ObjectSelector extends AbstractSelector
 			fireModifyListeners();
 		}
 	}
+
+   /**
+    * @see org.netxms.ui.eclipse.widgets.AbstractSelector#contextButtonHandler()
+    */
+   @Override
+   protected void contextButtonHandler()
+   {
+      objectId = AbstractObject.CONTEXT;
+      object = null;
+      setText(contextSelectionName);
+      setImage(null);
+      fireModifyListeners();
+   }
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
@@ -144,6 +170,11 @@ public class ObjectSelector extends AbstractSelector
          setText(emptySelectionName);
          setImage(null);
 		}
+      else if (objectId == AbstractObject.CONTEXT)
+      {
+         setText(contextSelectionName);
+         setImage(null);
+      }
 		else
 		{
 			object = ConsoleSharedData.getSession().findObjectById(objectId);
@@ -197,8 +228,24 @@ public class ObjectSelector extends AbstractSelector
 	}
 
 	/**
-	 * @return the classFilter
-	 */
+    * @return the contextSelectionName
+    */
+   public String getContextSelectionName()
+   {
+      return contextSelectionName;
+   }
+
+   /**
+    * @param contextSelectionName the contextSelectionName to set
+    */
+   public void setContextSelectionName(String contextSelectionName)
+   {
+      this.contextSelectionName = contextSelectionName;
+   }
+
+   /**
+    * @return the classFilter
+    */
 	public Set<Integer> getClassFilter()
 	{
 		return classFilter;

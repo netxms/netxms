@@ -29,8 +29,8 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -45,6 +45,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -56,15 +57,19 @@ public class AbstractSelector extends Composite
 {
 	public static final int USE_HYPERLINK = 0x0001;
 	public static final int HIDE_LABEL = 0x0002;
+   public static final int SHOW_CONTEXT_BUTTON = 0x0004;
 	public static final int SHOW_CLEAR_BUTTON = 0x0008;
 
 	private Label label;
    private CText text;
-	private Button selectionButton;
-	private Button clearingButton;
-	private ImageHyperlink selectionLink;
-	private ImageHyperlink clearingLink;
+	private Button buttonSelect;
+   private Button buttonContext;
+	private Button buttonClear;
+	private ImageHyperlink linkSelect;
+   private ImageHyperlink linkContext;
+	private ImageHyperlink linkClear;
 	private Action actionCopy;
+   private Image imageContext = null;
 	private Image scaledImage = null;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>(0);
 
@@ -86,7 +91,11 @@ public class AbstractSelector extends Composite
 		layout.marginBottom = 0;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-		layout.numColumns = ((options & SHOW_CLEAR_BUTTON) != 0) ? 3 : 2;
+      layout.numColumns = 2;
+      if ((options & SHOW_CONTEXT_BUTTON) != 0)
+         layout.numColumns++;
+      if ((options & SHOW_CLEAR_BUTTON) != 0)
+         layout.numColumns++;
 		setLayout(layout);
 
 		if ((options & HIDE_LABEL) == 0)
@@ -107,13 +116,13 @@ public class AbstractSelector extends Composite
 
 		if ((options & USE_HYPERLINK) != 0)
 		{
-			selectionLink = new ImageHyperlink(this, SWT.NONE);
+			linkSelect = new ImageHyperlink(this, SWT.NONE);
 			gd = new GridData();
 			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-			selectionLink.setLayoutData(gd);
-			selectionLink.setImage(SharedIcons.IMG_FIND);
-			selectionLink.setToolTipText(getSelectionButtonToolTip());
-			selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
+			linkSelect.setLayoutData(gd);
+			linkSelect.setImage(SharedIcons.IMG_FIND);
+			linkSelect.setToolTipText(getSelectionButtonToolTip());
+			linkSelect.addHyperlinkListener(new HyperlinkAdapter() {
 				@Override
 				public void linkActivated(HyperlinkEvent e)
 				{
@@ -121,67 +130,93 @@ public class AbstractSelector extends Composite
 				}
 			});
 
-			if ((options & SHOW_CLEAR_BUTTON) != 0)
+         if ((options & SHOW_CONTEXT_BUTTON) != 0)
 			{
-				clearingLink = new ImageHyperlink(this, SWT.NONE);
+            imageContext = Activator.getImageDescriptor("icons/context.png").createImage();
+
+            linkContext = new ImageHyperlink(this, SWT.NONE);
 				gd = new GridData();
 				gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-				clearingLink.setLayoutData(gd);
-				clearingLink.setImage(SharedIcons.IMG_CLEAR);
-				clearingLink.setToolTipText(getClearingButtonToolTip());
-				clearingLink.addHyperlinkListener(new HyperlinkAdapter() {
+            linkContext.setLayoutData(gd);
+            linkContext.setImage(imageContext);
+            linkContext.setToolTipText(getContextButtonToolTip());
+            linkContext.addHyperlinkListener(new HyperlinkAdapter() {
 					@Override
 					public void linkActivated(HyperlinkEvent e)
 					{
-						clearButtonHandler();
+                  contextButtonHandler();
 					}
 				});
 			}			
+
+         if ((options & SHOW_CLEAR_BUTTON) != 0)
+         {
+            linkClear = new ImageHyperlink(this, SWT.NONE);
+            gd = new GridData();
+            gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+            linkClear.setLayoutData(gd);
+            linkClear.setImage(SharedIcons.IMG_CLEAR);
+            linkClear.setToolTipText(getClearButtonToolTip());
+            linkClear.addHyperlinkListener(new HyperlinkAdapter() {
+               @Override
+               public void linkActivated(HyperlinkEvent e)
+               {
+                  clearButtonHandler();
+               }
+            });
+         }
 		}
 		else
 		{
-			selectionButton = new Button(this, SWT.PUSH);
+			buttonSelect = new Button(this, SWT.PUSH);
 			gd = new GridData();
 			gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-			selectionButton.setLayoutData(gd);
-			selectionButton.setImage(SharedIcons.IMG_FIND);
-			selectionButton.setToolTipText(getSelectionButtonToolTip());
-			selectionButton.addSelectionListener(new SelectionListener() {
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
-				}
-	
+			buttonSelect.setLayoutData(gd);
+			buttonSelect.setImage(SharedIcons.IMG_FIND);
+			buttonSelect.setToolTipText(getSelectionButtonToolTip());
+         buttonSelect.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
 					selectionButtonHandler();
 				}
 			});
-			
-			if ((options & SHOW_CLEAR_BUTTON) != 0)
+
+         if ((options & SHOW_CONTEXT_BUTTON) != 0)
 			{
-				clearingButton = new Button(this, SWT.PUSH);
+            imageContext = Activator.getImageDescriptor("icons/context.png").createImage();
+
+            buttonContext = new Button(this, SWT.PUSH);
 				gd = new GridData();
 				gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
-				clearingButton.setLayoutData(gd);
-				clearingButton.setImage(SharedIcons.IMG_CLEAR);
-				clearingButton.setToolTipText(getClearingButtonToolTip());
-				clearingButton.addSelectionListener(new SelectionListener() {
-					@Override
-					public void widgetDefaultSelected(SelectionEvent e)
-					{
-						widgetSelected(e);
-					}
-		
+            buttonContext.setLayoutData(gd);
+            buttonContext.setImage(imageContext);
+            buttonContext.setToolTipText(getContextButtonToolTip());
+            buttonContext.addSelectionListener(new SelectionAdapter() {
 					@Override
 					public void widgetSelected(SelectionEvent e)
 					{
-						clearButtonHandler();
+                  contextButtonHandler();
 					}
 				});
 			}
+
+         if ((options & SHOW_CLEAR_BUTTON) != 0)
+         {
+            buttonClear = new Button(this, SWT.PUSH);
+            gd = new GridData();
+            gd.heightHint = text.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
+            buttonClear.setLayoutData(gd);
+            buttonClear.setImage(SharedIcons.IMG_CLEAR);
+            buttonClear.setToolTipText(getClearButtonToolTip());
+            buttonClear.addSelectionListener(new SelectionAdapter() {
+               @Override
+               public void widgetSelected(SelectionEvent e)
+               {
+                  clearButtonHandler();
+               }
+            });
+         }
 		}
 
 		createActions();
@@ -195,6 +230,8 @@ public class AbstractSelector extends Composite
 			{
 				if (scaledImage != null)
 					scaledImage.dispose();
+            if (imageContext != null)
+               imageContext.dispose();
 			}
 		});
 	}
@@ -204,14 +241,13 @@ public class AbstractSelector extends Composite
 	 */
 	private void createActions()
 	{
-		actionCopy = new Action() {
+		actionCopy = new Action(Messages.get().AbstractSelector_CopyToClipboard) {
 			@Override
 			public void run()
 			{
             WidgetHelper.copyToClipboard(AbstractSelector.this.getText());
 			}
 		};
-		actionCopy.setText(Messages.get().AbstractSelector_CopyToClipboard);
 	}
 
 	/**
@@ -261,6 +297,13 @@ public class AbstractSelector extends Composite
 	{
 	}
 	
+   /**
+    * Handler for context button. This method intended to be overriden by subclasses. Default implementation does nothing.
+    */
+   protected void contextButtonHandler()
+   {
+   }
+
 	/**
 	 * Returns tooltip text for selection button. Can be overridden by subclasses.
 	 * @return tooltip text for selection button
@@ -274,10 +317,20 @@ public class AbstractSelector extends Composite
 	 * Returns tooltip text for clear button. Can be overridden by subclasses.
 	 * @return tooltip text for clear button
 	 */
-	protected String getClearingButtonToolTip()
+	protected String getClearButtonToolTip()
 	{
 		return Messages.get().AbstractSelector_ClearSelection;
 	}
+
+   /**
+    * Returns tooltip text for context button. Can be overridden by subclasses.
+    * 
+    * @return tooltip text for context button
+    */
+   protected String getContextButtonToolTip()
+   {
+      return "Context";
+   }
 
 	/**
 	 * Returns tooltip text for text area. Can be overridden by subclasses.
@@ -388,14 +441,18 @@ public class AbstractSelector extends Composite
 	public void setEnabled(boolean enabled)
 	{
 		text.setEnabled(enabled);
-		if (selectionButton != null)
-			selectionButton.setEnabled(enabled);
-		if (selectionLink != null)
-			selectionLink.setEnabled(enabled);
-		if (clearingButton != null)
-			clearingButton.setEnabled(enabled);
-		if (clearingLink != null)
-			clearingLink.setEnabled(enabled);
+		if (buttonSelect != null)
+			buttonSelect.setEnabled(enabled);
+		if (linkSelect != null)
+			linkSelect.setEnabled(enabled);
+      if (buttonContext != null)
+         buttonContext.setEnabled(enabled);
+      if (linkContext != null)
+         linkContext.setEnabled(enabled);
+      if (buttonClear != null)
+         buttonClear.setEnabled(enabled);
+		if (linkClear != null)
+			linkClear.setEnabled(enabled);
 		super.setEnabled(enabled);
 	}
 

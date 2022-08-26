@@ -19,9 +19,10 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
 import org.netxms.nxmc.modules.dashboards.config.AlarmViewerConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -58,16 +59,11 @@ public class AlarmViewerElement extends ElementWidget
       processCommonSettings(config);
 
       viewer = new AlarmList(view, getContentArea(), SWT.NONE, "Dashboard.AlarmList", null);
-		viewer.setRootObject(config.getObjectId());
+      viewer.setRootObject((config.getObjectId() == AbstractObject.CONTEXT) ? getContextObjectId() : config.getObjectId());
 		viewer.setSeverityFilter(config.getSeverityFilter());
       viewer.setStateFilter(config.getStateFilter());
       viewer.setIsLocalSoundEnabled(config.getIsLocalSoundEnabled());
-		viewer.getViewer().getControl().addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-         
+      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
          @Override
          public void focusGained(FocusEvent e)
          {

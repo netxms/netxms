@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,9 +54,9 @@ public class AlarmViewer extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		config = (AlarmViewerConfig)getElement().getAdapter(AlarmViewerConfig.class);
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 		
@@ -66,27 +66,27 @@ public class AlarmViewer extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
+      objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
       gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		objectSelector.setLayoutData(gd);
-		
+
 		Group severityGroup = new Group(dialogArea, SWT.NONE);
 		severityGroup.setText(Messages.get().AlarmViewer_SeverityFilter);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		severityGroup.setLayoutData(gd);
-		
+
 		layout = new GridLayout();
 		layout.numColumns = 5;
 		layout.makeColumnsEqualWidth = true;
 		severityGroup.setLayout(layout);
-		
+
 		checkSeverity = new Button[5];
 		for(int severity = 4; severity >= 0; severity--)
 		{
@@ -96,7 +96,7 @@ public class AlarmViewer extends PropertyPage
 		}
 
       Group stateGroup = new Group(dialogArea, SWT.NONE);
-      stateGroup.setText("State Filter");
+      stateGroup.setText("State filter");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
