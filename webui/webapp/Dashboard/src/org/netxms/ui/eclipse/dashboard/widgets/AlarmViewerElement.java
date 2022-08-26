@@ -23,8 +23,8 @@ import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
 
 /**
@@ -52,15 +52,15 @@ public class AlarmViewerElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         Activator.logError("Cannot parse dashboard element configuration", e);
 			config = new AlarmViewerConfig();
 		}
 
       processCommonSettings(config);
 
       viewer = new AlarmList(viewPart, getContentArea(), SWT.NONE, "Dashboard.AlarmList", null); //$NON-NLS-1$
-      viewer.setRootObject((config.getObjectId() == AbstractObject.CONTEXT) ? getContextObjectId() : config.getObjectId());
-		viewer.setSeverityFilter(config.getSeverityFilter());
+      viewer.setRootObject(getEffectiveObjectId(config.getObjectId()));
+      viewer.setSeverityFilter(config.getSeverityFilter());
       viewer.setStateFilter(config.getStateFilter());
       viewer.setIsLocalSoundEnabled(config.getIsLocalSoundEnabled());
       viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {

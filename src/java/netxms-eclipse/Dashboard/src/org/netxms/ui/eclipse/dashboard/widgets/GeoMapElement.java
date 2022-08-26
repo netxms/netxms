@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.osm.widgets.ObjectGeoLocationViewer;
 
@@ -46,15 +47,15 @@ public class GeoMapElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         Activator.logError("Cannot parse dashboard element configuration", e);
 			config = new GeoMapConfig();
 		}
-		
+
       processCommonSettings(config);
 
       mapWidget = new ObjectGeoLocationViewer(getContentArea(), SWT.NONE);
 		mapWidget.setViewPart(viewPart);
-		mapWidget.setRootObjectId(config.getRootObjectId());
+      mapWidget.setRootObjectId(getEffectiveObjectId(config.getRootObjectId()));
 		mapWidget.showMap(config.getLatitude(), config.getLongitude(), config.getZoom());
 	}
 }

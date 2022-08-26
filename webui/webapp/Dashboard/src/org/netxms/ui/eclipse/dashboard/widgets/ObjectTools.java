@@ -21,8 +21,8 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -93,17 +93,11 @@ public class ObjectTools extends ElementWidget
    {
       Button b = new Button(getContentArea(), SWT.PUSH | SWT.FLAT);
       b.setText(t.name);
-      b.addSelectionListener(new SelectionListener() {
+      b.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             executeTool(t);
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
       b.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -122,18 +116,13 @@ public class ObjectTools extends ElementWidget
    {
       ObjectTool tool = ObjectToolsCache.getInstance().findTool(t.toolId);
       if (tool == null)
-      {
          return;
-      }
       
-      AbstractObject object = ConsoleSharedData.getSession().findObjectById(t.objectId);
+      AbstractObject object = ConsoleSharedData.getSession().findObjectById(getEffectiveObjectId(t.objectId));
       if (object == null)
-      {
          return;
-      }
       
       Set<ObjectContext> nodes = new HashSet<ObjectContext>();
-      
       if (object instanceof AbstractNode)
       {
          nodes.add(new ObjectContext((AbstractNode)object, null));
@@ -143,7 +132,6 @@ public class ObjectTools extends ElementWidget
          for(AbstractObject n : object.getAllChildren(AbstractObject.OBJECT_NODE))
             nodes.add(new ObjectContext((AbstractNode)n, null));
       }
-      
       ObjectToolExecutor.execute(nodes, tool);
    }
 }

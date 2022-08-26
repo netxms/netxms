@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.GridData;
@@ -62,6 +63,8 @@ import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -69,6 +72,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class PortViewElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(PortViewElement.class);
+
    private final I18n i18n = LocalizationHelper.getI18n(PortViewElement.class);
 
    private ScrolledComposite scroller;
@@ -92,7 +97,7 @@ public class PortViewElement extends ElementWidget
    public PortViewElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
-		
+
       session = Registry.getSession();
 
 		try
@@ -101,10 +106,10 @@ public class PortViewElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new PortViewConfig();
 		}
-		
+
       processCommonSettings(config);
 
 		selectionProvider = new ISelectionProvider() {
@@ -113,7 +118,7 @@ public class PortViewElement extends ElementWidget
          {
             PortViewElement.this.selection = selection;
          }
-         
+
          @Override
          public void removeSelectionChangedListener(ISelectionChangedListener listener)
          {
@@ -132,25 +137,20 @@ public class PortViewElement extends ElementWidget
             selectionListeners.add(listener);
          }
       };
-		
-		focusListener = new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-         
+
+      focusListener = new FocusAdapter() {
          @Override
          public void focusGained(FocusEvent e)
          {
             setSelectionProviderDelegate(selectionProvider);
          }
       };
-      
+
       popupMenuManager = new ObjectContextMenuManager(view, selectionProvider);
-		
+
       scroller = new ScrolledComposite(getContentArea(), SWT.H_SCROLL | SWT.V_SCROLL);
       scroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-		
+
 		content = new Composite(scroller, SWT.NONE);
 		content.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		GridLayout contentLayout = new GridLayout();
@@ -167,7 +167,8 @@ public class PortViewElement extends ElementWidget
                return;
             
             AbstractObject object = (AbstractObject)n.getObject();
-            if ((n.getSubCode() == config.getRootObjectId()) || object.isChildOf(config.getRootObjectId()))
+            long rootObjectId = getEffectiveObjectId(config.getRootObjectId());
+            if ((n.getSubCode() == rootObjectId) || object.isChildOf(rootObjectId))
             {
                getDisplay().asyncExec(new Runnable() {
                   public void run()
@@ -201,7 +202,7 @@ public class PortViewElement extends ElementWidget
 	 */
 	private void syncChildren() 
 	{
-      AbstractObject root = session.findObjectById(config.getRootObjectId());
+      AbstractObject root = session.findObjectById(getEffectiveObjectId(config.getRootObjectId()));
       List<AbstractObject> parentsForChildSync = new ArrayList<AbstractObject>();
       if (root instanceof Node)
       {
@@ -229,7 +230,7 @@ public class PortViewElement extends ElementWidget
          }
       }
 
-      Job job = new Job(i18n.tr("Sync objects"), view) {
+      Job job = new Job(i18n.tr("Synchronizing objects"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -239,12 +240,11 @@ public class PortViewElement extends ElementWidget
             }
            
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {
                   buildView();
-                  
+
                   scroller.setContent(content);
                   scroller.setExpandVertical(true);
                   scroller.setExpandHorizontal(true);
@@ -259,11 +259,11 @@ public class PortViewElement extends ElementWidget
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return "Failed to sync objects";
+            return i18n.tr("Cannot synchronize objects");
          }
       };
       job.setUser(false);
@@ -275,7 +275,7 @@ public class PortViewElement extends ElementWidget
 	 */
 	private void buildView()
 	{
-      AbstractObject root = session.findObjectById(config.getRootObjectId());
+      AbstractObject root = session.findObjectById(getEffectiveObjectId(config.getRootObjectId()));
       if (root instanceof Node)
       {
          if (((Node)root).isBridge())
@@ -304,7 +304,7 @@ public class PortViewElement extends ElementWidget
     */
    private boolean needRebuild()
    {
-      AbstractObject root = session.findObjectById(config.getRootObjectId());
+      AbstractObject root = session.findObjectById(getEffectiveObjectId(config.getRootObjectId()));
       if (root instanceof Node)
          return (!deviceViews.containsKey(root.getObjectId()) && ((Node)root).isBridge()) ||
                (deviceViews.containsKey(root.getObjectId()) && !((Node)root).isBridge());

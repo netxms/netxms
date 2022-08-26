@@ -22,8 +22,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -33,6 +33,9 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventTraceWidget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
+/**
+ * Event monitor element widget
+ */
 public class EventMonitorElement extends ElementWidget
 {
    private EventTraceWidget viewer;
@@ -79,13 +82,8 @@ public class EventMonitorElement extends ElementWidget
       }.start();
 
       viewer = new EventTraceWidget(getContentArea(), SWT.NONE, viewPart);
-      viewer.setRootObject(config.getObjectId());
-      viewer.getViewer().getControl().addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-
+      viewer.setRootObject(getEffectiveObjectId(config.getObjectId()));
+      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
          @Override
          public void focusGained(FocusEvent e)
          {
@@ -108,7 +106,7 @@ public class EventMonitorElement extends ElementWidget
    private void unsubscribe()
    {
       ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel %s", NXCSession.CHANNEL_EVENTS), null,
-            Activator.PLUGIN_ID, null) {
+            Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

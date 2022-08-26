@@ -70,7 +70,7 @@ public class StatusIndicatorElement extends ElementWidget
 		}
 		catch(final Exception e)
 		{
-			e.printStackTrace();
+         Activator.logError("Cannot parse dashboard element configuration", e);
 			config = new StatusIndicatorConfig();
 		}
 
@@ -103,18 +103,16 @@ public class StatusIndicatorElement extends ElementWidget
 			}
 		});
 
-		final NXCSession session = ConsoleSharedData.getSession();
-		ConsoleJob job = new ConsoleJob("Sync objects", viewPart, Activator.PLUGIN_ID, null) {
-         
+      final NXCSession session = ConsoleSharedData.getSession();
+      ConsoleJob job = new ConsoleJob("Synchronize objects", viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             List<Long> relatedOpbjects = new ArrayList<Long>();
-            relatedOpbjects.add(config.getObjectId());
+            relatedOpbjects.add(getEffectiveObjectId(config.getObjectId()));
             session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
-           
+
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {
@@ -122,11 +120,11 @@ public class StatusIndicatorElement extends ElementWidget
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return "Failed to sync objects";
+            return "Cannot synchronize objects";
          }
       };
       job.setUser(false);
@@ -140,8 +138,8 @@ public class StatusIndicatorElement extends ElementWidget
 	 */
 	protected void refreshData()
 	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final AbstractObject object = session.findObjectById(config.getObjectId());
+      final NXCSession session = ConsoleSharedData.getSession();
+      final AbstractObject object = session.findObjectById(getEffectiveObjectId(config.getObjectId()));
 		if (object != null)
 		{
 			status = object.getStatus();

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2022 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ public class SyslogMonitor extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel("Root object");
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getObjectId());

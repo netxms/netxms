@@ -98,7 +98,7 @@ public class SyslogMonitor extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel(i18n.tr("Root object"));
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getObjectId());

@@ -100,7 +100,7 @@ public class StatusIndicator extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
       objectSelector.setLabel(i18n.tr("Object"));
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());

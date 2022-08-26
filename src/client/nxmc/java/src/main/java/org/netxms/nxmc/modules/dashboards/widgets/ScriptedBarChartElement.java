@@ -25,12 +25,16 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.ScriptedBarChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Scripted bar chart element
  */
 public class ScriptedBarChartElement extends ScriptedComparisonChartElement
 {
+   private static final Logger logger = LoggerFactory.getLogger(ScriptedBarChartElement.class);
+
    private ScriptedBarChartConfig elementConfig;
 	
 	/**
@@ -47,14 +51,14 @@ public class ScriptedBarChartElement extends ScriptedComparisonChartElement
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
          elementConfig = new ScriptedBarChartConfig();
 		}
 
       processCommonSettings(elementConfig);
 
       script = elementConfig.getScript();
-      objectId = elementConfig.getObjectId();
+      objectId = getEffectiveObjectId(elementConfig.getObjectId());
 		refreshInterval = elementConfig.getRefreshRate();
 
       ChartConfiguration chartConfig = new ChartConfiguration();

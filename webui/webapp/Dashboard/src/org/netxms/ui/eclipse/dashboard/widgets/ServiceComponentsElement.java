@@ -73,11 +73,12 @@ public class ServiceComponentsElement extends ElementWidget
       processCommonSettings(config);
 
       session = ConsoleSharedData.getSession();
-      AbstractObject rootObject = session.findObjectById(config.getObjectId());
+      long rootObjectId = getEffectiveObjectId(config.getObjectId());
+      AbstractObject rootObject = session.findObjectById(rootObjectId);
 
-      mapPage = new NetworkMapPage(ServiceComponents.ID + rootObject.getObjectId());
+      mapPage = new NetworkMapPage(ServiceComponents.ID + rootObjectId);
       long elementId = mapPage.createElementId();
-      mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
+      mapPage.addElement(new NetworkMapObject(elementId, rootObjectId));
       addServiceComponents(rootObject, elementId);
 
       if (mapPage != null)

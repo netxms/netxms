@@ -65,6 +65,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * "General" property page for DCO
  */
+@SuppressWarnings("restriction")
 public class General extends AbstractDCIPropertyPage
 {		
    private static final String[] dataUnits = 
@@ -362,7 +363,6 @@ public class General extends AbstractDCIPropertyPage
       scheduleLink.setText("Configure");
       scheduleLink.setUnderlined(true);
       scheduleLink.addHyperlinkListener(new HyperlinkAdapter() {
-         @SuppressWarnings("restriction")
          @Override
          public void linkActivated(HyperlinkEvent e)
          {

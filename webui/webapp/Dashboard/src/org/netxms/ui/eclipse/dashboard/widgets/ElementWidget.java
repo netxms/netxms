@@ -303,4 +303,16 @@ public class ElementWidget extends DashboardComposite implements ControlListener
       AbstractObject object = dbc.getContext();
       return (object != null) ? object.getObjectId() : 0;
    }
+
+   /**
+    * Get effective object ID - if suppliet object ID is a context placeholder, returns ID of current context object, otherwise
+    * supplied ID itself.
+    * 
+    * @param objectId object ID to check
+    * @return supplied object ID or context object ID if supplied ID is context placeholder
+    */
+   protected long getEffectiveObjectId(long objectId)
+   {
+      return (objectId == AbstractObject.CONTEXT) ? getContextObjectId() : objectId;
+   }
 }

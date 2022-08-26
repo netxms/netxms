@@ -128,7 +128,7 @@ public class GeoMap extends DashboardElementPropertyPage
       zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, i18n.tr("Zoom"), 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		zoom.setSelection(config.getZoom());
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel(i18n.tr("Root object"));
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getRootObjectId());

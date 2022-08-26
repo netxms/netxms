@@ -79,9 +79,9 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
    protected RackDiagramElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
    {
       super(parent, element, viewPart);
-            
+
       this.viewPart = viewPart;
-      
+
       try
       {
          config = RackDiagramConfig.createFromXml(element.getData());
@@ -95,8 +95,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       processCommonSettings(config);
 
       session = ConsoleSharedData.getSession();
-      Rack rack = session.findObjectById(config.getObjectId(), Rack.class);
-
+      Rack rack = session.findObjectById(getEffectiveObjectId(config.getObjectId()), Rack.class);
       if (rack != null)
       {
          Color backgroundColor = ThemeEngine.getBackgroundColor("Rack");
@@ -196,7 +195,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
 
       createPopupMenu();
    }
-   
+
    /**
     * Create pop-up menu
     */
@@ -279,7 +278,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       this.rackFrontWidget = rackFrontWidget;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -288,7 +287,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       selectionListeners.add(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
     */
    @Override
@@ -297,7 +296,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       return selection;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
     */
    @Override
@@ -306,7 +305,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       selectionListeners.remove(listener);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
     */
    @Override

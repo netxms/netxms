@@ -22,8 +22,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
@@ -82,13 +82,8 @@ public class SnmpTrapMonitorElement extends ElementWidget
       }.start();
 
       viewer = new SnmpTrapTraceWidget(getContentArea(), SWT.NONE, viewPart);
-      viewer.setRootObject(config.getObjectId());
-      viewer.getViewer().getControl().addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-
+      viewer.setRootObject(getEffectiveObjectId(config.getObjectId()));
+      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
          @Override
          public void focusGained(FocusEvent e)
          {
@@ -111,7 +106,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
    private void unsubscribe()
    {
       ConsoleJob job = new ConsoleJob(String.format("Unsuscribing from channel %s", NXCSession.CHANNEL_SNMP_TRAPS), null,
-            Activator.PLUGIN_ID, null) {
+            Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

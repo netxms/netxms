@@ -23,12 +23,16 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.GeoMapConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.worldmap.widgets.ObjectGeoLocationViewer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Geo map element for dashboard
  */
 public class GeoMapElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(GeoMapElement.class);
+
 	private ObjectGeoLocationViewer mapWidget;
 	private GeoMapConfig config;
 	
@@ -46,14 +50,14 @@ public class GeoMapElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new GeoMapConfig();
 		}
 
       processCommonSettings(config);
 
       mapWidget = new ObjectGeoLocationViewer(getContentArea(), SWT.NONE, view);
-		mapWidget.setRootObjectId(config.getRootObjectId());
+      mapWidget.setRootObjectId(getEffectiveObjectId(config.getRootObjectId()));
 		mapWidget.showMap(config.getLatitude(), config.getLongitude(), config.getZoom());
 	}
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ public class PortView extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel(i18n.tr("Root object"));
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getRootObjectId());

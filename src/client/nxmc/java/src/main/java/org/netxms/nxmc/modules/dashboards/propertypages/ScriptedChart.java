@@ -93,7 +93,7 @@ public class ScriptedChart extends DashboardElementPropertyPage
       GridLayout layout = new GridLayout();
       dialogArea.setLayout(layout);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel(i18n.tr("Object"));
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getObjectId());

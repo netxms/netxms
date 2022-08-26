@@ -137,7 +137,7 @@ public class DciSummaryTable extends DashboardElementPropertyPage
       gd.horizontalSpan = 2;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel(i18n.tr("Base object"));
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getBaseObjectId());

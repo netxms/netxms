@@ -41,7 +41,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class GeoMap extends PropertyPage
 {
-	private GeoMapConfig config;
+   private GeoMapConfig config;
    private TitleConfigurator title;
 	private LabeledText latitude;
 	private LabeledText longitude;
@@ -84,11 +84,11 @@ public class GeoMap extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		longitude.setLayoutData(gd);
-		
+
 		zoom = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().GeoMap_Zoom, 0, 18, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		zoom.setSelection(config.getZoom());
-		
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getRootObjectId());

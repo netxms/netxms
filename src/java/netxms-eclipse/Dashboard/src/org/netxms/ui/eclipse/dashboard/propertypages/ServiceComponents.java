@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -87,7 +88,7 @@ public class ServiceComponents extends PropertyPage
       gd.horizontalSpan = 2;
       title.setLayoutData(gd);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
       objectSelector.setLabel("Container");
       objectSelector.setClassFilter(ObjectSelectionDialog.createContainerSelectionFilter());
       objectSelector.setObjectClass(AbstractObject.class);
@@ -97,7 +98,7 @@ public class ServiceComponents extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
-      
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Zoom level (%)");
       gd = new GridData();
@@ -112,17 +113,11 @@ public class ServiceComponents extends PropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       zoomLevelScale.setLayoutData(gd);
-      zoomLevelScale.addSelectionListener(new SelectionListener() {
+      zoomLevelScale.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             zoomLevelSpinner.setSelection(zoomLevelScale.getSelection());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
       
@@ -130,17 +125,11 @@ public class ServiceComponents extends PropertyPage
       zoomLevelSpinner.setMinimum(10);
       zoomLevelSpinner.setMaximum(400);
       zoomLevelSpinner.setSelection(config.getZoomLevel());
-      zoomLevelSpinner.addSelectionListener(new SelectionListener() {
+      zoomLevelSpinner.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             zoomLevelScale.setSelection(zoomLevelSpinner.getSelection());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
       
@@ -220,17 +209,11 @@ public class ServiceComponents extends PropertyPage
       routingAlgorithm.add("Manhattan");
       routingAlgorithm.select(config.getDefaultLinkRouting() - 1);
 
-      final SelectionListener listener = new SelectionListener() {
+      final SelectionListener listener = new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             linkColor.setEnabled(radioColorCustom.getSelection());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       };
 

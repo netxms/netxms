@@ -24,6 +24,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ScriptedBarChartConfig;
 
 /**
@@ -47,14 +48,14 @@ public class ScriptedBarChartElement extends ScriptedComparisonChartElement
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         Activator.logError("Cannot parse dashboard element configuration", e);
          elementConfig = new ScriptedBarChartConfig();
 		}
 
       processCommonSettings(elementConfig);
 
       script = elementConfig.getScript();
-      objectId = elementConfig.getObjectId();
+      objectId = getEffectiveObjectId(elementConfig.getObjectId());
 		refreshInterval = elementConfig.getRefreshRate();
 
       ChartConfiguration chartConfig = new ChartConfiguration();

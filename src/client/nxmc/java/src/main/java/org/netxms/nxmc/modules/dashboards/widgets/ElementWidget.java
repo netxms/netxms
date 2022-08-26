@@ -429,6 +429,18 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    }
 
    /**
+    * Get effective object ID - if suppliet object ID is a context placeholder, returns ID of current context object, otherwise
+    * supplied ID itself.
+    * 
+    * @param objectId object ID to check
+    * @return supplied object ID or context object ID if supplied ID is context placeholder
+    */
+   protected long getEffectiveObjectId(long objectId)
+   {
+      return (objectId == AbstractObject.CONTEXT) ? getContextObjectId() : objectId;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.widgets.MessageAreaHolder#addMessage(int, java.lang.String)
     */
    @Override

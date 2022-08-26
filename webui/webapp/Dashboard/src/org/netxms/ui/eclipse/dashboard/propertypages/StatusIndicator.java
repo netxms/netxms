@@ -48,9 +48,9 @@ public class StatusIndicator extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		config = (StatusIndicatorConfig)getElement().getAdapter(StatusIndicatorConfig.class);
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 
@@ -60,7 +60,7 @@ public class StatusIndicator extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
 		objectSelector.setLabel(Messages.get().StatusIndicator_Object);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
@@ -68,7 +68,7 @@ public class StatusIndicator extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		objectSelector.setLayoutData(gd);
-		
+
 		checkFullColors = new Button(dialogArea, SWT.CHECK);
 		checkFullColors.setText(Messages.get().StatusIndicator_UseFullColorRange);
 		checkFullColors.setSelection(config.isFullColorRange());

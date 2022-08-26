@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,22 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.DciSummaryTableConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.widgets.SummaryTableWidget;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DCI summary table element for dashboard
  */
 public class DciSummaryTableElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(DciSummaryTableElement.class);
+
 	private DciSummaryTableConfig config;
 	private SummaryTableWidget viewer;
 
@@ -48,21 +52,16 @@ public class DciSummaryTableElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new DciSummaryTableConfig();
 		}
 
       processCommonSettings(config);
 
-      viewer = new SummaryTableWidget(getContentArea(), SWT.NONE, view, config.getTableId(), config.getBaseObjectId());
+      viewer = new SummaryTableWidget(getContentArea(), SWT.NONE, view, config.getTableId(), getEffectiveObjectId(config.getBaseObjectId()));
       viewer.setShowNumLine(config.getNumRowShown());
 		viewer.setSortColumns(config.getSortingColumnList());
-      viewer.getViewer().getControl().addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-         
+      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
          @Override
          public void focusGained(FocusEvent e)
          {

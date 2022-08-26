@@ -101,7 +101,7 @@ public class ObjectStatusChart extends DashboardElementPropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
       objectSelector.setLabel(i18n.tr("Root object"));
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getRootObject());

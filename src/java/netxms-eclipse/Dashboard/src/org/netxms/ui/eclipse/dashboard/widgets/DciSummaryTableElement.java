@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,11 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
 import org.netxms.ui.eclipse.datacollection.widgets.SummaryTableWidget;
 
@@ -33,7 +34,7 @@ public class DciSummaryTableElement extends ElementWidget
 {
 	private DciSummaryTableConfig config;
 	private SummaryTableWidget viewer;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -48,21 +49,16 @@ public class DciSummaryTableElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         Activator.logError("Cannot parse dashboard element configuration", e);
 			config = new DciSummaryTableConfig();
 		}
-		
+
       processCommonSettings(config);
 
-      viewer = new SummaryTableWidget(getContentArea(), SWT.NONE, viewPart, config.getTableId(), config.getBaseObjectId());
+      viewer = new SummaryTableWidget(getContentArea(), SWT.NONE, viewPart, config.getTableId(), getEffectiveObjectId(config.getBaseObjectId()));
       viewer.setShowNumLine(config.getNumRowShown());
 		viewer.setSortColumns(config.getSortingColumnList());
-      viewer.getViewer().getControl().addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-         
+      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
          @Override
          public void focusGained(FocusEvent e)
          {

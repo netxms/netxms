@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ public class PortView extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		config = (PortViewConfig)getElement().getAdapter(PortViewConfig.class);
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 
 		GridLayout layout = new GridLayout();
@@ -58,7 +58,7 @@ public class PortView extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
 		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getRootObjectId());

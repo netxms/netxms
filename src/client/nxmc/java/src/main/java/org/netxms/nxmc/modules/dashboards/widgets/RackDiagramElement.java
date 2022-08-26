@@ -89,8 +89,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
       processCommonSettings(config);
 
       session = Registry.getSession();
-      Rack rack = session.findObjectById(config.getObjectId(), Rack.class);
-
+      Rack rack = session.findObjectById(getEffectiveObjectId(config.getObjectId()), Rack.class);
       if (rack != null)
       {
          Color backgroundColor = ThemeEngine.getBackgroundColor("Rack");

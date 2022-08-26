@@ -99,7 +99,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 		int[] objectCount = new int[6];
 		Arrays.fill(objectCount, 0);
 
-		AbstractObject root = session.findObjectById(elementConfig.getRootObject());
+      AbstractObject root = session.findObjectById(getEffectiveObjectId(elementConfig.getRootObject()));
 		if (root != null)
 			collectData(objectCount, root);
 

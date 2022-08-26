@@ -25,12 +25,16 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.ScriptedPieChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pie chart element
  */
 public class ScriptedPieChartElement extends ScriptedComparisonChartElement
 {
+   private static final Logger logger = LoggerFactory.getLogger(ScriptedPieChartElement.class);
+
    private ScriptedPieChartConfig elementConfig;
 
    /**
@@ -48,14 +52,14 @@ public class ScriptedPieChartElement extends ScriptedComparisonChartElement
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
          elementConfig = new ScriptedPieChartConfig();
 		}
 
       processCommonSettings(elementConfig);
 
       script = elementConfig.getScript();
-      objectId = elementConfig.getObjectId();
+      objectId = getEffectiveObjectId(elementConfig.getObjectId());
       refreshInterval = elementConfig.getRefreshRate();
 
       ChartConfiguration chartConfig = new ChartConfiguration();

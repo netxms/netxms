@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ public class DciSummaryTable extends PropertyPage
       gd.horizontalSpan = 2;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
 		objectSelector.setLabel(Messages.get().DciSummaryTable_BaseObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getBaseObjectId());
@@ -106,7 +106,7 @@ public class DciSummaryTable extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		objectSelector.setLayoutData(gd);
-		
+
 		tableSelector = new SummaryTableSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
 		tableSelector.setLabel(Messages.get().DciSummaryTable_SummaryTable);
 		tableSelector.setTableId(config.getTableId());
@@ -115,7 +115,7 @@ public class DciSummaryTable extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       tableSelector.setLayoutData(gd);
-      
+
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       gd.horizontalAlignment = SWT.FILL;
@@ -129,7 +129,7 @@ public class DciSummaryTable extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       numRowsShow = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Display limit (0 for unlimited)", 0, 10000, gd);
       numRowsShow.setSelection(config.getNumRowShown());
-      
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Ordering");
 
@@ -159,7 +159,7 @@ public class DciSummaryTable extends PropertyPage
             buttonRemove.setEnabled(selection.size() > 0);      
          }
       });
-      
+
       sortTables.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -196,7 +196,7 @@ public class DciSummaryTable extends PropertyPage
       gd.horizontalAlignment = SWT.LEFT;
       gd.grabExcessHorizontalSpace = true;
       leftButtons.setLayoutData(gd);
-      
+
       buttonUp = new Button(leftButtons, SWT.PUSH);
       buttonUp.setText("UP");
       buttonUp.addSelectionListener(new SelectionListener() {

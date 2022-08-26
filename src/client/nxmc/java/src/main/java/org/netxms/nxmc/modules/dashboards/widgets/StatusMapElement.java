@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,12 +25,16 @@ import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.objects.widgets.AbstractObjectStatusMap;
 import org.netxms.nxmc.modules.objects.widgets.FlatObjectStatusMap;
 import org.netxms.nxmc.modules.objects.widgets.RadialObjectStatusMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Status map element for dashboard
  */
 public class StatusMapElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(StatusMapElement.class);
+
 	private AbstractObjectStatusMap map;
 	private StatusMapConfig config;
 
@@ -49,7 +53,7 @@ public class StatusMapElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new StatusMapConfig();
 		}
 
@@ -63,9 +67,9 @@ public class StatusMapElement extends ElementWidget
       if (!config.isShowRadial())
 		   ((FlatObjectStatusMap)map).setGroupObjects(config.isGroupObjects());
       map.setHideObjectsInMaintenance(config.isHideObjectsInMaintenance());
-		map.setSeverityFilter(config.getSeverityFilter());
+      map.setSeverityFilter(config.getSeverityFilter());
       enableFilter(config.isShowTextFilter());
-		map.setRootObject(config.getObjectId());
+      map.setRootObject(getEffectiveObjectId(config.getObjectId()));
 
 		map.addRefreshListener(new Runnable() {
          @Override

@@ -99,7 +99,7 @@ public class RackDiagram extends DashboardElementPropertyPage
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
       objectSelector.setLabel(i18n.tr("Rack"));
       objectSelector.setClassFilter(ObjectSelectionDialog.createRackSelectionFilter());
       objectSelector.setObjectClass(AbstractObject.class);

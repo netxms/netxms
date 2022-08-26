@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,11 +56,11 @@ public class NetworkMap extends PropertyPage
 		config = (NetworkMapConfig)getElement().getAdapter(NetworkMapConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
+
       title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -83,7 +83,7 @@ public class NetworkMap extends PropertyPage
 		gd = new GridData();
 		gd.horizontalSpan = 2;
 		label.setLayoutData(gd);
-		
+
 		zoomLevelScale = new Scale(dialogArea, SWT.HORIZONTAL);
 		zoomLevelScale.setMinimum(10);
 		zoomLevelScale.setMaximum(400);

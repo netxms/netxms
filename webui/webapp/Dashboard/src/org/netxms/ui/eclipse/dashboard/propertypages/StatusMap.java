@@ -55,27 +55,27 @@ public class StatusMap extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
 		config = (StatusMapConfig)getElement().getAdapter(StatusMapConfig.class);
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
-		
+
       title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
+      objectSelector.setLabel(Messages.get().AlarmViewer_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
       gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		objectSelector.setLayoutData(gd);
-		
+
 		Group severityGroup = new Group(dialogArea, SWT.NONE);
 		severityGroup.setText(Messages.get().StatusMap_SeverityFilter);
 		gd = new GridData();

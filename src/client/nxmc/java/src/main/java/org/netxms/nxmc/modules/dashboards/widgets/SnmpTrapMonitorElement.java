@@ -22,8 +22,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.Registry;
@@ -54,7 +54,7 @@ public class SnmpTrapMonitorElement extends ElementWidget
     *
     * @param parent parent widget
     * @param element dashboard element definition
-    * @param view owning view part
+    * @param view owning view
     */
    protected SnmpTrapMonitorElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
@@ -89,13 +89,8 @@ public class SnmpTrapMonitorElement extends ElementWidget
       }.start();
 
       viewer = new SnmpTrapTraceWidget(getContentArea(), SWT.NONE, view);
-      viewer.setRootObject(config.getObjectId());
-      viewer.getViewer().getControl().addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-
+      viewer.setRootObject(getEffectiveObjectId(config.getObjectId()));
+      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
          @Override
          public void focusGained(FocusEvent e)
          {

@@ -53,7 +53,7 @@ public class ServiceComponentsElement extends ElementWidget
     * 
     * @param parent Dashboard control
     * @param element Dashboard element
-    * @param view viewPart
+    * @param view owning view
     */
    protected ServiceComponentsElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
    {
@@ -72,11 +72,12 @@ public class ServiceComponentsElement extends ElementWidget
       processCommonSettings(config);
 
       session = Registry.getSession();
-      AbstractObject rootObject = session.findObjectById(config.getObjectId());
+      long rootObjectId = getEffectiveObjectId(config.getObjectId());
+      AbstractObject rootObject = session.findObjectById(rootObjectId);
 
-      mapPage = new NetworkMapPage("ServiceComponents." + rootObject.getObjectId());
+      mapPage = new NetworkMapPage("ServiceComponents." + rootObjectId);
       long elementId = mapPage.createElementId();
-      mapPage.addElement(new NetworkMapObject(elementId, rootObject.getObjectId()));
+      mapPage.addElement(new NetworkMapObject(elementId, rootObjectId));
       addServiceComponents(rootObject, elementId);
 
       if (mapPage != null)

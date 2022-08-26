@@ -60,8 +60,8 @@ public class ObjectStatusChart extends PropertyPage
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
 		objectSelector.setLabel(Messages.get().ObjectStatusChart_RootObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getRootObject());
@@ -77,7 +77,7 @@ public class ObjectStatusChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
-		
+
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
 		optionsGroup.setText(Messages.get().ObjectStatusChart_Options);
 		gd = new GridData();
@@ -90,7 +90,7 @@ public class ObjectStatusChart extends PropertyPage
 		checkShowLegend = new Button(optionsGroup, SWT.CHECK);
 		checkShowLegend.setText(Messages.get().ObjectStatusChart_ShowLegend);
 		checkShowLegend.setSelection(config.isShowLegend());
-		
+
 		checkTransposed = new Button(optionsGroup, SWT.CHECK);
 		checkTransposed.setText(Messages.get().ObjectStatusChart_Transposed);
 		checkTransposed.setSelection(config.isTransposed());

@@ -52,7 +52,7 @@ public class ScriptedChart extends PropertyPage
       GridLayout layout = new GridLayout();
       dialogArea.setLayout(layout);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel("Object");
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getObjectId());

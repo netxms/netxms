@@ -129,7 +129,7 @@ public class ServiceComponents extends DashboardElementPropertyPage
       gd.horizontalSpan = 2;
       title.setLayoutData(gd);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
       objectSelector.setLabel(i18n.tr("Container"));
       objectSelector.setClassFilter(ObjectSelectionDialog.createContainerSelectionFilter());
       objectSelector.setObjectClass(AbstractObject.class);
@@ -139,7 +139,7 @@ public class ServiceComponents extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
-      
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText(i18n.tr("Zoom level (%)"));
       gd = new GridData();

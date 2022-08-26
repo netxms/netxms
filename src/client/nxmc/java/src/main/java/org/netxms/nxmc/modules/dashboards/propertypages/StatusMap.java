@@ -107,7 +107,7 @@ public class StatusMap extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
       objectSelector.setLabel(i18n.tr("Root object"));
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getObjectId());
@@ -161,11 +161,11 @@ public class StatusMap extends DashboardElementPropertyPage
 		checkShowFilter.setSelection(config.isShowTextFilter());
 		
 		checkRadial = new Button(optionsGroup, SWT.CHECK);
-      checkRadial.setText("Show in &radial form");
+      checkRadial.setText(i18n.tr("Show in &radial form"));
 		checkRadial.setSelection(config.isShowRadial());
       
       checkFitToScreen = new Button(optionsGroup, SWT.CHECK);
-      checkFitToScreen.setText("Fit to &screen");
+      checkFitToScreen.setText(i18n.tr("Fit to &screen"));
       checkFitToScreen.setSelection(config.isFitToScreen());
 
 		return dialogArea;

@@ -40,6 +40,8 @@ import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.tools.ViewRefreshController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -47,6 +49,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class StatusIndicatorElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(StatusIndicatorElement.class);
+
    private final I18n i18n = LocalizationHelper.getI18n(StatusIndicatorElement.class);
 
 	private StatusIndicatorConfig config;
@@ -73,7 +77,7 @@ public class StatusIndicatorElement extends ElementWidget
 		}
 		catch(final Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new StatusIndicatorConfig();
 		}
 
@@ -107,12 +111,12 @@ public class StatusIndicatorElement extends ElementWidget
 		});
 
       final NXCSession session = Registry.getSession();
-      Job job = new Job(i18n.tr("Sync objects"), view) {
+      Job job = new Job(i18n.tr("Synchronize objects"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             List<Long> relatedOpbjects = new ArrayList<Long>();
-            relatedOpbjects.add(config.getObjectId());
+            relatedOpbjects.add(getEffectiveObjectId(config.getObjectId()));
             session.syncMissingObjects(relatedOpbjects, true, NXCSession.OBJECT_SYNC_WAIT);
 
             runInUIThread(new Runnable() {
@@ -123,11 +127,11 @@ public class StatusIndicatorElement extends ElementWidget
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Failed to sync objects");
+            return i18n.tr("Cannot synchronize objects");
          }
       };
       job.setUser(false);
@@ -142,7 +146,7 @@ public class StatusIndicatorElement extends ElementWidget
 	protected void refreshData()
 	{
       final NXCSession session = Registry.getSession();
-		final AbstractObject object = session.findObjectById(config.getObjectId());
+      final AbstractObject object = session.findObjectById(getEffectiveObjectId(config.getObjectId()));
 		if (object != null)
 		{
 			status = object.getStatus();
