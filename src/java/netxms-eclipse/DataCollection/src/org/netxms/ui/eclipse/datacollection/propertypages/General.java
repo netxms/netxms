@@ -77,6 +77,7 @@ public class General extends AbstractDCIPropertyPage
       "b (IEC)",
       "Uptime", //special
       "Epoch time", //special
+      "dBm",
       "sr",
       "Hz",
       "N",

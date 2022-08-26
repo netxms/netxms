@@ -59,7 +59,7 @@ public class OverviewDciLabelProvider extends LabelProvider implements ITableLab
          case 0:
             return dci.getDescription();
          case 1:
-            return dci.getValue();
+            return dci.getFormattedValue(true, RegionalSettings.TIME_FORMATTER);
          case 2:            
             if (dci.getTimestamp().getTime() <= 1000)
                return null;

@@ -8,6 +8,7 @@ import org.eclipse.draw2d.GridLayout;
 import org.eclipse.draw2d.Label;
 import org.eclipse.swt.graphics.Color;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.resources.ThemeEngine;
 
 /**
@@ -32,7 +33,7 @@ public class NodeLastValuesFigure extends Figure
 			descr.setForegroundColor(color);
 			add(descr);
 			
-			Label value = new Label(v.getValue());
+			Label value = new Label(v.getFormattedValue(true, DateFormatFactory.TIME_FORMATTER));
 			value.setForegroundColor(color);
 			add(value);
 		}
