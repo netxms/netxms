@@ -52,7 +52,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
    m_tPrevValueTimeStamp = shadowCopy ? src->m_tPrevValueTimeStamp : 0;
    m_bCacheLoaded = shadowCopy ? src->m_bCacheLoaded : false;
 	m_multiplier = src->m_multiplier;
-	m_unitName = MemCopyString(src->m_unitName);
+	m_unitName = src->m_unitName;
 	m_snmpRawValueType = src->m_snmpRawValueType;
    _tcscpy(m_predictionEngine, src->m_predictionEngine);
 
@@ -108,7 +108,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 	m_resourceId = DBGetFieldULong(hResult, row, 14);
 	m_sourceNode = DBGetFieldULong(hResult, row, 15);
 	m_multiplier = DBGetFieldLong(hResult, row, 16);
-	m_unitName = DBGetField(hResult, row, 17, nullptr, 0);
+	m_unitName = DBGetFieldAsSharedString(hResult, row, 17);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 18, nullptr, 0);
 	m_systemTag = DBGetFieldAsSharedString(hResult, row, 19);
 	m_snmpPort = static_cast<UINT16>(DBGetFieldLong(hResult, row, 20));
@@ -178,7 +178,6 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
 	m_multiplier = 0;
-	m_unitName = nullptr;
 	m_snmpRawValueType = SNMP_RAWTYPE_NONE;
 	m_predictionEngine[0] = 0;
 
@@ -188,7 +187,7 @@ DCItem::DCItem(UINT32 id, const TCHAR *name, int source, int dataType, BYTE sche
 /**
  * Create DCItem from import file
  */
-DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : DCObject(config, owner)
+DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner) : DCObject(config, owner), m_unitName(config->getSubEntryValue(_T("unitName")))
 {
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
@@ -199,7 +198,6 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
 	m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
-	m_unitName = MemCopyString(config->getSubEntryValue(_T("unitName"), 0, _T("")));
 	m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
    _tcslcpy(m_predictionEngine, config->getSubEntryValue(_T("predictionEngine"), 0, _T("")), MAX_NPE_NAME_LEN);
 
@@ -233,7 +231,6 @@ DCItem::DCItem(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner
 DCItem::~DCItem()
 {
 	delete m_thresholds;
-	MemFree(m_unitName);
    clearCache();
 }
 
@@ -552,8 +549,7 @@ void DCItem::updateFromMessage(const NXCPMessage& msg, uint32_t *numMaps, uint32
    m_deltaCalculation = (BYTE)msg.getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
 	m_sampleCount = msg.getFieldAsInt16(VID_SAMPLE_COUNT);
 	m_multiplier = msg.getFieldAsInt32(VID_MULTIPLIER);
-	MemFree(m_unitName);
-	m_unitName = msg.getFieldAsString(VID_UNITS_NAME);
+	m_unitName = msg.getFieldAsSharedString(VID_UNITS_NAME);
 	m_snmpRawValueType = msg.getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
    msg.getFieldAsString(VID_NPE_NAME, m_predictionEngine, MAX_NPE_NAME_LEN);
 
@@ -1782,8 +1778,7 @@ void DCItem::updateFromTemplate(DCObject *src)
    m_snmpRawValueType = item->m_snmpRawValueType;
 
 	m_multiplier = item->m_multiplier;
-	MemFree(m_unitName);
-	m_unitName = MemCopyString(item->m_unitName);
+	m_unitName = item->m_unitName;
 
    // Copy thresholds
    // ***************************
@@ -1854,44 +1849,53 @@ void DCItem::createExportRecord(StringBuffer &xml) const
 {
    lock();
 
-   xml.appendFormattedString(_T("\t\t\t\t<dci id=\"%d\">\n")
-                             _T("\t\t\t\t\t<guid>%s</guid>\n")
-                          _T("\t\t\t\t\t<name>%s</name>\n")
-                          _T("\t\t\t\t\t<description>%s</description>\n")
-                          _T("\t\t\t\t\t<dataType>%d</dataType>\n")
-                          _T("\t\t\t\t\t<samples>%d</samples>\n")
-                          _T("\t\t\t\t\t<origin>%d</origin>\n")
-                          _T("\t\t\t\t\t<scheduleType>%d</scheduleType>\n")
-                          _T("\t\t\t\t\t<interval>%s</interval>\n")
-                          _T("\t\t\t\t\t<retentionType>%d</retentionType>\n")
-                          _T("\t\t\t\t\t<retention>%s</retention>\n")
-                          _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
-                          _T("\t\t\t\t\t<delta>%d</delta>\n")
-                          _T("\t\t\t\t\t<flags>%d</flags>\n")
-                          _T("\t\t\t\t\t<snmpRawValueType>%d</snmpRawValueType>\n")
-                          _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
-                          _T("\t\t\t\t\t<snmpVersion>%d</snmpVersion>\n")
-                          _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n")
-                          _T("\t\t\t\t\t<instanceRetentionTime>%d</instanceRetentionTime>\n")
-                          _T("\t\t\t\t\t<comments>%s</comments>\n")
-                          _T("\t\t\t\t\t<isDisabled>%s</isDisabled>\n"),
-                          _T("\t\t\t\t\t<unitName>%s</unitName>\n"),
-                          _T("\t\t\t\t\t<multiplier>%d</multiplier>\n"),
-								  (int)m_id, (const TCHAR *)m_guid.toString(),
-								  (const TCHAR *)EscapeStringForXML2(m_name),
-                          (const TCHAR *)EscapeStringForXML2(m_description),
-                          m_dataType, m_sampleCount, (int)m_source,
-                          m_pollingScheduleType,
-                          (const TCHAR *)EscapeStringForXML2(m_pollingIntervalSrc),
-                          m_retentionType,
-                          (const TCHAR *)EscapeStringForXML2(m_retentionTimeSrc),
-                          (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (int)m_deltaCalculation, m_flags,
-								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_snmpVersion,
-								  (int)m_instanceDiscoveryMethod, m_instanceRetentionTime,
-								  (const TCHAR *)EscapeStringForXML2(m_comments),
-								  (m_status == ITEM_STATUS_DISABLED) ? _T("true") : _T("false"),
-								  m_unitName, m_multiplier);
+   xml.append(_T("\t\t\t\t<dci id=\""));
+   xml.append(m_id);
+   xml.append(_T("\">\n\t\t\t\t\t<guid>"));
+   xml.append(m_guid);
+   xml.append(_T("</guid>\n\t\t\t\t\t<name>"));
+   xml.append(EscapeStringForXML2(m_name));
+   xml.append(_T("</name>\n\t\t\t\t\t<description>"));
+   xml.append(EscapeStringForXML2(m_description));
+   xml.append(_T("</description>\n\t\t\t\t\t<dataType>"));
+   xml.append(static_cast<int32_t>(m_dataType));
+   xml.append(_T("</dataType>\n\t\t\t\t\t<samples>"));
+   xml.append(m_sampleCount);
+   xml.append(_T("</samples>\n\t\t\t\t\t<origin>"));
+   xml.append(static_cast<int32_t>(m_source));
+   xml.append(_T("</origin>\n\t\t\t\t\t<scheduleType>"));
+   xml.append(static_cast<int32_t>(m_pollingScheduleType));
+   xml.append(_T("</scheduleType>\n\t\t\t\t\t<interval>"));
+   xml.append(EscapeStringForXML2(m_pollingIntervalSrc));
+   xml.append(_T("</interval>\n\t\t\t\t\t<retentionType>"));
+   xml.append(static_cast<int32_t>(m_retentionType));
+   xml.append(_T("</retentionType>\n\t\t\t\t\t<retention>"));
+   xml.append(EscapeStringForXML2(m_retentionTimeSrc));
+   xml.append(_T("</retention>\n\t\t\t\t\t<systemTag>"));
+   xml.append(EscapeStringForXML2(m_systemTag));
+   xml.append(_T("</systemTag>\n\t\t\t\t\t<delta>"));
+   xml.append(static_cast<int32_t>(m_deltaCalculation));
+   xml.append(_T("</delta>\n\t\t\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t\t\t<snmpRawValueType>"));
+   xml.append(m_snmpRawValueType);
+   xml.append(_T("</snmpRawValueType>\n\t\t\t\t\t<snmpPort>"));
+   xml.append(m_snmpPort);
+   xml.append(_T("</snmpPort>\n\t\t\t\t\t<snmpVersion>"));
+   xml.append(static_cast<int32_t>(m_snmpVersion));
+   xml.append(_T("</snmpVersion>\n\t\t\t\t\t<instanceDiscoveryMethod>"));
+   xml.append(m_instanceDiscoveryMethod);
+   xml.append(_T("</instanceDiscoveryMethod>\n\t\t\t\t\t<instanceRetentionTime>"));
+   xml.append(m_instanceRetentionTime);
+   xml.append(_T("</instanceRetentionTime>\n\t\t\t\t\t<comments>"));
+   xml.append(EscapeStringForXML2(m_comments));
+   xml.append(_T("</comments>\n\t\t\t\t\t<isDisabled>"));
+   xml.append((m_status == ITEM_STATUS_DISABLED) ? _T("true") : _T("false"));
+   xml.append(_T("</isDisabled>\n\t\t\t\t\t<unitName>"));
+   xml.append(EscapeStringForXML2(m_unitName));
+   xml.append(_T("</unitName>\n\t\t\t\t\t<multiplier>"));
+   xml.append(m_multiplier);
+   xml.append(_T("</multiplier>\n"));
 
 	if (m_transformationScriptSource != nullptr)
 	{

@@ -488,7 +488,7 @@ protected:
    time_t m_tPrevValueTimeStamp;
    bool m_bCacheLoaded;
 	int m_multiplier;
-	TCHAR *m_unitName;
+	SharedString m_unitName;
 	uint16_t m_snmpRawValueType;		// Actual SNMP raw value type for input transformation
 	TCHAR m_predictionEngine[MAX_NPE_NAME_LEN];
 
@@ -539,7 +539,7 @@ public:
 	int getSampleCount() const { return m_sampleCount; }
 	const TCHAR *getPredictionEngine() const { return m_predictionEngine; }
 	int getMultiplier() const { return m_multiplier; }
-	const TCHAR *getUnitName() const { return m_unitName; }
+	SharedString getUnitName() const { return GetAttributeWithLock(m_unitName, m_mutex); }
 
 	uint64_t getCacheMemoryUsage() const;
 
