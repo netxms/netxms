@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,17 +56,17 @@ public class DataSourceEditDlg extends Dialog
    private Button checkMultipeMatch;
 	private LabeledText instance;
 	private LabeledText dataColumn;
-	private boolean graphIsTemplate;
-	
+	private boolean isTemplate;
+
 	/**
 	 * @param parentShell
 	 * @param dci
 	 */
-	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean graphIsTemplate)
+	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean isTemplate)
 	{
 		super(parentShell);
 		this.dci = dci;
-		this.graphIsTemplate = graphIsTemplate;
+		this.isTemplate = isTemplate;
 	}
 
    /**
@@ -86,7 +86,7 @@ public class DataSourceEditDlg extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
@@ -94,7 +94,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 
       GridData gd = new GridData();
-      if (!graphIsTemplate)
+      if (!isTemplate)
       {
    		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
    		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
@@ -125,7 +125,7 @@ public class DataSourceEditDlg extends Dialog
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
 
-      if (graphIsTemplate)
+      if (isTemplate)
 		{
 		   dciName = new LabeledText(dialogArea, SWT.NONE);
 		   dciName.setLabel("DCI Name");
@@ -211,7 +211,7 @@ public class DataSourceEditDlg extends Dialog
       checkRawValues.setText("Raw values");
       checkRawValues.setSelection(dci.useRawValues);
 
-      if (graphIsTemplate)
+      if (isTemplate)
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
          checkMultipeMatch.setText("Multiple match");
@@ -237,7 +237,7 @@ public class DataSourceEditDlg extends Dialog
 	@Override
 	protected void okPressed()
 	{
-      if (graphIsTemplate)
+      if (isTemplate)
       {
          dci.dciName = dciName.getText();
          dci.dciDescription = dciDescription.getText();

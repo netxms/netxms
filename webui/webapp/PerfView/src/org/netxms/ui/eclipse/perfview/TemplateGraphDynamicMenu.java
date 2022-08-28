@@ -49,8 +49,8 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
    {
       evalService = (IEvaluationService)serviceLocator.getService(IEvaluationService.class);
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Menu, int)
     */
    @Override
@@ -70,7 +70,7 @@ public class TemplateGraphDynamicMenu extends ContributionItem implements IWorkb
          }
       }
       
-      if(firstNode == null)
+      if (firstNode == null)
          return;
 
       final AbstractNode node = firstNode;

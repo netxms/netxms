@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,8 +32,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -57,7 +57,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * DCI list editor for dashboard element
+ * Template data sources
  */
 public class TemplateDataSources extends PreferencePage
 {
@@ -66,7 +66,7 @@ public class TemplateDataSources extends PreferencePage
 	public static final int COLUMN_DESCRIPTION = 2;
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
-	
+
    private GraphDefinition config;
 	private DciTemplateListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
@@ -78,8 +78,7 @@ public class TemplateDataSources extends PreferencePage
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
 	private boolean saveToDatabase;
-   
-   
+
    /**
     * Constructor
     * @param settings
@@ -90,10 +89,10 @@ public class TemplateDataSources extends PreferencePage
       config = settings; 
       this.saveToDatabase = saveToDatabase;
    }
-	
-	/**
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -102,24 +101,23 @@ public class TemplateDataSources extends PreferencePage
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
-      
+
 		labelProvider = new DciTemplateListLabelProvider(dciList);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
-      
+
       final String[] columnNames = { Messages.get().DataSources_ColPosition, "DCI name", "DCI description", "Display name", Messages.get().DataSources_ColColor };
       final int[] columnWidths = { 40, 130, 200, 150, 50 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                       SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
       viewer.setInput(dciList.toArray());
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -140,19 +138,13 @@ public class TemplateDataSources extends PreferencePage
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.LEFT;
       leftButtons.setLayoutData(gridData);
-      
+
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().DataSources_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
-      upButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -166,13 +158,7 @@ public class TemplateDataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
-      downButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -198,13 +184,7 @@ public class TemplateDataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       importButton.setLayoutData(rd);
-      importButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      importButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -217,32 +197,20 @@ public class TemplateDataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             addItem();
          }
       });
-		
+
       editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText(Messages.get().DataSources_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
-      editButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -256,13 +224,7 @@ public class TemplateDataSources extends PreferencePage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -270,7 +232,7 @@ public class TemplateDataSources extends PreferencePage
 			}
       });
       deleteButton.setEnabled(false);
-		
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -303,17 +265,15 @@ public class TemplateDataSources extends PreferencePage
 		if (dlg.open() == Window.OK)
 		{
 		   List<DciValue> selection = dlg.getSelection();
-		   List<ChartDciConfig> select = new ArrayList<ChartDciConfig>();
+		   List<ChartDciConfig> newSelection = new ArrayList<ChartDciConfig>();
 			for(DciValue item : selection)
 			{
    			ChartDciConfig dci = new ChartDciConfig(item);
-   			
-   			select.add(dci);
+   			newSelection.add(dci);
    			dciList.add(dci);           
 			}
-			
          viewer.setInput(dciList.toArray());
-         viewer.setSelection(new StructuredSelection(select));
+         viewer.setSelection(new StructuredSelection(newSelection));
 		}
 	}
 
@@ -323,36 +283,29 @@ public class TemplateDataSources extends PreferencePage
    private void addItem()
    {
       ChartDciConfig dci = new ChartDciConfig();
-
       DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
       if (dlg.open() == Window.OK)
       {
-         List<ChartDciConfig> select = new ArrayList<ChartDciConfig>();select.add(dci);
-         select.add(dci);
          dciList.add(dci);
          viewer.setInput(dciList.toArray());
-         viewer.setSelection(new StructuredSelection(select));
+         viewer.setSelection(new StructuredSelection(dci));
       }
    }
-   	
+
 	/**
 	 * Edit selected item
 	 */
 	private void editItem()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
-	   
-		if (dci == null)
-			return;
-		
 		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
 		if (dlg.open() == Window.OK)
 		{
 		      viewer.update(dci, null);		      
 		}
 	}
-	
+
 	/**
 	 * Delete selected item(s)
 	 */
@@ -410,16 +363,14 @@ public class TemplateDataSources extends PreferencePage
 	protected void applyChanges(final boolean isApply)
 	{
       if (!isControlCreated())
-      {
          return;
-      }
-      
+
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
 		if (saveToDatabase && isApply)
 		{
 			setValid(false);
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.get().DataSources_JobName, null, Activator.PLUGIN_ID, null) {
+			final NXCSession session = ConsoleSharedData.getSession();
+			new ConsoleJob(Messages.get().DataSources_JobName, null, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{

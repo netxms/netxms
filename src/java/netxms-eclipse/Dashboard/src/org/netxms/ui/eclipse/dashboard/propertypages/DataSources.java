@@ -66,33 +66,34 @@ public class DataSources extends PropertyPage
 	public static final int COLUMN_METRIC = 2;
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
-	
+
 	private AbstractChartConfig config;
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
+   private Button addTemplateButton;
 	private Button editButton;
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
 	private ColorCache colorCache;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		config = (AbstractChartConfig)getElement().getAdapter(AbstractChartConfig.class);
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		colorCache = new ColorCache(dialogArea);
-		
+
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
-      
+
 		labelProvider = new DciListLabelProvider(dciList);
 		labelProvider.resolveDciNames(dciList);
 		
@@ -102,11 +103,10 @@ public class DataSources extends PropertyPage
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
-      
+
       final String[] columnNames = { Messages.get().DataSources_Pos, Messages.get().DataSources_Node, Messages.get().DataSources_Parameter, Messages.get().DataSources_Label, Messages.get().DataSources_Color };
       final int[] columnWidths = { 40, 130, 200, 150, 50 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                       SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
       viewer.disableSorting();
@@ -119,7 +119,7 @@ public class DataSources extends PropertyPage
 			}
 		});
       viewer.setInput(dciList.toArray());
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -140,7 +140,7 @@ public class DataSources extends PropertyPage
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.LEFT;
       leftButtons.setLayoutData(gridData);
-      
+
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(Messages.get().DataSources_Up);
       RowData rd = new RowData();
@@ -154,7 +154,7 @@ public class DataSources extends PropertyPage
 			}
       });
       upButton.setEnabled(false);
-      
+
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(Messages.get().DataSources_Down);
       rd = new RowData();
@@ -194,6 +194,19 @@ public class DataSources extends PropertyPage
 			}
       });
 		
+      addTemplateButton = new Button(rightButtons, SWT.PUSH);
+      addTemplateButton.setText("Add &template...");
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      addTemplateButton.setLayoutData(rd);
+      addTemplateButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            addTemplateItem();
+         }
+      });
+
       editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText(Messages.get().DataSources_Modify);
       rd = new RowData();
@@ -207,7 +220,7 @@ public class DataSources extends PropertyPage
 			}
       });
       editButton.setEnabled(false);
-		
+
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(Messages.get().DataSources_Delete);
       rd = new RowData();
@@ -221,7 +234,7 @@ public class DataSources extends PropertyPage
 			}
       });
       deleteButton.setEnabled(false);
-		
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -229,7 +242,7 @@ public class DataSources extends PropertyPage
             editItem();
 			}
       });
-      
+
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -241,7 +254,7 @@ public class DataSources extends PropertyPage
 				downButton.setEnabled(selection.size() == 1);
 			}
 		});
-		
+
 		return dialogArea;
 	}
 
@@ -254,7 +267,7 @@ public class DataSources extends PropertyPage
 		ChartDciConfig dci = (ChartDciConfig)item.getData();
 		if (dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR))
 			return;
-		
+
 		int width = viewer.getTable().getColumn(COLUMN_COLOR).getWidth();
 		Color color = ColorConverter.colorFromInt(dci.getColorAsInt(), colorCache);
 		event.gc.setForeground(colorCache.create(0, 0, 0));
@@ -273,20 +286,34 @@ public class DataSources extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 		   List<DciValue> selection = dlg.getSelection();
-		   List<ChartDciConfig> select = new ArrayList<ChartDciConfig>();		   
+		   List<ChartDciConfig> newSelection = new ArrayList<ChartDciConfig>();		   
 			for(DciValue item : selection)
 			{
 			   ChartDciConfig dci = new ChartDciConfig(item);
-			   select.add(dci);
+			   newSelection.add(dci);
    			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
-   			
             dciList.add(dci);
 			}			
          viewer.setInput(dciList.toArray());         
-         viewer.setSelection(new StructuredSelection(select));
+         viewer.setSelection(new StructuredSelection(newSelection));
 		}
 	}
-	
+
+   /**
+    * Add new template item
+    */
+   private void addTemplateItem()
+   {
+      ChartDciConfig dci = new ChartDciConfig();
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
+      if (dlg.open() == Window.OK)
+      {
+         dciList.add(dci);
+         viewer.setInput(dciList.toArray());
+         viewer.setSelection(new StructuredSelection(dci));
+      }
+   }
+
 	/**
 	 * Edit selected item
 	 */
@@ -296,14 +323,14 @@ public class DataSources extends PropertyPage
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
 		if (dci == null)
 			return;
-		
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false);
+
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, dci.getDciId() == 0);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);
 		}
 	}
-	
+
 	/**
 	 * Delete selected item(s)
 	 */

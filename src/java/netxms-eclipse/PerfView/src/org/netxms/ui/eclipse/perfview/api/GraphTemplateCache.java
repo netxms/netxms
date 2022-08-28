@@ -153,62 +153,42 @@ public class GraphTemplateCache
     *
     * @param node
     * @param template
-    * @param values
+    * @param dciList list of DCIs on target object
     * @param session
     * @param display
     * @throws IOException
     * @throws NXCException
     */
-   public static void instantiate(final AbstractNode node, GraphDefinition template, final DciValue[] values, NXCSession session, Display display) throws IOException, NXCException
+   public static void instantiate(final AbstractNode node, GraphDefinition template, final DciValue[] dciList, NXCSession session, Display display) throws IOException, NXCException
    {
       List<String> textsToExpand = new ArrayList<String>();
       textsToExpand.add(template.getTitle());
       String name = session.substituteMacros(new ObjectContext(node, null), textsToExpand, new HashMap<String, String>()).get(0);
       final GraphDefinition graphDefinition = new GraphDefinition(template, name);
- 
-      ChartDciConfig[] conf = graphDefinition.getDciList();
-      final HashSet<ChartDciConfig> newList = new HashSet<ChartDciConfig>();
-      int foundByDescription = -1;
-      int foundDCICount = 0;
-      //parse config and compare name as regexp and then compare description
-      for(int i = 0; i < conf.length; i++)
+
+      final HashSet<ChartDciConfig> chartMetrics = new HashSet<ChartDciConfig>();
+      for(ChartDciConfig dci : graphDefinition.getDciList())
       {
-         Pattern namePattern = Pattern.compile(conf[i].dciName);
-         Pattern descriptionPattern = Pattern.compile(conf[i].dciDescription);
-         int j;
-         for(j = 0; j < values.length; j++)
+         Pattern namePattern = dci.dciName.isEmpty() ? null : Pattern.compile(dci.dciName);
+         Pattern descriptionPattern = dci.dciDescription.isEmpty() ? null : Pattern.compile(dci.dciDescription);
+         for(int j = 0; j < dciList.length; j++)
          {
-            if (!conf[i].dciName.isEmpty() && namePattern.matcher(values[j].getName()).find())
+            if ((!dci.dciName.isEmpty() && namePattern.matcher(dciList[j].getName()).find()) ||
+                (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciList[j].getDescription()).find()))
             {
-               newList.add(new ChartDciConfig(values[j]));
-               foundDCICount++;
-               if(!conf[i].multiMatch)
+               chartMetrics.add(new ChartDciConfig(dciList[j]));
+               if (!dci.multiMatch)
                   break;
             }
-            if (!conf[i].dciDescription.isEmpty() && descriptionPattern.matcher(values[j].getDescription()).find())
-            {
-               foundByDescription = j;
-               if(conf[i].multiMatch)
-               {
-                  newList.add(new ChartDciConfig(values[j]));
-                  foundDCICount++;
-               }
-            }
-         }
-         
-         if (!conf[i].multiMatch && j == values.length && foundByDescription >= 0)
-         {
-            foundDCICount++;
-            newList.add(new ChartDciConfig(values[foundByDescription]));
          }
       }
-      if (foundDCICount > 0)
+      if (!chartMetrics.isEmpty())
       {
          display.syncExec(new Runnable() {
             @Override
             public void run()
             {
-               graphDefinition.setDciList(newList.toArray(new ChartDciConfig[newList.size()]));
+               graphDefinition.setDciList(chartMetrics.toArray(new ChartDciConfig[chartMetrics.size()]));
                showPredefinedGraph(graphDefinition, node.getObjectId());               
             }
          });
@@ -218,11 +198,11 @@ public class GraphTemplateCache
          display.syncExec(new Runnable() {
             @Override
             public void run()
-            {  
+            {
                MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "None of template DCI were found on a node.");
             }
          });
-       }
+      }
    }
 
    /**

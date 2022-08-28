@@ -361,7 +361,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          chart.addParameter(item);
       }
       updateDciInfo();
-      
+
       // Check that all DCI's are form one node
       if (chart.getItemCount() > 1)
          multipleSourceNodes = (nodeId != configuration.getDciList()[0].nodeId);
@@ -378,19 +378,11 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
    
    private void updateDciInfo()
    {
-      List<Long> nodeIds = new ArrayList<Long>();
-      List<Long> dciIds = new ArrayList<Long>();
-      
-      for(ChartDciConfig dci : configuration.getDciList())
-      {
-         nodeIds.add(dci.nodeId);
-         dciIds.add(dci.dciId);
-      }
-      ConsoleJob job = new ConsoleJob("Get DCI info", this, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob("Get DCI info", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+            final Map<Long, DciInfo> result = session.getDciInfo(configuration.getDciList());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -409,7 +401,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   }
                   chart.rebuild();
                   chartParent.layout(true, true);
-                  updateChart();                
+                  updateChart();
                }
             });
          }
@@ -902,7 +894,6 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);
-      //manager.add(actionSaveAsImage);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -1175,7 +1166,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
        */
       public void onPresetSelected(TimeUnit unit, int range);
    }
-   
+
    /**
     * Chart owner
     */
@@ -1187,7 +1178,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
        * @return current chart object
        */
       public Chart getChart();
-   } 
+   }
 
    /**
     * Show Graph configuration dialog

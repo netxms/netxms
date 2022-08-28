@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ public class DataSources extends PreferencePage
 	public static final int COLUMN_METRIC = 2;
 	public static final int COLUMN_LABEL = 3;
 	public static final int COLUMN_COLOR = 4;
-	
+
    private GraphDefinition config;
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
@@ -97,7 +97,7 @@ public class DataSources extends PreferencePage
       config = settings;     
       this.saveToDatabase = saveToDatabase;
    }
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -120,7 +120,7 @@ public class DataSources extends PreferencePage
 		layout.marginHeight = 0;
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
-      
+
       final String[] columnNames = { i18n.tr("Pos."), i18n.tr("Node"), i18n.tr("Parameter"), i18n.tr("Label"), i18n.tr("Color") };
       final int[] columnWidths = { 40, 130, 200, 150, 50 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -184,7 +184,7 @@ public class DataSources extends PreferencePage
 			}
       });
       upButton.setEnabled(false);
-      
+
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(i18n.tr("&Down"));
       rd = new RowData();
@@ -347,11 +347,11 @@ public class DataSources extends PreferencePage
 	 */
 	private void editItem()
 	{
-		IStructuredSelection selection = viewer.getStructuredSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
 		if (dci == null)
 			return;
-		
+
 		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, graphIsTemplate);
 		if (dlg.open() == Window.OK)
 		{

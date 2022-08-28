@@ -71,7 +71,7 @@ public class EditElementXmlDlg extends Dialog
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
-		
+
 		final Label label = new Label(dialogArea, SWT.NONE);
       label.setText(i18n.tr("XML configuration"));
 
@@ -81,8 +81,8 @@ public class EditElementXmlDlg extends Dialog
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
-		gd.minimumHeight = 300;
-		gd.minimumWidth = 400;
+      gd.heightHint = 500;
+      gd.widthHint = 600;
 		text.setLayoutData(gd);
 		text.setText(value);
 

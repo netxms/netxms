@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
@@ -115,23 +113,11 @@ public class GaugeElement extends ComparisonChartElement
     */
    private void updateDciInfo()
    {
-      List<Long> nodeIds = new ArrayList<Long>();
-      List<Long> dciIds = new ArrayList<Long>();
-      
-      for(ChartDciConfig dci : elementConfig.getDciList())
-      {
-         if (dci.getDisplayFormat() == null || dci.getDisplayFormat().isEmpty())
-         {
-            nodeIds.add(dci.nodeId);
-            dciIds.add(dci.dciId);
-         }
-      }
-      
-      ConsoleJob job = new ConsoleJob("Get DCI info", null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob("Get DCI info", null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+            final Map<Long, DciInfo> result = session.getDciInfo(elementConfig.getDciList());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -149,7 +135,7 @@ public class GaugeElement extends ComparisonChartElement
                      i++;
                   }
                   chart.rebuild();
-                  layout(true, true);          
+                  layout(true, true);
                }
             });
          }
@@ -162,7 +148,6 @@ public class GaugeElement extends ComparisonChartElement
       };
       job.setUser(false);
       job.start();
-      
    }
 
    /**

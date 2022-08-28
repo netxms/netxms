@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -122,8 +122,7 @@ public class DataSources extends PreferencePage
 
       final String[] columnNames = { Messages.get().DataSources_ColPosition, Messages.get().DataSources_ColNode, Messages.get().DataSources_ColParameter, Messages.get().DataSources_ColLabel, Messages.get().DataSources_ColColor };
       final int[] columnWidths = { 40, 130, 200, 150, 50 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                       SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
       viewer.disableSorting();
@@ -268,7 +267,7 @@ public class DataSources extends PreferencePage
 			}
       });
       deleteButton.setEnabled(false);
-		
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -276,19 +275,19 @@ public class DataSources extends PreferencePage
 				editButton.notifyListeners(SWT.Selection, new Event());
 			}
       });
-      
+
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				IStructuredSelection selection = viewer.getStructuredSelection();
 				editButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
 				upButton.setEnabled(selection.size() == 1);
 				downButton.setEnabled(selection.size() == 1);
 			}
 		});
-		
+
 		return dialogArea;
 	}
 
@@ -340,7 +339,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void editItem()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
 		if (dci == null)
 			return;
@@ -357,7 +356,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void deleteItems()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		for(Object o : selection.toList())
 			dciList.remove(o);
       viewer.setInput(dciList.toArray());
@@ -368,7 +367,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void moveUp()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		final IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			Object element = selection.getFirstElement();
@@ -387,7 +386,7 @@ public class DataSources extends PreferencePage
 	 */
 	private void moveDown()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		final IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			Object element = selection.getFirstElement();
@@ -417,12 +416,12 @@ public class DataSources extends PreferencePage
 		if (saveToDatabase && isApply)
 		{
 			setValid(false);
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.get().DataSources_JobName, null, Activator.PLUGIN_ID, null) {
+			final NXCSession session = ConsoleSharedData.getSession();
+			new ConsoleJob(Messages.get().DataSources_JobName, null, Activator.PLUGIN_ID) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph((GraphDefinition)config, false);
+               session.saveGraph((GraphDefinition)config, false);
 				}
 	
 				@Override
@@ -446,9 +445,9 @@ public class DataSources extends PreferencePage
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -456,9 +455,9 @@ public class DataSources extends PreferencePage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{

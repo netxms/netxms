@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,8 @@
 package org.netxms.nxmc.modules.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -32,6 +30,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.nxmc.base.widgets.ExtendedColorSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
@@ -52,9 +51,7 @@ public class DataSourceEditDlg extends Dialog
    private LabeledText displayFormat;
    private LabeledText dciName;
    private LabeledText dciDescription;
-	private Button colorAuto;
-	private Button colorCustom;
-	private ColorSelector colorSelector;
+   private ExtendedColorSelector colorSelector;
 	private Combo displayType;
 	private Button checkShowThresholds;
 	private Button checkInvertValues;
@@ -62,17 +59,17 @@ public class DataSourceEditDlg extends Dialog
    private Button checkMultipeMatch;
 	private LabeledText instance;
 	private LabeledText dataColumn;
-	private boolean graphIsTemplate;
-	
+	private boolean isTemplate;
+
 	/**
 	 * @param parentShell
 	 * @param dci
 	 */
-	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean graphIsTemplate)
+	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean isTemplate)
 	{
 		super(parentShell);
 		this.dci = dci;
-		this.graphIsTemplate = graphIsTemplate;
+		this.isTemplate = isTemplate;
 	}
 
    /**
@@ -92,7 +89,7 @@ public class DataSourceEditDlg extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
@@ -100,7 +97,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 
       GridData gd = new GridData();
-      if (!graphIsTemplate)
+      if (!isTemplate)
       {
    		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
          dciSelector.setLabel(i18n.tr("Data collection item"));
@@ -131,7 +128,7 @@ public class DataSourceEditDlg extends Dialog
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
 
-      if (graphIsTemplate)
+      if (isTemplate)
 		{
 		   dciName = new LabeledText(dialogArea, SWT.NONE);
 		   dciName.setLabel("DCI Name");
@@ -208,80 +205,32 @@ public class DataSourceEditDlg extends Dialog
       checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
       checkShowThresholds.setText(i18n.tr("Show &thresholds"));
       checkShowThresholds.setSelection(dci.showThresholds);
-      
+
       checkInvertValues = new Button(optionsGroup, SWT.CHECK);
       checkInvertValues.setText(i18n.tr("Invert values"));
       checkInvertValues.setSelection(dci.invertValues);
-      
+
       checkRawValues = new Button(optionsGroup, SWT.CHECK);
       checkRawValues.setText(i18n.tr("Raw values"));
       checkRawValues.setSelection(dci.useRawValues);
-      
-      if (graphIsTemplate)
+
+      if (isTemplate)
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
          checkMultipeMatch.setText(i18n.tr("Multiple match"));
          checkMultipeMatch.setSelection(dci.multiMatch);         
       }
 
-      /*** Color group ***/
-		Group colorGroup = new Group(dialogArea, SWT.NONE);
-      colorGroup.setText(i18n.tr("Color"));
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		colorGroup.setLayoutData(gd);
-		
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		colorGroup.setLayout(layout);
-		
-		colorAuto = new Button(colorGroup, SWT.RADIO);
-      colorAuto.setText(i18n.tr("&Automatic color"));
-		colorAuto.setSelection(dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
-		gd = new GridData();
-		gd.horizontalSpan = 2;
-		colorAuto.setLayoutData(gd);
-		colorAuto.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				colorSelector.setEnabled(false);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		colorCustom = new Button(colorGroup, SWT.RADIO);
-      colorCustom.setText(i18n.tr("&Custom color:"));
-		colorCustom.setSelection(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
-		colorCustom.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				colorSelector.setEnabled(true);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
-		colorSelector = new ColorSelector(colorGroup);
-		colorSelector.setColorValue(ColorConverter.rgbFromInt(dci.getColorAsInt()));
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.LEFT;
-		gd.grabExcessHorizontalSpace = true;
-		colorSelector.getButton().setLayoutData(gd);
-		colorSelector.setEnabled(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
-		
+      /*** Color ***/
+      colorSelector = new ExtendedColorSelector(dialogArea);
+      colorSelector.setLabels(i18n.tr("Color"), i18n.tr("&Automatic color"), i18n.tr("&Custom color:"));
+      colorSelector.setColorValue(dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR) ? null : ColorConverter.rgbFromInt(dci.getColorAsInt()));
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      colorSelector.setLayoutData(gd);
+
 		return dialogArea;
 	}
 
@@ -291,7 +240,7 @@ public class DataSourceEditDlg extends Dialog
 	@Override
 	protected void okPressed()
 	{
-      if (graphIsTemplate)
+      if (isTemplate)
       {
          dci.dciName = dciName.getText();
          dci.dciDescription = dciDescription.getText();
@@ -304,13 +253,14 @@ public class DataSourceEditDlg extends Dialog
       }
 		dci.name = name.getText();
 		dci.displayFormat = displayFormat.getText();
-		if (colorAuto.getSelection())
+      RGB color = colorSelector.getColorValue();
+      if (color == null)
 		{
 			dci.color = ChartDciConfig.UNSET_COLOR;
 		}
 		else
 		{
-			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue())); //$NON-NLS-1$
+         dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(color)); //$NON-NLS-1$
 		}
       dci.lineChartType = displayType.getSelectionIndex() - 1;
 		dci.showThresholds = checkShowThresholds.getSelection();

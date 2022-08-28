@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -34,7 +35,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataOrigin;
@@ -46,8 +46,10 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciInfo;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -71,6 +73,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
 	private NXCSession session;
+   private List<ChartDciConfig> runtimeDciList = new ArrayList<>();
 	private List<DataCacheElement> dataCache = new ArrayList<DataCacheElement>(16);
    private Action actionRefresh;
    private Action actionAdjustX;
@@ -85,8 +88,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 	public LineChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		session = (NXCSession)ConsoleSharedData.getSession();
-		
+      session = ConsoleSharedData.getSession();
+
 		try
 		{
 			config = LineChartConfig.createFromXml(element.getData());
@@ -118,28 +121,13 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       chartConfig.setModifyYBase(config.modifyYBase());
 
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.LINE, chartConfig);
-		for(ChartDciConfig dci : config.getDciList())
-         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
-      chart.rebuild();
-
-		refreshController = new ViewRefreshController(viewPart, config.getRefreshRate(), new Runnable() {
-			@Override
-			public void run()
-			{
-				if (LineChartElement.this.isDisposed())
-					return;
-				
-				refreshData();
-			}
-		});
-		updateDciInfo();
-		refreshData();
 
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            refreshController.dispose();
+            if (refreshController != null)
+               refreshController.dispose();
          }
       });
 
@@ -148,45 +136,87 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		   createActions();
 		   createChartContextMenu();
 		}
+
+      configureMetrics();
 	}   
-	
+
 	/**
-	 * Get DCI info (unit name and multiplier)
-	 */
-   private void updateDciInfo()
+    * Configure metrics on chart
+    */
+   private void configureMetrics()
    {
-      List<Long> nodeIds = new ArrayList<Long>();
-      List<Long> dciIds = new ArrayList<Long>();
-      
-      for(ChartDciConfig dci : config.getDciList())
-      {
-         nodeIds.add(dci.nodeId);
-         dciIds.add(dci.dciId);
-      }
-      
       ConsoleJob job = new ConsoleJob("Get DCI info", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+            DciValue[] nodeDciList = null;
+            for(ChartDciConfig dci : config.getDciList())
+            {
+               if ((dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT))
+               {
+                  AbstractObject contextObject = getContext();
+                  if (contextObject == null)
+                     continue;
+
+                  if (nodeDciList == null)
+                     nodeDciList = session.getLastValues(contextObject.getObjectId());
+
+                  Pattern namePattern = Pattern.compile(dci.dciName);
+                  Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
+                  for(DciValue dciInfo : nodeDciList)
+                  {
+                     if ((!dci.dciName.isEmpty() && namePattern.matcher(dciInfo.getName()).find()) ||
+                         (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
+                     {
+                        ChartDciConfig instance = new ChartDciConfig(dci);
+                        instance.nodeId = contextObject.getObjectId();
+                        instance.dciId = dciInfo.getId();
+                        runtimeDciList.add(instance);
+                        if (!dci.multiMatch)
+                           break;
+                     }
+                  }
+               }
+               else
+               {
+                  runtimeDciList.add(dci);
+               }
+            }
+
+            final Map<Long, DciInfo> result = session.getDciInfo(runtimeDciList);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  int i = 0;
-                  for(ChartDciConfig dci : config.getDciList())
+                  if (chart.isDisposed())
+                     return;
+
+                  for(ChartDciConfig dci : runtimeDciList)
                   {
-                     GraphItem item = chart.getItem(i);
+                     GraphItem item = new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32);
                      DciInfo info = result.get(dci.getDciId());
                      if (info != null)
                      {
                         item.setUnitName(info.getUnitName());
                         item.setMultipierPower(info.getMultipierPower());
                      }
-                     i++;
+                     chart.addParameter(item);
                   }
+
                   chart.rebuild();
                   layout(true, true);          
+                  refreshData();
+
+                  refreshController = new ViewRefreshController(viewPart, config.getRefreshRate(), new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        if (LineChartElement.this.isDisposed())
+                           return;
+
+                        refreshData();
+                     }
+                  });
                }
             });
          }
@@ -199,7 +229,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
       };
       job.setUser(false);
       job.start();
-      
    }
 
    /**
@@ -278,49 +307,48 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		
 		ConsoleJob job = new ConsoleJob(Messages.get().LineChartElement_JobTitle, viewPart, Activator.PLUGIN_ID) {
 			private ChartDciConfig currentDci;
-			
+
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final Date from = new Date(System.currentTimeMillis() - config.getTimeRangeMillis());
 				final Date to = new Date(System.currentTimeMillis());
-				final ChartDciConfig[] dciList = config.getDciList();
-				final DciData[] data = new DciData[dciList.length];
-				final Threshold[][] thresholds = new Threshold[dciList.length][];
-				for(int i = 0; i < dciList.length; i++)
-				{
-					currentDci = dciList[i];
-					if (currentDci.type == ChartDciConfig.ITEM)
-					{
-						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED);
-						thresholds[i] = session.getThresholds(currentDci.nodeId, currentDci.dciId);
-					}
-					else
-					{
-						data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
-						thresholds[i] = null;
-					}
-				}
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!((Widget)chart).isDisposed())
-						{
+            final DciData[] data = new DciData[runtimeDciList.size()];
+            final Threshold[][] thresholds = new Threshold[runtimeDciList.size()][];
+            for(int i = 0; i < runtimeDciList.size(); i++)
+            {
+               currentDci = runtimeDciList.get(i);
+               if (currentDci.type == ChartDciConfig.ITEM)
+               {
+                  data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0, HistoricalDataType.PROCESSED);
+                  thresholds[i] = session.getThresholds(currentDci.nodeId, currentDci.dciId);
+               }
+               else
+               {
+                  data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
+                  thresholds[i] = null;
+               }
+            }
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (!chart.isDisposed())
+                  {
                      dataCache.clear();
-							chart.setTimeRange(from, to);
-							for(int i = 0; i < data.length; i++)
-							{
-								chart.updateParameter(i, data[i], false);
-								dataCache.add(new DataCacheElement(dciList[i], data[i]));
-							}
-							chart.setThresholds(thresholds);
-							chart.refresh();
-							chart.clearErrors();
-						}
-						updateInProgress = false;
-					}
-				});
+                     chart.setTimeRange(from, to);
+                     for(int i = 0; i < data.length; i++)
+                     {
+                        chart.updateParameter(i, data[i], false);
+                        dataCache.add(new DataCacheElement(runtimeDciList.get(i), data[i]));
+                     }
+                     chart.setThresholds(thresholds);
+                     chart.refresh();
+                     chart.clearErrors();
+                  }
+                  updateInProgress = false;
+               }
+            });
 			}
 
 			@Override

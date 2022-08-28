@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.datacollection.views;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -49,6 +50,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
@@ -343,6 +345,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
             item.setDescription(session.getObjectName(dci.nodeId) + " - " + dci.getLabel());
          chart.addParameter(item);
       }
+      updateDciInfo();
 
       // Check that all DCI's are form one node
       if (chart.getItemCount() > 1)
@@ -356,6 +359,49 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       actionAutoRefresh.setChecked(configuration.isAutoRefresh());
       refreshMenuSelection();
       refreshController.setInterval(configuration.isAutoRefresh() ? configuration.getRefreshRate() : -1);
+   }
+
+   /**
+    * Get DCI info (unit name and multiplier)
+    */
+   private void updateDciInfo()
+   {
+      Job job = new Job("Get DCI info", this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final Map<Long, DciInfo> result = session.getDciInfo(configuration.getDciList());
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  int i = 0;
+                  for(ChartDciConfig dci : configuration.getDciList())
+                  {
+                     GraphItem item = chart.getItem(i);
+                     DciInfo info = result.get(dci.getDciId());
+                     if (info != null)
+                     {
+                        item.setUnitName(info.getUnitName());
+                        item.setMultipierPower(info.getMultipierPower());
+                     }
+                     i++;
+                  }
+                  chart.rebuild();
+                  chartParent.layout(true, true);
+                  updateChart();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**
@@ -397,7 +443,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          updateInProgress = false;
          return;
       }
-      
+
       // Request data from server
       Job job = new Job(i18n.tr("Get DCI values for history graph"), this) {
          private ChartDciConfig currentItem;

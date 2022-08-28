@@ -75,6 +75,7 @@ public class DataSources extends DashboardElementPropertyPage
 	private DciListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
+   private Button addTemplateButton;
 	private Button editButton;
 	private Button deleteButton;
 	private Button upButton;
@@ -129,11 +130,11 @@ public class DataSources extends DashboardElementPropertyPage
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		colorCache = new ColorCache(dialogArea);
-		
+
       dciList = new ArrayList<ChartDciConfig>();
       for(ChartDciConfig dci : config.getDciList())
       	dciList.add(new ChartDciConfig(dci));
-      
+
 		labelProvider = new DciListLabelProvider(dciList);
 		labelProvider.resolveDciNames(dciList);
 		
@@ -233,6 +234,19 @@ public class DataSources extends DashboardElementPropertyPage
 				addItem();
 			}
       });
+		
+      addTemplateButton = new Button(rightButtons, SWT.PUSH);
+      addTemplateButton.setText(i18n.tr("Add &template..."));
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      addTemplateButton.setLayoutData(rd);
+      addTemplateButton.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            addTemplateItem();
+         }
+      });
 
       editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText(i18n.tr("&Edit..."));
@@ -281,7 +295,7 @@ public class DataSources extends DashboardElementPropertyPage
 				downButton.setEnabled(selection.size() == 1);
 			}
 		});
-		
+
 		return dialogArea;
 	}
 
@@ -313,19 +327,33 @@ public class DataSources extends DashboardElementPropertyPage
 		if (dlg.open() == Window.OK)
 		{
 		   List<DciValue> selection = dlg.getSelection();
-		   List<ChartDciConfig> select = new ArrayList<ChartDciConfig>();		   
+		   List<ChartDciConfig> newSelection = new ArrayList<ChartDciConfig>();		   
 			for(DciValue item : selection)
 			{
 			   ChartDciConfig dci = new ChartDciConfig(item);
-			   select.add(dci);
+			   newSelection.add(dci);
    			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
-
             dciList.add(dci);
 			}			
          viewer.setInput(dciList.toArray());         
-         viewer.setSelection(new StructuredSelection(select));
+         viewer.setSelection(new StructuredSelection(newSelection));
 		}
 	}
+
+   /**
+    * Add new template item
+    */
+   private void addTemplateItem()
+   {
+      ChartDciConfig dci = new ChartDciConfig();
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
+      if (dlg.open() == Window.OK)
+      {
+         dciList.add(dci);
+         viewer.setInput(dciList.toArray());
+         viewer.setSelection(new StructuredSelection(dci));
+      }
+   }
 
 	/**
 	 * Edit selected item
@@ -337,13 +365,13 @@ public class DataSources extends DashboardElementPropertyPage
 		if (dci == null)
 			return;
 
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, dci.getDciId() == 0);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);
 		}
 	}
-	
+
 	/**
 	 * Delete selected item(s)
 	 */
@@ -373,7 +401,7 @@ public class DataSources extends DashboardElementPropertyPage
 			}
 		}
 	}
-
+	
 	/**
 	 * Move selected item down
 	 */

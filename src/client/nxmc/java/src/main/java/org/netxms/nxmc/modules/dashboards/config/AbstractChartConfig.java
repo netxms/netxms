@@ -51,7 +51,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 
 	@Element(required = false)
 	private int refreshRate = 30;
-   
+
    @Element(required = false)
    private double minYScaleValue = 0;
 
@@ -60,7 +60,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 
    @Element(required = false)
    private boolean modifyYBase = false;
-   
+
    @Element(required=false)
    private long drillDownObjectId = 0;
 

@@ -82,6 +82,7 @@ import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DCOStatusHolder;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -13406,16 +13407,16 @@ public class NXCSession
     * Get info for given DCI list
     *
     * @param nodeIds node identifiers
-    * @param dciIds  DCI identifiers (length must match length of node identifiers list)
-    * @return array of resolved DCI names
-    * @throws IOException  if socket I/O error occurs
+    * @param dciIds DCI identifiers (length must match length of node identifiers list)
+    * @return map with DCI information
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public Map<Long, DciInfo> getDciInfo(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
    {
-      if (nodeIds.size() == 0)
+      if (nodeIds.isEmpty())
          return new HashMap<Long, DciInfo>();
-   
+
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DCI_INFO);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.size());
       msg.setField(NXCPCodes.VID_NODE_LIST, nodeIds);
@@ -13423,14 +13424,54 @@ public class NXCSession
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      Map<Long, DciInfo> result = new HashMap<Long, DciInfo>();
-      int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      long varId = NXCPCodes.VID_DCI_LIST_BASE;
-      for(int i = 0; i < size; i++)
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+      Map<Long, DciInfo> result = new HashMap<Long, DciInfo>(count);
+      long fieldId = NXCPCodes.VID_DCI_LIST_BASE;
+      for(int i = 0; i < count; i++)
       {
-         result.put(response.getFieldAsInt64(varId++), new DciInfo(response, varId));         
-         varId+=2;
+         result.put(response.getFieldAsInt64(fieldId++), new DciInfo(response, fieldId));         
+         fieldId += 2;
       }
       return result;
+   }
+
+   /**
+    * Get info for given DCI list
+    *
+    * @param dciList list of DCI chart configurations
+    * @return map with DCI information
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<Long, DciInfo> getDciInfo(List<ChartDciConfig> dciList) throws IOException, NXCException
+   {
+      List<Long> nodeIds = new ArrayList<Long>(dciList.size());
+      List<Long> dciIds = new ArrayList<Long>(dciList.size());
+      for(ChartDciConfig dci : dciList)
+      {
+         nodeIds.add(dci.nodeId);
+         dciIds.add(dci.dciId);
+      }
+      return getDciInfo(nodeIds, dciIds);
+   }
+
+   /**
+    * Get info for given DCI list
+    *
+    * @param dciList list of DCI chart configurations
+    * @return map with DCI information
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<Long, DciInfo> getDciInfo(ChartDciConfig[] dciList) throws IOException, NXCException
+   {
+      List<Long> nodeIds = new ArrayList<Long>(dciList.length);
+      List<Long> dciIds = new ArrayList<Long>(dciList.length);
+      for(ChartDciConfig dci : dciList)
+      {
+         nodeIds.add(dci.nodeId);
+         dciIds.add(dci.dciId);
+      }
+      return getDciInfo(nodeIds, dciIds);
    }
 }

@@ -28,6 +28,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -75,8 +76,10 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			case DataSources.COLUMN_POSITION:
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case DataSources.COLUMN_NODE:
-            return session.getObjectName(dci.nodeId);
+            return ((dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT)) ? i18n.tr("<context>") : session.getObjectName(dci.nodeId);
 			case DataSources.COLUMN_METRIC:
+            if (dci.dciId == 0)
+               return dci.dciName;
 				String name = dciNameCache.get(dci.dciId);
             return (name != null) ? name : i18n.tr("<unresolved>");
 			case DataSources.COLUMN_LABEL:
@@ -99,7 +102,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
          protected void run(IProgressMonitor monitor) throws Exception
 			{
 				final Map<Long, String> names = session.dciIdsToNames(dciList);
-				
+
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -116,7 +119,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			}
 		}.runInForeground();
 	}
-	
+
 	/**
 	 * Add single cache entry
 	 * 

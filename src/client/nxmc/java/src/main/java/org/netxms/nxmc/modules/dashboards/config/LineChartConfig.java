@@ -30,10 +30,10 @@ public class LineChartConfig extends AbstractChartConfig
 {
 	@Element(required=false)
    private int timeUnits = TimeUnit.HOUR.getValue();
-	
+
 	@Element(required=false)
 	private int timeRange = 1;
-	
+
 	@Element(required = false)
 	private boolean showGrid = true;
 
@@ -45,13 +45,13 @@ public class LineChartConfig extends AbstractChartConfig
 
    @Element(required = false)
    private boolean stacked = false;
-   
+
    @Element(required = false)
    private int lineWidth = 2;
-   
+
    @Element(required = false)
    private boolean area = false;
-   
+
    @Element(required = false)
    private boolean interactive = false;
 
@@ -63,7 +63,7 @@ public class LineChartConfig extends AbstractChartConfig
       // for compatibility with older versions
       setTranslucent(true);
    }
-   
+
 	/**
 	 * Create line chart settings object from XML document
 	 * 

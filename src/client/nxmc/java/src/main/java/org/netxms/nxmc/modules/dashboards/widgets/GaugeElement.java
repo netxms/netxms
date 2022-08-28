@@ -18,8 +18,6 @@
  */
 package org.netxms.nxmc.modules.dashboards.widgets;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
@@ -108,29 +106,17 @@ public class GaugeElement extends ComparisonChartElement
       updateDciInfo();
 		startRefreshTimer();
 	}
-     
+   
    /**
     * Get DCI info (unit name and multiplier)
     */
    private void updateDciInfo()
    {
-      List<Long> nodeIds = new ArrayList<Long>();
-      List<Long> dciIds = new ArrayList<Long>();
-
-      for(ChartDciConfig dci : elementConfig.getDciList())
-      {
-         if (dci.getDisplayFormat() == null || dci.getDisplayFormat().isEmpty())
-         {
-            nodeIds.add(dci.nodeId);
-            dciIds.add(dci.dciId);
-         }
-      }
-
       Job job = new Job("Get DCI info", null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, DciInfo> result = session.getDciInfo(nodeIds, dciIds);
+            final Map<Long, DciInfo> result = session.getDciInfo(elementConfig.getDciList());
             runInUIThread(new Runnable() {
                @Override
                public void run()

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,15 +69,16 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * Template Graph Configuration
+ * Template graph manager
  */
 public class TemplateGraphView extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.TemplateGraphView"; //$NON-NLS-1$
+
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_DCI_NAME = 1;
    public static final int COLUMN_DCI_DESCRIPTION = 2;
-	
+
 	private NXCSession session;
 	private SortableTableViewer viewer;
 	private Action actionEdit;
@@ -94,7 +95,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 	}
 
    /**
@@ -152,7 +153,7 @@ public class TemplateGraphView extends ViewPart implements SessionListener
             saveGraph("", null, false);
          }
       };
-      
+
       actionDelete = new Action("Delete template graph") {
          @Override
          public void run()

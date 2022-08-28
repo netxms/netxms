@@ -42,55 +42,55 @@ public class ChartDciConfig implements NodeItemPair
    // Unset integer field indicator
    private static final int UNSET = -99;
 
-	@Attribute
-	public long nodeId;
+   @Attribute
+   public long nodeId;
 
-	@Attribute
-	public long dciId;
+   @Attribute
+   public long dciId;
 
-   @Element(required=false)
-	public String dciName;
+   @Element(required = false)
+   public String dciName;
 
-   @Element(required=false)
+   @Element(required = false)
    public String dciDescription;
 
-	@Element(required=false)
-	public int type;
+   @Element(required = false)
+   public int type;
 
-   @Element(required=false)
-	public String color;
+   @Element(required = false)
+   public String color;
 
-	@Element(required=false)
-	public String name;
+   @Element(required = false)
+   public String name;
 
-	@Element(required=false)
-	public int lineWidth;
+   @Element(required = false)
+   public int lineWidth;
 
    @Element(required = false)
    public int lineChartType;
 
    @Element(required = false)
-   protected int displayType;    // For compatibility, new configurations use lineChartType
+   protected int displayType; // For compatibility, new configurations use lineChartType
 
-	@Element(required=false)
-	public boolean showThresholds;
+   @Element(required = false)
+   public boolean showThresholds;
 
-   @Element(required=false)
+   @Element(required = false)
    public boolean invertValues;
 
-   @Element(required=false)
+   @Element(required = false)
    public boolean useRawValues;
 
-   @Element(required=false)
+   @Element(required = false)
    public boolean multiMatch;
 
-	@Element(required=false)
-	public String instance;
+   @Element(required = false)
+   public String instance;
 
-	@Element(required=false)
-	public String column;
+   @Element(required = false)
+   public String column;
 
-   @Element(required=false)
+   @Element(required = false)
    public String displayFormat;
 
 	/**
