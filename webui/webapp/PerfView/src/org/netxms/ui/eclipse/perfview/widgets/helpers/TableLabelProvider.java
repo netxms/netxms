@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,9 +51,9 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		keyColumnFont = new Font(Display.getCurrent(), fd);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -69,18 +69,18 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		this.columns = columns;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -88,13 +88,13 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 
       if (columnIndex >= row.size())
          return null;
-      
-      return new DataFormatter(useMultipliers ? "%{u,m}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getUnitName(), columns[columnIndex].getMultiplier()).format(row.get(columnIndex).getValue(), RegionalSettings.TIME_FORMATTER);
+
+      return new DataFormatter(useMultipliers ? "%{u,m}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getMeasurementUnit()).format(row.get(columnIndex).getValue(), RegionalSettings.TIME_FORMATTER);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableFontProvider#getFont(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableFontProvider#getFont(java.lang.Object, int)
+    */
 	@Override
 	public Font getFont(Object element, int columnIndex)
 	{
@@ -104,7 +104,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 			return keyColumnFont;
 		return null;
 	}
-	
+
 	/**
 	 * @param useMultipliers
 	 */
@@ -112,7 +112,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	{
 	   this.useMultipliers = useMultipliers;
 	}
-	
+
 	/**
 	 * @return
 	 */

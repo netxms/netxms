@@ -27,6 +27,7 @@ import org.netxms.client.HardwareComponent;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HardwareComponentCategory;
 import org.netxms.client.datacollection.DataFormatter;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.objects.widgets.HardwareInventory;
 
@@ -77,11 +78,11 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
                   return Long.toString(c.getCapacity()) + " mWh"; 
                case MEMORY_DEVICE:
                case STORAGE_DEVICE:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, "B (IEC)", 0).format(Long.toString(c.getCapacity()), DateFormatFactory.TIME_FORMATTER);
+                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.BYTES_IEC).format(Long.toString(c.getCapacity()), DateFormatFactory.TIME_FORMATTER);
                case NETWORK_ADAPTER:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, "bps", 0).format(Long.toString(c.getCapacity()), DateFormatFactory.TIME_FORMATTER); 
+                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.BPS_METRIC).format(Long.toString(c.getCapacity()), DateFormatFactory.TIME_FORMATTER);
                case PROCESSOR:
-                  return new DataFormatter("%{u,m}s", DataType.UINT64, "Hz", 0).format(Long.toString(c.getCapacity() * 1000000L), DateFormatFactory.TIME_FORMATTER);
+                  return new DataFormatter("%{u,m}s", DataType.UINT64, MeasurementUnit.HZ).format(Long.toString(c.getCapacity() * 1000000L), DateFormatFactory.TIME_FORMATTER);
                default:
                   break;
             }

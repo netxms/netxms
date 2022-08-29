@@ -13,6 +13,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Event;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
 import org.swtchart.IAxis.Direction;
@@ -104,15 +105,8 @@ abstract public class Series implements ISeries
 	/** the list of dispose listeners */
 	private List<IDisposeListener> listeners;
 	
-	/** name of units **/
-	private String unitName;
-	
-	/** if units are binary **/
-	private boolean isBinary;
-	
-	/** power of multiplier **/
-   private int multiplierPower;
-	
+   /** measurement unit **/
+   private MeasurementUnit measurementUnit;
 
 	/**
 	 * Constructor.
@@ -829,7 +823,7 @@ abstract public class Series implements ISeries
       return ((ySeries != null) && (ySeries.length > 0)) ? ySeries[0] : 0;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.swtchart.ISeries#getSize()
     */
    @Override
@@ -839,50 +833,22 @@ abstract public class Series implements ISeries
    }
 
    /**
-    * @return the unitName
+    * Get measurement unit.
+    *
+    * @return measurement unit
     */
-   public String getUnitName()
+   public MeasurementUnit getMeasurementUnit()
    {
-      return unitName;
+      return measurementUnit;
    }
 
    /**
-    * @param unitName the unitName to set
+    * Set measurement unit
+    *
+    * @param measurementUnit new measurement unit
     */
-   public void setUnitName(String unitName)
+   public void setUnitName(MeasurementUnit measurementUnit)
    {
-      this.unitName = unitName;
-   }
-
-   /**
-    * @return the isBinary
-    */
-   public boolean isBinary()
-   {
-      return isBinary;
-   }
-
-   /**
-    * @param isBinary the isBinary to set
-    */
-   public void setBinary(boolean isBinary)
-   {
-      this.isBinary = isBinary;
-   }
-
-   /**
-    * @return the multiplierPower
-    */
-   public int getMultiplierPower()
-   {
-      return multiplierPower;
-   }
-
-   /**
-    * @param multiplierPower the multiplierPower to set
-    */
-   public void setMultiplierPower(int multiplierPower)
-   {
-      this.multiplierPower = multiplierPower;
+      this.measurementUnit = measurementUnit;
    }
 }

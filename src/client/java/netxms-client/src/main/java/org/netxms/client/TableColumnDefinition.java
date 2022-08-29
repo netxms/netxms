@@ -5,6 +5,7 @@ package org.netxms.client;
 
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.DataType;
+import org.netxms.client.datacollection.MeasurementUnit;
 
 /**
  * Table column definition
@@ -15,8 +16,7 @@ public class TableColumnDefinition
 	private String displayName;
 	private DataType dataType;
 	private boolean instanceColumn;
-	private String unitName;
-	private int multiplier;
+   private MeasurementUnit measurementUnit;
 	
 	/**
 	 * @param name The name to set
@@ -30,8 +30,7 @@ public class TableColumnDefinition
 		this.displayName = (displayName != null) ? displayName : name;
 		this.dataType = dataType;
 		this.instanceColumn = instanceColumn;
-      this.unitName = "";
-      this.multiplier = 0;
+      this.measurementUnit = null;
 	}
 
 	/**
@@ -46,10 +45,9 @@ public class TableColumnDefinition
 		if (displayName == null)
 			displayName = name;
 		instanceColumn = msg.getFieldAsBoolean(baseId + 3);
-		unitName = msg.getFieldAsString(baseId + 4);
-		multiplier = msg.getFieldAsInt32(baseId + 5);
+      measurementUnit = new MeasurementUnit(msg, baseId + 4);
 	}
-	
+
 	/**
 	 * @param msg The NXCPMessage
 	 * @param baseId The base ID
@@ -97,16 +95,8 @@ public class TableColumnDefinition
    /**
     * @return the unitName
     */
-   public String getUnitName()
+   public MeasurementUnit getMeasurementUnit()
    {
-      return unitName;
-   }
-
-   /**
-    * @return the multiplier
-    */
-   public int getMultiplier()
-   {
-      return multiplier;
+      return measurementUnit;
    }
 }

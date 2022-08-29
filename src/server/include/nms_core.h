@@ -731,6 +731,7 @@ private:
    void getRelatedEventList(const NXCPMessage& request);
    void getDCIScriptList(const NXCPMessage& request);
 	void getDCIInfo(const NXCPMessage& request);
+   void getDciMeasurementUnits(const NXCPMessage& request);
    void getPerfTabDCIList(const NXCPMessage& request);
    void exportConfiguration(const NXCPMessage& request);
    void importConfiguration(const NXCPMessage& request);
@@ -887,7 +888,6 @@ private:
    void readMaintenanceJournal(const NXCPMessage& request);
    void writeMaintenanceJournal(const NXCPMessage& request);
    void updateMaintenanceJournal(const NXCPMessage& request);
-   void getDciInfo(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

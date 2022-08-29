@@ -27,7 +27,6 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
-import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
@@ -245,11 +244,7 @@ public class TableValueViewer extends BaseTableValueViewer
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          String instance = buildInstanceString(cells[i].getViewerRow());
-         DataOrigin source = currentData.getSource();
-
-         items.add(new GraphItem(objectId, dciId, source, column.getDataType(), 
-               currentData.getTitle(), column.getDisplayName() + ": " + instance.replace("~~~", " / "), 
-               instance, column.getName(), "%s"));  
+         items.add(new GraphItem(objectId, dciId, currentData.getTitle(), column.getDisplayName() + ": " + instance.replace("~~~", " / "), instance, column.getName(), "%s"));
       }
 
       Perspective p = view.getPerspective();

@@ -56,8 +56,6 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.constants.TimeUnit;
@@ -65,7 +63,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciInfo;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
@@ -364,7 +362,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       for(ChartDciConfig dci : configuration.getDciList())
       {
          nodeId |= dci.nodeId; // Check that all DCI's are from one node
-         GraphItem item = new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32);
+         GraphItem item = new GraphItem(dci);
          if (configuration.isShowHostNames())
             item.setDescription(session.getObjectName(dci.nodeId) + " - " + dci.getLabel());
          chart.addParameter(item);
@@ -391,7 +389,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, DciInfo> result = session.getDciInfo(configuration.getDciList());
+            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(configuration.getDciList());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -400,12 +398,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   for(ChartDciConfig dci : configuration.getDciList())
                   {
                      GraphItem item = chart.getItem(i);
-                     DciInfo info = result.get(dci.getDciId());
-                     if (info != null)
-                     {
-                        item.setUnitName(info.getUnitName());
-                        item.setMultipierPower(info.getMultipierPower());
-                     }
+                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
                      i++;
                   }
                   chart.rebuild();

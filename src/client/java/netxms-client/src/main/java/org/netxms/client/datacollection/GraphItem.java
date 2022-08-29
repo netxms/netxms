@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,6 @@
  */
 package org.netxms.client.datacollection;
 
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
-
 /**
  * This class represents single graph item (DCI)
  */
@@ -29,8 +26,6 @@ public class GraphItem
 	private long nodeId;
 	private long dciId;
 	private int type;
-   private DataOrigin source;
-	private DataType dataType;
 	private String name;
 	private String description;
    private String displayFormat;
@@ -41,8 +36,7 @@ public class GraphItem
    private int lineWidth;
    private boolean showThresholds;
    private boolean inverted;
-   private String unitName;
-   private int multipierPower;
+   private MeasurementUnit measurementUnit;
 
 	/**
 	 * Create graph item object with default values
@@ -52,8 +46,6 @@ public class GraphItem
 		nodeId = 0;
 		dciId = 0;
 		type = DataCollectionObject.DCO_TYPE_ITEM;
-      source = DataOrigin.AGENT;
-		dataType = DataType.STRING;
 		name = "<noname>";
 		description = "<noname>";
       displayFormat = "";
@@ -64,8 +56,7 @@ public class GraphItem
       lineWidth = 0;
       showThresholds = false;
       inverted = false;
-      unitName = null;
-      multipierPower = 0;
+      measurementUnit = null;
 	}
 
 	/**
@@ -73,21 +64,17 @@ public class GraphItem
     * 
     * @param nodeId The node ID
     * @param dciId The dci ID
-    * @param source The source
-    * @param dataType The data type
     * @param name The name
     * @param description The description
     * @param displayFormat The display format
     * @param lineChartType item line chart type (line or area)
     * @param color item color (-1 to use palette default)
     */
-   public GraphItem(long nodeId, long dciId, DataOrigin source, DataType dataType, String name, String description, String displayFormat, int lineChartType, int color)
+   public GraphItem(long nodeId, long dciId, String name, String description, String displayFormat, int lineChartType, int color)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
 		this.type = DataCollectionObject.DCO_TYPE_ITEM;
-		this.source = source;
-		this.dataType = dataType;
 		this.name = name;
 		this.description = description;
       this.displayFormat = displayFormat;
@@ -98,8 +85,7 @@ public class GraphItem
       this.lineWidth = 0;
       this.showThresholds = false;
       this.inverted = false;
-      unitName = null;
-      multipierPower = 0;
+      this.measurementUnit = null;
 	}
 
    /**
@@ -110,49 +96,44 @@ public class GraphItem
     * @param description The description
     * @param displayFormat The display format
     */
-   public GraphItem(DataType dataType, String name, String description, String displayFormat)
+   public GraphItem(String name, String description, String displayFormat)
    {
-      this(0, 0, DataOrigin.INTERNAL, dataType, name, description, displayFormat, ChartDciConfig.DEFAULT, -1);
+      this(0, 0, name, description, displayFormat, ChartDciConfig.DEFAULT, -1);
    }
 
    /**
     * Constructor for ITEM type from existing DCI value
     * 
     * @param dciValue DCI value
-    * @param source The source
     * @param displayFormat The display format
     */
-   public GraphItem(DciValue dciValue, DataOrigin source, String displayFormat)
+   public GraphItem(DciValue dciValue, String displayFormat)
    {
-      this(dciValue, source, displayFormat, ChartDciConfig.DEFAULT, -1);
+      this(dciValue, displayFormat, ChartDciConfig.DEFAULT, -1);
    }
 
    /**
     * Constructor for ITEM type from existing DCI value and applied styling
     * 
     * @param dciValue DCI value
-    * @param source The source
     * @param displayFormat The display format
     * @param lineChartType item line chart type (line or area)
     * @param color item color (-1 to use palette default)
     */
-   public GraphItem(DciValue dciValue, DataOrigin source, String displayFormat, int lineChartType, int color)
+   public GraphItem(DciValue dciValue, String displayFormat, int lineChartType, int color)
    {
-      this(dciValue.getNodeId(), dciValue.getId(), source, dciValue.getDataType(), dciValue.getName(), dciValue.getDescription(), displayFormat, lineChartType, color);
-      unitName = dciValue.getUnitName();
-      multipierPower = dciValue.getMultiplier();
+      this(dciValue.getNodeId(), dciValue.getId(), dciValue.getName(), dciValue.getDescription(), displayFormat, lineChartType, color);
+      measurementUnit = dciValue.getMeasurementUnit();
    }
 
    /**
     * Constructor for ITEM type from chart DCI configuration
     * 
     * @param dciConfig DCI configuration
-    * @param source DCI source (origin)
-    * @param dataType DCI data type
     */
-   public GraphItem(ChartDciConfig dciConfig, DataOrigin source, DataType dataType)
+   public GraphItem(ChartDciConfig dciConfig)
    {
-      this(dciConfig.nodeId, dciConfig.dciId, source, dataType, dciConfig.getDciName(), dciConfig.getLabel(), dciConfig.getDisplayFormat(), dciConfig.getLineChartType(), dciConfig.getColorAsInt());
+      this(dciConfig.nodeId, dciConfig.dciId, dciConfig.getDciName(), dciConfig.getLabel(), dciConfig.getDisplayFormat(), dciConfig.getLineChartType(), dciConfig.getColorAsInt());
       this.instance = dciConfig.instance;
       this.inverted = dciConfig.invertValues;
       this.lineWidth = dciConfig.lineWidth;
@@ -164,22 +145,17 @@ public class GraphItem
     * 
     * @param nodeId The node ID
     * @param dciId The dci ID
-    * @param source DCI source (origin)
-    * @param dataType DCI data type
     * @param name The name
     * @param description The description
     * @param instance The instance
     * @param dataColumn The data column
     * @param displayFormat The display format
 	 */
-   public GraphItem(long nodeId, long dciId, DataOrigin source, DataType dataType, String name, String description,
-        String instance, String dataColumn, String displayFormat)
+   public GraphItem(long nodeId, long dciId, String name, String description, String instance, String dataColumn, String displayFormat)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
 		this.type = DataCollectionObject.DCO_TYPE_TABLE;
-		this.source = source;
-		this.dataType = dataType;
 		this.name = name;
 		this.description = description;
       this.displayFormat = displayFormat;
@@ -224,41 +200,9 @@ public class GraphItem
 		this.dciId = dciId;
 	}
 
-	/**
-	 * @return the source
-	 */
-   public DataOrigin getSource()
-	{
-		return source;
-	}
-
-	/**
-	 * @param source the source to set
-	 */
-   public void setSource(DataOrigin source)
-	{
-		this.source = source;
-	}
-
-	/**
-	 * @return the dataType
-	 */
-	public DataType getDataType()
-	{
-		return dataType;
-	}
-
-	/**
-	 * @param dataType the dataType to set
-	 */
-	public void setDataType(DataType dataType)
-	{
-		this.dataType = dataType;
-	}
-
-	/**
-	 * @return the name
-	 */
+   /**
+    * @return the name
+    */
 	public String getName()
 	{
 		return name;
@@ -444,35 +388,23 @@ public class GraphItem
    }
 
    /**
-    * @return the unitName
+    * Get configured measurement unit.
+    *
+    * @return measurement unit or null
     */
-   public String getUnitName()
+   public MeasurementUnit getMeasurementUnit()
    {
-      return unitName;
+      return measurementUnit;
    }
 
    /**
-    * @param unitName the unitName to set
+    * Set measurement unit to use.
+    *
+    * @param measurementUnit new measurement unit
     */
-   public void setUnitName(String unitName)
+   public void setMeasurementUnit(MeasurementUnit measurementUnit)
    {
-      this.unitName = unitName;
-   }
-
-   /**
-    * @return the multipierPower
-    */
-   public int getMultiplierPower()
-   {
-      return multipierPower;
-   }
-
-   /**
-    * @param multipierPower the multipierPower to set
-    */
-   public void setMultipierPower(int multipierPower)
-   {
-      this.multipierPower = multipierPower;
+      this.measurementUnit = measurementUnit;
    }
 
    /**
@@ -481,8 +413,8 @@ public class GraphItem
    @Override
    public String toString()
    {
-      return "GraphItem [nodeId=" + nodeId + ", dciId=" + dciId + ", type=" + type + ", source=" + source + ", dataType=" + dataType + ", name=" + name + ", description=" + description +
+      return "GraphItem [nodeId=" + nodeId + ", dciId=" + dciId + ", type=" + type + ", name=" + name + ", description=" + description +
             ", displayFormat=" + displayFormat + ", dataColumn=" + dataColumn + ", instance=" + instance + ", lineChartType=" + lineChartType + ", color=" + color + ", lineWidth=" + lineWidth +
-            ", showThresholds=" + showThresholds + ", inverted=" + inverted + ", binaryUnit=" + ", unitName=" + unitName + ", multipierPower=" + multipierPower + "]";
+            ", showThresholds=" + showThresholds + ", inverted=" + inverted + ", binaryUnit=" + ", measurementUnit=" + measurementUnit + "]";
    }
 }

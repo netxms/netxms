@@ -70,7 +70,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_EVENT_DB_UPDATE"),
       _T("CMD_TRAP_CFG_UPDATE"),
       _T("CMD_SET_EVENT_INFO"),
-      _T("CMD_0x001B"), // was CMD_EVENT_DB_RECORD
+      _T("CMD_GET_DCI_MEASUREMENT_UNITS"),
       _T("CMD_LOAD_EVENT_DB"),
       _T("CMD_REQUEST_COMPLETED"),
       _T("CMD_LOAD_USER_DB"),
@@ -499,8 +499,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_WRITE_MAINTENANCE_JOURNAL"),
       _T("CMD_UPDATE_MAINTENANCE_JOURNAL"),
       _T("CMD_GET_SSH_CREDENTIALS"),
-      _T("CMD_UPDATE_SSH_CREDENTIALS"),
-      _T("CMD_DCI_INFO")
+      _T("CMD_UPDATE_SSH_CREDENTIALS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -513,7 +512,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_DCI_INFO))
+   if ((code >= CMD_LOGIN) && (code <= CMD_UPDATE_SSH_CREDENTIALS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

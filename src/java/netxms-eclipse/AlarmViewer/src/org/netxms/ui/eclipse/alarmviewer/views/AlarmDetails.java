@@ -61,7 +61,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.DataOrigin;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
@@ -633,7 +632,7 @@ public class AlarmDetails extends ViewPart
          chartConfiguration.setTranslucent(true);
 
          chart = new Chart(dataArea, SWT.NONE, ChartType.LINE, chartConfiguration);
-         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, null, ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
+         chart.addParameter(new GraphItem(dci, null, ChartDciConfig.AREA, ColorConverter.rgbToInt(new RGB(127, 154, 72))));
          chart.rebuild();
 
          dataViewControl = chart;

@@ -35,8 +35,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -123,12 +121,10 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       final Date to = new Date(System.currentTimeMillis());
       chart.setTimeRange(from, to);
 
-      GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, null, settings.getRuntimeName(), "", settings.getType(),
-            settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
+      GraphItem item = new GraphItem(nodeId, dci.getId(), null, settings.getRuntimeName(), "", settings.getType(), settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
       item.setInverted(settings.isInvertedValues());
       item.setShowThresholds(settings.isShowThresholds());
-      item.setUnitName(dci.getUnitName());
-      item.setMultipierPower(dci.getMultiplier());
+      item.setMeasurementUnit(dci.getMeasurementUnit());
       chart.addParameter(item);
 
 		addDisposeListener(new DisposeListener() {
@@ -230,12 +226,10 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 		synchronized(items)
 		{
 			items.add(dci);
-         GraphItem item = new GraphItem(nodeId, dci.getId(), DataOrigin.INTERNAL, DataType.INT32, null, settings.getRuntimeName(), "", settings.getType(),
-               settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
+         GraphItem item = new GraphItem(nodeId, dci.getId(), null, settings.getRuntimeName(), "", settings.getType(), settings.isAutomaticColor() ? -1 : settings.getColorAsInt());
          item.setInverted(settings.isInvertedValues());
          item.setShowThresholds(settings.isShowThresholds());
-         item.setUnitName(dci.getUnitName());
-         item.setMultipierPower(dci.getMultiplier());
+         item.setMeasurementUnit(dci.getMeasurementUnit());
          chart.addParameter(item);
 		}
 	}

@@ -21,13 +21,11 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
@@ -98,7 +96,7 @@ public class GaugeElement extends ComparisonChartElement
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
 		for(ChartDciConfig dci : elementConfig.getDciList())
-         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
+         chart.addParameter(new GraphItem(dci));
 
       chart.setPaletteEntry(0, new ChartColor(elementConfig.getCustomColor()));
       chart.rebuild();
@@ -116,7 +114,7 @@ public class GaugeElement extends ComparisonChartElement
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, DciInfo> result = session.getDciInfo(elementConfig.getDciList());
+            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(elementConfig.getDciList());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -125,12 +123,7 @@ public class GaugeElement extends ComparisonChartElement
                   for(ChartDciConfig dci : elementConfig.getDciList())
                   {
                      GraphItem item = chart.getItem(i);
-                     DciInfo info = result.get(dci.getDciId());
-                     if (info != null)
-                     {
-                        item.setUnitName(info.getUnitName());
-                        item.setMultipierPower(info.getMultipierPower());
-                     }
+                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
                      i++;
                   }
                   chart.rebuild();

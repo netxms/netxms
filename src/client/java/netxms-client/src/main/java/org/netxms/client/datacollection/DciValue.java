@@ -35,28 +35,27 @@ public abstract class DciValue
 
 	protected long id;					// DCI id
 	protected long nodeId;				// related node object id
-	private long templateDciId;	// related template DCI ID
+   protected long templateDciId; // related template DCI ID
 	protected String name;				// name
 	protected String description;	// description
 	protected String value;			// value
    protected DataOrigin source;  // data source (agent, SNMP, etc.)
 	protected DataType dataType;
 	protected int status;				// status (active, disabled, etc.)
-	private int errorCount;
-	private int dcObjectType;		// Data collection object type (item, table, etc.)
-	private Date timestamp;
-	private Threshold activeThreshold;
-	private int flags;
-	private String unitName;
-   private int multiplier;
+   protected int errorCount;
+   protected int dcObjectType; // Data collection object type (item, table, etc.)
+   protected Date timestamp;
+   protected Threshold activeThreshold;
+   protected int flags;
+   protected MeasurementUnit measurementUnit;
 
-	/**
-	 * Factory method to create correct DciValue subclass from NXCP message.
-	 * 
-	 * @param msg NXCP message
-	 * @param base Base variable ID for value object
-	 * @return DciValue object
-	 */
+   /**
+    * Factory method to create correct DciValue subclass from NXCP message.
+    * 
+    * @param msg NXCP message
+    * @param base Base variable ID for value object
+    * @return DciValue object
+    */
 	public static DciValue createFromMessage(NXCPMessage msg, long base)
 	{
 		int type = msg.getFieldAsInt32(base + 10);
@@ -101,8 +100,8 @@ public abstract class DciValue
 		dcObjectType = msg.getFieldAsInt32(fieldId++);
 		errorCount = msg.getFieldAsInt32(fieldId++);
 		templateDciId = msg.getFieldAsInt64(fieldId++);
-      unitName = msg.getFieldAsString(fieldId++);
-      multiplier = msg.getFieldAsInt32(fieldId++);
+      measurementUnit = new MeasurementUnit(msg, fieldId);
+      fieldId += 2;
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
@@ -119,9 +118,9 @@ public abstract class DciValue
 	 */
 	public String format(String formatString, TimeFormatter formatter)
 	{     
-      return new DataFormatter(formatString, dataType, unitName, multiplier).format(value, formatter);
+      return new DataFormatter(formatString, dataType, measurementUnit).format(value, formatter);
 	}
-   
+
    /**
     * Returns formated DCI value or string with format error and correct type of DCI value;
     * 
@@ -133,7 +132,7 @@ public abstract class DciValue
       int selection = getMultipliersSelection();
       String format = ((selection == DciValue.MULTIPLIERS_DEFAULT) && useMultipliers) || 
             (selection == DciValue.MULTIPLIERS_YES) ? "%{m,u}s" : "%{u}s" ;
-      return new DataFormatter(format, dataType, unitName, multiplier).format(value, formatter);
+      return new DataFormatter(format, dataType, measurementUnit).format(value, formatter);
    }
 
 	/**
@@ -279,17 +278,9 @@ public abstract class DciValue
    /**
     * @return the unitName
     */
-   public String getUnitName()
+   public MeasurementUnit getMeasurementUnit()
    {
-      return unitName;
-   }
-
-   /**
-    * @return the multiplier
-    */
-   public int getMultiplier()
-   {
-      return multiplier;
+      return measurementUnit;
    }
 
    /**
@@ -300,6 +291,6 @@ public abstract class DciValue
    {
       return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", source=" + source +
             ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" + timestamp + ", activeThreshold=" + activeThreshold +
-            ", flags=" + flags + ", unitName=" + unitName + ", multiplier=" + multiplier + "]";
+            ", flags=" + flags + ", measurementUnit=" + measurementUnit + "]";
    }
 }

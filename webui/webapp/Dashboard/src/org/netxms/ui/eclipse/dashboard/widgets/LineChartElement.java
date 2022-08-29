@@ -37,15 +37,13 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.DciInfo;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
@@ -183,7 +181,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                }
             }
 
-            final Map<Long, DciInfo> result = session.getDciInfo(runtimeDciList);
+            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -193,13 +191,8 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 
                   for(ChartDciConfig dci : runtimeDciList)
                   {
-                     GraphItem item = new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32);
-                     DciInfo info = result.get(dci.getDciId());
-                     if (info != null)
-                     {
-                        item.setUnitName(info.getUnitName());
-                        item.setMultipierPower(info.getMultipierPower());
-                     }
+                     GraphItem item = new GraphItem(dci);
+                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
                      chart.addParameter(item);
                   }
 

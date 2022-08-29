@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -137,6 +137,6 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
     */
    protected String getValueAsDisplayString(GraphItem dci, DataSeries data)
    {
-      return new DataFormatter(dci.getDisplayFormat(), dci.getDataType(), dci.getUnitName(), dci.getMultiplierPower()).format(data.getCurrentValueAsString(), DateFormatFactory.TIME_FORMATTER);
+      return new DataFormatter(dci.getDisplayFormat(), data.getDataType(), dci.getMeasurementUnit()).format(data.getCurrentValueAsString(), DateFormatFactory.TIME_FORMATTER);
    }
 }

@@ -29,7 +29,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
@@ -124,14 +123,14 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
                      {
                         GraphElement ge = new Gson().fromJson(e.getValue(), GraphElement.class);
                         String name = (ge.name != null) && !ge.name.isBlank() ? ge.name : e.getKey();
-                        item = new GraphItem(DataType.FLOAT, name, name, null);
+                        item = new GraphItem(name, name, null);
                         if ((ge.color != null) && !ge.color.isBlank())
                            item.setColor(ColorConverter.rgbToInt(ColorConverter.parseColorDefinition(ge.color)));
                         value = ge.value;
                      }
                      else
                      {
-                        item = new GraphItem(DataType.FLOAT, e.getKey(), e.getKey(), null);
+                        item = new GraphItem(e.getKey(), e.getKey(), null);
                         value = safeParseDouble(e.getValue());
                      }
                      int index = chart.addParameter(item);

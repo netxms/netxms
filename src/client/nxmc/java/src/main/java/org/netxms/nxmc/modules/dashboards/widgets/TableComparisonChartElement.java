@@ -31,8 +31,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableCell;
 import org.netxms.client.TableRow;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -216,7 +214,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
             if ((instanceMap.size() >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT) ||
 				    ((value == 0) && config.isIgnoreZeroValues()))
 					continue;
-            index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), DataOrigin.INTERNAL, DataType.INT32, Long.toString(config.getDciId()), instance, null, ChartDciConfig.DEFAULT, -1)); //$NON-NLS-1$
+            index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), Long.toString(config.getDciId()), instance, null, ChartDciConfig.DEFAULT, -1));
 				instanceMap.put(instance, index);
 				rebuild = true;
 			}

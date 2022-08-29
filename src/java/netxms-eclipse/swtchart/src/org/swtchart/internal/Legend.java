@@ -465,7 +465,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
       String format = "%{u}.3f";
       if (chart.isUseMultipliers())
          format = "%{u,m}.3f";
-      DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, series.getUnitName(), series.getMultiplierPower());
+      DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, series.getMeasurementUnit());
 
       gc.drawText(formatter.format(Double.toString(series.getCurY()), null), x, r.y, true);
       x += shift;

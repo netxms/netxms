@@ -91,7 +91,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.DciInfo;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.DciLastValue;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
@@ -13412,12 +13412,12 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Long, DciInfo> getDciInfo(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
+   public Map<Long, MeasurementUnit> getDciMeasurementUnits(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
    {
       if (nodeIds.isEmpty())
-         return new HashMap<Long, DciInfo>();
+         return new HashMap<Long, MeasurementUnit>();
 
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DCI_INFO);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_MEASUREMENT_UNITS);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.size());
       msg.setField(NXCPCodes.VID_NODE_LIST, nodeIds);
       msg.setField(NXCPCodes.VID_DCI_LIST, dciIds);
@@ -13425,25 +13425,25 @@ public class NXCSession
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      Map<Long, DciInfo> result = new HashMap<Long, DciInfo>(count);
+      Map<Long, MeasurementUnit> result = new HashMap<Long, MeasurementUnit>(count);
       long fieldId = NXCPCodes.VID_DCI_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         result.put(response.getFieldAsInt64(fieldId++), new DciInfo(response, fieldId));         
+         result.put(response.getFieldAsInt64(fieldId++), new MeasurementUnit(response, fieldId));         
          fieldId += 2;
       }
       return result;
    }
 
    /**
-    * Get info for given DCI list
+    * Get measurement units for given DCI list
     *
     * @param dciList list of DCI chart configurations
     * @return map with DCI information
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Long, DciInfo> getDciInfo(List<ChartDciConfig> dciList) throws IOException, NXCException
+   public Map<Long, MeasurementUnit> getDciMeasurementUnits(List<ChartDciConfig> dciList) throws IOException, NXCException
    {
       List<Long> nodeIds = new ArrayList<Long>(dciList.size());
       List<Long> dciIds = new ArrayList<Long>(dciList.size());
@@ -13452,7 +13452,7 @@ public class NXCSession
          nodeIds.add(dci.nodeId);
          dciIds.add(dci.dciId);
       }
-      return getDciInfo(nodeIds, dciIds);
+      return getDciMeasurementUnits(nodeIds, dciIds);
    }
 
    /**
@@ -13463,7 +13463,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Long, DciInfo> getDciInfo(ChartDciConfig[] dciList) throws IOException, NXCException
+   public Map<Long, MeasurementUnit> getDciMeasurementUnits(ChartDciConfig[] dciList) throws IOException, NXCException
    {
       List<Long> nodeIds = new ArrayList<Long>(dciList.length);
       List<Long> dciIds = new ArrayList<Long>(dciList.length);
@@ -13472,6 +13472,6 @@ public class NXCSession
          nodeIds.add(dci.nodeId);
          dciIds.add(dci.dciId);
       }
-      return getDciInfo(nodeIds, dciIds);
+      return getDciMeasurementUnits(nodeIds, dciIds);
    }
 }

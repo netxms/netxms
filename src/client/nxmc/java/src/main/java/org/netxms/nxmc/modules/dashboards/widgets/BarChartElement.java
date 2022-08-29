@@ -19,8 +19,6 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
-import org.netxms.client.constants.DataOrigin;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
@@ -75,7 +73,7 @@ public class BarChartElement extends ComparisonChartElement
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
 		for(ChartDciConfig dci : elementConfig.getDciList())
-         chart.addParameter(new GraphItem(dci, DataOrigin.INTERNAL, DataType.INT32));
+         chart.addParameter(new GraphItem(dci));
       chart.rebuild();
 
 		startRefreshTimer();

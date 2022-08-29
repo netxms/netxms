@@ -228,14 +228,6 @@ public class Legend extends Canvas implements ILegend, PaintListener
       chart.updateLayout();
    }
 
-   /*
-    * @see ILegend#getBounds(String)
-    */
-   public Rectangle getBounds(String seriesId)
-   {
-      return cellBounds.get(seriesId);
-   }
-
    /**
     * Sorts the given series array. For instance, if there are two stack series in horizontal orientation, the top of stack series
     * should appear at top of legend.
@@ -272,6 +264,14 @@ public class Legend extends Canvas implements ILegend, PaintListener
       }
 
       return sortedArray.toArray(new ISeries[0]);
+   }
+
+   /*
+    * @see ILegend#getBounds(String)
+    */
+   public Rectangle getBounds(String seriesId)
+   {
+      return cellBounds.get(seriesId);
    }
 
    /**
@@ -465,7 +465,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
       String format = "%{u}.3f";
       if (chart.isUseMultipliers())
          format = "%{u,m}.3f";
-      DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, series.getUnitName(), series.getMultiplierPower());
+      DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, series.getMeasurementUnit());
 
       gc.drawText(formatter.format(Double.toString(series.getCurY()), null), x, r.y, true);
       x += shift;

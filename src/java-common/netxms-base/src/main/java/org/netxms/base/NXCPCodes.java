@@ -50,7 +50,7 @@ public class NXCPCodes
 	public static final int CMD_EVENT_DB_UPDATE = 0x0018;
 	public static final int CMD_TRAP_CFG_UPDATE = 0x0019;
 	public static final int CMD_SET_EVENT_INFO = 0x001A;
-   // unused: public static final int CMD_EVENT_DB_RECORD = 0x001B;
+   public static final int CMD_GET_DCI_MEASUREMENT_UNITS = 0x001B;
 	public static final int CMD_LOAD_EVENT_DB = 0x001C;
 	public static final int CMD_REQUEST_COMPLETED = 0x001D;
 	public static final int CMD_LOAD_USER_DB = 0x001E;
@@ -472,7 +472,6 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_MAINTENANCE_JOURNAL = 0x01C6;
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
-   public static final int CMD_DCI_INFO = 0x01C9;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

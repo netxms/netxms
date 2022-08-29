@@ -309,7 +309,7 @@ public class ChartLegend extends Composite
          GraphItem item = chart.getItem(row);
          String format = (item.getDisplayFormat() == null || item.getDisplayFormat().isEmpty()) ? 
                ((useMultipliers) ? "%{m,u}.3f" : "%{u}.3f") :  item.getDisplayFormat();
-         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getUnitName(), item.getMultiplierPower());
+         DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getMeasurementUnit());
          dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), RegionalSettings.TIME_FORMATTER));
          if (chart.getType() == ChartType.LINE)
          {

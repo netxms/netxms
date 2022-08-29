@@ -30,10 +30,8 @@ import org.netxms.client.constants.DataType;
 public class DataFormatter
 {
    private String formatString;
-   private boolean useBinaryMultipliers = false;
    private DataType dataType;
-   private String unitName = null;
-   private int multiplierPower;
+   private MeasurementUnit unit;
 
    /**
     * Create new data formatter with binary multipliers option set to off.
@@ -45,9 +43,7 @@ public class DataFormatter
    {
       this.formatString = formatString;
       this.dataType = dataType;
-      this.useBinaryMultipliers = false;
-      this.unitName = null;
-      this.multiplierPower = 0;
+      this.unit = null;
    }
 
    /**
@@ -55,21 +51,15 @@ public class DataFormatter
     * 
     * @param formatString format string
     * @param dataType data type
-    * @param unitName name of the unit
-    * @param multiplierPower fixed power of the multiplier (0 for automatic selection)
+    * @param unit measurement unit
     */
-   public DataFormatter(String formatString, DataType dataType, String unitName, int multiplierPower)
+   public DataFormatter(String formatString, DataType dataType, MeasurementUnit unit)
    {
       this.formatString = formatString;
       this.dataType = dataType;
-      if (unitName != null)
-      {
-         this.useBinaryMultipliers = unitName.contains(" (IEC)");
-         this.unitName = unitName.replace(" (IEC)", "").replace(" (Metric)", "");
-      }
+      this.unit = unit;
       if (formatString == null || formatString.isEmpty())
          this.formatString = "%{m,u}s";
-      this.multiplierPower = multiplierPower;
    }
 
    /**
@@ -83,9 +73,6 @@ public class DataFormatter
    {
       if (value == null || value.isEmpty())
          return "";
-      
-      /*
-      */
       
       StringBuilder sb = new StringBuilder();
       char[] format = formatString.toCharArray();
@@ -124,7 +111,7 @@ public class DataFormatter
                         {
                            if ((item.trim().compareToIgnoreCase("u") == 0) || (item.trim().compareToIgnoreCase("units") == 0))
                            {
-                              useUnits = unitName != null && !unitName.isEmpty();
+                              useUnits = unit != null;
                            }
                            else if ((item.trim().compareToIgnoreCase("m") == 0) || (item.trim().compareToIgnoreCase("multipliers") == 0))
                            {
@@ -134,24 +121,23 @@ public class DataFormatter
                      }
                      i = end + 1;
                   }
-                     
                }
-               
+
                int j;
                for(j = i; (j < format.length) && !Character.isLetter(format[j]); j++)
                   ;
-               
+
                if (j + 1 < format.length && (format[j] == 't' || format[j] == 'T') && Character.isLetter(format[j + 1])) //t or T is prefix for date and time conversion characters
                   j++;
 
                final String f = "%" + new String(Arrays.copyOfRange(format, i, j + 1));
                i = j;
-               
-               if (useUnits && unitName.equals("Uptime")) 
+
+               if (useUnits && unit.getName().equals("Uptime"))
                {      
                   sb.append(formatter.formatUptime((long)Double.parseDouble(value)));   
                }
-               else if (useUnits && unitName.equals("Epoch time"))
+               else if (useUnits && unit.getName().equals("Epoch time"))
                {
                   sb.append(formatter.formatDateAndTime((long)Double.parseDouble(value)));
                }
@@ -168,7 +154,7 @@ public class DataFormatter
                         {
                            sb.append(" ");
                         }
-                        sb.append(unitName);
+                        sb.append(unit.getName());
                      }
                   }
                   catch(IndexOutOfBoundsException | IllegalFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
@@ -215,6 +201,8 @@ public class DataFormatter
       {
          if (useMultipliers)
          {
+            boolean useBinaryMultipliers = (unit != null) && unit.isBinary();
+            int multiplierPower = (unit != null) ? unit.getMultipierPower() : 0;
             final long[] multipliers = useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
             Double d = Double.parseDouble(value);
             int i;

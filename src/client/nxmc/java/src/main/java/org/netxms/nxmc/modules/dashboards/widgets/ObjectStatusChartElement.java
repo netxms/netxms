@@ -20,7 +20,6 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import java.util.Arrays;
 import org.eclipse.swt.SWT;
-import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -73,7 +72,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
-         chart.addParameter(new GraphItem(DataType.INT32, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), null)); //$NON-NLS-1$
+         chart.addParameter(new GraphItem(StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), null));
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}
       chart.rebuild();
