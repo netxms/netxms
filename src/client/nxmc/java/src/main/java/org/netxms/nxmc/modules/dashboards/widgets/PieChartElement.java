@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.PieChartConfig;
@@ -67,11 +66,7 @@ public class PieChartElement extends ComparisonChartElement
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
-      for(ChartDciConfig dci : elementConfig.getDciList())
-         chart.addParameter(new GraphItem(dci));
-      chart.rebuild();
-
-		startRefreshTimer();
+      configureMetrics();
 	}
 
    /**

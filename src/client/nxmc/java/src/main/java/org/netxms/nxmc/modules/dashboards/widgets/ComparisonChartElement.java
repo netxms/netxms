@@ -18,7 +18,11 @@
  */
 package org.netxms.nxmc.modules.dashboards.widgets;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -30,7 +34,11 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -50,16 +58,18 @@ public abstract class ComparisonChartElement extends ElementWidget
 	protected NXCSession session;
 	protected int refreshInterval = 30;
 	protected boolean updateThresholds = false;
-	
+   protected List<ChartDciConfig> runtimeDciList = new ArrayList<>();
+
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
 
-	/**
-	 * @param parent
-	 * @param data
-	 */
+   /**
+    * @param parent parent composite
+    * @param element dashboard element
+    * @param view owning view
+    */
    public ComparisonChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
-	{
+   {
       super(parent, element, view);
       session = Registry.getSession();
 
@@ -71,7 +81,81 @@ public abstract class ComparisonChartElement extends ElementWidget
                refreshController.dispose();
          }
       });
-	}
+   }
+
+   /**
+    * Configure metrics on chart and start refresh timer on success
+    */
+   protected void configureMetrics()
+   {
+      Job job = new Job("Reading measurement unit information", view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            DciValue[] nodeDciList = null;
+            for(ChartDciConfig dci : getDciList())
+            {
+               if ((dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT))
+               {
+                  AbstractObject contextObject = getContext();
+                  if (contextObject == null)
+                     continue;
+
+                  if (nodeDciList == null)
+                     nodeDciList = session.getLastValues(contextObject.getObjectId());
+
+                  Pattern namePattern = Pattern.compile(dci.dciName);
+                  Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
+                  for(DciValue dciInfo : nodeDciList)
+                  {
+                     if ((!dci.dciName.isEmpty() && namePattern.matcher(dciInfo.getName()).find()) || (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
+                     {
+                        ChartDciConfig instance = new ChartDciConfig(dci);
+                        instance.nodeId = contextObject.getObjectId();
+                        instance.dciId = dciInfo.getId();
+                        runtimeDciList.add(instance);
+                        if (!dci.multiMatch)
+                           break;
+                     }
+                  }
+               }
+               else
+               {
+                  runtimeDciList.add(dci);
+               }
+            }
+
+            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(runtimeDciList);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (chart.isDisposed())
+                     return;
+
+                  for(ChartDciConfig dci : runtimeDciList)
+                  {
+                     GraphItem item = new GraphItem(dci);
+                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
+                     chart.addParameter(item);
+                  }
+
+                  chart.rebuild();
+                  layout(true, true);
+                  startRefreshTimer();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot read measurement unit information");
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
 
 	/**
 	 * Start refresh timer
@@ -85,16 +169,16 @@ public abstract class ComparisonChartElement extends ElementWidget
 				if (ComparisonChartElement.this.isDisposed())
 					return;
 				
-				refreshData(getDciList());
+            refreshData();
 			}
 		});
-		refreshData(getDciList());
+      refreshData();
 	}
 
 	/**
 	 * Refresh graph's data
 	 */
-	protected void refreshData(final ChartDciConfig[] dciList)
+   protected void refreshData()
 	{
 		if (updateInProgress)
 			return;
@@ -105,23 +189,25 @@ public abstract class ComparisonChartElement extends ElementWidget
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final DciData[] data = new DciData[dciList.length];
-				for(int i = 0; i < dciList.length; i++)
+            final DciData[] data = new DciData[runtimeDciList.size()];
+            for(int i = 0; i < runtimeDciList.size(); i++)
 				{
-					if (dciList[i].type == ChartDciConfig.ITEM)
-						data[i] = session.getCollectedData(dciList[i].nodeId, dciList[i].dciId, null, null, 1, HistoricalDataType.PROCESSED);
+               ChartDciConfig dci = runtimeDciList.get(i);
+               if (dci.type == ChartDciConfig.ITEM)
+                  data[i] = session.getCollectedData(dci.nodeId, dci.dciId, null, null, 1, HistoricalDataType.PROCESSED);
 					else
-						data[i] = session.getCollectedTableData(dciList[i].nodeId, dciList[i].dciId, dciList[i].instance, dciList[i].column, null, null, 1);
+                  data[i] = session.getCollectedTableData(dci.nodeId, dci.dciId, dci.instance, dci.column, null, null, 1);
 				}
 
             final Threshold[][] thresholds;
             if (updateThresholds)
             {
-               thresholds = new Threshold[dciList.length][];
-               for(int i = 0; i < dciList.length; i++)
+               thresholds = new Threshold[runtimeDciList.size()][];
+               for(int i = 0; i < runtimeDciList.size(); i++)
                {
-                  if (dciList[i].type == ChartDciConfig.ITEM)
-                     thresholds[i] = session.getThresholds(dciList[i].nodeId, dciList[i].dciId);
+                  ChartDciConfig dci = runtimeDciList.get(i);
+                  if (dci.type == ChartDciConfig.ITEM)
+                     thresholds[i] = session.getThresholds(dci.nodeId, dci.dciId);
                   else
                      thresholds[i] = new Threshold[0];
                }
@@ -130,7 +216,7 @@ public abstract class ComparisonChartElement extends ElementWidget
             {
                thresholds = null;
             }
-				
+
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -186,5 +272,10 @@ public abstract class ComparisonChartElement extends ElementWidget
 		return size;
 	}
 
+   /**
+    * Get list of configured DCIs.
+    *
+    * @return list of configured DCIs
+    */
 	protected abstract ChartDciConfig[] getDciList();
 }

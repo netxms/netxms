@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,15 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
-import java.util.Map;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.MeasurementUnit;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
-import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
  * Dial chart element
@@ -62,7 +56,7 @@ public class GaugeElement extends ComparisonChartElement
       processCommonSettings(elementConfig);
 
 		refreshInterval = elementConfig.getRefreshRate();
-		
+
       ChartConfiguration chartConfig = new ChartConfiguration();
       chartConfig.setTitleVisible(false);
       chartConfig.setLegendVisible(false);
@@ -95,53 +89,10 @@ public class GaugeElement extends ComparisonChartElement
 				break;
 		}
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
-
-		for(ChartDciConfig dci : elementConfig.getDciList())
-         chart.addParameter(new GraphItem(dci));
-
       chart.setPaletteEntry(0, new ChartColor(elementConfig.getCustomColor()));
-      chart.rebuild();
 
-      updateDciInfo();
-		startRefreshTimer();
+      configureMetrics();
 	}
-   
-   /**
-    * Get DCI info (unit name and multiplier)
-    */
-   private void updateDciInfo()
-   {
-      ConsoleJob job = new ConsoleJob("Get DCI info", null, Activator.PLUGIN_ID) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            final Map<Long, MeasurementUnit> measurementUnits = session.getDciMeasurementUnits(elementConfig.getDciList());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  int i = 0;
-                  for(ChartDciConfig dci : elementConfig.getDciList())
-                  {
-                     GraphItem item = chart.getItem(i);
-                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
-                     i++;
-                  }
-                  chart.rebuild();
-                  layout(true, true);
-               }
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return null;
-         }
-      };
-      job.setUser(false);
-      job.start();
-   }
 
    /**
     * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#getDciList()

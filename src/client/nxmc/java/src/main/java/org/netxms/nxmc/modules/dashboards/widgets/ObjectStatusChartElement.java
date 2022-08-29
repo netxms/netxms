@@ -90,10 +90,10 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#refreshData(org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardDciInfo[])
+    * @see org.netxms.nxmc.modules.dashboards.widgets.ComparisonChartElement#refreshData()
     */
 	@Override
-	protected void refreshData(ChartDciConfig[] dciList)
+   protected void refreshData()
 	{
 		int[] objectCount = new int[6];
 		Arrays.fill(objectCount, 0);

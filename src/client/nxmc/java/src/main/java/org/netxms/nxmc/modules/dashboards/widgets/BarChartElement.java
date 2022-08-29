@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.BarChartConfig;
@@ -35,13 +34,13 @@ public class BarChartElement extends ComparisonChartElement
 {
 	private BarChartConfig elementConfig;
 	
-	/**
-    * @param parent
-    * @param element
-    * @param view
+   /**
+    * @param parent parent composite
+    * @param element dashboard element
+    * @param view owning view
     */
    public BarChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
-	{
+   {
       super(parent, element, view);
 
 		try
@@ -72,11 +71,7 @@ public class BarChartElement extends ComparisonChartElement
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
-		for(ChartDciConfig dci : elementConfig.getDciList())
-         chart.addParameter(new GraphItem(dci));
-      chart.rebuild();
-
-		startRefreshTimer();
+      configureMetrics();
 	}
 
    /**

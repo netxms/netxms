@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
-import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
@@ -35,14 +34,15 @@ public class BarChartElement extends ComparisonChartElement
 {
 	private BarChartConfig elementConfig;
 	
-	/**
-	 * @param parent
-	 * @param data
-	 */
-	public BarChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
-	{
-		super(parent, element, viewPart);
-		
+   /**
+    * @param parent parent composite
+    * @param element dashboard element
+    * @param viewPart owning view
+    */
+   public BarChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
+   {
+      super(parent, element, viewPart);
+
 		try
 		{
 			elementConfig = BarChartConfig.createFromXml(element.getData());
@@ -71,11 +71,7 @@ public class BarChartElement extends ComparisonChartElement
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());
 
-		for(ChartDciConfig dci : elementConfig.getDciList())
-         chart.addParameter(new GraphItem(dci));
-      chart.rebuild();
-
-		startRefreshTimer();
+      configureMetrics();
 	}
 
    /**
