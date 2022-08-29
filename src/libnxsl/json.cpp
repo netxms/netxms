@@ -460,6 +460,8 @@ int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    json_error_t error;
    json_t *json = json_loads(utfString, 0, &error);
    MemFree(utfString);
-   *result = (json != nullptr) ? vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json)) : vm->createValue();
+   *result = (json != nullptr) ?
+         (json_typeof(json) == JSON_ARRAY ? vm->createValue(vm->createObject(&g_nxslJsonArrayClass, json)) : vm->createValue(vm->createObject(&g_nxslJsonObjectClass, json)))
+               : vm->createValue();
    return 0;
 }
