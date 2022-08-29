@@ -71,7 +71,7 @@ public class TemplateDataSources extends PreferencePage
 	private DciTemplateListLabelProvider labelProvider;
 	private SortableTableViewer viewer;
 	private Button addButton;
-	private Button importButton;
+	private Button pickButton;
 	private Button editButton;
 	private Button deleteButton;
 	private Button upButton;
@@ -179,16 +179,16 @@ public class TemplateDataSources extends PreferencePage
       gridData.horizontalAlignment = SWT.RIGHT;
       rightButtons.setLayoutData(gridData);
 
-      importButton = new Button(rightButtons, SWT.PUSH);
-      importButton.setText("Import");
+      pickButton = new Button(rightButtons, SWT.PUSH);
+      pickButton.setText("&Pick...");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      importButton.setLayoutData(rd);
-      importButton.addSelectionListener(new SelectionAdapter() {
+      pickButton.setLayoutData(rd);
+      pickButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				importItem();
+				pickFromExistingItem();
 			}
       });
 
@@ -257,9 +257,9 @@ public class TemplateDataSources extends PreferencePage
 	}
 
 	/**
-	 * Import new item
-	 */
-	private void importItem()
+    * Pick name and description from existing item
+    */
+	private void pickFromExistingItem()
 	{
 		SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
 		if (dlg.open() == Window.OK)

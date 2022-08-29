@@ -34,6 +34,7 @@ import org.netxms.nxmc.base.widgets.ExtendedColorSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
+import org.netxms.nxmc.modules.datacollection.widgets.TemplateDciSelector;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -49,8 +50,8 @@ public class DataSourceEditDlg extends Dialog
 	private DciSelector dciSelector;
 	private LabeledText name;
    private LabeledText displayFormat;
-   private LabeledText dciName;
-   private LabeledText dciDescription;
+   private TemplateDciSelector dciName;
+   private TemplateDciSelector dciDescription;
    private ExtendedColorSelector colorSelector;
 	private Combo displayType;
 	private Button checkShowThresholds;
@@ -109,7 +110,7 @@ public class DataSourceEditDlg extends Dialog
    		gd.horizontalSpan = 2;
    		dciSelector.setLayoutData(gd);
       }
-		
+
 		name = new LabeledText(dialogArea, SWT.NONE);
       name.setLabel(i18n.tr("Display name"));
 		name.setText(dci.name);
@@ -130,7 +131,7 @@ public class DataSourceEditDlg extends Dialog
 
       if (isTemplate)
 		{
-		   dciName = new LabeledText(dialogArea, SWT.NONE);
+         dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
 		   dciName.setLabel("DCI Name");
 		   dciName.setText(dci.dciName);
 	      gd = new GridData();
@@ -139,9 +140,10 @@ public class DataSourceEditDlg extends Dialog
 	      gd.horizontalSpan = 2;
 	      dciName.setLayoutData(gd);	      
 
-	      dciDescription = new LabeledText(dialogArea, SWT.NONE);
+         dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
 	      dciDescription.setLabel("DCI Description");
 	      dciDescription.setText(dci.dciDescription);
+         dciDescription.setSelectDescription(true);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;

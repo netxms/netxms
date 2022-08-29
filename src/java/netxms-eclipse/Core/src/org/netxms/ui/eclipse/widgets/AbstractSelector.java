@@ -59,6 +59,7 @@ public class AbstractSelector extends Composite
 	public static final int HIDE_LABEL = 0x0002;
    public static final int SHOW_CONTEXT_BUTTON = 0x0004;
 	public static final int SHOW_CLEAR_BUTTON = 0x0008;
+   public static final int EDITABLE_TEXT = 0x0010;
 
 	private Label label;
    private CText text;
@@ -107,7 +108,7 @@ public class AbstractSelector extends Composite
 			label.setLayoutData(gd);
 		}
 
-      text = new CText(this, SWT.BORDER);
+      text = new CText(this, SWT.BORDER | (((options & EDITABLE_TEXT) != 0) ? 0 : SWT.READ_ONLY));
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

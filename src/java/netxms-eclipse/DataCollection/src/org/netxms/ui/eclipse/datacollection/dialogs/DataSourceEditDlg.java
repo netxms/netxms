@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
+import org.netxms.ui.eclipse.datacollection.widgets.TemplateDciSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.ExtendedColorSelector;
@@ -46,8 +47,8 @@ public class DataSourceEditDlg extends Dialog
 	private DciSelector dciSelector;
 	private LabeledText name;
    private LabeledText displayFormat;
-   private LabeledText dciName;
-   private LabeledText dciDescription;
+   private TemplateDciSelector dciName;
+   private TemplateDciSelector dciDescription;
    private ExtendedColorSelector colorSelector;
 	private Combo displayType;
 	private Button checkShowThresholds;
@@ -106,7 +107,7 @@ public class DataSourceEditDlg extends Dialog
    		gd.horizontalSpan = 2;
    		dciSelector.setLayoutData(gd);
       }
-		
+
 		name = new LabeledText(dialogArea, SWT.NONE);
 		name.setLabel(Messages.get().DataSourceEditDlg_DispName);
 		name.setText(dci.name);
@@ -127,7 +128,7 @@ public class DataSourceEditDlg extends Dialog
 
       if (isTemplate)
 		{
-		   dciName = new LabeledText(dialogArea, SWT.NONE);
+         dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
 		   dciName.setLabel("DCI Name");
 		   dciName.setText(dci.dciName);
 	      gd = new GridData();
@@ -136,9 +137,10 @@ public class DataSourceEditDlg extends Dialog
 	      gd.horizontalSpan = 2;
 	      dciName.setLayoutData(gd);	      
 
-	      dciDescription = new LabeledText(dialogArea, SWT.NONE);
+         dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
 	      dciDescription.setLabel("DCI Description");
 	      dciDescription.setText(dci.dciDescription);
+         dciDescription.setSelectDescription(true);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -75,7 +76,7 @@ public class SummaryTableColumns extends PropertyPage
 	private Button deleteButton;
 	private Button upButton;
 	private Button downButton;
-	private Button importButton;
+	private Button pickButton;
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -173,24 +174,16 @@ public class SummaryTableColumns extends PropertyPage
 		buttonsLayout.pack = false;
 		buttons.setLayout(buttonsLayout);
 
-		importButton = new Button(buttons, SWT.PUSH);
-		importButton.setText(Messages.get().SummaryTableColumns_Import);
+		pickButton = new Button(buttons, SWT.PUSH);
+		pickButton.setText(Messages.get().SummaryTableColumns_Import);
 		RowData rd = new RowData();
 		rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-		importButton.setLayoutData(rd);
-
-		importButton.addSelectionListener(new SelectionListener() {
-
+		pickButton.setLayoutData(rd);
+      pickButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				importColumns();
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
+				pickFromExistingItems();
 			}
 		});
 
@@ -488,9 +481,9 @@ public class SummaryTableColumns extends PropertyPage
 	}
 
 	/**
-	 * Import Columns from node
-	 */
-	private void importColumns()
+    * Pick existing data collection items for column creation
+    */
+	private void pickFromExistingItems()
 	{
 		final SelectDciDialog dialog = new SelectDciDialog(getShell(), 0);
 		dialog.setAllowTemplateItems(true);

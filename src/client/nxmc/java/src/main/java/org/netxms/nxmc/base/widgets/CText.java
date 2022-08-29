@@ -44,7 +44,7 @@ public class CText extends Composite
     */
    public CText(Composite parent, int style)
    {
-      super(parent, style);
+      super(parent, style & ~SWT.READ_ONLY);
 
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
@@ -58,7 +58,7 @@ public class CText extends Composite
       imageControl.setVisible(false);
       ((GridData)imageControl.getLayoutData()).exclude = true;
 
-      textControl = new Text(this, SWT.READ_ONLY);
+      textControl = new Text(this, style & SWT.READ_ONLY);
       textControl.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
       imageControl.setBackground(textControl.getBackground());
