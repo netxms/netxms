@@ -888,6 +888,7 @@ private:
    void readMaintenanceJournal(const NXCPMessage& request);
    void writeMaintenanceJournal(const NXCPMessage& request);
    void updateMaintenanceJournal(const NXCPMessage& request);
+   void cloneNetworkMap(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

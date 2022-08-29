@@ -39,6 +39,18 @@ NetworkMapElement::NetworkMapElement(uint32_t id, uint32_t flags)
 }
 
 /**
+ * Copy constructor
+ */
+NetworkMapElement::NetworkMapElement(const NetworkMapElement &src)
+{
+   m_id = src.m_id;
+   m_type = src.m_type;
+   m_posX = src.m_posX;
+   m_posY = src.m_posY;
+   m_flags = src.m_flags;
+}
+
+/**
  * Generic element config constructor
  */
 NetworkMapElement::NetworkMapElement(uint32_t id, Config *config, uint32_t flags)
@@ -122,6 +134,14 @@ json_t *NetworkMapElement::toJson() const
    return root;
 }
 
+/**
+ * Clone element
+ */
+NetworkMapElement *NetworkMapElement::clone() const
+{
+   return new NetworkMapElement(*this);
+}
+
 /**********************
  * Network Map Object
  **********************/
@@ -135,6 +155,16 @@ NetworkMapObject::NetworkMapObject(uint32_t id, uint32_t objectId, uint32_t flag
 	m_objectId = objectId;
 	m_width = 100;
 	m_height = 100;
+}
+
+/**
+ * Copy constructor
+ */
+NetworkMapObject::NetworkMapObject(const NetworkMapObject &src) : NetworkMapElement(src)
+{
+   m_objectId = src.m_objectId;
+   m_width = src.m_width;
+   m_height = src.m_height;
 }
 
 /**
@@ -198,6 +228,14 @@ json_t *NetworkMapObject::toJson() const
    return root;
 }
 
+/**
+ * Clone element
+ */
+NetworkMapElement *NetworkMapObject::clone() const
+{
+   return new NetworkMapObject(*this);
+}
+
 /**************************
  * Network Map Decoration
  **************************/
@@ -213,6 +251,18 @@ NetworkMapDecoration::NetworkMapDecoration(uint32_t id, LONG decorationType, uin
 	m_title = nullptr;
 	m_width = 50;
 	m_height = 20;
+}
+
+/**
+ * Copy constructor
+ */
+NetworkMapDecoration::NetworkMapDecoration(const NetworkMapDecoration &src) : NetworkMapElement(src)
+{
+   m_decorationType = src.m_decorationType;
+   m_color = src.m_color;
+   m_title = MemCopyString(src.m_title);
+   m_width = src.m_width;
+   m_height = src.m_height;
 }
 
 /**
@@ -287,6 +337,15 @@ json_t *NetworkMapDecoration::toJson() const
    return root;
 }
 
+/**
+ * Clone element
+ */
+NetworkMapElement *NetworkMapDecoration::clone() const
+{
+   return new NetworkMapDecoration(*this);
+}
+
+
 /*****************************
  * Network Map DCI Container
  *****************************/
@@ -298,6 +357,14 @@ NetworkMapDCIContainer::NetworkMapDCIContainer(uint32_t id, TCHAR* xmlDCIList, u
 {
 	m_type = MAP_ELEMENT_DCI_CONTAINER;
    m_xmlDCIList = MemCopyString(xmlDCIList);
+}
+
+/**
+ * Copy constructor
+ */
+NetworkMapDCIContainer::NetworkMapDCIContainer(const NetworkMapDCIContainer &src) : NetworkMapElement(src)
+{
+   m_xmlDCIList = MemCopyString(src.m_xmlDCIList);
 }
 
 /**
@@ -352,6 +419,14 @@ json_t *NetworkMapDCIContainer::toJson() const
    return root;
 }
 
+/**
+ * Clone element
+ */
+NetworkMapElement *NetworkMapDCIContainer::clone() const
+{
+   return new NetworkMapDCIContainer(*this);
+}
+
 /**************************
  * Network Map DCI Image
  **************************/
@@ -363,6 +438,14 @@ NetworkMapDCIImage::NetworkMapDCIImage(uint32_t id, TCHAR* config, uint32_t flag
 {
 	m_type = MAP_ELEMENT_DCI_IMAGE;
    m_config = MemCopyString(config);
+}
+
+/**
+ * Copy constructor
+ */
+NetworkMapDCIImage::NetworkMapDCIImage(const NetworkMapDCIImage &src) : NetworkMapElement(src)
+{
+   m_config = MemCopyString(src.m_config);
 }
 
 /**
@@ -417,6 +500,15 @@ json_t *NetworkMapDCIImage::toJson() const
    return root;
 }
 
+/**
+ * Clone element
+ */
+NetworkMapElement *NetworkMapDCIImage::clone() const
+{
+   return new NetworkMapDCIImage(*this);
+}
+
+
 /**************************
  * Network Map Text Box
  **************************/
@@ -428,6 +520,14 @@ NetworkMapTextBox::NetworkMapTextBox(uint32_t id, TCHAR* config, uint32_t flags)
 {
    m_type = MAP_ELEMENT_TEXT_BOX;
    m_config = MemCopyString(config);
+}
+
+/**
+ * Copy constructor
+ */
+NetworkMapTextBox::NetworkMapTextBox(const NetworkMapTextBox &src) : NetworkMapElement(src)
+{
+   m_config = MemCopyString(src.m_config);
 }
 
 /**
@@ -480,4 +580,12 @@ json_t *NetworkMapTextBox::toJson() const
    json_t *root = NetworkMapElement::toJson();
    json_object_set_new(root, "config", json_string_t(m_config));
    return root;
+}
+
+/**
+ * Clone element
+ */
+NetworkMapElement *NetworkMapTextBox::clone() const
+{
+   return new NetworkMapTextBox(*this);
 }

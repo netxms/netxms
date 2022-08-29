@@ -462,7 +462,7 @@ typedef struct
 #define CMD_UPLOAD_FILE                   0x00DB
 #define CMD_DELETE_FILE                   0x00DC
 #define CMD_RENAME_FILE                   0x00DD
-// unused #define CMD_                   0x00DE
+#define CMD_CLONE_MAP                     0x00DE
 // unused #define CMD_                   0x00DF
 // unused #define CMD_                   0x00E0
 #define CMD_CONFIG_SET_CLOB               0x00E1

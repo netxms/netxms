@@ -89,7 +89,7 @@ void NetworkMapObjectList::merge(const NetworkMapObjectList& src)
    for(int i = 0; i < src.m_linkList.size(); i++)
    {
       ObjLink *l = src.m_linkList.get(i);
-      if (m_allowDuplicateLinks || (!isLinkExist(l->id1, l->id2) && !isLinkExist(l->id2, l->id1)))
+      if (m_allowDuplicateLinks || (!isLinkExist(l->id1, l->id2, l->type) && !isLinkExist(l->id2, l->id1, l->type)))
          m_linkList.add(new ObjLink(l));
    }
 }
@@ -215,6 +215,9 @@ void NetworkMapObjectList::linkObjectsEx(uint32_t id1, uint32_t id2, const TCHAR
    if ((m_objectList.indexOf(id1) == -1) || (m_objectList.indexOf(id2) == -1))
       return;  // both objects should exist
 
+   if (id1 == id2)
+      return;  // Link should not link the same object
+
    // Check for duplicate links
    bool linkExists = false;
    for(int i = 0; i < m_linkList.size(); i++)
@@ -314,12 +317,12 @@ void NetworkMapObjectList::createMessage(NXCPMessage *msg)
 /**
  * Check if link between two given objects exist
  */
-bool NetworkMapObjectList::isLinkExist(uint32_t objectId1, uint32_t objectId2) const
+bool NetworkMapObjectList::isLinkExist(uint32_t objectId1, uint32_t objectId2, int type) const
 {
    for(int i = 0; i < m_linkList.size(); i++)
    {
       ObjLink *l = m_linkList.get(i);
-		if ((l->id1 == objectId1) && (l->id2 == objectId2))
+		if ((l->id1 == objectId1) && (l->id2 == objectId2) && ((type == -1) || (l->type == type)))
 			return true;
 	}
 	return false;

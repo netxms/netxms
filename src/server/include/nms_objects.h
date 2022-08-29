@@ -4203,6 +4203,7 @@ protected:
 
 public:
    NetworkMap();
+   NetworkMap(const NetworkMap &src);
    NetworkMap(int type, const IntegerArray<uint32_t>& seeds);
    virtual ~NetworkMap();
 
@@ -4218,6 +4219,7 @@ public:
    virtual json_t *toJson() override;
 
    void updateContent();
+   void clone(const TCHAR *name, const TCHAR *alias);
 
    int getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(int color) { m_backgroundColor = color; }

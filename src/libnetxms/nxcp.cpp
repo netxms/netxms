@@ -265,7 +265,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
 		_T("CMD_UPLOAD_FILE"),
 		_T("CMD_DELETE_FILE"),
 		_T("CMD_RENAME_FILE"),
-		_T("CMD_0x00DE"),
+      _T("CMD_CLONE_MAP"),
 		_T("CMD_0x00DF"),
 		_T("CMD_0x00E0"),
 		_T("CMD_CONFIG_SET_CLOB"),

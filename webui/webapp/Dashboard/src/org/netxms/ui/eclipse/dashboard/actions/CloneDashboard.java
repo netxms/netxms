@@ -41,6 +41,7 @@ public class CloneDashboard implements IObjectActionDelegate
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
+					cd.setObjectAlias(dlg.getObjectAlias());
 					final long newDashboardId = session.createObject(cd);
 
 					final NXCObjectModificationData md = new NXCObjectModificationData(newDashboardId);

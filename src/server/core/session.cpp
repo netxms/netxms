@@ -1880,6 +1880,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_UPDATE_MAINTENANCE_JOURNAL:
          updateMaintenanceJournal(*request);
          break;
+      case CMD_CLONE_MAP:
+         cloneNetworkMap(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -16326,6 +16329,38 @@ void ClientSession::updateMaintenanceJournal(const NXCPMessage& request)
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
       debugPrintf(6, _T("Maintenance journal entry %u edit failed: invalid object ID %u"), entryId, request.getFieldAsUInt32(VID_OBJECT_ID));
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Clone network map
+ */
+void ClientSession::cloneNetworkMap(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_MAP_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         SharedString name = request.getFieldAsSharedString(VID_NAME);
+         SharedString alias = request.getFieldAsSharedString(VID_ALIAS);
+         static_pointer_cast<NetworkMap>(object)->clone(name, alias);
+         writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Network map cloned successfully"));
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on clone network map"));
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
    sendMessage(response);

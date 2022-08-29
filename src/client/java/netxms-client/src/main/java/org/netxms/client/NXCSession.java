@@ -13474,4 +13474,23 @@ public class NXCSession
       }
       return getDciMeasurementUnits(nodeIds, dciIds);
    }
+   
+   /**
+    * Create network map clone
+    * 
+    * @param mapId map id to clone
+    * @param newObjectName name of the new object
+    * @param alias new object alias
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void cloneNetworkMap(long mapId, String newObjectName, String alias) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLONE_MAP);
+      msg.setFieldInt32(NXCPCodes.VID_MAP_ID, (int)mapId);
+      msg.setField(NXCPCodes.VID_NAME, newObjectName);
+      msg.setField(NXCPCodes.VID_ALIAS, alias);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 }

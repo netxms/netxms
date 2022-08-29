@@ -26,10 +26,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.netxms.client.NXCObjectCreationData;
-import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -75,12 +72,7 @@ public class CloneNetworkMap implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKMAP, dlg.getObjectName(), source.getParentIdList()[0]);
-				NXCObjectModificationData md = new NXCObjectModificationData(0);
-				source.prepareCopy(cd, md);
-				long id = session.createObject(cd);
-				md.setObjectId(id);
-				session.modifyObject(md);
+				session.cloneNetworkMap(source.getObjectId(), dlg.getObjectName(), dlg.getObjectAlias());
 			}
 
 			@Override

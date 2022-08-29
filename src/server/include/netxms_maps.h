@@ -111,7 +111,7 @@ public:
 
 	void createMessage(NXCPMessage *pMsg);
 
-	bool isLinkExist(uint32_t objectId1, uint32_t objectId2) const;
+	bool isLinkExist(uint32_t objectId1, uint32_t objectId2, int type) const;
 	ObjLink *getLink(uint32_t objectId1, uint32_t objectId2, int linkType);
 	bool isObjectExist(uint32_t objectId) const;
 
@@ -164,6 +164,8 @@ protected:
    int32_t m_posY;
    uint32_t m_flags;
 
+   NetworkMapElement(const NetworkMapElement& src);
+
 public:
 	NetworkMapElement(uint32_t id, uint32_t flags = 0);
 	NetworkMapElement(uint32_t id, Config *config, uint32_t flags = 0);
@@ -174,6 +176,7 @@ public:
 	virtual void updateConfig(Config *config);
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId);
 	virtual json_t *toJson() const;
+   virtual NetworkMapElement *clone() const;
 
    uint32_t getId() const { return m_id; }
    int32_t getType() const { return m_type; }
@@ -194,6 +197,8 @@ protected:
    uint32_t m_width;
    uint32_t m_height;
 
+   NetworkMapObject(const NetworkMapObject& src);
+
 public:
 	NetworkMapObject(uint32_t id, uint32_t objectId, uint32_t flags = 0);
 	NetworkMapObject(uint32_t id, Config *config, uint32_t flags = 0);
@@ -203,6 +208,7 @@ public:
 	virtual void updateConfig(Config *config) override;
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
+   virtual NetworkMapElement *clone() const override;
 
 	uint32_t getObjectId() const { return m_objectId; }
 };
@@ -219,6 +225,8 @@ protected:
    int32_t m_width;
    int32_t m_height;
 
+   NetworkMapDecoration(const NetworkMapDecoration& src);
+
 public:
 	NetworkMapDecoration(uint32_t id, LONG decorationType, uint32_t flags = 0);
 	NetworkMapDecoration(uint32_t id, Config *config, uint32_t flags = 0);
@@ -228,6 +236,7 @@ public:
 	virtual void updateConfig(Config *config) override;
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
+   virtual NetworkMapElement *clone() const override;
 
    int32_t getDecorationType() const { return m_decorationType; }
    uint32_t getColor() const { return m_color; }
@@ -245,6 +254,8 @@ class NetworkMapDCIContainer : public NetworkMapElement
 protected:
 	TCHAR *m_xmlDCIList;
 
+	NetworkMapDCIContainer(const NetworkMapDCIContainer& src);
+
 public:
 	NetworkMapDCIContainer(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
 	NetworkMapDCIContainer(uint32_t id, Config *config, uint32_t flags = 0);
@@ -254,6 +265,7 @@ public:
 	virtual void updateConfig(Config *config) override;
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
+   virtual NetworkMapElement *clone() const override;
 
 	const TCHAR *getObjectDCIList() const { return m_xmlDCIList; }
 };
@@ -266,6 +278,8 @@ class NetworkMapTextBox : public NetworkMapElement
 protected:
 	TCHAR *m_config;
 
+	NetworkMapTextBox(const NetworkMapTextBox& src);
+
 public:
 	NetworkMapTextBox(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
 	NetworkMapTextBox(uint32_t id, Config *config, uint32_t flags = 0);
@@ -275,6 +289,7 @@ public:
 	virtual void updateConfig(Config *config) override;
 	virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
+   virtual NetworkMapElement *clone() const override;
 
 	const TCHAR *getObjectDCIList() const { return m_config; }
 };
@@ -287,6 +302,8 @@ class NetworkMapDCIImage : public NetworkMapElement
 protected:
    TCHAR *m_config;
 
+   NetworkMapDCIImage(const NetworkMapDCIImage& src);
+
 public:
    NetworkMapDCIImage(uint32_t id, TCHAR* objectDCIList, uint32_t flags = 0);
    NetworkMapDCIImage(uint32_t id, Config *config, uint32_t flags = 0);
@@ -296,6 +313,7 @@ public:
    virtual void updateConfig(Config *config) override;
    virtual void fillMessage(NXCPMessage *msg, uint32_t baseId) override;
    virtual json_t *toJson() const override;
+   virtual NetworkMapElement *clone() const override;
 
    const TCHAR *getObjectDCIList() const { return m_config; }
 };

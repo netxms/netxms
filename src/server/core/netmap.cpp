@@ -67,6 +67,41 @@ NetworkMap::NetworkMap() : super(), m_elements(0, 64, Ownership::True), m_links(
 }
 
 /**
+ * Network map object default constructor
+ */
+NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects), m_seedObjects(src.m_seedObjects)
+{
+   m_mapType = src.m_mapType;
+   m_discoveryRadius = src.m_discoveryRadius;
+   m_flags = src.m_flags;
+   m_layout = src.m_layout;
+   m_status = STATUS_NORMAL;
+   m_backgroundLatitude = src.m_backgroundLatitude;
+   m_backgroundLongitude = src.m_backgroundLongitude;
+   m_backgroundZoom = src.m_backgroundZoom;
+   m_backgroundColor = src.m_backgroundColor;
+   m_defaultLinkColor = src.m_defaultLinkColor;
+   m_defaultLinkRouting = src.m_defaultLinkRouting;  // default routing type "direct"
+   m_objectDisplayMode = src.m_objectDisplayMode;  // default display mode "icons"
+   m_nextElementId = src.m_nextElementId;
+   m_nextLinkId = src.m_nextLinkId;
+   m_filterSource = nullptr;
+   m_filter = nullptr;
+   setFilter(src.m_filterSource);
+   for(int i = 0; i < src.m_elements.size(); i++)
+   {
+      m_elements.add(src.m_elements.get(i)->clone());
+   }
+   for(int i = 0; i < src.m_links.size(); i++)
+   {
+      m_links.add(new NetworkMapLink(*src.m_links.get(i)));
+   }
+   m_isHidden = true;
+   setCreationTime();
+}
+
+
+/**
  * Create network map object from user session
  */
 NetworkMap::NetworkMap(int type, const IntegerArray<uint32_t>& seeds) : super(), m_seedObjects(seeds), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True)
@@ -905,11 +940,11 @@ void NetworkMap::updateObjects(NetworkMapObjectList *objects)
       uint32_t objID1 = objectIdFromElementId(link->getElement1());
       uint32_t objID2 = objectIdFromElementId(link->getElement2());
       bool linkExists = false;
-      if (objects->isLinkExist(objID1, objID2))
+      if (objects->isLinkExist(objID1, objID2, link->getType()))
       {
          linkExists = true;
       }
-      else if (objects->isLinkExist(objID2, objID1))
+      else if (objects->isLinkExist(objID2, objID1, link->getType()))
       {
          link->swap();
          linkExists = true;
@@ -1294,6 +1329,25 @@ void NetworkMap::onObjectDelete(const NetObj& object)
    unlockProperties();
 
    super::onObjectDelete(object);
+}
+
+/**
+ * Clone network map
+ */
+void NetworkMap::clone(const TCHAR *name, const TCHAR *alias)
+{
+   lockProperties();
+   shared_ptr<NetworkMap> object = make_shared<NetworkMap>(*this);
+   unlockProperties();
+
+   object->setName(name);
+   object->setAlias(alias);
+   NetObjInsert(object, true, false);
+   auto parentList = getParentList();
+   parentList.get(0)->addChild(object);
+   object->addParent(parentList.getShared(0));
+   parentList.get(0)->calculateCompoundStatus();
+   object->unhide();
 }
 
 /**
