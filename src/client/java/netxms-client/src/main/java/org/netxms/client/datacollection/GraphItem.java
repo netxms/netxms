@@ -91,7 +91,6 @@ public class GraphItem
    /**
     * Constructor for ad-hoc ITEM type (without related server-side DCI)
     * 
-    * @param dataType The data type
     * @param name The name
     * @param description The description
     * @param displayFormat The display format

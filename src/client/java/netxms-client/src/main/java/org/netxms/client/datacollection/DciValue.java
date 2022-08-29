@@ -125,6 +125,7 @@ public abstract class DciValue
     * Returns formated DCI value or string with format error and correct type of DCI value;
     * 
     * @param useMultipliers the string into which will be placed DCI value 
+    * @param formatter date/time formatter
     * @return The format
     */
    public String getFormattedValue(boolean useMultipliers, TimeFormatter formatter)
