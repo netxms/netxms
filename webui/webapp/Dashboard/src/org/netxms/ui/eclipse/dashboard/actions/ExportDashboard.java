@@ -133,8 +133,11 @@ public class ExportDashboard implements IObjectActionDelegate
 		      List<Long> dciList = new ArrayList<Long>();
 				for(Entry<Long, Long> dci : items.entrySet())
 				{
-					dciList.add(dci.getKey());
-					nodeList.add(dci.getValue());
+               if ((dci.getKey() != 0) && (dci.getValue() != 0)) // ignore template entries
+               {
+                  dciList.add(dci.getKey());
+                  nodeList.add(dci.getValue());
+               }
 				}
 				Map<Long, String> names = session.dciIdsToNames(nodeList, dciList);
 				for(int i = 0; i < names.size(); i++)

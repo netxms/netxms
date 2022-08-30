@@ -49,6 +49,8 @@ public abstract class GenericComparisonChart extends Canvas implements PlotArea
    {
       super(parent, SWT.DOUBLE_BUFFERED);
 
+      setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND)); // FIXME: use color from theme
+
       chart = parent;
 
       addPaintListener(new PaintListener() {

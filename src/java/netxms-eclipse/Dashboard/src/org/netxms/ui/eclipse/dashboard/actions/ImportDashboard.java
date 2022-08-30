@@ -193,14 +193,14 @@ public class ImportDashboard implements IObjectActionDelegate
 	{
 		final Map<Long, ObjectIdMatchingData> objects = readSourceObjects(root);
 		final Map<Long, DciIdMatchingData> dcis = readSourceDci(root);
-		
+
 		// add all node IDs from DCI list if they are missing
 		for(DciIdMatchingData d : dcis.values())
 		{
-			if (!objects.containsKey(d.srcNodeId))
+         if (!objects.containsKey(d.srcNodeId) && (d.srcNodeId != 0) && (d.srcNodeId != AbstractObject.CONTEXT))
 				objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", AbstractObject.OBJECT_NODE)); //$NON-NLS-1$
 		}
-		
+
 		// try to match objects
 		for(ObjectIdMatchingData d : objects.values())
 		{
@@ -225,6 +225,9 @@ public class ImportDashboard implements IObjectActionDelegate
 		// try to match DCIs
 		for(DciIdMatchingData d : dcis.values())
 		{
+         if ((d.srcNodeId == 0) || (d.srcNodeId == AbstractObject.CONTEXT))
+            continue;   // Template entry
+
 			// get node ID on target system
 			ObjectIdMatchingData od = objects.get(d.srcNodeId);
 			
@@ -233,7 +236,7 @@ public class ImportDashboard implements IObjectActionDelegate
 			
 			if (od.dstId == 0)
 				continue;	// no match for node
-			
+
 			d.dstNodeId = od.dstId;
 			DciValue[] dciValues = session.getLastValues(d.dstNodeId);
 			for(DciValue v : dciValues)
@@ -246,7 +249,7 @@ public class ImportDashboard implements IObjectActionDelegate
 				}
 			}
 		}
-		
+
 		// show matching results to user
 		UIJob job = new UIJob(display, "") { //$NON-NLS-1$
 			@Override
@@ -267,7 +270,7 @@ public class ImportDashboard implements IObjectActionDelegate
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Check if two classes are compatible for object matching
 	 * 
