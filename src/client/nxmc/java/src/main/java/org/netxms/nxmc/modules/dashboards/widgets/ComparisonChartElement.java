@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
@@ -261,16 +261,14 @@ public abstract class ComparisonChartElement extends ElementWidget
 	}
 
    /**
-    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
+    * @see org.netxms.nxmc.modules.dashboards.widgets.ElementWidget#adjustContentHeight(org.eclipse.swt.widgets.Composite,
+    *      org.eclipse.swt.graphics.Point)
     */
-	@Override
-	public Point computeSize(int wHint, int hHint, boolean changed)
-	{
-		Point size = super.computeSize(wHint, hHint, changed);
-		if ((hHint == SWT.DEFAULT) && (size.y < 250))
-			size.y = 250;
-		return size;
-	}
+   @Override
+   protected int adjustContentHeight(Composite content, Point computedSize)
+   {
+      return Math.max(computedSize.y, 250);
+   }
 
    /**
     * Get list of configured DCIs.

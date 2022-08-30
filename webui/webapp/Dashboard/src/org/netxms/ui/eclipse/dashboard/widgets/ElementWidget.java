@@ -25,6 +25,7 @@ import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -98,7 +99,20 @@ public class ElementWidget extends DashboardComposite implements ControlListener
       layout.verticalSpacing = 4;
       setLayout(layout);
 
-      content = new Composite(this, SWT.NONE);
+      content = new Composite(this, SWT.NONE) {
+         @Override
+         public Point computeSize(int wHint, int hHint, boolean changed)
+         {
+            Point size = super.computeSize(wHint, hHint, changed);
+            if (hHint == SWT.DEFAULT)
+            {
+               int h = adjustContentHeight(this, size);
+               if (h > 0)
+                  size.y = h;
+            }
+            return (size != null) ? size : super.computeSize(wHint, hHint, changed);
+         }
+      };
       content.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       content.setLayout(new FillLayout());
       content.setBackground(getBackground());
@@ -121,6 +135,19 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    protected Composite getContentArea()
    {
       return content;
+   }
+
+   /**
+    * Adjust content height. Called by framework after size for content area is computed so subclasses can implement more complex
+    * logic for preferred height calculation.
+    *
+    * @param content content area
+    * @param computedSize computed content area size
+    * @return adjusted content height or -1 to leave computed height
+    */
+   protected int adjustContentHeight(Composite content, Point computedSize)
+   {
+      return -1;
    }
 
    /**

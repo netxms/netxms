@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -48,6 +49,7 @@ public class Gauge extends PropertyPage
 	private GaugeConfig config;
 	private Combo gaugeType;
 	private LabeledText fontName;
+   private LabeledSpinner fontSize;
 	private Button checkLegendInside;
 	private Button checkVertical;
 	private Button checkElementBorders;
@@ -85,16 +87,27 @@ public class Gauge extends PropertyPage
 		gaugeType.add(Messages.get().Gauge_Bar);
 		gaugeType.add(Messages.get().Gauge_Text);
 		gaugeType.select(config.getGaugeType());
-		
+
 		fontName = new LabeledText(dialogArea, SWT.NONE);
 		fontName.setLabel(Messages.get().Gauge_FontName);
 		fontName.setText(config.getFontName());
 		gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+      gd.horizontalSpan = 1;
 		fontName.setLayoutData(gd);
-		
+
+      fontSize = new LabeledSpinner(dialogArea, SWT.NONE);
+      fontSize.setLabel("Font size (0 for autoscale)");
+      fontSize.setRange(0, 72);
+      fontSize.setSelection(config.getFontSize());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 1;
+      fontSize.setLayoutData(gd);
+
 		minValue = new LabeledText(dialogArea, SWT.NONE);
 		minValue.setLabel(Messages.get().DialChart_MinVal);
 		minValue.setText(Double.toString(config.getMinValue()));
@@ -151,25 +164,19 @@ public class Gauge extends PropertyPage
       colorMode.add(Messages.get().Gauge_FixedCustomColor);
       colorMode.add(Messages.get().Gauge_ActiveThresholdColor);
       colorMode.select(config.getColorMode());
-      colorMode.addSelectionListener(new SelectionListener() {
+      colorMode.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             onColorModeChange(colorMode.getSelectionIndex());
          }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
       });
-      
+
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       customColor = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().Gauge_CustomColor, gd); 
       customColor.setColorValue(ColorConverter.rgbFromInt(config.getCustomColor()));
-      
+
       drillDownObject = new ObjectSelector(dialogArea, SWT.NONE, true);
       drillDownObject.setLabel("Drill-down object");
       drillDownObject.setObjectClass(AbstractObject.class);
@@ -180,7 +187,7 @@ public class Gauge extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       drillDownObject.setLayoutData(gd);
-		
+
 		checkLegendInside = new Button(dialogArea, SWT.CHECK);
 		checkLegendInside.setText(Messages.get().DialChart_LegendInside);
 		checkLegendInside.setSelection(config.isLegendInside());
@@ -189,7 +196,7 @@ public class Gauge extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		checkLegendInside.setLayoutData(gd);
-		
+
 		checkVertical = new Button(dialogArea, SWT.CHECK);
 		checkVertical.setText(Messages.get().Gauge_Vertical);
 		checkVertical.setSelection(config.isVertical());
@@ -198,7 +205,7 @@ public class Gauge extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		checkVertical.setLayoutData(gd);
-		
+
       checkElementBorders = new Button(dialogArea, SWT.CHECK);
       checkElementBorders.setText(Messages.get().Gauge_ShowBorder);
       checkElementBorders.setSelection(config.isElementBordersVisible());
@@ -207,14 +214,14 @@ public class Gauge extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       checkElementBorders.setLayoutData(gd);
-      
+
       onColorModeChange(config.getColorMode());
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -233,9 +240,10 @@ public class Gauge extends PropertyPage
 			MessageDialogHelper.openWarning(getShell(), Messages.get().DialChart_Warning, Messages.get().DialChart_WarningText);
 			return false;
 		}
-		
+
 		config.setGaugeType(gaugeType.getSelectionIndex());
 		config.setFontName(fontName.getText().trim());
+      config.setFontSize(fontSize.getSelection());
 		config.setMinValue(min);
 		config.setMaxValue(max);
 		config.setLeftYellowZone(ly);
@@ -250,7 +258,7 @@ public class Gauge extends PropertyPage
 		config.setDrillDownObjectId(drillDownObject.getObjectId());
 		return true;
 	}
-	
+
 	/**
 	 * Handle color mode change
 	 * 

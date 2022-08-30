@@ -163,6 +163,9 @@ public class ChartConfiguration
    @Element(required = false)
    private String fontName = "";
 
+   @Element(required = false)
+   private int fontSize = 0;
+
    private Set<ChartConfigurationChangeListener> changeListeners = new HashSet<ChartConfigurationChangeListener>(0);
 
 	/**
@@ -874,5 +877,21 @@ public class ChartConfiguration
    public void setFontName(String fontName)
    {
       this.fontName = fontName;
+   }
+
+   /**
+    * @return the fontSize
+    */
+   public int getFontSize()
+   {
+      return fontSize;
+   }
+
+   /**
+    * @param fontSize the fontSize to set
+    */
+   public void setFontSize(int fontSize)
+   {
+      this.fontSize = fontSize;
    }
 }

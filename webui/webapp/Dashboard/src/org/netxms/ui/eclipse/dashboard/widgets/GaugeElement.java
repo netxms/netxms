@@ -19,6 +19,11 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -27,6 +32,7 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Dial chart element
@@ -34,6 +40,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 public class GaugeElement extends ComparisonChartElement
 {
 	private GaugeConfig elementConfig;
+   private Font heightCalculationFont = null;
 	
 	/**
 	 * @param parent
@@ -72,6 +79,7 @@ public class GaugeElement extends ComparisonChartElement
       chartConfig.setRightYellowZone(elementConfig.getRightYellowZone());
       chartConfig.setRightRedZone(elementConfig.getRightRedZone());
       chartConfig.setFontName(elementConfig.getFontName());
+      chartConfig.setFontSize(elementConfig.getFontSize());
       chartConfig.setGaugeColorMode(elementConfig.getColorMode());
 
 		switch(elementConfig.getGaugeType())
@@ -92,6 +100,15 @@ public class GaugeElement extends ComparisonChartElement
       chart.setPaletteEntry(0, new ChartColor(elementConfig.getCustomColor()));
 
       configureMetrics();
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (heightCalculationFont != null)
+               heightCalculationFont.dispose();
+         }
+      });
 	}
 
    /**
@@ -102,4 +119,30 @@ public class GaugeElement extends ComparisonChartElement
 	{
 		return elementConfig.getDciList();
 	}
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#adjustContentHeight(org.eclipse.swt.widgets.Composite,
+    *      org.eclipse.swt.graphics.Point)
+    */
+   @Override
+   protected int adjustContentHeight(Composite content, Point computedSize)
+   {
+      if (elementConfig.getGaugeType() == GaugeConfig.BAR)
+         return elementConfig.isVertical() ? 40 * elementConfig.getDciList().length : 40;
+
+      if (elementConfig.getGaugeType() == GaugeConfig.TEXT)
+      {
+         if (heightCalculationFont == null)
+         {
+            int fontSize = elementConfig.getFontSize();
+            if (fontSize == 0)
+               fontSize = 24;
+            heightCalculationFont = new Font(getDisplay(), elementConfig.getFontName(), fontSize, SWT.BOLD);
+         }
+         int h = WidgetHelper.getTextExtent(this, heightCalculationFont, "X").y + 10;
+         return elementConfig.isVertical() ? h * elementConfig.getDciList().length : h;
+      }
+
+      return super.adjustContentHeight(content, computedSize);
+   }
 }

@@ -707,8 +707,7 @@ public class WidgetHelper
          }
 
          Matcher matcherRemoveLineEnd = patternCharsAndNumbersAtStart.matcher(substr.substring(numOfCharToLeave - 1));
-         numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); // remove if something left after last
-                                                                                            // word
+         numOfCharToLeave = substr.length() - matcherRemoveLineEnd.replaceAll("").length(); // remove if something left after last word
          start = start + numOfCharToLeave + 1;
       }
 
@@ -877,8 +876,25 @@ public class WidgetHelper
    }
 
    /**
-    *  Get column index by column ID
-    *  
+    * Get width and height of given text in pixels using given control and font
+    * 
+    * @param control
+    * @param font
+    * @param text
+    * @return
+    */
+   public static Point getTextExtent(Control control, Font font, String text)
+   {
+      GC gc = new GC(control);
+      gc.setFont(font);
+      Point e = gc.textExtent(text);
+      gc.dispose();
+      return e;
+   }
+
+   /**
+    * Get column index by column ID
+    * 
     * @param table table control
     * @param id the id index to be found by
     * @return index of the column

@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
@@ -51,6 +52,7 @@ public class Gauge extends DashboardElementPropertyPage
 	private GaugeConfig config;
 	private Combo gaugeType;
 	private LabeledText fontName;
+   private LabeledSpinner fontSize;
 	private Button checkLegendInside;
 	private Button checkVertical;
 	private Button checkElementBorders;
@@ -130,11 +132,22 @@ public class Gauge extends DashboardElementPropertyPage
       fontName.setLabel(i18n.tr("Font name (leave empty to use default)"));
 		fontName.setText(config.getFontName());
 		gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+      gd.horizontalSpan = 1;
 		fontName.setLayoutData(gd);
-		
+
+      fontSize = new LabeledSpinner(dialogArea, SWT.NONE);
+      fontSize.setLabel(i18n.tr("Font size (0 for autoscale)"));
+      fontSize.setRange(0, 72);
+      fontSize.setSelection(config.getFontSize());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.horizontalSpan = 1;
+      fontSize.setLayoutData(gd);
+
 		minValue = new LabeledText(dialogArea, SWT.NONE);
       minValue.setLabel(i18n.tr("Minimum value"));
 		minValue.setText(Double.toString(config.getMinValue()));
@@ -198,7 +211,7 @@ public class Gauge extends DashboardElementPropertyPage
             onColorModeChange(colorMode.getSelectionIndex());
          }
       });
-      
+
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
       customColor = WidgetHelper.createLabeledColorSelector(dialogArea, i18n.tr("Custom color"), gd);
@@ -270,6 +283,7 @@ public class Gauge extends DashboardElementPropertyPage
 
 		config.setGaugeType(gaugeType.getSelectionIndex());
 		config.setFontName(fontName.getText().trim());
+      config.setFontSize(fontSize.getSelection());
 		config.setMinValue(min);
 		config.setMaxValue(max);
 		config.setLeftYellowZone(ly);

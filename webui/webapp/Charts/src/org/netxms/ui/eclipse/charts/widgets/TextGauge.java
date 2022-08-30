@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class TextGauge extends GenericGauge
 {
+   private Font fixedValueFont = null;
 	private Font[] valueFonts = null;
 	
 	/**
@@ -53,9 +54,17 @@ public class TextGauge extends GenericGauge
 	protected void createFonts()
 	{
       String fontName = chart.getConfiguration().getFontName();
-		valueFonts = new Font[32];
-		for(int i = 0; i < valueFonts.length; i++)
-			valueFonts[i] = new Font(getDisplay(), fontName, i * 6 + 12, SWT.BOLD); //$NON-NLS-1$
+      int fontSize = chart.getConfiguration().getFontSize();
+      if (fontSize > 0)
+      {
+         fixedValueFont = new Font(getDisplay(), fontName, fontSize, SWT.BOLD);
+      }
+      else
+      {
+         valueFonts = new Font[32];
+         for(int i = 0; i < valueFonts.length; i++)
+            valueFonts[i] = new Font(getDisplay(), fontName, i * 6 + 12, SWT.BOLD);
+      }
 	}
 
    /**
@@ -64,6 +73,9 @@ public class TextGauge extends GenericGauge
 	@Override
 	protected void disposeFonts()
 	{
+      if (fixedValueFont != null)
+         fixedValueFont.dispose();
+
 		if (valueFonts != null)
 		{
 			for(int i = 0; i < valueFonts.length; i++)
@@ -91,14 +103,14 @@ public class TextGauge extends GenericGauge
 		   rect.width -= INNER_MARGIN_WIDTH * 2;
          rect.height -= INNER_MARGIN_HEIGHT * 2;
 		}
-		
+
       if (config.areLabelsVisible())
 		{
 			rect.height -= gc.textExtent("MMM").y + 8; //$NON-NLS-1$
 		}
-		
+
       final String value = getValueAsDisplayString(dci, data);
-		final Font font = WidgetHelper.getBestFittingFont(gc, valueFonts, value, rect.width, rect.height); //$NON-NLS-1$
+      final Font font = (valueFonts != null) ? WidgetHelper.getBestFittingFont(gc, valueFonts, value, rect.width, rect.height) : fixedValueFont;
 		gc.setFont(font);
       switch(GaugeColorMode.getByValue(config.getGaugeColorMode()))
 		{
