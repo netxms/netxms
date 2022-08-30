@@ -222,6 +222,7 @@ public class NXCSession
    public static final int DEFAULT_CONN_PORT = 4701;
 
    // Core notification channels
+   public static final String CHANNEL_AGENT_TUNNELS = "Core.AgentTunnels";
    public static final String CHANNEL_ALARMS = "Core.Alarms";
    public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
    public static final String CHANNEL_DC_THRESHOLDS = "Core.DC.Thresholds";
@@ -692,12 +693,16 @@ public class NXCSession
                      sendNotification(new SessionNotification(SessionNotification.SYSTEM_ACCESS_CHANGED, userSystemRights));
                      break;
                   case NXCPCodes.CMD_UPDATE_BIZSVC_CHECK:
-                     sendNotification(new SessionNotification(SessionNotification.BIZSVC_CHECK_MODIFIED,
-                           msg.getFieldAsInt64(NXCPCodes.VID_CHECK_LIST_BASE), new BusinessServiceCheck(msg, NXCPCodes.VID_CHECK_LIST_BASE)));
+                     sendNotification(
+                           new SessionNotification(SessionNotification.BIZSVC_CHECK_MODIFIED, msg.getFieldAsInt64(NXCPCodes.VID_CHECK_LIST_BASE),
+                                 new BusinessServiceCheck(msg, NXCPCodes.VID_CHECK_LIST_BASE)));
                      break;
                   case NXCPCodes.CMD_DELETE_BIZSVC_CHECK:
-                     sendNotification(new SessionNotification(SessionNotification.BIZSVC_CHECK_DELETED,
-                           msg.getFieldAsInt64(NXCPCodes.VID_CHECK_ID)));
+                     sendNotification(new SessionNotification(SessionNotification.BIZSVC_CHECK_DELETED, msg.getFieldAsInt64(NXCPCodes.VID_CHECK_ID)));
+                     break;
+                  case NXCPCodes.CMD_AGENT_TUNNEL_UPDATE:
+                     sendNotification(
+                           new SessionNotification(msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE, new AgentTunnel(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
                      break;
                   default:
                      // Check subscriptions

@@ -528,14 +528,14 @@ void NXCORE_EXPORTABLE NotifyClientSessions(const NXCPMessage& msg, const TCHAR 
 /**
  * Send notification to all active user sessions
  */
-void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data)
+void NXCORE_EXPORTABLE NotifyClientSessions(uint32_t code, uint32_t data, const TCHAR *channel)
 {
    s_sessionListLock.readLock();
    auto it = s_sessions.begin();
    while(it.hasNext())
    {
       ClientSession *session = it.next();
-      if (session->isAuthenticated() && !session->isTerminated())
+      if (session->isAuthenticated() && !session->isTerminated() && ((channel == nullptr) || session->isSubscribedTo(channel)))
       {
          session->notify(code, data);
       }

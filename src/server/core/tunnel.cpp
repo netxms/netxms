@@ -170,6 +170,7 @@ static void UnregisterTunnel(AgentTunnel *tunnel)
    }
    s_tunnels.remove(tunnel->getId());
    s_tunnelListLock.unlock();
+   NotifyClientSessions(NX_NOTIFY_AGENT_TUNNEL_CLOSED, tunnel->getId(), NXC_CHANNEL_AGENT_TUNNELS);
 }
 
 /**
@@ -709,6 +710,17 @@ void AgentTunnel::setup(const NXCPMessage *request)
       }
 
       ExecuteTunnelHookScript(self());
+
+      auto msg = new NXCPMessage(CMD_AGENT_TUNNEL_UPDATE, 0);
+      fillMessage(msg, VID_ELEMENT_LIST_BASE);
+      msg->setField(VID_NOTIFICATION_CODE, NX_NOTIFY_AGENT_TUNNEL_OPEN);
+      ThreadPoolExecute(g_clientThreadPool,
+         [msg] () -> void
+         {
+            NotifyClientSessions(*msg, NXC_CHANNEL_AGENT_TUNNELS);
+            delete msg;
+         });
+
       if (m_state == AGENT_TUNNEL_BOUND)
       {
          PostSystemEventWithNames(EVENT_TUNNEL_OPEN, m_nodeId, "dAsssssG", s_eventParamNames,

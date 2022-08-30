@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.modules.agentmanagement.views;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -36,6 +38,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.AgentTunnel;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -50,13 +54,16 @@ import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Tunnel manager view
  */
-public class TunnelManager extends ConfigurationView
+public class TunnelManager extends ConfigurationView implements SessionListener
 {
+   private static final Logger logger = LoggerFactory.getLogger(TunnelManager.class);
    private static final I18n i18n = LocalizationHelper.getI18n(TunnelManager.class);
    public static final String ID = "TunnelManager";
    
@@ -81,6 +88,8 @@ public class TunnelManager extends ConfigurationView
    public static final int COL_CERTIFICATE_EXPIRATION = 18;
    public static final int COL_CONNECTION_TIME = 19;
 
+   private NXCSession session = Registry.getSession();
+   private Map<Integer, AgentTunnel> tunnels = new HashMap<>();
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
    private Action actionCreateNode;
@@ -130,15 +139,60 @@ public class TunnelManager extends ConfigurationView
       createPopupMenu();
       
       refresh();
+
+      session.addListener(this);
+      new Job("Subscribing to tunnel change notifications", this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.subscribe(NXCSession.CHANNEL_AGENT_TUNNELS);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot subscribe to tunnel change notifications";
+         }
+      }.start();
    }
 
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+   /**
+    * @see org.netxms.nxmc.base.views.View#setFocus()
     */
    @Override
    public void setFocus()
    {
       viewer.getTable().setFocus();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(this);
+      new Job("Unsubscribing from tunnel change notifications", null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            try
+            {
+               session.unsubscribe(NXCSession.CHANNEL_AGENT_TUNNELS);
+            }
+            catch(Exception e)
+            {
+               logger.error("Cannot remove subscription for agent tunnel notifications", e);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      }.start();
+      super.dispose();
    }
 
    /**
@@ -241,21 +295,23 @@ public class TunnelManager extends ConfigurationView
     */
    public void refresh()
    {
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Get list of active agent tunnels"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
+            final List<AgentTunnel> tunnelList = session.getAgentTunnels();
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  viewer.setInput(tunnels);
+                  tunnels.clear();
+                  for(AgentTunnel t : tunnelList)
+                     tunnels.put(t.getId(), t);
+                  viewer.setInput(tunnels.values());
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -263,13 +319,13 @@ public class TunnelManager extends ConfigurationView
          }
       }.start();
    }
-   
+
    /**
     * Create new node and bind tunnel
     */
    private void createNode()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -299,7 +355,6 @@ public class TunnelManager extends ConfigurationView
       cd.setSshPassword(dlg.getSshPassword());
       cd.setSshPort(dlg.getSshPort());
 
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Create new node and bind tunnel"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -317,15 +372,6 @@ public class TunnelManager extends ConfigurationView
                session.waitForAgentTunnel(nodeId, 20000);
                session.setObjectManaged(nodeId, true);
             }
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!viewer.getControl().isDisposed())
-                     viewer.setInput(tunnels);
-               }
-            });
          }
 
          @Override
@@ -344,33 +390,23 @@ public class TunnelManager extends ConfigurationView
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
          return;
-      
+
       final AgentTunnel tunnel = (AgentTunnel)selection.getFirstElement();
       if (tunnel.isBound())
          return;
-      
+
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
       if (dlg.open() != Window.OK)
          return;      
       final long nodeId = dlg.getSelectedObjects().get(0).getObjectId();
-      
-      final NXCSession session = Registry.getSession();
+
       new Job(i18n.tr("Bind tunnels"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.bindAgentTunnel(tunnel.getId(), nodeId);
-
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(tunnels);
-               }
-            });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -384,15 +420,14 @@ public class TunnelManager extends ConfigurationView
     */
    private void unbindTunnel()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Unbind Tunnel"), i18n.tr("Selected tunnels will be unbound. Are you sure?")))
          return;
-      
+
       final Object[] tunnels = selection.toArray();
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Unbind tunnels"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -404,17 +439,8 @@ public class TunnelManager extends ConfigurationView
                   continue;
                session.unbindAgentTunnel(t.getNodeId());
             }
-
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(tunnels);
-               }
-            });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -423,14 +449,51 @@ public class TunnelManager extends ConfigurationView
       }.start();
    }
    
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
    @Override
    public boolean isModified()
    {
       return false;
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
    @Override
    public void save()
    {
+   }
+
+   /**
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
+    */
+   @Override
+   public void notificationHandler(final SessionNotification n)
+   {
+      if (n.getCode() == SessionNotification.AGENT_TUNNEL_OPEN)
+      {
+         getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               AgentTunnel t = (AgentTunnel)n.getObject();
+               tunnels.put(t.getId(), t);
+               viewer.refresh();
+            }
+         });
+      }
+      else if (n.getCode() == SessionNotification.AGENT_TUNNEL_CLOSED)
+      {
+         getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               tunnels.remove((int)n.getSubCode());
+               viewer.refresh();
+            }
+         });
+      }
    }
 }

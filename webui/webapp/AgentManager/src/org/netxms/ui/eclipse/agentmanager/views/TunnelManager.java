@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.agentmanager.views;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -40,6 +42,7 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.contexts.IContextService;
@@ -48,6 +51,8 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AgentTunnel;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
@@ -67,7 +72,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 /**
  * Tunnel manager view
  */
-public class TunnelManager extends ViewPart
+public class TunnelManager extends ViewPart implements SessionListener
 {
    public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.TunnelManager";
    
@@ -92,6 +97,9 @@ public class TunnelManager extends ViewPart
    public static final int COL_CERTIFICATE_EXPIRATION = 18;
    public static final int COL_CONNECTION_TIME = 19;
 
+   private NXCSession session = ConsoleSharedData.getSession();
+   private Map<Integer, AgentTunnel> tunnels = new HashMap<>();
+   private Display display = Display.getCurrent();
    private SortableTableViewer viewer;
    private TunnelManagerFilter filter;
    private boolean initShowfilter = true;
@@ -142,7 +150,7 @@ public class TunnelManager extends ViewPart
       viewer.setComparator(new TunnelListComparator());
       filter = new TunnelManagerFilter();
       viewer.addFilter(filter);
-      
+
       final IDialogSettings settings = Activator.getDefault().getDialogSettings();
       initShowfilter = settings.getBoolean(ID + "initShowFilter");
       
@@ -180,10 +188,25 @@ public class TunnelManager extends ViewPart
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
-      
+
       refresh();
+
+      session.addListener(this);
+      new ConsoleJob("Subscribing to tunnel change notifications", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.subscribe(NXCSession.CHANNEL_AGENT_TUNNELS);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot subscribe to tunnel change notifications";
+         }
+      }.start();
    }
-   
+
    /**
     * Activate context
     */
@@ -196,13 +219,43 @@ public class TunnelManager extends ViewPart
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
    public void setFocus()
    {
       viewer.getTable().setFocus();
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(this);
+      new ConsoleJob("Unsubscribing from tunnel change notifications", null, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            try
+            {
+               session.unsubscribe(NXCSession.CHANNEL_AGENT_TUNNELS);
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Cannot remove subscription for agent tunnel notifications", e);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      }.start();
+      super.dispose();
    }
 
    /**
@@ -361,21 +414,23 @@ public class TunnelManager extends ViewPart
     */
    private void refresh()
    {
-      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Get list of active agent tunnels", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
+            final List<AgentTunnel> tunnelList = session.getAgentTunnels();
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  viewer.setInput(tunnels);
+                  tunnels.clear();
+                  for(AgentTunnel t : tunnelList)
+                     tunnels.put(t.getId(), t);
+                  viewer.setInput(tunnels.values());
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -383,13 +438,13 @@ public class TunnelManager extends ViewPart
          }
       }.start();
    }
-   
+
    /**
     * Create new node and bind tunnel
     */
    private void createNode()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -419,7 +474,6 @@ public class TunnelManager extends ViewPart
       cd.setSshPassword(dlg.getSshPassword());
       cd.setSshPort(dlg.getSshPort());
 
-      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Create new node and bind tunnel", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -437,15 +491,6 @@ public class TunnelManager extends ViewPart
                session.waitForAgentTunnel(nodeId, 20000);
                session.setObjectManaged(nodeId, true);
             }
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!viewer.getControl().isDisposed())
-                     viewer.setInput(tunnels);
-               }
-            });
          }
 
          @Override
@@ -461,36 +506,26 @@ public class TunnelManager extends ViewPart
     */
    private void bindTunnel()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final AgentTunnel tunnel = (AgentTunnel)selection.getFirstElement();
       if (tunnel.isBound())
          return;
-      
+
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
       if (dlg.open() != Window.OK)
          return;      
       final long nodeId = dlg.getSelectedObjects().get(0).getObjectId();
-      
-      final NXCSession session = ConsoleSharedData.getSession();
+
       new ConsoleJob("Bind tunnels", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             session.bindAgentTunnel(tunnel.getId(), nodeId);
-
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(tunnels);
-               }
-            });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -504,15 +539,14 @@ public class TunnelManager extends ViewPart
     */
    private void unbindTunnel()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Unbind Tunnel", "Selected tunnels will be unbound. Are you sure?"))
          return;
-      
+
       final Object[] tunnels = selection.toArray();
-      final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob("Unbind tunnels", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -524,17 +558,8 @@ public class TunnelManager extends ViewPart
                   continue;
                session.unbindAgentTunnel(t.getNodeId());
             }
-
-            final List<AgentTunnel> tunnels = session.getAgentTunnels();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(tunnels);
-               }
-            });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -580,5 +605,36 @@ public class TunnelManager extends ViewPart
       final String text = filterText.getText();
       filter.setFilterString(text);
       viewer.refresh(false);
+   }
+
+   /**
+    * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
+    */
+   @Override
+   public void notificationHandler(final SessionNotification n)
+   {
+      if (n.getCode() == SessionNotification.AGENT_TUNNEL_OPEN)
+      {
+         display.asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               AgentTunnel t = (AgentTunnel)n.getObject();
+               tunnels.put(t.getId(), t);
+               viewer.refresh();
+            }
+         });
+      }
+      else if (n.getCode() == SessionNotification.AGENT_TUNNEL_CLOSED)
+      {
+         display.asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               tunnels.remove((int)n.getSubCode());
+               viewer.refresh();
+            }
+         });
+      }
    }
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2016-2020 RadenSolutions
+** Copyright (C) 2016-2022 RadenSolutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -242,7 +242,7 @@ uint32_t UpdateAlarmCategory(const NXCPMessage& request, uint32_t *returnId)
       msg.setCode(CMD_ALARM_CATEGORY_UPDATE);
       msg.setField(VID_NOTIFICATION_CODE, static_cast<uint16_t>(NX_NOTIFY_ALARM_CATEGORY_UPDATED));
       category->fillMessage(&msg, VID_ELEMENT_LIST_BASE);
-      NotifyClientSessions(msg, nullptr);
+      NotifyClientSessions(msg);
    }
 
    s_lock.unlock();
@@ -304,7 +304,7 @@ uint32_t DeleteAlarmCategory(uint32_t id)
                nmsg.setCode(CMD_ALARM_CATEGORY_UPDATE);
                nmsg.setField(VID_NOTIFICATION_CODE, static_cast<uint16_t>(NX_NOTIFY_ALARM_CATEGORY_DELETED));
                nmsg.setField(VID_ELEMENT_LIST_BASE, id);
-               NotifyClientSessions(nmsg, nullptr);
+               NotifyClientSessions(nmsg);
             }
          }
          else
@@ -423,11 +423,10 @@ uint32_t CreateAlarmCategory(const TCHAR *name, const TCHAR *description)
    category->saveToDatabase();
 
    // Notify clients
-   NXCPMessage msg;
-   msg.setCode(CMD_ALARM_CATEGORY_UPDATE);
+   NXCPMessage msg(CMD_ALARM_CATEGORY_UPDATE, 0);
    msg.setField(VID_NOTIFICATION_CODE, static_cast<uint16_t>(NX_NOTIFY_ALARM_CATEGORY_UPDATED));
    category->fillMessage(&msg, VID_ELEMENT_LIST_BASE);
-   NotifyClientSessions(msg, nullptr);
+   NotifyClientSessions(msg);
 
    s_lock.unlock();
    return id;

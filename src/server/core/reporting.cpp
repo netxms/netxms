@@ -113,7 +113,7 @@ bool RSConnector::onMessage(NXCPMessage *msg)
    switch(msg->getCode())
    {
       case CMD_RS_NOTIFY:
-         NotifyClientSessions(*msg, nullptr);
+         NotifyClientSessions(*msg);
          return true;
       case CMD_CREATE_OBJECT_ACCESS_SNAPSHOT:
          createObjectAccessSnapshot(msg);

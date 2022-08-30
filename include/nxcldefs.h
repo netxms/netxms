@@ -553,6 +553,8 @@ enum SessionState
 #define NX_NOTIFY_BIZSVC_CHECK_DELETED        58
 #define NX_NOTIFY_MAINTENANCE_JOURNAL_UPDATED 59
 #define NX_NOTIFY_SSH_CREDENTIALS_CHANGED     60
+#define NX_NOTIFY_AGENT_TUNNEL_OPEN           61
+#define NX_NOTIFY_AGENT_TUNNEL_CLOSED         62
 
 /**
  * Request completion codes
@@ -1170,6 +1172,7 @@ enum AggregationFunction
 /**
  * Core subscription channels
  */
+#define NXC_CHANNEL_AGENT_TUNNELS   _T("Core.AgentTunnels")
 #define NXC_CHANNEL_ALARMS          _T("Core.Alarms")
 #define NXC_CHANNEL_AUDIT_LOG       _T("Core.Audit")
 #define NXC_CHANNEL_DC_THRESHOLDS   _T("Core.DC.Thresholds")

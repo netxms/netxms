@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ uint32_t DeleteGeoArea(uint32_t id, bool forceDelete)
 
    s_geoAreas.remove(id);
 
-   NotifyClientSessions(NX_NOTIFY_GEO_AREA_DELETED, id);
+   NotifyClientSessions(NX_NOTIFY_GEO_AREA_DELETED, id, NXC_CHANNEL_GEO_AREAS);
    return RCC_SUCCESS;
 }
 

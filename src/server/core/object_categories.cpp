@@ -112,7 +112,7 @@ uint32_t DeleteObjectCategory(uint32_t id, bool forceDelete)
 
    s_objectCategories.remove(id);
 
-   NotifyClientSessions(NX_NOTIFY_OBJECT_CATEGORY_DELETED, id);
+   NotifyClientSessions(NX_NOTIFY_OBJECT_CATEGORY_DELETED, id, NXC_CHANNEL_OBJECTS);
    return RCC_SUCCESS;
 }
 
