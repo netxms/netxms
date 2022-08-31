@@ -40,7 +40,7 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <lib.scope>compile</lib.scope>
-      <rwt.version>3.19.0</rwt.version>
+      <rwt.version>3.21.0</rwt.version>
       <swt.version>3.118.0</swt.version>
       <packaging.type>jar</packaging.type>
    </properties>

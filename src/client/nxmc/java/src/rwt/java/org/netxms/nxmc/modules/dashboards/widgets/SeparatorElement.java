@@ -28,7 +28,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.SeparatorConfig;
-import org.netxms.nxmc.modules.dashboards.views.DashboardView;
+import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
 
 /**
@@ -44,7 +44,7 @@ public class SeparatorElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-   public SeparatorElement(DashboardControl parent, DashboardElement element, DashboardView view)
+   public SeparatorElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, SWT.NONE, element, view);
 

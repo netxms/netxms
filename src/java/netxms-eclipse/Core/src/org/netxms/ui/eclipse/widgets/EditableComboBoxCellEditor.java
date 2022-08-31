@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.dialogs.helpers;
+package org.netxms.ui.eclipse.widgets;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -37,15 +37,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * A cell editor that presents a list of items in a combo box. 
+ * A cell editor that presents a list of items in a combo box.
  */
-public class EditableComboBoxCellEditor extends CellEditor 
+public class EditableComboBoxCellEditor extends CellEditor
 {
-
    /**
     * The list of items to present in the combo box.
     */
-   private ArrayList<String> items = new  ArrayList<String>();
+   private ArrayList<String> items = new ArrayList<String>();
 
    /**
     * The zero-based index of the selected item.
@@ -63,49 +62,42 @@ public class EditableComboBoxCellEditor extends CellEditor
    private static final int defaultStyle = SWT.NONE;
 
    /**
-    * Creates a new cell editor with no control and no st of choices.
-    * Initially, the cell editor has no cell validator.
+    * Creates a new cell editor with no control and no st of choices. Initially, the cell editor has no cell validator.
     *
-    * @since 2.1
     * @see CellEditor#setStyle
     * @see CellEditor#create
     * @see EditableComboBoxCellEditor#setItems
     * @see CellEditor#dispose
     */
-   public EditableComboBoxCellEditor() {
+   public EditableComboBoxCellEditor()
+   {
       setStyle(defaultStyle);
    }
 
    /**
-    * Creates a new cell editor with a combo containing the given list of
-    * choices and parented under the given control. The cell editor value is
-    * the zero-based index of the selected item. Initially, the cell editor has
-    * no cell validator and the first item in the list is selected.
+    * Creates a new cell editor with a combo containing the given list of choices and parented under the given control. The cell
+    * editor value is the zero-based index of the selected item. Initially, the cell editor has no cell validator and the first item
+    * in the list is selected.
     *
-    * @param parent
-    *            the parent control
-    * @param items
-    *            the list of strings for the combo box
+    * @param parent the parent control
+    * @param items the list of strings for the combo box
     */
-   public EditableComboBoxCellEditor(Composite parent, String[] items) {
+   public EditableComboBoxCellEditor(Composite parent, String[] items)
+   {
       this(parent, items, defaultStyle);
    }
 
    /**
-    * Creates a new cell editor with a combo containing the given list of
-    * choices and parented under the given control. The cell editor value is
-    * the zero-based index of the selected item. Initially, the cell editor has
-    * no cell validator and the first item in the list is selected.
+    * Creates a new cell editor with a combo containing the given list of choices and parented under the given control. The cell
+    * editor value is the zero-based index of the selected item. Initially, the cell editor has no cell validator and the first item
+    * in the list is selected.
     *
-    * @param parent
-    *            the parent control
-    * @param items
-    *            the list of strings for the combo box
-    * @param style
-    *            the style bits
-    * @since 2.1
+    * @param parent the parent control
+    * @param items the list of strings for the combo box
+    * @param style the style bits
     */
-   public EditableComboBoxCellEditor(Composite parent, String[] items, int style) {
+   public EditableComboBoxCellEditor(Composite parent, String[] items, int style)
+   {
       super(parent, style);
       setItems(items);
    }
@@ -115,24 +107,26 @@ public class EditableComboBoxCellEditor extends CellEditor
     *
     * @return the list of choices for the combo box
     */
-   public List<String> getItems() {
+   public List<String> getItems()
+   {
       return items;
    }
 
    /**
     * Sets the list of choices for the combo box
     *
-    * @param items
-    *            the list of choices for the combo box
+    * @param items the list of choices for the combo box
     */
-   public void setItems(String[] items) {
+   public void setItems(String[] items)
+   {
       Assert.isNotNull(items);
       Collections.addAll(this.items, items);
       populateComboBoxItems();
    }
 
    @Override
-   protected Control createControl(Composite parent) {
+   protected Control createControl(Composite parent)
+   {
 
       comboBox = new CCombo(parent, getStyle());
       comboBox.setFont(parent.getFont());
@@ -142,33 +136,37 @@ public class EditableComboBoxCellEditor extends CellEditor
       comboBox.addKeyListener(new KeyAdapter() {
          // hook key pressed - see PR 14201
          @Override
-         public void keyPressed(KeyEvent e) {
+         public void keyPressed(KeyEvent e)
+         {
             keyReleaseOccured(e);
          }
       });
 
       comboBox.addSelectionListener(new SelectionAdapter() {
          @Override
-         public void widgetDefaultSelected(SelectionEvent event) {
+         public void widgetDefaultSelected(SelectionEvent event)
+         {
             applyEditorValueAndDeactivate();
          }
 
          @Override
-         public void widgetSelected(SelectionEvent event) {
+         public void widgetSelected(SelectionEvent event)
+         {
             selection = comboBox.getText();
          }
       });
 
       comboBox.addTraverseListener(e -> {
-         if (e.detail == SWT.TRAVERSE_ESCAPE
-               || e.detail == SWT.TRAVERSE_RETURN) {
+         if (e.detail == SWT.TRAVERSE_ESCAPE || e.detail == SWT.TRAVERSE_RETURN)
+         {
             e.doit = false;
          }
       });
 
       comboBox.addFocusListener(new FocusAdapter() {
          @Override
-         public void focusLost(FocusEvent e) {
+         public void focusLost(FocusEvent e)
+         {
             EditableComboBoxCellEditor.this.focusLost();
          }
       });
@@ -176,60 +174,60 @@ public class EditableComboBoxCellEditor extends CellEditor
    }
 
    /**
-    * The <code>ComboBoxCellEditor</code> implementation of this
-    * <code>CellEditor</code> framework method returns the zero-based index
-    * of the current selection.
+    * The <code>ComboBoxCellEditor</code> implementation of this <code>CellEditor</code> framework method returns the zero-based
+    * index of the current selection.
     *
-    * @return the zero-based index of the current selection wrapped as an
-    *         <code>Integer</code>
+    * @return the zero-based index of the current selection wrapped as an <code>Integer</code>
     */
    @Override
-   protected Object doGetValue() {
+   protected Object doGetValue()
+   {
       return selection;
    }
 
    @Override
-   protected void doSetFocus() {
+   protected void doSetFocus()
+   {
       comboBox.setFocus();
    }
 
    /**
-    * The <code>ComboBoxCellEditor</code> implementation of this
-    * <code>CellEditor</code> framework method sets the minimum width of the
-    * cell. The minimum width is 10 characters if <code>comboBox</code> is
-    * not <code>null</code> or <code>disposed</code> else it is 60 pixels
-    * to make sure the arrow button and some text is visible. The list of
-    * CCombo will be wide enough to show its longest item.
+    * The <code>ComboBoxCellEditor</code> implementation of this <code>CellEditor</code> framework method sets the minimum width of
+    * the cell. The minimum width is 10 characters if <code>comboBox</code> is not <code>null</code> or <code>disposed</code> else
+    * it is 60 pixels to make sure the arrow button and some text is visible. The list of CCombo will be wide enough to show its
+    * longest item.
     */
    @Override
-   public LayoutData getLayoutData() {
+   public LayoutData getLayoutData()
+   {
       LayoutData layoutData = super.getLayoutData();
-      if ((comboBox == null) || comboBox.isDisposed()) {
+      if ((comboBox == null) || comboBox.isDisposed())
+      {
          layoutData.minimumWidth = 60;
-      } else {
+      }
+      else
+      {
          // make the comboBox 10 characters wide
          GC gc = new GC(comboBox);
-         layoutData.minimumWidth = (int) ((gc.getFontMetrics().getAverageCharacterWidth() * 10) + 10);
+         layoutData.minimumWidth = (int)((gc.getFontMetrics().getAverageCharacterWidth() * 10) + 10);
          gc.dispose();
       }
       return layoutData;
    }
 
    /**
-    * The <code>ComboBoxCellEditor</code> implementation of this
-    * <code>CellEditor</code> framework method accepts a zero-based index of
-    * a selection.
+    * The <code>ComboBoxCellEditor</code> implementation of this <code>CellEditor</code> framework method accepts a zero-based index
+    * of a selection.
     *
-    * @param value
-    *            the zero-based index of the selection wrapped as an
-    *            <code>Integer</code>
+    * @param value the zero-based index of the selection wrapped as an <code>Integer</code>
     */
    @Override
-   protected void doSetValue(Object value) {
+   protected void doSetValue(Object value)
+   {
       Assert.isTrue(comboBox != null && (value instanceof String));
-      selection = ((String) value);
+      selection = ((String)value);
       int i = 0;
-      for (;i < items.size(); i++)
+      for(; i < items.size(); i++)
       {
          if (items.get(i).equals(selection))
             break;
@@ -237,7 +235,7 @@ public class EditableComboBoxCellEditor extends CellEditor
       if (i == items.size())
       {
          items.add(selection);
-         comboBox.add(selection, i);         
+         comboBox.add(selection, i);
       }
       comboBox.select(i);
    }
@@ -245,10 +243,13 @@ public class EditableComboBoxCellEditor extends CellEditor
    /**
     * Updates the list of choices for the combo box for the current control.
     */
-   private void populateComboBoxItems() {
-      if (comboBox != null && items != null) {
+   private void populateComboBoxItems()
+   {
+      if (comboBox != null && items != null)
+      {
          comboBox.removeAll();
-         for (int i = 0; i < items.size(); i++) {
+         for(int i = 0; i < items.size(); i++)
+         {
             comboBox.add(items.get(i), i);
          }
 
@@ -260,7 +261,8 @@ public class EditableComboBoxCellEditor extends CellEditor
    /**
     * Applies the currently selected value and deactivates the cell editor
     */
-   void applyEditorValueAndDeactivate() {
+   void applyEditorValueAndDeactivate()
+   {
       // must set the selection before getting value
       selection = comboBox.getText();
       Object newValue = doGetValue();
@@ -268,9 +270,9 @@ public class EditableComboBoxCellEditor extends CellEditor
       boolean isValid = isCorrect(newValue);
       setValueValid(isValid);
 
-      if (!isValid) {
-            setErrorMessage(MessageFormat.format(getErrorMessage(),
-                  new Object[] { comboBox.getText() }));
+      if (!isValid)
+      {
+         setErrorMessage(MessageFormat.format(getErrorMessage(), new Object[] { comboBox.getText() }));
       }
 
       fireApplyEditorValue();
@@ -278,17 +280,23 @@ public class EditableComboBoxCellEditor extends CellEditor
    }
 
    @Override
-   protected void focusLost() {
-      if (isActivated()) {
+   protected void focusLost()
+   {
+      if (isActivated())
+      {
          applyEditorValueAndDeactivate();
       }
    }
 
    @Override
-   protected void keyReleaseOccured(KeyEvent keyEvent) {
-      if (keyEvent.character == '\u001b') { // Escape character
+   protected void keyReleaseOccured(KeyEvent keyEvent)
+   {
+      if (keyEvent.character == '\u001b')
+      { // Escape character
          fireCancelEditor();
-      } else if (keyEvent.character == '\t') { // tab key
+      }
+      else if (keyEvent.character == '\t')
+      { // tab key
          applyEditorValueAndDeactivate();
       }
    }

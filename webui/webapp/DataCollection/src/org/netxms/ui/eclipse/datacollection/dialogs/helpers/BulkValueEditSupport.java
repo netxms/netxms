@@ -25,6 +25,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.widgets.EditableComboBoxCellEditor;
 
 /**
  * Edit support class for bulk update value field
