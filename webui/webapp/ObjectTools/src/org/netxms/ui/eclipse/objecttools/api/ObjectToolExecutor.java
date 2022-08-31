@@ -410,7 +410,7 @@ public final class ObjectToolExecutor
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         Activator.logError("Cannot open view " + MultiNodeCommandExecutor.ID, e);
          MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
       }
    }
@@ -469,7 +469,7 @@ public final class ObjectToolExecutor
                   {
                      statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
                   }
-                  else
+                  else if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                   {
                      runInUIThread(new Runnable() {
                         @Override
@@ -536,7 +536,7 @@ public final class ObjectToolExecutor
                   {
                      statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
                   }
-                  else
+                  else if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                   {
                      runInUIThread(new Runnable() {
                         @Override
@@ -606,7 +606,7 @@ public final class ObjectToolExecutor
                   {
                      statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
                   }
-                  else
+                  else if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                   {
                      runInUIThread(new Runnable() {
                         @Override

@@ -446,14 +446,17 @@ public final class ObjectToolExecutor
             protected void run(IProgressMonitor monitor) throws Exception
             {
                final String action = session.executeActionWithExpansion(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, maskedFields);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     String message = String.format(i18n.tr("Action %s executed successfully on node %s"), action, node.object.getObjectName());
-                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
-                  }
-               });
+               if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
+               {
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        String message = String.format(i18n.tr("Action %s executed successfully on node %s"), action, node.object.getObjectName());
+                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
+                     }
+                  });
+               }
             }
          }.start();
       }
@@ -494,14 +497,17 @@ public final class ObjectToolExecutor
             protected void run(IProgressMonitor monitor) throws Exception
             {
                session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues, maskedFields);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     String message = String.format(i18n.tr("Server command %s executed successfully on node %s"), tool.getDisplayName(), node.object.getObjectName());
-                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
-                  }
-               });
+               if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
+               {
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        String message = String.format(i18n.tr("Server command %s executed successfully on node %s"), tool.getDisplayName(), node.object.getObjectName());
+                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
+                     }
+                  });
+               }
             }
             
             @Override
@@ -627,13 +633,16 @@ public final class ObjectToolExecutor
             protected void run(IProgressMonitor monitor) throws Exception
             {
                session.executeLibraryScript(node.object.getObjectId(), node.getAlarmId(), tool.getData(), inputValues, null);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, String.format(i18n.tr("Server script executed successfully on node %s"), node.object.getObjectName()));
-                  }
-               });
+               if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
+               {
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, String.format(i18n.tr("Server script executed successfully on node %s"), node.object.getObjectName()));
+                     }
+                  });
+               }
             }
 
             @Override

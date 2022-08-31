@@ -58,6 +58,7 @@ public class ObjectTool implements ObjectAction
    public static final int SHOW_IN_COMMANDS          = 0x00000008;
    public static final int SNMP_INDEXED_BY_VALUE     = 0x00000010;
    public static final int RUN_IN_CONTAINER_CONTEXT  = 0x00000020;
+   public static final int SUPPRESS_SUCCESS_MESSAGE  = 0x00000040;
 
    private static final Logger logger = LoggerFactory.getLogger(ObjectTool.class);
 
