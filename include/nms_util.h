@@ -5089,7 +5089,7 @@ template<typename T> inline T GetAttributeWithLock(const T& attr, const Mutex& m
 /**
  * Set value of given attribute protected by given mutex
  */
-template<typename T> inline void SetAttributeWithLock(T& attr, T value, const Mutex& mutex)
+template<typename T> inline void SetAttributeWithLock(T& attr, const T& value, const Mutex& mutex)
 {
    mutex.lock();
    attr = value;
