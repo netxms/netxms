@@ -10983,47 +10983,6 @@ void ClientSession::executeScript(const NXCPMessage& request)
 }
 
 /**
- * Library script execution data
- */
-struct LibraryScriptExecutionData
-{
-   NXSL_VM *vm;
-   TCHAR *name;
-   ObjectRefArray<NXSL_Value> args;
-
-   LibraryScriptExecutionData(NXSL_VM *_vm, StringList *_args) : args(_args->size(), 16)
-   {
-      vm = _vm;
-      for(int i = 1; i < _args->size(); i++)
-         args.add(vm->createValue(_args->get(i)));
-      name = MemCopyString(_args->get(0));
-   }
-
-   ~LibraryScriptExecutionData()
-   {
-      delete vm;
-      MemFree(name);
-   }
-};
-
-/**
- * Callback for executing library script on separate thread pool
- */
-static void ExecuteLibraryScript(LibraryScriptExecutionData *context)
-{
-   nxlog_debug(6, _T("Starting background execution of library script %s"), context->name);
-   if (context->vm->run(context->args))
-   {
-      nxlog_debug(6, _T("Background execution of library script %s completed"), context->name);
-   }
-   else
-   {
-      nxlog_debug(6, _T("Background execution of library script %s failed (%s)"), context->name, context->vm->getErrorText());
-   }
-   delete context;
-}
-
-/**
  * Execute library script in object's context
  */
 void ClientSession::executeLibraryScript(const NXCPMessage& request)
@@ -11077,7 +11036,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                   if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
                      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-                     sendMessage(&response);
+                     sendMessage(response);
                      delete alarm;
                      delete inputFields;
                      return;
@@ -11099,7 +11058,7 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
                      SetupServerScriptVM(vm, object, shared_ptr<DCObjectInfo>());
                      WriteAuditLog(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), _T("'%s' script successfully executed."), CHECK_NULL(script));
                      response.setField(VID_RCC, RCC_SUCCESS);
-                     sendMessage(&response);
+                     sendMessage(response);
                      success = true;
                   }
                   else
@@ -11138,38 +11097,36 @@ void ClientSession::executeLibraryScript(const NXCPMessage& request)
    if (success)
    {
       writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Executed library script \"%s\" for object %s [%u]"), script, object->getName(), object->getId());
-      if (withOutput)
+
+      ObjectRefArray<NXSL_Value> sargs(args->size() - 1, 1);
+      for(int i = 1; i < args->size(); i++)
+         sargs.add(vm->createValue(args->get(i)));
+      response.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
+
+      if (vm->run(sargs))
       {
-         ObjectRefArray<NXSL_Value> sargs(args->size() - 1, 1);
-         for(int i = 1; i < args->size(); i++)
-            sargs.add(vm->createValue(args->get(i)));
-         response.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
-         if (vm->run(sargs))
+         if (withOutput)
          {
             TCHAR buffer[1024];
             const TCHAR *value = vm->getResult()->getValueAsCString();
             _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
             response.setField(VID_MESSAGE, buffer);
-            response.setField(VID_RCC, RCC_SUCCESS);
-            response.setEndOfSequence();
-            sendMessage(response);
          }
-         else
-         {
-            response.setField(VID_ERROR_TEXT, vm->getErrorText());
-            response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
-            response.setEndOfSequence();
-            sendMessage(response);
-
-            if (!request.getFieldAsBoolean(VID_DEVELOPMENT_MODE))
-               ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), script);
-         }
-         delete vm;
+         response.setField(VID_RCC, RCC_SUCCESS);
+         response.setEndOfSequence();
+         sendMessage(response);
       }
       else
       {
-         ThreadPoolExecute(g_clientThreadPool, ExecuteLibraryScript, new LibraryScriptExecutionData(vm, args));
+         response.setField(VID_ERROR_TEXT, vm->getErrorText());
+         response.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+         response.setEndOfSequence();
+         sendMessage(response);
+
+         if (!request.getFieldAsBoolean(VID_DEVELOPMENT_MODE))
+            ReportScriptError(SCRIPT_CONTEXT_CLIENT, object.get(), 0, vm->getErrorText(), script);
       }
+      delete vm;
    }
    else
    {
