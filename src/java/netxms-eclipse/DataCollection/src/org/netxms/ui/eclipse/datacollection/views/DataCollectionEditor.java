@@ -1018,7 +1018,10 @@ public class DataCollectionEditor extends ViewPart
       for (BulkDciUpdateElementUI e : elements)
       {
          if (e.isModified())
+         {
             changed = true;
+            break;
+         }
       }
 
       if (!changed)

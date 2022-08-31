@@ -50,9 +50,7 @@ public class BulkUpdateLabelProvider extends LabelProvider implements ITableLabe
          case 0:
             return el.getName();
          case 1:
-            if (el.isText())
-               return el.getTextValue().isEmpty() ? "No change" : el.getTextValue();
-            return el.getPossibleValues()[el.getSelectionValue() + 1];
+            return el.getDisplayText();
          default:
             return null;
       }

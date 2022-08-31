@@ -575,6 +575,7 @@ int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request, uin
 
    SharedString pollingIntervalSrc = request.getFieldAsSharedString(VID_POLLING_INTERVAL);
    SharedString retentionTimeSrc = request.getFieldAsSharedString(VID_RETENTION_TIME);
+   SharedString unitName = request.getFieldAsSharedString(VID_UNITS_NAME);
 
    int count = 0;
    readLockDciAccess();
@@ -596,6 +597,8 @@ int DataCollectionOwner::updateMultipleDCObjects(const NXCPMessage& request, uin
                   dci->setPollingIntervalType(static_cast<BYTE>(pollingScheduleType));
                if (retentionType != -1)
                   dci->setRetentionType(static_cast<BYTE>(retentionType));
+               if (!unitName.isNull() && (dci->getType() == DCO_TYPE_ITEM))
+                  static_cast<DCItem*>(dci)->setUnitName(unitName);
                NotifyClientsOnDCIUpdate(*this, dci);
                count++;
             }

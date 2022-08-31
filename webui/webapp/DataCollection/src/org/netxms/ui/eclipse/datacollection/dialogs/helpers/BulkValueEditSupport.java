@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,6 +58,10 @@ public class BulkValueEditSupport extends EditingSupport
       {
          editor = new TextCellEditor(viewer.getTable());
       }
+      else if (el.isEditableDropdown())
+      {
+         editor = new EditableComboBoxCellEditor(viewer.getTable(), el.getPossibleValues());
+      }
       else
       {
          editor = new ComboBoxCellEditor(viewer.getTable(), el.getPossibleValues(), SWT.READ_ONLY);
@@ -85,14 +89,7 @@ public class BulkValueEditSupport extends EditingSupport
    protected Object getValue(Object element)
    {
       BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
-      if (el.isText())
-      {
-         return el.getTextValue();
-      }
-      else
-      {
-         return el.getSelectionValue() + 1;         
-      }
+      return el.getValue();
    }
 
    /**
@@ -102,7 +99,7 @@ public class BulkValueEditSupport extends EditingSupport
    protected void setValue(Object element, Object value)
    {
       BulkDciUpdateElementUI el = (BulkDciUpdateElementUI)element;
-      el.setValue(el.isText() ? value : ((Integer)value) - 1);
+      el.setValue(value);         
       getViewer().update(el, null);
    }
 }

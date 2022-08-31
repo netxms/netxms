@@ -69,7 +69,7 @@ public class General extends AbstractDCIPropertyPage
 {	
    private static final I18n i18n = LocalizationHelper.getI18n(General.class);
    
-   private static final String[] dataUnits = 
+   public static final String[] DATA_UNITS = 
    {
       "B/s",
       "b/s",
@@ -272,10 +272,10 @@ public class General extends AbstractDCIPropertyPage
          dataUnit = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.NONE, "Units", gd);
          int selection = -1;
          int index = 0;
-         for (; index < dataUnits.length; index++)
+         for (; index < DATA_UNITS.length; index++)
          {
-            dataUnit.add(dataUnits[index]);
-            if (dci.getUnitName() != null  && dci.getUnitName().equals(dataUnits[index]))
+            dataUnit.add(DATA_UNITS[index]);
+            if (dci.getUnitName() != null  && dci.getUnitName().equals(DATA_UNITS[index]))
             {
                selection = index;
             }

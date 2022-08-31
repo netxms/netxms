@@ -573,6 +573,7 @@ public:
 
 	int getThresholdCount() const { return (m_thresholds != nullptr) ? m_thresholds->size() : 0; }
 
+	void setUnitName(const SharedString &unitName) { SetAttributeWithLock(m_unitName, m_mutex); }
 	void setDataType(int dataType) { m_dataType = dataType; }
 	void setDeltaCalculationMethod(int method) { m_deltaCalculation = method; }
 	void setAllThresholdsFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ALL_THRESHOLDS; else m_flags &= ~DCF_ALL_THRESHOLDS; }

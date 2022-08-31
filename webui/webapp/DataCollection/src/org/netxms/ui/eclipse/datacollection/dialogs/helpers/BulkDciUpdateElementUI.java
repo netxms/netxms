@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ public class BulkDciUpdateElementUI extends BulkDciUpdateElement
    private String[] possibleValues;
    private VerifyListener verifyListener;
    private EditModeSelector callback;
+   private boolean editableDropdown = false;
 
    /**
     * Constructor for bulk update element 
@@ -77,7 +78,7 @@ public class BulkDciUpdateElementUI extends BulkDciUpdateElement
       this.name = name;
       this.possibleValues = possibleValues;
       this.verifyListener = verifyListener;
-      callback = null;
+      this.callback = null;
    }
 
    /**
@@ -88,7 +89,7 @@ public class BulkDciUpdateElementUI extends BulkDciUpdateElement
       if (value != null && value instanceof String)
          return (String)value;
       else
-         return "";
+         return editableDropdown ? possibleValues[0] : "";
    }
 
    /**
@@ -155,5 +156,69 @@ public class BulkDciUpdateElementUI extends BulkDciUpdateElement
    public static interface EditModeSelector
    {
       public boolean isEditable();
+   }
+
+   /** 
+    * Set if drop down should be read only. By default TRUE.
+    * 
+    * @param isReadOnly if drop down should be read only. 
+    */
+   public void setEditableDropdown(boolean editableDropdown)
+   {
+      this.editableDropdown = editableDropdown;
+   }
+
+   /** 
+    * @return if element drop down is read only
+    */
+   public boolean isEditableDropdown()
+   {
+      return editableDropdown;
+   }
+   
+   /**
+    * Set value from UI
+    *
+    * @param value new field value
+    */
+   public void setValue(Object value)
+   {
+      if (isText())
+         this.value = ((String)value).isEmpty() ? null : value;
+      else if (editableDropdown)
+         this.value = possibleValues[0].equals(value) ? null : value; //do not save first element: No change
+      else
+         this.value = ((Integer)value) - 1;
+   }
+   
+   /**
+    * Get value to show on UI
+    * 
+    * @return value
+    */
+   public Object getValue()
+   {
+      if (isText() || editableDropdown)
+      {
+         return getTextValue();
+      }
+      else
+      {
+         return getSelectionValue() + 1;         
+      }      
+   }
+   
+   /**
+    * Get value as a text to display
+    * 
+    * @return text to display
+    */
+   public String getDisplayText()
+   {
+      if (editableDropdown)
+         return getTextValue();
+      if (isText())
+         return getTextValue().isEmpty() ? "No change" : getTextValue();
+      return possibleValues[getSelectionValue() + 1];
    }
 }

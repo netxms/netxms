@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,9 +52,7 @@ public class BulkUpdateLabelProvider extends LabelProvider implements ITableLabe
          case 0:
             return el.getName();
          case 1:
-            if (el.isText())
-               return el.getTextValue().isEmpty() ? "No change" : el.getTextValue();
-            return el.getPossibleValues()[el.getSelectionValue() + 1];
+            return el.getDisplayText();
          default:
             return null;
       }

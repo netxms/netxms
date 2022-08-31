@@ -891,7 +891,10 @@ public class DataCollectionView extends BaseDataCollectionView
       for (BulkDciUpdateElementUI e : elements)
       {
          if (e.isModified())
+         {
             changed = true;
+            break;
+         }
       }
 
       if (!changed)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,16 +38,6 @@ public class BulkDciUpdateElement
       this.fieldId = fieldId;
       value = null;
    }
-   
-   /**
-    * Set field value
-    *
-    * @param value new field value
-    */
-   public void setValue(Object value)
-   {
-      this.value = value;
-   }
 
    /**
     * Returns if field has to be modified
@@ -56,8 +46,7 @@ public class BulkDciUpdateElement
     */
    public boolean isModified()
    {
-      return (value != null) && !(value instanceof String && ((String)value).isEmpty())
-            && !(value instanceof Integer && ((Integer)value) == -1);
+      return (value != null) && !(value instanceof Integer && ((Integer)value) == -1);
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -34,6 +35,7 @@ import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkUpdateLabelProvider;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.BulkValueEditSupport;
+import org.netxms.ui.eclipse.datacollection.propertypages.General;
 
 /**
  * DCI bulk update dialog
@@ -77,6 +79,14 @@ public class BulkUpdateDialog extends Dialog
             return (isCustomRetention && retentionType.getSelectionValue() == -1) || (retentionType.getSelectionValue() == DataCollectionObject.RETENTION_CUSTOM);
          }
       }));
+
+      ArrayList<String> dataUnits = new ArrayList<String>();
+      dataUnits.add("No change");
+      Collections.addAll(dataUnits, General.DATA_UNITS);
+      BulkDciUpdateElementUI unitName = new BulkDciUpdateElementUI("Unit name", NXCPCodes.VID_UNITS_NAME, dataUnits.toArray(new String[dataUnits.size()]));
+      unitName.setEditableDropdown(true);
+      elements.add(unitName);
+      
    }
 
    /**
