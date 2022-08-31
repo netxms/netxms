@@ -1466,13 +1466,17 @@ void NXSL_VM::execute()
             {
                error(pValue->getValueAsInt32());
             }
+            else if (pValue->isString())
+            {
+               error(NXSL_ERR_EXECUTION_ABORTED, cp->m_sourceLine, pValue->getValueAsCString());
+            }
             else if (pValue->isNull())
             {
                error(NXSL_ERR_EXECUTION_ABORTED);
             }
             else
             {
-               error(NXSL_ERR_NOT_INTEGER);
+               error(NXSL_ERR_NOT_STRING);
             }
             destroyValue(pValue);
          }
@@ -2961,20 +2965,27 @@ void NXSL_VM::trace(int level, const TCHAR *text)
 /**
  * Report error
  */
-void NXSL_VM::error(int errorCode, int sourceLine)
+void NXSL_VM::error(int errorCode, int sourceLine, const TCHAR *customMessage)
 {
    m_errorCode = errorCode;
    m_errorLine = (sourceLine == -1) ?
-            (((m_cp == INVALID_ADDRESS) || (m_cp >= static_cast<UINT32>(m_instructionSet.size()))) ?
+            (((m_cp == INVALID_ADDRESS) || (m_cp >= static_cast<uint32_t>(m_instructionSet.size()))) ?
                      0 : m_instructionSet.get(m_cp)->m_sourceLine) : sourceLine;
 
-   TCHAR buffer[1024];
-   if ((errorCode == NXSL_ERR_ASSERTION_FAILED) && (m_assertMessage != nullptr) && (*m_assertMessage != 0))
-      _sntprintf(buffer, 1024, _T("Error %d in line %d: %s (%s)"), errorCode, m_errorLine, GetErrorMessage(errorCode), m_assertMessage);
-   else
-      _sntprintf(buffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
    MemFree(m_errorText);
-   m_errorText = MemCopyString(buffer);
+   if ((customMessage == nullptr) || (*customMessage == 0))
+   {
+      TCHAR buffer[1024];
+      if ((errorCode == NXSL_ERR_ASSERTION_FAILED) && (m_assertMessage != nullptr) && (*m_assertMessage != 0))
+         _sntprintf(buffer, 1024, _T("Error %d in line %d: %s (%s)"), errorCode, m_errorLine, GetErrorMessage(errorCode), m_assertMessage);
+      else
+         _sntprintf(buffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
+      m_errorText = MemCopyString(buffer);
+   }
+   else
+   {
+      m_errorText = MemCopyString(customMessage);
+   }
 
    m_cp = INVALID_ADDRESS;
 }
