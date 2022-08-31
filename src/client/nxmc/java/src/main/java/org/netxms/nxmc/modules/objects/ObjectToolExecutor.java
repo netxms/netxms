@@ -329,8 +329,7 @@ public final class ObjectToolExecutor
     * @param inputValues input values
     * @param maskedFields list of input fields to be masked
     * @param expandedToolData expanded tool data
-    * @param winbdow owning window
-    * @param perspective owning perspective
+    * @param viewPlacement view placement information
     */
    private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues,
          List<String> maskedFields, String expandedToolData, final ViewPlacement viewPlacement)
@@ -347,16 +346,16 @@ public final class ObjectToolExecutor
             executeInternalTool(node, tool);
             break;
          case ObjectTool.TYPE_LOCAL_COMMAND:
-            executeLocalCommand(node, tool, inputValues, expandedToolData);
+            executeLocalCommand(node, tool, inputValues, expandedToolData, viewPlacement);
             break;
          case ObjectTool.TYPE_SERVER_COMMAND:
-            executeServerCommand(node, tool, inputValues, maskedFields);
+            executeServerCommand(node, tool, inputValues, maskedFields, viewPlacement);
             break;
          case ObjectTool.TYPE_SSH_COMMAND:
-            executeSshCommand(node, tool, inputValues);
+            executeSshCommand(node, tool, inputValues, viewPlacement);
             break;
          case ObjectTool.TYPE_SERVER_SCRIPT:
-            executeServerScript(node, tool, inputValues);
+            executeServerScript(node, tool, inputValues, viewPlacement);
             break;
          case ObjectTool.TYPE_AGENT_LIST:
          case ObjectTool.TYPE_AGENT_TABLE:
@@ -427,7 +426,8 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     * @param inputValues
-    * @param view current view
+    * @param maskedFields
+    * @param viewPlacement view placement information
     */
    private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ViewPlacement viewPlacement)
    {
@@ -441,7 +441,7 @@ public final class ObjectToolExecutor
             {
                return String.format(i18n.tr("Cannot execute command on node %s"), node.object.getObjectName());
             }
-   
+
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -480,14 +480,16 @@ public final class ObjectToolExecutor
     * 
     * @param node
     * @param tool
-    * @param inputValues 
+    * @param inputValues
+    * @param maskedFields
+    * @param viewPlacement view placement information
     */
-   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
+   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields, final ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
-         new Job(i18n.tr("Execute server command"), null) {
+         new Job(i18n.tr("Executing server command"), null, viewPlacement.getMessageAreaHolder()) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -496,8 +498,8 @@ public final class ObjectToolExecutor
                   @Override
                   public void run()
                   {
-                     MessageDialogHelper.openInformation(Registry.getMainWindow().getShell(), i18n.tr("Information"),
-                           i18n.tr("Server command executed successfully"));
+                     String message = String.format(i18n.tr("Server command %s executed successfully on node %s"), tool.getDisplayName(), node.object.getObjectName());
+                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, message);
                   }
                });
             }
@@ -505,7 +507,7 @@ public final class ObjectToolExecutor
             @Override
             protected String getErrorMessage()
             {
-               return i18n.tr("Cannot execute command on server");
+               return String.format(i18n.tr("Cannot execute server command for node %s"), node.object.getObjectName());
             }
          }.start();
       }
@@ -533,14 +535,15 @@ public final class ObjectToolExecutor
     * @param node target node
     * @param tool tool information
     * @param inputValues input values provided by user
+    * @param viewPlacement view placement information
     */
-   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeSshCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, final ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
 
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
-         new Job(String.format(i18n.tr("Executing SSH command on node %s"), node.object.getObjectName()), null) {
+         new Job(String.format(i18n.tr("Executing SSH command on node %s"), node.object.getObjectName()), null, viewPlacement.getMessageAreaHolder()) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -609,16 +612,17 @@ public final class ObjectToolExecutor
    /**
     * Execute server script
     * 
-    * @param node
-    * @param tool
-    * @param inputValues 
+    * @param node node to execute at
+    * @param tool object tool
+    * @param inputValues input values
+    * @param viewPlacement view placement information
     */
-   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
-         new Job(i18n.tr("Execute server script"), null) {
+         new Job(i18n.tr("Execute server script"), null, viewPlacement.getMessageAreaHolder()) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -627,15 +631,15 @@ public final class ObjectToolExecutor
                   @Override
                   public void run()
                   {
-                     MessageDialogHelper.openInformation(Registry.getMainWindow().getShell(), i18n.tr("Information"), i18n.tr("Server script executed successfully"));
+                     viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, String.format(i18n.tr("Server script executed successfully on node %s"), node.object.getObjectName()));
                   }
                });
             }
-            
+
             @Override
             protected String getErrorMessage()
             {
-               return i18n.tr("Cannot execute script on server");
+               return String.format(i18n.tr("Cannot execute server script for node %s"), node.object.getObjectName());
             }
          }.start();
       }
@@ -664,8 +668,9 @@ public final class ObjectToolExecutor
     * @param tool object tool
     * @param inputValues input values
     * @param command command to execute
+    * @param viewPlacement view placement information
     */
-   private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String command)
+   private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String command, ViewPlacement viewPlacement)
    {      
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
@@ -673,17 +678,19 @@ public final class ObjectToolExecutor
          {
             if (SystemUtils.IS_OS_WINDOWS)
             {
-               command = "CMD.EXE /C START \"NetXMS\" " + command; //$NON-NLS-1$
+               command = "CMD.EXE /C START \"NetXMS\" " + command;
                Runtime.getRuntime().exec(command);
             }
             else
             {
-               Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", command }); //$NON-NLS-1$ //$NON-NLS-2$
+               Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", command });
             }
          }
          catch(IOException e)
          {
             logger.error("Exception while executing local command", e);
+            String m = e.getLocalizedMessage();
+            viewPlacement.getMessageAreaHolder().addMessage(MessageArea.ERROR, i18n.tr("Cannot execute local command") + (((m != null) && !m.isEmpty()) ? " (" + m + ")" : ""));
          }
       }
       else

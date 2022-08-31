@@ -659,7 +659,6 @@ public final class ObjectToolExecutor
       }
    }
 
-   
    /**
     * Execute server script
     * 
@@ -671,7 +670,7 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
-      {      
+      {
          new ConsoleJob("Execute server script", null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -706,7 +705,7 @@ public final class ObjectToolExecutor
                   }
                }
             }
-            
+
             @Override
             protected String getErrorMessage()
             {
@@ -729,7 +728,7 @@ public final class ObjectToolExecutor
          }
       }
    }
-   
+
    /**
     * Execute local command
     * 
