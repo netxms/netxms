@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.serverconfig.views;
+package org.netxms.nxmc.modules.tools.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -34,7 +34,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -43,9 +43,9 @@ import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * 
+ * Server debug console
  */
-public class ServerConsole extends ConfigurationView
+public class ServerConsole extends View
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerConsole.class);
 
@@ -63,7 +63,7 @@ public class ServerConsole extends ConfigurationView
     */
    public ServerConsole()
    {
-      super(i18n.tr("Server Debug Console"), ResourceManager.getImageDescriptor("icons/config-views/server-debug-console.png"), "ServerConsole", false);
+      super(i18n.tr("Server Debug Console"), ResourceManager.getImageDescriptor("icons/tool-views/server-debug-console.png"), "ServerConsole", false);
       session = Registry.getSession();
       listener = new ServerConsoleListener() {
          @Override
@@ -308,22 +308,5 @@ public class ServerConsole extends ConfigurationView
       {
          outputStream.safeWrite("\u001b[31;1mNOT CONNECTED\u001b[0m\r\n");
       }
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
-    */
-   @Override
-   public boolean isModified()
-   {
-      return false;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
-    */
-   @Override
-   public void save()
-   {
    }
 }

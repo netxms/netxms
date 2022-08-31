@@ -16,25 +16,25 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.serverconfig;
+package org.netxms.nxmc.modules.tools;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.serverconfig.views.ServerConsole;
+import org.netxms.nxmc.modules.tools.views.ServerConsole;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
+import org.netxms.nxmc.services.ToolsPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Configuration perspective element for server debug console
+ * Tools perspective element for server debug console
  */
-public class ServerConsoleElement implements ConfigurationPerspectiveElement
+public class ServerConsoleElement implements ToolsPerspectiveElement
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerConsoleElement.class);
 
    /**
-    * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()
+    * @see org.netxms.nxmc.services.ToolsPerspectiveElement#getName()
     */
    @Override
    public String getName()
@@ -43,19 +43,19 @@ public class ServerConsoleElement implements ConfigurationPerspectiveElement
    }
 
    /**
-    * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getImage()
+    * @see org.netxms.nxmc.services.ToolsPerspectiveElement#getImage()
     */
    @Override
    public ImageDescriptor getImage()
    {
-      return ResourceManager.getImageDescriptor("icons/config-views/server-debug-console.png");
+      return ResourceManager.getImageDescriptor("icons/tool-views/server-debug-console.png");
    }
 
    /**
-    * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#createView()
+    * @see org.netxms.nxmc.services.ToolsPerspectiveElement#createView()
     */
    @Override
-   public ConfigurationView createView()
+   public View createView()
    {
       return new ServerConsole();
    }

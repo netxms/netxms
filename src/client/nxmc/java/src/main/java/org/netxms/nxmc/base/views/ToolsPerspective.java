@@ -35,41 +35,40 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
+import org.netxms.nxmc.services.ToolsPerspectiveElement;
 import org.netxms.nxmc.tools.ImageCache;
-import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Configuration perspective
+ * Tools perspective
  */
-public class ConfigurationPerspective extends Perspective
+public class ToolsPerspective extends Perspective
 {
-   private static final Logger logger = LoggerFactory.getLogger(ConfigurationPerspective.class);
-   private static final I18n i18n = LocalizationHelper.getI18n(ConfigurationPerspective.class);
+   private static final Logger logger = LoggerFactory.getLogger(ToolsPerspective.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(ToolsPerspective.class);
 
-   private List<ConfigurationPerspectiveElement> elements = new ArrayList<ConfigurationPerspectiveElement>();
-   private ConfigurationPerspectiveElement previousSelectedElement = null;
+   private List<ToolsPerspectiveElement> elements = new ArrayList<ToolsPerspectiveElement>();
+   private ToolsPerspectiveElement previousSelectedElement = null;
    private NavigationView navigationView;
 
    /**
     * The constructor.
     */
-   public ConfigurationPerspective()
+   public ToolsPerspective()
    {
-      super("Configuration", i18n.tr("Configuration"), ResourceManager.getImage("icons/perspective-configuration.png"));
+      super("Tools", i18n.tr("Tools"), ResourceManager.getImage("icons/perspective-tools.png"));
 
-      ServiceLoader<ConfigurationPerspectiveElement> loader = ServiceLoader.load(ConfigurationPerspectiveElement.class, getClass().getClassLoader());
-      for(ConfigurationPerspectiveElement e : loader)
+      ServiceLoader<ToolsPerspectiveElement> loader = ServiceLoader.load(ToolsPerspectiveElement.class, getClass().getClassLoader());
+      for(ToolsPerspectiveElement e : loader)
       {
-         logger.debug("Adding configuration element " + e.getName());
+         logger.debug("Adding tools element " + e.getName());
          elements.add(e);
       }
-      elements.sort(new Comparator<ConfigurationPerspectiveElement>() {
+      elements.sort(new Comparator<ToolsPerspectiveElement>() {
          @Override
-         public int compare(ConfigurationPerspectiveElement e1, ConfigurationPerspectiveElement e2)
+         public int compare(ToolsPerspectiveElement e1, ToolsPerspectiveElement e2)
          {
             return e1.getName().compareToIgnoreCase(e2.getName());
          }
@@ -87,7 +86,7 @@ public class ConfigurationPerspective extends Perspective
       configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = false;
       configuration.hasSupplementalArea = false;
-      configuration.priority = 250;
+      configuration.priority = 200;
    }
 
    /**
@@ -96,7 +95,7 @@ public class ConfigurationPerspective extends Perspective
    @Override
    protected void configureViews()
    {
-      navigationView = new NavigationView(i18n.tr("Configuration"), null, "Configuration", true, false, false) {
+      navigationView = new NavigationView(i18n.tr("Tools"), null, "Tools", true, false, false) {
          private ImageCache imageCache;
          private TableViewer viewer;
 
@@ -111,13 +110,13 @@ public class ConfigurationPerspective extends Perspective
                @Override
                public Image getImage(Object element)
                {
-                  return imageCache.create(((ConfigurationPerspectiveElement)element).getImage());
+                  return imageCache.create(((ToolsPerspectiveElement)element).getImage());
                }
 
                @Override
                public String getText(Object element)
                {
-                  return ((ConfigurationPerspectiveElement)element).getName();
+                  return ((ToolsPerspectiveElement)element).getName();
                }
             });
             viewer.addFilter(new ViewerFilter() {
@@ -125,7 +124,7 @@ public class ConfigurationPerspective extends Perspective
                public boolean select(Viewer viewer, Object parentElement, Object element)
                {
                   String filter = getFilterText();
-                  return (filter == null) || filter.isEmpty() || ((ConfigurationPerspectiveElement)element).getName().toLowerCase().contains(filter.toLowerCase());
+                  return (filter == null) || filter.isEmpty() || ((ToolsPerspectiveElement)element).getName().toLowerCase().contains(filter.toLowerCase());
                }
             });
             viewer.setInput(elements);
@@ -174,25 +173,11 @@ public class ConfigurationPerspective extends Perspective
    @Override
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
-      ConfigurationPerspectiveElement currentElement = (ConfigurationPerspectiveElement)selection.getFirstElement();
+      ToolsPerspectiveElement currentElement = (ToolsPerspectiveElement)selection.getFirstElement();
       
       if (previousSelectedElement == currentElement)
          return; //do nothing for reselection
 
-      ConfigurationView currentView = (ConfigurationView)getMainView();
-      if ((currentView != null) && currentView.isModified())
-      {
-         int choice = MessageDialogHelper.openQuestionWithCancel(getWindow().getShell(), i18n.tr("Unsaved Changes"), currentView.getSaveOnExitPrompt());
-         if (choice == MessageDialogHelper.CANCEL)
-         {
-            navigationView.setSelection(previousSelectedElement);
-            return; // Do not change view
-         }
-         if (choice == MessageDialogHelper.YES)
-         {
-            currentView.save();
-         }
-      }
       if (currentElement != null)
       {
          setMainView(currentElement.createView());

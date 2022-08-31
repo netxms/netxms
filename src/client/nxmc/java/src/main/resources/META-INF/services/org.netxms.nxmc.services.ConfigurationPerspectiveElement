@@ -13,7 +13,6 @@ org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement
 org.netxms.nxmc.modules.serverconfig.NetworkCredentialsElement
 org.netxms.nxmc.modules.serverconfig.NetworkDiscoveryElement
 org.netxms.nxmc.modules.serverconfig.NotificationChannelsElement
-org.netxms.nxmc.modules.serverconfig.ServerConsoleElement
 org.netxms.nxmc.modules.serverconfig.ServerVariableElement
 org.netxms.nxmc.modules.serverconfig.SSHKeysElement
 org.netxms.nxmc.modules.serverconfig.TwoFactorAuthMethodsElement
