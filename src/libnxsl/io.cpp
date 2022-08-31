@@ -31,8 +31,8 @@ class NXSL_FileClass : public NXSL_Class
 public:
    NXSL_FileClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *object, const char *attr);
-   virtual void onObjectDelete(NXSL_Object *object);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
@@ -223,7 +223,7 @@ NXSL_FileClass::NXSL_FileClass() : NXSL_Class()
 /**
  * Get attributes
  */
-NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *object, const char *attr)
+NXSL_Value *NXSL_FileClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
