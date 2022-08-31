@@ -74,6 +74,10 @@ public class EventSelectionDialog extends DialogWithFilter
       {
          newShell.setSize(cx, cy);
       }
+      else
+      {
+         newShell.setSize(600, 460);         
+      }
 	}
 
    /**

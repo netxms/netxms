@@ -75,6 +75,7 @@ public class EventSelectionDialog extends Dialog
 		}
 		catch(NumberFormatException e)
 		{
+		   newShell.setSize(600, 460);
 		}
 	}
 
