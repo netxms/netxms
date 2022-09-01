@@ -286,6 +286,9 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
       json = nullptr;
    }
 
+   char errorBuffer[CURL_ERROR_SIZE];
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+
    json_t *response = nullptr;
 
    char url[256];
@@ -308,7 +311,7 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
       }
    }
    else

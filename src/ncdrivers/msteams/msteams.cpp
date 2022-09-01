@@ -183,8 +183,8 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
    headers = curl_slist_append(headers, "Content-Type: application/json");
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-   char errBuff[CURL_ERROR_SIZE];
-   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errBuff);
+   char errorBuffer[CURL_ERROR_SIZE];
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
 
    int result = 0;
 
@@ -201,9 +201,9 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
       result = -1;
    }
 
-   if (result == 0 && curl_easy_perform(curl) != CURLE_OK)
+   if ((result == 0) && curl_easy_perform(curl) != CURLE_OK)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
       result = -1;
    }
 

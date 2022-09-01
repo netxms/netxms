@@ -143,6 +143,9 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
       curl_free(phone);
       curl_free(msg);
 
+      char errorBuffer[CURL_ERROR_SIZE];
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
       {
          if (curl_easy_perform(curl) == CURLE_OK)
@@ -178,7 +181,7 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
          }
       }
       else
