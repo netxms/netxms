@@ -60,6 +60,7 @@ import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPro
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.AbstractSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -99,9 +100,8 @@ public class General extends AbstractDCIPropertyPage
    
 	private DataCollectionObject dco;
    private Combo origin;
-   private Text parameter;
+   private MetricSelector metricSelector;
 	private LabeledText description;
-	private Button selectButton;
 	private ObjectSelector sourceNode;
    private Combo dataType;
    private Combo useMultipliers;
@@ -109,7 +109,6 @@ public class General extends AbstractDCIPropertyPage
 	private Button scheduleDefault;
    private Button scheduleFixed;
    private Button scheduleAdvanced;
-   private Label serverDefaultIntervalLabel;
    private Composite pollingIntervalComposite;
    private Label pollingIntervalLabel;
    private Hyperlink scheduleLink;
@@ -117,7 +116,6 @@ public class General extends AbstractDCIPropertyPage
    private Button storageFixed;
    private Button storageNoStorage;
    private Composite retentionTimeComposite;
-   private Label serverDefaultRetentionLabel;
 	private Text pollingInterval;
 	private Text retentionTime;
 	private Button checkSaveOnlyChangedValues;
@@ -125,33 +123,33 @@ public class General extends AbstractDCIPropertyPage
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createContents(Composite parent)
-	{		
-	   Composite dialogArea = (Composite)super.createContents(parent);
-		dco = editor.getObject();
+   @Override
+   protected Control createContents(Composite parent)
+   {
+      Composite dialogArea = (Composite)super.createContents(parent);
+      dco = editor.getObject();
 
-		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		layout.marginWidth = 0;
-		layout.marginRight = WidgetHelper.OUTER_SPACING;
-		layout.marginHeight = 0;
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginWidth = 0;
+      layout.marginRight = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       Group groupMetricConfig = new Group(dialogArea, SWT.NONE);
       groupMetricConfig.setText("Metric to collect");
       layout = new GridLayout();
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      layout.numColumns = 3;
+      layout.numColumns = 2;
       groupMetricConfig.setLayout(layout);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupMetricConfig.setLayoutData(gd);
-      
-      origin = new Combo(groupMetricConfig, SWT.READ_ONLY);
+
+      origin = WidgetHelper.createLabeledCombo(groupMetricConfig, SWT.READ_ONLY, Messages.get().General_Origin, new GridData());
       origin.add(Messages.get().DciLabelProvider_SourceInternal);
       origin.add(Messages.get().DciLabelProvider_SourceAgent);
       origin.add(Messages.get().DciLabelProvider_SourceSNMP);
@@ -177,35 +175,26 @@ public class General extends AbstractDCIPropertyPage
             onOriginChange();
          }
       });
-      
-      parameter = new Text(groupMetricConfig, SWT.BORDER);
-      parameter.setTextLimit(255);
-      parameter.setText(dco.getName());
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;    
-      parameter.setLayoutData(gd);
-      
-      selectButton = new Button(groupMetricConfig, SWT.PUSH);
-      selectButton.setText("Lookup");
-      selectButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
 
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            selectParameter();
-         }
-      });
+      sourceNode = new ObjectSelector(groupMetricConfig, SWT.NONE, true);
+      sourceNode.setLabel("Source node override");
+      sourceNode.setObjectClass(Node.class);
+      sourceNode.setObjectId(dco.getSourceNode());
+      sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.END;
-      selectButton.setLayoutData(gd);      
+      gd.verticalAlignment = SWT.FILL;
+      sourceNode.setLayoutData(gd);
+
+      metricSelector = new MetricSelector(groupMetricConfig);
+      metricSelector.setMetricName(dco.getName());
+      metricSelector.setLabel("Metric");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      metricSelector.setLayoutData(gd);
 
       description = new LabeledText(groupMetricConfig, SWT.NONE);
       description.setLabel("Display name");
@@ -214,25 +203,13 @@ public class General extends AbstractDCIPropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 3;
+      gd.horizontalSpan = 2;
       description.setLayoutData(gd);
 
-      sourceNode = new ObjectSelector(groupMetricConfig, SWT.NONE, true);
-      sourceNode.setLabel(Messages.get().General_ProxyNode);
-      sourceNode.setObjectClass(Node.class);
-      sourceNode.setObjectId(dco.getSourceNode());
-      sourceNode.setEnabled(dco.getOrigin() != DataOrigin.PUSH);
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.verticalAlignment = SWT.FILL;
-      gd.horizontalSpan = 3;
-      sourceNode.setLayoutData(gd);
-      
       if (dco instanceof DataCollectionItem)
       {
          DataCollectionItem dci = (DataCollectionItem)dco;
-         
+
          Group groupProcessingAndVisualization = new Group(dialogArea, SWT.NONE);
          groupProcessingAndVisualization.setText(Messages.get().General_Polling);
          layout = new GridLayout();
@@ -245,7 +222,7 @@ public class General extends AbstractDCIPropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.verticalAlignment = SWT.FILL;
          groupProcessingAndVisualization.setLayoutData(gd);
-   
+
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
@@ -259,50 +236,49 @@ public class General extends AbstractDCIPropertyPage
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
          dataType.select(getDataTypePosition(dci.getDataType()));
-         
+
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
          dataUnit = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.NONE, "Units", gd);
          int selection = -1;
          int index = 0;
-         for (; index < DATA_UNITS.length; index++)
+         for(; index < DATA_UNITS.length; index++)
          {
             dataUnit.add(DATA_UNITS[index]);
-            if (dci.getUnitName() != null  && dci.getUnitName().equals(DATA_UNITS[index]))
+            if (dci.getUnitName() != null && dci.getUnitName().equals(DATA_UNITS[index]))
             {
                selection = index;
             }
          }
          if (selection == -1 && dci.getUnitName() != null)
          {
-            dataUnit.add(dci.getUnitName()); 
+            dataUnit.add(dci.getUnitName());
             selection = index;
          }
          dataUnit.select(selection);
-         
+
          useMultipliers = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, "Use multipliers", new GridData());
          useMultipliers.add("Default");
          useMultipliers.add("Yes");
          useMultipliers.add("No");
          useMultipliers.select(dci.getMultipliersSelection());
       }
-         
+
       Group groupPolling = new Group(dialogArea, SWT.NONE);
       groupPolling.setText("Collection schedule");
       layout = new GridLayout();
       layout.marginTop = WidgetHelper.OUTER_SPACING;
       layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      layout.numColumns = 3;
-      layout.makeColumnsEqualWidth = true;
+      layout.numColumns = 2;
       groupPolling.setLayout(layout);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupPolling.setLayoutData(gd);
-      
+
       SelectionListener pollingButtons = new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -312,7 +288,6 @@ public class General extends AbstractDCIPropertyPage
             {
                pollingInterval.setFocus();
             }
-            serverDefaultIntervalLabel.setVisible(scheduleDefault.getSelection());
             pollingIntervalComposite.setVisible(scheduleFixed.getSelection());
             scheduleLink.setVisible(scheduleAdvanced.getSelection());
          }
@@ -320,28 +295,18 @@ public class General extends AbstractDCIPropertyPage
 
       final NXCSession session = ConsoleSharedData.getSession();
       scheduleDefault = new Button(groupPolling, SWT.RADIO);
-      scheduleDefault.setText("Server default interval");
+      scheduleDefault.setText(String.format("Server default interval (%d seconds)", session.getDefaultDciPollingInterval()));
       scheduleDefault.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT);
       scheduleDefault.addSelectionListener(pollingButtons);
-      scheduleDefault.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
+      gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+      gd.horizontalSpan = 2;
+      scheduleDefault.setLayoutData(gd);
 
       scheduleFixed = new Button(groupPolling, SWT.RADIO);
       scheduleFixed.setText("Custom interval");
       scheduleFixed.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
       scheduleFixed.addSelectionListener(pollingButtons);
-      scheduleFixed.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
-
-      scheduleAdvanced = new Button(groupPolling, SWT.RADIO);
-      scheduleAdvanced.setText("Advanced schedule");
-      scheduleAdvanced.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_ADVANCED);
-      scheduleAdvanced.addSelectionListener(pollingButtons);
-      scheduleAdvanced.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
-
-      serverDefaultIntervalLabel = new Label(groupPolling, SWT.NONE);
-      serverDefaultIntervalLabel.setText(String.format("%d seconds", session.getDefaultDciPollingInterval()));
-      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
-      gd.horizontalIndent = SUB_ELEMENT_INDENT;
-      serverDefaultIntervalLabel.setLayoutData(gd);
+      scheduleFixed.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
       pollingIntervalComposite = new Composite(groupPolling, SWT.NONE);
       layout = new GridLayout();
@@ -353,11 +318,23 @@ public class General extends AbstractDCIPropertyPage
       pollingInterval = new Text(pollingIntervalComposite, SWT.BORDER);
       pollingInterval.setText(dco.getPollingInterval() != null ? dco.getPollingInterval() : "");
       pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH));
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      pollingInterval.setLayoutData(gd);
       pollingIntervalLabel = new Label(pollingIntervalComposite, SWT.NONE);
       pollingIntervalLabel.setText("seconds");
-      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
+      gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+      gd.horizontalIndent = WidgetHelper.OUTER_SPACING;
+      pollingIntervalLabel.setLayoutData(gd);
+
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       pollingIntervalComposite.setLayoutData(gd);
+
+      scheduleAdvanced = new Button(groupPolling, SWT.RADIO);
+      scheduleAdvanced.setText("Advanced schedule");
+      scheduleAdvanced.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_ADVANCED);
+      scheduleAdvanced.addSelectionListener(pollingButtons);
+      scheduleAdvanced.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
       scheduleLink = new Hyperlink(groupPolling, SWT.NONE);
       scheduleLink.setText("Configure");
@@ -370,23 +347,21 @@ public class General extends AbstractDCIPropertyPage
             FilteredPreferenceDialog dialog = (FilteredPreferenceDialog)container;
             dialog.setCurrentPageId("org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10");
          }
-      });      
+      });
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       scheduleLink.setLayoutData(gd);
 
-      serverDefaultIntervalLabel.setVisible(scheduleDefault.getSelection());
       pollingIntervalComposite.setVisible(scheduleFixed.getSelection());
       scheduleLink.setVisible(scheduleAdvanced.getSelection());
 
       Group groupRetention = new Group(dialogArea, SWT.NONE);
-      groupRetention.setText("Retention");
+      groupRetention.setText("History retention period");
       layout = new GridLayout();
       layout.marginTop = WidgetHelper.OUTER_SPACING;
       layout.marginBottom = WidgetHelper.OUTER_SPACING * 2;
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
-      layout.numColumns = 3;
-      layout.makeColumnsEqualWidth = true;
+      layout.numColumns = 2;
       groupRetention.setLayout(layout);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -402,31 +377,22 @@ public class General extends AbstractDCIPropertyPage
             if (storageFixed.getSelection())
                retentionTime.setFocus();
 
-            serverDefaultRetentionLabel.setVisible(storageDefault.getSelection());
             retentionTimeComposite.setVisible(storageFixed.getSelection());
          }
       };
 
       storageDefault = new Button(groupRetention, SWT.RADIO);
-      storageDefault.setText("Server default");
+      storageDefault.setText(String.format("Server default (%d days)", session.getDefaultDciRetentionTime()));
       storageDefault.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT);
-      storageDefault.addSelectionListener(storageButtons);  
+      storageDefault.addSelectionListener(storageButtons);
+      gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+      gd.horizontalSpan = 2;
+      storageDefault.setLayoutData(gd);
 
       storageFixed = new Button(groupRetention, SWT.RADIO);
       storageFixed.setText("Custom");
       storageFixed.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
       storageFixed.addSelectionListener(storageButtons);
-
-      storageNoStorage = new Button(groupRetention, SWT.RADIO);
-      storageNoStorage.setText("Do not save to the database");
-      storageNoStorage.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_NONE);
-      storageNoStorage.addSelectionListener(storageButtons);
-
-      serverDefaultRetentionLabel = new Label(groupRetention, SWT.NONE);
-      serverDefaultRetentionLabel.setText(String.format("%d days", session.getDefaultDciRetentionTime()));
-      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
-      gd.horizontalIndent = SUB_ELEMENT_INDENT;
-      serverDefaultRetentionLabel.setLayoutData(gd);
 
       retentionTimeComposite = new Composite(groupRetention, SWT.NONE);
       layout = new GridLayout();
@@ -438,13 +404,23 @@ public class General extends AbstractDCIPropertyPage
       retentionTime = new Text(retentionTimeComposite, SWT.BORDER);
       retentionTime.setText(dco.getRetentionTime() != null ? dco.getRetentionTime() : "");
       retentionTime.setEnabled(dco.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      retentionTime.setLayoutData(gd);
       Label label = new Label(retentionTimeComposite, SWT.NONE);
       label.setText("days");
-      gd = new GridData(SWT.LEFT, SWT.CENTER, true, false);
+      gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+      gd.horizontalIndent = WidgetHelper.OUTER_SPACING;
+      label.setLayoutData(gd);
+
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       retentionTimeComposite.setLayoutData(gd);
 
-      serverDefaultRetentionLabel.setVisible(storageDefault.getSelection());
+      storageNoStorage = new Button(groupRetention, SWT.RADIO);
+      storageNoStorage.setText("Do not save to the database");
+      storageNoStorage.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_NONE);
+      storageNoStorage.addSelectionListener(storageButtons);
+
       retentionTimeComposite.setVisible(storageFixed.getSelection());
 
       if (dco instanceof DataCollectionItem)
@@ -455,13 +431,14 @@ public class General extends AbstractDCIPropertyPage
          checkSaveOnlyChangedValues.setText("Save only &changed values");
          checkSaveOnlyChangedValues.setSelection(dci.isStoreChangesOnly());
          gd = new GridData();
-         gd.horizontalSpan = 3;
-         checkSaveOnlyChangedValues.setLayoutData(gd); 
+         gd.horizontalSpan = 2;
+         gd.verticalIndent = SUB_ELEMENT_INDENT;
+         checkSaveOnlyChangedValues.setLayoutData(gd);
       }
 
       onOriginChange();
       return dialogArea;
-	}
+   }
 
 	/**
 	 * Handler for changing item origin
@@ -475,12 +452,11 @@ public class General extends AbstractDCIPropertyPage
 		scheduleDefault.setEnabled(enableSchedule);
       scheduleFixed.setEnabled(enableSchedule);
       scheduleAdvanced.setEnabled(enableSchedule);
-      serverDefaultIntervalLabel.setEnabled(enableSchedule);
       pollingInterval.setEnabled(enableSchedule);
       pollingIntervalLabel.setEnabled(enableSchedule);
       scheduleLink.setEnabled(enableSchedule);
       
-		selectButton.setEnabled(
+		metricSelector.setSelectioEnabled(
 		      (dataOrigin == DataOrigin.AGENT) || 
 		      (dataOrigin == DataOrigin.SNMP) || 
 		      (dataOrigin == DataOrigin.INTERNAL) || 
@@ -491,74 +467,6 @@ public class General extends AbstractDCIPropertyPage
 	}
 	
 	/**
-	 * Select parameter
-	 */
-	private void selectParameter()
-	{
-		Dialog dlg = null;
-      DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
-      boolean isTable = dco instanceof DataCollectionTable;
-      switch(dataOrigin)
-      {
-         case INTERNAL:
-            if (sourceNode.getObjectId() != 0)
-               dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), isTable);
-            else
-               dlg = new SelectInternalParamDlg(getShell(), dco.getNodeId(), isTable);
-            break;
-         case AGENT:
-         case DEVICE_DRIVER:
-            if (sourceNode.getObjectId() != 0)
-               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, isTable);
-            else
-               dlg = new SelectAgentParamDlg(getShell(), dco.getNodeId(), dataOrigin, isTable);
-            break;
-         case SNMP:
-            SnmpObjectId oid;
-            try
-            {
-               oid = SnmpObjectId.parseSnmpObjectId(parameter.getText());
-            }
-            catch(SnmpObjectIdFormatException e)
-            {
-               oid = null;
-            }
-            if (sourceNode.getObjectId() != 0)
-               dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
-            else
-               dlg = new SelectSnmpParamDlg(getShell(), oid, dco.getNodeId());
-            break;
-         case WINPERF:
-            if (!isTable)
-               if (sourceNode.getObjectId() != 0)
-                  dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
-               else
-                  dlg = new WinPerfCounterSelectionDialog(getShell(), dco.getNodeId());
-            break;
-         case SCRIPT:
-            dlg = new SelectParameterScriptDialog(getShell());
-            break;
-         case WEB_SERVICE:
-            if (!isTable)
-               dlg = new SelectWebServiceDlg(getShell(), false);
-            break;
-         default:
-            dlg = null;
-            break;
-      }
-		
-		if ((dlg != null) && (dlg.open() == Window.OK))
-		{
-			IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
-			description.setText(pd.getParameterDescription());
-			parameter.setText(pd.getParameterName());
-			dataType.select(getDataTypePosition(pd.getParameterDataType()));
-         editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(),
-               pd.getParameterDescription(), pd.getParameterDataType());
-		}
-	}
-	
-	/**
 	 * Apply changes
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button
@@ -566,7 +474,7 @@ public class General extends AbstractDCIPropertyPage
 	protected boolean applyChanges(final boolean isApply)
 	{
       dco.setOrigin(DataOrigin.getByValue(origin.getSelectionIndex()));
-      dco.setName(parameter.getText().trim());
+      dco.setName(metricSelector.getMetricName().trim());
 		dco.setDescription(description.getText().trim());
       dco.setSourceNode(sourceNode.getObjectId());
       dco.setPollingScheduleType(getScheduleType());
@@ -714,4 +622,111 @@ public class General extends AbstractDCIPropertyPage
 	{
       return TYPES[position];
 	}
+	
+	/**
+	 * DCI metric selector class
+	 */
+   private class MetricSelector extends AbstractSelector
+   {
+      /**
+       * Constructor
+       * 
+       * @param parent parent composite
+       * @param style SWT style
+       * @param options selector style
+       */
+      public MetricSelector(Composite parent)
+      {
+         super(parent, SWT.NONE, AbstractSelector.EDITABLE_TEXT);
+      }
+   
+      /* (non-Javadoc)
+       * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
+       */
+      @Override
+      protected void selectionButtonHandler()
+      {
+         Dialog dlg = null;
+         DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
+         boolean isTable = dco instanceof DataCollectionTable;
+         switch(dataOrigin)
+         {
+            case INTERNAL:
+               if (sourceNode.getObjectId() != 0)
+                  dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId(), isTable);
+               else
+                  dlg = new SelectInternalParamDlg(getShell(), dco.getNodeId(), isTable);
+               break;
+            case AGENT:
+            case DEVICE_DRIVER:
+               if (sourceNode.getObjectId() != 0)
+                  dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), dataOrigin, isTable);
+               else
+                  dlg = new SelectAgentParamDlg(getShell(), dco.getNodeId(), dataOrigin, isTable);
+               break;
+            case SNMP:
+               SnmpObjectId oid;
+               try
+               {
+                  oid = SnmpObjectId.parseSnmpObjectId(metricSelector.getText());
+               }
+               catch(SnmpObjectIdFormatException e)
+               {
+                  oid = null;
+               }
+               if (sourceNode.getObjectId() != 0)
+                  dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
+               else
+                  dlg = new SelectSnmpParamDlg(getShell(), oid, dco.getNodeId());
+               break;
+            case WINPERF:
+               if (!isTable)
+                  if (sourceNode.getObjectId() != 0)
+                     dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
+                  else
+                     dlg = new WinPerfCounterSelectionDialog(getShell(), dco.getNodeId());
+               break;
+            case SCRIPT:
+               dlg = new SelectParameterScriptDialog(getShell());
+               break;
+            case WEB_SERVICE:
+               if (!isTable)
+                  dlg = new SelectWebServiceDlg(getShell(), false);
+               break;
+            default:
+               dlg = null;
+               break;
+         }
+         
+         if ((dlg != null) && (dlg.open() == Window.OK))
+         {
+            IParameterSelectionDialog pd = (IParameterSelectionDialog)dlg;
+            description.setText(pd.getParameterDescription());
+            metricSelector.setText(pd.getParameterName());
+            dataType.select(getDataTypePosition(pd.getParameterDataType()));
+            editor.fireOnSelectItemListeners(DataOrigin.getByValue(origin.getSelectionIndex()), pd.getParameterName(),
+            pd.getParameterDescription(), pd.getParameterDataType());
+         }
+      }
+   
+      /**
+       * Set selected DCI name 
+       * 
+       * @param name DCI name
+       */
+      public void setMetricName(String name)
+      {
+         setText(name);      
+      }
+   
+      /**
+       * Get selected DCI name
+       * 
+       * @return dCI name
+       */
+      public String getMetricName()
+      {
+         return getText();      
+      }   
+   }
 }

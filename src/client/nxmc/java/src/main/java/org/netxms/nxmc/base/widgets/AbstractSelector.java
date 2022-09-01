@@ -458,6 +458,18 @@ public class AbstractSelector extends Composite
 			linkClear.setEnabled(enabled);
 		super.setEnabled(enabled);
 	}
+   
+   /**
+    * If selection button should be enabled 
+    * @param enabled if selection button should be enabled
+    */
+   public void setSelectioEnabled(boolean enabled)
+   {
+      if (buttonSelect != null)
+         buttonSelect.setEnabled(enabled);
+      if (linkSelect != null)
+         linkSelect.setEnabled(enabled);
+   }
 
 	/**
 	 * Get text control
