@@ -1197,6 +1197,16 @@ public class DataCollectionView extends BaseDataCollectionView
          manager.add(actionToggleEditMode);
       }
    }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#deactivate()
+    */
+   @Override
+   public void deactivate()
+   {
+      commitDciChanges();
+      super.deactivate();
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#dispose()
@@ -1220,8 +1230,31 @@ public class DataCollectionView extends BaseDataCollectionView
                return String.format(i18n.tr("Cannot unlock data collection configuration for %s"), getObjectName());
             }
          }.start();
-      }  
+      } 
       super.dispose();
+   }
+   
+   /**
+    * Commit DCI changes
+    */
+   private void commitDciChanges()
+   { 
+      if (dciConfig != null)
+      {
+         new Job(String.format(i18n.tr("Apply data collection configuration for %s"), getObjectName()), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               dciConfig.commit();
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(i18n.tr("Cannot apply data collection configuration for %s"), getObjectName());
+            }
+         }.start();
+      } 
    }
 
    /**

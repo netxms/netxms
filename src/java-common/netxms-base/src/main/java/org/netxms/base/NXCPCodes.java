@@ -805,7 +805,7 @@ public class NXCPCodes
 	public static final long VID_USE_X509_KEY_FORMAT = 319;
 	public static final long VID_STICKY_FLAG = 320;
 	public static final long VID_AUTOBIND_FILTER = 321;
-	public static final long VID_BASE_UNITS = 322;
+	public static final long VID_COMMIT_ONLY = 322;
 	public static final long VID_MULTIPLIER = 323;
 	public static final long VID_UNITS_NAME = 324;
 	public static final long VID_PERFTAB_SETTINGS = 325;

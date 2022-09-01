@@ -1030,7 +1030,7 @@ typedef struct
 #define VID_USE_X509_KEY_FORMAT     ((UINT32)319)
 #define VID_STICKY_FLAG             ((UINT32)320)
 #define VID_AUTOBIND_FILTER         ((UINT32)321)
-//#define VID_BASE_UNITS              ((UINT32)322)
+#define VID_COMMIT_ONLY             ((UINT32)322)
 #define VID_MULTIPLIER              ((UINT32)323)
 #define VID_UNITS_NAME              ((UINT32)324)
 #define VID_PERFTAB_SETTINGS        ((UINT32)325)

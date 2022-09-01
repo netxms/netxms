@@ -205,6 +205,21 @@ public class DataCollectionConfiguration
    }
 
    /**
+    * Apply user changes 
+    * 
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void commit() throws IOException, NXCException
+   {
+      NXCPMessage msg = session.newMessage(NXCPCodes.CMD_UNLOCK_NODE_DCI_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)ownerId);
+      msg.setField(NXCPCodes.VID_COMMIT_ONLY, true);
+      session.sendMessage(msg);
+      session.waitForRCC(msg.getMessageId());
+   }
+
+   /**
     * Get list of data collection items
     *
     * @return List of data collection items

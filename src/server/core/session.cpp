@@ -3971,7 +3971,8 @@ void ClientSession::closeNodeDCIList(const NXCPMessage& request)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
-            m_openDataCollectionConfigurations.remove(objectId);
+            if (!request.getFieldAsBoolean(VID_COMMIT_ONLY))
+               m_openDataCollectionConfigurations.remove(objectId);
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
