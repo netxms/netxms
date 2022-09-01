@@ -113,8 +113,8 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    headers = curl_slist_append(headers, "Content-Type: application/json");
    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-   char errBuff[CURL_ERROR_SIZE];
-   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errBuff);
+   char errorBuffer[CURL_ERROR_SIZE];
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
 
    int result = -1;
 
@@ -149,7 +149,7 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
       }
    }
    else

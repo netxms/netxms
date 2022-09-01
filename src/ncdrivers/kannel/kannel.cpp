@@ -86,7 +86,7 @@ int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone=\"%s\", text=\"%s\""), recipient, body);
 
    CURL *curl = curl_easy_init();
-   if (curl != NULL)
+   if (curl != nullptr)
    {
 #if HAVE_DECL_CURLOPT_NOSIGNAL
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
@@ -121,6 +121,9 @@ int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
       curl_free(phone);
       curl_free(msg);
 
+      char errorBuffer[CURL_ERROR_SIZE];
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
       {
          if (curl_easy_perform(curl) == CURLE_OK)
@@ -137,7 +140,7 @@ int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
          }
          else
          {
-         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
          }
       }
       else

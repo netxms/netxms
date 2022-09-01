@@ -186,6 +186,9 @@ int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
    }
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
 
+   char errorBuffer[CURL_ERROR_SIZE];
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
+
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
@@ -246,7 +249,7 @@ int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
       }
    }
    else
