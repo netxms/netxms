@@ -207,8 +207,8 @@ public class DataCollectionConfiguration
    /**
     * Apply user changes 
     * 
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void commit() throws IOException, NXCException
    {

@@ -141,6 +141,7 @@ public class DataCollectionEditor extends ViewPart
 	private Action actionExportAllToCsv;
 	private Action actionBulkUpdate;
    private Action actionHideTemplateItems;
+   private Action actionApplyChanges;
 	private boolean hideModificationWarnings;
 	private RemoteChangeListener changeListener;
 
@@ -451,6 +452,8 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
 		manager.add(new Separator());
+      if(object instanceof Template)
+         manager.add(actionApplyChanges);
 		manager.add(actionRefresh);
 		manager.add(actionExportAllToCsv);
 	}
@@ -467,6 +470,8 @@ public class DataCollectionEditor extends ViewPart
       manager.add(actionShowFilter);
       manager.add(actionHideTemplateItems);
       manager.add(actionExportAllToCsv);
+      if(object instanceof Template)
+         manager.add(actionApplyChanges);
 		manager.add(actionRefresh);
 	}
 
@@ -640,6 +645,15 @@ public class DataCollectionEditor extends ViewPart
       };
       actionHideTemplateItems.setImageDescriptor(Activator.getImageDescriptor("icons/ignore-template-objects.png"));
       actionHideTemplateItems.setChecked(getBooleanFromSettings("DataCollectionEditor.hideTemplateItems", false));
+      
+      actionApplyChanges = new Action("Apply changes") { //TODO: add icon
+         @Override
+         public void run()
+         {
+            commitDciChanges();
+         }
+      };
+      actionApplyChanges.setEnabled(false);
 	}
 	
 	/**
@@ -741,6 +755,41 @@ public class DataCollectionEditor extends ViewPart
 		}
 		super.dispose();
 	}
+   
+   /**
+    * Commit DCI changes
+    */
+   private void commitDciChanges()
+   { 
+      if (dciConfig != null)
+      {
+         new ConsoleJob(String.format("Apply data collection configuration for %s", object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               dciConfig.commit();
+               runInUIThread(new Runnable() {
+                  
+                  @Override
+                  public void run()
+                  {
+                     actionApplyChanges.setEnabled(false);
+                     if (!viewerContainer.isDisposed())
+                     {
+                        viewerContainer.hideMessage();
+                     }
+                  }
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format("Cannot apply data collection configuration for %s",  object.getObjectName());
+            }
+         }.start();
+      } 
+   }
 
 	/**
 	 * Change status for selected items
@@ -1202,6 +1251,7 @@ public class DataCollectionEditor extends ViewPart
     */
    public void showInformationMessage()
    {
+      actionApplyChanges.setEnabled(true);
       if (!viewerContainer.isDisposed())
       {
          viewerContainer.showMessage(CompositeWithMessageBar.INFORMATION,

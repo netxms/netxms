@@ -106,6 +106,7 @@ public class DataCollectionView extends BaseDataCollectionView
    private Composite parent;
    private SessionListener clientListener = null;
    private DataCollectionConfiguration dciConfig = null;
+   private int messageId = 0;
 
    private DciFilter dcFilter;
    private boolean hideModificationWarnings;
@@ -124,6 +125,7 @@ public class DataCollectionView extends BaseDataCollectionView
    private Action actionDisable;
    private Action actionBulkUpdate;
    private Action actionHideTemplateItems;
+   private Action actionApplyChanges;
 
    /**
     * Constructor
@@ -562,6 +564,15 @@ public class DataCollectionView extends BaseDataCollectionView
       actionHideTemplateItems.setImageDescriptor(ResourceManager.getImageDescriptor("icons/ignore-template-objects.png"));
       actionHideTemplateItems.setChecked(PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideTemplateItems", false));
       addKeyBinding("M1+M2+T", actionHideTemplateItems);
+
+      actionApplyChanges = new Action("Apply changes") { //TODO: add icon
+         @Override
+         public void run()
+         {
+            commitDciChanges();
+         }
+      };
+      actionApplyChanges.setEnabled(false);      
    }
 
    /**
@@ -1023,9 +1034,10 @@ public class DataCollectionView extends BaseDataCollectionView
     */
    public void showInformationMessage()
    {
-      if (!viewer.getTable().isDisposed())
+      actionApplyChanges.setEnabled(true);
+      if (!viewer.getTable().isDisposed() && messageId < 1)
       {
-         addMessage(MessageArea.INFORMATION, i18n.tr("Changes in policies will be deployed to nodes the moment when the tab is closed"), true);
+         messageId = addMessage(MessageArea.INFORMATION, i18n.tr("Changes in data collection configuration will be deployed to nodes the moment when the tab is closed"), true);
       }
    }
 
@@ -1176,6 +1188,10 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          manager.add(actionToggleEditMode);
       }
+      else
+      {
+         manager.add(actionApplyChanges);
+      }
    }
 
    /**
@@ -1195,6 +1211,11 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          manager.add(new Separator());
          manager.add(actionToggleEditMode);
+      }
+      else
+      {
+         manager.add(new Separator());
+         manager.add(actionApplyChanges);
       }
    }
    
@@ -1246,6 +1267,19 @@ public class DataCollectionView extends BaseDataCollectionView
             protected void run(IProgressMonitor monitor) throws Exception
             {
                dciConfig.commit();
+               runInUIThread(new Runnable() {
+                  
+                  @Override
+                  public void run()
+                  {
+                     actionApplyChanges.setEnabled(false);
+                     if (messageId > 0)
+                     {
+                        deleteMessage(messageId);
+                        messageId = 0;
+                     }
+                  }
+               });
             }
 
             @Override
