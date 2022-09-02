@@ -646,7 +646,7 @@ public class DataCollectionEditor extends ViewPart
       actionHideTemplateItems.setImageDescriptor(Activator.getImageDescriptor("icons/ignore-template-objects.png"));
       actionHideTemplateItems.setChecked(getBooleanFromSettings("DataCollectionEditor.hideTemplateItems", false));
       
-      actionApplyChanges = new Action("Apply changes") { //TODO: add icon
+      actionApplyChanges = new Action("Apply changes", Activator.getImageDescriptor("icons/commit.png")) { 
          @Override
          public void run()
          {

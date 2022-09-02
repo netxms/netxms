@@ -565,7 +565,7 @@ public class DataCollectionView extends BaseDataCollectionView
       actionHideTemplateItems.setChecked(PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideTemplateItems", false));
       addKeyBinding("M1+M2+T", actionHideTemplateItems);
 
-      actionApplyChanges = new Action("Apply changes") { //TODO: add icon
+      actionApplyChanges = new Action("Apply changes", ResourceManager.getImageDescriptor("icons/commit.png")) { 
          @Override
          public void run()
          {
