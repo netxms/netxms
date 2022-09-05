@@ -30,6 +30,7 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.ExitConfirmation;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.internal.service.UISessionImpl;
 import org.eclipse.swt.widgets.Display;
@@ -248,121 +249,124 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			} while(!success);
 		}
 
-		if (success)
-		{
-			final NXCSession session = (NXCSession)RWT.getUISession().getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
-         final Display display = Display.getCurrent();
-         session.addListener(new SessionListener() {
-            private final Object MONITOR = new Object();
-            
-            @Override
-            public void notificationHandler(final SessionNotification n)
-            {
-				if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ||
-				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN) ||
-				    (n.getCode() == SessionNotification.SESSION_KILLED))
-               {
-                  display.asyncExec(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        RWT.getUISession().setAttribute("NoPageReload", Boolean.TRUE);
-                        PlatformUI.getWorkbench().close();
-                        
-                        String productName = BrandingManager.getInstance().getProductName();
-                        String msg =
-                              (n.getCode() == SessionNotification.CONNECTION_BROKEN) ? 
-                            		  String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
-                                      : ((n.getCode() == SessionNotification.SESSION_KILLED) ?
-                                        "Communication session was terminated by system administrator"
-                                    	: String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName));
-                        
-                        JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-                        if (executor != null)
-                           executor.execute("document.body.innerHTML='" +
-                                 "<div style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: none; background-color: white;\">" + 
-                                 "<p style=\"margin-top: 30px; margin-left: 30px; color: #800000; font-family: \"Segoe UI\", Verdana, Arial, sans-serif; font-weight: bold; font-size: 2em;\">" + 
-                                 msg + 
-                                 "</p><br/>" + 
-                                 "<button style=\"margin-left: 30px\" onclick=\"location.reload(true)\">RELOAD</button>" + 
-                                 "</div>';");
-                        
-                        synchronized(MONITOR)
-                        {
-                           MONITOR.notifyAll();
-                        }
-                     }
-                  });
+		if (!success)
+		   return;
 
-                  synchronized(MONITOR)
+		final NXCSession session = (NXCSession)RWT.getUISession().getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
+      final Display display = Display.getCurrent();
+      session.addListener(new SessionListener() {
+         private final Object MONITOR = new Object();
+
+         @Override
+         public void notificationHandler(final SessionNotification n)
+         {
+			if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ||
+			    (n.getCode() == SessionNotification.SERVER_SHUTDOWN) ||
+			    (n.getCode() == SessionNotification.SESSION_KILLED))
+            {
+               display.asyncExec(new Runnable() {
+                  @Override
+                  public void run()
                   {
-                     try
+                     RWT.getUISession().setAttribute("NoPageReload", Boolean.TRUE);
+                     PlatformUI.getWorkbench().close();
+
+                     String productName = BrandingManager.getInstance().getProductName();
+                     String msg =
+                           (n.getCode() == SessionNotification.CONNECTION_BROKEN) ? 
+                         		  String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
+                                   : ((n.getCode() == SessionNotification.SESSION_KILLED) ?
+                                     "Communication session was terminated by system administrator"
+                                 	: String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName));
+
+                     JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                     if (executor != null)
+                        executor.execute("document.body.innerHTML='" +
+                              "<div style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: none; background-color: white;\">" + 
+                              "<p style=\"margin-top: 30px; margin-left: 30px; color: #800000; font-family: \"Segoe UI\", Verdana, Arial, sans-serif; font-weight: bold; font-size: 2em;\">" + 
+                              msg + 
+                              "</p><br/>" + 
+                              "<button style=\"margin-left: 30px\" onclick=\"location.reload(true)\">RELOAD</button>" + 
+                              "</div>';");
+                     
+                     synchronized(MONITOR)
                      {
-                        MONITOR.wait(5000);
-                     }
-                     catch(InterruptedException e)
-                     {
+                        MONITOR.notifyAll();
                      }
                   }
-                  ((UISessionImpl)RWT.getUISession(display)).shutdown();
+               });
+
+               synchronized(MONITOR)
+               {
+                  try
+                  {
+                     MONITOR.wait(5000);
+                  }
+                  catch(InterruptedException e)
+                  {
+                  }
                }
+               ((UISessionImpl)RWT.getUISession(display)).shutdown();
             }
-         });
-			
-			try
+         }
+      });
+
+		try
+		{
+			RWT.getSettingStore().loadById(session.getUserName() + "@" + session.getServerId());
+		}
+		catch(IOException e)
+		{
+		}
+
+		// Suggest user to change password if it is expired
+		if (session.isPasswordExpired())
+		{
+			final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null, session.getGraceLogins());
+			while(true)
 			{
-				RWT.getSettingStore().loadById(session.getUserName() + "@" + session.getServerId());
-			}
-			catch(IOException e)
-			{
-			}
-			
-			// Suggest user to change password if it is expired
-			if (session.isPasswordExpired())
-			{
-				final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null, session.getGraceLogins());
-				while(true)
-				{
-   				if (dlg.open() != Window.OK)
-   				   return;
-   
-					final String currentPassword = password;
-					IRunnableWithProgress job = new IRunnableWithProgress() {
-						@Override
-						public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+				if (dlg.open() != Window.OK)
+				   return;
+
+				final String currentPassword = password;
+				IRunnableWithProgress job = new IRunnableWithProgress() {
+					@Override
+					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+					{
+						try
 						{
-							try
-							{
-								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
-								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
-							}
-							catch(Exception e)
-							{
-								throw new InvocationTargetException(e);
-							}
-							finally
-							{
-								monitor.done();
-							}
+							NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
+							session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
 						}
-					};
-					try
-					{
-						ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
-						pd.run(false, false, job);
-						MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
-						return;
+						catch(Exception e)
+						{
+							throw new InvocationTargetException(e);
+						}
+						finally
+						{
+							monitor.done();
+						}
 					}
-					catch(InvocationTargetException e)
-					{
-						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, Messages.get().ApplicationWorkbenchWindowAdvisor_CannotChangePswd + e.getCause().getLocalizedMessage());
-					}
-					catch(InterruptedException e)
-					{
-						MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
-					}
-   			}
+				};
+				try
+				{
+					ProgressMonitorDialog pd = new ProgressMonitorDialog(null);
+					pd.run(false, false, job);
+					MessageDialog.openInformation(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Information, Messages.get().ApplicationWorkbenchWindowAdvisor_PasswordChanged);
+					return;
+				}
+				catch(InvocationTargetException e)
+				{
+					MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, Messages.get().ApplicationWorkbenchWindowAdvisor_CannotChangePswd + e.getCause().getLocalizedMessage());
+				}
+				catch(InterruptedException e)
+				{
+					MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
+				}
 			}
 		}
+
+	   ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
+	   exitConfirmation.setMessage("This will terminate your current session. Are you sure?");
 	}
 }

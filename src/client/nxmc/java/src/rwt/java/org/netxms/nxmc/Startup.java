@@ -32,6 +32,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.application.EntryPoint;
+import org.eclipse.rap.rwt.client.service.ExitConfirmation;
 import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
 import org.eclipse.swt.SWT;
@@ -121,6 +122,9 @@ public class Startup implements EntryPoint, StartupParameters
       ObjectToolsCache.init();
       ObjectToolsCache.attachSession(session);
       SummaryTablesCache.attachSession(display, session);
+
+      ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
+      exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
 
       MainWindow w = new MainWindow(shell);
       Registry.getInstance().setMainWindow(w);
