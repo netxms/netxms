@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ public final class ServerVariable
    {
       values.put(msg.getFieldAsString(baseId), msg.getFieldAsString(baseId + 1));
    }
-   
+
 	/**
 	 * @return Varaible's name
 	 */
@@ -96,6 +96,38 @@ public final class ServerVariable
 		return name;
 	}
 
+   /**
+    * Get variable's value for display. Will replace numeric value with textual description when possible.
+    * 
+    * @param value to convert to display form
+    * @return Variable's value prepared for display
+    */
+   protected String getValueForDisplay(String value)
+   {
+      if (value == null)
+         return "";
+
+      if (dataType == ServerVariableDataType.BOOLEAN)
+      {
+         try
+         {
+            return (Integer.parseInt(value) != 0) ? "true" : "false";
+         }
+         catch(NumberFormatException e)
+         {
+            return "false";
+         }
+      }
+
+      if (dataType == ServerVariableDataType.CHOICE)
+      {
+         String s = values.get(value);
+         return (s != null) ? s : value;
+      }
+
+      return value;
+   }
+
 	/**
 	 * Get variable's value for display. Will replace numeric value with textual description when possible.
 	 * 
@@ -103,12 +135,7 @@ public final class ServerVariable
     */
    public String getValueForDisplay()
    {
-      if (value == null)
-         return "";
-      if (dataType != ServerVariableDataType.CHOICE)
-         return value;
-      String s = values.get(value);
-      return (s != null) ? s : value;
+      return getValueForDisplay(value);
    }
 
 	/**
@@ -176,7 +203,7 @@ public final class ServerVariable
 	{
 		return isServerRestartNeeded;
 	}
-	
+
 	/**
 	 * @return A list of possible variable values
 	 */
@@ -184,7 +211,7 @@ public final class ServerVariable
 	{
 	   return values;
 	}
-	
+
 	/**
 	 * @return Variable`s default value
 	 */
@@ -200,14 +227,9 @@ public final class ServerVariable
     */
    public String getDefaultValueForDisplay()
    {
-      if (defaultValue == null)
-         return "";
-      if (dataType != ServerVariableDataType.CHOICE)
-         return defaultValue;
-      String s = values.get(defaultValue);
-      return (s != null) ? s : defaultValue;
+      return getValueForDisplay(defaultValue);
    }
-   
+
 	/**
 	 * @return true if variable`s value is the default value
 	 */
@@ -215,7 +237,7 @@ public final class ServerVariable
 	{
 	   return value.equals(defaultValue);
 	}
-	
+
 	/**
 	 * @return get variable unit
 	 */

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,14 +49,15 @@ public class VariableEditDialog extends Dialog
 	private LabeledText textName;
 	private Text textValue;
 	private Spinner spinnerValue;
-	private Button buttonEnable;
+   private Button trueValue;
+   private Button falseValue;
 	private ColorSelector colorSelector;
 	private Combo comboValue;
 	private ServerVariable variable;
 	private Map<Integer, String> valueMap;
 	private String name;
 	private String value;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -66,20 +67,30 @@ public class VariableEditDialog extends Dialog
 		this.variable  = variable;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText((variable.getName() == null) ? Messages.get().VariableEditDialog_TitleCreate : Messages.get().VariableEditDialog_TitleEdit);
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
-		
+
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel(Messages.get().VariableEditDialog_Name);
       textName.getTextControl().setTextLimit(63);
@@ -103,12 +114,16 @@ public class VariableEditDialog extends Dialog
       switch(variable.getDataType())
       {
          case BOOLEAN:
-            buttonEnable = new Button(dialogArea, SWT.CHECK);
-            buttonEnable.setText("Enable");
-            buttonEnable.setSelection(variable.getValueAsBoolean());
-            
+            trueValue = new Button(dialogArea, SWT.RADIO);
+            trueValue.setText("&True");
+            trueValue.setSelection(variable.getValueAsBoolean());
+
+            falseValue = new Button(dialogArea, SWT.RADIO);
+            falseValue.setText("&False");
+            falseValue.setSelection(!trueValue.getSelection());
+
             if (variable.getName() != null)
-               buttonEnable.setFocus();
+               trueValue.setFocus();
             break;
          case CHOICE:
             valueMap = new HashMap<Integer, String>();
@@ -124,7 +139,7 @@ public class VariableEditDialog extends Dialog
                if (e.getKey().equals(variable.getValue()))
                   comboValue.select(index);
             }
-            
+
             if (variable.getName() != null)
                comboValue.setFocus();
             break;
@@ -153,7 +168,7 @@ public class VariableEditDialog extends Dialog
                gd.horizontalAlignment = SWT.FILL;
                unit.setLayoutData(gd);
             }
-            
+
             if (variable.getName() != null)
                spinnerValue.setFocus();
             break;
@@ -174,16 +189,6 @@ public class VariableEditDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-		newShell.setText((variable.getName() == null) ? Messages.get().VariableEditDialog_TitleCreate : Messages.get().VariableEditDialog_TitleEdit);
-	}
-	
 	/**
 	 * Get variable name
 	 * 
@@ -202,9 +207,9 @@ public class VariableEditDialog extends Dialog
 		return value;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -212,7 +217,7 @@ public class VariableEditDialog extends Dialog
 	   switch(variable.getDataType())
 	   {
 	      case BOOLEAN:
-	         value = (buttonEnable.getSelection()) ? "1" : "0";
+            value = trueValue.getSelection() ? "1" : "0";
 	         break;
 	      case CHOICE:
 	         if (comboValue.getSelectionIndex() == -1)
