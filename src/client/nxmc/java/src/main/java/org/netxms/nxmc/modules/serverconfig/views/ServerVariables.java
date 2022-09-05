@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -181,7 +181,7 @@ public class ServerVariables extends ConfigurationView
       };
       actionDelete.setEnabled(false);
 
-      actionDefaultValue = new Action("Set default value") {
+      actionDefaultValue = new Action(i18n.tr("&Reset to default"), ResourceManager.getImageDescriptor("icons/reset-to-default.png")) {
          @Override
          public void run()
          {
@@ -221,8 +221,8 @@ public class ServerVariables extends ConfigurationView
    {
       mgr.add(actionAdd);
       mgr.add(actionEdit);
-      mgr.add(actionDelete);
       mgr.add(actionDefaultValue);
+      mgr.add(actionDelete);
       mgr.add(new Separator());
       mgr.add(actionExportToCsv);
       mgr.add(actionExportAllToCsv);

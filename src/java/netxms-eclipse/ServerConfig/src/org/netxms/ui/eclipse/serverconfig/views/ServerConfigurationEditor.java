@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class ServerConfigurationEditor extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverconfig.view.server_config"; //$NON-NLS-1$
-		
+
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private Map<String, ServerVariable> varList;
@@ -98,12 +98,15 @@ public class ServerConfigurationEditor extends ViewPart
    private Action actionDefaultValue;
 	
 	// Columns
-	public static final int COLUMN_NAME = 0;
-	public static final int COLUMN_VALUE = 1;
+   public static final int COLUMN_NAME = 0;
+   public static final int COLUMN_VALUE = 1;
    public static final int COLUMN_DEFAULT_VALUE = 2;
-	public static final int COLUMN_NEED_RESTART = 3;
-	public static final int COLUMN_DESCRIPTION = 4;
+   public static final int COLUMN_NEED_RESTART = 3;
+   public static final int COLUMN_DESCRIPTION = 4;
 
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
    public void init(IViewSite site) throws PartInitException
    {
@@ -121,15 +124,15 @@ public class ServerConfigurationEditor extends ViewPart
    {
       return (s != null) ? b : defval;
    }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	public void createPartControl(Composite parent)
 	{
 	   content = new Composite(parent, SWT.NONE);
       content.setLayout(new FormLayout());
-	   
+
 	   // Create filter area
       filterText = new FilterText(content, SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
@@ -139,7 +142,7 @@ public class ServerConfigurationEditor extends ViewPart
             onFilterModify();
          }
       });
-	   
+
 		final String[] names = { Messages.get().ServerConfigurationEditor_ColName, Messages.get().ServerConfigurationEditor_ColValue, "Default value", Messages.get().ServerConfigurationEditor_ColRestart, "Description" };
 		final int[] widths = { 200, 150, 150, 80, 500 };
 		viewer = new SortableTableViewer(content, names, widths, 0, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER, SortableTableViewer.DEFAULT_STYLE);
@@ -159,13 +162,13 @@ public class ServerConfigurationEditor extends ViewPart
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
 				actionEdit.setEnabled(selection.size() == 1);
 				actionDelete.setEnabled(selection.size() > 0);
-				actionDefaultValue.setEnabled(selection.size() > 0);
+            actionDefaultValue.setEnabled(selection.size() > 0);
 			}
 		});
-		
+
 		// Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -173,13 +176,13 @@ public class ServerConfigurationEditor extends ViewPart
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       viewer.getTable().setLayoutData(fd);
-      
+
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       filterText.setLayoutData(fd);
-		
+
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTableViewerSettings(viewer, settings, "ServerConfigurationEditor"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -196,15 +199,15 @@ public class ServerConfigurationEditor extends ViewPart
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
+
 		filterText.setCloseAction(actionShowFilter);
-		
+
 		// Set initial focus to filter input line
       if (initShowFilter)
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
-		
+
 		session = ConsoleSharedData.getSession();
 		refresh();
 	}
@@ -327,8 +330,8 @@ public class ServerConfigurationEditor extends ViewPart
          }
       };
       actionDelete.setEnabled(false);
-		
-		actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
@@ -340,8 +343,8 @@ public class ServerConfigurationEditor extends ViewPart
       actionShowFilter.setChecked(initShowFilter);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.show_filter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
-      
-      actionDefaultValue = new Action("Set default value") {
+
+      actionDefaultValue = new Action("&Reset to default", Activator.getImageDescriptor("icons/reset-to-default.png")) {
          @Override
          public void run()
          {
@@ -352,8 +355,8 @@ public class ServerConfigurationEditor extends ViewPart
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
-	
-	  /**
+
+   /**
     * Enable or disable filter
     * 
     * @param enable New filter state
@@ -376,12 +379,15 @@ public class ServerConfigurationEditor extends ViewPart
       }
    }
 
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
    @Override
    public void dispose()
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       settings.put("ServerConfigurationEditor.showFilter", initShowFilter);
-  
+
       super.dispose();
    }
 
@@ -413,10 +419,6 @@ public class ServerConfigurationEditor extends ViewPart
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-
-		// Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
 	/**
@@ -427,8 +429,8 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		mgr.add(actionAdd);
 		mgr.add(actionEdit);
-		mgr.add(actionDelete);
       mgr.add(actionDefaultValue);
+		mgr.add(actionDelete);
 		mgr.add(new Separator());
 		mgr.add(actionExportToCsv);
 	}
@@ -480,10 +482,10 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	private void editVariable()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		if ((selection == null) || (selection.size() != 1))
 			return;
-		
+
 		final ServerVariable var = (ServerVariable)selection.getFirstElement();
 		final VariableEditDialog dlg = new VariableEditDialog(getSite().getShell(), var);
 		if (dlg.open() == Window.OK)
