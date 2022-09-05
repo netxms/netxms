@@ -22,6 +22,7 @@ import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.bindings.BindingManager;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.ExitConfirmation;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -222,6 +223,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       super.postWindowClose();
       if (RWT.getUISession().getAttribute("NoPageReload") == null)
       {
+         RWT.getClient().getService(ExitConfirmation.class).setMessage(null);
          JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
          if (executor != null)
             executor.execute("location.reload(true);");
