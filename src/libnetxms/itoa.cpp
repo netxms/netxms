@@ -40,7 +40,7 @@ template<typename _Ti, typename _Ta> static inline _Ta *SignedIntegerToString(_T
    do
    {
       _Ti rem = value % base;
-      *t++ = (rem < 10) ? (rem + '0') : (rem - 10 + 'a');
+      *t++ = static_cast<_Ta>((rem < 10) ? (rem + '0') : (rem - 10 + 'a'));
       value = value / base;
    } while(value > 0);
 
@@ -62,7 +62,7 @@ template<typename _Ti, typename _Ta> static inline _Ta *UnsignedIntegerToString(
    do
    {
       _Ti rem = value % base;
-      *t++ = (rem < 10) ? (rem + '0') : (rem - 10 + 'a');
+      *t++ = static_cast<_Ta>((rem < 10) ? (rem + '0') : (rem - 10 + 'a'));
       value = value / base;
    } while(value > 0);
 

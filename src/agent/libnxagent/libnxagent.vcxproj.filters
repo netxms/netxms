@@ -54,6 +54,9 @@
     <ClCompile Include="crl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tftp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libnxagent.h">

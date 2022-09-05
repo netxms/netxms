@@ -142,6 +142,17 @@ int main(int argc, char *argv[])
       return 1;
    }
 
+#ifdef _WIN32
+   WSADATA wsaData;
+   int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
+   if (wrc != 0)
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("Call to WSAStartup() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      return FALSE;
+   }
+#endif
+
    InetAddress addr = InetAddress::resolveHostName(argv[optind + 1]);
    if (!addr.isValidUnicast() && !addr.isLoopback())
    {

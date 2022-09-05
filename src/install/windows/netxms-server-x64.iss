@@ -165,6 +165,7 @@ Source: "..\..\..\x64\Release\nxminfo.exe"; DestDir: "{app}\bin"; Flags: ignorev
 Source: "..\..\..\x64\Release\nxsnmpget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxsnmpwalk.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxsnmpset.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
+Source: "..\..\..\x64\Release\nxtftp.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxupload.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 Source: "..\..\..\x64\Release\nxwsget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server
 ; Agent
@@ -847,6 +848,7 @@ Begin
   If CurStep=ssPostInstall Then Begin
     SetFirewallException('NetXMS Server', ExpandConstant('{app}')+'\bin\netxmsd.exe');
     SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+    SetFirewallException('NetXMS TFTP Client', ExpandConstant('{app}')+'\bin\nxtftp.exe');
     DeleteBackupFiles;
   End;
 End;
@@ -856,5 +858,6 @@ Begin
   If CurUninstallStep=usPostUninstall Then Begin
     RemoveFirewallException(ExpandConstant('{app}')+'\bin\netxmsd.exe');
     RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
+    RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxtftp.exe');
   End;
 End;

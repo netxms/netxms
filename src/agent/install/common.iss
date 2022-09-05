@@ -549,6 +549,7 @@ Procedure CurStepChanged(CurStep: TSetupStep);
 Begin
   If CurStep = ssPostInstall Then Begin
     SetFirewallException('NetXMS Agent', ExpandConstant('{app}')+'\bin\nxagentd.exe');
+    SetFirewallException('NetXMS TFTP Client', ExpandConstant('{app}')+'\bin\nxtftp.exe');
     DeleteBackupFiles;
   End;
 End;
@@ -557,5 +558,6 @@ Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 Begin
   If CurUninstallStep = usPostUninstall Then Begin
      RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxagentd.exe');
+     RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxtftp.exe');
   End;
 End;
