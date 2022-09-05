@@ -5,7 +5,7 @@ nxagentd_SOURCES = actions.cpp appagent.cpp certinfo.cpp comm.cpp config.cpp ctr
                    master.cpp nproc.cpp nxagentd.cpp policy.cpp proxy.cpp \
                    push.cpp register.cpp sa.cpp session.cpp snmpproxy.cpp \
                    snmptrapproxy.cpp static_subagents.cpp subagent.cpp \
-                   sysinfo.cpp syslog.cpp systemd.cpp tcpproxy.cpp \
+                   sysinfo.cpp syslog.cpp systemd.cpp tcpproxy.cpp tftp.cpp \
                    tools.cpp tunnel.cpp watchdog.cpp websvc.cpp
 
 nxagentd_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build @LIBJQ_CPPFLAGS@

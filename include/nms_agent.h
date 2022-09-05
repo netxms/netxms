@@ -1345,6 +1345,37 @@ void LIBNXAGENT_EXPORTABLE TCPScanAddressRange(const InetAddress& from, const In
 int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name);
 
 /**
+ * TFTP client error codes
+ */
+enum TFTPError
+{
+   TFTP_SUCCESS = 0,
+   TFTP_FILE_READ_ERROR = 1,
+   TFTP_FILE_WRITE_ERROR = 2,
+   TFTP_SOCKET_ERROR = 3,
+   TFTP_TIMEOUT = 4,
+   TFTP_PROTOCOL_ERROR = 5,
+   TFTP_FILE_NOT_FOUND = 6,
+   TFTP_ACCESS_VIOLATION = 7,
+   TFTP_DISK_FULL = 8,
+   TFTP_ILLEGAL_OPERATION = 9,
+   TFTP_UNKNOWN_TRANSFER_ID = 10,
+   TFTP_FILE_ALREADY_EXISTS = 11,
+   TFTP_NO_SUCH_USER = 12
+};
+
+/**
+ * TFTP client implementation
+ */
+TFTPError LIBNXAGENT_EXPORTABLE TFTPWrite(const TCHAR *fileName, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
+TFTPError LIBNXAGENT_EXPORTABLE TFTPWrite(const BYTE *data, size_t size, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
+TFTPError LIBNXAGENT_EXPORTABLE TFTPWrite(std::istream *stream, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
+TFTPError LIBNXAGENT_EXPORTABLE TFTPRead(const TCHAR *fileName, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
+TFTPError LIBNXAGENT_EXPORTABLE TFTPRead(ByteStream *output, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
+TFTPError LIBNXAGENT_EXPORTABLE TFTPRead(std::ostream *stream, const TCHAR *remoteFileName, const InetAddress& addr, uint16_t port = 69, std::function<void (size_t)> progressCallback = std::function<void (size_t)>());
+const TCHAR LIBNXAGENT_EXPORTABLE *TFTPErrorMessage(TFTPError code);
+
+/**
  * Wrapper for SleepAndCheckForShutdownEx (for backward compatibility)
  * @return True if shutdown was initiated.
  */

@@ -4737,6 +4737,7 @@ AC_CONFIG_FILES([
 	src/agent/tools/nxapush/Makefile
 	src/agent/tools/nxhwid/Makefile
 	src/agent/tools/nxreload/Makefile
+	src/agent/tools/nxtftp/Makefile
 	src/agent/tools/scripts/Makefile
 	src/appagent/Makefile
 	src/client/Makefile

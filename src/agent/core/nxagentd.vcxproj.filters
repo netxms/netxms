@@ -103,6 +103,9 @@
     <ClCompile Include="syslog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tftp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -230,6 +230,7 @@
     <ClCompile Include="sysinfo.cpp" />
     <ClCompile Include="syslog.cpp" />
     <ClCompile Include="tcpproxy.cpp" />
+    <ClCompile Include="tftp.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="tunnel.cpp" />
     <ClCompile Include="watchdog.cpp" />

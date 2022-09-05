@@ -63,11 +63,7 @@
 #define NXCP_SUPPORT_AES_128      0x10
 #define NXCP_SUPPORT_BLOWFISH_128 0x20
 
-#ifdef __HP_aCC
-#pragma pack 1
-#else
 #pragma pack(1)
-#endif
 
 /**
  * Message field flags
@@ -204,9 +200,7 @@ typedef struct
    } value;
 } DCI_DATA_ROW;
 
-#if defined(__HP_aCC)
-#pragma pack
-#elif defined(_AIX) && !defined(__GNUC__)
+#if defined(_AIX) && !defined(__GNUC__)
 #pragma pack(pop)
 #else
 #pragma pack()

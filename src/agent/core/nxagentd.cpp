@@ -121,6 +121,8 @@ void StartWebServiceHousekeeper();
 void StartFileMonitor(const shared_ptr<Config>& config);
 void StopFileMonitor();
 
+uint32_t H_TFTPPut(const shared_ptr<ActionExecutionContext>& context);
+
 #if !defined(_WIN32)
 void InitStaticSubagents();
 #endif
@@ -344,6 +346,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableSyslogProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableSubagentAutoload"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_AUTOLOAD, 0, &s_startupFlags, nullptr },
    { _T("EnableTCPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_TCP_PROXY, 0, &g_dwFlags, nullptr },
+   { _T("EnableTFTPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_TFTP_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_WATCHDOG, 0, &s_startupFlags, nullptr },
    { _T("EnableWebServiceProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_WEBSVC_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
@@ -1234,12 +1237,13 @@ BOOL Initialize()
 		if (m_pszServerList != nullptr)
 			ParseServerList(m_pszServerList, false, false);
 
-		// Add built-in actions
-		AddAction(_T("Agent.Restart"), false, nullptr, H_RestartAgent, _T("CORE"), _T("Restart agent"));
+      // Add built-in actions
+      AddAction(_T("Agent.Restart"), false, nullptr, H_RestartAgent, _T("CORE"), _T("Restart agent"));
       AddAction(_T("Agent.RotateLog"), false, nullptr, H_RotateLog, _T("CORE"), _T("Rotate agent log"));
 #ifndef _WIN32
       AddAction(_T("Process.Terminate"), false, nullptr, H_TerminateProcess, _T("CORE"), _T("Terminate process"));
 #endif
+      AddAction(_T("TFTP.Put"), false, nullptr, H_TFTPPut, _T("CORE"), _T("Transfer file to remote system via TFTP"));
       if (config->getValueAsBoolean(_T("/CORE/EnableArbitraryCommandExecution"), false))
       {
          nxlog_write(NXLOG_INFO, _T("Arbitrary command execution enabled"));
@@ -1255,15 +1259,15 @@ BOOL Initialize()
 
 	   // Load platform subagents
 #if !defined(_WIN32)
-		InitStaticSubagents();
+      InitStaticSubagents();
 #endif
-		if (s_startupFlags & SF_ENABLE_AUTOLOAD)
-		{
-		   LoadPlatformSubagent();
-		}
-	}
+      if (s_startupFlags & SF_ENABLE_AUTOLOAD)
+      {
+         LoadPlatformSubagent();
+      }
+   }
 
-	// Wait for external process if requested
+   // Wait for external process if requested
 	if (s_processToWaitFor[0] != 0)
 	{
 	   DebugPrintf(1, _T("Waiting for process %s"), s_processToWaitFor);

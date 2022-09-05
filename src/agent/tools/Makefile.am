@@ -8,9 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = nxaevent nxappget nxapush nxhwid nxreload scripts
+SUBDIRS = nxaevent nxappget nxapush nxhwid nxreload nxtftp scripts
 
-bin_PROGRAMS = nxaevent/nxaevent nxappget/nxappget nxapush/nxapush nxhwid/nxhwid
+bin_PROGRAMS = nxaevent/nxaevent nxappget/nxappget nxapush/nxapush nxhwid/nxhwid nxtftp/nxtftp
 
 nxaevent_nxaevent_SOURCES = nxaevent/nxaevent.cpp
 nxaevent_nxaevent_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
@@ -77,5 +77,22 @@ if ALL_STATIC
 nxhwid_nxhwid_LDFLAGS += -all-static
 else
 nxhwid_nxhwid_LDFLAGS += -static
+endif
+endif
+
+nxtftp_nxtftp_SOURCES = nxtftp/nxtftp.cpp
+nxtftp_nxtftp_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build
+nxtftp_nxtftp_LDFLAGS = @EXEC_LDFLAGS@
+nxtftp_nxtftp_LDADD = @top_srcdir@/src/agent/libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @EXEC_LIBS@
+if USE_INTERNAL_JANSSON
+nxtftp_nxtftp_LDADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+nxtftp_nxtftp_LDADD += -ljansson
+endif
+if STATIC_BUILD
+if ALL_STATIC
+nxtftp_nxtftp_LDFLAGS += -all-static
+else
+nxtftp_nxtftp_LDFLAGS += -static
 endif
 endif

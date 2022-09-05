@@ -334,26 +334,20 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
  */
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
-   TCHAR szHashText[MD5_DIGEST_SIZE * 2 + 1];
-   BYTE hash[MD5_DIGEST_SIZE];
-   UINT32 i;
+   TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
 
-   if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, fileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
-   if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+   if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!CalculateFileMD5Hash(szRealFileName, hash))
+   BYTE hash[MD5_DIGEST_SIZE];
+   if (!CalculateFileMD5Hash(realFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
 
-   // Convert MD5 hash to text form
-   for(i = 0; i < MD5_DIGEST_SIZE; i++)
-      _sntprintf(&szHashText[i << 1], 4, _T("%02x"), hash[i]);
-
-   ret_string(value, szHashText);
+   BinToStr(hash, MD5_DIGEST_SIZE, value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -362,26 +356,20 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
  */
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
-   TCHAR szHashText[SHA1_DIGEST_SIZE * 2 + 1];
-   BYTE hash[SHA1_DIGEST_SIZE];
-   UINT32 i;
+   TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
 
-   if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, fileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
-   if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+   if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!CalculateFileSHA1Hash(szRealFileName, hash))
+   BYTE hash[SHA1_DIGEST_SIZE];
+   if (!CalculateFileSHA1Hash(realFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
 
-   // Convert SHA1 hash to text form
-   for(i = 0; i < SHA1_DIGEST_SIZE; i++)
-      _sntprintf(&szHashText[i << 1], 4, _T("%02x"), hash[i]);
-
-   ret_string(value, szHashText);
+   BinToStr(hash, SHA1_DIGEST_SIZE, value);
    return SYSINFO_RC_SUCCESS;
 }
 
@@ -390,20 +378,20 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
  */
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
-   UINT32 dwCRC32;
+   TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
+   uint32_t crc32;
 
-   if (!AgentGetParameterArg(cmd, 1, szFileName, MAX_PATH))
+   if (!AgentGetParameterArg(cmd, 1, fileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
-   if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+   if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!CalculateFileCRC32(szRealFileName, &dwCRC32))
+   if (!CalculateFileCRC32(realFileName, &crc32))
       return SYSINFO_RC_UNSUPPORTED;
 
-   ret_uint(value, dwCRC32);
+   ret_uint(value, crc32);
    return SYSINFO_RC_SUCCESS;
 }
 
