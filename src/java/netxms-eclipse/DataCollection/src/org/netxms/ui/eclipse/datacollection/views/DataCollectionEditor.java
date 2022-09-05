@@ -441,7 +441,7 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(actionDelete);
 		manager.add(actionCopy);
 		manager.add(actionMove);
-		if(!(object instanceof Template))
+      if (!(object instanceof Template))
 		   manager.add(actionConvert);
 		manager.add(actionDuplicate);
 		manager.add(new Separator());
@@ -452,10 +452,14 @@ public class DataCollectionEditor extends ViewPart
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
 		manager.add(new Separator());
-      if(object instanceof Template)
+      if ((object instanceof Template) || (object instanceof Cluster))
+      {
          manager.add(actionApplyChanges);
+         manager.add(new Separator());
+      }
+      manager.add(actionExportAllToCsv);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
-		manager.add(actionExportAllToCsv);
 	}
 
 	/**
@@ -469,9 +473,9 @@ public class DataCollectionEditor extends ViewPart
       manager.add(actionCreateItem);
       manager.add(actionShowFilter);
       manager.add(actionHideTemplateItems);
-      manager.add(actionExportAllToCsv);
-      if(object instanceof Template)
+      if ((object instanceof Template) || (object instanceof Cluster))
          manager.add(actionApplyChanges);
+      manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
 	}
 

@@ -565,7 +565,7 @@ public class DataCollectionView extends BaseDataCollectionView
       actionHideTemplateItems.setChecked(PreferenceStore.getInstance().getAsBoolean("DataCollectionConfiguration.hideTemplateItems", false));
       addKeyBinding("M1+M2+T", actionHideTemplateItems);
 
-      actionApplyChanges = new Action("Apply changes", ResourceManager.getImageDescriptor("icons/commit.png")) { 
+      actionApplyChanges = new Action("Appl&y changes", ResourceManager.getImageDescriptor("icons/commit.png")) {
          @Override
          public void run()
          {
@@ -573,6 +573,7 @@ public class DataCollectionView extends BaseDataCollectionView
          }
       };
       actionApplyChanges.setEnabled(false);      
+      addKeyBinding("M1+S", actionApplyChanges);
    }
 
    /**
@@ -1179,6 +1180,10 @@ public class DataCollectionView extends BaseDataCollectionView
    protected void fillLocalToolbar(ToolBarManager manager)
    {
       manager.add(actionCreateItem);
+      if ((getObject() instanceof Template) || (getObject() instanceof Cluster))
+      {
+         manager.add(actionApplyChanges);
+      }
       super.fillLocalToolbar(manager);
       if (editMode)
       {
@@ -1187,10 +1192,6 @@ public class DataCollectionView extends BaseDataCollectionView
       if (!(getObject() instanceof Template))
       {
          manager.add(actionToggleEditMode);
-      }
-      else
-      {
-         manager.add(actionApplyChanges);
       }
    }
 
@@ -1202,6 +1203,11 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       manager.add(actionCreateItem);
       manager.add(new Separator());
+      if ((getObject() instanceof Template) || (getObject() instanceof Cluster))
+      {
+         manager.add(actionApplyChanges);
+         manager.add(new Separator());
+      }
       super.fillLocalMenu(manager);
       if (editMode)
       {
@@ -1212,13 +1218,8 @@ public class DataCollectionView extends BaseDataCollectionView
          manager.add(new Separator());
          manager.add(actionToggleEditMode);
       }
-      else
-      {
-         manager.add(new Separator());
-         manager.add(actionApplyChanges);
-      }
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#deactivate()
     */
