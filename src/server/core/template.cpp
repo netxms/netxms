@@ -386,11 +386,11 @@ void Template::forceDeployPolicies(const shared_ptr<Node>& target)
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      GenericAgentPolicy *object = m_policyList->get(i);
+      const shared_ptr<GenericAgentPolicy>& policy = m_policyList->getShared(i);
       auto data = make_shared<AgentPolicyDeploymentData>(target, target->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
-      _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), target->getName(), target->getId(), getName(), object->getName());
-      ThreadPoolExecuteSerialized(g_mainThreadPool, key, object, &GenericAgentPolicy::deploy, data);
+      _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), target->getName(), target->getId(), getName(), policy->getName());
+      ThreadPoolExecuteSerialized(g_mainThreadPool, key, policy, &GenericAgentPolicy::deploy, data);
    }
    setModified(MODIFY_POLICY, false);
    unlockProperties();
@@ -811,7 +811,7 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
    lockProperties();
    for (int i = 0; i < m_policyList->size(); i++)
    {
-      shared_ptr<GenericAgentPolicy> policy = m_policyList->getShared(i);
+      const shared_ptr<GenericAgentPolicy>& policy = m_policyList->getShared(i);
       auto data = make_shared<AgentPolicyDeploymentData>(node, node->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
 
