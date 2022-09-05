@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
@@ -87,15 +85,15 @@ public class DciList extends Composite
 	public DciList(ViewPart viewPart, Composite parent, int style, AbstractNode _node, final String configPrefix, int dcObjectType, int selectionType, boolean allowNoValueObjects)
 	{
 		super(parent, style);
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		this.node = _node;
 		this.dcObjectType = dcObjectType;
 		this.allowNoValueObjects = allowNoValueObjects;
-		
+
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
-      
+
       // Create filter area
       filterText = new FilterText(this, SWT.NONE, null, false);
       filterText.addModifyListener(new ModifyListener() {
@@ -112,28 +110,21 @@ public class DciList extends Composite
             enableFilter(false);
          }
       });
-		
+
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
-		
+
 		// Setup table columns
 		final String[] names = { Messages.get().DciList_ColID, Messages.get().DciList_ColParam, Messages.get().DciList_ColDescr };
 		final int[] widths = { 70, 150, 250 };
 		viewer = new SortableTableViewer(this, names, widths, 2, SWT.DOWN, selectionType | SWT.FULL_SELECTION);
-	
+
 		viewer.setLabelProvider(new DciListLabelProvider());
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new DciListComparator());
 		filter = new DciListFilter();
 		viewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(viewer, ds, configPrefix);
-		
-		addListener(SWT.Resize, new Listener() {
-			public void handleEvent(Event e)
-			{
-				viewer.getControl().setBounds(DciList.this.getClientArea());
-			}
-		});
-		
+
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -141,7 +132,7 @@ public class DciList extends Composite
 				WidgetHelper.saveTableViewerSettings(viewer, ds, configPrefix);
 			}
 		});
-		
+
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -161,7 +152,7 @@ public class DciList extends Composite
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
-      
+
 		getDataFromServer();
 	}
 	
