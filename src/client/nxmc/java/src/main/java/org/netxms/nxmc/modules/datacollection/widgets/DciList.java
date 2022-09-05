@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,8 +36,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
@@ -94,10 +92,10 @@ public class DciList extends Composite
 		this.node = _node;
 		this.dcObjectType = dcObjectType;
 		this.allowNoValueObjects = allowNoValueObjects;
-		
+
       FormLayout formLayout = new FormLayout();
       setLayout(formLayout);
-      
+
       // Create filter area
       filterText = new FilterText(this, SWT.NONE, null, false);
       filterText.addModifyListener(new ModifyListener() {
@@ -114,26 +112,19 @@ public class DciList extends Composite
             enableFilter(false);
          }
       });
-		
+
 		// Setup table columns
       final String[] names = { i18n.tr("ID"), i18n.tr("Parameter"), i18n.tr("Description") };
 		final int[] widths = { 70, 150, 250 };
 		viewer = new SortableTableViewer(this, names, widths, 2, SWT.DOWN, selectionType | SWT.FULL_SELECTION);
-	
+
 		viewer.setLabelProvider(new DciListLabelProvider());
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new DciListComparator());
 		filter = new DciListFilter();
 		viewer.addFilter(filter);
       WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
-		
-		addListener(SWT.Resize, new Listener() {
-			public void handleEvent(Event e)
-			{
-				viewer.getControl().setBounds(DciList.this.getClientArea());
-			}
-		});
-		
+
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
