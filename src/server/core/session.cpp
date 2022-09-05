@@ -3098,6 +3098,7 @@ void ClientSession::setDefaultConfigurationVariableValues(const NXCPMessage& req
                DBGetField(result, 0, 0, defValue, MAX_CONFIG_VALUE);
                ConfigWriteStr(varName, defValue, false);
                response.setField(VID_RCC, RCC_SUCCESS);
+               DBFreeResult(result);
             }
             else
             {
