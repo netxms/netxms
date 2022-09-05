@@ -27,8 +27,8 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Button;
@@ -107,19 +107,13 @@ public class SelectDciDialog extends Dialog
 		if (enableEmptySelection)
 		{
 			Button button = createButton(parent, 1000, Messages.get().SelectDciDialog_None, false);
-			button.addSelectionListener(new SelectionListener() {
+         button.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
 					selection = null;
 					saveSettings();
 					SelectDciDialog.super.okPressed();
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
 				}
 			});
 		}		
@@ -133,10 +127,10 @@ public class SelectDciDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		
+
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 		dialogArea.setLayout(new FillLayout());
-		
+
 		if (fixedNode == 0)
 		{
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
@@ -172,7 +166,7 @@ public class SelectDciDialog extends Dialog
 			{
 				splitter.setWeights(new int[] { 30, 70 });
 			}
-			
+
 			objectTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener()	{
 				@Override
 				public void selectionChanged(SelectionChangedEvent event)
@@ -224,9 +218,9 @@ public class SelectDciDialog extends Dialog
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{

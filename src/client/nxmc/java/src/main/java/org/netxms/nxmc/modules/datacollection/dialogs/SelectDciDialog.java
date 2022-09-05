@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -229,8 +229,7 @@ public class SelectDciDialog extends Dialog
 		selection = dciList.getSelection();
 		if (selection == null || selection.size() == 0)
 		{
-         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"),
-               i18n.tr("Please select DCI fro the list and then press OK"));
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select DCI from the list and then press OK"));
 			return;
 		}
 		saveSettings();
