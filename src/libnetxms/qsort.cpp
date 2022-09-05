@@ -280,17 +280,17 @@ typedef struct { char * first; char * last; } stack_entry;
   }
 
 #define SWAP_nonaligned(a,b) { \
-  register char *aa=(a),*bb=(b); \
-  register size_t sz=size; \
-  do { register char t=*aa; *aa++=*bb; *bb++=t; } while (--sz); }
+  char *aa=(a),*bb=(b); \
+  size_t sz=size; \
+  do { char t=*aa; *aa++=*bb; *bb++=t; } while (--sz); }
 
 #define SWAP_aligned(a,b) { \
-  register int *aa=(int*)(a),*bb=(int*)(b); \
-  register size_t sz=size; \
-  do { register int t=*aa;*aa++=*bb; *bb++=t; } while (sz-=WORD_BYTES); }
+  int *aa=(int*)(a),*bb=(int*)(b); \
+  size_t sz=size; \
+  do { int t=*aa;*aa++=*bb; *bb++=t; } while (sz-=WORD_BYTES); }
 
 #define SWAP_words(a,b) { \
-  register int t=*((int*)a); *((int*)a)=*((int*)b); *((int*)b)=t; }
+  int t=*((int*)a); *((int*)a)=*((int*)b); *((int*)b)=t; }
 
 /* ---------------------------------------------------------------------- */
 
