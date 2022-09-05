@@ -534,7 +534,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int row, int column, 
       int32_t nLen = hResult->m_driver->m_callTable.GetFieldLength(hResult->m_data, row, column);
       if (nLen == -1)
          return nullptr;
-      nLen = nLen++;
+      nLen++;
 
       Buffer<WCHAR, 1024> wtemp(nLen);
       hResult->m_driver->m_callTable.GetField(hResult->m_data, row, column, wtemp, nLen);
