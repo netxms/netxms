@@ -56,6 +56,7 @@
       <view
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.datacollection.views.WebServiceManager"
+            icon="icons/url.png"
             id="org.netxms.ui.eclipse.datacollection.views.WebServiceManager"
             name="Web Service Definitions"
             restorable="true">
@@ -553,6 +554,7 @@
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.OpenWebServiceManager"
                definitionId="org.netxms.ui.eclipse.datacollection.commands.open_websvc_manager"
+               icon="icons/url.png"
                id="org.netxms.ui.eclipse.datacollection.actions.open_dcisumtbl_manager"
                label="%action.label.WebServiceDefinitions"
                menubarPath="config/additions"

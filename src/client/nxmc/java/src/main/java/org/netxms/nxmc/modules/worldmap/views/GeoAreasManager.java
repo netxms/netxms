@@ -103,7 +103,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    private Action actionImport;
 
    /**
-    * Create notification channels view
+    * Create geo area manager view
     */
    public GeoAreasManager()
    {
@@ -240,6 +240,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
             createArea();
          }
       };
+      addKeyBinding("M1+N", actionNew);
 
       actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
          @Override
@@ -256,6 +257,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
             deleteAreas();
          }
       };
+      addKeyBinding("M1+D", actionDelete);
 
       actionImport = new Action("&Import...", SharedIcons.IMPORT) {
          @Override
@@ -264,6 +266,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
             importAreas();
          }
       };
+      addKeyBinding("M1+I", actionImport);
    }
 
    /**

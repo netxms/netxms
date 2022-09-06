@@ -4,7 +4,8 @@ org.netxms.nxmc.modules.agentmanagement.ServerStoredAgentConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.TunnelConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.UserAgentNotificationElement
 org.netxms.nxmc.modules.alarms.AlarmCategoryConfiguratorElement
-org.netxms.nxmc.modules.datacollection.SummaryTableManagerConfiguratorElement
+org.netxms.nxmc.modules.datacollection.SummaryTablesElement
+org.netxms.nxmc.modules.datacollection.WebServiceDefinitionsElement
 org.netxms.nxmc.modules.events.EPPConfigurationElement
 org.netxms.nxmc.modules.events.EventConfigurationElement
 org.netxms.nxmc.modules.filemanager.ServerFilesElement

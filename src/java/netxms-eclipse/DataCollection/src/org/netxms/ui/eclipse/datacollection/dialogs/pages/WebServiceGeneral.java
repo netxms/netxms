@@ -199,7 +199,7 @@ public class WebServiceGeneral extends PreferencePage
       timeout.setLayoutData(gd);
 
       checkVerifyCert = new Button(groupOptions, SWT.CHECK);
-      checkVerifyCert.setText("Verify peer's certificate");
+      checkVerifyCert.setText("Verify &peer's certificate");
       checkVerifyCert.setSelection(definition.isVerifyCertificate());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -207,7 +207,7 @@ public class WebServiceGeneral extends PreferencePage
       checkVerifyCert.setLayoutData(gd);
 
       checkVerifyHost = new Button(groupOptions, SWT.CHECK);
-      checkVerifyHost.setText("Verify host name in certificate");
+      checkVerifyHost.setText("Verify &host name in certificate");
       checkVerifyHost.setSelection(definition.isVerifyHost());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -215,7 +215,7 @@ public class WebServiceGeneral extends PreferencePage
       checkVerifyHost.setLayoutData(gd);
 
       checkTextParsing = new Button(groupOptions, SWT.CHECK);
-      checkTextParsing.setText("Process response as plain text");
+      checkTextParsing.setText("Process response as plain &text");
       checkTextParsing.setSelection(definition.isTextParsingUsed());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -254,7 +254,7 @@ public class WebServiceGeneral extends PreferencePage
       if (svcName.contains(":") || svcName.contains("/") || svcName.contains(",") || svcName.contains("(") || svcName.contains(")") || svcName.contains("{") || svcName.contains("}") ||
             svcName.contains("'") || svcName.contains("\""))
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name cannot contain following characters: / , : ' \" ( ) { }");
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service name should not contain any of the following characters: / , : ' \" ( ) { }");
          return false;
       }
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -219,11 +219,9 @@ public class WebServiceManager extends ViewPart
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
-      manager.add(actionShowFilter);
-      manager.add(new Separator());
       manager.add(actionCreate);
-      manager.add(actionEdit);
-      manager.add(actionDelete);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -238,6 +236,7 @@ public class WebServiceManager extends ViewPart
       manager.add(actionCreate);
       manager.add(new Separator());
       manager.add(actionShowFilter);
+      manager.add(new Separator());
       manager.add(actionRefresh);
    }
 
@@ -352,7 +351,7 @@ public class WebServiceManager extends ViewPart
    private void refresh()
    {
       final NXCSession session = ConsoleSharedData.getSession();
-      ConsoleJob job = new ConsoleJob("Get web service definitions", this, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob("Loading web service definitions", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -372,10 +371,9 @@ public class WebServiceManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get web service definitions";
+            return "Cannot load web service definitions";
          }
       };
-      job.setUser(false);
       job.start();
    }
 
@@ -388,7 +386,7 @@ public class WebServiceManager extends ViewPart
       if (showDefinitionEditDialog(definition))
       {
          final NXCSession session = ConsoleSharedData.getSession();
-         new ConsoleJob("Create web service definition", this, Activator.PLUGIN_ID, null) {
+         new ConsoleJob("Creating web service definition", this, Activator.PLUGIN_ID) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -417,7 +415,7 @@ public class WebServiceManager extends ViewPart
     */
    private void editDefinition()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -425,7 +423,7 @@ public class WebServiceManager extends ViewPart
       if (showDefinitionEditDialog(definition))
       {
          final NXCSession session = ConsoleSharedData.getSession();
-         new ConsoleJob("Modify web service definition", this, Activator.PLUGIN_ID, null) {
+         new ConsoleJob("Updating web service definition", this, Activator.PLUGIN_ID) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -477,7 +475,7 @@ public class WebServiceManager extends ViewPart
     */
    private void deleteDefinitions()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
 

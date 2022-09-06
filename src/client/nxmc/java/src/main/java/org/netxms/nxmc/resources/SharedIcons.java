@@ -73,6 +73,7 @@ public class SharedIcons
 	public static ImageDescriptor UNKNOWN_OBJECT;
 	public static ImageDescriptor UP;
    public static ImageDescriptor UPLOAD;
+   public static ImageDescriptor URL;
    public static ImageDescriptor USER;
    public static ImageDescriptor VIEW_MENU;
 	public static ImageDescriptor XML;
@@ -126,6 +127,7 @@ public class SharedIcons
 	public static Image IMG_UNKNOWN_OBJECT;
 	public static Image IMG_UP;
    public static Image IMG_UPLOAD;
+   public static Image IMG_URL;
    public static Image IMG_USER;
    public static Image IMG_VIEW_MENU;
 	public static Image IMG_XML;
@@ -184,6 +186,7 @@ public class SharedIcons
       UNKNOWN_OBJECT = ResourceManager.getImageDescriptor("icons/unknown_obj.gif");
       UP = ResourceManager.getImageDescriptor("icons/up.png");
       UPLOAD = ResourceManager.getImageDescriptor("icons/upload.png");
+      URL = ResourceManager.getImageDescriptor("icons/url.png");
       USER = ResourceManager.getImageDescriptor("icons/user.png");
       VIEW_MENU = ResourceManager.getImageDescriptor("icons/view_menu.png");
       XML = ResourceManager.getImageDescriptor("icons/xml.gif");
@@ -237,6 +240,7 @@ public class SharedIcons
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_UP = UP.createImage();
       IMG_UPLOAD = UPLOAD.createImage();
+      IMG_URL = URL.createImage();
       IMG_USER = USER.createImage();
       IMG_VIEW_MENU = VIEW_MENU.createImage();
 		IMG_XML = XML.createImage();

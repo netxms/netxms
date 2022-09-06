@@ -29,9 +29,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * DCI summary tables configuration element
  */
-public class SummaryTableManagerConfiguratorElement implements ConfigurationPerspectiveElement
+public class SummaryTablesElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SummaryTableManagerConfiguratorElement.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(SummaryTablesElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()
