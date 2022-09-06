@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,50 +16,44 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.base.widgets.helpers;
+package org.netxms.nxmc.modules.worldmap.views.helpers;
 
-import java.util.Map.Entry;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.GeoArea;
+import org.netxms.nxmc.modules.worldmap.views.GeoAreasManager;
 
 /**
- * Label provider for attribute name/value pairs
+ * Label provider for geo area list
  */
-public class KeyValuePairLabelProvider extends LabelProvider implements ITableLabelProvider
+public class GeoAreaLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
-	@Override
-	public Image getColumnImage(Object element, int columnIndex)
-	{
-		return null;
-	}
+   @Override
+   public Image getColumnImage(Object element, int columnIndex)
+   {
+      return null;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
-	@Override
-	public String getColumnText(Object element, int columnIndex)
-	{
-		switch(columnIndex)
-		{
-			case 0:
-            return ((Entry<?, ?>)element).getKey().toString();
-			case 1:
-            return ((Entry<?, ?>)element).getValue().toString();
-			default:
-				return null;
-		}
-	}
-
-   /**
-    * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-    */
-	@Override
-	public String getText(Object element)
-	{
-		return getColumnText(element, 0);
-	}
+   @Override
+   public String getColumnText(Object element, int columnIndex)
+   {
+      GeoArea area = (GeoArea)element;
+      switch(columnIndex)
+      {
+         case GeoAreasManager.COL_COMMENTS:
+            return area.getComments();
+         case GeoAreasManager.COL_ID:
+            return Integer.toString(area.getId());
+         case GeoAreasManager.COL_NAME:
+            return area.getName();
+      }
+      return null;
+   }
 }

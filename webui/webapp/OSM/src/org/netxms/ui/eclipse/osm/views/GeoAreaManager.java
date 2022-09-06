@@ -246,7 +246,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
 
       createActions();
       contributeToActionBars();
-      createPopupMenu();
+      createContextMenu();
       activateContext();
 
       session.addListener(this);
@@ -396,7 +396,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          }
       };
 
-      actionImport = new Action("&Import...", Activator.getImageDescriptor("icons/import.gif")) {
+      actionImport = new Action("&Import...", Activator.getImageDescriptor("icons/import.png")) {
          @Override
          public void run()
          {
@@ -424,8 +424,6 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    {
       manager.add(actionNew);
       manager.add(actionImport);
-      manager.add(actionEdit);
-      manager.add(actionDelete);
       manager.add(new Separator());
       manager.add(actionShowFilter);
       manager.add(new Separator());
@@ -441,16 +439,14 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    {
       manager.add(actionNew);
       manager.add(actionImport);
-      manager.add(actionEdit);
-      manager.add(actionDelete);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
 
    /**
-    * Create pop-up menu for user list
+    * Create context menu for area list
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager
       MenuManager menuMgr = new MenuManager();
@@ -465,9 +461,6 @@ public class GeoAreaManager extends ViewPart implements SessionListener
       // Create menu
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
-
-      // Register menu for extension.
-      getSite().registerContextMenu(menuMgr, viewer);
    }
 
    /**
@@ -518,7 +511,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
     */
    private void updateArea(final GeoArea area)
    {
-      new ConsoleJob("Modify geographical area", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Updating geographical area", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -542,7 +535,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot modify object category";
+            return "Cannot update geographical area";
          }
       }.start();
    }

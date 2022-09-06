@@ -18,10 +18,10 @@
  */
 package org.netxms.nxmc.modules.networkmaps.algorithms;
 
-import org.eclipse.swt.widgets.Item;
 import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
 import org.eclipse.gef4.zest.layouts.interfaces.EntityLayout;
 import org.eclipse.gef4.zest.layouts.interfaces.LayoutContext;
+import org.eclipse.swt.widgets.Item;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**

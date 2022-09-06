@@ -18,9 +18,9 @@
  */
 package org.netxms.nxmc.modules.networkmaps.widgets.helpers;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomListener;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
+import org.eclipse.jface.action.Action;
 
 /**
  * Zoom action

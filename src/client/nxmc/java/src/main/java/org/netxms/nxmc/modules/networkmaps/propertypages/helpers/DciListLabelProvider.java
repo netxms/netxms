@@ -27,13 +27,13 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.networkmaps.propertypages.LinkDataSources;
 import org.xnap.commons.i18n.I18n;
-import org.netxms.client.maps.configs.SingleDciConfig;
 
 /**
  * Label provider for DCI list on property page for map link

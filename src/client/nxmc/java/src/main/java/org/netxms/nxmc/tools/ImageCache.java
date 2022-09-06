@@ -20,7 +20,6 @@ package org.netxms.nxmc.tools;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;

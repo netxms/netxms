@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.osm.views;
+package org.netxms.nxmc.modules.worldmap.views;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,11 +30,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -48,22 +45,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.handlers.IHandlerService;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.KMLParser;
 import org.netxms.client.GeoArea;
@@ -72,28 +58,29 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
-import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.osm.Activator;
-import org.netxms.ui.eclipse.osm.dialogs.GeoAreaEditDialog;
-import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaComparator;
-import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaFilter;
-import org.netxms.ui.eclipse.osm.views.helpers.GeoAreaLabelProvider;
-import org.netxms.ui.eclipse.osm.widgets.GeoAreaViewer;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.FilterText;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.worldmap.dialogs.GeoAreaEditDialog;
+import org.netxms.nxmc.modules.worldmap.views.helpers.GeoAreaComparator;
+import org.netxms.nxmc.modules.worldmap.views.helpers.GeoAreaFilter;
+import org.netxms.nxmc.modules.worldmap.views.helpers.GeoAreaLabelProvider;
+import org.netxms.nxmc.modules.worldmap.widgets.GeoAreaViewer;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Object category manager
  *
  */
-public class GeoAreaManager extends ViewPart implements SessionListener
+public class GeoAreasManager extends ConfigurationView implements SessionListener
 {
-   public static final String ID = "org.netxms.ui.eclipse.osm.views.GeoAreaManager";
+   private static final I18n i18n = LocalizationHelper.getI18n(GeoAreasManager.class);
 
    public static final int COL_ID = 0;
    public static final int COL_NAME = 1;
@@ -106,88 +93,44 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    private SashForm splitter;
    private SortableTableViewer viewer;
    private NXCSession session;
-   private Composite content;
-   private FilterText filterText;
    private GeoAreaFilter filter;
    private Composite details;
    private TableViewer coordinateListViewer;
    private GeoAreaViewer mapViewer;
-   private boolean initShowFilter = true;
-   private Action actionRefresh;
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
    private Action actionImport;
-   private Action actionShowFilter;
 
    /**
-    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    * Create notification channels view
     */
-   @Override
-   public void init(IViewSite site) throws PartInitException
+   public GeoAreasManager()
    {
-      super.init(site);
-      initShowFilter = getBooleanSetting("ObjectTools.showFilter", initShowFilter);
-      session = ConsoleSharedData.getSession();
+      super(i18n.tr("Geographical Areas"), ResourceManager.getImageDescriptor("icons/config-views/geo-areas.png"), "GeographicalAreas", true);
+      session = Registry.getSession();
    }
 
    /**
-    * Get boolean value from settings.
-    * 
-    * @param name parameter name
-    * @param defval default value
-    * @return value from settings or default
-    */
-   private static boolean getBooleanSetting(String name, boolean defval)
-   {
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      if (settings.get(name) == null)
-         return defval;
-      return settings.getBoolean(name);
-   }
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   public void createPartControl(Composite parent)
+   protected void createContent(Composite parent)
    {
       display = parent.getDisplay();
 
       splitter = new SashForm(parent, SWT.HORIZONTAL);
 
-      // Create content area
-      content = new Composite(splitter, SWT.NONE);
-      FormLayout formLayout = new FormLayout();
-      content.setLayout(formLayout);
-
-      // Create filter
-      filterText = new FilterText(content, SWT.NONE);
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            onFilterModify();
-         }
-      });
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
-            actionShowFilter.setChecked(initShowFilter);
-         }
-      });
-
       final String[] names = { "ID", "Name", "Comments" };
       final int[] widths = { 100, 400, 800 };
-      viewer = new SortableTableViewer(content, names, widths, 1, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+      viewer = new SortableTableViewer(splitter, names, widths, 1, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
+      WidgetHelper.restoreTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new GeoAreaLabelProvider());
       viewer.setComparator(new GeoAreaComparator());
       filter = new GeoAreaFilter();
       viewer.addFilter(filter);
+      setFilterClient(viewer, filter);
 
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -206,30 +149,16 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();
+            editArea();
          }
       });
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
+            WidgetHelper.saveTableViewerSettings(viewer, TABLE_CONFIG_PREFIX);
          }
       });
-
-      // Setup layout
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(filterText);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      viewer.getControl().setLayoutData(fd);
-
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      filterText.setLayoutData(fd);
 
       details = new Composite(splitter, SWT.NONE);
       details.setLayout(new FillLayout(SWT.VERTICAL));
@@ -237,31 +166,30 @@ public class GeoAreaManager extends ViewPart implements SessionListener
       coordinateListViewer = new TableViewer(details);
       coordinateListViewer.setContentProvider(new ArrayContentProvider());
       
-      mapViewer = new GeoAreaViewer(details, SWT.BORDER);
+      mapViewer = new GeoAreaViewer(details, SWT.BORDER, this);
       mapViewer.enableMapControls(false);
 
       splitter.setWeights(new int[] { 60, 40 });
 
-      getSite().setSelectionProvider(viewer);
-
       createActions();
-      contributeToActionBars();
       createContextMenu();
-      activateContext();
 
       session.addListener(this);
-
-      // Set initial focus to filter input line
-      if (initShowFilter)
-         filterText.setFocus();
-      else
-         enableFilter(false); // Will hide filter area correctly
 
       refresh();
    }
 
    /**
-    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      refresh();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#setFocus()
     */
    @Override
    public void setFocus()
@@ -301,77 +229,10 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    }
 
    /**
-    * Activate context
-    */
-   private void activateContext()
-   {
-      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
-      if (contextService != null)
-      {
-         contextService.activateContext("org.netxms.ui.eclipse.osm.context.GeoAreaManager"); //$NON-NLS-1$
-      }
-   }
-
-   /**
-    * Enable or disable filter
-    * 
-    * @param enable New filter state
-    */
-   public void enableFilter(boolean enable)
-   {
-      initShowFilter = enable;
-      filterText.setVisible(initShowFilter);
-      FormData fd = (FormData)viewer.getTable().getLayoutData();
-      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
-      content.layout();
-      if (enable)
-      {
-         filterText.setFocus();
-      }
-      else
-      {
-         filterText.setText("");
-         onFilterModify();
-      }
-   }
-
-   /**
-    * Handler for filter modification
-    */
-   public void onFilterModify()
-   {
-      final String text = filterText.getText();
-      filter.setFilterString(text);
-      viewer.refresh(false);
-   }
-
-   /**
     * Create actions
     */
    private void createActions()
    {
-      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            enableFilter(!initShowFilter);
-            actionShowFilter.setChecked(initShowFilter);
-         }
-      };
-      actionShowFilter.setChecked(initShowFilter);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.osm.commands.showFilter"); //$NON-NLS-1$
-      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
-
-      actionRefresh = new RefreshAction() {
-         @Override
-         public void run()
-         {
-            refresh();
-         }
-      };
-
       actionNew = new Action("New...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -396,7 +257,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          }
       };
 
-      actionImport = new Action("&Import...", Activator.getImageDescriptor("icons/import.png")) {
+      actionImport = new Action("&Import...", SharedIcons.IMPORT) {
          @Override
          public void run()
          {
@@ -406,41 +267,23 @@ public class GeoAreaManager extends ViewPart implements SessionListener
    }
 
    /**
-    * Contribute actions to action bar
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
     */
-   private void contributeToActionBars()
-   {
-      IActionBars bars = getViewSite().getActionBars();
-      fillLocalPullDown(bars.getMenuManager());
-      fillLocalToolBar(bars.getToolBarManager());
-   }
-
-   /**
-    * Fill local pull-down menu
-    * 
-    * @param manager Menu manager for pull-down menu
-    */
-   private void fillLocalPullDown(IMenuManager manager)
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
    {
       manager.add(actionNew);
       manager.add(actionImport);
-      manager.add(new Separator());
-      manager.add(actionShowFilter);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
-    * Fill local tool bar
-    * 
-    * @param manager Menu manager for local toolbar
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
     */
-   private void fillLocalToolBar(IToolBarManager manager)
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
    {
       manager.add(actionNew);
       manager.add(actionImport);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
@@ -481,7 +324,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
     */
    private void createArea()
    {
-      GeoAreaEditDialog dlg = new GeoAreaEditDialog(getSite().getShell(), null);
+      GeoAreaEditDialog dlg = new GeoAreaEditDialog(getWindow().getShell(), null);
       if (dlg.open() == Window.OK)
       {
          updateArea(dlg.getArea());
@@ -497,7 +340,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
       if (selection.size() != 1)
          return;
 
-      GeoAreaEditDialog dlg = new GeoAreaEditDialog(getSite().getShell(), (GeoArea)selection.getFirstElement());
+      GeoAreaEditDialog dlg = new GeoAreaEditDialog(getWindow().getShell(), (GeoArea)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
          updateArea(dlg.getArea());
@@ -511,9 +354,9 @@ public class GeoAreaManager extends ViewPart implements SessionListener
     */
    private void updateArea(final GeoArea area)
    {
-      new ConsoleJob("Updating geographical area", this, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Updating geographical area"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             final int id = session.modifyGeoArea(area);
             runInUIThread(new Runnable() {
@@ -535,7 +378,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot update geographical area";
+            return i18n.tr("Cannot update geographical area");
          }
       }.start();
    }
@@ -549,8 +392,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete Geographical Areas",
-            "Selected geographical areas will be deleted. Are you sure?"))
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Geographical Areas"), i18n.tr("Selected geographical areas will be deleted. Are you sure?")))
          return;
 
       final int[] idList = new int[selection.size()];
@@ -558,11 +400,11 @@ public class GeoAreaManager extends ViewPart implements SessionListener
       for(Object o : selection.toList())
          idList[index++] = ((GeoArea)o).getId();
 
-      new ConsoleJob("Delete geographical areas", this, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Delete geographical areas"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
-            monitor.beginTask("Delete geographical areas", idList.length);
+            monitor.beginTask(i18n.tr("Delete geographical areas"), idList.length);
             for(final int id : idList)
             {
                try
@@ -580,8 +422,8 @@ public class GeoAreaManager extends ViewPart implements SessionListener
                      public void run()
                      {
                         GeoArea a = areas.get(id);
-                        retry[0] = MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Delete",
-                              String.format("Geographical area \"%s\" is in use. Are you sure you want to delete it?",
+                        retry[0] = MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Confirm Delete"),
+                              String.format(i18n.tr("Geographical area \"%s\" is in use. Are you sure you want to delete it?"),
                                     (a != null) ? a.getName() : "[" + id + "]"));
                      }
                   });
@@ -598,19 +440,20 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot delete geographical area";
+            return i18n.tr("Cannot delete geographical area");
          }
       }.start();
    }
 
    /**
-    * Refresh view
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
-   private void refresh()
+   @Override
+   public void refresh()
    {
-      new ConsoleJob("Read configured geographical areas", this, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Loading configured geographical areas"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<GeoArea> serverAreaList = session.getGeoAreas();
             runInUIThread(new Runnable() {
@@ -628,7 +471,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get configured geographical areas";
+            return i18n.tr("Cannot load configured geographical areas");
          }
       }.start();
    }
@@ -650,17 +493,17 @@ public class GeoAreaManager extends ViewPart implements SessionListener
     */
    private void importAreas()
    {
-      FileDialog dlg = new FileDialog(getSite().getShell(), SWT.OPEN);
-      dlg.setFilterExtensions(new String[] { "*.kml", "*.*" });
-      dlg.setFilterNames(new String[] { "KML files", "All files" });
+      FileDialog dlg = new FileDialog(getWindow().getShell(), SWT.OPEN);
+      WidgetHelper.setFileDialogFilterExtensions(dlg, new String[] { "*.kml", "*.*" });
+      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { "KML files", "All files" });
       String fileName = dlg.open();
       if (fileName == null)
          return;
-      
+
       final File file = new File(fileName);
-      new ConsoleJob("Import areas from file", this, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Import areas from file"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             final Map<String, List<GeoLocation>> importedAreas = KMLParser.importPolygons(file);
             runInUIThread(new Runnable() {
@@ -675,7 +518,7 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot read import file";
+            return i18n.tr("Cannot read import file");
          }
       }.start();
    }
@@ -695,8 +538,8 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          {
             if (a.getName().equalsIgnoreCase(n))
             {
-               if (MessageDialogHelper.openQuestion(getSite().getShell(), "Override Geographical Area",
-                     String.format("Geographical area with name \"%s\" already exist. Do you want to override it's content?", a.getName())))
+               if (MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Override Geographical Area"),
+                     String.format(i18n.tr("Geographical area with name \"%s\" already exist. Do you want to override it's content?"), a.getName())))
                {
                   replaceList.add(new GeoArea(a.getId(), a.getName(), a.getComments(), importedAreas.get(n)));
                }
@@ -708,9 +551,9 @@ public class GeoAreaManager extends ViewPart implements SessionListener
       for(String n : skipSet)
          importedAreas.remove(n);
 
-      new ConsoleJob("Import geographical area", this, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Importing geographical area"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             for(GeoArea a : replaceList)
                session.modifyGeoArea(a);
@@ -725,8 +568,25 @@ public class GeoAreaManager extends ViewPart implements SessionListener
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot update geographical area on server";
+            return i18n.tr("Cannot update geographical area on server");
          }
       }.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
+   @Override
+   public boolean isModified()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
+   @Override
+   public void save()
+   {
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2022 RadenSolutions
+ * Copyright (C) 2020 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,50 +16,46 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.alarms.widgets.helpers;
+package org.netxms.nxmc.modules.worldmap.views.helpers;
 
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.client.events.AlarmCategory;
-import org.netxms.nxmc.modules.alarms.widgets.AlarmCategoryList;
+import org.netxms.client.GeoArea;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.modules.worldmap.views.GeoAreasManager;
 
 /**
- * Comparator for Alarm Category List
+ * Comparator for geo area list
  */
-public class AlarmCategoryListComparator extends ViewerComparator
+public class GeoAreaComparator extends ViewerComparator
 {
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
    public int compare(Viewer viewer, Object e1, Object e2)
    {
-      TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
-      if (sortColumn == null)
-         return 0;
+      GeoArea c1 = (GeoArea)e1;
+      GeoArea c2 = (GeoArea)e2;
+      final int column = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
 
-      int rc;
-      switch((Integer)sortColumn.getData("ID"))
+      int result;
+      switch(column)
       {
-         case AlarmCategoryList.COLUMN_ID:
-            rc = Long.signum(((AlarmCategory)e1).getId() - ((AlarmCategory)e2).getId());
+         case GeoAreasManager.COL_COMMENTS:
+            result = c1.getComments().compareToIgnoreCase(c2.getComments());
             break;
-         case AlarmCategoryList.COLUMN_NAME:
-            rc = (((AlarmCategory)e1).getName().compareToIgnoreCase(((AlarmCategory)e2).getName()));
+         case GeoAreasManager.COL_ID:
+            result = c1.getId() - c2.getId();
             break;
-         case AlarmCategoryList.COLUMN_DESCRIPTION:
-            rc = (((AlarmCategory)e1).getDescription().compareToIgnoreCase(((AlarmCategory)e2).getDescription()));
+         case GeoAreasManager.COL_NAME:
+            result = c1.getName().compareToIgnoreCase(c2.getName());
             break;
          default:
-            rc = 0;
+            result = 0;
             break;
       }
-      int dir = ((TableViewer)viewer).getTable().getSortDirection();
-      return (dir == SWT.UP) ? rc : -rc;
+      return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
    }
 }
