@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,36 +35,36 @@ import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
-import org.netxms.ui.eclipse.widgets.ScheduleSelector;
+import org.netxms.ui.eclipse.widgets.ScheduleEditor;
 
 /**
  * Scheduled task editor
  */
-public class ScheduledTaskEditor extends Dialog
+public class ScheduledTaskEditDialog extends Dialog
 {
-   private ScheduledTask scheduledTask;
-   private List<String> scheduleTypeList;
-   private LabeledText textParameters;
-   private Text textComments;
-   private Combo scheduleType;
-   private ScheduleSelector scheduleSelector;
-   private ObjectSelector selector;
+   private ScheduledTask task;
+   private List<String> types;
+   private LabeledText parameters;
+   private Text comments;
+   private Combo taskType;
+   private ScheduleEditor scheduleEditor;
+   private ObjectSelector objectSelector;
 
    /**
     * @param shell
     * @param task
-    * @param scheduleType
+    * @param types
     */
-   public ScheduledTaskEditor(Shell shell, ScheduledTask task, List<String> scheduleType)
+   public ScheduledTaskEditDialog(Shell shell, ScheduledTask task, List<String> types)
    {
       super(shell);
       if (task != null)
-         scheduledTask = task;
+         this.task = task;
       else
-         scheduledTask = new ScheduledTask();
-      this.scheduleTypeList = scheduleType;
+         this.task = new ScheduledTask();
+      this.types = types;
    }
-   
+
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
@@ -82,71 +82,71 @@ public class ScheduledTaskEditor extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       final Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogArea.setLayout(layout);  
 
-      scheduleType = new Combo(dialogArea, SWT.READ_ONLY);
-      for(String type : scheduleTypeList)
-         scheduleType.add(type);
-      int taskId = scheduleTypeList.indexOf(scheduledTask.getTaskHandlerId());
-      scheduleType.select(taskId == -1 ? 0 : taskId);
+      taskType = new Combo(dialogArea, SWT.READ_ONLY);
+      for(String type : types)
+         taskType.add(type);
+      int taskId = types.indexOf(task.getTaskHandlerId());
+      taskType.select(taskId == -1 ? 0 : taskId);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
-      scheduleType.setLayoutData(gd);
-      
-      selector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      selector.setLabel("Select execution object");
-      selector.setObjectClass(AbstractObject.class);
+      taskType.setLayoutData(gd);
+
+      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      objectSelector.setLabel("Select execution object");
+      objectSelector.setObjectClass(AbstractObject.class);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
-      selector.setLayoutData(gd);
-      selector.setObjectId(scheduledTask.getObjectId());
+      objectSelector.setLayoutData(gd);
+      objectSelector.setObjectId(task.getObjectId());
       
-      textParameters = new LabeledText(dialogArea, SWT.NONE);
-      textParameters.setLabel("Parameters");
+      parameters = new LabeledText(dialogArea, SWT.NONE);
+      parameters.setLabel("Parameters");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
-      textParameters.setLayoutData(gd);
-      textParameters.setText(scheduledTask.getParameters());
+      parameters.setLayoutData(gd);
+      parameters.setText(task.getParameters());
       
-      textComments = WidgetHelper.createLabeledText(dialogArea, SWT.MULTI | SWT.BORDER, SWT.DEFAULT, "Description",
-            scheduledTask.getComments(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      textComments.setTextLimit(255);
+      comments = WidgetHelper.createLabeledText(dialogArea, SWT.MULTI | SWT.BORDER, SWT.DEFAULT, "Description",
+            task.getComments(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      comments.setTextLimit(255);
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.heightHint = 100;
       gd.verticalAlignment = SWT.FILL;
-      textComments.setLayoutData(gd);
+      comments.setLayoutData(gd);
       
-      if ((scheduledTask.getFlags() & ScheduledTask.SYSTEM) != 0)
+      if ((task.getFlags() & ScheduledTask.SYSTEM) != 0)
       {
-         scheduleType.add(scheduledTask.getTaskHandlerId());
-         scheduleType.select(scheduleTypeList.size());
-         scheduleType.setEnabled(false);
-         selector.setEnabled(false);
-         textParameters.setEnabled(false);
+         taskType.add(task.getTaskHandlerId());
+         taskType.select(types.size());
+         taskType.setEnabled(false);
+         objectSelector.setEnabled(false);
+         parameters.setEnabled(false);
       }
 
       Group scheduleGroup = new Group(dialogArea, SWT.NONE);
       scheduleGroup.setText(Messages.get().ScheduleSelector_Schedule);
       scheduleGroup.setLayout(new GridLayout());
 
-      scheduleSelector = new ScheduleSelector(scheduleGroup, SWT.NONE);
-      scheduleSelector.setSchedule(scheduledTask);
+      scheduleEditor = new ScheduleEditor(scheduleGroup, SWT.NONE);
+      scheduleEditor.setSchedule(task);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -160,16 +160,16 @@ public class ScheduledTaskEditor extends Dialog
    @Override
    protected void okPressed()
    {
-      ScheduledTask task = scheduleSelector.getSchedule();
-      scheduledTask.setSchedule(task.getSchedule());
-      scheduledTask.setExecutionTime(task.getExecutionTime());
-      scheduledTask.setComments(textComments.getText());
+      ScheduledTask schedule = scheduleEditor.getSchedule();
+      task.setSchedule(schedule.getSchedule());
+      task.setExecutionTime(schedule.getExecutionTime());
+      task.setComments(comments.getText());
 
-      if ((scheduledTask.getFlags() & ScheduledTask.SYSTEM) == 0)
+      if ((task.getFlags() & ScheduledTask.SYSTEM) == 0)
       {
-         scheduledTask.setTaskHandlerId(scheduleTypeList.get(scheduleType.getSelectionIndex()));
-         scheduledTask.setParameters(textParameters.getText());
-         scheduledTask.setObjectId(selector.getObjectId());
+         task.setTaskHandlerId(types.get(taskType.getSelectionIndex()));
+         task.setParameters(parameters.getText());
+         task.setObjectId(objectSelector.getObjectId());
       }
       super.okPressed();
    }
@@ -179,8 +179,8 @@ public class ScheduledTaskEditor extends Dialog
     * 
     * @return
     */
-   public ScheduledTask getScheduledTask()
+   public ScheduledTask getTask()
    {
-      return scheduledTask;
+      return task;
    }
 }

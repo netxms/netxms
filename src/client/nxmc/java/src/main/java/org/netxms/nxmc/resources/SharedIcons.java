@@ -42,9 +42,10 @@ public class SharedIcons
    public static ImageDescriptor COPY_TO_CLIPBOARD;
 	public static ImageDescriptor CSV;
    public static ImageDescriptor CUT;
-	public static ImageDescriptor DELETE_OBJECT;
-	public static ImageDescriptor DOWN;
-	public static ImageDescriptor EDIT;
+   public static ImageDescriptor DELETE_OBJECT;
+   public static ImageDescriptor DISABLE;
+   public static ImageDescriptor DOWN;
+   public static ImageDescriptor EDIT;
 	public static ImageDescriptor EMPTY;
 	public static ImageDescriptor EXECUTE;
 	public static ImageDescriptor EXPAND;
@@ -96,8 +97,9 @@ public class SharedIcons
    public static Image IMG_COPY_TO_CLIPBOARD;
 	public static Image IMG_CSV;
    public static Image IMG_CUT;
-	public static Image IMG_DELETE_OBJECT;
-	public static Image IMG_DOWN;
+   public static Image IMG_DELETE_OBJECT;
+   public static Image IMG_DISABLE;
+   public static Image IMG_DOWN;
 	public static Image IMG_EDIT;
 	public static Image IMG_EMPTY;
 	public static Image IMG_EXECUTE;
@@ -156,10 +158,11 @@ public class SharedIcons
       CSV = ResourceManager.getImageDescriptor("icons/csv.png");
       CUT = ResourceManager.getImageDescriptor("icons/cut.gif");
       DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.png");
+      DISABLE = ResourceManager.getImageDescriptor("icons/disable.png");
       DOWN = ResourceManager.getImageDescriptor("icons/down.png");
       EDIT = ResourceManager.getImageDescriptor("icons/edit.png");
       EMPTY = ResourceManager.getImageDescriptor("icons/empty.png");
-      EXECUTE = ResourceManager.getImageDescriptor("icons/execute.gif");
+      EXECUTE = ResourceManager.getImageDescriptor("icons/execute.png");
       EXPAND = ResourceManager.getImageDescriptor("icons/expand.png");
       EXPAND_ALL = ResourceManager.getImageDescriptor("icons/expandall.png");
       EXPORT = ResourceManager.getImageDescriptor("icons/export.png");
@@ -210,6 +213,7 @@ public class SharedIcons
 		IMG_CSV = CSV.createImage();
       IMG_CUT = CUT.createImage();
 		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
+      IMG_DISABLE = DISABLE.createImage();
 		IMG_DOWN = DOWN.createImage();
 		IMG_EDIT = EDIT.createImage();
 		IMG_EMPTY = EMPTY.createImage();

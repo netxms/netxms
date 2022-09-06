@@ -7,7 +7,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.reporting.ReportingJob;
-import org.netxms.ui.eclipse.widgets.ScheduleSelector;
+import org.netxms.ui.eclipse.widgets.ScheduleEditor;
 
 /**
  * "General" property page for reporting job schedule
@@ -17,7 +17,7 @@ public class General extends PropertyPage
 	public static final String ID = "org.netxms.ui.eclipse.reporter.propertypages.General"; //$NON-NLS-1$
 	
    private ReportingJob job = null;
-   private ScheduleSelector scheduleSelector;
+   private ScheduleEditor scheduleSelector;
 	
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -30,7 +30,7 @@ public class General extends PropertyPage
       final Composite dialogArea = new Composite(parent, SWT.NONE);
       dialogArea.setLayout(new FillLayout());
 
-      scheduleSelector = new ScheduleSelector(dialogArea, SWT.NONE);
+      scheduleSelector = new ScheduleEditor(dialogArea, SWT.NONE);
       scheduleSelector.setSchedule(job.getTask());
 
 		return dialogArea;

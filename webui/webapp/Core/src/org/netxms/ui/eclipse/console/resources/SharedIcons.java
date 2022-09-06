@@ -43,8 +43,9 @@ public class SharedIcons
    public static ImageDescriptor COPY_TO_CLIPBOARD;
 	public static ImageDescriptor CSV;
    public static ImageDescriptor CUT;
-	public static ImageDescriptor DELETE_OBJECT;
-	public static ImageDescriptor DOWN;
+   public static ImageDescriptor DELETE_OBJECT;
+   public static ImageDescriptor DISABLE;
+   public static ImageDescriptor DOWN;
 	public static ImageDescriptor EDIT;
 	public static ImageDescriptor EMPTY;
 	public static ImageDescriptor EXECUTE;
@@ -88,8 +89,9 @@ public class SharedIcons
    public static Image IMG_COPY_TO_CLIPBOARD;
 	public static Image IMG_CSV;
    public static Image IMG_CUT;
-	public static Image IMG_DELETE_OBJECT;
-	public static Image IMG_DOWN;
+   public static Image IMG_DELETE_OBJECT;
+   public static Image IMG_DISABLE;
+   public static Image IMG_DOWN;
 	public static Image IMG_EDIT;
 	public static Image IMG_EMPTY;
 	public static Image IMG_EXECUTE;
@@ -138,11 +140,12 @@ public class SharedIcons
       COPY_TO_CLIPBOARD = Activator.getImageDescriptor("icons/copy-to-clipboard.png"); //$NON-NLS-1$
 		CSV = Activator.getImageDescriptor("icons/csv.png"); //$NON-NLS-1$
       CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
-		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.png"); //$NON-NLS-1$
-		DOWN = Activator.getImageDescriptor("icons/down.png"); //$NON-NLS-1$
+      DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.png"); //$NON-NLS-1$
+      DISABLE = Activator.getImageDescriptor("icons/disable.png"); //$NON-NLS-1$
+      DOWN = Activator.getImageDescriptor("icons/down.png"); //$NON-NLS-1$
 		EDIT = Activator.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
 		EMPTY = Activator.getImageDescriptor("icons/empty.png"); //$NON-NLS-1$
-		EXECUTE = Activator.getImageDescriptor("icons/execute.gif"); //$NON-NLS-1$
+		EXECUTE = Activator.getImageDescriptor("icons/execute.png"); //$NON-NLS-1$
 		EXPAND = Activator.getImageDescriptor("icons/expand.png"); //$NON-NLS-1$
 		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
 		FILTER = Activator.getImageDescriptor("icons/filter.gif"); //$NON-NLS-1$
@@ -181,10 +184,11 @@ public class SharedIcons
       IMG_CONTAINER = CONTAINER.createImage(display);
 		IMG_COPY = COPY.createImage(display);
       IMG_COPY_TO_CLIPBOARD = COPY_TO_CLIPBOARD.createImage(display);
-		IMG_CSV = CSV.createImage(display);
-		IMG_CUT = CUT.createImage(display);
-		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage(display);
-		IMG_DOWN = DOWN.createImage(display);
+      IMG_CSV = CSV.createImage(display);
+      IMG_CUT = CUT.createImage(display);
+      IMG_DELETE_OBJECT = DELETE_OBJECT.createImage(display);
+      IMG_DISABLE = DISABLE.createImage(display);
+      IMG_DOWN = DOWN.createImage(display);
 		IMG_EDIT = EDIT.createImage(display);
 		IMG_EMPTY = EMPTY.createImage(display);
 		IMG_EXECUTE = EXECUTE.createImage(display);

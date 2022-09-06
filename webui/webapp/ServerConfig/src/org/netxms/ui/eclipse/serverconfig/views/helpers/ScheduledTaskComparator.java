@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.serverconfig.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
@@ -11,16 +29,21 @@ import org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
-public class ScheduleTableEntryComparator extends ViewerComparator
+/**
+ * Comparator for scheduled task list
+ */
+public class ScheduledTaskComparator extends ViewerComparator
 {
-   /* (non-Javadoc)
+   private NXCSession session = ConsoleSharedData.getSession();
+
+   /**
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
    public int compare(Viewer viewer, Object e1, Object e2)
    {
       int result;
-      
+
       ScheduledTask task1 = (ScheduledTask)e1;
       ScheduledTask task2 = (ScheduledTask)e2;
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
@@ -32,19 +55,19 @@ public class ScheduleTableEntryComparator extends ViewerComparator
             result = task1.getTaskHandlerId().compareToIgnoreCase(task2.getTaskHandlerId());
             break;
          case ScheduledTaskView.OBJECT:
-            AbstractObject obj1 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(task1.getObjectId());
-            AbstractObject obj2 = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(task2.getObjectId());
-            String name1 = (obj1 != null) ? obj1.getObjectName() : "Unknown";
-            String name2 = (obj2 != null) ? obj2.getObjectName() : "Unknown";
+            AbstractObject obj1 = session.findObjectById(task1.getObjectId());
+            AbstractObject obj2 = session.findObjectById(task2.getObjectId());
+            String name1 = (obj1 != null) ? obj1.getObjectName() : "";
+            String name2 = (obj2 != null) ? obj2.getObjectName() : "";
             result = name1.compareToIgnoreCase(name2);
             break;
          case ScheduledTaskView.PARAMETERS:
             result = task1.getParameters().compareToIgnoreCase(task2.getParameters());
             break;
          case ScheduledTaskView.EXECUTION_TIME:
-            if(task1.getSchedule().isEmpty())
+            if (task1.getSchedule().isEmpty())
             {
-               if(task2.getSchedule().isEmpty())
+               if (task2.getSchedule().isEmpty())
                {
                   result = task1.getExecutionTime().compareTo(task2.getExecutionTime());
                   break;
@@ -55,8 +78,8 @@ public class ScheduleTableEntryComparator extends ViewerComparator
                   break;
                }
             }
-            
-            if(task2.getSchedule().isEmpty())
+
+            if (task2.getSchedule().isEmpty())
             {
                result = -1;
             }
@@ -72,22 +95,26 @@ public class ScheduleTableEntryComparator extends ViewerComparator
          case ScheduledTaskView.OWNER:
             String user1 = "";
             String user2 = "";
-            if((task1.getFlags() & ScheduledTask.SYSTEM)>0)
-               user1= "Internal";
+            if (task1.isSystem())
+            {
+               user1 = "system";
+            }
             else
             {
-               AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task1.getOwner(), null);
+               AbstractUserObject user = session.findUserDBObjectById(task1.getOwner(), null);
                user1 = user != null ? user.getName() : ("[" + Long.toString(task1.getOwner()) + "]");
             }
-            
-            if((task2.getFlags() & ScheduledTask.SYSTEM)>0)
-               user2= "Internal";
+
+            if (task2.isSystem())
+            {
+               user2 = "system";
+            }
             else
             {
-               AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task2.getOwner(), null);
+               AbstractUserObject user = session.findUserDBObjectById(task2.getOwner(), null);
                user2 = user != null ? user.getName() : ("[" + Long.toString(task1.getOwner()) + "]");
             }
-            
+
             result = user1.compareTo(user2);
             break;
          case ScheduledTaskView.COMMENTS:

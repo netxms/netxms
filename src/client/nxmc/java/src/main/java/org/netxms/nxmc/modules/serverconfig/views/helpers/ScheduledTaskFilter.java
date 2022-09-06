@@ -16,17 +16,22 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.serverconfig.views.helpers;
+package org.netxms.nxmc.modules.serverconfig.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
  * Filter for scheduled tasks
  */
-public class ScheduledTaskFilter extends ViewerFilter
+public class ScheduledTaskFilter extends ViewerFilter implements AbstractViewerFilter
 {
+   private NXCSession session = Registry.getSession();
+   private String filterString = null;
    private boolean showSystemTasks = false;
    private boolean showDisabledTasks = true;
    private boolean showCompletedTasks = true;
@@ -44,6 +49,13 @@ public class ScheduledTaskFilter extends ViewerFilter
          return false;
       if (!showCompletedTasks && task.isCompleted() && !task.isRecurring())
          return false;
+      if ((filterString != null) && !filterString.isEmpty())
+      {
+         return task.getComments().toLowerCase().contains(filterString) || 
+               task.getParameters().toLowerCase().contains(filterString) || 
+               task.getTaskHandlerId().toLowerCase().contains(filterString) ||
+               ((task.getObjectId() != 0) && session.getObjectName(task.getObjectId()).toLowerCase().contains(filterString));
+      }
       return true;
    }
 
@@ -93,5 +105,14 @@ public class ScheduledTaskFilter extends ViewerFilter
    public void setShowCompletedTasks(boolean showCompletedTasks)
    {
       this.showCompletedTasks = showCompletedTasks;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
+    */
+   @Override
+   public void setFilterString(String filterString)
+   {
+      this.filterString = filterString;
    }
 }

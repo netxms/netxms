@@ -984,8 +984,8 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
          curl_easy_setopt(curl, CURLOPT_USERNAME, login);
          curl_easy_setopt(curl, CURLOPT_XOAUTH2_BEARER, password);
 #else
-       rcc = ERR_NOT_IMPLEMENTED;
-       errorText = _T("OAuth 2.0 Bearer Access Token not implemented");
+         rcc = ERR_NOT_IMPLEMENTED;
+         errorText = _T("OAuth 2.0 Bearer Access Token not implemented");
 #endif
       }
       else

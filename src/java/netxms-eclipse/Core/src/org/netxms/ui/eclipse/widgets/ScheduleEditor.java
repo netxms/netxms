@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,20 +31,20 @@ import org.netxms.client.ScheduledTask;
 import org.netxms.ui.eclipse.console.Messages;
 
 /**
- * Date/time selection widget
+ * Editor for task schedule
  */
-public class ScheduleSelector extends Composite
+public class ScheduleEditor extends Composite
 {
    private Button radioOneTimeSchedule;
    private Button radioCronSchedule;
    private DateTimeSelector execDateSelector;
    private Text textSchedule; 
-	
+
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public ScheduleSelector(Composite parent, int style)
+	public ScheduleEditor(Composite parent, int style)
 	{
 		super(parent, style);
 
@@ -121,7 +121,7 @@ public class ScheduleSelector extends Composite
     */
    public ScheduledTask getSchedule()
    {
-      return new ScheduledTask("Upload.File", radioCronSchedule.getSelection() ? textSchedule.getText() : "","", "", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      return new ScheduledTask("Dummy", radioCronSchedule.getSelection() ? textSchedule.getText() : "", "", "", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
    }
 
    /**

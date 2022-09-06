@@ -198,6 +198,16 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(this);
+      super.dispose();
+   }
+
+   /**
     * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
     */
    @Override

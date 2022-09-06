@@ -45,7 +45,7 @@ import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
-import org.netxms.ui.eclipse.widgets.ScheduleSelector;
+import org.netxms.ui.eclipse.widgets.ScheduleEditor;
 
 /**
  * Dialog for starting file upload
@@ -58,14 +58,14 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	private LabeledText textRemoteFile;
 	private Button checkJobOnHold;
    private Button checkIsSchedule;
-   private ScheduleSelector scheduleSelector;
+   private ScheduleEditor scheduleEditor;
 	private List<ServerFile> serverFiles = new ArrayList<ServerFile>();
 	private String remoteFileName;
 	private boolean createJobOnHold;
 	private boolean scheduledTask;
 	private ScheduledTask schedule;
 	private boolean canScheduleFileUpload;
-	
+
 	/**
 	 * 
 	 * @param parentShell
@@ -77,9 +77,9 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		this.canScheduleFileUpload = canScheduleFileUpload;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -87,9 +87,9 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		newShell.setText(Messages.get().StartServerToAgentFileUploadDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -216,7 +216,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
             public void widgetSelected(SelectionEvent e)
             {        
                checkJobOnHold.setEnabled(!checkIsSchedule.getSelection());
-               scheduleSelector.setEnabled(checkIsSchedule.getSelection());
+               scheduleEditor.setEnabled(checkIsSchedule.getSelection());
             }
             
             @Override
@@ -226,8 +226,8 @@ public class StartServerToAgentFileUploadDialog extends Dialog
             }
          });
          
-         scheduleSelector = new ScheduleSelector(dialogArea, SWT.NONE);
-         scheduleSelector.setEnabled(false);
+         scheduleEditor = new ScheduleEditor(dialogArea, SWT.NONE);
+         scheduleEditor.setEnabled(false);
 		}
 		
 		return dialogArea;
@@ -242,7 +242,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	   scheduledTask = checkIsSchedule.getSelection();
 	   if (scheduledTask)
 	   {
-	      schedule = scheduleSelector.getSchedule();
+	      schedule = scheduleEditor.getSchedule();
 	   }
 		if (serverFiles.isEmpty())
 		{
