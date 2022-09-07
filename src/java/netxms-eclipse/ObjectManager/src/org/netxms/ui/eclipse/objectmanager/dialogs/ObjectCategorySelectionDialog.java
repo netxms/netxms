@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -29,21 +28,21 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.ObjectCategory;
-import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Object category selection dialog
  */
 public class ObjectCategorySelectionDialog extends Dialog
 {
-   private static final String TABLE_CONFIG_PREFIX = "ObjectCategorySelectionDialog"; //$NON-NLS-1$
-
    private TableViewer viewer;
    private int categoryId = 0;
 
@@ -55,7 +54,6 @@ public class ObjectCategorySelectionDialog extends Dialog
    public ObjectCategorySelectionDialog(Shell parentShell)
    {
       super(parentShell);
-      setShellStyle(getShellStyle() | SWT.RESIZE);
    }
 
    /**
@@ -65,15 +63,7 @@ public class ObjectCategorySelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Category");
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      try
-      {
-         newShell.setSize(settings.getInt(TABLE_CONFIG_PREFIX + ".cx"), settings.getInt(TABLE_CONFIG_PREFIX + ".cy"));
-      }
-      catch(NumberFormatException e)
-      {
-      }
+      newShell.setText("Select Object Category");
    }
 
    /**
@@ -84,7 +74,12 @@ public class ObjectCategorySelectionDialog extends Dialog
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-      dialogArea.setLayout(new FillLayout());
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.INNER_SPACING;
+      dialogArea.setLayout(layout);
+
+      Label label = new Label(dialogArea, SWT.NONE);
+      label.setText("Available categories");
 
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -110,6 +105,15 @@ public class ObjectCategorySelectionDialog extends Dialog
          }
       });
       viewer.setInput(ConsoleSharedData.getSession().getObjectCategories().toArray());
+
+      GridData gd = new GridData();
+      gd.widthHint = 500;
+      gd.heightHint = 300;
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.FILL;
+      viewer.getControl().setLayoutData(gd);
 
       return dialogArea;
    }

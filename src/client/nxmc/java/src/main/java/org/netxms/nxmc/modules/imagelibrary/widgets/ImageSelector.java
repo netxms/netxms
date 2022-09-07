@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.NXCommon;
 import org.netxms.client.LibraryImage;
 import org.netxms.nxmc.base.widgets.AbstractSelector;
@@ -40,7 +41,8 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
    private static I18n i18n = LocalizationHelper.getI18n(ImageSelector.class);
 
    private UUID imageGuid = null;
-	
+   private Shell parentShell = null;
+
 	/**
 	 * @param parent
 	 * @param style
@@ -81,6 +83,8 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
             imageGuid = null;
 			}
 			getParent().layout();
+         if (parentShell != null)
+            parentShell.pack(true);
 		}
 	}
 
@@ -94,6 +98,8 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		setImage(null);
       imageGuid = null;
 		getParent().layout();
+      if (parentShell != null)
+         parentShell.pack(true);
 	}
 
    /**
@@ -143,7 +149,11 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 		}
 		
 		if (redoLayout)
+      {
 			getParent().layout();
+         if (parentShell != null)
+            parentShell.pack(true);
+      }
 	}
 
    /**
@@ -160,8 +170,30 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
             {
                setImage(ImageProvider.getInstance().getImage(imageGuid));
                getParent().layout();
+               if (parentShell != null)
+                  parentShell.pack(true);
             }
          });
 		}
 	}
+
+   /**
+    * Get shell currently set as parent shell.
+    *
+    * @return shell currently set as parent shell.
+    */
+   public Shell getParentShell()
+   {
+      return parentShell;
+   }
+
+   /**
+    * Set parent shell. If not null, control will call <code>Shell.pack()</code> on provided shell after image selection change.
+    * 
+    * @param parentShell new parent shell
+    */
+   public void setParentShell(Shell parentShell)
+   {
+      this.parentShell = parentShell;
+   }
 }

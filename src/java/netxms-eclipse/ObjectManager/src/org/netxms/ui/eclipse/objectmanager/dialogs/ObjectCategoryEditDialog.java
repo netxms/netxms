@@ -92,6 +92,7 @@ public class ObjectCategoryEditDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       icon.setLayoutData(gd);
+      icon.setParentShell(getShell());
 
       mapImage = new ImageSelector(dialogArea, SWT.NONE);
       mapImage.setLabel("Map image");
@@ -99,6 +100,7 @@ public class ObjectCategoryEditDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       mapImage.setLayoutData(gd);
+      mapImage.setParentShell(getShell());
 
       if (category != null)
       {

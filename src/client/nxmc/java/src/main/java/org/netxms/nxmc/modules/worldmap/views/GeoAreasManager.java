@@ -47,7 +47,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.GeoLocation;
@@ -89,7 +88,6 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    private static final String TABLE_CONFIG_PREFIX = "GeoAreaManager";
 
    private Map<Integer, GeoArea> areas = new HashMap<Integer, GeoArea>();
-   private Display display;
    private SashForm splitter;
    private SortableTableViewer viewer;
    private NXCSession session;
@@ -117,8 +115,6 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    @Override
    protected void createContent(Composite parent)
    {
-      display = parent.getDisplay();
-
       splitter = new SashForm(parent, SWT.HORIZONTAL);
 
       final String[] names = { "ID", "Name", "Comments" };
@@ -215,7 +211,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    {
       if (n.getCode() == SessionNotification.GEO_AREA_UPDATED)
       {
-         display.asyncExec(new Runnable() {
+         getDisplay().asyncExec(new Runnable() {
             @Override
             public void run()
             {
@@ -227,7 +223,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
       }
       else if (n.getCode() == SessionNotification.GEO_AREA_DELETED)
       {
-         display.asyncExec(new Runnable() {
+         getDisplay().asyncExec(new Runnable() {
             @Override
             public void run()
             {

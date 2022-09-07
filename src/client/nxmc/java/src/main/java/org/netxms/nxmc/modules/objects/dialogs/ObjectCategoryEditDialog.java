@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Victor Kirhenshtein
+ * Copyright (C) 2020-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager.dialogs;
+package org.netxms.nxmc.modules.objects.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -26,16 +26,20 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.MutableObjectCategory;
-import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.imagelibrary.widgets.ImageSelector;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for editing object category
  */
 public class ObjectCategoryEditDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectCategoryEditDialog.class);
+
    private MutableObjectCategory category;
    private LabeledText name;
    private ImageSelector icon;
@@ -60,7 +64,7 @@ public class ObjectCategoryEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText((category != null) ? "Edit Object Category" : "Create Object Category");
+      newShell.setText((category != null) ? i18n.tr("Edit Object Category") : i18n.tr("Create Object Category"));
    }
 
    /**
@@ -78,7 +82,7 @@ public class ObjectCategoryEditDialog extends Dialog
       dialogArea.setLayout(layout);
 
       name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel("Name");
+      name.setLabel(i18n.tr("Name"));
       name.getTextControl().setTextLimit(63);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -87,7 +91,7 @@ public class ObjectCategoryEditDialog extends Dialog
       name.setLayoutData(gd);
 
       icon = new ImageSelector(dialogArea, SWT.NONE);
-      icon.setLabel("Icon");
+      icon.setLabel(i18n.tr("Icon"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -95,7 +99,7 @@ public class ObjectCategoryEditDialog extends Dialog
       icon.setParentShell(getShell());
 
       mapImage = new ImageSelector(dialogArea, SWT.NONE);
-      mapImage.setLabel("Map image");
+      mapImage.setLabel(i18n.tr("Map image"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -120,7 +124,7 @@ public class ObjectCategoryEditDialog extends Dialog
    {
       if (name.getText().trim().isEmpty())
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Category name cannot be empty!");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Category name cannot be empty!"));
          return;
       }
 

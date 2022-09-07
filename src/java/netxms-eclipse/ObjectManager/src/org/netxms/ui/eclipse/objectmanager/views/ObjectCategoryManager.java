@@ -240,6 +240,16 @@ public class ObjectCategoryManager extends ViewPart implements SessionListener
    }
 
    /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      session.removeListener(this);
+      super.dispose();
+   }
+
+   /**
     * @see org.netxms.client.SessionListener#notificationHandler(org.netxms.client.SessionNotification)
     */
    @Override

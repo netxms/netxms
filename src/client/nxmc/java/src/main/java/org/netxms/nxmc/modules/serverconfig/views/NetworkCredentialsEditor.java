@@ -39,7 +39,6 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SSHCredentials;
@@ -103,7 +102,6 @@ public class NetworkCredentialsEditor extends ConfigurationView
 	private Action actionSave;
 	private NetworkCredentials config;
 	private ZoneSelector zoneSelector;
-   private Display display;
    private int zoneUIN = NetworkCredentials.NETWORK_CONFIG_GLOBAL;
    private List<SshKeyPair> sshKeys;
    private SshCredentialsLabelProvider sshLabelProvider;
@@ -124,8 +122,6 @@ public class NetworkCredentialsEditor extends ConfigurationView
    @Override
    public void createContent(Composite parent)
 	{
-      display = parent.getDisplay();
-
       ScrolledComposite scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
       scroller.setExpandHorizontal(true);
       scroller.setExpandVertical(true);
@@ -204,7 +200,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
             if (type != 0)
             {
                final int configType = type;
-               display.asyncExec(new Runnable() {
+               getDisplay().asyncExec(new Runnable() {
                   @Override
                   public void run()
                   {

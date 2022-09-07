@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager.dialogs;
+package org.netxms.nxmc.modules.objects.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -35,14 +35,18 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objects.ObjectCategory;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Object category selection dialog
  */
 public class ObjectCategorySelectionDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectCategorySelectionDialog.class);
+
    private TableViewer viewer;
    private int categoryId = 0;
 
@@ -63,7 +67,7 @@ public class ObjectCategorySelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Object Category");
+      newShell.setText(i18n.tr("Select Object Category"));
    }
 
    /**
@@ -79,7 +83,7 @@ public class ObjectCategorySelectionDialog extends Dialog
       dialogArea.setLayout(layout);
 
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText("Available categories");
+      label.setText(i18n.tr("Available categories"));
 
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -104,7 +108,7 @@ public class ObjectCategorySelectionDialog extends Dialog
             okPressed();
          }
       });
-      viewer.setInput(ConsoleSharedData.getSession().getObjectCategories().toArray());
+      viewer.setInput(Registry.getSession().getObjectCategories().toArray());
 
       GridData gd = new GridData();
       gd.widthHint = 500;

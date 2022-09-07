@@ -1009,7 +1009,7 @@
       <view
             allowMultiple="false"
             class="org.netxms.ui.eclipse.objectmanager.views.ObjectCategoryManager"
-            icon="icons/object_categories.gif"
+            icon="icons/object-categories.png"
             id="org.netxms.ui.eclipse.objectmanager.views.ObjectCategoryManager"
             name="Object Categories"
             restorable="true">
@@ -1521,7 +1521,7 @@
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.OpenObjectCategoryManager"
                definitionId="org.netxms.ui.eclipse.objectmanager.commands.open_object_categories_editor"
-               icon="icons/object_categories.gif"
+               icon="icons/object-categories.png"
                id="org.netxms.ui.eclipse.objectmanager.actions.open_category_editor"
                label="Object categories"
                menubarPath="config/additions"

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -29,7 +30,9 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.AbstractSelector;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.widgets.ObjectCategorySelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -42,8 +45,10 @@ public class General extends ObjectPropertyPage
 
    private Text name;
    private Text alias;
+   private ObjectCategorySelector categorySelector;
 	private String initialName;
    private String initialAlias;
+   private int initialCategory;
 
    /**
     * Create new page.
@@ -88,7 +93,6 @@ public class General extends ObjectPropertyPage
       dialogArea.setLayout(layout);
       
       // Object ID
-
       WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT,
            i18n.tr("Object ID"), Long.toString(object.getObjectId()), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
@@ -105,6 +109,13 @@ public class General extends ObjectPropertyPage
       initialAlias = object.getAlias();
       alias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Alias"),
             initialAlias, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+      // Category selector
+      initialCategory = object.getCategoryId();
+      categorySelector = new ObjectCategorySelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
+      categorySelector.setLabel(i18n.tr("Category"));
+      categorySelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      categorySelector.setCategoryId(initialCategory);
 
 		return dialogArea;
 	}
@@ -127,7 +138,8 @@ public class General extends ObjectPropertyPage
 	{
       final String newName = name.getText();
       final String newAlias = alias.getText();
-      if (newName.equals(initialName) && newAlias.equals(initialAlias))
+      final int newCategory = categorySelector.getCategoryId();
+      if (newName.equals(initialName) && newAlias.equals(initialAlias) && (newCategory == initialCategory))
          return true; // nothing to change
 
 		if (isApply)
@@ -137,6 +149,7 @@ public class General extends ObjectPropertyPage
 		final NXCObjectModificationData data = new NXCObjectModificationData(object.getObjectId());
 		data.setName(newName);
       data.setAlias(newAlias);
+      data.setCategoryId(newCategory);
       new Job(i18n.tr("Update object properties"), null, null) {
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -161,6 +174,7 @@ public class General extends ObjectPropertyPage
 						{
 							initialName = newName;
                      initialAlias = newAlias;
+                     initialCategory = newCategory;
 							General.this.setValid(true);
 						}
 					});
