@@ -57,7 +57,7 @@ public class SNMP extends ObjectPropertyPage
    private Combo snmpAuth;
    private Combo snmpPriv;
    private ObjectSelector snmpProxy;
-   private LabeledText snmpAuthName;
+   private PasswordInputField snmpAuthName;
    private PasswordInputField snmpAuthPassword;
    private PasswordInputField snmpPrivPassword;
    private LabeledText snmpCodepage;
@@ -174,7 +174,7 @@ public class SNMP extends ObjectPropertyPage
       fd.right = new FormAttachment(snmpPriv.getParent(), 0, SWT.RIGHT);
       snmpProxy.setLayoutData(fd);
       
-      snmpAuthName = new LabeledText(dialogArea, SWT.NONE);
+      snmpAuthName = new PasswordInputField(dialogArea, SWT.NONE);
       snmpAuthName.setLabel((node.getSnmpVersion() == SnmpVersion.V3) ? i18n.tr("User name") : i18n.tr("Community string"));
       snmpAuthName.setText(node.getSnmpAuthName());
       fd = new FormData();
@@ -182,7 +182,7 @@ public class SNMP extends ObjectPropertyPage
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       snmpAuthName.setLayoutData(fd);
-      
+
       snmpAuthPassword = new PasswordInputField(dialogArea, SWT.NONE);
       snmpAuthPassword.setLabel(i18n.tr("Authentication password"));
       snmpAuthPassword.setText(node.getSnmpAuthPassword());
@@ -192,7 +192,7 @@ public class SNMP extends ObjectPropertyPage
       fd.right = new FormAttachment(100, 0);
       snmpAuthPassword.setLayoutData(fd);
       snmpAuthPassword.setInputControlsEnabled(node.getSnmpVersion() == SnmpVersion.V3);
-      
+
       snmpPrivPassword = new PasswordInputField(dialogArea, SWT.NONE);
       snmpPrivPassword.setLabel(i18n.tr("Encryption password"));
       snmpPrivPassword.setText(node.getSnmpPrivPassword());
@@ -208,7 +208,7 @@ public class SNMP extends ObjectPropertyPage
       fd.right = new FormAttachment(snmpAuthName, 0, SWT.LEFT);
       fd.top = new FormAttachment(0, 0);
       snmpPort.setLayoutData(fd);
-      
+
       snmpCodepage = new LabeledText(dialogArea, SWT.NONE);
       snmpCodepage.setLabel(i18n.tr("Codepage"));
       snmpCodepage.setText(node.getSNMPCodepage());

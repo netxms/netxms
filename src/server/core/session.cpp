@@ -2687,7 +2687,7 @@ void ClientSession::getObjects(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&response);    // Send confirmation message
+   sendMessage(response);    // Send confirmation message
    response.deleteAllFields();
 
    // Change "sync comments" flag
@@ -2726,10 +2726,12 @@ void ClientSession::getObjects(const NXCPMessage& request)
       {
          // mask passwords
          response.setField(VID_SHARED_SECRET, _T("********"));
+         response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
          response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
          response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+         response.setField(VID_SSH_PASSWORD, _T("********"));
       }
-      sendMessage(&response);
+      sendMessage(response);
       response.deleteAllFields();
 	}
 
@@ -2747,7 +2749,7 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    response.setField(VID_RCC, RCC_SUCCESS);
-   sendMessage(&response);    // Send confirmation message
+   sendMessage(response);    // Send confirmation message
    response.deleteAllFields();
 
    // Change "sync comments" flag
@@ -2780,10 +2782,12 @@ void ClientSession::getSelectedObjects(const NXCPMessage& request)
          {
             // mask passwords
             response.setField(VID_SHARED_SECRET, _T("********"));
+            response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
             response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
             response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+            response.setField(VID_SSH_PASSWORD, _T("********"));
          }
-         sendMessage(&response);
+         sendMessage(response);
          response.deleteAllFields();
       }
 	}
@@ -3283,30 +3287,32 @@ void ClientSession::sendObjectUpdates()
 
    int64_t startTime = GetCurrentTimeMs();
 
-   NXCPMessage msg(CMD_OBJECT_UPDATE, 0);
+   NXCPMessage response(CMD_OBJECT_UPDATE, 0);
    for(size_t i = 0; i < count; i++)
    {
-      msg.deleteAllFields();
+      response.deleteAllFields();
       shared_ptr<NetObj> object = FindObjectById(idList[i]);
       if ((object != nullptr) && !object->isDeleted())
       {
-         object->fillMessage(&msg, m_dwUserId);
+         object->fillMessage(&response, m_dwUserId);
          if (m_flags & CSF_SYNC_OBJECT_COMMENTS)
-            object->commentsToMessage(&msg);
+            object->commentsToMessage(&response);
          if ((object->getObjectClass() == OBJECT_NODE) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             // mask passwords
-            msg.setField(VID_SHARED_SECRET, _T("********"));
-            msg.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
-            msg.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+            response.setField(VID_SHARED_SECRET, _T("********"));
+            response.setField(VID_SNMP_AUTH_OBJECT, _T("********"));
+            response.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
+            response.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
+            response.setField(VID_SSH_PASSWORD, _T("********"));
          }
       }
       else
       {
-         msg.setField(VID_OBJECT_ID, idList[i]);
-         msg.setField(VID_IS_DELETED, true);
+         response.setField(VID_OBJECT_ID, idList[i]);
+         response.setField(VID_IS_DELETED, true);
       }
-      sendMessage(msg);
+      sendMessage(response);
    }
 
    uint32_t elapsedTime = static_cast<uint32_t>(GetCurrentTimeMs() - startTime);

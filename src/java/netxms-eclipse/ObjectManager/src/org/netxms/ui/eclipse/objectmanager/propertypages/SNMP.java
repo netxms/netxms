@@ -55,7 +55,7 @@ public class SNMP extends PropertyPage
    private Combo snmpAuth;
    private Combo snmpPriv;
    private ObjectSelector snmpProxy;
-   private LabeledText snmpAuthName;
+   private PasswordInputField snmpAuthName;
    private PasswordInputField snmpAuthPassword;
    private PasswordInputField snmpPrivPassword;
    private LabeledText snmpCodepage;
@@ -135,7 +135,7 @@ public class SNMP extends PropertyPage
       fd.right = new FormAttachment(snmpPriv.getParent(), 0, SWT.RIGHT);
       snmpProxy.setLayoutData(fd);
       
-      snmpAuthName = new LabeledText(dialogArea, SWT.NONE);
+      snmpAuthName = new PasswordInputField(dialogArea, SWT.NONE);
       snmpAuthName.setLabel(node.getSnmpVersion() == SnmpVersion.V3 ? Messages.get().Communication_UserName
             : Messages.get().Communication_Community);
       snmpAuthName.setText(node.getSnmpAuthName());
@@ -144,7 +144,7 @@ public class SNMP extends PropertyPage
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       snmpAuthName.setLayoutData(fd);
-      
+
       snmpAuthPassword = new PasswordInputField(dialogArea, SWT.NONE);
       snmpAuthPassword.setLabel(Messages.get().Communication_AuthPassword);
       snmpAuthPassword.setText(node.getSnmpAuthPassword());
@@ -154,7 +154,7 @@ public class SNMP extends PropertyPage
       fd.right = new FormAttachment(100, 0);
       snmpAuthPassword.setLayoutData(fd);
       snmpAuthPassword.setInputControlsEnabled(node.getSnmpVersion() == SnmpVersion.V3);
-      
+
       snmpPrivPassword = new PasswordInputField(dialogArea, SWT.NONE);
       snmpPrivPassword.setLabel(Messages.get().Communication_EncPassword);
       snmpPrivPassword.setText(node.getSnmpPrivPassword());
@@ -179,7 +179,7 @@ public class SNMP extends PropertyPage
       fd.right = new FormAttachment(100, 0);
       fd.top = new FormAttachment(snmpProxy, 0, SWT.BOTTOM);
       snmpCodepage.setLayoutData(fd);
-      
+
       snmpSettingsLocked = new Button(dialogArea, SWT.CHECK);
       snmpSettingsLocked.setText("&Prevent automatic SNMP configuration changes");
       snmpSettingsLocked.setSelection(node.isSnmpSettingsLocked());

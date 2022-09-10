@@ -8344,8 +8344,7 @@ void Node::onObjectDelete(const NetObj& object)
 void Node::checkOSPFSupport(SNMP_Transport *pTransport)
 {
    int32_t adminStatus;
-   if (SnmpGet(m_snmpVersion, pTransport,
-               _T(".1.3.6.1.2.1.14.1.2.0"), nullptr, 0, &adminStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.14.1.2.0"), nullptr, 0, &adminStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
    {
       lockProperties();
       if (adminStatus)
