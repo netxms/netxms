@@ -1992,6 +1992,7 @@ protected:
    IntegerArray<uint32_t> *m_vlans;
    int16_t m_lastKnownOperState;
    int16_t m_lastKnownAdminState;
+   uint32_t m_ospfArea;
 
    void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
@@ -3109,6 +3110,7 @@ protected:
    uint16_t m_snmpPort;
    uint16_t m_nUseIfXTable;
    SNMP_SecurityContext *m_snmpSecurity;
+   char m_snmpCodepage[16];
    uuid m_agentId;
    TCHAR *m_agentCertSubject;
    TCHAR m_agentVersion[MAX_AGENT_VERSION_LEN];
@@ -3119,6 +3121,7 @@ protected:
    TCHAR *m_sysName;            // SNMP sysName
    TCHAR *m_sysLocation;      // SNMP sysLocation
    TCHAR *m_sysContact;       // SNMP sysContact
+   uint32_t m_ospfRouterId;
    TCHAR *m_lldpNodeId;         // lldpLocChassisId combined with lldpLocChassisIdSubtype, or nullptr for non-LLDP nodes
    ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
    NetworkDeviceDriver *m_driver;
@@ -3180,6 +3183,7 @@ protected:
    uint32_t m_physicalContainer;
    uuid m_rackImageFront;
    uuid m_rackImageRear;
+   char m_syslogCodepage[16];
    int64_t m_syslogMessageCount;
    int64_t m_snmpTrapCount;
    int64_t m_snmpTrapLastTotal;
@@ -3202,8 +3206,6 @@ protected:
    uint16_t m_cipStatus;
    uint8_t m_cipState;
    uint16_t m_cipVendorCode;
-   char m_syslogCodepage[16];
-   char m_snmpCodepage[16];
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -3229,9 +3231,9 @@ protected:
    void routingTableLock() { m_routingTableMutex.lock(); }
    void routingTableUnlock() { m_routingTableMutex.unlock(); }
 
-   void checkOSPFSupport(SNMP_Transport *pTransport);
+   void checkOSPFSupport(SNMP_Transport *snmp);
    void addVrrpInterfaces(InterfaceList *ifList);
-   BOOL resolveName(BOOL useOnlyDNS);
+   bool resolveName(bool useOnlyDNS);
    void setPrimaryIPAddress(const InetAddress& addr);
 
    bool setAgentProxy(AgentConnectionEx *conn);

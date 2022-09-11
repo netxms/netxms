@@ -54,6 +54,7 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
    m_vlans = nullptr;
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
+   m_ospfArea = 0;
 }
 
 /**
@@ -94,6 +95,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_vlans = nullptr;
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
+   m_ospfArea = 0;
    setCreationTime();
 }
 
@@ -137,6 +139,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *description, uint32_t index
    m_vlans = nullptr;
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
+   m_ospfArea = 0;
    setCreationTime();
 }
 
@@ -165,7 +168,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("iftable_suffix FROM interfaces WHERE id=?"));
+      _T("iftable_suffix,ospf_area FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -204,6 +207,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_parentInterfaceId = DBGetFieldULong(hResult, 0, 21);
       m_lastKnownOperState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 22));
       m_lastKnownAdminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 23));
+      m_ospfArea = DBGetFieldIPAddr(hResult, 0, 24);
 
       TCHAR suffixText[128];
       DBGetField(hResult, 0, 24, suffixText, 128);
@@ -327,13 +331,15 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("phy_chassis"), _T("phy_module"), _T("phy_pic"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"),
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
          _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"), _T("last_known_oper_state"),
-         _T("last_known_admin_state"), _T("if_alias"),
+         _T("last_known_admin_state"), _T("if_alias"), _T("ospf_area"),
          nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("interfaces"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
+         TCHAR ospfArea[16];
+
          lockProperties();
 
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
@@ -369,7 +375,11 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownOperState));
          DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownAdminState));
          DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_ifAlias, DB_BIND_STATIC);
-         DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_id);
+         if (m_flags & IF_OSPF_INTERFACE)
+            DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfArea, ospfArea), DB_BIND_STATIC);
+         else
+            DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -945,6 +955,7 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
    msg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
    msg->setFieldFromInt32Array(VID_VLAN_LIST, m_vlans);
+   msg->setField(VID_OSPF_AREA, InetAddress(m_ospfArea));
 }
 
 /**

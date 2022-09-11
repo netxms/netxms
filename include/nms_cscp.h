@@ -1469,7 +1469,7 @@ typedef struct
 #define VID_WEBSVC_RESPONSE         ((uint32_t)764)
 #define VID_WEBSVC_ERROR_TEXT       ((uint32_t)765)
 #define VID_REQUEST_DATA            ((uint32_t)766)
-// #define VID_ENABLE_FILE_UPLOAD_RESUMING ((uint32_t)767) unused
+#define VID_OSPF_ROUTER_ID          ((uint32_t)767)
 #define VID_CHECK_COUNT             ((uint32_t)768)
 #define VID_CHECK_ID                ((uint32_t)769)
 #define VID_PROTOTYPE_ID            ((uint32_t)770)
@@ -1498,6 +1498,7 @@ typedef struct
 #define VID_MAC_ADDR_COUNT          ((uint32_t)793)
 #define VID_DEVELOPMENT_MODE        ((uint32_t)794)
 #define VID_DISPLAY_PRIORITY        ((uint32_t)795)
+#define VID_OSPF_AREA               ((uint32_t)796)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

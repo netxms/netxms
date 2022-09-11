@@ -22,6 +22,16 @@
 
 #include "nxdbmgr.h"
 
+/**
+ * Upgrade from 42.14 to 42.15
+ */
+static bool H_UpgradeFromV14()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD ospf_router_id varchar(15)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE interfaces ADD ospf_area varchar(15)")));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
 
 /**
  * Upgrade from 42.13 to 42.14
@@ -294,6 +304,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 14, 42, 15, H_UpgradeFromV14 },
    { 13, 42, 14, H_UpgradeFromV13 },
    { 12, 42, 13, H_UpgradeFromV12 },
    { 11, 42, 12, H_UpgradeFromV11 },

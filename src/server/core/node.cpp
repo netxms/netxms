@@ -109,6 +109,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_snmpPort = SNMP_DEFAULT_PORT;
    m_snmpSecurity = new SNMP_SecurityContext("public");
    m_snmpObjectId = nullptr;
+   m_snmpCodepage[0] = 0;
+   m_ospfRouterId = 0;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -173,6 +175,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
+   m_syslogCodepage[0] = 0;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
    m_snmpTrapLastTotal = 0;
@@ -193,8 +196,6 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
-   m_syslogCodepage[0] = 0;
-   m_snmpCodepage[0] = 0;
 }
 
 /**
@@ -227,6 +228,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    else
       newNodeData->ipAddr.toString(m_name);    // Make default name from IP address
    m_snmpObjectId = nullptr;
+   m_snmpCodepage[0] = 0;
+   m_ospfRouterId = 0;
    m_downSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
@@ -292,6 +295,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_physicalContainer = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
+   m_syslogCodepage[0] = 0;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
    m_snmpTrapLastTotal = 0;
@@ -315,8 +319,6 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_cipStatus = 0;
    m_cipVendorCode = 0;
    m_webServiceProxy = newNodeData->webServiceProxyId;
-   m_syslogCodepage[0] = 0;
-   m_snmpCodepage[0] = 0;
 }
 
 /**
@@ -384,7 +386,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("rack_image_rear,agent_id,agent_cert_subject,hypervisor_type,hypervisor_info,icmp_poll_mode,")
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
-      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage FROM nodes WHERE id=?"));
+      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -473,7 +475,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_driver = FindDriverByName(driverName);
 
    m_icmpProxy = DBGetFieldULong(hResult, 0, 25);
-   m_agentCacheMode = (INT16)DBGetFieldLong(hResult, 0, 26);
+   m_agentCacheMode = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 26));
    if ((m_agentCacheMode != AGENT_CACHE_ON) && (m_agentCacheMode != AGENT_CACHE_OFF))
       m_agentCacheMode = AGENT_CACHE_DEFAULT;
 
@@ -551,6 +553,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    DBGetFieldUTF8(hResult, 0, 75, m_syslogCodepage, 16);
    DBGetFieldUTF8(hResult, 0, 76, m_snmpCodepage, 16);
+   m_ospfRouterId = DBGetFieldIPAddr(hResult, 0, 77);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -879,6 +882,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("syslog_codepage"), _T("snmp_codepage"),
+         _T("ospf_router_id"),
          nullptr
       };
 
@@ -888,7 +892,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          lockProperties();
 
          int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
-         TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16], hardwareId[HARDWARE_ID_LENGTH * 2 + 1];
+         TCHAR ipAddr[64], baseAddress[16], cacheMode[16], compressionMode[16], hardwareId[HARDWARE_ID_LENGTH * 2 + 1], routerId[16];
 
          const TCHAR *icmpPollMode;
          switch(m_icmpStatCollectionMode)
@@ -1009,9 +1013,13 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          {
             DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          }
-         DBBind(hStmt, 76, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
-         DBBind(hStmt, 77, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, m_snmpCodepage, DB_BIND_STATIC);
-         DBBind(hStmt, 78, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 76, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
+         DBBind(hStmt, 77, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_snmpCodepage, DB_BIND_STATIC);
+         if (m_ospfRouterId != 0)
+            DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfRouterId, routerId), DB_BIND_STATIC);
+         else
+            DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 79, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -7727,6 +7735,7 @@ void Node::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_AGENT_CERT_SUBJECT, m_agentCertSubject);
    msg->setFieldFromUtf8String(VID_SYSLOG_CODEPAGE, m_syslogCodepage);
    msg->setFieldFromUtf8String(VID_SNMP_CODEPAGE, m_snmpCodepage);
+   msg->setField(VID_OSPF_ROUTER_ID, InetAddress(m_ospfRouterId));
 }
 
 /**
@@ -8341,21 +8350,44 @@ void Node::onObjectDelete(const NetObj& object)
 /**
  * Check node for OSPF support
  */
-void Node::checkOSPFSupport(SNMP_Transport *pTransport)
+void Node::checkOSPFSupport(SNMP_Transport *snmp)
 {
    int32_t adminStatus;
-   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.14.1.2.0"), nullptr, 0, &adminStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+   if (SnmpGet(m_snmpVersion, snmp, _T(".1.3.6.1.2.1.14.1.2.0"), nullptr, 0, &adminStatus, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
    {
       lockProperties();
       if (adminStatus)
       {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkOSPFSupport(%s [%u]): OSPF is enabled"), m_name, m_id);
          m_capabilities |= NC_IS_OSPF;
       }
       else
       {
          m_capabilities &= ~NC_IS_OSPF;
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkOSPFSupport(%s [%u]): OSPF is disabled"), m_name, m_id);
       }
       unlockProperties();
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkOSPFSupport(%s [%u]): OSPF MIB not supported"), m_name, m_id);
+   }
+
+   if (m_capabilities & NC_IS_OSPF)
+   {
+      uint32_t routerId = 0;
+      if (SnmpGet(m_snmpVersion, snmp, _T(".1.3.6.1.2.1.14.1.1.0"), nullptr, 0, &routerId, sizeof(int32_t), 0) == SNMP_ERR_SUCCESS)
+      {
+         lockProperties();
+         if (m_ospfRouterId != routerId)
+         {
+            TCHAR buffer[16];
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::checkOSPFSupport(%s [%u]): OSPF router ID changed to %s"), m_name, m_id, IpToStr(routerId, buffer));
+            m_ospfRouterId = routerId;
+            setModified(MODIFY_NODE_PROPERTIES);
+         }
+         unlockProperties();
+      }
    }
 }
 
@@ -9230,32 +9262,30 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext() const
 /**
  * Resolve node's name
  */
-BOOL Node::resolveName(BOOL useOnlyDNS)
+bool Node::resolveName(bool useOnlyDNS)
 {
-   BOOL bSuccess = FALSE;
-   BOOL bNameTruncated = FALSE;
-   TCHAR szBuffer[256];
+   bool resolved = false;
+   bool truncated = false;
 
-   DbgPrintf(4, _T("Resolving name for node %d [%s]"), m_id, m_name);
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u]"), m_name, m_id);
 
    TCHAR name[MAX_OBJECT_NAME];
-   bool nameResolved = false;
    if (m_zoneUIN != 0)
    {
       shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
       shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : shared_ptr<AgentConnectionEx>();
       if (conn != nullptr)
       {
-         nameResolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
+         resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
       }
    }
    else
    {
-      nameResolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr);
+      resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr);
    }
 
    // Try to resolve primary IP
-   if (nameResolved)
+   if (resolved)
    {
       _tcslcpy(m_name, name, MAX_OBJECT_NAME);
       if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
@@ -9264,10 +9294,9 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
          if (pPoint != nullptr)
          {
             *pPoint = _T('\0');
-            bNameTruncated = TRUE;
+            truncated = true;
          }
       }
-      bSuccess = TRUE;
    }
    else
    {
@@ -9285,7 +9314,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
                if (a.isValidUnicast() && (a.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr))
                {
                   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
-                  bSuccess = TRUE;
+                  resolved = true;
                   break;
                }
             }
@@ -9294,42 +9323,43 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
       unlockChildList();
 
       // Try to get hostname from agent if address resolution fails
-      if (!(bSuccess || useOnlyDNS))
+      if (!(resolved || useOnlyDNS))
       {
-         DbgPrintf(4, _T("Resolving name for node %d [%s] via agent"), m_id, m_name);
-         if (getMetricFromAgent(_T("System.Hostname"), szBuffer, 256) == DCE_SUCCESS)
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u] via agent"), m_name, m_id);
+         TCHAR buffer[256];
+         if (getMetricFromAgent(_T("System.Hostname"), buffer, 256) == DCE_SUCCESS)
          {
-            Trim(szBuffer);
-            if (szBuffer[0] != 0)
+            Trim(buffer);
+            if (buffer[0] != 0)
             {
-               _tcslcpy(m_name, szBuffer, MAX_OBJECT_NAME);
-               bSuccess = TRUE;
+               _tcslcpy(m_name, buffer, MAX_OBJECT_NAME);
+               resolved = true;
             }
          }
       }
 
       // Try to get hostname from SNMP if other methods fails
-      if (!(bSuccess || useOnlyDNS))
+      if (!(resolved || useOnlyDNS))
       {
-         DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP"), m_id, m_name);
-         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), szBuffer, 256, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u] via SNMP"), m_name, m_id);
+         TCHAR buffer[256];
+         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), buffer, 256, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
-            Trim(szBuffer);
-            if (szBuffer[0] != 0)
+            Trim(buffer);
+            if (buffer[0] != 0)
             {
-               _tcslcpy(m_name, szBuffer, MAX_OBJECT_NAME);
-               bSuccess = TRUE;
+               _tcslcpy(m_name, buffer, MAX_OBJECT_NAME);
+               resolved = true;
             }
          }
       }
    }
 
-   if (bSuccess)
-      DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_id, m_name,
-         bNameTruncated ? _T(" (truncated to host)") : _T(""));
+   if (resolved)
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Name for node [%u] was resolved to %s%s"), m_id, m_name, truncated ? _T(" (truncated to host part)") : _T(""));
    else
-      DbgPrintf(4, _T("Name for node %d was not resolved"), m_id);
-   return bSuccess;
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Name for node [%u] was not resolved"), m_id);
+   return resolved;
 }
 
 /**
