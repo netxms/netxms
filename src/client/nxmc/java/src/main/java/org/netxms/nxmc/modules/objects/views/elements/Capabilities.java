@@ -62,27 +62,28 @@ public class Capabilities extends TableElement
 			return;
 		
 		AbstractNode node = (AbstractNode)getObject();
+      addFlag("802.1x", (node.getCapabilities() & AbstractNode.NC_IS_8021X) != 0);
       addFlag(i18n.tr("Agent"), (node.getCapabilities() & AbstractNode.NC_IS_NATIVE_AGENT) != 0);
       addFlag(i18n.tr("Bridge"), (node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0);
-      addFlag(i18n.tr("CDP"), (node.getCapabilities() & AbstractNode.NC_IS_CDP) != 0);
-      addFlag(i18n.tr("802.1x"), (node.getCapabilities() & AbstractNode.NC_IS_8021X) != 0);
-      addFlag(i18n.tr("EtherNet/IP"), (node.getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0);
+      addFlag("CDP", (node.getCapabilities() & AbstractNode.NC_IS_CDP) != 0);
+      addFlag("EtherNet/IP", (node.getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0);
       addFlag(i18n.tr("Entity MIB"), (node.getCapabilities() & AbstractNode.NC_HAS_ENTITY_MIB) != 0);
-      addFlag(i18n.tr("LLDP"), (node.getCapabilities() & AbstractNode.NC_IS_LLDP) != 0);
-      addFlag(i18n.tr("NDP"), (node.getCapabilities() & AbstractNode.NC_IS_NDP) != 0);
+      addFlag("LLDP", (node.getCapabilities() & AbstractNode.NC_IS_LLDP) != 0);
+      addFlag("NDP", (node.getCapabilities() & AbstractNode.NC_IS_NDP) != 0);
+      addFlag("OSPF", (node.getCapabilities() & AbstractNode.NC_IS_OSPF) != 0);
       addFlag(i18n.tr("Printer"), (node.getCapabilities() & AbstractNode.NC_IS_PRINTER) != 0);
       addFlag(i18n.tr("Router"), (node.getCapabilities() & AbstractNode.NC_IS_ROUTER) != 0);
-      addFlag(i18n.tr("SMCLP"), (node.getCapabilities() & AbstractNode.NC_IS_SMCLP) != 0);
-      addFlag(i18n.tr("SNMP"), (node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0);
+      addFlag("SMCLP", (node.getCapabilities() & AbstractNode.NC_IS_SMCLP) != 0);
+      addFlag("SNMP", (node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0);
       if ((node.getCapabilities() & AbstractNode.NC_IS_SNMP) != 0)
       {
-         addFlag(i18n.tr("SNMP ifXTable"), (node.getCapabilities() & AbstractNode.NC_HAS_IFXTABLE) != 0);
+         addFlag("SNMP ifXTable", (node.getCapabilities() & AbstractNode.NC_HAS_IFXTABLE) != 0);
          addPair(i18n.tr("SNMP Port"), Integer.toString(node.getSnmpPort()));
          addPair(i18n.tr("SNMP Version"), getSnmpVersionName(node.getSnmpVersion()));
       }
-      addFlag(i18n.tr("STP"), (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
+      addFlag("STP", (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
       addFlag(i18n.tr("User Agent"), (node.getCapabilities() & AbstractNode.NC_HAS_USER_AGENT) != 0);
-      addFlag(i18n.tr("VRRP"), (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
+      addFlag("VRRP", (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
 	}
 
 	/**

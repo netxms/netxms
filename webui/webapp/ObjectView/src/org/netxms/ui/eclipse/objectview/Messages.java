@@ -20,16 +20,8 @@ public class Messages extends NLS
    public String Capabilities_FlagHasIfXTable;
    public String Capabilities_FlagIsAgent;
    public String Capabilities_FlagIsBridge;
-   public String Capabilities_FlagIsCDP;
-   public String Capabilities_FlagIsDot1x;
-   public String Capabilities_FlagIsLLDP;
-   public String Capabilities_FlagIsNDP;
    public String Capabilities_FlagIsPrinter;
    public String Capabilities_FlagIsRouter;
-   public String Capabilities_FlagIsSMCLP;
-   public String Capabilities_FlagIsSNMP;
-   public String Capabilities_FlagIsSTP;
-   public String Capabilities_FlagIsVRRP;
    public String Capabilities_No;
    public String Capabilities_SNMPPort;
    public String Capabilities_SNMPVersion;
