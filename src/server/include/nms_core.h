@@ -889,6 +889,7 @@ private:
    void writeMaintenanceJournal(const NXCPMessage& request);
    void updateMaintenanceJournal(const NXCPMessage& request);
    void cloneNetworkMap(const NXCPMessage& request);
+   void findVendorByMac(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

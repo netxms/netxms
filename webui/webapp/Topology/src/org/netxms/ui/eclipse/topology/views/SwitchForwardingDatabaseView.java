@@ -172,7 +172,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 		final int[] widths = { 180, 100, 200, 100, 250, 110 };
 		viewer = new SortableTableViewer(resultArea, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new FDBLabelProvider());
+		viewer.setLabelProvider(new FDBLabelProvider(viewer));
 		viewer.setComparator(new FDBComparator());
 		filter = new SwitchForwardingDatabaseFilter();
 		viewer.addFilter(filter);

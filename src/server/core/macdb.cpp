@@ -23,6 +23,28 @@
 #include "nxcore.h"
 #include <uthash.h>
 
+#define DEBUG_TAG_OUI  _T("oui")
+
+/**
+ * Organizationally Unique Identifier mapping
+ */
+typedef BYTE oui24_t[3];
+static HashMap<oui24_t, String> s_ouiMap(Ownership::True);
+
+/**
+ * Organizationally Unique Identifier mapping 28
+ */
+typedef BYTE oui28_t[4];
+static HashMap<oui28_t, String> s_ouiMap28(Ownership::True);
+
+
+/**
+ * Organizationally Unique Identifier mapping 36
+ */
+typedef BYTE oui36_t[5];
+static HashMap<oui36_t, String> s_ouiMap36(Ownership::True);
+
+
 /**
  * Entry
  */
@@ -233,4 +255,127 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr)
    if (!macAddr.isValid() || macAddr.isBroadcast() || macAddr.isMulticast() || (macAddr.length() != MAC_ADDR_LENGTH))
       return shared_ptr<NetObj>();
    return MacDbFind(macAddr.value());
+}
+
+/**
+ * Find vendor by MAC address (internal)
+ */
+static std::pair<const TCHAR *, uint32_t> FindVendorByMacInternal(const MacAddress& macAddr)
+{
+   uint32_t numBytes;
+   oui24_t bytes;
+   memcpy(bytes, macAddr.value(), 3);
+   const String *name = s_ouiMap.get(bytes);
+   numBytes = 3;
+
+   if (name == nullptr)
+   {
+      oui28_t value;
+      memcpy(value, macAddr.value(), 4);
+      value[3] &= 0xF0;
+      name = s_ouiMap28.get(value);
+      numBytes = 4;
+   }
+   if (name == nullptr)
+   {
+      oui36_t value;
+      memcpy(value, macAddr.value(), 5);
+      value[4] &= 0xF0;
+      name = s_ouiMap36.get(value);
+      numBytes = 5;
+   }
+
+   return std::pair<const TCHAR *, uint32_t>((name != nullptr) ? name->cstr() : nullptr, numBytes);
+}
+
+/**
+ * Find vendor name by MAC address
+ */
+const TCHAR *FindVendorByMac(const MacAddress& macAddr)
+{
+   return FindVendorByMacInternal(macAddr).first;
+}
+
+void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response)
+{
+   uint32_t numElements = request.getFieldAsUInt32(VID_NUM_ELEMENTS);
+   uint32_t inputBase = VID_ELEMENT_LIST_BASE;
+   uint32_t outputBase = VID_ELEMENT_LIST_BASE;
+   for (int i = 0; i < numElements; i++)
+   {
+      MacAddress addr = request.getFieldAsMacAddress(inputBase++);
+      std::pair<const TCHAR *, uint32_t> result = FindVendorByMacInternal(addr);
+      oui36_t value;
+      memcpy(value, addr.value(), result.second);
+      if (result.second > 3)
+         value[result.second -1] &= 0xF0;
+      response->setField(outputBase, value, result.second);
+      response->setField(outputBase + 1, result.first);
+      outputBase += 2;
+   }
+   response->setField(VID_NUM_ELEMENTS, numElements);
+}
+
+/**
+ * Parse one oui file
+ */
+template<size_t MaxLen, typename T> static void ParseCsvFile(const TCHAR *fileName, HashMap<T, String> *map)
+{
+   TCHAR path[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, path);
+   _tcscat(path, FS_PATH_SEPARATOR);
+   _tcscat(path, _T("oui"));
+   _tcscat(path, FS_PATH_SEPARATOR);
+   _tcscat(path, fileName);
+
+   char *fileContent = LoadFileAsUTF8String(path);
+   if (fileContent == nullptr)
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OUI, _T("Failed to open \"%s\" file"), path);
+      return;
+   }
+  TCHAR *content;
+
+#ifdef UNICODE
+   content = WideStringFromUTF8String(fileContent);
+#else
+   content = MBStringFromUTF8String(fileContent);
+#endif
+   MemFree(fileContent);
+
+   Table *table = Table::createFromCSV(content, _T(','));
+   if (table != nullptr)
+   {
+      for (int i = 0; i < table->getNumRows(); i++)
+      {
+         T buffer;
+         StringBuffer pattern = table->getAsString(i, 1, _T(""));
+         if (pattern.length() %2 != 0)
+            pattern.append(_T("0"));
+         size_t size = StrToBin(pattern, buffer, MaxLen);
+         TCHAR tmp[64]; // max_length(16) * 4
+         BinToStr(buffer, MaxLen, tmp);
+         map->set(buffer, new String(table->getAsString(i, 2, _T(""))));
+      }
+   }
+   else
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OUI, _T("Failed to parse file \"%s\""), fileName);
+   }
+
+   delete table;
+   MemFree(content);
+}
+
+/**
+ * Load MAC to vendor files
+ */
+void LoadMacToVendorInfo()
+{
+   ParseCsvFile<3, oui24_t>(_T("oui.csv"), &s_ouiMap);
+   ParseCsvFile<4, oui28_t>(_T("oui28.csv"), &s_ouiMap28);
+   ParseCsvFile<5, oui36_t>(_T("oui36.csv"), &s_ouiMap36);
+   DbgPrintf(4, _T("%d oui loaded"), s_ouiMap.size());
+   DbgPrintf(4, _T("%d oui28 loaded"), s_ouiMap28.size());
+   DbgPrintf(4, _T("%d oui36 loaded"), s_ouiMap36.size());
 }

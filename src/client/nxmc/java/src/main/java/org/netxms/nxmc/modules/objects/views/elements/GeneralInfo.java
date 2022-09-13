@@ -144,6 +144,9 @@ public class GeneralInfo extends TableElement
             if (iface.getSpeed() > 0)
                addPair(i18n.tr("Speed"), InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
             addPair(i18n.tr("MAC address"), iface.getMacAddress().toString());
+            String vendor = session.getVendorByMac(iface.getMacAddress(), null);
+            if (vendor != null && !vendor.isEmpty())
+               addPair(i18n.tr("MAC Address Vendor"), vendor);   
 				if (iface.isPhysicalPort())
 				{
                addPair(i18n.tr("Physical location"), iface.getPhysicalLocation());
@@ -241,7 +244,12 @@ public class GeneralInfo extends TableElement
             Sensor sensor = (Sensor)object;
             addPair(i18n.tr("Device address"), sensor.getDeviceAddress(), false);
             if(sensor.getMacAddress() != null && !sensor.getMacAddress().isNull())
+            {
                addPair(i18n.tr("MAC address"), sensor.getMacAddress().toString(), true);
+               String vendorMac = session.getVendorByMac(sensor.getMacAddress(), null);
+               if (vendorMac != null && !vendorMac.isEmpty())
+                  addPair(i18n.tr("MAC Address Vendor"), vendorMac);   
+            }
             addPair(i18n.tr("Vendor"), sensor.getVendor(), true);
             addPair(i18n.tr("Device class"), Sensor.DEV_CLASS_NAMES[sensor.getDeviceClass()]);
             addPair(i18n.tr("Communication protocol"), Sensor.COMM_METHOD[sensor.getCommProtocol()]);
@@ -264,6 +272,9 @@ public class GeneralInfo extends TableElement
             addPair(i18n.tr("Model"), ap.getModel());
             addPair(i18n.tr("Serial number"), ap.getSerialNumber());
             addPair(i18n.tr("MAC address"), ap.getMacAddress().toString());
+            String vendorMac = session.getVendorByMac(ap.getMacAddress(), null);
+            if (vendorMac != null && !vendorMac.isEmpty())
+               addPair(i18n.tr("MAC Address Vendor"), vendorMac);   
 				if (ap.getIpAddress().isValidAddress())
                addPair(i18n.tr("IP address"), ap.getIpAddress().getHostAddress());
 				break;

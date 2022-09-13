@@ -1883,6 +1883,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_CLONE_MAP:
          cloneNetworkMap(*request);
          break;
+      case CMD_FIND_VENDOR_BY_MAC:
+         findVendorByMac(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -16328,5 +16331,16 @@ void ClientSession::cloneNetworkMap(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   sendMessage(response);
+}
+
+/**
+ * Find vendor by MAC address
+ */
+void ClientSession::findVendorByMac(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   FindVendorByMacList(request, &response);
+   response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }

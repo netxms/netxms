@@ -58,6 +58,24 @@ public class MacAddress
 			Arrays.fill(value, (byte)0);
 		}
 	}
+   
+   /**
+    * Create MAC address object from byte array
+    * 
+    * @param src byte array containing MAC address value
+    */
+   public MacAddress(byte[] src,int len)
+   {
+      if (src != null && src.length > 0)
+      {
+         value = Arrays.copyOf(src, Integer.min(src.length, len));
+      }
+      else
+      {
+         value = new byte[6];
+         Arrays.fill(value, (byte)0);
+      }
+   }
 	
 	/**
 	 * Check if MAC address is all zeroes

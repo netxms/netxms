@@ -36,6 +36,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
+import org.netxms.base.MacAddress;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
@@ -127,7 +128,7 @@ public class InterfacesTab extends NodeComponentViewerTab
 			@Override
 			public void run()
 			{
-				copyToClipboard(COLUMN_MAC_ADDRESS);
+			   copyMacAddress(false);
 			}
 		};	
 
@@ -151,7 +152,7 @@ public class InterfacesTab extends NodeComponentViewerTab
 			@Override
 			public void run()
 			{
-				copyToClipboard(COLUMN_PEER_MAC_ADDRESS);
+            copyMacAddress(true);
 			}
 		};	
 
@@ -181,6 +182,37 @@ public class InterfacesTab extends NodeComponentViewerTab
 		manager.add(new Separator());
 		ObjectContextMenu.fill(manager, getViewPart().getSite(), viewer);
 	}
+   
+   /**
+    * Copy mac address
+    */
+   private void copyMacAddress(boolean peerMacAddress)
+   {
+      @SuppressWarnings("unchecked")
+      final List<Interface> selection = viewer.getStructuredSelection().toList();
+      if (selection.size() > 0)
+      {
+         final String newLine = WidgetHelper.getNewLineCharacters();
+         final StringBuilder sb = new StringBuilder();
+         for(int i = 0; i < selection.size(); i++)
+         {
+            if (i > 0)
+               sb.append(newLine);
+            
+            MacAddress addr = null;
+            if (peerMacAddress)
+            {
+               addr = labelProvider.getPeerMacAddress(selection.get(i));
+            }
+            else
+            {
+               addr = selection.get(i).getMacAddress();
+            }
+            sb.append(addr != null ? addr.toString() : "");
+         }
+         WidgetHelper.copyToClipboard(sb.toString());
+      }      
+   }
 
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
@@ -237,7 +269,7 @@ public class InterfacesTab extends NodeComponentViewerTab
       };
       final int[] widths = { 60, 150, 150, 150, 70, 100, 70, 90, 150, 100, 90, 80, 150, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      labelProvider = new InterfaceListLabelProvider();
+      labelProvider = new InterfaceListLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new InterfaceListComparator());

@@ -25,7 +25,7 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
 import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -73,7 +73,7 @@ public class ReportResultComparator extends ViewerComparator
     */
    private String getUserName(Viewer viewer, ReportResult r)
    {
-      AbstractUserObject user = session.findUserDBObjectById(r.getUserId(), new UserRefreshRunnable((ColumnViewer)viewer, r));
+      AbstractUserObject user = session.findUserDBObjectById(r.getUserId(), new ViewerElementUpdater((ColumnViewer)viewer, r));
       return (user != null) ? user.getName() : ("[" + r.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
    }
 }

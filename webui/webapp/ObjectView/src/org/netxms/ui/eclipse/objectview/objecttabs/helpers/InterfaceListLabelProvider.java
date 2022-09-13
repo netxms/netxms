@@ -21,12 +21,15 @@ package org.netxms.ui.eclipse.objectview.objecttabs.helpers;
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab;
@@ -41,7 +44,18 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	
 	private AbstractNode node = null;
 	private NXCSession session = ConsoleSharedData.getSession();
+   private TableViewer viewer;
 
+   /**
+    * Constructor
+    * 
+    * @param viewer viewer
+    */
+   public InterfaceListLabelProvider(TableViewer viewer)
+   {
+      this.viewer = viewer;
+   }
+   
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -99,7 +113,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
             String typeName = iface.getIfTypeName();
 				return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()); //$NON-NLS-1$
 			case InterfacesTab.COLUMN_MAC_ADDRESS:
-				return iface.getMacAddress().toString();
+			   String vendor = session.getVendorByMac(iface.getMacAddress(), new ViewerElementUpdater(viewer, element));
+				return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", iface.getMacAddress().toString(), vendor) : iface.getMacAddress().toString();
 			case InterfacesTab.COLUMN_IP_ADDRESS:
 				return iface.getIpAddressListAsString();
          case InterfacesTab.COLUMN_PEER_INTERFACE:
@@ -107,7 +122,13 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 			case InterfacesTab.COLUMN_PEER_NODE:
 				return getPeerNodeName(iface);
 			case InterfacesTab.COLUMN_PEER_MAC_ADDRESS:
-				return getPeerMacAddress(iface);
+			   MacAddress mac = getPeerMacAddress(iface);
+			   if (mac != null)
+			   {
+			      String peerVendor = session.getVendorByMac(mac, new ViewerElementUpdater(viewer, element));
+               return peerVendor != null && !peerVendor.isEmpty() ? String.format("%s (%s)", mac.toString(), peerVendor) : mac.toString();
+			   }
+			   return "";
 			case InterfacesTab.COLUMN_PEER_IP_ADDRESS:
 				return getPeerIpAddress(iface);
          case InterfacesTab.COLUMN_PEER_PROTOCOL:
@@ -138,10 +159,10 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	 * @param iface
 	 * @return
 	 */
-	private String getPeerMacAddress(Interface iface)
+	public MacAddress getPeerMacAddress(Interface iface)
 	{
       Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
-		return (peer != null) ? peer.getMacAddress().toString() : null;
+		return (peer != null) ? peer.getMacAddress() : null;
 	}
 
    /**

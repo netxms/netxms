@@ -35,7 +35,7 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -140,7 +140,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
             if (alarm.getState() == Alarm.STATE_OUTSTANDING)
 					return null;
             long userId = (alarm.getState() == Alarm.STATE_ACKNOWLEDGED) ? alarm.getAcknowledgedByUser() : alarm.getResolvedByUser();
-            AbstractUserObject user = session.findUserDBObjectById(userId, new UserRefreshRunnable(viewer, element));
+            AbstractUserObject user = session.findUserDBObjectById(userId, new ViewerElementUpdater(viewer, element));
             return (user != null) ? user.getName() : ("[" + Long.toString(userId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case AlarmList.COLUMN_CREATED:
             return RegionalSettings.getDateTimeFormat().format(alarm.getCreationTime());

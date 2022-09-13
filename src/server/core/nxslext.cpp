@@ -2006,6 +2006,30 @@ static int F_PollerTrace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 }
 
 /**
+ * Finds vendor name by MAC address
+ * Syntax:
+ *    FindVendorByMACAddress(text)
+ * Returned value:
+ *    String or null
+ */
+static int F_FindVendorByMACAddress(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   MacAddress addr = MacAddress::parse(argv[0]->getValueAsCString());
+   if (addr.isValid())
+   {
+      *result = vm->createValue(FindVendorByMac(addr));
+   }
+   else
+   {
+      *result = vm->createValue();
+   }
+   return 0;
+}
+
+/**
  * Additional server functions to use within all scripts
  */
 static NXSL_ExtFunction m_nxslServerFunctions[] =
@@ -2057,6 +2081,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ "FindNodeObject", F_FindNodeObject, 2 },
 	{ "FindObject", F_FindObject, -1 },
    { "FindObjectByGUID", F_FindObjectByGUID, -1 },
+   { "FindVendorByMACAddress", F_FindVendorByMACAddress, 1 },
    { "LeaveMaintenance", F_LeaveMaintenance, 1 },
    { "LoadEvent", F_LoadEvent, 1 },
    { "ManageObject", F_ManageObject, 1 },

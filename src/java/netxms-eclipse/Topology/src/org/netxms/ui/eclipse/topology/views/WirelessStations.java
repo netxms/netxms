@@ -90,7 +90,7 @@ public class WirelessStations extends ViewPart
 		final int[] widths = { 120, 90, 180, 180, 100, 100 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new WirelessStationLabelProvider());
+		viewer.setLabelProvider(new WirelessStationLabelProvider(viewer));
 		viewer.setComparator(new WirelessStationComparator());
 		
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations"); //$NON-NLS-1$

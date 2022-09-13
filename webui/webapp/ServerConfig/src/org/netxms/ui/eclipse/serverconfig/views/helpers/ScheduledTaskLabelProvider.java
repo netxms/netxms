@@ -30,7 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView;
@@ -125,7 +125,7 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
          case ScheduledTaskView.OWNER:
             if (task.isSystem())
                return "system";
-            AbstractUserObject user = session.findUserDBObjectById(task.getOwner(), new UserRefreshRunnable(viewer, element));
+            AbstractUserObject user = session.findUserDBObjectById(task.getOwner(), new ViewerElementUpdater(viewer, element));
             return (user != null) ? user.getName() : ("[" + Long.toString(task.getOwner()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case ScheduledTaskView.COMMENTS:
             return task.getComments();

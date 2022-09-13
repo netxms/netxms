@@ -25,7 +25,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
@@ -70,7 +70,7 @@ public class ReportResultLabelProvider extends LabelProvider implements ITableLa
 			case ReportExecutionForm.COLUMN_RESULT_EXEC_TIME:
 				return dateFormat.format(reportResult.getExecutionTime());
 			case ReportExecutionForm.COLUMN_RESULT_STARTED_BY:
-            AbstractUserObject user = session.findUserDBObjectById(reportResult.getUserId(), new UserRefreshRunnable(viewer, element));
+            AbstractUserObject user = session.findUserDBObjectById(reportResult.getUserId(), new ViewerElementUpdater(viewer, element));
             return (user != null) ? user.getName() : ("[" + reportResult.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ReportExecutionForm.COLUMN_RESULT_STATUS:
             return reportResult.isSuccess() ? Messages.get().ReportResultLabelProvider_Success

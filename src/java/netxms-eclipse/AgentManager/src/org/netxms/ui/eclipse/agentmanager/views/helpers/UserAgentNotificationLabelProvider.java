@@ -25,7 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.UserAgentNotification;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.agentmanager.views.UserAgentNotificationView;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -90,7 +90,7 @@ public class UserAgentNotificationLabelProvider extends LabelProvider implements
 
    public String getUserName(UserAgentNotification uam)
    {
-      AbstractUserObject user = session.findUserDBObjectById(uam.getCreatedBy(), new UserRefreshRunnable(viewer, uam)); 
+      AbstractUserObject user = session.findUserDBObjectById(uam.getCreatedBy(), new ViewerElementUpdater(viewer, uam)); 
       return (user != null) ? user.getName() : ("[" + Long.toString(uam.getCreatedBy()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
    }
 }

@@ -27,7 +27,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.server.ServerJob;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
 import org.netxms.ui.eclipse.serverjobmanager.Messages;
 import org.netxms.ui.eclipse.serverjobmanager.views.ServerJobManager;
@@ -86,7 +86,7 @@ public class ServerJobLabelProvider extends LabelProvider implements ITableLabel
 				case ServerJobManager.COLUMN_STATUS:
 					return statusTexts.get(((ServerJob)obj).getStatus());
 				case ServerJobManager.COLUMN_USER:
-					AbstractUserObject user = session.findUserDBObjectById(((ServerJob)obj).getUserId(), new UserRefreshRunnable(viewer, obj));
+					AbstractUserObject user = session.findUserDBObjectById(((ServerJob)obj).getUserId(), new ViewerElementUpdater(viewer, obj));
 					return (user != null) ? user.getName() : Messages.get().ServerJobLabelProvider_Unknown;
 				case ServerJobManager.COLUMN_NODE:
 					AbstractObject object = session.findObjectById(((ServerJob)obj).getNodeId());

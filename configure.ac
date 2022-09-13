@@ -981,7 +981,7 @@ AC_ARG_WITH(dist,
    PDSDRV_DIRS="influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
-	CONTRIB_MODULES="mibs backgrounds music templates"
+	CONTRIB_MODULES="mibs backgrounds music oui templates"
 	CLIENT_COMPONENTS="java nxalarm nxevent nxmc nxnotify nxpush nxshell"
 	SERVER_COMPONENTS="nxreportd"
 	DIST_BUILD="yes"
@@ -1242,7 +1242,7 @@ if test $? = 0; then
 	MODULES="$MODULES libnxsl server ncdrivers nxscript"
 	TEST_MODULES="$TEST_MODULES test-libnxsl"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
+	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music oui templates"
 	NCDRV_MODULES="$NCDRV_MODULES nxagent"
 	PDSDRV_DIRS="influxdb"
 
@@ -4660,6 +4660,7 @@ AC_CONFIG_FILES([
 	contrib/integration/HP_P2000/Makefile
 	contrib/mibs/Makefile
 	contrib/music/Makefile
+	contrib/oui/Makefile
 	contrib/startup/Makefile
 	contrib/startup/systemd/Makefile
 	contrib/startup/debian/Makefile

@@ -20,9 +20,11 @@ package org.netxms.ui.eclipse.topology.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.WirelessStation;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.views.WirelessStations;
 
@@ -32,6 +34,15 @@ import org.netxms.ui.eclipse.topology.views.WirelessStations;
 public class WirelessStationLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private TableViewer viewer;
+	
+	/**
+	 * Constructor
+	 */
+	public WirelessStationLabelProvider(TableViewer viewer)
+	{
+	   this.viewer = viewer;
+	}
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -52,7 +63,8 @@ public class WirelessStationLabelProvider extends LabelProvider implements ITabl
 		switch(columnIndex)
 		{
 			case WirelessStations.COLUMN_MAC_ADDRESS:
-				return ws.getMacAddress().toString();
+            String vendor = session.getVendorByMac(ws.getMacAddress(), new ViewerElementUpdater(viewer, element));
+            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", ws.getMacAddress().toString(), vendor) : ws.getMacAddress().toString();
 			case WirelessStations.COLUMN_IP_ADDRESS:
 				if ((ws.getIpAddress() == null) || ws.getIpAddress().isAnyLocalAddress())
 					return ""; //$NON-NLS-1$

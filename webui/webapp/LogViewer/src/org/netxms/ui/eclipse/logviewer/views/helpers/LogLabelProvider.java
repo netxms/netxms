@@ -35,7 +35,7 @@ import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.logviewer.Activator;
@@ -147,7 +147,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long id = Long.parseLong(value);
-					AbstractUserObject user = session.findUserDBObjectById(id, new UserRefreshRunnable(viewer, element));
+					AbstractUserObject user = session.findUserDBObjectById(id, new ViewerElementUpdater(viewer, element));
 					return (user != null) ? wbLabelProvider.getImage(user) : null;
 				}
 				catch(NumberFormatException e)
@@ -257,7 +257,7 @@ public class LogLabelProvider implements ITableLabelProvider
 				try
 				{
 					long id = Long.parseLong(value);
-					AbstractUserObject user = session.findUserDBObjectById(id, new UserRefreshRunnable(viewer, element));
+					AbstractUserObject user = session.findUserDBObjectById(id, new ViewerElementUpdater(viewer, element));
 					return (user != null) ? wbLabelProvider.getText(user) : null;
 				}
 				catch(NumberFormatException e)

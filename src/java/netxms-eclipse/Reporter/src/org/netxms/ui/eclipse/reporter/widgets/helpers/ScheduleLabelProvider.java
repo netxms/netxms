@@ -25,7 +25,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.reporting.ReportingJob;
 import org.netxms.client.users.AbstractUserObject;
-import org.netxms.ui.eclipse.console.UserRefreshRunnable;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -66,7 +66,7 @@ public class ScheduleLabelProvider extends LabelProvider implements ITableLabelP
          case ReportExecutionForm.COLUMN_SCHEDULE_EXEC_TIME:
             return task.getSchedule().isEmpty() ? RegionalSettings.getDateTimeFormat().format(task.getExecutionTime()) : task.getSchedule();
          case ReportExecutionForm.COLUMN_SCHEDULE_OWNER:
-            AbstractUserObject user = ConsoleSharedData.getSession().findUserDBObjectById(task.getOwner(), new UserRefreshRunnable(viewer, element));
+            AbstractUserObject user = ConsoleSharedData.getSession().findUserDBObjectById(task.getOwner(), new ViewerElementUpdater(viewer, element));
             return (user != null) ? user.getName() : ("[" + task.getOwner() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case ReportExecutionForm.COLUMN_SCHEDULE_LAST_EXEC_TIME:
             return (task.getLastExecutionTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(task.getLastExecutionTime());

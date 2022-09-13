@@ -94,7 +94,7 @@ public class HostSearchResults extends ViewPart
 		final int[] widths = { 70, 120, 120, 90, 90, 120, 120, 60 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_SEQUENCE, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ArrayContentProvider());
-		ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider();
+		ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider(viewer);
 		viewer.setLabelProvider(labelProvider);
 		viewer.setComparator(new ConnectionPointComparator(labelProvider));
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);

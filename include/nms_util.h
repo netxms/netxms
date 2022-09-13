@@ -2642,7 +2642,6 @@ private:
 
 public:
 	HashMap(Ownership objectOwner = Ownership::False, void (*_destructor)(void *, HashMapBase *) = destructor) : HashMapBase(objectOwner, sizeof(K), _destructor) { }
-
 	V *get(const K& key) const { return (V*)_get(&key); }
 	void set(const K& key, V *value) { _set(&key, (void *)value); }
    void remove(const K& key) { _remove(&key, true); }
@@ -3575,6 +3574,8 @@ public:
 
    static Table *createFromPackedXML(const char *packedXml);
    char *createPackedXML() const;
+
+   static Table *createFromCSV(const TCHAR *content, const TCHAR separator);
 };
 
 #ifdef _WIN32

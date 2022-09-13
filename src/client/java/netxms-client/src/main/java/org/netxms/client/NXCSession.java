@@ -397,6 +397,9 @@ public class NXCSession
    //Children synchronization
    private Set<Long> synchronizedObjectSet = new HashSet<Long>();
    
+   //Mac to vendor cache 
+   MacToVendorCache macToVendorCache;
+   
    /**
     * Message subscription class
     */
@@ -1423,6 +1426,7 @@ public class NXCSession
       this.connAddress = connAddress;
       this.connPort = connPort;
       this.connUseEncryption = connUseEncryption;
+      macToVendorCache = new MacToVendorCache(this);
    }
 
    /**
@@ -13497,5 +13501,47 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_ALIAS, alias);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Get measurement units for given DCI list
+    *
+    * @param dciList list of DCI chart configurations
+    * @return map with DCI information
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String getVendorByMac(MacAddress mac, Runnable callback)
+   {
+      return macToVendorCache.getVendor(mac, callback);
+   }
+
+   /**
+    * Get measurement units for given DCI list
+    *
+    * @param dciList list of DCI chart configurations
+    * @return map with DCI information
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public Map<MacAddress, String> getVendorByMac(Set<MacAddress> macList) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FIND_VENDOR_BY_MAC);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, macList.size());
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for (MacAddress mac : macList)
+         msg.setField(fieldId++, mac);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      Map<MacAddress, String> result = new HashMap<MacAddress, String>(count);
+      fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         result.put(response.getFieldAsMacAddress(fieldId), response.getFieldAsString(fieldId + 1));         
+         fieldId += 2;
+      }
+      return result;
    }
 }

@@ -72,7 +72,7 @@ public class SearchResult extends CompositeWithMessageBar
       final int[] widths = { 70, 120, 120, 90, 90, 120, 120, 60 };
       viewer = new SortableTableViewer(getContent(), names, widths, COLUMN_SEQUENCE, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider();
+      ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
       viewer.setComparator(new ConnectionPointComparator(labelProvider));
       WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
@@ -116,7 +116,7 @@ public class SearchResult extends CompositeWithMessageBar
          @Override
          public void run()
          {
-            copyToClipboard(COLUMN_MAC_ADDRESS);
+            copyMacAddress();
          }
       };
       
@@ -166,6 +166,28 @@ public class SearchResult extends CompositeWithMessageBar
       manager.add(actionClearLog);
       manager.add(new Separator());
       manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+   }
+   
+   /**
+    * Copy mac address
+    */
+   private void copyMacAddress()
+   {
+      @SuppressWarnings("unchecked")
+      final List<ConnectionPoint> selection = viewer.getStructuredSelection().toList();
+      if (selection.size() > 0)
+      {
+         final String newLine = WidgetHelper.getNewLineCharacters();
+         final StringBuilder sb = new StringBuilder();
+         for(int i = 0; i < selection.size(); i++)
+         {
+            if (i > 0)
+               sb.append(newLine);
+            
+            sb.append(selection.get(i).getLocalMacAddress().toString());
+         }
+         WidgetHelper.copyToClipboard(sb.toString());
+      }      
    }
    
    /**

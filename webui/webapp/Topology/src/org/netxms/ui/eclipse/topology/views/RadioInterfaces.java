@@ -109,7 +109,7 @@ public class RadioInterfaces extends ViewPart
 		final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 100, 90, 90, 90 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new RadioInterfaceLabelProvider());
+		viewer.setLabelProvider(new RadioInterfaceLabelProvider(viewer));
 		viewer.setComparator(new RadioInterfaceComparator());
 		
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces"); //$NON-NLS-1$

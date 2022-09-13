@@ -102,6 +102,8 @@ void ExpandCommentMacrosTask(const shared_ptr<ScheduledTaskParameters> &paramete
 void InitCountryList();
 void InitCurrencyList();
 
+void LoadMacToVendorInfo();
+
 /**
  * Syslog server control
  */
@@ -1138,6 +1140,7 @@ retry_db_lock:
 
    InitCountryList();
    InitCurrencyList();
+   LoadMacToVendorInfo();
 
    // Load and compile scripts
    LoadScripts();

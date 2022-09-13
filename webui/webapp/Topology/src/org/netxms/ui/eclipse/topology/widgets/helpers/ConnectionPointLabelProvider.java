@@ -24,6 +24,7 @@ import java.util.Map;
 import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -31,6 +32,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ConnectionPointType;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.topology.Messages;
@@ -53,6 +55,15 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private TableViewer viewer;
+	
+	/**
+	 * Constructor
+	 */
+	public ConnectionPointLabelProvider(TableViewer viewer)
+	{
+	   this.viewer = viewer;
+	}
 	
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -101,7 +112,10 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 			   if (cp.getLocalMacAddress() == null)
 			      return "n/a";
 			   else
-			      return cp.getLocalMacAddress().toString();
+			   {
+	            String vendor = session.getVendorByMac(cp.getLocalMacAddress(), new ViewerElementUpdater(viewer, element));
+	            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", cp.getLocalMacAddress().toString(), vendor) : cp.getLocalMacAddress().toString();
+			   }
 			case SearchResult.COLUMN_IP_ADDRESS:
 				InetAddress addr = cp.getLocalIpAddress();
 				if (addr != null)

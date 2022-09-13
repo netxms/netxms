@@ -411,6 +411,123 @@ char *Table::createPackedXML() const
    return encodedBuffer;
 }
 
+Table *Table::createFromCSV(const TCHAR *content, const TCHAR separator)
+{
+   if (content == nullptr)
+   {
+      return nullptr;
+   }
+
+   Table *table = new Table();
+
+   TCHAR item[2048];
+   bool success = true;
+   int state, currIndex, pos, lineCount;
+   const TCHAR *ptr2;
+   StringList elements;
+   for(ptr2 = content, currIndex = 0, state = 0, pos = 0, lineCount = 0; state != -1; ptr2++)
+   {
+      switch(state)
+      {
+         case 0:  // Normal
+            switch(*ptr2)
+            {
+               case _T('"'):
+                  state = 1;     // String
+                  break;
+               case _T('\n'):
+               case _T('\r'):
+                  if (*(ptr2 + 1) == _T('\n'))
+                  {
+                     ptr2++;
+                  }
+                  item[pos] = 0;
+                  if (lineCount == 0)
+                  {
+                     table->addColumn(item);
+                  }
+                  else
+                  {
+                     elements.add(item);
+                     table->addRow();
+                     for (int j = 0; j < elements.size(); j++)
+                     {
+                        table->set(j, elements.get(j));
+                     }
+                     elements.clear();
+                  }
+                  pos = 0;
+                  currIndex = 0;
+                  lineCount++;
+                  break;
+               case 0:
+                  state = -1;       // Finish processing
+                  break;
+               default:
+                  if (*ptr2 == separator)
+                  {
+                     item[pos] = 0;
+                     if (lineCount == 0)
+                     {
+                        table->addColumn(item);
+                     }
+                     else
+                     {
+
+                        elements.add(item);
+                     }
+                     pos = 0;
+                     currIndex++;
+                  }
+                  else if (pos < 2048 - 1)
+                     item[pos++] = *ptr2;
+            }
+            break;
+         case 1:  // String in ""
+            switch(*ptr2)
+            {
+               case _T('"'):
+                  if (*(ptr2 + 1) != _T('"'))
+                  {
+                     state = 0;     // Normal
+                  }
+                  else
+                  {
+                     ptr2++;
+                     if (pos < 2048 - 1)
+                        item[pos++] = *ptr2;
+                  }
+                  break;
+               case 0:
+                  state = -1;       // Finish processing
+                  success = false;  // Set error flag
+                  break;
+               default:
+                  if (pos < 2048 - 1)
+                     item[pos++] = *ptr2;
+            }
+            break;
+      }
+   }
+
+   if (success)
+   {
+      if (elements.size() > 0)
+      {
+         table->addRow();
+         for (int j = 0; j < elements.size(); j++)
+         {
+            table->set(j, elements.get(j));
+         }
+      }
+
+      return table;
+   }
+
+   delete table;
+   return NULL;
+}
+
 /**
  * Create table from NXCP message
  */

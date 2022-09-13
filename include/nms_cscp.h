@@ -458,7 +458,7 @@ typedef struct
 #define CMD_RENAME_FILE                   0x00DD
 #define CMD_CLONE_MAP                     0x00DE
 #define CMD_AGENT_TUNNEL_UPDATE           0x00DF
-// unused #define CMD_                   0x00E0
+#define CMD_FIND_VENDOR_BY_MAC            0x00E0
 #define CMD_CONFIG_SET_CLOB               0x00E1
 #define CMD_CONFIG_GET_CLOB               0x00E2
 #define CMD_RENAME_MAP                    0x00E3

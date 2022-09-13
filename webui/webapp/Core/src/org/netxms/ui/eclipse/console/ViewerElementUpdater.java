@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ColumnViewer;
 /**
  * Callback for user database object synchronization completion
  */
-public class UserRefreshRunnable implements Runnable
+public class ViewerElementUpdater implements Runnable
 {
    private ColumnViewer viewer;
    private Object element;
@@ -31,7 +31,7 @@ public class UserRefreshRunnable implements Runnable
    /**
     * Constructor
     */
-   public UserRefreshRunnable(ColumnViewer viewer, Object element)
+   public ViewerElementUpdater(ColumnViewer viewer, Object element)
    {
       this.viewer = viewer;
       this.element = element;

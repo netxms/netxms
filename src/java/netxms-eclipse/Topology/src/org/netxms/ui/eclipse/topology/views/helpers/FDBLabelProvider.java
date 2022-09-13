@@ -20,9 +20,11 @@ package org.netxms.ui.eclipse.topology.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.FdbEntry;
+import org.netxms.ui.eclipse.console.ViewerElementUpdater;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView;
@@ -33,6 +35,15 @@ import org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView;
 public class FDBLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private TableViewer viewer;
+   
+   /**
+    * Constructor
+    */
+   public FDBLabelProvider(TableViewer viewer)
+   {
+      this.viewer = viewer;
+   }
    
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -55,7 +66,8 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
          case SwitchForwardingDatabaseView.COLUMN_INTERFACE:
             return e.getInterfaceName();
          case SwitchForwardingDatabaseView.COLUMN_MAC_ADDRESS:
-            return e.getAddress().toString();
+            String vendor = session.getVendorByMac(e.getAddress(), new ViewerElementUpdater(viewer, element));
+            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", e.getAddress().toString(), vendor) : e.getAddress().toString();
          case SwitchForwardingDatabaseView.COLUMN_NODE:
             if (e.getNodeId() == 0)
                return ""; //$NON-NLS-1$

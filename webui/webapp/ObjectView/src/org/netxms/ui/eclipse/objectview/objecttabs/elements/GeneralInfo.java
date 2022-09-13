@@ -141,6 +141,9 @@ public class GeneralInfo extends TableElement
             if (iface.getSpeed() > 0)
                addPair(Messages.get().GeneralInfo_Speed, InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
             addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
+            String vendor = session.getVendorByMac(iface.getMacAddress(), null);
+            if (vendor != null && !vendor.isEmpty())
+               addPair("MAC Address Vendor", vendor);               
 				if (iface.isPhysicalPort())
 				{
 					addPair(Messages.get().GeneralInfo_SlotPort, iface.getPhysicalLocation());
@@ -247,7 +250,12 @@ public class GeneralInfo extends TableElement
             Sensor sensor = (Sensor)object;
             addPair(Messages.get().SensorStatus_DeviceAddress, sensor.getDeviceAddress(), false);
             if (sensor.getMacAddress() != null && !sensor.getMacAddress().isNull())
+            {
                addPair(Messages.get().SensorStatus_MacAddress, sensor.getMacAddress().toString(), true);
+               String vendorMac = session.getVendorByMac(sensor.getMacAddress(), null);
+               if (vendorMac != null && !vendorMac.isEmpty())
+                  addPair("MAC Address Vendor", vendorMac);   
+            }
             addPair(Messages.get().SensorStatus_Vendor, sensor.getVendor(), true);            
             addPair(Messages.get().SensorStatus_DeviceClass, Sensor.DEV_CLASS_NAMES[sensor.getDeviceClass()]);
             addPair(Messages.get().SensorStatus_CommProtocol, Sensor.COMM_METHOD[sensor.getCommProtocol()]);
@@ -270,6 +278,9 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_Model, ap.getModel());
 				addPair(Messages.get().GeneralInfo_Serial, ap.getSerialNumber());
 				addPair(Messages.get().GeneralInfo_MACAddr, ap.getMacAddress().toString());
+            String vendorMac = session.getVendorByMac(ap.getMacAddress(), null);
+            if (vendorMac != null && !vendorMac.isEmpty())
+               addPair("MAC Address Vendor", vendorMac);   
 				if (ap.getIpAddress().isValidAddress())
 				   addPair(Messages.get().GeneralInfo_IPAddr, ap.getIpAddress().getHostAddress());
 				break;
