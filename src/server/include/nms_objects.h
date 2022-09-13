@@ -835,6 +835,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_BIZSVC_CHECKS        0x080000
 #define MODIFY_POLL_TIMES           0x100000
 #define MODIFY_DASHBOARD_LIST       0x200000
+#define MODIFY_OSPF_AREAS           0x400000
 #define MODIFY_ALL                  0xFFFFFF
 
 /**
@@ -1993,6 +1994,8 @@ protected:
    int16_t m_lastKnownOperState;
    int16_t m_lastKnownAdminState;
    uint32_t m_ospfArea;
+   int16_t m_ospfState;
+   int16_t m_ospfType;
 
    void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
@@ -2048,6 +2051,9 @@ public:
    uint32_t getPeerNodeId() const { return m_peerNodeId; }
    uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
+   uint32_t getOSPFArea() const { return m_ospfArea; }
+   int16_t getOSPFType() const { return m_ospfType; }
+   int16_t getOSPFState() const { return m_ospfState; }
    int getExpectedState() const { return (int)((m_flags & IF_EXPECTED_STATE_MASK) >> 28); }
    int getAdminState() const { return (int)m_adminState; }
    int getOperState() const { return (int)m_operState; }
@@ -2059,11 +2065,12 @@ public:
    const MacAddress& getMacAddr() const { return m_macAddr; }
    int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
    const uint32_t *getIfTableSuffix() const { return m_ifTableSuffix; }
-   bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
-   bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
-   bool isLoopback() const { return (m_flags & IF_LOOPBACK) ? true : false; }
-   bool isManuallyCreated() const { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
-   bool isExcludedFromTopology() const { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
+   bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) != 0; }
+   bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) != 0; }
+   bool isLoopback() const { return (m_flags & IF_LOOPBACK) != 0; }
+   bool isOSPF() const { return (m_flags & IF_OSPF_INTERFACE) != 0; }
+   bool isManuallyCreated() const { return (m_flags & IF_CREATED_MANUALLY) != 0; }
+   bool isExcludedFromTopology() const { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) != 0; }
    bool isFake() const
    {
       return (m_index == 1) &&
@@ -2072,7 +2079,7 @@ public:
    }
    bool isSubInterface() const { return m_parentInterfaceId != 0; }
    bool isPointToPoint() const;
-   bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) ? true : false; }
+   bool isIncludedInIcmpPoll() const { return (m_flags & IF_INCLUDE_IN_ICMP_POLL) != 0; }
    NXSL_Value *getVlanListForNXSL(NXSL_VM *vm);
 
    uint64_t getLastDownEventId() const { return m_lastDownEventId; }
@@ -2176,6 +2183,33 @@ public:
    void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
    void setExcludeFromTopology(bool excluded);
    void setIncludeInIcmpPoll(bool included);
+
+   void setOSPFInformation(const OSPFInterface& ospfInterface)
+   {
+      lockProperties();
+      bool modified = ((m_flags & IF_OSPF_INTERFACE) == 0) || (m_ospfArea != ospfInterface.areaId) || (m_ospfType != ospfInterface.type) || (m_ospfState != ospfInterface.state);
+      m_flags |= IF_OSPF_INTERFACE;
+      m_ospfArea = ospfInterface.areaId;
+      m_ospfType = ospfInterface.type;
+      m_ospfState = ospfInterface.state;
+      unlockProperties();
+      if (modified)
+         setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
+
+   void clearOSPFInformation()
+   {
+      lockProperties();
+      if (m_flags & IF_OSPF_INTERFACE)
+      {
+         m_flags &= ~IF_OSPF_INTERFACE;
+         m_ospfArea = 0;
+         m_ospfType = 0;
+         m_ospfState = 0;
+         setModified(MODIFY_INTERFACE_PROPERTIES);
+      }
+      unlockProperties();
+   }
 
    void expandName(const TCHAR *originalName, TCHAR *expandedName);
 };
@@ -3122,6 +3156,8 @@ protected:
    TCHAR *m_sysLocation;      // SNMP sysLocation
    TCHAR *m_sysContact;       // SNMP sysContact
    uint32_t m_ospfRouterId;
+   StructArray<OSPFArea> m_ospfAreas;
+   StructArray<OSPFNeighbor> m_ospfNeighbors;
    TCHAR *m_lldpNodeId;         // lldpLocChassisId combined with lldpLocChassisIdSubtype, or nullptr for non-LLDP nodes
    ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
    NetworkDeviceDriver *m_driver;
@@ -3369,6 +3405,7 @@ public:
    bool isProfiNetSupported() const { return m_capabilities & NC_IS_PROFINET ? true : false; }
    bool isBridge() const { return m_capabilities & NC_IS_BRIDGE ? true : false; }
    bool isRouter() const { return m_capabilities & NC_IS_ROUTER ? true : false; }
+   bool isOSPFSupported() const { return m_capabilities & NC_IS_OSPF ? true : false; }
    bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
    bool isPerVlanFdbSupported() const { return (m_driver != nullptr) ? m_driver->isPerVlanFdbSupported() : false; }
    bool isFdbUsingIfIndex() const { return (m_driver != nullptr) ? m_driver->isFdbUsingIfIndex(this, m_driverData) : false; }
@@ -3429,6 +3466,9 @@ public:
    uint16_t getCipVendorCode() const { return m_cipVendorCode; }
    const char *getSyslogCodepage() const { return m_syslogCodepage; }
    const char *getSnmpCodepage() const { return m_snmpCodepage; }
+   uint32_t getOSPFRouterId() const { return m_ospfRouterId; }
+   StructArray<OSPFArea> getOSPFAreas() const { return GetAttributeWithLock(m_ospfAreas, m_mutexProperties); }
+   StructArray<OSPFNeighbor> getOSPFNeighbors() const { return GetAttributeWithLock(m_ospfNeighbors, m_mutexProperties); }
 
    bool isDown() { return (m_state & DCSF_UNREACHABLE) ? true : false; }
    time_t getDownSince() const { return m_downSince; }
@@ -3465,6 +3505,7 @@ public:
    shared_ptr<Interface> findInterfaceByMAC(const MacAddress& macAddr) const;
    shared_ptr<Interface> findInterfaceByIP(const InetAddress& addr) const;
    shared_ptr<Interface> findInterfaceBySubnet(const InetAddress& subnet) const;
+   shared_ptr<Interface> findInterfaceInSameSubnet(const InetAddress& addr) const;
    shared_ptr<Interface> findInterfaceByLocation(const InterfacePhysicalLocation& location) const;
    shared_ptr<Interface> findBridgePort(UINT32 bridgePortNumber) const;
    shared_ptr<AccessPoint> findAccessPointByMAC(const MacAddress& macAddr) const;
@@ -3477,8 +3518,8 @@ public:
    RoutingTable *getRoutingTable();
    RoutingTable *getCachedRoutingTable() { return m_routingTable; }
    shared_ptr<NetworkPath> getLastKnownNetworkPath() const { return GetAttributeWithLock(m_lastKnownNetworkPath, m_mutexProperties); }
-   shared_ptr<LinkLayerNeighbors> getLinkLayerNeighbors();
-   shared_ptr<VlanList> getVlans();
+   shared_ptr<LinkLayerNeighbors> getLinkLayerNeighbors() const { return GetAttributeWithLock(m_linkLayerNeighbors, m_topologyMutex); }
+   shared_ptr<VlanList> getVlans() const { return GetAttributeWithLock(m_vlans, m_topologyMutex); }
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);
    shared_ptr<ComponentTree> getComponents();
@@ -3497,9 +3538,9 @@ public:
    virtual bool setMgmtStatus(bool isManaged) override;
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
-   bool checkAgentTrapId(UINT64 id);
-   bool checkSNMPTrapId(UINT32 id);
-   bool checkSyslogMessageId(UINT64 id);
+   bool checkAgentTrapId(uint64_t id);
+   bool checkSNMPTrapId(uint32_t id);
+   bool checkSyslogMessageId(uint64_t id);
    bool checkWindowsEventId(uint64_t id);
    bool checkAgentPushRequestId(UINT64 id);
 
@@ -3531,6 +3572,8 @@ public:
    NXSL_Value *getInterfacesForNXSL(NXSL_VM *vm);
    NXSL_Value *getHardwareComponentsForNXSL(NXSL_VM* vm);
    NXSL_Value* getSoftwarePackagesForNXSL(NXSL_VM* vm);
+   NXSL_Value *getOSPFAreasForNXSL(NXSL_VM *vm);
+   NXSL_Value *getOSPFNeighborsForNXSL(NXSL_VM *vm);
 
    ObjectArray<AgentParameterDefinition> *openParamList(int origin);
    void closeParamList() { unlockProperties(); }
@@ -3578,7 +3621,7 @@ public:
 
    shared_ptr<NetworkMapObjectList> getL2Topology();
    shared_ptr<NetworkMapObjectList> buildL2Topology(uint32_t *status, int radius, bool includeEndNodes, bool useL1Topology);
-   shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase();
+   shared_ptr<ForwardingDatabase> getSwitchForwardingDatabase() const { return GetAttributeWithLock(m_fdb, m_topologyMutex); }
    shared_ptr<NetObj> findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
    void addHostConnections(LinkLayerNeighbors *nbs);
    void addExistingConnections(LinkLayerNeighbors *nbs);

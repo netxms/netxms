@@ -250,9 +250,12 @@ template class NXCORE_EXPORTABLE shared_ptr<LinkLayerNeighbors>;
 #define VRRP_VIP_DISABLED     2
 #define VRRP_VIP_NOTREADY     3
 
+/**
+ * VRRP router
+ */
 class VrrpRouter
 {
-   friend UINT32 VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
+   friend uint32_t VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
 
 private:
    uint32_t m_id;
@@ -263,13 +266,12 @@ private:
    uint32_t *m_ipAddrList;
 
    void addVirtualIP(SNMP_Variable *var);
-   static UINT32 walkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg);
 
 protected:
    bool readVirtualIP(SNMP_Transport *transport);
 
 public:
-   VrrpRouter(UINT32 id, UINT32 ifIndex, int state, BYTE *macAddr);
+   VrrpRouter(uint32_t id, uint32_t ifIndex, int state, const BYTE *macAddr);
    ~VrrpRouter();
 
    uint32_t getId() const { return m_id; }
@@ -280,24 +282,65 @@ public:
    uint32_t getVip(int index) const { return ((index >= 0) && (index < m_ipAddrCount)) ? m_ipAddrList[index] : 0; }
 };
 
+/**
+ * VRRP information
+ */
 class VrrpInfo
 {
-   friend UINT32 VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
+   friend uint32_t VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
 
 private:
    int m_version;
-   ObjectArray<VrrpRouter> *m_routers;
+   ObjectArray<VrrpRouter> m_routers;
 
 protected:
-   void addRouter(VrrpRouter *router) { m_routers->add(router); }
+   void addRouter(VrrpRouter *router) { m_routers.add(router); }
 
 public:
-   VrrpInfo(int version);
-   ~VrrpInfo();
+   VrrpInfo(int version) : m_routers(0, 16, Ownership::True)
+   {
+      m_version = version;
+   }
 
    int getVersion() { return m_version; }
-   int size() { return m_routers->size(); }
-   VrrpRouter *getRouter(int index) { return m_routers->get(index); }
+   int size() { return m_routers.size(); }
+   VrrpRouter *getRouter(int index) { return m_routers.get(index); }
+};
+
+/**
+ * OSPF area
+ */
+struct OSPFArea
+{
+   uint32_t id;
+   uint32_t lsaCount;
+   uint32_t areaBorderRouterCount;
+   uint32_t asBorderRouterCount;
+};
+
+/**
+ * OSPF neighbor
+ */
+struct OSPFNeighbor
+{
+   uint32_t ipAddress;
+   uint32_t nodeId;
+   uint32_t routerId;
+   uint32_t state;
+   uint32_t ifIndex;
+};
+
+/**
+ * OSPF interface
+ */
+struct OSPFInterface
+{
+   uint32_t ifIndex;
+   uint32_t areaId;
+   uint32_t type;
+   uint32_t state;
+   uint32_t dr;
+   uint32_t bdr;
 };
 
 
@@ -348,5 +391,7 @@ VrrpInfo *GetVRRPInfo(Node *node);
 const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
 
 unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, int radius, bool includeEndNodes);
+
+bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArray<OSPFInterface> *interfaces, StructArray<OSPFNeighbor> *neighbors);
 
 #endif   /* _nms_topo_h_ */

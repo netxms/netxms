@@ -299,7 +299,7 @@ bool InetAddress::sameSubnet(const InetAddress &a) const
 
    if (m_family == AF_INET)
    {
-      UINT32 mask = (m_maskBits > 0) ? (0xFFFFFFFF << (32 - m_maskBits)) : 0;
+      uint32_t mask = (m_maskBits > 0) ? (0xFFFFFFFF << (32 - m_maskBits)) : 0;
       return (a.m_addr.v4 & mask) == (m_addr.v4 & mask);
    }
    else

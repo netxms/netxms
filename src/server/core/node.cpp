@@ -678,7 +678,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         DbgPrintf(3, _T("Cannot load components for node %d (%s)"), m_id, m_name);
+         nxlog_debug(3, _T("Cannot load components for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult)
@@ -713,7 +713,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         DbgPrintf(3, _T("Cannot load software packages of node %d (%s)"), m_id, m_name);
+         nxlog_debug(3, _T("Cannot load software package list for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult)
@@ -748,7 +748,44 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 
       if (!bResult)
-         nxlog_debug(3, _T("Cannot load hardware information of node %d (%s)"), m_id, m_name);
+         nxlog_debug(3, _T("Cannot load hardware information for node %s [%u]"), m_name, m_id);
+   }
+
+   if (bResult)
+   {
+      // Load OSPF areas
+      hStmt = DBPrepare(hdb, _T("SELECT area_id FROM ospf_areas WHERE node_id=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int count = DBGetNumRows(hResult);
+            if (count > 0)
+            {
+               for(int i = 0; i < count; i++)
+               {
+                  OSPFArea *a = m_ospfAreas.addPlaceholder();
+                  memset(a, 0, sizeof(OSPFArea));
+                  a->id = DBGetFieldIPAddr(hResult, i, 0);
+               }
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            bResult = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         bResult = false;
+      }
+
+      if (!bResult)
+         nxlog_debug(3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
    }
 
    if (bResult && isIcmpStatCollectionEnabled())
@@ -1101,6 +1138,32 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       unlockProperties();
    }
 
+   if (success && (m_modified & MODIFY_OSPF_AREAS))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_areas WHERE node_id=?"));
+      lockProperties();
+      if (success && !m_ospfAreas.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ospf_areas (node_id,area_id) VALUES (?,?)"));
+         if (hStmt != nullptr)
+         {
+            TCHAR areaId[16];
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_ospfAreas.size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfAreas.get(i)->id, areaId), DB_BIND_STATIC);
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockProperties();
+   }
+
    // Save ICMP pollers
    if (success && (m_modified & MODIFY_ICMP_POLL_SETTINGS))
    {
@@ -1171,7 +1234,7 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
       return false;
 
    lockProperties();
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_lastAgentCommTime);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastAgentCommTime));
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
    DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
    if (m_snmpSecurity != nullptr)
@@ -1206,6 +1269,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM hardware_inventory WHERE node_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM node_components WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_areas WHERE node_id=?"));
    return success;
 }
 
@@ -1541,16 +1606,45 @@ shared_ptr<Interface> Node::findInterfaceBySubnet(const InetAddress& subnet) con
    for(int i = 0; i < getChildList().size(); i++)
    {
       NetObj *curr = getChildList().get(i);
-      if (curr->getObjectClass() == OBJECT_INTERFACE)
+      if (curr->getObjectClass() != OBJECT_INTERFACE)
+         continue;
+
+      const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
+      for(int j = 0; j < addrList->size(); j++)
       {
-         const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
-         for(int j = 0; j < addrList->size(); j++)
+         if (subnet.contain(addrList->get(j)))
          {
-            if (subnet.contain(addrList->get(j)))
-            {
-               iface = static_pointer_cast<Interface>(getChildList().getShared(i));
-               goto stop_search;
-            }
+            iface = static_pointer_cast<Interface>(getChildList().getShared(i));
+            goto stop_search;
+         }
+      }
+   }
+stop_search:
+   unlockChildList();
+   return iface;
+}
+
+/**
+ * Find interface on this node that is in same subnet as given interface (using mask bits from interface object on node).
+ * Returns pointer to interface object or nullptr if appropriate interface couldn't be found
+ */
+shared_ptr<Interface> Node::findInterfaceInSameSubnet(const InetAddress& addr) const
+{
+   shared_ptr<Interface> iface;
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *curr = getChildList().get(i);
+      if (curr->getObjectClass() != OBJECT_INTERFACE)
+         continue;
+
+      const InetAddressList *addrList = static_cast<Interface*>(curr)->getIpAddressList();
+      for(int j = 0; j < addrList->size(); j++)
+      {
+         if (addrList->get(j).sameSubnet(addr))
+         {
+            iface = static_pointer_cast<Interface>(getChildList().getShared(i));
+            goto stop_search;
          }
       }
    }
@@ -9658,6 +9752,86 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
       }
    }
 
+   if (m_capabilities & NC_IS_OSPF)
+   {
+      StructArray<OSPFArea> areas;
+      StructArray<OSPFInterface> interfaces;
+      StructArray<OSPFNeighbor> neighbors;
+      bool success = CollectOSPFInformation(this, &areas, &interfaces, &neighbors);
+
+      lockProperties();
+      m_ospfNeighbors.clear();
+      if (success)
+      {
+         m_ospfNeighbors.addAll(neighbors);
+
+         areas.sort(
+            [] (const void *a1, const void *a2) -> int
+            {
+               uint32_t id1 = static_cast<const OSPFArea*>(a1)->id;
+               uint32_t id2 = static_cast<const OSPFArea*>(a2)->id;
+               return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
+            });
+
+         bool changed = (m_ospfAreas.size() != areas.size());
+         if (!changed)
+         {
+            for(int i = 0; (i < m_ospfAreas.size()) && !changed; i++)
+            {
+               for(int j = 0; j < areas.size(); j++)
+               {
+                  if (areas.get(j)->id != m_ospfAreas.get(i)->id)
+                  {
+                     changed = true;
+                     break;
+                  }
+               }
+            }
+         }
+
+         m_ospfAreas.clear();
+         m_ospfAreas.addAll(areas);
+
+         if (changed)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("OSPF area configuration changed for node %s [%d]"), m_name, m_id);
+            setModified(MODIFY_OSPF_AREAS);
+         }
+      }
+      else
+      {
+         m_ospfAreas.clear();
+      }
+      unlockProperties();
+
+      // Update OSPF information on interfaces
+      readLockChildList();
+      for(int i = 0; i < getChildList().size(); i++)
+      {
+         NetObj *curr = getChildList().get(i);
+         if (curr->getObjectClass() != OBJECT_INTERFACE)
+            continue;
+
+         Interface *iface = static_cast<Interface*>(curr);
+         bool found = false;
+         for(int j = 0; j < interfaces.size(); j++)
+         {
+            OSPFInterface *ospfInterface = interfaces.get(j);
+            if (iface->getIfIndex() == ospfInterface->ifIndex)
+            {
+               iface->setOSPFInformation(*ospfInterface);
+               found = true;
+               break;
+            }
+         }
+         if (!found)
+         {
+            iface->clearOSPFInformation();
+         }
+      }
+      unlockChildList();
+   }
+
    if (m_ipAddress.isValidUnicast())
    {
       POLL_CANCELLATION_CHECKPOINT();
@@ -10274,7 +10448,7 @@ NXSL_Value *Node::getHardwareComponentsForNXSL(NXSL_VM* vm)
  */
 NXSL_Value* Node::getSoftwarePackagesForNXSL(NXSL_VM* vm)
 {
-   NXSL_Array* a = new NXSL_Array(vm);
+   NXSL_Array *a = new NXSL_Array(vm);
    lockProperties();
    if (m_softwarePackages != nullptr)
    {
@@ -10289,42 +10463,39 @@ NXSL_Value* Node::getSoftwarePackagesForNXSL(NXSL_VM* vm)
 }
 
 /**
- * Get switch forwarding database
+ * Get list of OSPF areas for use within NXSL
  */
-shared_ptr<ForwardingDatabase> Node::getSwitchForwardingDatabase()
+NXSL_Value *Node::getOSPFAreasForNXSL(NXSL_VM *vm)
 {
-   m_topologyMutex.lock();
-   shared_ptr<ForwardingDatabase> fdb = m_fdb;
-   m_topologyMutex.unlock();
-   return fdb;
+   NXSL_Array *a = new NXSL_Array(vm);
+   lockProperties();
+   for (int i = 0; i < m_ospfAreas.size(); i++)
+   {
+      a->append(vm->createValue(vm->createObject(&g_nxslOSPFAreaClass, new OSPFArea(*m_ospfAreas.get(i)))));
+   }
+   unlockProperties();
+   return vm->createValue(a);
 }
 
 /**
- * Get link layer neighbors
+ * Get list of OSPF neighbors for use within NXSL
  */
-shared_ptr<LinkLayerNeighbors> Node::getLinkLayerNeighbors()
+NXSL_Value *Node::getOSPFNeighborsForNXSL(NXSL_VM *vm)
 {
-   m_topologyMutex.lock();
-   shared_ptr<LinkLayerNeighbors> linkLayerNeighbors = m_linkLayerNeighbors;
-   m_topologyMutex.unlock();
-   return linkLayerNeighbors;
-}
-
-/**
- * Get VLANs
- */
-shared_ptr<VlanList> Node::getVlans()
-{
-   m_topologyMutex.lock();
-   shared_ptr<VlanList> vlans(m_vlans);
-   m_topologyMutex.unlock();
-   return vlans;
+   NXSL_Array *a = new NXSL_Array(vm);
+   lockProperties();
+   for (int i = 0; i < m_ospfNeighbors.size(); i++)
+   {
+      a->append(vm->createValue(vm->createObject(&g_nxslOSPFNeighborClass, new OSPFNeighbor(*m_ospfNeighbors.get(i)))));
+   }
+   unlockProperties();
+   return vm->createValue(a);
 }
 
 /**
  * Check and update last agent trap ID
  */
-bool Node::checkAgentTrapId(UINT64 trapId)
+bool Node::checkAgentTrapId(uint64_t trapId)
 {
    lockProperties();
    bool valid = (trapId > m_lastAgentTrapId);
@@ -10337,7 +10508,7 @@ bool Node::checkAgentTrapId(UINT64 trapId)
 /**
  * Check and update last agent SNMP trap ID
  */
-bool Node::checkSNMPTrapId(UINT32 id)
+bool Node::checkSNMPTrapId(uint32_t id)
 {
    lockProperties();
    bool valid = (id > m_lastSNMPTrapId);
@@ -10350,7 +10521,7 @@ bool Node::checkSNMPTrapId(UINT32 id)
 /**
  * Check and update last syslog message ID
  */
-bool Node::checkSyslogMessageId(UINT64 id)
+bool Node::checkSyslogMessageId(uint64_t id)
 {
    lockProperties();
    bool valid = (id > m_lastSyslogMessageId);

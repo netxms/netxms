@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,33 +23,16 @@
 #include "nxcore.h"
 
 /**
- * VRRP info class constructor
- */
-VrrpInfo::VrrpInfo(int version)
-{
-	m_version = version;
-	m_routers = new ObjectArray<VrrpRouter>(16, 16, Ownership::True);
-}
-
-/**
- * VRRP info class destructor
- */
-VrrpInfo::~VrrpInfo()
-{
-	delete m_routers;
-}
-
-/**
  * Router constructor
  */
-VrrpRouter::VrrpRouter(UINT32 id, UINT32 ifIndex, int state, BYTE *macAddr)
+VrrpRouter::VrrpRouter(uint32_t id, uint32_t ifIndex, int state, const BYTE *macAddr)
 {
 	m_id = id;
 	m_ifIndex = ifIndex;
 	m_state = state;
 	memcpy(m_virtualMacAddr, macAddr, MAC_ADDR_LENGTH);
 	m_ipAddrCount = 0;
-	m_ipAddrList = NULL;
+	m_ipAddrList = nullptr;
 }
 
 /**
@@ -69,21 +52,12 @@ void VrrpRouter::addVirtualIP(SNMP_Variable *var)
 		return;	// Ignore non-active VIPs
 
 	// IP is encoded in last 4 elements of the OID
-	const UINT32 *oid = var->getName().value();
-	UINT32 vip = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
+	const uint32_t *oid = var->getName().value();
+	uint32_t vip = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
 
 	if (m_ipAddrCount % 16 == 0)
-		m_ipAddrList = (UINT32 *)realloc(m_ipAddrList, (m_ipAddrCount + 16) * sizeof(UINT32));
+		m_ipAddrList = MemRealloc(m_ipAddrList, m_ipAddrCount + 16);
 	m_ipAddrList[m_ipAddrCount++] = vip; 
-}
-
-/**
- * VRRP walker callback
- */
-UINT32 VrrpRouter::walkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
-{
-	((VrrpRouter *)arg)->addVirtualIP(var);
-	return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -93,13 +67,19 @@ bool VrrpRouter::readVirtualIP(SNMP_Transport *transport)
 {
 	TCHAR oid[256];
 	_sntprintf(oid, 256, _T(".1.3.6.1.2.1.68.1.4.1.2.%u.%u"), m_ifIndex, m_id);
-	return SnmpWalk(transport, oid, VrrpRouter::walkerCallback, this) == SNMP_ERR_SUCCESS;
+	return SnmpWalk(transport, oid,
+	   [this] (SNMP_Variable *var) -> uint32_t
+	   {
+	      this->addVirtualIP(var);
+	      return SNMP_ERR_SUCCESS;
+	   }
+	) == SNMP_ERR_SUCCESS;
 }
 
 /**
  * VRRP virtual router table walker's callback
  */
-UINT32 VRRPHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+uint32_t VRRPHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	const SNMP_ObjectId& oid = var->getName();
 
@@ -130,24 +110,24 @@ UINT32 VRRPHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 VrrpInfo *GetVRRPInfo(Node *node)
 {
 	if (!node->isSNMPSupported())
-		return NULL;
+		return nullptr;
 
 	SNMP_Transport *transport = node->createSnmpTransport();
-	if (transport == NULL)
-		return NULL;
+	if (transport == nullptr)
+		return nullptr;
 
 	LONG version;
-	if (SnmpGetEx(transport, _T(".1.3.6.1.2.1.68.1.1.0"), NULL, 0, &version, sizeof(LONG), 0, NULL) != SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, _T(".1.3.6.1.2.1.68.1.1.0"), nullptr, 0, &version, sizeof(LONG), 0, nullptr) != SNMP_ERR_SUCCESS)
 	{
 		delete transport;
-		return NULL;
+		return nullptr;
 	}
 
 	VrrpInfo *info = new VrrpInfo(version);
 	if (SnmpWalk(transport, _T(".1.3.6.1.2.1.68.1.3.1.3"), VRRPHandler, info) != SNMP_ERR_SUCCESS)
 	{
 		delete info;
-		info = NULL;
+		info = nullptr;
 	}
 
 	delete transport;

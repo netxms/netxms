@@ -1499,6 +1499,8 @@ typedef struct
 #define VID_DEVELOPMENT_MODE        ((uint32_t)794)
 #define VID_DISPLAY_PRIORITY        ((uint32_t)795)
 #define VID_OSPF_AREA               ((uint32_t)796)
+#define VID_OSPF_INTERFACE_TYPE     ((uint32_t)797)
+#define VID_OSPF_INTERFACE_STATE    ((uint32_t)798)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

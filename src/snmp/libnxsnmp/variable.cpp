@@ -596,7 +596,7 @@ TCHAR *SNMP_Variable::getValueAsIPAddr(TCHAR *buffer) const
    // Ignore type and check only length
    if (m_valueLength >= 4)
    {
-      IpToStr(ntohl(*((UINT32 *)m_value)), buffer);
+      IpToStr(ntohl(*reinterpret_cast<uint32_t*>(m_value)), buffer);
    }
    else
    {

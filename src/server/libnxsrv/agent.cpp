@@ -2073,8 +2073,7 @@ uint32_t AgentConnection::installPackage(const TCHAR *pkgName, const TCHAR *pkgT
 
    NXCPMessage request(CMD_INSTALL_PACKAGE, generateRequestId(), m_nProtocolVersion);
    int i;
-   for(i = (int)_tcslen(pkgName) - 1;
-       (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
+   for(i = (int)_tcslen(pkgName) - 1; (i >= 0) && (pkgName[i] != '\\') && (pkgName[i] != '/'); i--);
    request.setField(VID_FILE_NAME, &pkgName[i + 1]);
    request.setField(VID_PACKAGE_TYPE, pkgType);
    request.setField(VID_COMMAND, command);

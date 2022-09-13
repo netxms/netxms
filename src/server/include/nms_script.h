@@ -443,6 +443,30 @@ public:
    virtual void toString(StringBuffer *sb, NXSL_Object *object) override;
 };
 
+/**
+ * OSPF area information for NXSL
+ */
+class NXSL_OSPFAreaClass : public NXSL_Class
+{
+public:
+   NXSL_OSPFAreaClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
+/**
+ * OSPF neighbor information for NXSL
+ */
+class NXSL_OSPFNeighborClass : public NXSL_Class
+{
+public:
+   NXSL_OSPFNeighborClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
+   virtual void onObjectDelete(NXSL_Object *object) override;
+};
+
 class ScheduleParameters;
 
 /**
@@ -537,6 +561,8 @@ extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
+extern NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
+extern NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 extern NXSL_SensorClass g_nxslSensorClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;

@@ -311,6 +311,7 @@
     <ClCompile Include="object_categories.cpp" />
     <ClCompile Include="object_queries.cpp" />
     <ClCompile Include="objtools.cpp" />
+    <ClCompile Include="ospf.cpp" />
     <ClCompile Include="package.cpp" />
     <ClCompile Include="pds.cpp" />
     <ClCompile Include="physical_link.cpp" />

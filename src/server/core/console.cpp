@@ -84,20 +84,101 @@ static void ShowMemoryUsage(ServerConsole *console)
 /**
  * Print ARP cache
  */
-static void PrintArpCache(CONSOLE_CTX ctx, const Node& node, const ArpCache& arpCache)
+static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
 {
-   ConsolePrintf(ctx, _T("\x1b[1mIP address\x1b[0m      | \x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m\n"));
-   ConsolePrintf(ctx, _T("----------------+-------------------+---------+----------------------\n"));
+   if (!node.isOSPFSupported())
+   {
+      console->print(_T("OSPF is not detected on this node\n"));
+      return;
+   }
+
+   TCHAR idText[16], addrText[16];
+   console->printf(_T("OSPF router ID: \x1b[1m%s\x1b[0m\n\n"), IpToStr(node.getOSPFRouterId(), idText));
+
+   console->print(_T("\x1b[32;1mAREAS\x1b[0m\n\n"));
+   StructArray<OSPFArea> areas = node.getOSPFAreas();
+   if (!areas.isEmpty())
+   {
+      console->printf(_T(" \x1b[1mID\x1b[0m              | \x1b[1mLSA\x1b[0m  | \x1b[1mABR\x1b[0m  | \x1b[1mASBR\x1b[0m\n"));
+      console->printf(_T("-----------------+------+------+------\n"));
+      for(int i = 0; i < areas.size(); i++)
+      {
+         const OSPFArea *a = areas.get(i);
+         console->printf(_T(" %-15s | %4d | %4d | %4d\n"), IpToStr(a->id, idText), a->lsaCount, a->areaBorderRouterCount, a->asBorderRouterCount);
+      }
+      console->print(_T("\n"));
+   }
+   else
+   {
+      console->print(_T("No known OSPF areas on this node\n\n"));
+   }
+
+   console->print(_T("\x1b[32;1mINTERFACES\x1b[0m\n\n"));
+   unique_ptr<SharedObjectArray<NetObj>> interfaces = node.getChildren(OBJECT_INTERFACE);
+   int count = 0;
+   for(int i = 0; i < interfaces->size(); i++)
+   {
+      Interface *iface = static_cast<Interface*>(interfaces->get(i));
+      if (!iface->isOSPF())
+         continue;
+
+      count++;
+      if (count == 1)
+      {
+         console->printf(_T(" \x1b[1mArea\x1b[0m            | \x1b[1mState\x1b[0m    | \x1b[1mifIndex\x1b[0m | \x1b[1mName\x1b[0m\n"));
+         console->printf(_T("-----------------+----------+---------+--------------------------\n"));
+      }
+
+      static const TCHAR *states[] = { _T("DOWN"), _T("LOOPBACK"), _T("WAITING"), _T("PT-TO-PT"), _T("DR"), _T("BDR"), _T("ODR") };
+      const TCHAR *state = ((iface->getOSPFState() >= 1) && (iface->getOSPFState() <= 7)) ? states[iface->getOSPFState() - 1] : _T("UNKNOWN");
+      console->printf(_T(" %-15s | %-8s | %7d | %s\n"), IpToStr(iface->getOSPFArea(), idText), state, iface->getIfIndex(), iface->getName());
+   }
+   if (count == 0)
+      console->print(_T("No known OSPF interfaces on this node\n"));
+   console->print(_T("\n"));
+
+   console->print(_T("\x1b[32;1mNEIGHBORS\x1b[0m\n\n"));
+   StructArray<OSPFNeighbor> neighbors = node.getOSPFNeighbors();
+   if (!neighbors.isEmpty())
+   {
+      static const TCHAR *states[] = { _T("DOWN"), _T("ATTEMPT"), _T("INIT"), _T("2WAY"), _T("EXCHSTART"), _T("EXCHANGE"), _T("LOADING"), _T("FULL") };
+
+      console->printf(_T(" \x1b[1mID\x1b[0m              | \x1b[1mIP Address\x1b[0m      | \x1b[1mState\x1b[0m     | \x1b[1mifIndex\x1b[0m | \x1b[1mInterface\x1b[0m                | \x1b[1mNode\x1b[0m\n"));
+      console->printf(_T("-----------------+-----------------+-----------+---------+--------------------------+------------------------------\n"));
+      for(int i = 0; i < neighbors.size(); i++)
+      {
+         const OSPFNeighbor *n = neighbors.get(i);
+         const TCHAR *state = ((n->state >= 1) && (n->state <= 8)) ? states[n->state - 1] : _T("UNKNOWN");
+         shared_ptr<Interface> iface = node.findInterfaceByIndex(n->ifIndex);
+         shared_ptr<NetObj> remoteNode = FindObjectById(n->nodeId, OBJECT_NODE);
+         console->printf(_T(" %-15s | %-15s | %9s | %7u | %-24s | %s\n"), IpToStr(n->routerId, idText), IpToStr(n->ipAddress, addrText), state, n->ifIndex,
+            iface != nullptr ? iface->getName() : _T(""), remoteNode != nullptr ? remoteNode->getName() : _T(""));
+      }
+      console->print(_T("\n"));
+   }
+   else
+   {
+      console->print(_T("No known OSPF neighbors on this node\n\n"));
+   }
+}
+
+/**
+ * Print ARP cache
+ */
+static void PrintArpCache(CONSOLE_CTX console, const Node& node, const ArpCache& arpCache)
+{
+   ConsolePrintf(console, _T("\x1b[1mIP address\x1b[0m      | \x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m\n"));
+   ConsolePrintf(console, _T("----------------+-------------------+---------+----------------------\n"));
 
    TCHAR ipAddrStr[64], macAddrStr[64];
    for(int i = 0; i < arpCache.size(); i++)
    {
       const ArpEntry *e = arpCache.get(i);
       shared_ptr<Interface> iface = node.findInterfaceByIndex(e->ifIndex);
-      ConsolePrintf(ctx, _T("%-15s | %s | %7d | %-20s\n"), e->ipAddr.toString(ipAddrStr), e->macAddr.toString(macAddrStr),
+      ConsolePrintf(console, _T("%-15s | %s | %7d | %-20s\n"), e->ipAddr.toString(ipAddrStr), e->macAddr.toString(macAddrStr),
          e->ifIndex, (iface != nullptr) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
    }
-   ConsolePrintf(ctx, _T("\n%d entries\n\n"), arpCache.size());
+   ConsolePrintf(console, _T("\n%d entries\n\n"), arpCache.size());
 }
 
 /**
@@ -759,15 +840,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
-         if (dwNode != 0)
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+         if (nodeId != 0)
          {
-            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
-            if (pObject != nullptr)
+            shared_ptr<NetObj> object = FindObjectById(nodeId);
+            if (object != nullptr)
             {
-               if (pObject->getObjectClass() == OBJECT_NODE)
+               if (object->getObjectClass() == OBJECT_NODE)
                {
-                  shared_ptr<ComponentTree> components = static_cast<Node*>(pObject.get())->getComponents();
+                  shared_ptr<ComponentTree> components = static_cast<Node&>(*object).getComponents();
                   if (components != nullptr)
                   {
                      components->print(pCtx);
@@ -784,7 +865,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
@@ -857,18 +938,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
-         if (dwNode != 0)
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+         if (nodeId != 0)
          {
-            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
-            if (pObject != nullptr)
+            shared_ptr<NetObj> object = FindObjectById(nodeId);
+            if (object != nullptr)
             {
-               if (pObject->getObjectClass() == OBJECT_NODE)
+               if (object->getObjectClass() == OBJECT_NODE)
                {
-                  shared_ptr<ForwardingDatabase> fdb = static_cast<Node*>(pObject.get())->getSwitchForwardingDatabase();
+                  shared_ptr<ForwardingDatabase> fdb = static_cast<Node*>(object.get())->getSwitchForwardingDatabase();
                   if (fdb != nullptr)
                   {
-                     fdb->print(pCtx, static_cast<Node*>(pObject.get()));
+                     fdb->print(pCtx, static_cast<Node*>(object.get()));
                   }
                   else
                   {
@@ -882,7 +963,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
@@ -1102,15 +1183,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       {
          // Get argument
          ExtractWord(pArg, szBuffer);
-         UINT32 dwNode = _tcstoul(szBuffer, nullptr, 0);
-         if (dwNode != 0)
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+         if (nodeId != 0)
          {
-            shared_ptr<NetObj> pObject = FindObjectById(dwNode);
-            if (pObject != nullptr)
+            shared_ptr<NetObj> object = FindObjectById(nodeId);
+            if (object != nullptr)
             {
-               if (pObject->getObjectClass() == OBJECT_NODE)
+               if (object->getObjectClass() == OBJECT_NODE)
                {
-                  ((Node *)pObject.get())->showLLDPInfo(pCtx);
+                  ((Node *)object.get())->showLLDPInfo(pCtx);
                }
                else
                {
@@ -1119,7 +1200,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             }
             else
             {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
             }
          }
          else
@@ -1165,6 +1246,35 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ExtractWord(pArg, szBuffer);
          Trim(szBuffer);
          DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : nullptr);
+      }
+      else if (IsCommand(_T("OSPF"), szBuffer, 4))
+      {
+         // Get argument
+         ExtractWord(pArg, szBuffer);
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
+         if (nodeId != 0)
+         {
+            shared_ptr<NetObj> object = FindObjectById(nodeId);
+            if (object != nullptr)
+            {
+               if (object->getObjectClass() == OBJECT_NODE)
+               {
+                  ShowNodeOSPFData(pCtx, static_cast<Node&>(*object));
+               }
+               else
+               {
+                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+               }
+            }
+            else
+            {
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), nodeId);
+            }
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+         }
       }
       else if (IsCommand(_T("PE"), szBuffer, 2))
       {

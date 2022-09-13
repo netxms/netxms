@@ -55,6 +55,8 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    m_ospfArea = 0;
+   m_ospfType = 0;
+   m_ospfState = 0;
 }
 
 /**
@@ -96,6 +98,8 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    m_ospfArea = 0;
+   m_ospfType = 0;
+   m_ospfState = 0;
    setCreationTime();
 }
 
@@ -140,6 +144,8 @@ Interface::Interface(const TCHAR *name, const TCHAR *description, uint32_t index
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    m_ospfArea = 0;
+   m_ospfType = 0;
+   m_ospfState = 0;
    setCreationTime();
 }
 
@@ -168,7 +174,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("iftable_suffix,ospf_area FROM interfaces WHERE id=?"));
+      _T("iftable_suffix,ospf_area,ospf_if_type,ospf_if_state FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -208,6 +214,8 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_lastKnownOperState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 22));
       m_lastKnownAdminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 23));
       m_ospfArea = DBGetFieldIPAddr(hResult, 0, 24);
+      m_ospfType = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 25));
+      m_ospfState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 26));
 
       TCHAR suffixText[128];
       DBGetField(hResult, 0, 24, suffixText, 128);
@@ -331,7 +339,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("phy_chassis"), _T("phy_module"), _T("phy_pic"), _T("phy_port"), _T("peer_node_id"), _T("peer_if_id"),
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
          _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"), _T("last_known_oper_state"),
-         _T("last_known_admin_state"), _T("if_alias"), _T("ospf_area"),
+         _T("last_known_admin_state"), _T("if_alias"), _T("ospf_area"), _T("ospf_if_type"), _T("ospf_if_state"),
          nullptr
       };
 
@@ -376,10 +384,12 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownAdminState));
          DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_ifAlias, DB_BIND_STATIC);
          if (m_flags & IF_OSPF_INTERFACE)
-            DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfArea, ospfArea), DB_BIND_STATIC);
+            DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfArea, ospfArea), DB_BIND_STATIC);
          else
             DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-         DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfType));
+         DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfState));
+         DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -956,6 +966,8 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
    msg->setFieldFromInt32Array(VID_VLAN_LIST, m_vlans);
    msg->setField(VID_OSPF_AREA, InetAddress(m_ospfArea));
+   msg->setField(VID_OSPF_INTERFACE_TYPE, m_ospfType);
+   msg->setField(VID_OSPF_INTERFACE_STATE, m_ospfState);
 }
 
 /**
@@ -1433,8 +1445,8 @@ json_t *Interface::toJson()
    lockProperties();
 
    json_object_set_new(root, "index", json_integer(m_index));
-   TCHAR macAddrText[64];
-   json_object_set_new(root, "macAddr", json_string_t(m_macAddr.toString(macAddrText)));
+   TCHAR text[64];
+   json_object_set_new(root, "macAddr", json_string_t(m_macAddr.toString(text)));
    json_object_set_new(root, "ipAddressList", m_ipAddressList.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "description", json_string_t(m_description));
@@ -1462,6 +1474,14 @@ json_t *Interface::toJson()
    json_object_set_new(root, "zoneUIN", json_integer(m_zoneUIN));
    json_object_set_new(root, "ifTableSuffixLen", json_integer(m_ifTableSuffixLen));
    json_object_set_new(root, "ifTableSuffix", json_integer_array(m_ifTableSuffix, m_ifTableSuffixLen));
+
+   if (m_flags & IF_OSPF_INTERFACE)
+   {
+      json_object_set_new(root, "ospfArea", json_string_t(IpToStr(m_ospfArea, text)));
+      json_object_set_new(root, "ospfType", json_integer(m_ospfType));
+      json_object_set_new(root, "ospfState", json_integer(m_ospfState));
+   }
+
    json_t *loc = json_object();
    json_object_set_new(loc, "chassis", json_integer(m_physicalLocation.chassis));
    json_object_set_new(loc, "module", json_integer(m_physicalLocation.module));

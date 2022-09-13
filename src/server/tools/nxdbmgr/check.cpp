@@ -377,6 +377,7 @@ static bool FindSubnetForNode(uint32_t id, const TCHAR *name)
 						{
 							success = true;
 							g_dbCheckFixes++;
+			            DBFreeResult(hResult2);
 							break;
 						}
 						else

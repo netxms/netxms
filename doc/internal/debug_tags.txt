@@ -215,6 +215,7 @@ topology.ipv4	IPv4 topology
 topology.layer2 Layer 2 topology builder
 topology.lldp	LLDP topology
 topology.ndp	NDP topology
+topology.ospf	OSPF topology
 topology.stp	STP topology
 
 tunnel		Tunnel (in agent log)

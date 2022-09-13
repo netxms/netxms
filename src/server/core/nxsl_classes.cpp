@@ -2029,7 +2029,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isOSPF"))
    {
-      value = vm->createValue((node->getCapabilities() & NC_IS_OSPF) != 0);
+      value = vm->createValue(node->isOSPFSupported());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPAE") || NXSL_COMPARE_ATTRIBUTE_NAME("is802_1x"))
    {
@@ -2089,7 +2089,20 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeType"))
    {
-      value = vm->createValue((INT32)node->getType());
+      value = vm->createValue(static_cast<int32_t>(node->getType()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfAreas"))
+   {
+      value = node->isOSPFSupported() ? node->getOSPFAreasForNXSL(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfNeighbors"))
+   {
+      value = node->isOSPFSupported() ? node->getOSPFNeighborsForNXSL(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfRouterId"))
+   {
+      TCHAR buffer[16];
+      value = node->isOSPFSupported() ? vm->createValue(IpToStr(node->getOSPFRouterId(), buffer)) : vm->createValue();
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("physicalContainer"))
    {
@@ -2477,23 +2490,27 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isExcludedFromTopology"))
    {
-      value = vm->createValue((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
+      value = vm->createValue(iface->isExcludedFromTopology());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isIncludedInIcmpPoll"))
    {
-      value = vm->createValue((LONG)(iface->isIncludedInIcmpPoll() ? 1 : 0));
+      value = vm->createValue(iface->isIncludedInIcmpPoll());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isLoopback"))
    {
-		value = vm->createValue((LONG)(iface->isLoopback() ? 1 : 0));
+		value = vm->createValue(iface->isLoopback());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isManuallyCreated"))
    {
-		value = vm->createValue((LONG)(iface->isManuallyCreated() ? 1 : 0));
+		value = vm->createValue(iface->isManuallyCreated());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isOSPF"))
+   {
+      value = vm->createValue(iface->isOSPF());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isPhysicalPort"))
    {
-		value = vm->createValue((LONG)(iface->isPhysicalPort() ? 1 : 0));
+		value = vm->createValue(iface->isPhysicalPort());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("macAddr"))
    {
@@ -2523,6 +2540,19 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("operState"))
    {
 		value = vm->createValue((LONG)iface->getOperState());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfAreaId"))
+   {
+      TCHAR buffer[16];
+      value = vm->createValue(IpToStr(iface->getOSPFArea(), buffer));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfState"))
+   {
+      value = vm->createValue(iface->getOSPFState());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfType"))
+   {
+      value = vm->createValue(iface->getOSPFType());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerInterface"))
    {
@@ -5367,7 +5397,7 @@ void NXSL_WebService::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * NXSL "WebServiceCallResult" class
+ * NXSL "WebServiceResponse" class
  */
 NXSL_WebServiceCallResult::NXSL_WebServiceCallResult()
 {
@@ -5418,6 +5448,112 @@ void NXSL_WebServiceCallResult::onObjectDelete(NXSL_Object *object)
 }
 
 /**
+ * NXSL "OSPFArea" class
+ */
+NXSL_OSPFAreaClass::NXSL_OSPFAreaClass()
+{
+   setName(_T("OSPFArea"));
+}
+
+/**
+ * NXSL class OSPFArea: get attribute
+ */
+NXSL_Value *NXSL_OSPFAreaClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   OSPFArea *area = static_cast<OSPFArea*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("areaBorderRouterCount"))
+   {
+      value = vm->createValue(area->areaBorderRouterCount);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("asBorderRouterCount"))
+   {
+      value = vm->createValue(area->asBorderRouterCount);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
+   {
+      TCHAR buffer[16];
+      value = vm->createValue(IpToStr(area->id, buffer));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lsaCount"))
+   {
+      value = vm->createValue(area->lsaCount);
+   }
+   return value;
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_OSPFAreaClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<OSPFArea*>(object->getData());
+}
+
+/**
+ * NXSL "OSPFNeighbor" class
+ */
+NXSL_OSPFNeighborClass::NXSL_OSPFNeighborClass()
+{
+   setName(_T("OSPFNeighbor"));
+}
+
+/**
+ * NXSL class OSPFNeighbor: get attribute
+ */
+NXSL_Value *NXSL_OSPFNeighborClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   OSPFNeighbor *neighbor = static_cast<OSPFNeighbor*>(object->getData());
+
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
+   {
+      value = vm->createValue(neighbor->ifIndex);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
+   {
+      TCHAR buffer[16];
+      value = vm->createValue(IpToStr(neighbor->ipAddress, buffer));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("node"))
+   {
+      shared_ptr<NetObj> node = FindObjectById(neighbor->nodeId, OBJECT_NODE);
+      value = (node != nullptr) ? node->createNXSLObject(vm) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeId"))
+   {
+      value = vm->createValue(neighbor->nodeId);
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("routerId"))
+   {
+      TCHAR buffer[16];
+      value = vm->createValue(IpToStr(neighbor->routerId, buffer));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
+   {
+      value = vm->createValue(neighbor->state);
+   }
+   return value;
+}
+
+/**
+ * Object destruction handler
+ */
+void NXSL_OSPFNeighborClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<OSPFNeighbor*>(object->getData());
+}
+
+/**
  * Class objects
  */
 NXSL_AccessPointClass g_nxslAccessPointClass;
@@ -5438,6 +5574,8 @@ NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_NodeDependencyClass g_nxslNodeDependencyClass;
+NXSL_OSPFAreaClass g_nxslOSPFAreaClass;
+NXSL_OSPFNeighborClass g_nxslOSPFNeighborClass;
 NXSL_SensorClass g_nxslSensorClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
 NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;

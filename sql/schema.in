@@ -497,6 +497,16 @@ CREATE TABLE node_components
 ) TABLE_TYPE;
 
 /**
+ * OSPF areas
+ */
+CREATE TABLE ospf_areas
+(
+  node_id integer not null,
+  area_id varchar(15) not null,
+  PRIMARY KEY(node_id,area_id)
+) TABLE_TYPE;
+
+/**
  * Clusters information
  */
 CREATE TABLE clusters
@@ -588,6 +598,8 @@ CREATE TABLE interfaces
   last_known_oper_state integer not null,
   last_known_admin_state integer not null,
   ospf_area varchar(15) null,
+  ospf_if_type integer not null,
+  ospf_if_state integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

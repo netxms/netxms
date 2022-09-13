@@ -23,6 +23,24 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.15 to 42.16
+ */
+static bool H_UpgradeFromV15()
+{
+   const TCHAR batch[] =
+      _T("ALTER TABLE interfaces ADD ospf_if_type integer\n")
+      _T("ALTER TABLE interfaces ADD ospf_if_state integer\n")
+      _T("UPDATE interfaces SET ospf_if_type=0,ospf_if_state=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("ospf_if_type")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("ospf_if_state")));
+   CHK_EXEC(CreateTable(_T("CREATE TABLE ospf_areas (node_id integer not null, area_id varchar(15) not null, PRIMARY KEY(node_id,area_id))")));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 42.14 to 42.15
  */
 static bool H_UpgradeFromV14()
@@ -304,6 +322,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 42, 16, H_UpgradeFromV15 },
    { 14, 42, 15, H_UpgradeFromV14 },
    { 13, 42, 14, H_UpgradeFromV13 },
    { 12, 42, 13, H_UpgradeFromV12 },

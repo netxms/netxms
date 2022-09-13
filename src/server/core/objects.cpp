@@ -1515,22 +1515,23 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("network_map_links"), _T("map_id,link_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("network_map_seed_nodes"), _T("map_id,seed_node_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("node_components"), _T("node_id,component_index"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("ospf_areas"), _T("node_id,area_id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("business_service_checks"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("business_services"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("business_service_prototypes"), _T("id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("dashboard_associations"), _T("object_id,dashboard_id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("business_service_checks"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("business_services"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("business_service_prototypes"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_statistics"), _T("object_id,poll_target"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_target_address_list"), _T("node_id,ip_addr"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,name,version"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*")) &&
-               DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,name,version"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns);
 
       if (success)
