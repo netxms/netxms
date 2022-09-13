@@ -41,7 +41,10 @@ public class MacToVendorCache
    private NXCSession session;
    
    /**
+    * 
     * Constructor
+    * 
+    * @param session NXCP session 
     */
    public MacToVendorCache(NXCSession session)
    {
@@ -54,6 +57,11 @@ public class MacToVendorCache
    
    /**
     * Get MAC from list or request missing form server and refresh once received
+    *
+    * @param mac MAC address to search
+    * @param callback callback to call when result comes form server
+    * 
+    * @return vendor name or null
     */
    public String getVendor(MacAddress mac, Runnable callback)
    {

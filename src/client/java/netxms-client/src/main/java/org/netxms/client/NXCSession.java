@@ -13504,12 +13504,12 @@ public class NXCSession
    }
 
    /**
-    * Get measurement units for given DCI list
+    * 
+    * Get vendor name by MAC address from cache or make a request form the server and call provided callback
     *
-    * @param dciList list of DCI chart configurations
-    * @return map with DCI information
-    * @throws IOException if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @param mac MAC address to search
+    * @param callback callback to be called when information comes form server
+    * @return vendor name
     */
    public String getVendorByMac(MacAddress mac, Runnable callback)
    {
@@ -13517,9 +13517,9 @@ public class NXCSession
    }
 
    /**
-    * Get measurement units for given DCI list
+    * Get vendor name by MAC address 
     *
-    * @param dciList list of DCI chart configurations
+    * @param macList list of mac adresses to request form server    * 
     * @return map with DCI information
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
