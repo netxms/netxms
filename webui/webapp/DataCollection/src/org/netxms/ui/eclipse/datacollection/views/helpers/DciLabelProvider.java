@@ -132,8 +132,6 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 			   try
 			   {
    				int days = Integer.parseInt(dci.getRetentionTime());
-   				if (days <= 0)
-   				   return Messages.get().DciLabelProvider_Default;
    				return Integer.toString(days) + ((days == 1) ? Messages.get().DciLabelProvider_Day : Messages.get().DciLabelProvider_Days);
 			   }
 			   catch(NumberFormatException e)
