@@ -72,30 +72,30 @@ public class General extends AbstractDCIPropertyPage
    
    public static final String[] DATA_UNITS = 
    {
-      "B/s",
-      "b/s",
-      "B (Metric)",
-      "B (IEC)",
-      "b (Metric)",
-      "b (IEC)",
-      "Uptime", //special
-      "Epoch time", //special
-      "dBm",
-      "sr",
-      "Hz",
-      "N",
-      "Pa",
-      "J",
-      "W",
-      "V",
-      "Ω",
-      "Wb",
-      "T",
+      "%",
       "°C",
       "°F",
+      "A",
+      "B (IEC)",
+      "b (IEC)",
+      "B (Metric)",
+      "b (Metric)",
+      "B/s",
+      "b/s",
+      "dBm",
+      "Epoch time", //special
+      "Hz",
+      "J",
       "lm",
       "lx",
-      "%"
+      "N",
+      "Pa",
+      "rpm",
+      "T",
+      "Uptime", //special
+      "W",
+      "V",
+      "Ω"
    };
    private static final int SUB_ELEMENT_INDENT = 20;
    

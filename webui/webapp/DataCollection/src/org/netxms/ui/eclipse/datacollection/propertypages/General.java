@@ -71,30 +71,30 @@ public class General extends AbstractDCIPropertyPage
 {		
    public static final String[] DATA_UNITS = 
    {
-      "B/s",
-      "b/s",
-      "B (Metric)",
-      "B (IEC)",
-      "b (Metric)",
-      "b (IEC)",
-      "Uptime", //special
-      "Epoch time", //special
-      "dBm",
-      "sr",
-      "Hz",
-      "N",
-      "Pa",
-      "J",
-      "W",
-      "V",
-      "Ω",
-      "Wb",
-      "T",
+      "%",
       "°C",
       "°F",
+      "A",
+      "B (IEC)",
+      "b (IEC)",
+      "B (Metric)",
+      "b (Metric)",
+      "B/s",
+      "b/s",
+      "dBm",
+      "Epoch time", //special
+      "Hz",
+      "J",
       "lm",
       "lx",
-      "%"
+      "N",
+      "Pa",
+      "rpm",
+      "T",
+      "Uptime", //special
+      "W",
+      "V",
+      "Ω"
    };
    private static final int SUB_ELEMENT_INDENT = 20;
    
@@ -123,19 +123,19 @@ public class General extends AbstractDCIPropertyPage
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	protected Control createContents(Composite parent)
-	{		
-	   Composite dialogArea = (Composite)super.createContents(parent);
-		dco = editor.getObject();
+   @Override
+   protected Control createContents(Composite parent)
+   {
+      Composite dialogArea = (Composite)super.createContents(parent);
+      dco = editor.getObject();
 
-		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		layout.marginWidth = 0;
-		layout.marginRight = WidgetHelper.OUTER_SPACING;
-		layout.marginHeight = 0;
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginWidth = 0;
+      layout.marginRight = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       Group groupMetricConfig = new Group(dialogArea, SWT.NONE);
       groupMetricConfig.setText("Metric to collect");
       layout = new GridLayout();
@@ -148,7 +148,7 @@ public class General extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupMetricConfig.setLayoutData(gd);
-      
+
       origin = WidgetHelper.createLabeledCombo(groupMetricConfig, SWT.READ_ONLY, Messages.get().General_Origin, new GridData());
       origin.add(Messages.get().DciLabelProvider_SourceInternal);
       origin.add(Messages.get().DciLabelProvider_SourceAgent);
@@ -186,7 +186,7 @@ public class General extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       sourceNode.setLayoutData(gd);
-       
+
       metricSelector = new MetricSelector(groupMetricConfig);
       metricSelector.setMetricName(dco.getName());
       metricSelector.setLabel("Metric");
@@ -205,11 +205,11 @@ public class General extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 2;
       description.setLayoutData(gd);
-      
+
       if (dco instanceof DataCollectionItem)
       {
          DataCollectionItem dci = (DataCollectionItem)dco;
-         
+
          Group groupProcessingAndVisualization = new Group(dialogArea, SWT.NONE);
          groupProcessingAndVisualization.setText(Messages.get().General_Polling);
          layout = new GridLayout();
@@ -222,7 +222,7 @@ public class General extends AbstractDCIPropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.verticalAlignment = SWT.FILL;
          groupProcessingAndVisualization.setLayoutData(gd);
-   
+
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
@@ -236,35 +236,35 @@ public class General extends AbstractDCIPropertyPage
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
          dataType.select(getDataTypePosition(dci.getDataType()));
-         
+
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
          dataUnit = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.NONE, "Units", gd);
          int selection = -1;
          int index = 0;
-         for (; index < DATA_UNITS.length; index++)
+         for(; index < DATA_UNITS.length; index++)
          {
             dataUnit.add(DATA_UNITS[index]);
-            if (dci.getUnitName() != null  && dci.getUnitName().equals(DATA_UNITS[index]))
+            if (dci.getUnitName() != null && dci.getUnitName().equals(DATA_UNITS[index]))
             {
                selection = index;
             }
          }
          if (selection == -1 && dci.getUnitName() != null)
          {
-            dataUnit.add(dci.getUnitName()); 
+            dataUnit.add(dci.getUnitName());
             selection = index;
          }
          dataUnit.select(selection);
-         
+
          useMultipliers = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, "Use multipliers", new GridData());
          useMultipliers.add("Default");
          useMultipliers.add("Yes");
          useMultipliers.add("No");
          useMultipliers.select(dci.getMultipliersSelection());
       }
-         
+
       Group groupPolling = new Group(dialogArea, SWT.NONE);
       groupPolling.setText("Collection schedule");
       layout = new GridLayout();
@@ -278,7 +278,7 @@ public class General extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupPolling.setLayoutData(gd);
-      
+
       SelectionListener pollingButtons = new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -319,13 +319,13 @@ public class General extends AbstractDCIPropertyPage
       pollingInterval.setText(dco.getPollingInterval() != null ? dco.getPollingInterval() : "");
       pollingInterval.setEnabled((dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_CUSTOM) && (dco.getOrigin() != DataOrigin.PUSH));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-      pollingInterval.setLayoutData(gd);      
+      pollingInterval.setLayoutData(gd);
       pollingIntervalLabel = new Label(pollingIntervalComposite, SWT.NONE);
       pollingIntervalLabel.setText("seconds");
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
       gd.horizontalIndent = WidgetHelper.OUTER_SPACING;
       pollingIntervalLabel.setLayoutData(gd);
-      
+
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       pollingIntervalComposite.setLayoutData(gd);
@@ -347,7 +347,7 @@ public class General extends AbstractDCIPropertyPage
             FilteredPreferenceDialog dialog = (FilteredPreferenceDialog)container;
             dialog.setCurrentPageId("org.netxms.ui.eclipse.datacollection.propertypages.CustomSchedule#10");
          }
-      });      
+      });
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       scheduleLink.setLayoutData(gd);
@@ -384,11 +384,11 @@ public class General extends AbstractDCIPropertyPage
       storageDefault = new Button(groupRetention, SWT.RADIO);
       storageDefault.setText(String.format("Server default (%d days)", session.getDefaultDciRetentionTime()));
       storageDefault.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_DEFAULT);
-      storageDefault.addSelectionListener(storageButtons);   
+      storageDefault.addSelectionListener(storageButtons);
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
       gd.horizontalSpan = 2;
       storageDefault.setLayoutData(gd);
-      
+
       storageFixed = new Button(groupRetention, SWT.RADIO);
       storageFixed.setText("Custom");
       storageFixed.setSelection(dco.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
@@ -405,13 +405,13 @@ public class General extends AbstractDCIPropertyPage
       retentionTime.setText(dco.getRetentionTime() != null ? dco.getRetentionTime() : "");
       retentionTime.setEnabled(dco.getRetentionType() == DataCollectionObject.RETENTION_CUSTOM);
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-      retentionTime.setLayoutData(gd);  
+      retentionTime.setLayoutData(gd);
       Label label = new Label(retentionTimeComposite, SWT.NONE);
       label.setText("days");
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
       gd.horizontalIndent = WidgetHelper.OUTER_SPACING;
       label.setLayoutData(gd);
-      
+
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalIndent = SUB_ELEMENT_INDENT;
       retentionTimeComposite.setLayoutData(gd);
@@ -433,12 +433,12 @@ public class General extends AbstractDCIPropertyPage
          gd = new GridData();
          gd.horizontalSpan = 2;
          gd.verticalIndent = SUB_ELEMENT_INDENT;
-         checkSaveOnlyChangedValues.setLayoutData(gd); 
+         checkSaveOnlyChangedValues.setLayoutData(gd);
       }
 
       onOriginChange();
       return dialogArea;
-	}
+   }
 
 	/**
 	 * Handler for changing item origin
@@ -727,7 +727,6 @@ public class General extends AbstractDCIPropertyPage
       public String getMetricName()
       {
          return getText();      
-      }
-   
+      }   
    }
 }
