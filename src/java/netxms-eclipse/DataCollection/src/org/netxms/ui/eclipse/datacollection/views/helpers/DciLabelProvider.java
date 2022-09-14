@@ -118,6 +118,13 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 				if (dci instanceof DataCollectionItem)
 					return DataCollectionDisplayInfo.getDataTypeName(((DataCollectionItem)dci).getDataType());
 				return Messages.get().DciLabelProvider_Table;
+			case DataCollectionEditor.COLUMN_DATAUNIT:
+            if((dci instanceof DataCollectionItem))
+            {
+               String unitName = ((DataCollectionItem)dci).getUnitName();
+               return unitName == null ? "" : unitName;
+            }
+            return "";
 			case DataCollectionEditor.COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
 					return Messages.get().DciLabelProvider_CustomSchedule;

@@ -108,14 +108,15 @@ public class DataCollectionEditor extends ViewPart
    public static final int COLUMN_DESCRIPTION = 1;
    public static final int COLUMN_ORIGIN = 2;
    public static final int COLUMN_PARAMETER = 3;
-	public static final int COLUMN_DATATYPE = 4;
-	public static final int COLUMN_INTERVAL = 5;
-	public static final int COLUMN_RETENTION = 6;
-	public static final int COLUMN_STATUS = 7;
-	public static final int COLUMN_THRESHOLD = 8;
-	public static final int COLUMN_TEMPLATE = 9;
-   public static final int COLUMN_RELATEDOBJ = 10;
-   public static final int COLUMN_STATUSCALC = 11;
+   public static final int COLUMN_DATAUNIT = 4;
+	public static final int COLUMN_DATATYPE = 5;
+	public static final int COLUMN_INTERVAL = 6;
+	public static final int COLUMN_RETENTION = 7;
+	public static final int COLUMN_STATUS = 8;
+	public static final int COLUMN_THRESHOLD = 9;
+	public static final int COLUMN_TEMPLATE = 10;
+   public static final int COLUMN_RELATEDOBJ = 11;
+   public static final int COLUMN_STATUSCALC = 12;
 
    private CompositeWithMessageBar viewerContainer;
 	private FilterText filterText;
@@ -236,10 +237,10 @@ public class DataCollectionEditor extends ViewPart
 		});
 		
       final String[] names = { Messages.get().DataCollectionEditor_ColID, Messages.get().DataCollectionEditor_ColDescription, Messages.get().DataCollectionEditor_ColOrigin,
-            Messages.get().DataCollectionEditor_ColParameter, Messages.get().DataCollectionEditor_ColDataType, Messages.get().DataCollectionEditor_ColPollingInterval,
+            Messages.get().DataCollectionEditor_ColParameter, " Data Unit", Messages.get().DataCollectionEditor_ColDataType, Messages.get().DataCollectionEditor_ColPollingInterval,
             Messages.get().DataCollectionEditor_ColRetentionTime, Messages.get().DataCollectionEditor_ColStatus, Messages.get().DataCollectionEditor_ColThresholds,
             Messages.get().DataCollectionEditor_ColTemplate, "Related Object", "Is status calculation" };
-      final int[] widths = { 60, 250, 150, 200, 90, 90, 90, 100, 200, 150, 150, 90 };
+      final int[] widths = { 60, 250, 150, 200, 90, 90, 90, 90, 100, 200, 150, 150, 90 };
 		viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new DciLabelProvider());

@@ -116,6 +116,13 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 				return dci.getDescription();
 			case DataCollectionView.DC_COLUMN_PARAMETER:
 				return dci.getName();
+			case DataCollectionView.DC_COLUMN_DATAUNIT:
+            if((dci instanceof DataCollectionItem))
+            {
+               String unitName = ((DataCollectionItem)dci).getUnitName();
+               return unitName == null ? "" : unitName;
+            }
+            return "";			   
 			case DataCollectionView.DC_COLUMN_DATATYPE:
 				if (dci instanceof DataCollectionItem)
 					return DataCollectionDisplayInfo.getDataTypeName(((DataCollectionItem)dci).getDataType());

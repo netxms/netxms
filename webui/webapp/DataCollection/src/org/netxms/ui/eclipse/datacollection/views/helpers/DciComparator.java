@@ -70,6 +70,7 @@ public class DciComparator extends ViewerComparator
 				result = (int)(dci1.getComparableRetentionTime() - dci2.getComparableRetentionTime());
 				break;
 			case DataCollectionEditor.COLUMN_ORIGIN:
+         case DataCollectionEditor.COLUMN_DATAUNIT:
 			case DataCollectionEditor.COLUMN_DATATYPE:
 			case DataCollectionEditor.COLUMN_STATUS:
 			case DataCollectionEditor.COLUMN_TEMPLATE:
