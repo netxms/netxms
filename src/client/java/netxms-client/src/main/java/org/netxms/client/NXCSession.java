@@ -393,17 +393,17 @@ public class NXCSession
 
    // TCP proxies
    private Map<Integer, TcpProxy> tcpProxies = new HashMap<Integer, TcpProxy>();
-   
-   //Children synchronization
+
+   // Set of objects whose child objects were already synchronized
    private Set<Long> synchronizedObjectSet = new HashSet<Long>();
-   
-   //Mac to vendor cache 
-   MacToVendorCache macToVendorCache;
-   
+
+   // OUI cache
+   private OUICache ouiCache;
+
    /**
     * Message subscription class
     */
-   final protected class MessageSubscription
+   final protected static class MessageSubscription
    {
       protected int messageCode;
       protected long messageId;
@@ -1198,9 +1198,7 @@ public class NXCSession
          start();
       }
 
-      /*
-       * (non-Javadoc)
-       *
+      /**
        * @see java.lang.Thread#run()
        */
       @Override
@@ -1274,7 +1272,7 @@ public class NXCSession
          start();
       }
 
-      /* (non-Javadoc)
+      /**
        * @see java.lang.Thread#run()
        */
       @Override
@@ -1336,7 +1334,7 @@ public class NXCSession
          start();
       }
 
-      /* (non-Javadoc)
+      /**
        * @see java.lang.Thread#run()
        */
       @Override
@@ -1387,7 +1385,6 @@ public class NXCSession
             catch(Exception e)
             {
                logger.error("Exception while synchronizing user database objects", e);
-               continue;
             }
          }         
       }
@@ -1426,7 +1423,7 @@ public class NXCSession
       this.connAddress = connAddress;
       this.connPort = connPort;
       this.connUseEncryption = connUseEncryption;
-      macToVendorCache = new MacToVendorCache(this);
+      ouiCache = new OUICache(this);
    }
 
    /**
@@ -13504,23 +13501,26 @@ public class NXCSession
    }
 
    /**
-    * 
-    * Get vendor name by MAC address from cache or make a request form the server and call provided callback
+    * Get vendor name by OUI part of MAC address. Local cache is checked first, and only if OUI is not found in local cache request
+    * to server is made. If server request is made method will return null and queue background request to the server, and if
+    * completion callback is provided it will be called after local cache is populated, so next request to
+    * <code>getVendorByMac</code> will complete without request to the server.
     *
-    * @param mac MAC address to search
-    * @param callback callback to be called when information comes form server
-    * @return vendor name
+    * @param mac MAC address
+    * @param callback request completion callback
+    * @return vendor name, could be null or empty string if OUI is not known (yet)
     */
    public String getVendorByMac(MacAddress mac, Runnable callback)
    {
-      return macToVendorCache.getVendor(mac, callback);
+      return ouiCache.getVendor(mac, callback);
    }
 
    /**
-    * Get vendor name by MAC address 
+    * Get vendor names by OUI part of provided MAC addresses. Resulting map will contain all unique OUIs extracted from provided MAC
+    * addresses.
     *
-    * @param macList list of mac adresses to request form server    * 
-    * @return map with DCI information
+    * @param macList list of MAC addresses
+    * @return OUI to vendor map
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */

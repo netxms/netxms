@@ -23,30 +23,28 @@
 #include "nxcore.h"
 #include <uthash.h>
 
-#define DEBUG_TAG_OUI  _T("oui")
+#define DEBUG_TAG _T("macdb")
 
 /**
- * Organizationally Unique Identifier mapping
+ * Organizationally Unique Identifier mapping (24 bit identifiers)
  */
 typedef BYTE oui24_t[3];
 static HashMap<oui24_t, String> s_ouiMap(Ownership::True);
 
 /**
- * Organizationally Unique Identifier mapping 28
+ * Organizationally Unique Identifier mapping (28 bit identifiers)
  */
 typedef BYTE oui28_t[4];
 static HashMap<oui28_t, String> s_ouiMap28(Ownership::True);
 
-
 /**
- * Organizationally Unique Identifier mapping 36
+ * Organizationally Unique Identifier mapping (36 bit identifiers)
  */
 typedef BYTE oui36_t[5];
 static HashMap<oui36_t, String> s_ouiMap36(Ownership::True);
 
-
 /**
- * Entry
+ * MAC database entry
  */
 struct MacDbEntry
 {
@@ -260,7 +258,7 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE MacDbFind(const MacAddress& macAddr)
 /**
  * Find vendor by MAC address (internal)
  */
-static std::pair<const TCHAR *, uint32_t> FindVendorByMacInternal(const MacAddress& macAddr)
+static std::pair<const TCHAR*, uint32_t> FindVendorByMacInternal(const MacAddress& macAddr)
 {
    uint32_t numBytes;
    oui24_t bytes;
@@ -276,6 +274,7 @@ static std::pair<const TCHAR *, uint32_t> FindVendorByMacInternal(const MacAddre
       name = s_ouiMap28.get(value);
       numBytes = 4;
    }
+
    if (name == nullptr)
    {
       oui36_t value;
@@ -296,6 +295,9 @@ const TCHAR *FindVendorByMac(const MacAddress& macAddr)
    return FindVendorByMacInternal(macAddr).first;
 }
 
+/**
+ * Find vendor name by MAC address list. Read MAC addresses from incoming NXCP message and write results to response NXCP message.
+ */
 void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response)
 {
    uint32_t numElements = request.getFieldAsUInt32(VID_NUM_ELEMENTS);
@@ -308,7 +310,7 @@ void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response)
       oui36_t value;
       memcpy(value, addr.value(), result.second);
       if (result.second > 3)
-         value[result.second -1] &= 0xF0;
+         value[result.second - 1] &= 0xF0;
       response->setField(outputBase, value, result.second);
       response->setField(outputBase + 1, result.first);
       outputBase += 2;
@@ -317,9 +319,9 @@ void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response)
 }
 
 /**
- * Parse one oui file
+ * Load OUI database file
  */
-template<size_t MaxLen, typename T> static void ParseCsvFile(const TCHAR *fileName, HashMap<T, String> *map)
+template<size_t MaxLen, typename T> static bool LoadOUIDatabaseFile(const TCHAR *fileName, HashMap<T, String> *map)
 {
    TCHAR path[MAX_PATH];
    GetNetXMSDirectory(nxDirShare, path);
@@ -331,51 +333,50 @@ template<size_t MaxLen, typename T> static void ParseCsvFile(const TCHAR *fileNa
    char *fileContent = LoadFileAsUTF8String(path);
    if (fileContent == nullptr)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OUI, _T("Failed to open \"%s\" file"), path);
-      return;
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot open OUI database file \"%s\" (%s)"), path, _tcserror(errno));
+      return false;
    }
-  TCHAR *content;
 
 #ifdef UNICODE
-   content = WideStringFromUTF8String(fileContent);
+   TCHAR *content = WideStringFromUTF8String(fileContent);
 #else
-   content = MBStringFromUTF8String(fileContent);
+   TCHAR *content = MBStringFromUTF8String(fileContent);
 #endif
    MemFree(fileContent);
 
    Table *table = Table::createFromCSV(content, _T(','));
-   if (table != nullptr)
+   MemFree(content);
+   if (table == nullptr)
    {
-      for (int i = 0; i < table->getNumRows(); i++)
-      {
-         T buffer;
-         StringBuffer pattern = table->getAsString(i, 1, _T(""));
-         if (pattern.length() %2 != 0)
-            pattern.append(_T("0"));
-         size_t size = StrToBin(pattern, buffer, MaxLen);
-         TCHAR tmp[64]; // max_length(16) * 4
-         BinToStr(buffer, MaxLen, tmp);
-         map->set(buffer, new String(table->getAsString(i, 2, _T(""))));
-      }
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Error parsing OUI database file \"%s\""), fileName);
+      return false;
    }
-   else
+
+   for (int i = 0; i < table->getNumRows(); i++)
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_OUI, _T("Failed to parse file \"%s\""), fileName);
+      T oui;
+      StringBuffer ouiText = table->getAsString(i, 1, _T(""));
+      if (ouiText.length() % 2 != 0)
+         ouiText.append(_T("0"));
+      StrToBin(ouiText, oui, MaxLen);
+      map->set(oui, new String(table->getAsString(i, 2, _T(""))));
    }
 
    delete table;
-   MemFree(content);
+   return true;
 }
 
 /**
- * Load MAC to vendor files
+ * Load OUI database
  */
-void LoadMacToVendorInfo()
+void LoadOUIDatabase()
 {
-   ParseCsvFile<3, oui24_t>(_T("oui.csv"), &s_ouiMap);
-   ParseCsvFile<4, oui28_t>(_T("oui28.csv"), &s_ouiMap28);
-   ParseCsvFile<5, oui36_t>(_T("oui36.csv"), &s_ouiMap36);
-   DbgPrintf(4, _T("%d oui loaded"), s_ouiMap.size());
-   DbgPrintf(4, _T("%d oui28 loaded"), s_ouiMap28.size());
-   DbgPrintf(4, _T("%d oui36 loaded"), s_ouiMap36.size());
+   if (LoadOUIDatabaseFile<3, oui24_t>(_T("oui.csv"), &s_ouiMap))
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("OUI-24 database loaded (%d entries)"), s_ouiMap.size());
+
+   if (LoadOUIDatabaseFile<4, oui28_t>(_T("oui28.csv"), &s_ouiMap28))
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("OUI-28 database loaded (%d entries)"), s_ouiMap28.size());
+
+   if (LoadOUIDatabaseFile<5, oui36_t>(_T("oui36.csv"), &s_ouiMap36))
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("OUI-36 database loaded (%d entries)"), s_ouiMap36.size());
 }

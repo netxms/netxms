@@ -29,32 +29,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Mac to vendor cache
+ * OUI to vendor mapping cache
  */
-public class MacToVendorCache
+final class OUICache
 {
-   private static Logger logger = LoggerFactory.getLogger(MacToVendorCache.class);
-   
-   private HashMap<MacAddress, String> macToVendorMap;
-   private Set<MacAddress> macSyncList;
+   private static Logger logger = LoggerFactory.getLogger(OUICache.class);
+
+   private HashMap<MacAddress, String> ouiToVendorMap;
+   private Set<MacAddress> syncList;
    private List<Runnable> callbackList;
    private NXCSession session;
-   
+
    /**
-    * 
     * Constructor
     * 
     * @param session NXCP session 
     */
-   public MacToVendorCache(NXCSession session)
+   public OUICache(NXCSession session)
    {
-      macToVendorMap = new HashMap<MacAddress, String>();
-      macSyncList = new HashSet<MacAddress>();
+      ouiToVendorMap = new HashMap<MacAddress, String>();
+      syncList = new HashSet<MacAddress>();
       callbackList = new ArrayList<Runnable>();
       this.session = session;
-      new BackgroundMacSync();
+      new BackgroundSync();
    }
-   
+
    /**
     * Get MAC from list or request missing form server and refresh once received
     *
@@ -67,23 +66,23 @@ public class MacToVendorCache
    {
       if (mac == null || mac.isNull())
          return null;
-      
+
       String name = null;
       boolean needSync = false;
-      synchronized(macToVendorMap)
+      synchronized(ouiToVendorMap)
       {
          MacAddress macPart = new MacAddress(mac.getValue(), 3);   
-         name = macToVendorMap.get(macPart);  
-         
+         name = ouiToVendorMap.get(macPart);  
+
          if (name == null)
          {
             byte[] oui28 = new byte[4];
             for (int i = 0; i < 4; i++)
                oui28[i] = mac.getValue()[i];
             oui28[3] &= 0xF0;
-            
+
             macPart = new MacAddress(oui28);   
-            name = macToVendorMap.get(macPart);            
+            name = ouiToVendorMap.get(macPart);            
          }
          if (name == null)
          {
@@ -91,41 +90,39 @@ public class MacToVendorCache
             for (int i = 0; i < 5; i++)
                oui32[i] = mac.getValue()[i];
             oui32[4] &= 0xF0;
-            
+
             macPart = new MacAddress(oui32);   
-            name = macToVendorMap.get(macPart);                
+            name = ouiToVendorMap.get(macPart);                
          }
          if (name == null)
             needSync = true;
       }
       if (needSync)
       {
-         synchronized(macSyncList)
+         synchronized(syncList)
          {
-            macSyncList.add(mac);
+            syncList.add(mac);
             if (callback != null)
                callbackList.add(callback);
-            macSyncList.notifyAll();
+            syncList.notifyAll();
          }
       }
       return name;    
    }
-   
 
-   
    /**
-    * User synchronization thread
+    * OUI database synchronization thread
     */
-   class BackgroundMacSync extends Thread
+   class BackgroundSync extends Thread
    {
-      public BackgroundMacSync()
+      public BackgroundSync()
       {
-         setName("BackgroundMacSync");
+         setName("BackgroundOUISync");
          setDaemon(true);
          start();
       }
 
-      /* (non-Javadoc)
+      /**
        * @see java.lang.Thread#run()
        */
       @Override
@@ -133,13 +130,13 @@ public class MacToVendorCache
       {
          while(true)
          {
-            synchronized(macSyncList)
+            synchronized(syncList)
             {
-               while(macSyncList.isEmpty())
+               while(syncList.isEmpty())
                {
                   try
                   {
-                     macSyncList.wait();
+                     syncList.wait();
                   }
                   catch(InterruptedException e)
                   {
@@ -157,30 +154,29 @@ public class MacToVendorCache
             {
             }
 
-            Set<MacAddress> macSyncListCopy;
+            Set<MacAddress> syncListCopy;
             List<Runnable> callbackListCopy;
-            synchronized(macSyncList)
+            synchronized(syncList)
             {
-               macSyncListCopy = macSyncList;
-               macSyncList = new HashSet<MacAddress>();
+               syncListCopy = syncList;
+               syncList = new HashSet<MacAddress>();
                callbackListCopy = callbackList;
                callbackList = new ArrayList<Runnable>();
             }
 
             try
             {
-               Map<MacAddress, String> updatedElements = session.getVendorByMac(macSyncListCopy);
-               synchronized(macToVendorMap)
+               Map<MacAddress, String> updatedElements = session.getVendorByMac(syncListCopy);
+               synchronized(ouiToVendorMap)
                {
-                  macToVendorMap.putAll(updatedElements);
+                  ouiToVendorMap.putAll(updatedElements);
                }
                for(Runnable cb : callbackListCopy)
                   cb.run();
             }
             catch(Exception e)
             {
-               logger.error("Exception while synchronizing MAC to vendor cache", e);
-               continue;
+               logger.error("Exception while synchronizing OUI cache", e);
             }
          }         
       }

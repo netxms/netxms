@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ public class PhysicalComponent
 	public static final int MODULE = 9;
 	public static final int PORT = 10;
 	public static final int STACK = 11;
-	
+
 	private int index;
 	private int parentIndex;
 	private int position;
@@ -53,7 +53,7 @@ public class PhysicalComponent
 	private PhysicalComponent parent;
 	private List<PhysicalComponent> subcomponents;
 	private long nextVarId;
-	
+
 	/**
 	 * Create object from NXCP message
 	 * 
