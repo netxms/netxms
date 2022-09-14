@@ -25,6 +25,7 @@
 .#*
 .*.rej
 .*~
+.~lock.*
 .DS_Store
 Makefile
 Makefile.in
