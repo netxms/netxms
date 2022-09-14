@@ -68,17 +68,20 @@ public class InterfacesTab extends NodeComponentViewerTab
    public static final int COLUMN_MAC_ADDRESS = 9;
    public static final int COLUMN_IP_ADDRESS = 10;
    public static final int COLUMN_VLAN = 11;
-   public static final int COLUMN_PEER_NODE = 12;
-   public static final int COLUMN_PEER_INTERFACE = 13;
-   public static final int COLUMN_PEER_MAC_ADDRESS = 14;
-   public static final int COLUMN_PEER_IP_ADDRESS = 15;
-   public static final int COLUMN_PEER_PROTOCOL = 16;
-   public static final int COLUMN_ADMIN_STATE = 17;
-   public static final int COLUMN_OPER_STATE = 18;
-   public static final int COLUMN_EXPECTED_STATE = 19;
-   public static final int COLUMN_STATUS = 20;
-   public static final int COLUMN_8021X_PAE_STATE = 21;
-   public static final int COLUMN_8021X_BACKEND_STATE = 22;
+   public static final int COLUMN_OSPF_AREA = 12;
+   public static final int COLUMN_OSPF_TYPE = 13;
+   public static final int COLUMN_OSPF_STATE = 14;
+   public static final int COLUMN_PEER_NODE = 15;
+   public static final int COLUMN_PEER_INTERFACE = 16;
+   public static final int COLUMN_PEER_MAC_ADDRESS = 17;
+   public static final int COLUMN_PEER_IP_ADDRESS = 18;
+   public static final int COLUMN_PEER_PROTOCOL = 19;
+   public static final int COLUMN_ADMIN_STATE = 20;
+   public static final int COLUMN_OPER_STATE = 21;
+   public static final int COLUMN_EXPECTED_STATE = 22;
+   public static final int COLUMN_STATUS = 23;
+   public static final int COLUMN_8021X_PAE_STATE = 24;
+   public static final int COLUMN_8021X_BACKEND_STATE = 25;
 
    private InterfaceListLabelProvider labelProvider;
    private Action actionCopyMacAddressToClipboard;
@@ -182,7 +185,7 @@ public class InterfacesTab extends NodeComponentViewerTab
 		manager.add(new Separator());
 		ObjectContextMenu.fill(manager, getViewPart().getSite(), viewer);
 	}
-   
+
    /**
     * Copy mac address
     */
@@ -255,6 +258,9 @@ public class InterfacesTab extends NodeComponentViewerTab
          Messages.get().InterfacesTab_ColMacAddr,
          Messages.get().InterfacesTab_ColIpAddr, 
          "VLAN",
+         "OSPF area",
+         "OSPF type",
+         "OSPF state",
          Messages.get().InterfacesTab_ColPeerNode,
          "Peer interface",
          Messages.get().InterfacesTab_ColPeerMAC, 
@@ -267,7 +273,7 @@ public class InterfacesTab extends NodeComponentViewerTab
          Messages.get().InterfacesTab_Col8021xPAE, 
          Messages.get().InterfacesTab_Col8021xBackend 
       };
-      final int[] widths = { 60, 150, 150, 150, 70, 100, 70, 90, 150, 100, 90, 80, 150, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
+      final int[] widths = { 60, 150, 150, 150, 70, 100, 70, 90, 150, 100, 90, 80, 80, 80, 80, 150, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new InterfaceListLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
@@ -278,12 +284,12 @@ public class InterfacesTab extends NodeComponentViewerTab
       filter = new InterfacesTabFilter();
       ((InterfacesTabFilter)filter).setHideSubInterfaces(hideSubInterfaces);
       viewer.addFilter(filter);
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V7"); //$NON-NLS-1$
+      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V8"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V7"); //$NON-NLS-1$
+            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V8"); //$NON-NLS-1$
          }
       });
 

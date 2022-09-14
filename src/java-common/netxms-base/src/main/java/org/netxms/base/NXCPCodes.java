@@ -451,7 +451,7 @@ public class NXCPCodes
    public static final int CMD_2FA_PREPARE_CHALLENGE = 0x01AE;
    public static final int CMD_2FA_VALIDATE_RESPONSE = 0x01AF;
    public static final int CMD_2FA_GET_METHODS = 0x01B0;
-   // public static final int CMD_2FA_GET_METHOD_DETAILS = 0x01B1;
+   public static final int CMD_GET_OSPF_DATA = 0x01B1;
    public static final int CMD_2FA_MODIFY_METHOD = 0x01B2;
    public static final int CMD_2FA_DELETE_METHOD = 0x01B3;
    public static final int CMD_2FA_GET_USER_BINDINGS = 0x01B4;
@@ -459,7 +459,7 @@ public class NXCPCodes
    public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
    public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
    public static final int CMD_WEB_SERVICE_CUSTOM_REQUEST = 0x01B8;
-   public static final int CMD_MERGE_FILES = 0x01B9;
+   // public static final int CMD_MERGE_FILES = 0x01B9;
    public static final int CMD_FILEMGR_MERGE_FILES = 0x01BA;
    public static final int CMD_GET_BIZSVC_CHECK_LIST = 0x01BB;
    public static final int CMD_UPDATE_BIZSVC_CHECK = 0x01BC;
@@ -1249,7 +1249,7 @@ public class NXCPCodes
    public static final long VID_WEBSVC_RESPONSE = 764;
    public static final long VID_WEBSVC_ERROR_TEXT = 765;
    public static final long VID_REQUEST_DATA = 766;
-   public static final long VID_ENABLE_FILE_UPLOAD_RESUMING = 767;
+   public static final long VID_OSPF_ROUTER_ID = 767;
    public static final long VID_CHECK_COUNT = 768;
    public static final long VID_CHECK_ID  = 769;
    public static final long VID_BUSINESS_SERVICE_CHECK_RELATED_OBJECT = 770;
@@ -1278,6 +1278,9 @@ public class NXCPCodes
    public static final long VID_MAC_ADDR_COUNT = 793;
    public static final long VID_DEVELOPMENT_MODE = 794;
    public static final long VID_DISPLAY_PRIORITY = 795;
+   public static final long VID_OSPF_AREA = 796;
+   public static final long VID_OSPF_INTERFACE_TYPE = 797;
+   public static final long VID_OSPF_INTERFACE_STATE = 798;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -60,17 +60,20 @@ public class InterfacesView extends NodeSubObjectTableView
    public static final int COLUMN_MAC_ADDRESS = 9;
    public static final int COLUMN_IP_ADDRESS = 10;
    public static final int COLUMN_VLAN = 11;
-   public static final int COLUMN_PEER_NODE = 12;
-   public static final int COLUMN_PEER_INTERFACE = 13;
-   public static final int COLUMN_PEER_MAC_ADDRESS = 14;
-   public static final int COLUMN_PEER_IP_ADDRESS = 15;
-   public static final int COLUMN_PEER_PROTOCOL = 16;
-   public static final int COLUMN_ADMIN_STATE = 17;
-   public static final int COLUMN_OPER_STATE = 18;
-   public static final int COLUMN_EXPECTED_STATE = 19;
-   public static final int COLUMN_STATUS = 20;
-   public static final int COLUMN_8021X_PAE_STATE = 21;
-   public static final int COLUMN_8021X_BACKEND_STATE = 22;
+   public static final int COLUMN_OSPF_AREA = 12;
+   public static final int COLUMN_OSPF_TYPE = 13;
+   public static final int COLUMN_OSPF_STATE = 14;
+   public static final int COLUMN_PEER_NODE = 15;
+   public static final int COLUMN_PEER_INTERFACE = 16;
+   public static final int COLUMN_PEER_MAC_ADDRESS = 17;
+   public static final int COLUMN_PEER_IP_ADDRESS = 18;
+   public static final int COLUMN_PEER_PROTOCOL = 19;
+   public static final int COLUMN_ADMIN_STATE = 20;
+   public static final int COLUMN_OPER_STATE = 21;
+   public static final int COLUMN_EXPECTED_STATE = 22;
+   public static final int COLUMN_STATUS = 23;
+   public static final int COLUMN_8021X_PAE_STATE = 24;
+   public static final int COLUMN_8021X_BACKEND_STATE = 25;
 
    private InterfaceListLabelProvider labelProvider;
    private Action actionCopyMacAddressToClipboard;
@@ -120,6 +123,9 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("MAC address"),
          i18n.tr("IP addresses"),
          i18n.tr("VLAN"),
+         i18n.tr("OSPF area"),
+         i18n.tr("OSPF type"),
+         i18n.tr("OSPF state"),
          i18n.tr("Peer node"),
          i18n.tr("Peer interface"),
          i18n.tr("Peer MAC"),
@@ -132,7 +138,7 @@ public class InterfacesView extends NodeSubObjectTableView
          i18n.tr("802.1x PAE"),
          i18n.tr("802.1x Backend")
       };
-      final int[] widths = { 60, 150, 150, 150, 70, 100, 70, 90, 150, 100, 90, 80, 150, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
+      final int[] widths = { 60, 150, 150, 150, 70, 100, 70, 90, 150, 100, 90, 80, 80, 80, 80, 150, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new InterfaceListLabelProvider(viewer);
       viewer.setLabelProvider(labelProvider);
@@ -216,7 +222,7 @@ public class InterfacesView extends NodeSubObjectTableView
       manager.add(actionCopyPeerIpToClipboard);
       manager.add(actionExportToCsv);
    }
-   
+
    /**
     * Copy mac address
     */

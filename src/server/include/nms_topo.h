@@ -319,6 +319,22 @@ struct OSPFArea
 };
 
 /**
+ * OSPF neighbor states
+ */
+enum class OSPFNeighborState : int16_t
+{
+   UNKNOWN = 0,
+   DOWN = 1,
+   ATTEMPT = 2,
+   INIT = 3,
+   TWO_WAY = 4,
+   EXCHANGE_START = 5,
+   EXCHANGE = 6,
+   LOADING = 7,
+   FULL = 8
+};
+
+/**
  * OSPF neighbor
  */
 struct OSPFNeighbor
@@ -326,8 +342,36 @@ struct OSPFNeighbor
    uint32_t ipAddress;
    uint32_t nodeId;
    uint32_t routerId;
-   uint32_t state;
    uint32_t ifIndex;
+   uint32_t ifObject;
+   OSPFNeighborState state;
+};
+
+/**
+ * OSPF interface types
+ */
+enum class OSPFInterfaceType : int16_t
+{
+   UNKNOWN = 0,
+   BROADCAST = 1,
+   NBMA = 2,
+   POINT_TO_POINT = 3,
+   POINT_TO_MULTIPOINT = 4
+};
+
+/**
+ * OSPF interface states
+ */
+enum class OSPFInterfaceState : int16_t
+{
+   UNKNOWN = 0,
+   DOWN = 1,
+   LOOPBACK = 2,
+   WAITING = 3,
+   POINT_TO_POINT = 4,
+   DESIGNATED_ROUTER = 5,
+   BACKUP_DESIGNATED_ROUTER = 6,
+   OTHER_DESIGNATED_ROUTER = 7
 };
 
 /**
@@ -337,16 +381,14 @@ struct OSPFInterface
 {
    uint32_t ifIndex;
    uint32_t areaId;
-   uint32_t type;
-   uint32_t state;
+   OSPFInterfaceType type;
+   OSPFInterfaceState state;
    uint32_t dr;
    uint32_t bdr;
 };
 
-
-//
+//////////////////////////////////
 // Topology functions
-//
 
 shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes, bool useL1Topology);
@@ -393,5 +435,8 @@ const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p);
 unique_ptr<NetworkMapObjectList> BuildIPTopology(const shared_ptr<Node>& root, int radius, bool includeEndNodes);
 
 bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArray<OSPFInterface> *interfaces, StructArray<OSPFNeighbor> *neighbors);
+const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state);
+const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state);
+const TCHAR *OSPFInterfaceTypeToText(OSPFInterfaceType type);
 
 #endif   /* _nms_topo_h_ */

@@ -114,7 +114,7 @@ uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t use
 /**
  * Client session console constructor
  */
-ClientSessionConsole::ClientSessionConsole(ClientSession *session, UINT16 msgCode)
+ClientSessionConsole::ClientSessionConsole(ClientSession *session, uint16_t msgCode)
 {
    m_session = session;
    m_messageCode = msgCode;
@@ -1885,6 +1885,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_FIND_VENDOR_BY_MAC:
          findVendorByMac(*request);
+         break;
+      case CMD_GET_OSPF_DATA:
+         getOspfData(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -16309,21 +16312,21 @@ void ClientSession::cloneNetworkMap(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_MAP_ID));
-   if (object != nullptr)
+   shared_ptr<NetObj> map = FindObjectById(request.getFieldAsUInt32(VID_MAP_ID), OBJECT_NETWORKMAP);
+   if (map != nullptr)
    {
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      if (map->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          SharedString name = request.getFieldAsSharedString(VID_NAME);
          SharedString alias = request.getFieldAsSharedString(VID_ALIAS);
-         static_pointer_cast<NetworkMap>(object)->clone(name, alias);
-         writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Network map cloned successfully"));
+         static_cast<NetworkMap&>(*map).clone(name, alias);
+         writeAuditLog(AUDIT_OBJECTS, true, map->getId(), _T("Network map cloned successfully"));
          response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on clone network map"));
+         writeAuditLog(AUDIT_OBJECTS, false, map->getId(), _T("Access denied on clone network map"));
       }
    }
    else
@@ -16342,5 +16345,41 @@ void ClientSession::findVendorByMac(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    FindVendorByMacList(request, &response);
    response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Get OSPF data for given node
+ */
+void ClientSession::getOspfData(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_NODE_ID), OBJECT_NODE);
+   if (node != nullptr)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (static_cast<Node&>(*node).isOSPFSupported())
+         {
+            static_cast<Node&>(*node).writeOSPFDataToMessage(&response);
+            response.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on reading OSPF information"));
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
    sendMessage(response);
 }

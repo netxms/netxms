@@ -194,6 +194,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected String agentCertificateSubject;
    protected String syslogCodepage;
    protected String snmpCodepage;
+   protected InetAddress ospfRouterId;
 
 	/**
 	 * Create new node object.
@@ -297,7 +298,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       agentCertificateSubject = msg.getFieldAsString(NXCPCodes.VID_AGENT_CERT_SUBJECT);
       syslogCodepage = msg.getFieldAsString(NXCPCodes.VID_SYSLOG_CODEPAGE);
       snmpCodepage = msg.getFieldAsString(NXCPCodes.VID_SNMP_CODEPAGE);
-      
+      ospfRouterId = msg.getFieldAsInetAddress(NXCPCodes.VID_OSPF_ROUTER_ID);
+
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
       if(config != null && !config.isEmpty())
@@ -705,6 +707,16 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public boolean isBridge()
    {
       return (capabilities & NC_IS_BRIDGE) != 0;
+   }
+
+   /**
+    * Check for OSPF capabilities flag
+    * 
+    * @return true if node is has OSPF capabilities
+    */
+   public boolean isOSPF()
+   {
+      return (capabilities & NC_IS_OSPF) != 0;
    }
 
 	/**
@@ -1302,5 +1314,15 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public String getSNMPCodepage()
    {
       return snmpCodepage;
+   }
+
+   /**
+    * Get OSPF router ID
+    *
+    * @return OSPF router ID
+    */
+   public InetAddress getOSPFRouterId()
+   {
+      return ospfRouterId;
    }
 }

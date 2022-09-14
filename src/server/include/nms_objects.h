@@ -1994,8 +1994,8 @@ protected:
    int16_t m_lastKnownOperState;
    int16_t m_lastKnownAdminState;
    uint32_t m_ospfArea;
-   int16_t m_ospfState;
-   int16_t m_ospfType;
+   OSPFInterfaceState m_ospfState;
+   OSPFInterfaceType m_ospfType;
 
    void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
@@ -2052,8 +2052,8 @@ public:
    uint32_t getPeerInterfaceId() const { return m_peerInterfaceId; }
    LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
    uint32_t getOSPFArea() const { return m_ospfArea; }
-   int16_t getOSPFType() const { return m_ospfType; }
-   int16_t getOSPFState() const { return m_ospfState; }
+   OSPFInterfaceType getOSPFType() const { return m_ospfType; }
+   OSPFInterfaceState getOSPFState() const { return m_ospfState; }
    int getExpectedState() const { return (int)((m_flags & IF_EXPECTED_STATE_MASK) >> 28); }
    int getAdminState() const { return (int)m_adminState; }
    int getOperState() const { return (int)m_operState; }
@@ -2087,6 +2087,8 @@ public:
 
    void setMacAddr(const MacAddress& macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
+   void addIpAddress(const InetAddress& addr);
+   void deleteIpAddress(InetAddress addr);
    void setBridgePortNumber(uint32_t bpn)
    {
       lockProperties();
@@ -2140,8 +2142,8 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
-   void addIpAddress(const InetAddress& addr);
-   void deleteIpAddress(InetAddress addr);
+   void setExcludeFromTopology(bool excluded);
+   void setIncludeInIcmpPoll(bool included);
    void setNetMask(const InetAddress& addr);
    void setMTU(int mtu)
    {
@@ -2173,45 +2175,24 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
-   void updateVlans(IntegerArray<uint32_t> *vlans);
-
-   void updateZoneUIN();
-
-   void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy);
-
-   uint32_t wakeUp();
-   void setExpectedState(int state) { lockProperties(); setExpectedStateInternal(state); unlockProperties(); }
-   void setExcludeFromTopology(bool excluded);
-   void setIncludeInIcmpPoll(bool included);
-
-   void setOSPFInformation(const OSPFInterface& ospfInterface)
+   void setExpectedState(int state)
    {
       lockProperties();
-      bool modified = ((m_flags & IF_OSPF_INTERFACE) == 0) || (m_ospfArea != ospfInterface.areaId) || (m_ospfType != ospfInterface.type) || (m_ospfState != ospfInterface.state);
-      m_flags |= IF_OSPF_INTERFACE;
-      m_ospfArea = ospfInterface.areaId;
-      m_ospfType = ospfInterface.type;
-      m_ospfState = ospfInterface.state;
+      setExpectedStateInternal(state);
       unlockProperties();
-      if (modified)
-         setModified(MODIFY_INTERFACE_PROPERTIES);
    }
 
-   void clearOSPFInformation()
-   {
-      lockProperties();
-      if (m_flags & IF_OSPF_INTERFACE)
-      {
-         m_flags &= ~IF_OSPF_INTERFACE;
-         m_ospfArea = 0;
-         m_ospfType = 0;
-         m_ospfState = 0;
-         setModified(MODIFY_INTERFACE_PROPERTIES);
-      }
-      unlockProperties();
-   }
+   void setOSPFInformation(const OSPFInterface& ospfInterface);
+   void clearOSPFInformation();
 
    void expandName(const TCHAR *originalName, TCHAR *expandedName);
+
+   void updateVlans(IntegerArray<uint32_t> *vlans);
+   void updateZoneUIN();
+
+   uint32_t wakeUp();
+
+   void statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Event> *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, uint32_t nodeIcmpProxy);
 };
 
 #ifdef _WIN32
@@ -3598,6 +3579,7 @@ public:
    void writePackageListToMessage(NXCPMessage *msg);
    void writeWsListToMessage(NXCPMessage *msg);
    void writeHardwareListToMessage(NXCPMessage *msg);
+   void writeOSPFDataToMessage(NXCPMessage *msg);
 
    shared_ptr<Table> wsListAsTable();
 

@@ -163,6 +163,12 @@ public class GeneralInfo extends TableElement
 					for(int i = 1; i < iface.getIpAddressList().size(); i++)
 	               addPair("", iface.getIpAddressList().get(i).toString()); //$NON-NLS-1$
 				}
+            if (iface.isOSPF())
+            {
+               addPair("OSPF area", iface.getOSPFArea().getHostAddress());
+               addPair("OSPF interface type", iface.getOSPFType().getText(), false);
+               addPair("OSPF interface state", iface.getOSPFState().getText(), false);
+            }
             addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
             addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());
             addPair(Messages.get().GeneralInfo_ExpectedState, ifaceExpectedState[iface.getExpectedState()]);
@@ -204,8 +210,10 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_SysOID, node.getSnmpOID(), false);
             addPair(Messages.get().GeneralInfo_SNMPsysLocation, node.getSnmpSysLocation(), false);
             addPair(Messages.get().GeneralInfo_SNMPsysContact, node.getSnmpSysContact(), false);
-				if ((node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0)
+            if (node.isBridge())
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
+            if (node.isOSPF())
+               addPair("OSPF router ID", node.getOSPFRouterId().getHostAddress());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
@@ -318,7 +326,7 @@ public class GeneralInfo extends TableElement
          addPair(Messages.get().GeneralInfo_PostalAddress, object.getPostalAddress().getAddressLine());
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
 	 */
 	@Override

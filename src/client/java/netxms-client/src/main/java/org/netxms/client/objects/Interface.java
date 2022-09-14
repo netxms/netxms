@@ -31,6 +31,8 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
+import org.netxms.client.constants.OSPFInterfaceState;
+import org.netxms.client.constants.OSPFInterfaceType;
 import org.netxms.client.objects.interfaces.NodeChild;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpObjectId;
@@ -51,6 +53,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
    public static final int IF_DISABLE_SNMP_STATUS_POLL  = 0x00000080;
    public static final int IF_DISABLE_ICMP_STATUS_POLL  = 0x00000100;
    public static final int IF_DISABLE_AGENT_STATUS_POLL = 0x00000200;
+   public static final int IF_OSPF_INTERFACE            = 0x00000400;
 	public static final int IF_EXPECTED_STATE_MASK       = 0x30000000;
 
 	public static final int ADMIN_STATE_UNKNOWN      = 0;
@@ -405,7 +408,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	   ifTypeNames.put(271, "aluGponPhysicalUni");
 	   ifTypeNames.put(272, "vmwareNicTeam");
 	}
-	
+
 	private int ifIndex;
 	private int ifType;
 	private int mtu;
@@ -430,6 +433,9 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	private SnmpObjectId ifTableSuffix;
    private long parentInterfaceId;
    private long[] vlans;
+   private InetAddress ospfArea;
+   private OSPFInterfaceState ospfState;
+   private OSPFInterfaceType ospfType;
 
 	/**
     * Create from NXCP message.
@@ -464,11 +470,12 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 		parentInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PARENT_INTERFACE);
 		vlans = msg.getFieldAsUInt32Array(NXCPCodes.VID_VLAN_LIST);
       ifAlias = msg.getFieldAsString(NXCPCodes.VID_IF_ALIAS);
+      ospfArea = msg.getFieldAsInetAddress(NXCPCodes.VID_OSPF_AREA);
+      ospfState = OSPFInterfaceState.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OSPF_INTERFACE_STATE));
+      ospfType = OSPFInterfaceType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OSPF_INTERFACE_TYPE));
 
 		if (vlans != null)
-		{
 		   Arrays.sort(vlans);
-		}
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_IP_ADDRESS_COUNT);
 		ipAddressList = new ArrayList<InetAddressEx>(count);
@@ -801,6 +808,16 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 		return (flags & IF_LOOPBACK) != 0;
 	}
 	
+   /**
+    * Check if OSPF is running on this interface
+    * 
+    * @return true if OSPF is running on this interface
+    */
+   public boolean isOSPF()
+   {
+      return (flags & IF_OSPF_INTERFACE) != 0;
+   }
+
 	/**
     * Check if this interface is excluded from network topology calculation
     * 
@@ -996,6 +1013,30 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
    public long[] getVlans()
    {
       return (vlans != null) ? vlans : new long[0];
+   }
+
+   /**
+    * @return the ospfArea
+    */
+   public InetAddress getOSPFArea()
+   {
+      return ospfArea;
+   }
+
+   /**
+    * @return the ospfState
+    */
+   public OSPFInterfaceState getOSPFState()
+   {
+      return ospfState;
+   }
+
+   /**
+    * @return the ospfType
+    */
+   public OSPFInterfaceType getOSPFType()
+   {
+      return ospfType;
    }
 
    /**

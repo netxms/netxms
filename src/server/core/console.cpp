@@ -125,13 +125,12 @@ static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
       count++;
       if (count == 1)
       {
-         console->printf(_T(" \x1b[1mArea\x1b[0m            | \x1b[1mState\x1b[0m    | \x1b[1mifIndex\x1b[0m | \x1b[1mName\x1b[0m\n"));
-         console->printf(_T("-----------------+----------+---------+--------------------------\n"));
+         console->printf(_T(" \x1b[1mifIndex\x1b[0m | \x1b[1mName\x1b[0m                           | \x1b[1mArea\x1b[0m            | \x1b[1mType\x1b[0m      | \x1b[1mState\x1b[0m\n"));
+         console->printf(_T("---------+--------------------------------+-----------------+-----------+-----------\n"));
       }
 
-      static const TCHAR *states[] = { _T("DOWN"), _T("LOOPBACK"), _T("WAITING"), _T("PT-TO-PT"), _T("DR"), _T("BDR"), _T("ODR") };
-      const TCHAR *state = ((iface->getOSPFState() >= 1) && (iface->getOSPFState() <= 7)) ? states[iface->getOSPFState() - 1] : _T("UNKNOWN");
-      console->printf(_T(" %-15s | %-8s | %7d | %s\n"), IpToStr(iface->getOSPFArea(), idText), state, iface->getIfIndex(), iface->getName());
+      console->printf(_T(" %7d | %-30s | %-15s | %-9s | %s\n"), iface->getIfIndex(), iface->getName(), IpToStr(iface->getOSPFArea(), idText),
+         OSPFInterfaceTypeToText(iface->getOSPFType()), OSPFInterfaceStateToText(iface->getOSPFState()));
    }
    if (count == 0)
       console->print(_T("No known OSPF interfaces on this node\n"));
@@ -148,11 +147,10 @@ static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
       for(int i = 0; i < neighbors.size(); i++)
       {
          const OSPFNeighbor *n = neighbors.get(i);
-         const TCHAR *state = ((n->state >= 1) && (n->state <= 8)) ? states[n->state - 1] : _T("UNKNOWN");
-         shared_ptr<Interface> iface = node.findInterfaceByIndex(n->ifIndex);
+         shared_ptr<NetObj> iface = FindObjectById(n->ifObject, OBJECT_INTERFACE);
          shared_ptr<NetObj> remoteNode = FindObjectById(n->nodeId, OBJECT_NODE);
-         console->printf(_T(" %-15s | %-15s | %9s | %7u | %-24s | %s\n"), IpToStr(n->routerId, idText), IpToStr(n->ipAddress, addrText), state, n->ifIndex,
-            iface != nullptr ? iface->getName() : _T(""), remoteNode != nullptr ? remoteNode->getName() : _T(""));
+         console->printf(_T(" %-15s | %-15s | %9s | %7u | %-24s | %s\n"), IpToStr(n->routerId, idText), IpToStr(n->ipAddress, addrText),
+            OSPFNeighborStateToText(n->state), n->ifIndex, iface != nullptr ? iface->getName() : _T(""), remoteNode != nullptr ? remoteNode->getName() : _T(""));
       }
       console->print(_T("\n"));
    }

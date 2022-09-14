@@ -41,9 +41,9 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class InterfaceListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
 	private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, Messages.get().InterfaceListLabelProvider_Auto };
-	
+
 	private AbstractNode node = null;
-	private NXCSession session = ConsoleSharedData.getSession();
+   private NXCSession session = ConsoleSharedData.getSession();
    private TableViewer viewer;
 
    /**
@@ -55,7 +55,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    {
       this.viewer = viewer;
    }
-   
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -117,6 +117,12 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", iface.getMacAddress().toString(), vendor) : iface.getMacAddress().toString();
 			case InterfacesTab.COLUMN_IP_ADDRESS:
 				return iface.getIpAddressListAsString();
+         case InterfacesTab.COLUMN_OSPF_AREA:
+            return iface.isOSPF() ? iface.getOSPFArea().getHostAddress() : "";
+         case InterfacesTab.COLUMN_OSPF_STATE:
+            return iface.isOSPF() ? iface.getOSPFState().getText() : "";
+         case InterfacesTab.COLUMN_OSPF_TYPE:
+            return iface.isOSPF() ? iface.getOSPFType().getText() : "";
          case InterfacesTab.COLUMN_PEER_INTERFACE:
             return getPeerInterfaceName(iface);
 			case InterfacesTab.COLUMN_PEER_NODE:
@@ -286,16 +292,16 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    {
       if (speed < 1000)
          return Long.toString(speed) + Messages.get().InterfaceListLabelProvider_bps;
-      
+
       if (speed < 1000000)
          return divideSpeed(speed, 3) + Messages.get().InterfaceListLabelProvider_Kbps;
-      
+
       if (speed < 1000000000)
          return divideSpeed(speed, 6) + Messages.get().InterfaceListLabelProvider_Mbps;
-      
+
       if (speed < 1000000000000L)
          return divideSpeed(speed, 9) + Messages.get().InterfaceListLabelProvider_Gbps;
-      
+
       return divideSpeed(speed, 12) + Messages.get().InterfaceListLabelProvider_Tbps;
    }
 

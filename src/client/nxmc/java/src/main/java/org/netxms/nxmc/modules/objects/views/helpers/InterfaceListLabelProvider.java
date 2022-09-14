@@ -41,13 +41,18 @@ import org.xnap.commons.i18n.I18n;
  */
 public class InterfaceListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(InterfaceListLabelProvider.class);
-   private static final String[] ifaceExpectedState = { i18n.tr("Up"), i18n.tr("Down"), i18n.tr("Ignore"), i18n.tr("Auto") };
-	
+   private final I18n i18n = LocalizationHelper.getI18n(InterfaceListLabelProvider.class);
+   private final String[] ifaceExpectedState = { i18n.tr("Up"), i18n.tr("Down"), i18n.tr("Ignore"), i18n.tr("Auto") };
+
 	private AbstractNode node = null;
    private NXCSession session = Registry.getSession();
-   private TableViewer viewer; 
+   private TableViewer viewer;
 
+   /**
+    * Constructor
+    * 
+    * @param viewer viewer
+    */
    public InterfaceListLabelProvider(TableViewer viewer)
    {
       this.viewer = viewer;
@@ -94,44 +99,50 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return Long.toString(iface.getObjectId());
          case InterfacesView.COLUMN_INDEX:
 				return Integer.toString(iface.getIfIndex());
+         case InterfacesView.COLUMN_IP_ADDRESS:
+            return iface.getIpAddressListAsString();
+         case InterfacesView.COLUMN_MAC_ADDRESS:
+            String vendor = session.getVendorByMac(iface.getMacAddress(), new ViewerElementUpdater(viewer, element));
+            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", iface.getMacAddress().toString(), vendor) : iface.getMacAddress().toString();
          case InterfacesView.COLUMN_MTU:
             return Integer.toString(iface.getMtu());
          case InterfacesView.COLUMN_NAME:
 				return iface.getObjectName();
          case InterfacesView.COLUMN_OPER_STATE:
 				return iface.getOperStateAsText();
-         case InterfacesView.COLUMN_PHYSICAL_LOCATION:
-				if (iface.isPhysicalPort())
-					return iface.getPhysicalLocation();
-				return null;
-         case InterfacesView.COLUMN_STATUS:
-				return StatusDisplayInfo.getStatusText(iface.getStatus());
-         case InterfacesView.COLUMN_TYPE:
-            String typeName = iface.getIfTypeName();
-				return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()); //$NON-NLS-1$
-         case InterfacesView.COLUMN_MAC_ADDRESS:
-            String vendor = session.getVendorByMac(iface.getMacAddress(), new ViewerElementUpdater(viewer, element));
-            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", iface.getMacAddress().toString(), vendor) : iface.getMacAddress().toString();
-         case InterfacesView.COLUMN_IP_ADDRESS:
-				return iface.getIpAddressListAsString();
+         case InterfacesView.COLUMN_OSPF_AREA:
+            return iface.isOSPF() ? iface.getOSPFArea().getHostAddress() : "";
+         case InterfacesView.COLUMN_OSPF_STATE:
+            return iface.isOSPF() ? iface.getOSPFState().getText() : "";
+         case InterfacesView.COLUMN_OSPF_TYPE:
+            return iface.isOSPF() ? iface.getOSPFType().getText() : "";
          case InterfacesView.COLUMN_PEER_INTERFACE:
             return getPeerInterfaceName(iface);
-			case InterfacesView.COLUMN_PEER_NODE:
-				return getPeerNodeName(iface);
-			case InterfacesView.COLUMN_PEER_MAC_ADDRESS:
-			   MacAddress mac = getPeerMacAddress(iface);
+         case InterfacesView.COLUMN_PEER_IP_ADDRESS:
+            return getPeerIpAddress(iface);
+         case InterfacesView.COLUMN_PEER_MAC_ADDRESS:
+            MacAddress mac = getPeerMacAddress(iface);
             if (mac != null)
             {
                String peerVendor = session.getVendorByMac(mac, new ViewerElementUpdater(viewer, element));
                return peerVendor != null && !peerVendor.isEmpty() ? String.format("%s (%s)", mac.toString(), peerVendor) : mac.toString();
             }
             return "";
-         case InterfacesView.COLUMN_PEER_IP_ADDRESS:
-				return getPeerIpAddress(iface);
+         case InterfacesView.COLUMN_PEER_NODE:
+            return getPeerNodeName(iface);
          case InterfacesView.COLUMN_PEER_PROTOCOL:
             return getPeerProtocol(iface);
+         case InterfacesView.COLUMN_PHYSICAL_LOCATION:
+            if (iface.isPhysicalPort())
+               return iface.getPhysicalLocation();
+            return null;
          case InterfacesView.COLUMN_SPEED:
-            return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : ""; //$NON-NLS-1$
+            return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : "";
+         case InterfacesView.COLUMN_STATUS:
+            return StatusDisplayInfo.getStatusText(iface.getStatus());
+         case InterfacesView.COLUMN_TYPE:
+            String typeName = iface.getIfTypeName();
+            return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType());
          case InterfacesView.COLUMN_VLAN:
             return getVlanList(iface);
 		}
@@ -282,18 +293,18 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    public static String ifSpeedTotext(long speed)
    {
       if (speed < 1000)
-         return Long.toString(speed) + i18n.tr(" bps");
-      
+         return Long.toString(speed) + " bps";
+
       if (speed < 1000000)
-         return divideSpeed(speed, 3) + i18n.tr(" Kbps");
-      
+         return divideSpeed(speed, 3) + " Kbps";
+
       if (speed < 1000000000)
-         return divideSpeed(speed, 6) + i18n.tr(" Mbps");
-      
+         return divideSpeed(speed, 6) + " Mbps";
+
       if (speed < 1000000000000L)
-         return divideSpeed(speed, 9) + i18n.tr(" Gbps");
-      
-      return divideSpeed(speed, 12) + i18n.tr(" Tbps");
+         return divideSpeed(speed, 9) + " Gbps";
+
+      return divideSpeed(speed, 12) + " Tbps";
    }
 
    /**

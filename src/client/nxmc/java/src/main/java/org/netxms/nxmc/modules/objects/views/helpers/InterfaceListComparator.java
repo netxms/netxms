@@ -92,6 +92,21 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_OPER_STATE:
 				result = iface1.getOperState() - iface2.getOperState();
 				break;
+         case InterfacesView.COLUMN_OSPF_AREA:
+            result = Boolean.compare(iface1.isOSPF(), iface2.isOSPF());
+            if ((result == 0) && iface1.isOSPF())
+               result = ComparatorHelper.compareInetAddresses(iface1.getOSPFArea(), iface2.getOSPFArea());
+            break;
+         case InterfacesView.COLUMN_OSPF_STATE:
+            result = Boolean.compare(iface1.isOSPF(), iface2.isOSPF());
+            if ((result == 0) && iface1.isOSPF())
+               result = iface1.getOSPFState().getText().compareTo(iface2.getOSPFState().getText());
+            break;
+         case InterfacesView.COLUMN_OSPF_TYPE:
+            result = Boolean.compare(iface1.isOSPF(), iface2.isOSPF());
+            if ((result == 0) && iface1.isOSPF())
+               result = iface1.getOSPFType().getText().compareTo(iface2.getOSPFType().getText());
+            break;
          case InterfacesView.COLUMN_PEER_INTERFACE:
             result = ComparatorHelper.compareStringsNatural(getPeerInterfaceName(iface1), getPeerInterfaceName(iface2));
             break;

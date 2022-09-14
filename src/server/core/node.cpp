@@ -8486,6 +8486,42 @@ void Node::checkOSPFSupport(SNMP_Transport *snmp)
 }
 
 /**
+ * Write node's OSPF data to NXCP message
+ */
+void Node::writeOSPFDataToMessage(NXCPMessage *msg)
+{
+   lockProperties();
+
+   msg->setField(VID_OSPF_ROUTER_ID, m_ospfRouterId);
+
+   uint32_t fieldId = VID_OSPF_AREA_LIST_BASE;
+   for(OSPFArea *a : m_ospfAreas)
+   {
+      msg->setField(fieldId++, a->id);
+      msg->setField(fieldId++, a->lsaCount);
+      msg->setField(fieldId++, a->areaBorderRouterCount);
+      msg->setField(fieldId++, a->asBorderRouterCount);
+      fieldId += 6;
+   }
+   msg->setField(VID_OSPF_AREA_COUNT, m_ospfAreas.size());
+
+   fieldId = VID_OSPF_NEIGHBOR_LIST_BASE;
+   for(OSPFNeighbor *n : m_ospfNeighbors)
+   {
+      msg->setField(fieldId++, n->routerId);
+      msg->setField(fieldId++, n->nodeId);
+      msg->setField(fieldId++, n->ipAddress);
+      msg->setField(fieldId++, n->ifIndex);
+      msg->setField(fieldId++, n->ifObject);
+      msg->setField(fieldId++, static_cast<uint16_t>(n->state));
+      fieldId += 4;
+   }
+   msg->setField(VID_OSPF_NEIGHBOR_COUNT, m_ospfNeighbors.size());
+
+   unlockProperties();
+}
+
+/**
  * Create ready to use agent connection
  */
 shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
@@ -11786,14 +11822,6 @@ bool Node::getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocate
 }
 
 /**
- * Filter for selecting clusters from objects
- */
-static bool ClusterSelectionFilter(NetObj *object, void *userData)
-{
-   return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isAutoBindEnabled();
-}
-
-/**
  * Update cluster membership
  */
 void Node::updateClusterMembership()
@@ -11802,7 +11830,11 @@ void Node::updateClusterMembership()
       return;
 
    sendPollerMsg(_T("Processing cluster autobind rules\r\n"));
-   unique_ptr<SharedObjectArray<NetObj>> clusters = g_idxObjectById.getObjects(ClusterSelectionFilter);
+   unique_ptr<SharedObjectArray<NetObj>> clusters = g_idxObjectById.getObjects(
+      [] (NetObj *object, void *context)
+      {
+         return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && static_cast<Cluster*>(object)->isAutoBindEnabled();
+      });
    for(int i = 0; i < clusters->size(); i++)
    {
       Cluster *cluster = static_cast<Cluster*>(clusters->get(i));

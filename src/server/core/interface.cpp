@@ -55,8 +55,8 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    m_ospfArea = 0;
-   m_ospfType = 0;
-   m_ospfState = 0;
+   m_ospfType = OSPFInterfaceType::UNKNOWN;
+   m_ospfState = OSPFInterfaceState::UNKNOWN;
 }
 
 /**
@@ -98,8 +98,8 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    m_ospfArea = 0;
-   m_ospfType = 0;
-   m_ospfState = 0;
+   m_ospfType = OSPFInterfaceType::UNKNOWN;
+   m_ospfState = OSPFInterfaceState::UNKNOWN;
    setCreationTime();
 }
 
@@ -144,8 +144,8 @@ Interface::Interface(const TCHAR *name, const TCHAR *description, uint32_t index
    m_lastKnownOperState = IF_OPER_STATE_UNKNOWN;
    m_lastKnownAdminState = IF_ADMIN_STATE_UNKNOWN;
    m_ospfArea = 0;
-   m_ospfType = 0;
-   m_ospfState = 0;
+   m_ospfType = OSPFInterfaceType::UNKNOWN;
+   m_ospfState = OSPFInterfaceState::UNKNOWN;
    setCreationTime();
 }
 
@@ -214,8 +214,8 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_lastKnownOperState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 22));
       m_lastKnownAdminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 23));
       m_ospfArea = DBGetFieldIPAddr(hResult, 0, 24);
-      m_ospfType = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 25));
-      m_ospfState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 26));
+      m_ospfType = static_cast<OSPFInterfaceType>(DBGetFieldLong(hResult, 0, 25));
+      m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 26));
 
       TCHAR suffixText[128];
       DBGetField(hResult, 0, 24, suffixText, 128);
@@ -966,8 +966,8 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_PARENT_INTERFACE, m_parentInterfaceId);
    msg->setFieldFromInt32Array(VID_VLAN_LIST, m_vlans);
    msg->setField(VID_OSPF_AREA, InetAddress(m_ospfArea));
-   msg->setField(VID_OSPF_INTERFACE_TYPE, m_ospfType);
-   msg->setField(VID_OSPF_INTERFACE_STATE, m_ospfState);
+   msg->setField(VID_OSPF_INTERFACE_TYPE, static_cast<uint16_t>(m_ospfType));
+   msg->setField(VID_OSPF_INTERFACE_STATE, static_cast<uint16_t>(m_ospfState));
 }
 
 /**
@@ -1436,6 +1436,39 @@ void Interface::expandName(const TCHAR *originalName, TCHAR *expandedName)
 }
 
 /**
+ * Set OSPF information
+ */
+void Interface::setOSPFInformation(const OSPFInterface& ospfInterface)
+{
+   lockProperties();
+   bool modified = ((m_flags & IF_OSPF_INTERFACE) == 0) || (m_ospfArea != ospfInterface.areaId) || (m_ospfType != ospfInterface.type) || (m_ospfState != ospfInterface.state);
+   m_flags |= IF_OSPF_INTERFACE;
+   m_ospfArea = ospfInterface.areaId;
+   m_ospfType = ospfInterface.type;
+   m_ospfState = ospfInterface.state;
+   unlockProperties();
+   if (modified)
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+}
+
+/**
+ * Clear OSPF information
+ */
+void Interface::clearOSPFInformation()
+{
+   lockProperties();
+   if (m_flags & IF_OSPF_INTERFACE)
+   {
+      m_flags &= ~IF_OSPF_INTERFACE;
+      m_ospfArea = 0;
+      m_ospfType = OSPFInterfaceType::UNKNOWN;
+      m_ospfState = OSPFInterfaceState::UNKNOWN;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+   }
+   unlockProperties();
+}
+
+/**
  * Serialize object to JSON
  */
 json_t *Interface::toJson()
@@ -1478,8 +1511,8 @@ json_t *Interface::toJson()
    if (m_flags & IF_OSPF_INTERFACE)
    {
       json_object_set_new(root, "ospfArea", json_string_t(IpToStr(m_ospfArea, text)));
-      json_object_set_new(root, "ospfType", json_integer(m_ospfType));
-      json_object_set_new(root, "ospfState", json_integer(m_ospfState));
+      json_object_set_new(root, "ospfType", json_integer(static_cast<json_int_t>(m_ospfType)));
+      json_object_set_new(root, "ospfState", json_integer(static_cast<json_int_t>(m_ospfState)));
    }
 
    json_t *loc = json_object();

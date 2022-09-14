@@ -25,6 +25,36 @@
 #define DEBUG_TAG _T("topology.ospf")
 
 /**
+ * Convert OSPF neighbor state to text
+ */
+const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state)
+{
+   static const TCHAR *states[] = { _T("DOWN"), _T("ATTEMPT"), _T("INIT"), _T("2WAY"), _T("EXCHSTART"), _T("EXCHANGE"), _T("LOADING"), _T("FULL") };
+   int index = static_cast<int>(state);
+   return ((index >= 1) && (index <= 8)) ? states[index - 1] : _T("UNKNOWN");
+}
+
+/**
+ * Convert OSPF interface state to text
+ */
+const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state)
+{
+   static const TCHAR *states[] = { _T("DOWN"), _T("LOOPBACK"), _T("WAITING"), _T("PT-TO-PT"), _T("DR"), _T("BDR"), _T("ODR") };
+   int index = static_cast<int>(state);
+   return ((index >= 1) && (index <= 7)) ? states[index - 1] : _T("UNKNOWN");
+}
+
+/**
+ * Convert OSPF interface state to text
+ */
+const TCHAR *OSPFInterfaceTypeToText(OSPFInterfaceType type)
+{
+   static const TCHAR *types[] = { _T("BROADCAST"), _T("NBMA"), _T("PT-TO-PT"), _T("PT-TO-MP") };
+   int index = static_cast<int>(type);
+   return ((index >= 1) && (index <= 4)) ? types[index - 1] : _T("UNKNOWN");
+}
+
+/**
  * Walk handler for area tables
  */
 static uint32_t HandlerAreaTable(SNMP_Variable *var, SNMP_Transport *snmp, StructArray<OSPFArea> *areas)
@@ -75,9 +105,7 @@ static void ProcessInterfaceTableEntry(SNMP_Transport *snmp, SNMP_Variable *var,
       uint32_t ipAddr = (oid.getElement(10) << 24) | (oid.getElement(11) << 16) | (oid.getElement(12) << 8) | oid.getElement(13);
       shared_ptr<Interface> ifaceObject = node->findInterfaceByIP(ipAddr);
       if (ifaceObject != nullptr)
-      {
          iface->ifIndex = ifaceObject->getIfIndex();
-      }
    }
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -103,8 +131,8 @@ static void ProcessInterfaceTableEntry(SNMP_Transport *snmp, SNMP_Variable *var,
       if (response->getNumVariables() >= 5)
       {
          iface->areaId = ntohl(response->getVariable(0)->getValueAsUInt());
-         iface->type = response->getVariable(1)->getValueAsUInt();
-         iface->state = response->getVariable(2)->getValueAsUInt();
+         iface->type = static_cast<OSPFInterfaceType>(response->getVariable(1)->getValueAsUInt());
+         iface->state = static_cast<OSPFInterfaceState>(response->getVariable(2)->getValueAsUInt());
          iface->dr = ntohl(response->getVariable(3)->getValueAsUInt());
          iface->bdr = ntohl(response->getVariable(4)->getValueAsUInt());
       }
@@ -128,7 +156,16 @@ static void ProcessNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable *var, 
    {
       shared_ptr<Interface> iface = node->findInterfaceInSameSubnet(neighbor->ipAddress);
       if (iface != nullptr)
+      {
          neighbor->ifIndex = iface->getIfIndex();
+         neighbor->ifObject = iface->getId();
+      }
+   }
+   else
+   {
+      shared_ptr<Interface> iface = node->findInterfaceByIndex(neighbor->ifIndex);
+      if (iface != nullptr)
+         neighbor->ifObject = iface->getId();
    }
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -140,7 +177,7 @@ static void ProcessNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable *var, 
    if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 1)
-         neighbor->state = response->getVariable(0)->getValueAsUInt();
+         neighbor->state = static_cast<OSPFNeighborState>(response->getVariable(0)->getValueAsUInt());
       delete response;
    }
 

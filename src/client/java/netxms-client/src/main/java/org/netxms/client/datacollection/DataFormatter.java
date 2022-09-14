@@ -73,7 +73,7 @@ public class DataFormatter
    {
       if (value == null || value.isEmpty())
          return "";
-      
+
       StringBuilder sb = new StringBuilder();
       char[] format = formatString.toCharArray();
 

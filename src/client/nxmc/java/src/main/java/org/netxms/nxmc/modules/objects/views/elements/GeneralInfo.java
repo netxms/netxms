@@ -166,6 +166,12 @@ public class GeneralInfo extends TableElement
 					for(int i = 1; i < iface.getIpAddressList().size(); i++)
 	               addPair("", iface.getIpAddressList().get(i).toString()); //$NON-NLS-1$
 				}
+            if (iface.isOSPF())
+            {
+               addPair(i18n.tr("OSPF area"), iface.getOSPFArea().getHostAddress());
+               addPair(i18n.tr("OSPF interface type"), iface.getOSPFType().getText(), false);
+               addPair(i18n.tr("OSPF interface state"), iface.getOSPFState().getText(), false);
+            }
             addPair(i18n.tr("Administrative state"), iface.getAdminStateAsText());
             addPair(i18n.tr("Operational state"), iface.getOperStateAsText());
             addPair(i18n.tr("Expected state"), ifaceExpectedState[iface.getExpectedState()]);
@@ -199,8 +205,10 @@ public class GeneralInfo extends TableElement
             addPair(i18n.tr("SNMP object ID"), node.getSnmpOID(), false);
             addPair(i18n.tr("SNMP sysLocation"), node.getSnmpSysLocation(), false);
             addPair(i18n.tr("SNMP sysContact"), node.getSnmpSysContact(), false);
-				if ((node.getCapabilities() & AbstractNode.NC_IS_BRIDGE) != 0)
+            if (node.isBridge())
                addPair(i18n.tr("Bridge base address"), node.getBridgeBaseAddress().toString());
+            if (node.isOSPF())
+               addPair(i18n.tr("OSPF router ID"), node.getOSPFRouterId().getHostAddress());
             addPair(i18n.tr("Driver"), node.getDriverName(), false);
             if (node.getBootTime() != null)
                addPair(i18n.tr("Boot time"), DateFormatFactory.getDateTimeFormat().format(node.getBootTime()), false);

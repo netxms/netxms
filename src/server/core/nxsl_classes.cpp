@@ -2548,11 +2548,15 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfState"))
    {
-      value = vm->createValue(iface->getOSPFState());
+      value = vm->createValue(static_cast<int32_t>(iface->getOSPFState()));
    }
-   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfType"))
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfStateText"))
    {
-      value = vm->createValue(iface->getOSPFType());
+      value = vm->createValue(OSPFInterfaceStateToText(iface->getOSPFState()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfTypeText"))
+   {
+      value = vm->createValue(OSPFInterfaceTypeToText(iface->getOSPFType()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("peerInterface"))
    {
@@ -5540,7 +5544,11 @@ NXSL_Value *NXSL_OSPFNeighborClass::getAttr(NXSL_Object *object, const NXSL_Iden
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("state"))
    {
-      value = vm->createValue(neighbor->state);
+      value = vm->createValue(static_cast<int32_t>(neighbor->state));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("stateText"))
+   {
+      value = vm->createValue(OSPFNeighborStateToText(neighbor->state));
    }
    return value;
 }

@@ -667,7 +667,7 @@ typedef struct
 #define CMD_2FA_PREPARE_CHALLENGE         0x01AE
 #define CMD_2FA_VALIDATE_RESPONSE         0x01AF
 #define CMD_2FA_GET_METHODS               0x01B0
-// unused: #define CMD_2FA_GET_METHOD_DETAILS        0x01B1
+#define CMD_GET_OSPF_DATA                 0x01B1
 #define CMD_2FA_MODIFY_METHOD             0x01B2
 #define CMD_2FA_DELETE_METHOD             0x01B3
 #define CMD_2FA_GET_USER_BINDINGS         0x01B4
@@ -1501,6 +1501,8 @@ typedef struct
 #define VID_OSPF_AREA               ((uint32_t)796)
 #define VID_OSPF_INTERFACE_TYPE     ((uint32_t)797)
 #define VID_OSPF_INTERFACE_STATE    ((uint32_t)798)
+#define VID_OSPF_AREA_COUNT         ((uint32_t)799)
+#define VID_OSPF_NEIGHBOR_COUNT     ((uint32_t)800)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1736,9 +1738,12 @@ typedef struct
 
 #define VID_MASKED_FIELD_LIST_BASE  ((UINT32)0x10000000)
 
-#define VID_SSH_KEY_LIST_BASE       ((UINT32)0x10000000)
+#define VID_SSH_KEY_LIST_BASE       ((uint32_t)0x10000000)
 
-#define VID_MAC_ADDR_LIST_BASE      ((UINT32)0x30000000)
+#define VID_MAC_ADDR_LIST_BASE      ((uint32_t)0x30000000)
+
+#define VID_OSPF_AREA_LIST_BASE     ((uint32_t)0x20000000)
+#define VID_OSPF_NEIGHBOR_LIST_BASE ((uint32_t)0x30000000)
 
 // base value for SNMP community strings
 #define VID_COMMUNITY_STRING_LIST_BASE       ((UINT32)0x10000000)
