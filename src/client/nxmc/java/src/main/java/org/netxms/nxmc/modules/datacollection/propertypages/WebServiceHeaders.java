@@ -21,11 +21,10 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -246,13 +245,7 @@ public class WebServiceHeaders extends PropertyPage
       tc.setText(i18n.tr("Value"));
       tc.setWidth(200);
 
-      viewer.setContentProvider(new IStructuredContentProvider() {
-         @Override
-         public Object[] getElements(Object inputElement)
-         {
-            return ((Set<?>)inputElement).toArray();
-         }
-      });
+      viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new HeaderLabelProvider());
       viewer.setComparator(new ViewerComparator() {
          @SuppressWarnings("unchecked")
