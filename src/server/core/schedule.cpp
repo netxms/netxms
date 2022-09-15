@@ -37,7 +37,7 @@ static Mutex s_oneTimeScheduleLock;
 /**
  * Scheduled task execution pool
  */
-ThreadPool *g_schedulerThreadPool = NULL;
+ThreadPool *g_schedulerThreadPool = nullptr;
 
 /**
  * Task handler replacement for missing handlers
@@ -1097,7 +1097,7 @@ static void RecurrentScheduler()
    do
    {
       WatchdogNotify(watchdogId);
-      time_t now = time(NULL);
+      time_t now = time(nullptr);
       struct tm currLocal;
 #if HAVE_LOCALTIME_R
       localtime_r(&now, &currLocal);
@@ -1112,13 +1112,13 @@ static void RecurrentScheduler()
          if (task->isDisabled() || task->isRunning())
             continue;
 
-         if (MatchSchedule(task->getSchedule(), NULL, &currLocal, now))
+         if (MatchSchedule(task->getSchedule(), nullptr, &currLocal, now))
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("RecurrentScheduler: starting scheduled task [%u] with handler \"%s\" (schedule \"%s\")"),
                      task->getId(), task->getTaskHandlerId().cstr(), task->getSchedule().cstr());
 
             SchedulerCallback *callback = s_callbacks.get(task->getTaskHandlerId());
-            if (callback == NULL)
+            if (callback == nullptr)
             {
                nxlog_debug_tag(DEBUG_TAG, 3, _T("RecurrentScheduler: task handler \"%s\" not registered"), task->getTaskHandlerId().cstr());
                callback = &s_missingTaskHandler;
