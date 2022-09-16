@@ -194,7 +194,6 @@ static NXSL_ExtFunction s_builtinFunctions[] =
    { "ArrayToString", F_ArrayToString, 2 },
    { "Base64Decode", F_Base64Decode, -1 },
    { "Base64Encode", F_Base64Encode, -1 },
-   { "ByteStream", F_ByteStream, 0 },
    { "FormatMetricPrefix", F_FormatMetricPrefix, -1 },
    { "GetCurrentTimeMs", F_GetCurrentTimeMs, 0 },
    { "GetThreadPoolNames", F_GetThreadPoolNames, 0 },
