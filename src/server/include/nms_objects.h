@@ -1342,7 +1342,7 @@ public:
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm);
 
-   void executeHookScript(const TCHAR *hookName, uint32_t pollRequestId = 0);
+   void executeHookScript(const TCHAR *hookName);
 
    bool addDashboard(uint32_t id);
    bool removeDashboard(uint32_t id);
@@ -1625,7 +1625,11 @@ public:
    AutoBindTarget(NetObj *_this);
    virtual ~AutoBindTarget();
 
-   AutoBindDecision isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci = shared_ptr<DCObject>(), int filterNumber = 0) const;
+   AutoBindDecision isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& object, const shared_ptr<DCObject>& dci, int filterNumber, NetObj *pollContext = nullptr) const;
+   AutoBindDecision isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& object, NetObj *pollContext = nullptr) const
+   {
+      return isApplicable(cachedFilterVM, object, shared_ptr<DCObject>(), 0, pollContext);
+   }
 
    uint32_t getAutoBindFlags() const { return m_autoBindFlags; }
    bool isAutoBindEnabled(int filterNumber = 0) const { return (filterNumber >= 0) && (filterNumber < MAX_AUTOBIND_TARGET_FILTERS) && (m_autoBindFlags & (AAF_AUTO_APPLY_1 << filterNumber * 2)); }

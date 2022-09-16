@@ -2559,9 +2559,8 @@ NXSL_Value *NetObj::createNXSLObject(NXSL_VM *vm)
  * Execute hook script
  *
  * @param hookName hook name. Will find and execute script named Hook::hookName
- * @param pollRequestId request ID for forced poll request or 0 if not applicable
  */
-void NetObj::executeHookScript(const TCHAR *hookName, uint32_t pollRequestId)
+void NetObj::executeHookScript(const TCHAR *hookName)
 {
    if (g_flags & AF_SHUTDOWN)
       return;

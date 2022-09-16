@@ -626,7 +626,7 @@ void BusinessService::validateAutomaticObjectChecks()
       if (!classFilter.isEmpty() && !classFilter.contains(object->getObjectClass()))
          decision = AutoBindDecision_Unbind;
       else
-         decision = isApplicable(&cachedFilterVM, object);
+         decision = isApplicable(&cachedFilterVM, object, this);
 
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled(0)))
          continue;   // Decision cannot affect checks
@@ -689,7 +689,7 @@ void BusinessService::validateAutomaticDCIChecks()
       unique_ptr<SharedObjectArray<DCObject>> allDCOObjects = static_pointer_cast<DataCollectionTarget>(object)->getAllDCObjects();
       for (shared_ptr<DCObject> dci : *allDCOObjects)
       {
-         AutoBindDecision decision = isApplicable(&cachedFilterVM, object, dci, 1);
+         AutoBindDecision decision = isApplicable(&cachedFilterVM, object, dci, 1, this);
 
          if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled(1)))
             continue;   // Decision cannot affect checks

@@ -489,7 +489,7 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, uin
    m_pollRequestId = requestId;
 
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"), requestId);
+   executeHookScript(_T("ConfigurationPoll"));
 
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ClusterConfPoll(%s): applying templates"), m_name);
    if (ConfigReadBoolean(_T("Objects.Clusters.TemplateAutoApply"), false))
@@ -671,7 +671,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"), requestId);
+   executeHookScript(_T("StatusPoll"));
 
    calculateCompoundStatus(true);
    poller->setStatus(_T("cleanup"));
@@ -980,7 +980,7 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
    {
       shared_ptr<NetObj> node = nodes->getShared(i);
 
-      AutoBindDecision decision = isApplicable(&cachedFilterVM, node);
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, node, this);
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
          continue;   // Decision cannot affect checks
 

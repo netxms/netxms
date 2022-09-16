@@ -3119,7 +3119,7 @@ restart_status_poll:
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"), rqId);
+   executeHookScript(_T("StatusPoll"));
 
    if (resyncDataCollectionConfiguration)
    {
@@ -4297,7 +4297,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
 
       // Execute hook script
       poller->setStatus(_T("hook"));
-      executeHookScript(_T("ConfigurationPoll"), rqId);
+      executeHookScript(_T("ConfigurationPoll"));
 
       POLL_CANCELLATION_CHECKPOINT();
 
@@ -9900,7 +9900,7 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("TopologyPoll"), rqId);
+   executeHookScript(_T("TopologyPoll"));
 
    sendPollerMsg(_T("Finished topology poll of node %s\r\n"), m_name);
 

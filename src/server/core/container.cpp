@@ -398,7 +398,7 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
    {
       shared_ptr<NetObj> object = objects->getShared(i);
 
-      AutoBindDecision decision = isApplicable(&cachedFilterVM, object);
+      AutoBindDecision decision = isApplicable(&cachedFilterVM, object, this);
       if ((decision == AutoBindDecision_Ignore) || ((decision == AutoBindDecision_Unbind) && !isAutoUnbindEnabled()))
          continue;   // Decision cannot affect checks
 

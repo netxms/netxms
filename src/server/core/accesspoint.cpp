@@ -556,7 +556,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"), rqId);
+   executeHookScript(_T("ConfigurationPoll"));
 
    poller->setStatus(_T("autobind"));
    if (ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false))

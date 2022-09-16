@@ -581,7 +581,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
 
    // Execute hook script
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("ConfigurationPoll"), rqId);
+   executeHookScript(_T("ConfigurationPoll"));
 
    poller->setStatus(_T("autobind"));
    if (ConfigReadBoolean(_T("Objects.Sensors.TemplateAutoApply"), false))
@@ -730,7 +730,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
    calculateStatus(TRUE);
 
    poller->setStatus(_T("hook"));
-   executeHookScript(_T("StatusPoll"), rqId);
+   executeHookScript(_T("StatusPoll"));
 
    lockProperties();
    if (prevState != m_state)

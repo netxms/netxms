@@ -2160,7 +2160,7 @@ void DataCollectionTarget::instanceDiscoveryPoll(PollerInfo *poller, ClientSessi
 
       // Execute hook script
       poller->setStatus(_T("hook"));
-      executeHookScript(_T("InstancePoll"), requestId);
+      executeHookScript(_T("InstancePoll"));
    }
    else
    {

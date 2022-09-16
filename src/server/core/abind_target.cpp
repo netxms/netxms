@@ -211,7 +211,7 @@ bool AutoBindTarget::deleteFromDatabase(DB_HANDLE hdb)
  * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not,
  * AutoBindDecision_Ignore if no change required (script error or no auto apply)
  */
-AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci, int filterNumber) const
+AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const shared_ptr<NetObj>& target, const shared_ptr<DCObject>& dci, int filterNumber, NetObj *pollContext) const
 {
    AutoBindDecision result = AutoBindDecision_Ignore;
 
@@ -259,7 +259,7 @@ AutoBindDecision AutoBindTarget::isApplicable(NXSL_VM **cachedFilterVM, const sh
       filter->setGlobalVariable("$dci", dci->createNXSLObject(filter));
    else
       filter->removeGlobalVariable("$dci");
-   filter->setUserData(target.get());  // For PollerTrace()
+   filter->setUserData((pollContext != nullptr) ? pollContext : target.get());  // For PollerTrace()
    if (filter->run())
    {
       const NXSL_Value *value = filter->getResult();
