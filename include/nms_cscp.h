@@ -675,7 +675,7 @@ typedef struct
 #define CMD_2FA_MODIFY_USER_BINDING       0x01B6
 #define CMD_2FA_DELETE_USER_BINDING       0x01B7
 #define CMD_WEB_SERVICE_CUSTOM_REQUEST    0x01B8
-// unused #define CMD_MERGE_FILES                   0x01B9
+#define CMD_QUERY_OSPF_TOPOLOGY           0x01B9
 #define CMD_FILEMGR_MERGE_FILES           0x01BA
 #define CMD_GET_BIZSVC_CHECK_LIST         0x01BB
 #define CMD_UPDATE_BIZSVC_CHECK           0x01BC

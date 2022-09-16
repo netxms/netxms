@@ -95,6 +95,7 @@ public class CreateNetworkMapDialog extends Dialog
       mapType.add(i18n.tr("Layer 2 topology"));
       mapType.add(i18n.tr("IP topology"));
       mapType.add(i18n.tr("Internal communication topology"));
+      mapType.add(i18n.tr("OSPF topology"));
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -107,7 +108,7 @@ public class CreateNetworkMapDialog extends Dialog
 		      seedObjectSelector.setEnabled(mapType.getSelectionIndex() > 0 && mapType.getSelectionIndex() != 3);
 			}
       });
-      
+
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       seedObjectSelector.setLabel(i18n.tr("Seed node"));
       seedObjectSelector.setObjectClass(Node.class);

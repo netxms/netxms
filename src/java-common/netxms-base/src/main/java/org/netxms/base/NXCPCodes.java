@@ -459,7 +459,7 @@ public class NXCPCodes
    public static final int CMD_2FA_MODIFY_USER_BINDING = 0x01B6;
    public static final int CMD_2FA_DELETE_USER_BINDING = 0x01B7;
    public static final int CMD_WEB_SERVICE_CUSTOM_REQUEST = 0x01B8;
-   // public static final int CMD_MERGE_FILES = 0x01B9;
+   public static final int CMD_QUERY_OSPF_TOPOLOGY = 0x01B9;
    public static final int CMD_FILEMGR_MERGE_FILES = 0x01BA;
    public static final int CMD_GET_BIZSVC_CHECK_LIST = 0x01BB;
    public static final int CMD_UPDATE_BIZSVC_CHECK = 0x01BC;

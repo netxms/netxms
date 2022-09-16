@@ -438,5 +438,6 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
 const TCHAR *OSPFNeighborStateToText(OSPFNeighborState state);
 const TCHAR *OSPFInterfaceStateToText(OSPFInterfaceState state);
 const TCHAR *OSPFInterfaceTypeToText(OSPFInterfaceType type);
+unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, int radius);
 
 #endif   /* _nms_topo_h_ */

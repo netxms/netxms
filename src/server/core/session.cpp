@@ -1422,6 +1422,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_QUERY_L2_TOPOLOGY:
          queryL2Topology(*request);
          break;
+      case CMD_QUERY_OSPF_TOPOLOGY:
+         queryOSPFTopology(*request);
+         break;
       case CMD_QUERY_INTERNAL_TOPOLOGY:
          queryInternalCommunicationTopology(*request);
          break;
@@ -10380,7 +10383,7 @@ void ClientSession::queryL2Topology(const NXCPMessage& request)
 		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	sendMessage(&response);
+	sendMessage(response);
 }
 
 /**
@@ -10388,7 +10391,7 @@ void ClientSession::queryL2Topology(const NXCPMessage& request)
  */
 void ClientSession::queryInternalCommunicationTopology(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
@@ -10407,25 +10410,68 @@ void ClientSession::queryInternalCommunicationTopology(const NXCPMessage& reques
 
          if (topology != nullptr)
          {
-            msg.setField(VID_RCC, RCC_SUCCESS);
-            topology->createMessage(&msg);
+            response.setField(VID_RCC, RCC_SUCCESS);
+            topology->createMessage(&response);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
+}
+
+/**
+ * Query OSPF topology from device
+ */
+void ClientSession::queryOSPFTopology(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if (object->getObjectClass() == OBJECT_NODE)
+         {
+            unique_ptr<NetworkMapObjectList> topology = BuildOSPFTopology(static_pointer_cast<Node>(object), -1);
+            if (topology != nullptr)
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+               topology->createMessage(&response);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
 }
 
 /**

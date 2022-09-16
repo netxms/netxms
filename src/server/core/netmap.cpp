@@ -872,6 +872,9 @@ void NetworkMap::updateContent()
                case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
                   topology = shared_ptr<NetworkMapObjectList>(seed->buildInternalCommunicationTopology().release());
                   break;
+               case MAP_TYPE_OSPF_TOPOLOGY:
+                  topology = shared_ptr<NetworkMapObjectList>(BuildOSPFTopology(seed, m_discoveryRadius).release());
+                  break;
                default:
                   break;
             }

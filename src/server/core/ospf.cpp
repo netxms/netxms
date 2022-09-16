@@ -251,3 +251,48 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
    nxlog_debug_tag(DEBUG_TAG, 5, _T("%s OSPF topology collection complete (%d areas, %d interfaces, %d neighbors)"), debugPrefix, areas->size(), interfaces->size(), neighbors->size());
    return true;
 }
+
+/**
+ * Build OSPF topology - actual implementation
+ */
+static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<Node>& seed, int depth)
+{
+   if (topology->isObjectExist(seed->getId()))
+      return;
+
+   topology->addObject(seed->getId());
+   if (depth == 0)
+      return;
+
+   StructArray<OSPFNeighbor> neighbors = seed->getOSPFNeighbors();
+   for (int i = 0; i < neighbors.size(); i++)
+   {
+      OSPFNeighbor *n = neighbors.get(i);
+      if (n->nodeId == 0)
+         continue;
+
+      shared_ptr<Node> peer = static_pointer_cast<Node>(FindObjectById(n->nodeId, OBJECT_NODE));
+      if (peer == nullptr)
+         continue;
+
+      shared_ptr<Interface> iface = seed->findInterfaceByIndex(n->ifIndex);
+      if (iface == nullptr)
+         continue;
+
+      BuildOSPFTopology(topology, peer, depth - 1);
+
+      TCHAR area[64];
+      topology->linkObjects(seed->getId(), peer->getId(), LINK_TYPE_NORMAL, IpToStr(iface->getOSPFArea(), area), iface->getName(), nullptr);
+   }
+}
+
+/**
+ * Build OSPF topology
+ */
+unique_ptr<NetworkMapObjectList> BuildOSPFTopology(const shared_ptr<Node>& root, int radius)
+{
+   int maxDepth = (radius < 0) ? ConfigReadInt(_T("Topology.DefaultDiscoveryRadius"), 5) : radius;
+   auto topology = make_unique<NetworkMapObjectList>();
+   BuildOSPFTopology(topology.get(), root, maxDepth);
+   return topology;
+}

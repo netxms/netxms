@@ -59,9 +59,9 @@ public class CreateNetworkMapDialog extends Dialog
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -69,9 +69,9 @@ public class CreateNetworkMapDialog extends Dialog
 		newShell.setText(Messages.get().CreateNetworkMapDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -81,11 +81,11 @@ public class CreateNetworkMapDialog extends Dialog
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
-
+		
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateNetworkMapDialog_Name, "", //$NON-NLS-1$
                                                 WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
-
+      
       textAlias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateNetworkMapDialog_Alias, "", //$NON-NLS-1$
             WidgetHelper.DEFAULT_LAYOUT_DATA);
       textAlias.getShell().setMinimumSize(300, 0);
@@ -95,6 +95,7 @@ public class CreateNetworkMapDialog extends Dialog
       mapType.add(Messages.get().CreateNetworkMapDialog_L2Topology);
       mapType.add(Messages.get().CreateNetworkMapDialog_IpTopology);
       mapType.add("Internal Communication Topology");
+      mapType.add("OSPF Topology");
       mapType.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -127,9 +128,9 @@ public class CreateNetworkMapDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
