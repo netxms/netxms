@@ -174,10 +174,12 @@ public class DataFormatter
       return sb.toString();
    }
 
-   private static final long[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L };
-   private static final long[] BINARY_MULTIPLIERS = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x4000000000000L };
+   private static final double[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L };
+   private static final double[] DECIMAL_MULTIPLIERS_SMALL = { 0.000000000000001, 0.000000000001, 0.000000001, 0.000001, 0.001, 1 };
+   private static final double[] BINARY_MULTIPLIERS = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x4000000000000L };
    private static final String[] SUFFIX = { "", " k", " M", " G", " T", " P" };
    private static final String[] BINARY_SUFFIX = { "", " Ki", " Mi", " Gi", " Ti", " Pi" };
+   private static final String[] SUFFIX_SMALL = { " f", " p", " n", " μ", " m", "" };
 
    /**
     * Get value ready for formatter
@@ -203,11 +205,15 @@ public class DataFormatter
          {
             boolean useBinaryMultipliers = (unit != null) && unit.isBinary();
             int multiplierPower = (unit != null) ? unit.getMultipierPower() : 0;
-            final long[] multipliers = useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
             Double d = Double.parseDouble(value);
+            boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && d != 0 && multiplierPower <= 0) || multiplierPower < 0;
+            final double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
+
             int i;
             if (multiplierPower != 0)
             {
+               if (isSmallNumber)
+                  multiplierPower = 5 + multiplierPower;
                i = Integer.min(multiplierPower, multipliers.length);
             }
             else
@@ -224,13 +230,13 @@ public class DataFormatter
                {
                   NumberFormat nf = NumberFormat.getNumberInstance();
                   nf.setMaximumFractionDigits(2);
-                  v.value = nf.format(d / (double)multipliers[i]);
+                  v.value = nf.format(d / multipliers[i]);
                }
                else
                {
-                  v.value = Double.valueOf(d / (double)multipliers[i]);
+                  v.value = Double.valueOf(d / multipliers[i]);
                }
-               v.suffix = useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i];
+               v.suffix = isSmallNumber ? SUFFIX_SMALL[i] : useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i];
             }
             else if (stringOutput)
             {
@@ -300,7 +306,7 @@ public class DataFormatter
          return "0";
 
       double absValue = Math.abs(value);
-      final long[] multipliers = DECIMAL_MULTIPLIERS;
+      final double[] multipliers = DECIMAL_MULTIPLIERS;
 
       int i;
       for(i = multipliers.length - 1; i >= 0; i--)

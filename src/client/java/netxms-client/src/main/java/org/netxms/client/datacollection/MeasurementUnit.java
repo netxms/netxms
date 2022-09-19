@@ -44,7 +44,7 @@ public class MeasurementUnit
    public MeasurementUnit(String name, int multiplierPower)
    {
       this.name = name.replace(" (IEC)", "").replace(" (Metric)", "");
-      this.multiplierPower = 0;
+      this.multiplierPower = multiplierPower;
       this.binary = name.contains(" (IEC)");
    }
 
