@@ -1199,7 +1199,7 @@ static int BaseWebServiceRequestWithData(WebServiceHandle *websvc, int argc, NXS
       parameters.add(argv[i]->getValueAsCString());
 
    WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, data, contentType);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, response));
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
    MemFree(data);
 
    return 0;
@@ -1216,7 +1216,7 @@ static int BaseWebServiceRequestWithoutData(WebServiceHandle *websvc, int argc, 
       parameters.add(argv[i]->getValueAsCString());
 
    WebServiceCallResult *response = websvc->first->makeCustomRequest(websvc->second, requestMethod, parameters, nullptr, nullptr);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, response));
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, response));
 
    return 0;
 }
@@ -1242,7 +1242,7 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
    {
       WebServiceCallResult *webSwcResult = new WebServiceCallResult();
       _tcsncpy(webSwcResult->errorMessage, _T("Web service definition not found"), WEBSVC_ERROR_TEXT_MAX_SIZE);
-      *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, webSwcResult));
+      *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
       return 0;
    }
 
@@ -1271,7 +1271,7 @@ NXSL_METHOD_DEFINITION(Node, callWebService)
 
    WebServiceCallResult *webSwcResult = new WebServiceCallResult();
    _tcslcpy(webSwcResult->errorMessage, _T("Invalid web service request method"), WEBSVC_ERROR_TEXT_MAX_SIZE);
-   *result = vm->createValue(vm->createObject(&g_nxslWebServiceCallResult, webSwcResult));
+   *result = vm->createValue(vm->createObject(&g_nxslWebServiceResponseClass, webSwcResult));
    return 0;
 }
 
@@ -1562,7 +1562,7 @@ NXSL_METHOD_DEFINITION(Node, getWebService)
    }
    else
    {
-      *result = vm->createValue(vm->createObject(&g_nxslWebService, new WebServiceHandle(d, *node)));
+      *result = vm->createValue(vm->createObject(&g_nxslWebServiceClass, new WebServiceHandle(d, *node)));
    }
    return 0;
 }
@@ -5307,7 +5307,7 @@ void NXSL_VlanClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * WEB_SERVICE::get() method
+ * WebService::get() method
  */
 NXSL_METHOD_DEFINITION(WebService, get)
 {
@@ -5316,7 +5316,7 @@ NXSL_METHOD_DEFINITION(WebService, get)
 }
 
 /**
- * WEB_SERVICE::post() method
+ * WebService::post() method
  */
 NXSL_METHOD_DEFINITION(WebService, post)
 {
@@ -5325,7 +5325,7 @@ NXSL_METHOD_DEFINITION(WebService, post)
 }
 
 /**
- * WEB_SERVICE::put() method
+ * WebService::put() method
  */
 NXSL_METHOD_DEFINITION(WebService, put)
 {
@@ -5334,7 +5334,7 @@ NXSL_METHOD_DEFINITION(WebService, put)
 }
 
 /**
- * WEB_SERVICE::delete() method
+ * WebService::delete() method
  */
 NXSL_METHOD_DEFINITION(WebService, delete)
 {
@@ -5352,9 +5352,9 @@ NXSL_METHOD_DEFINITION(WebService, patch)
 }
 
 /**
- * NXSL "WEB_SERVICE" class
+ * NXSL class "WebService"
  */
-NXSL_WebService::NXSL_WebService()
+NXSL_WebServiceClass::NXSL_WebServiceClass()
 {
    setName(_T("WebService"));
 
@@ -5368,7 +5368,7 @@ NXSL_WebService::NXSL_WebService()
 /**
  * NXSL class WEB_SERVICE: get attribute
  */
-NXSL_Value *NXSL_WebService::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+NXSL_Value *NXSL_WebServiceClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -5395,15 +5395,15 @@ NXSL_Value *NXSL_WebService::getAttr(NXSL_Object *object, const NXSL_Identifier&
 /**
  * Object destruction handler
  */
-void NXSL_WebService::onObjectDelete(NXSL_Object *object)
+void NXSL_WebServiceClass::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<WebServiceHandle*>(object->getData());
 }
 
 /**
- * NXSL "WebServiceResponse" class
+ * NXSL class "WebServiceResponse"
  */
-NXSL_WebServiceCallResult::NXSL_WebServiceCallResult()
+NXSL_WebServiceResponseClass::NXSL_WebServiceResponseClass()
 {
    setName(_T("WebServiceResponse"));
 }
@@ -5411,7 +5411,7 @@ NXSL_WebServiceCallResult::NXSL_WebServiceCallResult()
 /**
  * NXSL class WebServiceCallResult: get attribute
  */
-NXSL_Value *NXSL_WebServiceCallResult::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(object, attr);
    if (value != nullptr)
@@ -5446,7 +5446,7 @@ NXSL_Value *NXSL_WebServiceCallResult::getAttr(NXSL_Object *object, const NXSL_I
 /**
  * Object destruction handler
  */
-void NXSL_WebServiceCallResult::onObjectDelete(NXSL_Object *object)
+void NXSL_WebServiceResponseClass::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<WebServiceCallResult*>(object->getData());
 }
@@ -5574,6 +5574,7 @@ NXSL_ClientSessionClass g_nxslClientSessionClass;
 NXSL_ClusterClass g_nxslClusterClass;
 NXSL_ContainerClass g_nxslContainerClass;
 NXSL_DciClass g_nxslDciClass;
+NXSL_DCTargetClass g_nxslDCTargetClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_HardwareComponent g_nxslHardwareComponent;
 NXSL_InterfaceClass g_nxslInterfaceClass;
@@ -5595,6 +5596,6 @@ NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 NXSL_UserClass g_nxslUserClass;
 NXSL_UserGroupClass g_nxslUserGroupClass;
 NXSL_VlanClass g_nxslVlanClass;
-NXSL_WebService g_nxslWebService;
-NXSL_WebServiceCallResult g_nxslWebServiceCallResult;
+NXSL_WebServiceClass g_nxslWebServiceClass;
+NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
 NXSL_ZoneClass g_nxslZoneClass;

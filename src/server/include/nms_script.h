@@ -347,7 +347,7 @@ public:
 };
 
 /**
- * NXSL "UserGroup" class
+ * NXSL class "UserGroup"
  */
 class NXSL_UserGroupClass : public NXSL_UserDBObjectClass
 {
@@ -359,7 +359,7 @@ public:
 };
 
 /**
- * NXSL "VLAN" class
+ * NXSL class "VLAN"
  */
 class NXSL_VlanClass : public NXSL_Class
 {
@@ -371,31 +371,31 @@ public:
 };
 
 /**
- * NXSL "WEB_SERVICE" class
+ * NXSL class "WebService"
  */
-class NXSL_WebService : public NXSL_Class
+class NXSL_WebServiceClass : public NXSL_Class
 {
 public:
-   NXSL_WebService();
+   NXSL_WebServiceClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
- * NXSL "WebServiceCallResult" class
+ * NXSL class "WebServiceResponse"
  */
-class NXSL_WebServiceCallResult : public NXSL_Class
+class NXSL_WebServiceResponseClass : public NXSL_Class
 {
 public:
-   NXSL_WebServiceCallResult();
+   NXSL_WebServiceResponseClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
 };
 
 /**
- * NXSL class with tunnel information
+ * NXSL class "Tunnel"
  */
 class NXSL_TunnelClass : public NXSL_Class
 {
@@ -574,8 +574,8 @@ extern NXSL_UserDBObjectClass g_nxslUserDBObjectClass;
 extern NXSL_UserClass g_nxslUserClass;
 extern NXSL_UserGroupClass g_nxslUserGroupClass;
 extern NXSL_VlanClass g_nxslVlanClass;
-extern NXSL_WebService g_nxslWebService;
-extern NXSL_WebServiceCallResult g_nxslWebServiceCallResult;
+extern NXSL_WebServiceClass g_nxslWebServiceClass;
+extern NXSL_WebServiceResponseClass g_nxslWebServiceResponseClass;
 extern NXSL_ZoneClass g_nxslZoneClass;
 
 #endif
