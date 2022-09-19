@@ -3044,13 +3044,6 @@ public:
    time_t getLastConnectTime() const { return m_lastConnect; }
 };
 
-// Explicit instantiation of shared_ptr<*> to enable DLL interface for them
-#ifdef _WIN32
-template class NXCORE_EXPORTABLE shared_ptr<ComponentTree>;
-template class NXCORE_EXPORTABLE shared_ptr<NetworkPath>;
-template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
-#endif
-
 /**
  * Node hardware ID
  */
@@ -3071,6 +3064,14 @@ public:
       return String(BinToStr(m_value, HARDWARE_ID_LENGTH, buffer));
    }
 };
+
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<ComponentTree>;
+template class NXCORE_EXPORTABLE shared_ptr<NetworkPath>;
+template class NXCORE_EXPORTABLE shared_ptr<VlanList>;
+template class NXCORE_EXPORTABLE StructArray<OSPFArea>;
+template class NXCORE_EXPORTABLE StructArray<OSPFNeighbor>;
+#endif
 
 /**
  * Node

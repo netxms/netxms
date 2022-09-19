@@ -160,7 +160,7 @@ int MQTTDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* 
    char *payload = UTF8StringFromTString(CHECK_NULL_EX(body));
 
    int result;
-   int rc = mosquitto_publish(m_handle, nullptr, topic, strlen(payload), payload, 0, false);
+   int rc = mosquitto_publish(m_handle, nullptr, topic, static_cast<int>(strlen(payload)), payload, 0, false);
    if (rc == MOSQ_ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 6, _T("Successfully published via %hs:%d in topic %s: \"%s\""), m_hostname, m_port, recipient, body);

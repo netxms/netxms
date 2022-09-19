@@ -327,7 +327,7 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
 	   {
 	      stmt->buffers.reserve(std::max(stmt->buffers.capacity() + 16, static_cast<size_t>(pos)));
 	   }
-	   for(int i = stmt->buffers.size(); i < pos; i++)
+	   for(int i = static_cast<int>(stmt->buffers.size()); i < pos; i++)
 	      stmt->buffers.emplace_back();
 	}
 
@@ -746,7 +746,6 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
 	bool success = false;
 	bool retry;
 	int retryCount = 60;
-	char localBuffer[1024];
    QueryString queryUTF8 = QueryToUTF8(query);
    do
    {

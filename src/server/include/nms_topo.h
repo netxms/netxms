@@ -113,6 +113,11 @@ struct PORT_MAPPING_ENTRY
    uint32_t ifIndex;
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE StructArray<FDB_ENTRY>;
+template class NXCORE_EXPORTABLE StructArray<PORT_MAPPING_ENTRY>;
+#endif
+
 /**
  * Switch forwarding database
  */

@@ -303,7 +303,7 @@ void FindVendorByMacList(const NXCPMessage& request, NXCPMessage* response)
    uint32_t numElements = request.getFieldAsUInt32(VID_NUM_ELEMENTS);
    uint32_t inputBase = VID_ELEMENT_LIST_BASE;
    uint32_t outputBase = VID_ELEMENT_LIST_BASE;
-   for (int i = 0; i < numElements; i++)
+   for (uint32_t i = 0; i < numElements; i++)
    {
       MacAddress addr = request.getFieldAsMacAddress(inputBase++);
       std::pair<const TCHAR *, uint32_t> result = FindVendorByMacInternal(addr);

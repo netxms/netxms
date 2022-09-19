@@ -386,6 +386,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xmpp", "src\ncdrivers\xmpp\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nxtftp", "src\agent\tools\nxtftp\nxtftp.vcxproj", "{012AC7E1-7B13-384F-B9A2-D1ABEFF8162F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mqtt", "src\ncdrivers\mqtt\mqtt.vcxproj", "{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -1504,6 +1506,14 @@ Global
 		{012AC7E1-7B13-384F-B9A2-D1ABEFF8162F}.Release|Win32.Build.0 = Release|Win32
 		{012AC7E1-7B13-384F-B9A2-D1ABEFF8162F}.Release|x64.ActiveCfg = Release|x64
 		{012AC7E1-7B13-384F-B9A2-D1ABEFF8162F}.Release|x64.Build.0 = Release|x64
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Debug|Win32.Build.0 = Debug|Win32
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Debug|x64.ActiveCfg = Debug|x64
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Debug|x64.Build.0 = Debug|x64
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Release|Win32.ActiveCfg = Release|Win32
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Release|Win32.Build.0 = Release|Win32
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Release|x64.ActiveCfg = Release|x64
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1673,6 +1683,7 @@ Global
 		{1FE11303-3726-204D-A214-DF8CEB0E0A8D} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{0391A0B5-F553-314A-8DAD-2E09DCF4FBA0} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 		{012AC7E1-7B13-384F-B9A2-D1ABEFF8162F} = {896A7CDA-423A-460A-83E2-6ED37DAE187C}
+		{34AD79C3-64FF-48CA-95D9-DF12B255AF5F} = {90D897D2-079F-43BE-BB47-6BBAF2DAAC5D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4F6B1F2-1076-4A45-8750-AF6CA13917B3}

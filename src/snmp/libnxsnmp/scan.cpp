@@ -100,7 +100,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpScanAddressRange(const InetAddress& from, cons
       saDest.sin_addr.s_addr = htonl(a);
       status[i].startTime = GetCurrentTimeMs();
       status[i].success = false;
-      sendto(sock, (char *)pdu, size, 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in));
+      sendto(sock, (char *)pdu, static_cast<int>(size), 0, (struct sockaddr *)&saDest, sizeof(struct sockaddr_in));
 
       sp.reset();
       sp.add(sock);
