@@ -43,9 +43,11 @@ static void Help()
             _T("Copyright (c) 2004-2022 Raden Solutions\n\n")
             _T("Usage: nxadm [-u <login>] [-P|-p <password>] -c <command>\n")
             _T("       nxadm [-u <login>] [-P|-p <password>] -i\n")
+            _T("       nxadm [-u <login>] [-P|-p <password>] [-r] -s <script>\n")
             _T("       nxadm -P\n")
             _T("       nxadm -p <db password>\n")
-            _T("       nxadm -h\n\n")
+            _T("       nxadm -h\n")
+            _T("       nxadm -v\n\n")
             _T("Options:\n")
             _T("   -c <command>   Execute given command at server debug console and disconnect\n")
             _T("   -i             Connect to server debug console in interactive mode\n")
@@ -54,7 +56,10 @@ static void Help()
             _T("                  user's password for console access\n")
             _T("   -P             Provide database password for server startup or\n")
             _T("                  user's password for console access (password read from terminal)\n")
-            _T("   -u name        User name for authentication\n\n"));
+            _T("   -r             Use script's return value as exit code\n")
+            _T("   -s <script>    Execute given NXSL script and disconnect\n")
+            _T("   -u name        User name for authentication\n")
+            _T("   -v             Display version and exit\n\n"));
 }
 
 /**
@@ -162,6 +167,64 @@ static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *p
    return connClosed;
 }
 
+
+/**
+ * Execute script
+ */
+static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *password, bool useReturnValue)
+{
+   if (login != nullptr)
+   {
+      if (!Login(login, password))
+         return RCC_ACCESS_DENIED;
+   }
+
+   NXCPMessage msg(CMD_ADM_REQUEST, g_requestId++);
+   msg.setField(VID_SCRIPT, script);
+   SendMsg(msg);
+
+   int rcc;
+   while(true)
+   {
+      NXCPMessage *response = RecvMsg();
+      if (response == nullptr)
+      {
+         _tprintf(_T("Connection closed\n"));
+         rcc = RCC_COMM_FAILURE;
+         break;
+      }
+
+      uint16_t code = response->getCode();
+      if (code == CMD_ADM_MESSAGE)
+      {
+         TCHAR *text = response->getFieldAsString(VID_MESSAGE);
+         if (text != nullptr)
+         {
+            WriteToTerminal(text);
+            MemFree(text);
+         }
+      }
+      else if (code == CMD_REQUEST_COMPLETED)
+      {
+         rcc = response->getFieldAsInt32(VID_RCC);
+         if (rcc == RCC_SUCCESS)
+         {
+            if (useReturnValue)
+               rcc = response->getFieldAsInt32(VID_EXECUTION_RESULT);
+         }
+         else
+         {
+            _tprintf(_T("Server error %d\n"), rcc);
+         }
+         delete response;
+         break;
+      }
+      delete response;
+   }
+
+   return rcc;
+}
+
 /**
  * Interactive mode loop
  */
@@ -240,6 +303,7 @@ enum WorkMode
    UNDEFINED,
    SHELL,
    COMMAND,
+   SCRIPT,
    DB_PASSWORD
 };
 
@@ -248,8 +312,9 @@ enum WorkMode
  */
 int main(int argc, char *argv[])
 {
-   int iError, ch;
-   BOOL bStart = TRUE;
+   int exitCode;
+   bool start = true;
+   bool useScriptReturnValue = false;
    WorkMode workMode = UNDEFINED;
    TCHAR *command = nullptr, *password = nullptr, *loginName = nullptr;
    TCHAR passwordBuffer[MAX_PASSWORD];
@@ -265,15 +330,11 @@ int main(int argc, char *argv[])
    {
       // Parse command line
       opterr = 1;
-      while((ch = getopt(argc, argv, "c:ihp:Pu:")) != -1)
+      int ch;
+      while((ch = getopt(argc, argv, "c:ihp:Prs:u:v")) != -1)
       {
          switch(ch)
          {
-            case 'h':
-               Help();
-               bStart = FALSE;
-               iError = 0;
-               break;
             case 'c':
 #ifdef UNICODE
                command = WideStringFromMBStringSysLocale(optarg);
@@ -281,6 +342,11 @@ int main(int argc, char *argv[])
                command = optarg;
 #endif
                workMode = COMMAND;
+               break;
+            case 'h':
+               Help();
+               start = false;
+               exitCode = 0;
                break;
             case 'i':
                command = NULL;
@@ -296,6 +362,17 @@ int main(int argc, char *argv[])
             case 'P':
                password = passwordBuffer;
                break;
+            case 'r':
+               useScriptReturnValue = true;
+               break;
+            case 's':
+#ifdef UNICODE
+               command = WideStringFromMBStringSysLocale(optarg);
+#else
+               command = optarg;
+#endif
+               workMode = SCRIPT;
+               break;
             case 'u':
 #ifdef UNICODE
                loginName = WideStringFromMBStringSysLocale(optarg);
@@ -303,9 +380,14 @@ int main(int argc, char *argv[])
                loginName = optarg;
 #endif
                break;
+            case 'v':
+               _tprintf(_T("NetXMS Server Local Administration Tool Version ") NETXMS_VERSION_STRING _T("\n"));
+               start = false;
+               exitCode = 0;
+               break;
             case '?':
-               bStart = FALSE;
-               iError = 1;
+               start = false;
+               exitCode = 1;
                break;
             default:
                break;
@@ -315,7 +397,7 @@ int main(int argc, char *argv[])
       if ((workMode == UNDEFINED) && (password != nullptr))
          workMode = DB_PASSWORD;
 
-      if (bStart && (workMode != UNDEFINED))
+      if (start && (workMode != UNDEFINED))
       {
          if (Connect())
          {
@@ -324,42 +406,46 @@ int main(int argc, char *argv[])
                if (!ReadPassword((workMode == DB_PASSWORD) ? _T("Database password: ") : _T("Password: "), passwordBuffer, MAX_PASSWORD))
                {
                   _tprintf(_T("Cannot read password from terminal\n"));
-                  iError = 4;
+                  exitCode = 4;
                   goto stop;
                }
             }
 
-            if (workMode == SHELL)
+            switch(workMode)
             {
-               Shell(loginName, password);
-               iError = 0;
+               case COMMAND:
+                  ExecCommand(command, loginName, password);
+                  exitCode = 0;
+                  break;
+               case SCRIPT:
+                  exitCode = ExecScript(command, loginName, password, useScriptReturnValue);
+                  break;
+               case SHELL:
+                  Shell(loginName, password);
+                  exitCode = 0;
+                  break;
+               case DB_PASSWORD:
+                  exitCode = SendPassword(password) ? 0 : 3;
+                  break;
             }
-            else if (workMode == COMMAND)
-            {
-               ExecCommand(command, loginName, password);
-               iError = 0;
-            }
-            else
-            {
-               iError = SendPassword(password) ? 0 : 3;
-            }
+
             Disconnect();
          }
          else
          {
-            iError = 2;
+            exitCode = 2;
          }
       }
-      else if (bStart && (workMode == UNDEFINED))
+      else if (start && (workMode == UNDEFINED))
       {
          Help();
-         iError = 1;
+         exitCode = 1;
       }
    }
    else
    {
       Help();
-      iError = 1;
+      exitCode = 1;
    }
 
 stop:
@@ -369,5 +455,5 @@ stop:
    if (password != passwordBuffer)
       MemFree(password);
 #endif
-   return iError;
+   return exitCode;
 }

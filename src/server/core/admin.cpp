@@ -37,6 +37,99 @@
 extern Condition g_dbPasswordReady;
 
 /**
+ * Execute server script
+ */
+static uint32_t ExecuteServerScript(const TCHAR *script, const StringList& args, ServerConsole *console, int32_t *result)
+{
+   uint32_t rcc = RCC_SUCCESS;
+   bool libraryLocked = true;
+   bool destroyCompiledScript = false;
+   NXSL_Library *scriptLibrary = GetServerScriptLibrary();
+   scriptLibrary->lock();
+
+   NXSL_Program *compiledScript = scriptLibrary->findNxslProgram(script);
+   if (compiledScript == nullptr)
+   {
+      scriptLibrary->unlock();
+      libraryLocked = false;
+      destroyCompiledScript = true;
+      char *scriptSource;
+      if ((scriptSource = LoadFileAsUTF8String(script)) != nullptr)
+      {
+         const int errorMsgLen = 512;
+         TCHAR errorMsg[errorMsgLen];
+         NXSL_ServerEnv env;
+#ifdef UNICODE
+         WCHAR *wscript = WideStringFromUTF8String(scriptSource);
+         compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, nullptr, &env);
+         MemFree(wscript);
+#else
+         compiledScript = NXSLCompile(scriptSource, errorMsg, errorMsgLen, nullptr, &env);
+#endif
+         MemFree(scriptSource);
+         if (compiledScript == nullptr)
+         {
+            rcc = RCC_NXSL_COMPILATION_ERROR;
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteServerScript: Script compilation error: %s"), errorMsg);
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteServerScript: Script \"%s\" not found"), script);
+         rcc = RCC_INVALID_SCRIPT_NAME;
+      }
+   }
+
+   if (compiledScript != nullptr)
+   {
+      NXSL_ServerEnv *env = new NXSL_ServerEnv;
+      env->setConsole(console);
+
+      NXSL_VM *vm = new NXSL_VM(env);
+      if (vm->load(compiledScript))
+      {
+         if (libraryLocked)
+         {
+            scriptLibrary->unlock();
+            libraryLocked = false;
+         }
+
+         NXSL_Value *argv[32];
+         int argc = 0;
+         while((argc < 32) && (argc < args.size()))
+         {
+            argv[argc] = vm->createValue(args.get(argc));
+            argc++;
+         }
+
+         if (vm->run(argc, argv))
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteServerScript: Script finished with return value %s"), vm->getResult()->getValueAsCString());
+            *result = vm->getResult()->getValueAsInt32();
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteServerScript: Script finished with error: %s"), vm->getErrorText());
+            rcc = RCC_NXSL_EXECUTION_ERROR;
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ExecuteServerScript: VM creation failed: %s"), vm->getErrorText());
+         rcc = RCC_NXSL_COMPILATION_ERROR;
+      }
+      delete vm;
+      if (destroyCompiledScript)
+         delete compiledScript;
+   }
+
+   if (libraryLocked)
+      scriptLibrary->unlock();
+
+   return rcc;
+}
+
+/**
  * Request processing thread
  */
 static void ProcessingThread(SOCKET sock)
@@ -67,26 +160,38 @@ static void ProcessingThread(SOCKET sock)
       }
 
       uint32_t rcc;
+      int32_t executionResult = 0;  // For script execution
       if (request->getCode() == CMD_ADM_REQUEST)
       {
          if (isAuthenticated || !requireAuthentication)
          {
-            TCHAR command[256];
-            request->getFieldAsString(VID_COMMAND, command, 256);
-
-            int exitCode = ProcessConsoleCommand(command, &console);
-            switch(exitCode)
+            if (request->isFieldExist(VID_SCRIPT))
             {
-               case CMD_EXIT_SHUTDOWN:
-                  InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
-                  break;
-               case CMD_EXIT_CLOSE_SESSION:
-                  delete request;
-                  goto close_session;
-               default:
-                  break;
+               TCHAR script[256];
+               request->getFieldAsString(VID_SCRIPT, script, 256);
+
+               StringList args(*request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
+               rcc = ExecuteServerScript(script, args, &console, &executionResult);
             }
-            rcc = RCC_SUCCESS;
+            else
+            {
+               TCHAR command[256];
+               request->getFieldAsString(VID_COMMAND, command, 256);
+
+               int exitCode = ProcessConsoleCommand(command, &console);
+               switch(exitCode)
+               {
+                  case CMD_EXIT_SHUTDOWN:
+                     InitiateShutdown(ShutdownReason::FROM_REMOTE_CONSOLE);
+                     break;
+                  case CMD_EXIT_CLOSE_SESSION:
+                     delete request;
+                     goto close_session;
+                  default:
+                     break;
+               }
+               rcc = RCC_SUCCESS;
+            }
          }
          else
          {
@@ -125,6 +230,7 @@ static void ProcessingThread(SOCKET sock)
 
       NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
       response.setField(VID_RCC, rcc);
+      response.setField(VID_EXECUTION_RESULT, executionResult);
       NXCP_MESSAGE *rawMsgOut = response.serialize();
 		SendEx(sock, rawMsgOut, ntohl(rawMsgOut->size), 0, console.getMutex());
       MemFree(rawMsgOut);
