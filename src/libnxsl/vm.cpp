@@ -1388,7 +1388,32 @@ void NXSL_VM::execute()
             else
             {
                bool constructor = !strncmp(cp->m_operand.m_identifier->value, "__new@", 6);
-               error(constructor ? NXSL_ERR_NO_OBJECT_CONSTRUCTOR : NXSL_ERR_NO_FUNCTION);
+
+               // Try to find constructor for class with same name
+               if (!constructor)
+               {
+                  char name[MAX_IDENTIFIER_LENGTH] = "__new@";
+                  strlcpy(&name[6], cp->m_operand.m_identifier->value, MAX_IDENTIFIER_LENGTH);
+                  pFunc = m_env->findFunction(name);
+                  if (pFunc != nullptr)
+                  {
+                     // convert to direct call using pointer
+                     cp->m_opCode = OPCODE_CALL_EXTPTR;
+                     destroyIdentifier(cp->m_operand.m_identifier);
+                     cp->m_operand.m_function = pFunc;
+
+                     if (callExternalFunction(pFunc, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))
+                        dwNext = m_instructionSet.size();
+                  }
+                  else
+                  {
+                     error(NXSL_ERR_NO_FUNCTION);
+                  }
+               }
+               else
+               {
+                  error(constructor ? NXSL_ERR_NO_OBJECT_CONSTRUCTOR : NXSL_ERR_NO_FUNCTION);
+               }
             }
          }
          if (cp->m_stackItems > 0)
