@@ -406,8 +406,6 @@ public:
       m_type = type;
    }
 
-   const MacAddress* getMacAddr() const { return &m_macAddr; }
-
    void fillMessage(NXCPMessage* msg, uint32_t base) const;
 };
 
