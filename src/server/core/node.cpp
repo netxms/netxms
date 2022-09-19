@@ -9918,7 +9918,7 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
    if (fdb == nullptr)
       return;
 
-   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::addHostConnections(%s [%d]): FDB retrieved"), m_name, (int)m_id);
+   nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 5, _T("Node::addHostConnections(%s [%u]): FDB retrieved"), m_name, m_id);
 
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
@@ -9927,17 +9927,17 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
          continue;
 
       Interface *ifLocal = static_cast<Interface*>(getChildList().get(i));
-      BYTE macAddr[MAC_ADDR_LENGTH];
-      if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), macAddr))
+      MacAddress macAddr;
+      if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), &macAddr))
       {
          TCHAR buffer[64];
-         nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%d]): found single MAC %s on interface %s"),
-            m_name, (int)m_id, MACToStr(macAddr, buffer), ifLocal->getName());
+         nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%u]): found single MAC %s on interface %s"),
+            m_name, m_id, macAddr.toString(buffer), ifLocal->getName());
          shared_ptr<Interface> ifRemote = FindInterfaceByMAC(macAddr);
          if (ifRemote != nullptr)
          {
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%d]): found remote interface %s [%d]"),
-               m_name, (int)m_id, ifRemote->getName(), ifRemote->getId());
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("Node::addHostConnections(%s [%u]): found remote interface %s [%u]"),
+               m_name, m_id, ifRemote->getName(), ifRemote->getId());
             shared_ptr<Node> peerNode = ifRemote->getParentNode();
             if (peerNode != nullptr)
             {

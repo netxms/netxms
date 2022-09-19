@@ -944,10 +944,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             {
                if (object->getObjectClass() == OBJECT_NODE)
                {
-                  shared_ptr<ForwardingDatabase> fdb = static_cast<Node*>(object.get())->getSwitchForwardingDatabase();
+                  shared_ptr<ForwardingDatabase> fdb = static_cast<Node&>(*object).getSwitchForwardingDatabase();
                   if (fdb != nullptr)
                   {
-                     fdb->print(pCtx, static_cast<Node*>(object.get()));
+                     fdb->print(pCtx, static_cast<Node&>(*object));
                   }
                   else
                   {

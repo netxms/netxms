@@ -96,12 +96,12 @@ public:
  */
 struct FDB_ENTRY
 {
-   uint32_t port;                    // Port number
-   uint32_t ifIndex;                 // Interface index
-   BYTE macAddr[MAC_ADDR_LENGTH]; // MAC address
-   uint32_t nodeObject;              // ID of node object or 0 if not found
-   uint16_t vlanId;
-   uint16_t type;
+   uint32_t port;       // Port number
+   uint32_t ifIndex;    // Interface index
+   MacAddress macAddr;  // MAC address
+   uint32_t nodeObject; // ID of node object or 0 if not found
+   uint16_t vlanId;     // VLAN ID
+   uint16_t type;       // Entry type
 };
 
 /**
@@ -120,12 +120,8 @@ class NXCORE_EXPORTABLE ForwardingDatabase
 {
 private:
    uint32_t m_nodeId;
-   int m_fdbSize;
-   int m_fdbAllocated;
-   FDB_ENTRY *m_fdb;
-   int m_pmSize;
-   int m_pmAllocated;
-   PORT_MAPPING_ENTRY *m_portMap;
+   StructArray<FDB_ENTRY> m_fdb;
+   StructArray<PORT_MAPPING_ENTRY> m_portMap;
    time_t m_timestamp;
    bool m_portReferenceByIfIndex;
    uint16_t m_currentVlanId;
@@ -135,28 +131,28 @@ private:
 
 public:
    ForwardingDatabase(uint32_t nodeId, bool portReferenceByIfIndex);
-   ~ForwardingDatabase();
 
    void addEntry(FDB_ENTRY *entry);
-   void addPortMapping(PORT_MAPPING_ENTRY *entry);
+   void addPortMapping(PORT_MAPPING_ENTRY *entry) { m_portMap.add(entry); }
    void sort();
 
    time_t getTimeStamp() const { return m_timestamp; }
    int getAge() const { return static_cast<int>(time(nullptr) - m_timestamp); }
-   int getSize() const { return m_fdbSize; }
-   FDB_ENTRY *getEntry(int index) const { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : nullptr; }
+   int getSize() const { return m_fdb.size(); }
+   FDB_ENTRY *getEntry(int index) const { return m_fdb.get(index); }
 
    void setCurrentVlanId(uint16_t vlanId) { m_currentVlanId = vlanId; }
    uint16_t getCurrentVlanId() const { return m_currentVlanId; }
 
-   uint32_t findMacAddress(const BYTE *macAddr, bool *isStatic);
+   uint32_t findMacAddress(const MacAddress& macAddr, bool *isStatic);
    void findMacAddressByPattern(const BYTE* macPattern, size_t macPatternSize, HashSet<MacAddress>* hs);
-   bool isSingleMacOnPort(uint32_t ifIndex, BYTE *macAddr = nullptr);
+   bool isSingleMacOnPort(uint32_t ifIndex, MacAddress *macAddr = nullptr);
    int getMacCountOnPort(uint32_t ifIndex);
 
-   void print(CONSOLE_CTX ctx, Node *owner);
-   void fillMessage(NXCPMessage *msg);
    shared_ptr<Table> getAsTable();
+
+   void print(ServerConsole *console, const Node& owner);
+   void fillMessage(NXCPMessage *msg);
 };
 
 #ifdef _WIN32

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
 			          macAddrText, node->getName(), (int)node->getId());
          bool isStatic;
-         uint32_t ifIndex = fdb->findMacAddress(macAddr.value(), &isStatic);
+         uint32_t ifIndex = fdb->findMacAddress(macAddr, &isStatic);
 			if (ifIndex != 0)
 			{
 			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): MAC address found on interface %d (%s)"),
