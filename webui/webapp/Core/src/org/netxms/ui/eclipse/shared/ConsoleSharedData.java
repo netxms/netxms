@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,23 +27,23 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
 
 /**
- * Compatibility class for RCP plugins
+ * Shared data for NXMC extensions
  */
 public class ConsoleSharedData
 {
    public static final String ATTRIBUTE_SESSION = "netxms.session";
    public static final String ATTRIBUTE_TIMEZONE = "netxms.timezone";
-   
+
 	/**
-	 * Get NetXMS session
+	 * Get current NetXMS client library session
 	 * 
-	 * @return
+	 * @return Current session
 	 */
 	public static NXCSession getSession()
 	{
 		return (NXCSession)RWT.getUISession().getAttribute(ATTRIBUTE_SESSION);
 	}
-	
+
 	/**
 	 * Get client timezone
 	 * 
@@ -82,7 +82,7 @@ public class ConsoleSharedData
          }
       }
    }
-	
+
 	/**
 	 * Get value of console property
 	 * 
@@ -130,7 +130,34 @@ public class ConsoleSharedData
       Object v = getProperty(display, name);
       return ((v != null) && (v instanceof Boolean)) ? (Boolean)v : defaultValue;
    }
-   
+
+   /**
+    * Get value of console property as integer
+    * 
+    * @param name name of the property
+    * @param defaultValue default value if property does not exist or is not boolean
+    * @return property value or default value
+    */
+   public static int getPropertyAsInteger(final String name, int defaultValue)
+   {
+      Object v = getProperty(name);
+      return ((v != null) && (v instanceof Integer)) ? (Integer)v : defaultValue;
+   }
+
+   /**
+    * Get value of console property as integer
+    * 
+    * @param display display to use
+    * @param name name of the property
+    * @param defaultValue default value if property does not exist or is not boolean
+    * @return property value or default value
+    */
+   public static int getPropertyAsInteger(Display display, final String name, int defaultValue)
+   {
+      Object v = getProperty(display, name);
+      return ((v != null) && (v instanceof Integer)) ? (Integer)v : defaultValue;
+   }
+
 	/**
 	 * Set value of console property
 	 * 
