@@ -140,17 +140,15 @@ static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
    StructArray<OSPFNeighbor> neighbors = node.getOSPFNeighbors();
    if (!neighbors.isEmpty())
    {
-      static const TCHAR *states[] = { _T("DOWN"), _T("ATTEMPT"), _T("INIT"), _T("2WAY"), _T("EXCHSTART"), _T("EXCHANGE"), _T("LOADING"), _T("FULL") };
-
       console->printf(_T(" \x1b[1mID\x1b[0m              | \x1b[1mIP Address\x1b[0m      | \x1b[1mState\x1b[0m     | \x1b[1mifIndex\x1b[0m | \x1b[1mInterface\x1b[0m                | \x1b[1mNode\x1b[0m\n"));
       console->printf(_T("-----------------+-----------------+-----------+---------+--------------------------+------------------------------\n"));
       for(int i = 0; i < neighbors.size(); i++)
       {
          const OSPFNeighbor *n = neighbors.get(i);
-         shared_ptr<NetObj> iface = FindObjectById(n->ifObject, OBJECT_INTERFACE);
-         shared_ptr<NetObj> remoteNode = FindObjectById(n->nodeId, OBJECT_NODE);
+         shared_ptr<NetObj> iface = (n->ifObject != 0) ? FindObjectById(n->ifObject, OBJECT_INTERFACE) : shared_ptr<NetObj>();
+         shared_ptr<NetObj> remoteNode = (n->nodeId != 0) ? FindObjectById(n->nodeId, OBJECT_NODE) : shared_ptr<NetObj>();
          console->printf(_T(" %-15s | %-15s | %-9s | %7u | %-24s | %s\n"), IpToStr(n->routerId, idText), n->ipAddress.toString(addrText),
-            OSPFNeighborStateToText(n->state), n->ifIndex, iface != nullptr ? iface->getName() : _T(""), remoteNode != nullptr ? remoteNode->getName() : _T(""));
+            OSPFNeighborStateToText(n->state), n->ifIndex, n->isVirtual ? _T("VIRTUAL") : (iface != nullptr ? iface->getName() : _T("")), remoteNode != nullptr ? remoteNode->getName() : _T(""));
       }
       console->print(_T("\n"));
    }

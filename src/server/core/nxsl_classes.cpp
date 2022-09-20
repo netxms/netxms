@@ -5374,7 +5374,7 @@ NXSL_Value *NXSL_WebServiceClass::getAttr(NXSL_Object *object, const NXSL_Identi
       return value;
 
    NXSL_VM *vm = object->vm();
-   WebServiceHandle *websvc = static_cast<WebServiceHandle*>(object->getData());
+   auto websvc = static_cast<WebServiceHandle*>(object->getData());
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("id"))
    {
@@ -5417,7 +5417,7 @@ NXSL_Value *NXSL_WebServiceResponseClass::getAttr(NXSL_Object *object, const NXS
       return value;
 
    NXSL_VM *vm = object->vm();
-   WebServiceCallResult *result = static_cast<WebServiceCallResult*>(object->getData());
+   auto result = static_cast<WebServiceCallResult*>(object->getData());
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("agentErrorCode"))
    {
@@ -5468,7 +5468,7 @@ NXSL_Value *NXSL_OSPFAreaClass::getAttr(NXSL_Object *object, const NXSL_Identifi
       return value;
 
    NXSL_VM *vm = object->vm();
-   OSPFArea *area = static_cast<OSPFArea*>(object->getData());
+   auto area = static_cast<OSPFArea*>(object->getData());
 
    if (NXSL_COMPARE_ATTRIBUTE_NAME("areaBorderRouterCount"))
    {
@@ -5516,9 +5516,14 @@ NXSL_Value *NXSL_OSPFNeighborClass::getAttr(NXSL_Object *object, const NXSL_Iden
       return value;
 
    NXSL_VM *vm = object->vm();
-   OSPFNeighbor *neighbor = static_cast<OSPFNeighbor*>(object->getData());
+   auto neighbor = static_cast<OSPFNeighbor*>(object->getData());
 
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("areaId"))
+   {
+      TCHAR buffer[16];
+      value = neighbor->isVirtual ? vm->createValue(IpToStr(neighbor->areaId, buffer)) : vm->createValue();
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifIndex"))
    {
       value = vm->createValue(neighbor->ifIndex);
    }
@@ -5526,6 +5531,10 @@ NXSL_Value *NXSL_OSPFNeighborClass::getAttr(NXSL_Object *object, const NXSL_Iden
    {
       TCHAR buffer[64];
       value = vm->createValue(neighbor->ipAddress.toString(buffer));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("isVirtual"))
+   {
+      value = vm->createValue(neighbor->isVirtual);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("node"))
    {

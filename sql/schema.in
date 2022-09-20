@@ -507,6 +507,22 @@ CREATE TABLE ospf_areas
 ) TABLE_TYPE;
 
 /**
+ * OSPF neighbors
+ */
+CREATE TABLE ospf_neighbors
+(
+  node_id integer not null,
+  router_id varchar(15) not null,
+  area_id varchar(15) null,
+  ip_address varchar(48) null,
+  remote_node_id integer not null,
+  if_index integer not null,
+  is_virtual char(1) not null,
+  neighbor_state integer not null,
+  PRIMARY KEY(node_id,router_id,if_index)
+) TABLE_TYPE;
+
+/**
  * Clusters information
  */
 CREATE TABLE clusters

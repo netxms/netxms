@@ -447,7 +447,7 @@ bool NetObj::saveRuntimeData(DB_HANDLE hdb)
    if (m_status != m_savedStatus || m_state != m_savedState)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE object_properties SET status=?,state=? WHERE object_id=?"));
-      if (hStmt == NULL)
+      if (hStmt == nullptr)
          return false;
 
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_status);

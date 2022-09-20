@@ -345,6 +345,8 @@ struct OSPFNeighbor
    uint32_t nodeId;
    uint32_t ifIndex;
    uint32_t ifObject;
+   uint32_t areaId;  // Only for virtual neighbors
+   bool isVirtual;
    OSPFNeighborState state;
 };
 

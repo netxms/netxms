@@ -3331,6 +3331,7 @@ public:
    virtual bool saveRuntimeData(DB_HANDLE hdb) override;
    virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual void linkObjects() override;
    virtual void cleanup() override;
 
    virtual bool lockForStatusPoll() override;

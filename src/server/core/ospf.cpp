@@ -187,6 +187,38 @@ static void ProcessNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable *var, 
 }
 
 /**
+ * Walk handler for virtual neighbor tables
+ */
+static void ProcessVirtualNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable *var, Node *node, StructArray<OSPFNeighbor> *neighbors)
+{
+   SNMP_ObjectId oid = var->getName();
+
+   OSPFNeighbor *neighbor = neighbors->addPlaceholder();
+   memset(neighbor, 0, sizeof(OSPFNeighbor));
+   neighbor->ipAddress = InetAddress(ntohl(var->getValueAsUInt()));
+   neighbor->areaId = (oid.getElement(10) << 24) | (oid.getElement(11) << 16) | (oid.getElement(12) << 8) | oid.getElement(13);
+   neighbor->routerId = (oid.getElement(14) << 24) | (oid.getElement(15) << 16) | (oid.getElement(16) << 8) | oid.getElement(17);
+   neighbor->isVirtual = true;
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+
+   oid.changeElement(9, 5);   // ospfVirtNbrState
+   request.bindVariable(new SNMP_Variable(oid));
+
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
+   {
+      if (response->getNumVariables() >= 1)
+         neighbor->state = static_cast<OSPFNeighborState>(response->getVariable(0)->getValueAsUInt());
+      delete response;
+   }
+
+   shared_ptr<Node> routerNode = FindNodeByIP(node->getZoneUIN(), neighbor->ipAddress);
+   if (routerNode != 0)
+      neighbor->nodeId = routerNode->getId();
+}
+
+/**
  * Collect OSPF information from node
  */
 bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArray<OSPFInterface> *interfaces, StructArray<OSPFNeighbor> *neighbors)
@@ -243,6 +275,22 @@ bool CollectOSPFInformation(Node *node, StructArray<OSPFArea> *areas, StructArra
       }
    }
 
+   // Virtual neighbors
+   if (success)
+   {
+      uint32_t rc = SnmpWalk(snmp, _T(".1.3.6.1.2.1.14.11.1.3"),   // Walk on ospfVirtNbrIpAddr
+         [snmp, node, neighbors] (SNMP_Variable *var) -> uint32_t
+         {
+            ProcessVirtualNeighborTableEntry(snmp, var, node, neighbors);
+            return SNMP_ERR_SUCCESS;
+         });
+      if (rc != SNMP_ERR_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("%s cannot read OSPF virtual neighbor table"), debugPrefix);
+         success = false;
+      }
+   }
+
    delete snmp;
 
    if (!success)
@@ -275,15 +323,26 @@ static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<N
       if (peer == nullptr)
          continue;
 
-      shared_ptr<Interface> iface = seed->findInterfaceByIndex(n->ifIndex);
-      if (iface == nullptr)
-         continue;
+      if (n->isVirtual)
+      {
+         BuildOSPFTopology(topology, peer, depth - 1);
 
-      BuildOSPFTopology(topology, peer, depth - 1);
+         TCHAR area[64];
+         topology->linkObjects(seed->getId(), peer->getId(), LINK_TYPE_VPN, IpToStr(n->areaId, area), _T("vlink"), _T("vlink"));
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildOSPFTopology(depth=%d): linking %s [%u] to %s [%u] (virtual link in area %s)"), depth, seed->getName(), seed->getId(), peer->getName(), peer->getId(), area);
+      }
+      else
+      {
+         shared_ptr<Interface> iface = seed->findInterfaceByIndex(n->ifIndex);
+         if (iface == nullptr)
+            continue;
 
-      TCHAR area[64];
-      topology->linkObjects(seed->getId(), peer->getId(), LINK_TYPE_NORMAL, IpToStr(iface->getOSPFArea(), area), iface->getName(), nullptr);
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildOSPFTopology: linking %s [%u] interface %s [%u] to %s [%u]"), seed->getName(), seed->getId(), iface->getName(), iface->getId(), peer->getName(), peer->getId());
+         BuildOSPFTopology(topology, peer, depth - 1);
+
+         TCHAR area[64];
+         topology->linkObjects(seed->getId(), peer->getId(), LINK_TYPE_NORMAL, IpToStr(iface->getOSPFArea(), area), iface->getName(), nullptr);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildOSPFTopology(depth=%d): linking %s [%u] interface %s [%u] to %s [%u]"), depth, seed->getName(), seed->getId(), iface->getName(), iface->getId(), peer->getName(), peer->getId());
+      }
    }
 }
 

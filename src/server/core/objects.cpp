@@ -1517,6 +1517,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("node_components"), _T("node_id,component_index"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("object_containers"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("ospf_areas"), _T("node_id,area_id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("ospf_neighbors"), _T("node_id,router_id,if_index"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("container_members"), _T("container_id,object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboards"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("dashboard_elements"), _T("dashboard_id,element_id"), _T("*"), intColumns) &&
@@ -1660,7 +1661,7 @@ bool LoadObjects()
 
    // Link children to container and template group objects
    nxlog_debug_tag(_T("obj.init"), 2, _T("Linking objects..."));
-	g_idxObjectById.forEach([](NetObj *object, void *context) { object->linkObjects(); }, nullptr);
+	g_idxObjectById.forEach([] (NetObj *object) { object->linkObjects(); });
 
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());

@@ -174,7 +174,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("iftable_suffix,ospf_area,ospf_if_type,ospf_if_state FROM interfaces WHERE id=?"));
+      _T("ospf_area,ospf_if_type,ospf_if_state,iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -218,7 +218,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 26));
 
       TCHAR suffixText[128];
-      DBGetField(hResult, 0, 24, suffixText, 128);
+      DBGetField(hResult, 0, 27, suffixText, 128);
       Trim(suffixText);
       if (suffixText[0] == 0)
       {
@@ -1448,7 +1448,7 @@ void Interface::setOSPFInformation(const OSPFInterface& ospfInterface)
    m_ospfState = ospfInterface.state;
    unlockProperties();
    if (modified)
-      setModified(MODIFY_INTERFACE_PROPERTIES);
+      setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
 }
 
 /**
@@ -1463,7 +1463,7 @@ void Interface::clearOSPFInformation()
       m_ospfArea = 0;
       m_ospfType = OSPFInterfaceType::UNKNOWN;
       m_ospfState = OSPFInterfaceState::UNKNOWN;
-      setModified(MODIFY_INTERFACE_PROPERTIES);
+      setModified(MODIFY_INTERFACE_PROPERTIES | MODIFY_COMMON_PROPERTIES);
    }
    unlockProperties();
 }

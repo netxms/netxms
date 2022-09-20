@@ -788,6 +788,49 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          nxlog_debug(3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
    }
 
+   if (bResult)
+   {
+      // Load OSPF neighbors
+      hStmt = DBPrepare(hdb, _T("SELECT router_id,area_id,ip_address,remote_node_id,if_index,is_virtual,neighbor_state FROM ospf_neighbors WHERE node_id=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int count = DBGetNumRows(hResult);
+            if (count > 0)
+            {
+               for(int i = 0; i < count; i++)
+               {
+                  OSPFNeighbor *n = m_ospfNeighbors.addPlaceholder();
+                  memset(n, 0, sizeof(OSPFNeighbor));
+                  n->routerId = DBGetFieldIPAddr(hResult, i, 0);
+                  n->areaId = DBGetFieldIPAddr(hResult, i, 1);
+                  n->ipAddress = DBGetFieldInetAddr(hResult, i, 2);
+                  n->nodeId = DBGetFieldULong(hResult, i, 3);
+                  n->ifIndex = DBGetFieldULong(hResult, i, 4);
+                  n->isVirtual = DBGetFieldLong(hResult, i, 5) ? true : false;
+                  n->state = static_cast<OSPFNeighborState>(DBGetFieldLong(hResult, i, 6));
+               }
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            bResult = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         bResult = false;
+      }
+
+      if (!bResult)
+         nxlog_debug(3, _T("Cannot load OSPF area information for node %s [%u]"), m_name, m_id);
+   }
+
    if (bResult && isIcmpStatCollectionEnabled())
    {
       m_icmpStatCollectors = new StringObjectMap<IcmpStatCollector>(Ownership::True);
@@ -859,6 +902,25 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    }
 
    return bResult;
+}
+
+/**
+ * Link related objects after loading from database
+ */
+void Node::linkObjects()
+{
+   super::linkObjects();
+
+   for(int i = 0; i < m_ospfNeighbors.size(); i++)
+   {
+      OSPFNeighbor *n = m_ospfNeighbors.get(i);
+      if (!n->isVirtual)
+      {
+         shared_ptr<Interface> iface = findInterfaceByIndex(n->ifIndex);
+         if (iface != nullptr)
+            n->ifObject = iface->getId();
+      }
+   }
 }
 
 /**
@@ -1164,6 +1226,39 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
       unlockProperties();
    }
 
+   if (success && (m_modified & MODIFY_OSPF_NEIGHBORS))
+   {
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_neighbors WHERE node_id=?"));
+      lockProperties();
+      if (success && !m_ospfNeighbors.isEmpty())
+      {
+         DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO ospf_neighbors (node_id,router_id,area_id,ip_address,remote_node_id,if_index,is_virtual,neighbor_state) VALUES (?,?,?,?,?,?,?,?)"));
+         if (hStmt != nullptr)
+         {
+            TCHAR routerId[16], areaId[16];
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_ospfNeighbors.size()) && success; i++)
+            {
+               OSPFNeighbor *n = m_ospfNeighbors.get(i);
+               DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, IpToStr(n->routerId, routerId), DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, n->isVirtual ? IpToStr(n->areaId, areaId) : nullptr, DB_BIND_STATIC);
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, n->ipAddress);
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, n->nodeId);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, n->ifIndex);
+               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, n->isVirtual ? _T("1") : _T("0"), DB_BIND_STATIC);
+               DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, static_cast<int32_t>(n->state));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+      unlockProperties();
+   }
+
    // Save ICMP pollers
    if (success && (m_modified & MODIFY_ICMP_POLL_SETTINGS))
    {
@@ -1271,6 +1366,8 @@ bool Node::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM node_components WHERE node_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_areas WHERE node_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ospf_neighbors WHERE node_id=?"));
    return success;
 }
 
@@ -8513,8 +8610,10 @@ void Node::writeOSPFDataToMessage(NXCPMessage *msg)
       msg->setField(fieldId++, n->ipAddress);
       msg->setField(fieldId++, n->ifIndex);
       msg->setField(fieldId++, n->ifObject);
+      msg->setField(fieldId++, n->areaId);
+      msg->setField(fieldId++, n->isVirtual);
       msg->setField(fieldId++, static_cast<uint16_t>(n->state));
-      fieldId += 4;
+      fieldId += 2;
    }
    msg->setField(VID_OSPF_NEIGHBOR_COUNT, m_ospfNeighbors.size());
 
@@ -9795,11 +9894,22 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
       StructArray<OSPFNeighbor> neighbors;
       bool success = CollectOSPFInformation(this, &areas, &interfaces, &neighbors);
 
-      lockProperties();
-      m_ospfNeighbors.clear();
       if (success)
       {
-         m_ospfNeighbors.addAll(neighbors);
+         neighbors.sort(
+            []  (const void *a1, const void *a2) -> int
+            {
+               uint32_t id1 = static_cast<const OSPFNeighbor*>(a1)->routerId;
+               uint32_t id2 = static_cast<const OSPFNeighbor*>(a2)->routerId;
+               if (id1 < id2)
+                  return -1;
+               if (id1 > id2)
+                  return -1;
+
+               uint32_t ifIndex1 = static_cast<const OSPFNeighbor*>(a1)->ifIndex;
+               uint32_t ifIndex2 = static_cast<const OSPFNeighbor*>(a2)->ifIndex;
+               return (ifIndex1 < ifIndex2) ? -1 : ((ifIndex1 > ifIndex2) ? 1 : 0);
+            });
 
          areas.sort(
             [] (const void *a1, const void *a2) -> int
@@ -9809,36 +9919,61 @@ void Node::topologyPoll(PollerInfo *poller, ClientSession *pSession, uint32_t rq
                return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
             });
 
+         lockProperties();
+
          bool changed = (m_ospfAreas.size() != areas.size());
          if (!changed)
          {
-            for(int i = 0; (i < m_ospfAreas.size()) && !changed; i++)
+            for(int i = 0; (i < areas.size()) && !changed; i++)
             {
-               for(int j = 0; j < areas.size(); j++)
+               if (areas.get(i)->id != m_ospfAreas.get(i)->id)
                {
-                  if (areas.get(j)->id != m_ospfAreas.get(i)->id)
-                  {
-                     changed = true;
-                     break;
-                  }
+                  changed = true;
+                  break;
                }
             }
          }
 
          m_ospfAreas.clear();
          m_ospfAreas.addAll(areas);
-
          if (changed)
          {
-            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("OSPF area configuration changed for node %s [%d]"), m_name, m_id);
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("OSPF area configuration changed for node %s [%u]"), m_name, m_id);
             setModified(MODIFY_OSPF_AREAS);
          }
+
+         changed = (m_ospfNeighbors.size() != neighbors.size());
+         if (!changed)
+         {
+            for(int i = 0; (i < neighbors.size()) && !changed; i++)
+            {
+               OSPFNeighbor *n1 = m_ospfNeighbors.get(i);
+               OSPFNeighbor *n2 = neighbors.get(i);
+               if ((n1->routerId != n2->routerId) || (n1->ifIndex != n2->ifIndex) || (n1->nodeId != n2->nodeId) || (n1->areaId != n2->areaId) || (n1->state != n2->state) || !n1->ipAddress.equals(n2->ipAddress))
+               {
+                  changed = true;
+                  break;
+               }
+            }
+         }
+
+         m_ospfNeighbors.clear();
+         m_ospfNeighbors.addAll(neighbors);
+         if (changed)
+         {
+            nxlog_debug_tag(DEBUG_TAG_TOPOLOGY_POLL, 6, _T("OSPF neighbor configuration changed for node %s [%u]"), m_name, m_id);
+            setModified(MODIFY_OSPF_NEIGHBORS);
+         }
+
+         unlockProperties();
       }
       else
       {
+         lockProperties();
          m_ospfAreas.clear();
+         m_ospfNeighbors.clear();
+         unlockProperties();
       }
-      unlockProperties();
 
       // Update OSPF information on interfaces
       readLockChildList();

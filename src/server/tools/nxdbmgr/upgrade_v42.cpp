@@ -23,6 +23,25 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.16 to 42.17
+ */
+static bool H_UpgradeFromV16()
+{
+   CHK_EXEC(CreateTable(_T("CREATE TABLE ospf_neighbors (")
+      _T("node_id integer not null,")
+      _T("router_id varchar(15) not null,")
+      _T("area_id varchar(15) null,")
+      _T("ip_address varchar(48) null,")
+      _T("remote_node_id integer not null,")
+      _T("if_index integer not null,")
+      _T("is_virtual char(1) not null,")
+      _T("neighbor_state integer not null,")
+      _T("PRIMARY KEY(node_id,router_id,if_index))")));
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 42.15 to 42.16
  */
 static bool H_UpgradeFromV15()
@@ -322,6 +341,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 42, 17, H_UpgradeFromV16 },
    { 15, 42, 16, H_UpgradeFromV15 },
    { 14, 42, 15, H_UpgradeFromV14 },
    { 13, 42, 14, H_UpgradeFromV13 },
