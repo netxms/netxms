@@ -185,7 +185,7 @@ public class DataFormatter
     * Get value ready for formatter
     *
     * @param useMultipliers
-    * @return
+    * @return formatted value
     */
    private Value getValueForFormat(String value, boolean useMultipliers, boolean stringOutput, boolean decimalOutput)
    {
@@ -207,16 +207,16 @@ public class DataFormatter
             int multiplierPower = (unit != null) ? unit.getMultipierPower() : 0;
             Double d = Double.parseDouble(value);
             boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && d != 0 && multiplierPower <= 0) || multiplierPower < 0;
-            final double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
+            double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
 
-            int i;
+            int i = 0;
             if (multiplierPower != 0)
             {
                if (isSmallNumber)
                   multiplierPower = 5 + multiplierPower;
                i = Integer.min(multiplierPower, multipliers.length);
             }
-            else
+            else if ((unit == null || unit.useMultiplierForUnit()))
             {
                for(i = multipliers.length - 1; i >= 0; i--)
                {
@@ -224,6 +224,11 @@ public class DataFormatter
                      break;
                }
             }
+            else
+            {
+               multipliers = DECIMAL_MULTIPLIERS;
+            }
+            
             if (i >= 0)
             {
                if (stringOutput)

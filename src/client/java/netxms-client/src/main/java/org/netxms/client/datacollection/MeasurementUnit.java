@@ -18,6 +18,9 @@
  */
 package org.netxms.client.datacollection;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -30,6 +33,9 @@ public class MeasurementUnit
    public static final MeasurementUnit BPS_IEC = new MeasurementUnit("bps (IEC)");
    public static final MeasurementUnit BPS_METRIC = new MeasurementUnit("bps");
    public static final MeasurementUnit HZ = new MeasurementUnit("Hz");
+   
+   public static final Set<String> UNITS_WITHOUT_MULTIPLIERS = 
+         new HashSet<>(Arrays.asList( "%", "°C", "°F"));
 
    private String name;
    private boolean binary;
@@ -97,6 +103,16 @@ public class MeasurementUnit
    public int getMultipierPower()
    {
       return multiplierPower;
+   }
+   
+   /**
+    * If small multipliers should be used for current unit
+    * 
+    * @return true if small multipliers can be used for current unit
+    */
+   public boolean useMultiplierForUnit()
+   {
+      return !UNITS_WITHOUT_MULTIPLIERS.contains(name);
    }
 
    /**
