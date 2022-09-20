@@ -1255,9 +1255,10 @@ public:
    void clear();
 
    void escapeCharacter(int ch, int esc);
-   void replace(const TCHAR *pszSrc, const TCHAR *pszDst);
+   void replace(const TCHAR *src, const TCHAR *dst);
    void trim();
    void shrink(size_t chars = 1);
+   void removeRange(size_t start, ssize_t len = -1);
 
    void toUppercase();
    void toLowercase();
