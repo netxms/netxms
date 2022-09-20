@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,8 @@ public class LinkEditor
 	{
 		mapPage.removeLink(link);
 		long[] bp = link.getBendPoints();
-		link = new NetworkMapLink(link.getId(), name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2, dciList.toArray(new SingleDciConfig[dciList.size()]), link.getFlags(), link.isLocked()); 
+      link = new NetworkMapLink(link.getId(), name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2,
+            (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], link.getFlags(), link.isLocked());
 		link.setColor(color);
 		link.setColorSource(colorSource);
       link.setColorProvider(colorProvider);
