@@ -174,7 +174,7 @@ static void LoadDriver(const TCHAR *file)
 
    size_t len = _tcslen(fullName);
    if ((len < 5) || (_tcsicmp(&fullName[len - 5], _T(".pdsd")) && _tcsicmp(&fullName[len - _tcslen(SHLIB_SUFFIX)], SHLIB_SUFFIX)))
-      _tcslcat(fullName, _T(".nxm"), MAX_PATH);
+      _tcslcat(fullName, _T(".pdsd"), MAX_PATH);
 
    HMODULE hModule = DLOpen(fullName, errorText);
 #endif
@@ -216,7 +216,7 @@ static void LoadDriver(const TCHAR *file)
    }
    else
    {
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load module \"%s\" (%s)"), file, errorText);
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Unable to load performance data storage driver \"%s\" (%s)"), file, errorText);
    }
 }
 
