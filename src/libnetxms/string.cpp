@@ -1015,26 +1015,26 @@ void StringBuffer::setBuffer(TCHAR *buffer)
 /**
  * Replace all occurrences of source substring with destination substring
  */
-void StringBuffer::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
+void StringBuffer::replace(const TCHAR *src, const TCHAR *dst)
 {
-   size_t lenSrc = _tcslen(pszSrc);
+   size_t lenSrc = _tcslen(src);
    if ((lenSrc > m_length) || (lenSrc == 0))
       return;
 
-   size_t lenDst = _tcslen(pszDst);
+   size_t lenDst = _tcslen(dst);
 
    for(size_t i = 0; (m_length >= lenSrc) && (i <= m_length - lenSrc); i++)
    {
-      if (!memcmp(pszSrc, &m_buffer[i], lenSrc * sizeof(TCHAR)))
+      if (!memcmp(src, &m_buffer[i], lenSrc * sizeof(TCHAR)))
       {
          if (lenSrc == lenDst)
          {
-            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
+            memcpy(&m_buffer[i], dst, lenDst * sizeof(TCHAR));
             i += lenDst - 1;
          }
          else if (lenSrc > lenDst)
          {
-            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
+            memcpy(&m_buffer[i], dst, lenDst * sizeof(TCHAR));
             i += lenDst;
             size_t delta = lenSrc - lenDst;
             m_length -= delta;
@@ -1063,11 +1063,24 @@ void StringBuffer::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
             }
             memmove(&m_buffer[i + lenDst], &m_buffer[i + lenSrc], (m_length - i - lenSrc + 1) * sizeof(TCHAR));
             m_length += delta;
-            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
+            memcpy(&m_buffer[i], dst, lenDst * sizeof(TCHAR));
             i += lenDst - 1;
          }
       }
    }
+}
+
+/**
+ * Remove given range from string buffer
+ */
+void StringBuffer::removeRange(size_t start, ssize_t len)
+{
+   if (start >= m_length)
+      return;
+
+   len = (len == -1) ? m_length - start : std::min(m_length - start, static_cast<size_t>(len));
+   memmove(&m_buffer[start], &m_buffer[start + len], (m_length - start - len) * sizeof(TCHAR));
+   m_length -= len;
 }
 
 /**
