@@ -58,9 +58,8 @@
 /**
  * Link between objects
  */
-class NXCORE_EXPORTABLE ObjLink
+struct NXCORE_EXPORTABLE ObjLink
 {
-public:
    uint32_t id1;
    uint32_t id2;
    int type;
@@ -73,7 +72,15 @@ public:
 	MutableString name;
 
    ObjLink();
-   ObjLink(const ObjLink *src);
+   ObjLink(const ObjLink& src);
+
+   ObjLink& operator =(const ObjLink& src)
+   {
+      update(src);
+      return *this;
+   }
+
+   void update(const ObjLink& src);
  };
 
 #ifdef _WIN32
@@ -372,6 +379,8 @@ public:
 	uint32_t getColor() const { return m_color; }
    const TCHAR *getColorProvider() const { return CHECK_NULL_EX(m_colorProvider); }
    const TCHAR *getConfig() const { return CHECK_NULL_EX(m_config); }
+
+   bool update(const ObjLink& src);
 
 	void setName(const TCHAR *name);
 	void setConnectedElements(uint32_t e1, uint32_t e2) { m_element1 = e1; m_element2 = e2; }

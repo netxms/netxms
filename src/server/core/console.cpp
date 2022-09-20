@@ -149,7 +149,7 @@ static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
          const OSPFNeighbor *n = neighbors.get(i);
          shared_ptr<NetObj> iface = FindObjectById(n->ifObject, OBJECT_INTERFACE);
          shared_ptr<NetObj> remoteNode = FindObjectById(n->nodeId, OBJECT_NODE);
-         console->printf(_T(" %-15s | %-15s | %9s | %7u | %-24s | %s\n"), IpToStr(n->routerId, idText), IpToStr(n->ipAddress, addrText),
+         console->printf(_T(" %-15s | %-15s | %-9s | %7u | %-24s | %s\n"), IpToStr(n->routerId, idText), n->ipAddress.toString(addrText),
             OSPFNeighborStateToText(n->state), n->ifIndex, iface != nullptr ? iface->getName() : _T(""), remoteNode != nullptr ? remoteNode->getName() : _T(""));
       }
       console->print(_T("\n"));

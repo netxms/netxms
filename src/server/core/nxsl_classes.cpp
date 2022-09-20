@@ -811,8 +811,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddr"))
    {
       TCHAR buffer[64];
-      object->getPrimaryIpAddress().toString(buffer);
-      value = vm->createValue(buffer);
+      value = vm->createValue(object->getPrimaryIpAddress().toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("isInMaintenanceMode"))
    {
@@ -5525,8 +5524,8 @@ NXSL_Value *NXSL_OSPFNeighborClass::getAttr(NXSL_Object *object, const NXSL_Iden
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ipAddress"))
    {
-      TCHAR buffer[16];
-      value = vm->createValue(IpToStr(neighbor->ipAddress, buffer));
+      TCHAR buffer[64];
+      value = vm->createValue(neighbor->ipAddress.toString(buffer));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("node"))
    {

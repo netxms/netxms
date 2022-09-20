@@ -149,7 +149,7 @@ static void ProcessNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable *var, 
 
    OSPFNeighbor *neighbor = neighbors->addPlaceholder();
    memset(neighbor, 0, sizeof(OSPFNeighbor));
-   neighbor->ipAddress = (oid.getElement(10) << 24) | (oid.getElement(11) << 16) | (oid.getElement(12) << 8) | oid.getElement(13);
+   neighbor->ipAddress = InetAddress((oid.getElement(10) << 24) | (oid.getElement(11) << 16) | (oid.getElement(12) << 8) | oid.getElement(13));
    neighbor->routerId = ntohl(var->getValueAsUInt());
    neighbor->ifIndex = oid.getLastElement();
    if (neighbor->ifIndex == 0)
@@ -283,6 +283,7 @@ static void BuildOSPFTopology(NetworkMapObjectList *topology, const shared_ptr<N
 
       TCHAR area[64];
       topology->linkObjects(seed->getId(), peer->getId(), LINK_TYPE_NORMAL, IpToStr(iface->getOSPFArea(), area), iface->getName(), nullptr);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("BuildOSPFTopology: linking %s [%u] interface %s [%u] to %s [%u]"), seed->getName(), seed->getId(), iface->getName(), iface->getId(), peer->getName(), peer->getId());
    }
 }
 

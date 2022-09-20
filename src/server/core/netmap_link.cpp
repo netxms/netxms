@@ -137,6 +137,123 @@ void NetworkMapLink::setConfig(const TCHAR *config)
 }
 
 /**
+ * Update link from object link
+ */
+bool NetworkMapLink::update(const ObjLink& src)
+{
+   bool modified = false;
+
+   if (_tcscmp(CHECK_NULL_EX(m_name), src.name))
+   {
+      setName(src.name);
+      modified = true;
+   }
+
+   if (_tcscmp(CHECK_NULL_EX(m_connectorName1), src.port1))
+   {
+      setConnector1Name(src.port1);
+      modified = true;
+   }
+
+   if (_tcscmp(CHECK_NULL_EX(m_connectorName2), src.port2))
+   {
+      setConnector2Name(src.port1);
+      modified = true;
+   }
+
+   StringBuffer config;
+   if ((m_config == nullptr) || (*m_config == 0))
+   {
+      config.append(_T("<config>\n"));
+      config.append(_T("   <routing>0</routing>\n"));
+      config.append(_T("   <dciList length=\"0\"/>"));
+   }
+   else
+   {
+      config = m_config;
+      config.replace(_T("</config>"), _T(""));  // remove trailing tag
+
+      ssize_t startIndex = config.find(_T("<objectStatusList class=\"java.util.ArrayList\"/>"));
+      if (startIndex != -1)
+      {
+         ssize_t endIndex = startIndex + 47;
+         while((startIndex > 0) && _istspace(config.charAt(startIndex - 1)))
+            startIndex--;
+         while((endIndex < config.length()) && _istspace(config.charAt(endIndex)))
+            endIndex++;
+         config.removeRange(startIndex, endIndex - startIndex);
+      }
+      else
+      {
+         startIndex = config.find(_T("<objectStatusList"));
+         if (startIndex != -1)
+         {
+            while((startIndex > 0) && _istspace(config.charAt(startIndex - 1)))
+               startIndex--;
+            int endIndex = config.find(_T("</objectStatusList>"));
+            if (endIndex != -1)
+            {
+               endIndex += 19;
+               while((endIndex < config.length()) && _istspace(config.charAt(endIndex)))
+                  endIndex++;
+               config.removeRange(startIndex, endIndex - startIndex);
+            }
+         }
+      }
+   }
+
+   if (src.portIdCount > 0)
+   {
+      config.append(_T("\n   <objectStatusList class=\"java.util.ArrayList\">\n"));
+
+      shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(src.id1, OBJECT_NODE));
+      if (node != nullptr)
+      {
+         for(int n = 0; n < src.portIdCount; n++)
+         {
+            shared_ptr<Interface> iface = node->findInterfaceByIndex(src.portIdArray1[n]);
+            if (iface != nullptr)
+            {
+               config.append(_T("      <long>"));
+               config.append(iface->getId());
+               config.append(_T("</long>\n"));
+            }
+         }
+      }
+
+      node = static_pointer_cast<Node>(FindObjectById(src.id2, OBJECT_NODE));
+      if (node != nullptr)
+      {
+         for(int n = 0; n < src.portIdCount; n++)
+         {
+            shared_ptr<Interface> iface = node->findInterfaceByIndex(src.portIdArray2[n]);
+            if (iface != nullptr)
+            {
+               config.append(_T("      <long>"));
+               config.append(iface->getId());
+               config.append(_T("</long>\n"));
+            }
+         }
+      }
+
+      config.append(_T("   </objectStatusList>\n"));
+   }
+   else
+   {
+      config.append(_T("\n   <objectStatusList class=\"java.util.ArrayList\"/>\n"));
+   }
+   config.append(_T("</config>"));
+
+   if (_tcscmp(CHECK_NULL_EX(m_config), config))
+   {
+      setConfig(config);
+      modified = true;
+   }
+
+   return modified;
+}
+
+/**
  * Swap connector information
  */
 void NetworkMapLink::swap()

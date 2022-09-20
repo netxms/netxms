@@ -340,9 +340,9 @@ enum class OSPFNeighborState : int16_t
  */
 struct OSPFNeighbor
 {
-   uint32_t ipAddress;
-   uint32_t nodeId;
+   InetAddress ipAddress;
    uint32_t routerId;
+   uint32_t nodeId;
    uint32_t ifIndex;
    uint32_t ifObject;
    OSPFNeighborState state;
