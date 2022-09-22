@@ -7049,6 +7049,74 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
       }
       unlockProperties();
    }
+   else if (!_tcsicmp(name, _T("Topology.OSPF.Areas")))
+   {
+      if (isOSPFSupported())
+      {
+         auto table = make_shared<Table>();
+         table->addColumn(_T("ID"), DCI_DT_STRING, _T("ID"), true);
+         table->addColumn(_T("LSA"), DCI_DT_UINT, _T("LSA count"));
+         table->addColumn(_T("ABR"), DCI_DT_UINT, _T("Area border router count"));
+         table->addColumn(_T("ASBR"), DCI_DT_UINT, _T("AS border router count"));
+
+         TCHAR areaId[16];
+         lockProperties();
+         for(int i = 0; i < m_ospfAreas.size(); i++)
+         {
+            OSPFArea *a = m_ospfAreas.get(i);
+            table->addRow();
+            table->set(0, IpToStr(a->id, areaId));
+            table->set(1, a->lsaCount);
+            table->set(2, a->areaBorderRouterCount);
+            table->set(3, a->asBorderRouterCount);
+         }
+         unlockProperties();
+         *result = table;
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(name, _T("Topology.OSPF.Neighbors")))
+   {
+      if (isOSPFSupported())
+      {
+         auto table = make_shared<Table>();
+         table->addColumn(_T("ROUTER_ID"), DCI_DT_STRING, _T("Router ID"), true);
+         table->addColumn(_T("IP_ADDRESS"), DCI_DT_STRING, _T("IP address"), true);
+         table->addColumn(_T("NODE_ID"), DCI_DT_UINT, _T("Node ID"));
+         table->addColumn(_T("NODE_NAME"), DCI_DT_STRING, _T("Node name"));
+         table->addColumn(_T("IF_INDEX"), DCI_DT_UINT, _T("Interface index"));
+         table->addColumn(_T("IF_NAME"), DCI_DT_STRING, _T("Interface name"));
+         table->addColumn(_T("AREA_ID"), DCI_DT_STRING, _T("Area ID"));
+         table->addColumn(_T("IS_VIRTUAL"), DCI_DT_INT, _T("Is virtual"));
+         table->addColumn(_T("STATE"), DCI_DT_STRING, _T("State"));
+
+         TCHAR id[16];
+         lockProperties();
+         for(int i = 0; i < m_ospfNeighbors.size(); i++)
+         {
+            OSPFNeighbor *n = m_ospfNeighbors.get(i);
+            table->addRow();
+            table->set(0, IpToStr(n->routerId, id));
+            table->set(1, n->ipAddress.toString());
+            table->set(2, n->nodeId);
+            table->set(3, GetObjectName(n->nodeId, _T("")));
+            table->set(4, n->ifIndex);
+            table->set(5, GetObjectName(n->ifObject, _T("")));
+            table->set(6, n->isVirtual ? IpToStr(n->areaId, id) : _T(""));
+            table->set(7, static_cast<int32_t>(n->isVirtual ? 1 : 0));
+            table->set(8, OSPFNeighborStateToText(n->state));
+         }
+         unlockProperties();
+         *result = table;
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
    else if (!_tcsicmp(name, _T("Topology.RoutingTable")))
    {
       RoutingTable *rt = getRoutingTable();
@@ -7056,10 +7124,10 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
       {
          auto table = make_shared<Table>();
          table->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
-         table->addColumn(_T("DEST_ADDR"), DCI_DT_UINT, _T("Destination Address"));
-         table->addColumn(_T("DEST_MASK"), DCI_DT_UINT, _T("Destination Mask"));
-         table->addColumn(_T("NEXT_HOP"), DCI_DT_UINT, _T("Next Hop"));
-         table->addColumn(_T("IF_INDEX"), DCI_DT_COUNTER64, _T("Interface index"));
+         table->addColumn(_T("DEST_ADDR"), DCI_DT_UINT, _T("Destination address"));
+         table->addColumn(_T("DEST_MASK"), DCI_DT_UINT, _T("Destination mask"));
+         table->addColumn(_T("NEXT_HOP"), DCI_DT_UINT, _T("Next hop"));
+         table->addColumn(_T("IF_INDEX"), DCI_DT_UINT, _T("Interface index"));
          table->addColumn(_T("IF_NAME"), DCI_DT_STRING, _T("Interface name"));
          table->addColumn(_T("ROUTE_TYPE"), DCI_DT_UINT, _T("Route type"));
 
@@ -7070,7 +7138,7 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
             table->set(0, i + 1);
             InetAddress arrd = InetAddress(r->dwDestAddr);
             table->set(1, arrd.toString());
-            table->set(2, static_cast<UINT32>(BitsInMask(r->dwDestMask)));
+            table->set(2, static_cast<uint32_t>(BitsInMask(r->dwDestMask)));
             arrd = InetAddress(r->dwNextHop);
             table->set(3, arrd.toString());
             table->set(4, r->dwIfIndex);
