@@ -1281,6 +1281,8 @@ public class NXCPCodes
    public static final long VID_OSPF_AREA = 796;
    public static final long VID_OSPF_INTERFACE_TYPE = 797;
    public static final long VID_OSPF_INTERFACE_STATE = 798;
+   public static final long VID_OSPF_AREA_COUNT = 799;
+   public static final long VID_OSPF_NEIGHBOR_COUNT = 800;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1395,4 +1397,6 @@ public class NXCPCodes
    public static final long VID_2FA_METHOD_LIST_BASE = 0x10000000L;
    public static final long VID_CHECK_LIST_BASE = 0x10000000L;
    public static final long VID_TICKET_LIST_BASE = 0x10000000L;
+   public static final long VID_OSPF_AREA_LIST_BASE = 0x20000000L;
+   public static final long VID_OSPF_NEIGHBOR_LIST_BASE = 0x30000000L;
 }

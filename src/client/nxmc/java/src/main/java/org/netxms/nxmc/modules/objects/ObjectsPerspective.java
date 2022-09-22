@@ -71,6 +71,7 @@ import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.HardwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
+import org.netxms.nxmc.modules.objects.views.OSPFView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
 import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
@@ -158,6 +159,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new MibExplorer());
       addMainView(new ObjectGeoLocationView());
       addMainView(new ObjectOverviewView());
+      addMainView(new OSPFView());
       addMainView(new PerformanceView());
       addMainView(new PhysicalLinkView());
       addMainView(new PortView());

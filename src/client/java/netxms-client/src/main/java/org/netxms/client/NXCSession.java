@@ -197,6 +197,7 @@ import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.client.topology.NetworkPath;
+import org.netxms.client.topology.OSPFInfo;
 import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
@@ -3237,17 +3238,17 @@ public class NXCSession
     * Synchronize only those objects from given set which are not synchronized yet.
     * Accepts all options which are valid for syncObjectSet.
     *
-    * @param relatedOpbjects      identifiers of objects need to be synchronized
+    * @param objects      identifiers of objects need to be synchronized
     * @param syncComments if true, comments for objects will be synchronized as well
     * @param options      sync options (see comments for syncObjectSet)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncMissingObjects(List<Long> relatedOpbjects, boolean syncComments, int options) throws IOException, NXCException
+   public void syncMissingObjects(List<Long> objects, boolean syncComments, int options) throws IOException, NXCException
    {
-      final long[] syncList = new long[relatedOpbjects.size()];
-      for (int i = 0; i < relatedOpbjects.size(); i++)
-         syncList[i] = relatedOpbjects.get(i);
+      final long[] syncList = new long[objects.size()];
+      for (int i = 0; i < objects.size(); i++)
+         syncList[i] = objects.get(i);
       
       int count = syncList.length;
       synchronized(objectList)
@@ -10879,6 +10880,23 @@ public class NXCSession
          varId += 10;
       }
       return rt;
+   }
+
+   /**
+    * Get OSPF information for given node.
+    *
+    * @param nodeId node object ID
+    * @return OSPF information
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public OSPFInfo getOSPFInfo(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_OSPF_DATA);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new OSPFInfo(response);
    }
 
    /**

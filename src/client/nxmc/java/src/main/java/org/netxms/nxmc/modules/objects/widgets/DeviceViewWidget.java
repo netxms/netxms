@@ -136,7 +136,6 @@ public class DeviceViewWidget extends DashboardComposite
 		List<Interface> interfaces = new ArrayList<Interface>();
 		for(AbstractObject o: object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
 		{
-System.out.println(">>> iface: " + o);		   
 			if (((Interface)o).isPhysicalPort())
 				interfaces.add((Interface)o);
 		}
@@ -150,7 +149,6 @@ System.out.println(">>> iface: " + o);
 			}
 		});
 
-System.out.println("--- if count = " + interfaces.size());		
 		for(Interface iface : interfaces)
 		{
 			long hash = ((long)iface.getChassis() << 32) | (long)iface.getModule();
@@ -173,7 +171,6 @@ System.out.println("--- if count = " + interfaces.size());
 		{
 			sv.setMenu(getMenu());
 			sv.addSelectionListener(listener);
-System.out.println("=== slot view: " + sv.computeSize(SWT.DEFAULT, SWT.DEFAULT));			
 		}
 	}
 
@@ -191,7 +188,6 @@ System.out.println("=== slot view: " + sv.computeSize(SWT.DEFAULT, SWT.DEFAULT))
 	public void setNodeId(long nodeId)
 	{
 		this.nodeId = nodeId;
-System.out.println(">>> node set to " + nodeId);		
 		refresh();
 	}
 

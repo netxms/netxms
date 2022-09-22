@@ -39,7 +39,7 @@ public class ObjectToolSelectionDialog extends Dialog
    public ObjectToolSelectionDialog(Shell parent)
    {
       super(parent);
-      setShellStyle(getShellStyle() | SWT.RESIZE);
+      setShellStyle(getShellStyle());
    }
 
    /**
