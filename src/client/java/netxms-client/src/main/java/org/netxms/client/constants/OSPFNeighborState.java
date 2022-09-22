@@ -28,15 +28,15 @@ import org.slf4j.LoggerFactory;
  */
 public enum OSPFNeighborState
 {
-   UNKNOWN(0),
-   DOWN(1),
-   ATTEMPT(2),
-   INIT(3),
-   TWO_WAY(4),
-   EXCHANGE_START(5),
-   EXCHANGE(6),
-   LOADING(7),
-   FULL(8);
+   UNKNOWN(0, ""),
+   DOWN(1, "DOWN"),
+   ATTEMPT(2, "ATTEMPT"),
+   INIT(3, "INIT"),
+   TWO_WAY(4, "TWO-WAY"),
+   EXCHANGE_START(5, "EXCHANGE START"),
+   EXCHANGE(6, "EXCHANGE"),
+   LOADING(7, "LOADING"),
+   FULL(8, "FULL");
 
    private static Logger logger = LoggerFactory.getLogger(OSPFNeighborState.class);
    private static Map<Integer, OSPFNeighborState> lookupTable = new HashMap<Integer, OSPFNeighborState>();
@@ -49,15 +49,18 @@ public enum OSPFNeighborState
    }
 
    private int value;
+   private String text;
 
    /**
     * Internal constructor
-    *  
+    * 
     * @param value integer value
+    * @param text text value
     */
-   private OSPFNeighborState(int value)
+   private OSPFNeighborState(int value, String text)
    {
       this.value = value;
+      this.text = text;
    }
 
    /**
@@ -68,6 +71,16 @@ public enum OSPFNeighborState
    public int getValue()
    {
       return value;
+   }
+
+   /**
+    * Get text value
+    *
+    * @return text value
+    */
+   public String getText()
+   {
+      return text;
    }
 
    /**

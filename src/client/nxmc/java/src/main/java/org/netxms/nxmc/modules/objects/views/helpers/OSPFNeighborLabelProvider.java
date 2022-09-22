@@ -67,7 +67,7 @@ public class OSPFNeighborLabelProvider extends LabelProvider implements ITableLa
          case OSPFView.COLUMN_NEIGHBOR_ROUTER_ID:
             return n.getRouterId().getHostAddress();
          case OSPFView.COLUMN_NEIGHBOR_STATE:
-            return n.getState().toString();
+            return n.getState().getText();
          case OSPFView.COLUMN_NEIGHBOR_VIRTUAL:
             return n.isVirtual() ? i18n.tr("yes") : i18n.tr("no");
       }

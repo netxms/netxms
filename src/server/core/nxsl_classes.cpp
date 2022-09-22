@@ -2553,6 +2553,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
       value = vm->createValue(OSPFInterfaceStateToText(iface->getOSPFState()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfType"))
+   {
+      value = vm->createValue(static_cast<int32_t>(iface->getOSPFType()));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ospfTypeText"))
    {
       value = vm->createValue(OSPFInterfaceTypeToText(iface->getOSPFType()));
