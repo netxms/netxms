@@ -1208,7 +1208,7 @@
 		</template>
 		<template id="119">
 			<guid>3677cb73-d121-4d48-b529-37a276f592be</guid>
-			<name>Database writer</name>
+			<name>Database Writer</name>
 			<flags>0</flags>
 			<comments></comments>
 			<path>
@@ -1411,7 +1411,7 @@
 		</template>
 		<template id="666">
 			<guid>39021586-80ad-4d9e-9ec8-628a863a82a8</guid>
-			<name>Server heap memory</name>
+			<name>Server Heap Memory</name>
 			<flags>0</flags>
 			<comments></comments>
 			<path>
@@ -1831,7 +1831,7 @@
 		</template>
 		<template id="667">
 			<guid>989f562b-f3c6-452c-b3de-55107456d784</guid>
-			<name>Thread pools</name>
+			<name>Thread Pools</name>
 			<flags>0</flags>
 			<comments></comments>
 			<path>

@@ -442,7 +442,7 @@
 		</template>
 		<template id="105">
 			<guid>d9069036-9fd0-4778-8831-ec22b0abd3bb</guid>
-			<name>Local database</name>
+			<name>Local Database</name>
 			<flags>0</flags>
 			<comments></comments>
 			<path>
@@ -903,7 +903,7 @@
 		</template>
 		<template id="108">
 			<guid>8e05f18c-2275-46c6-9e24-0e7c409bda44</guid>
-			<name>Thread pools</name>
+			<name>Thread Pools</name>
 			<flags>0</flags>
 			<comments></comments>
 			<path>
