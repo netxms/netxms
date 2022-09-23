@@ -339,7 +339,7 @@ bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
       return true;
 
    // Attempt to read serial number from mnf_info command output (works on Teltonika modems and possibly other OpenWRT platforms)
-   OutputCapturingProcessExecutor executor(_T("/sbin/mnf_info"), false);
+   OutputCapturingProcessExecutor executor(_T("/sbin/mnf_info -s"), false);
    if (executor.execute())
    {
       if (executor.waitForCompletion(1000) && (executor.getExitCode() == 0))
