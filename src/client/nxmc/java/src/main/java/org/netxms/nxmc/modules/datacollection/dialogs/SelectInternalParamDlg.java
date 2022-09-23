@@ -145,8 +145,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.AgentTunnels.Unbound.Total", "Number of unbound agent tunnels", DataType.UINT32));
          list.add(new AgentParameter("Server.AverageDCIQueuingTime", "Average time to queue DCI for polling for last minute", DataType.UINT32));
          list.add(new AgentParameter("Server.Certificate.ExpirationDate", "Server certificate expiration date (YYYY-MM-DD)", DataType.STRING)); 
-         list.add(new AgentParameter("Server.Certificate.ExpirationIn", "Days until server certificate expiration date", DataType.UINT64));
-         list.add(new AgentParameter("Server.Certificate.ExpirationTime", "Server certificate expiration time", DataType.UINT32)); 
+         list.add(new AgentParameter("Server.Certificate.ExpirationTime", "Server certificate expiration time", DataType.UINT64)); 
+         list.add(new AgentParameter("Server.Certificate.ExpiresIn", "Days until server certificate expiration date", DataType.INT32));
          list.add(new AgentParameter("Server.ClientSessions.Authenticated", "Client sessions: authenticated", DataType.UINT32));
          list.add(new AgentParameter("Server.ClientSessions.Authenticated(*)", "Client sessions for user {instance}: authenticated", DataType.UINT32));
          list.add(new AgentParameter("Server.ClientSessions.Desktop", "Client sessions: desktop", DataType.UINT32));

@@ -7501,13 +7501,13 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          ret_string(buffer, GetServerCertificateExpirationDate());
       }
-      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationIn")))
-      {
-         ret_int(buffer, GetServerCertificateDaysUntilExpiration());
-      }
       else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationTime")))
       {
          ret_int64(buffer, GetServerCertificateExpirationTime());
+      }
+      else if (!_tcsicmp(name, _T("Server.Certificate.ExpiresIn")))
+      {
+         ret_int(buffer, GetServerCertificateDaysUntilExpiration());
       }
       else if (!_tcsicmp(name, _T("Server.ClientSessions.Authenticated")))
       {
