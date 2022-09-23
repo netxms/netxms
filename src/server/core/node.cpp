@@ -7501,7 +7501,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          ret_string(buffer, GetServerCertificateExpirationDate());
       }
-      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationInt")))
+      else if (!_tcsicmp(name, _T("Server.Certificate.ExpirationIn")))
       {
          ret_int(buffer, GetServerCertificateDaysUntilExpiration());
       }
