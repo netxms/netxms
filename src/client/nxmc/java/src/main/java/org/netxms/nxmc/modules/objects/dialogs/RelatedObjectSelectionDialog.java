@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectbrowser.dialogs;
+package org.netxms.nxmc.modules.objects.dialogs;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,46 +24,48 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
-import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectFilter;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.FilterText;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
+import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectFilter;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
- * Dialog used to select child object(s) of given object
+ * Dialog used to select related object(s) of given object
  */
-public class ChildObjectListDialog extends Dialog
+public class RelatedObjectSelectionDialog extends Dialog
 {
-	private long parentObject;
+   public enum RelationType
+   {
+      DIRECT_SUBORDINATES, DIRECT_SUPERORDINATES
+   }
+
+   private final I18n i18n = LocalizationHelper.getI18n(RelatedObjectSelectionDialog.class);
+
+   private long seedObject;
+   private RelationType relationType;
 	private Set<Integer> classFilter;
 	private ObjectFilter filter;
-	private Text filterText;
+   private FilterText filterText;
 	private TableViewer objectList;
 	private List<AbstractObject> selectedObjects;
 	
@@ -95,68 +97,58 @@ public class ChildObjectListDialog extends Dialog
 	}
 	
 	/**
-	 * @param parentShell
-	 */
-	public ChildObjectListDialog(Shell parentShell, long parentObject, Set<Integer> classFilter)
+    * @param parentShell parent shell
+    * @param seedObject object used for populating related object list
+    * @param relationType relation type
+    * @param classFilter class filter for object list
+    */
+   public RelatedObjectSelectionDialog(Shell parentShell, long seedObject, RelationType relationType, Set<Integer> classFilter)
 	{
 		super(parentShell);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
-		this.parentObject = parentObject;
+		this.seedObject = seedObject;
+      this.relationType = relationType;
 		this.classFilter = classFilter;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().ChildObjectListDialog_SelectSubordinate);
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		try
-		{
-			newShell.setSize(settings.getInt("ChildObjectListDialog.cx"), settings.getInt("ChildObjectListDialog.cy")); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		catch(NumberFormatException e)
-		{
-			newShell.setSize(300, 350);
-		}
+      newShell.setText((relationType == RelationType.DIRECT_SUBORDINATES) ? i18n.tr("Select Subordinate Object") : i18n.tr("Select Parent Object"));
+      PreferenceStore settings = PreferenceStore.getInstance();
+      newShell.setSize(settings.getAsInteger("RelatedObjectSelectionDialog.cx", 300), settings.getAsInteger("RelatedObjectSelectionDialog.cy", 350));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
-		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(parentObject);
-		AbstractObject[] sourceObjects = (object != null) ? object.getChildrenAsArray() : new AbstractObject[0];
-		
+
+      AbstractObject object = Registry.getSession().findObjectById(seedObject);
+		AbstractObject[] sourceObjects = (object != null) ? 
+		      ((relationType == RelationType.DIRECT_SUBORDINATES) ? object.getChildrenAsArray() : object.getParentsAsArray())
+		      : new AbstractObject[0];
+
+      FillLayout dialogLayout = new FillLayout();
+      dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      dialogArea.setLayout(dialogLayout);
+
+      Composite listArea = new Composite(dialogArea, SWT.BORDER);
 		GridLayout layout = new GridLayout();
-		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
-		dialogArea.setLayout(layout);
-		
-		// Create filter area
-		Composite filterArea = new Composite(dialogArea, SWT.NONE);
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		filterArea.setLayout(layout);
-		filterArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		
-		Label filterLabel = new Label(filterArea, SWT.NONE);
-		filterLabel.setText(Messages.get().ChildObjectListDialog_Filter);
-		
-		filterText = new Text(filterArea, SWT.BORDER);
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = WidgetHelper.INNER_SPACING;
+      listArea.setLayout(layout);
+
+      filterText = new FilterText(listArea, SWT.NONE, null, false, false);
 		filterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
@@ -172,15 +164,12 @@ public class ChildObjectListDialog extends Dialog
 				}
 			}
 		});
-		
+
 		// Create object list
-		objectList = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
-		TableColumn tc = new TableColumn(objectList.getTable(), SWT.LEFT); 
-		tc.setText(Messages.get().ChildObjectListDialog_Name);
-		tc.setWidth(280);
+      objectList = new TableViewer(listArea, SWT.FULL_SELECTION | SWT.MULTI);
 		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());
-		objectList.setLabelProvider(new WorkbenchLabelProvider());
+      objectList.setLabelProvider(new BaseObjectLabelProvider());
 		objectList.setComparator(new ViewerComparator());
       filter = new ObjectFilter(sourceObjects, classFilter);
 		objectList.addFilter(filter);
@@ -190,35 +179,17 @@ public class ChildObjectListDialog extends Dialog
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		objectList.getControl().setLayoutData(gd);
-		objectList.getTable().addControlListener(new ControlListener() {
-			@Override
-			public void controlMoved(ControlEvent e)
-			{
-			}
 
-			@Override
-			public void controlResized(ControlEvent e)
-			{
-				Table table = objectList.getTable();
-				int w = table.getSize().x - table.getBorderWidth() * 2;
-				ScrollBar sc = table.getVerticalBar();
-				if ((sc != null) && sc.isVisible())
-					w -= sc.getSize().x;
-				table.getColumn(0).setWidth(w);
-			}
-		});
-		
-		if (object != null)
-			objectList.setInput(sourceObjects);
-		
-		filterText.setFocus();
-		
+      objectList.setInput(sourceObjects);
+
+      objectList.getControl().setFocus();
+
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
@@ -226,9 +197,9 @@ public class ChildObjectListDialog extends Dialog
 		super.cancelPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@SuppressWarnings("rawtypes")
 	@Override
 	protected void okPressed()
@@ -248,10 +219,9 @@ public class ChildObjectListDialog extends Dialog
 	private void saveSettings()
 	{
 		Point size = getShell().getSize();
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-
-		settings.put("ChildObjectListDialog.cx", size.x); //$NON-NLS-1$
-		settings.put("ChildObjectListDialog.cy", size.y); //$NON-NLS-1$
+      PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set("RelatedObjectSelectionDialog.cx", size.x);
+      settings.set("RelatedObjectSelectionDialog.cy", size.y);
 	}
 
 	/**

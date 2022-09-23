@@ -200,7 +200,7 @@ public class ScheduledTaskView extends ViewPart
          contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"); //$NON-NLS-1$
       }
    }
-   
+
    /**
     * Create actions
     */

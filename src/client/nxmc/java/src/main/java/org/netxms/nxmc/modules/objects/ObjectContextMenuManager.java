@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -35,7 +37,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
@@ -49,7 +57,9 @@ import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigEditorView;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
+import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -76,6 +86,10 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionTakeScreenshot;
    private Action actionEditAgentConfig;
    private Action actionExecuteScript;
+   private Action actionBind;
+   private Action actionUnbind;
+   private Action actionBindTo;
+   private Action actionUnbindFrom;
 
    /**
     * Create new object context menu manager.
@@ -189,6 +203,38 @@ public class ObjectContextMenuManager extends MenuManager
             executeScript();
          }
       };
+
+      actionBind = new Action(i18n.tr("&Bind...")) {
+         @Override
+         public void run()
+         {
+            bindObjects();
+         }
+      };
+
+      actionUnbind = new Action(i18n.tr("U&nbind...")) {
+         @Override
+         public void run()
+         {
+            unbindObjects();
+         }
+      };
+
+      actionBindTo = new Action(i18n.tr("&Bind to...")) {
+         @Override
+         public void run()
+         {
+            bindToObject();
+         }
+      };
+
+      actionUnbindFrom = new Action(i18n.tr("U&nbind from...")) {
+         @Override
+         public void run()
+         {
+            unbindFromObjects();
+         }
+      };
    }
 
    /**
@@ -204,17 +250,30 @@ public class ObjectContextMenuManager extends MenuManager
 
       if (singleObject)
       {
-         MenuManager createMenu = new ObjectCreateMenuManager(getShell(), view, getObjectFromSelection());
+         AbstractObject object = getObjectFromSelection();
+         MenuManager createMenu = new ObjectCreateMenuManager(getShell(), view, object);
          if (!createMenu.isEmpty())
          {
             add(createMenu);
             add(new Separator());
          }
+         if ((object instanceof Container) || (object instanceof ServiceRoot))
+         {
+            add(actionBind);
+            add(actionUnbind);
+            add(new Separator());
+         }
       }
-
+      if (isBindToMenuAllowed(selection))
+      {
+         add(actionBindTo);
+         if (singleObject)
+            add(actionUnbindFrom);
+         add(new Separator());
+      }
       if (isMaintenanceMenuAllowed(selection))
       {
-         MenuManager maintenanceMenu = new MenuManager(i18n.tr("&Maintenance"));
+         MenuManager maintenanceMenu = new MenuManager(i18n.tr("M&aintenance"));
          maintenanceMenu.add(actionEnterMaintenance);
          maintenanceMenu.add(actionLeaveMaintenance);
          maintenanceMenu.add(actionScheduleMaintenance);
@@ -289,7 +348,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (pollsMenu != null)
       {
          add(new Separator());
-         add(new MenuContributionItem(i18n.tr("&Poll"), pollsMenu));
+         add(new MenuContributionItem(i18n.tr("P&oll"), pollsMenu));
       }
 
       if (singleObject)
@@ -305,7 +364,7 @@ public class ObjectContextMenuManager extends MenuManager
     * @param selection current object selection
     * @return true if maintenance menu is allowed
     */
-   private boolean isMaintenanceMenuAllowed(IStructuredSelection selection)
+   private static boolean isMaintenanceMenuAllowed(IStructuredSelection selection)
    {
       for(Object o : selection.toList())
       {
@@ -316,6 +375,27 @@ public class ObjectContextMenuManager extends MenuManager
              (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) ||
              (objectClass == AbstractObject.OBJECT_NETWORKMAP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPGROUP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) ||
              (objectClass == AbstractObject.OBJECT_TEMPLATE) || (objectClass == AbstractObject.OBJECT_TEMPLATEGROUP) || (objectClass == AbstractObject.OBJECT_TEMPLATEROOT))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if "bind to" / "unbind from" menu is allowed.
+    *
+    * @param selection current object selection
+    * @return true if "bind to" / "unbind from" menu is allowed
+    */
+   private static boolean isBindToMenuAllowed(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof AbstractObject))
+            return false;
+         int objectClass = ((AbstractObject)o).getObjectClass();
+         if ((objectClass != AbstractObject.OBJECT_CHASSIS) && (objectClass != AbstractObject.OBJECT_CLUSTER) && (objectClass != AbstractObject.OBJECT_MOBILEDEVICE) &&
+             (objectClass != AbstractObject.OBJECT_NODE) && (objectClass != AbstractObject.OBJECT_RACK) && (objectClass != AbstractObject.OBJECT_SENSOR) &&
+             (objectClass != AbstractObject.OBJECT_SUBNET))
             return false;
       }
       return true;
@@ -615,5 +695,136 @@ public class ObjectContextMenuManager extends MenuManager
          PopOutViewWindow window = new PopOutViewWindow(executor);
          window.open();
       }
+   }
+
+   /**
+    * Bind objects to selected object
+    */
+   private void bindObjects()
+   {
+      final long parentId = getObjectIdFromSelection();
+      if (parentId == 0)
+         return;
+
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Binding objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(AbstractObject o : objects)
+               session.bindObject(parentId, o.getObjectId());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot bind objects");
+         }
+      }.start();
+   }
+
+   /**
+    * Unbind objects from selected object
+    */
+   private void unbindObjects()
+   {
+      final long parentId = getObjectIdFromSelection();
+      if (parentId == 0)
+         return;
+
+      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(view.getWindow().getShell(), parentId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES, null);
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Unbinding objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(AbstractObject o : objects)
+               session.unbindObject(parentId, o.getObjectId());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot unbind objects");
+         }
+      }.start();
+   }
+
+   /**
+    * Bind selected object to another object
+    */
+   private void bindToObject()
+   {
+      final List<Long> childIdList = new ArrayList<>();
+      for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
+      {
+         if ((o instanceof DataCollectionTarget) || (o instanceof Rack) || (o instanceof Chassis) || (o instanceof Subnet))
+            childIdList.add(((AbstractObject)o).getObjectId());
+      }
+
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createContainerSelectionFilter());
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Binding objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> parents = dlg.getSelectedObjects();
+            for(AbstractObject o : parents)
+            {
+               for(Long childId : childIdList)
+                  session.bindObject(o.getObjectId(), childId);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot bind objects");
+         }
+      }.start();
+   }
+
+   /**
+    * Unbind selected objects from one or more containers
+    */
+   private void unbindFromObjects()
+   {
+      final long childId = getObjectIdFromSelection();
+      if (childId == 0)
+         return;
+
+      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(view.getWindow().getShell(), childId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUPERORDINATES,
+            ObjectSelectionDialog.createContainerSelectionFilter());
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Unbinding objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(AbstractObject o : objects)
+               session.unbindObject(o.getObjectId(), childId);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot unbind objects");
+         }
+      }.start();
    }
 }

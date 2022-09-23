@@ -71,7 +71,7 @@ public class BindObjectTo implements IObjectActionDelegate
 		dlg.showFilterToolTip(false);
 		if (dlg.open() == Window.OK)
 		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
 			final Long[] childIdList = objects.toArray(new Long[objects.size()]);
 			new ConsoleJob(Messages.get().BindObject_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,14 +33,13 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ChildObjectListDialog;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- * @author victor
- *
+ * Unbind object
  */
 public class UnbindObject implements IObjectActionDelegate
 {
@@ -48,25 +47,25 @@ public class UnbindObject implements IObjectActionDelegate
 	private ViewPart viewPart;
 	private long parentId;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
 		shell = targetPart.getSite().getShell();
 		viewPart = (targetPart instanceof ViewPart) ? (ViewPart)targetPart : null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	public void run(IAction action)
 	{
-		final ChildObjectListDialog dlg = new ChildObjectListDialog(shell, parentId, null);
+      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(shell, parentId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES, null);
 		dlg.open();
 		if (dlg.getReturnCode() == Window.OK)
 		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.get().UnbindObject_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
@@ -78,20 +77,19 @@ public class UnbindObject implements IObjectActionDelegate
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					List<AbstractObject> objects = dlg.getSelectedObjects();
-					for(int i = 0; i < objects.size(); i++)
-						session.unbindObject(parentId, objects.get(i).getObjectId());
+               for(AbstractObject o : objects)
+                  session.unbindObject(parentId, o.getObjectId());
 				}
 			}.start();
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if ((selection instanceof IStructuredSelection) &&
-		    (((IStructuredSelection)selection).size() == 1))
+      if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
 			if ((obj instanceof ServiceRoot) || (obj instanceof Container))

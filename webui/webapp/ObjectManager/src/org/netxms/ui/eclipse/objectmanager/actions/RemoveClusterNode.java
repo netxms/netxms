@@ -33,7 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ChildObjectListDialog;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -48,21 +48,22 @@ public class RemoveClusterNode implements IObjectActionDelegate
 	private ViewPart viewPart;
 	private long clusterId;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
 		shell = targetPart.getSite().getShell();
 		viewPart = (targetPart instanceof ViewPart) ? (ViewPart)targetPart : null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	public void run(IAction action)
 	{
-		final ChildObjectListDialog dlg = new ChildObjectListDialog(shell, clusterId, ChildObjectListDialog.createClassFilter(AbstractObject.OBJECT_NODE));
+      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(shell, clusterId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES,
+            RelatedObjectSelectionDialog.createClassFilter(AbstractObject.OBJECT_NODE));
 		dlg.open();
 		if (dlg.getReturnCode() == Window.OK)
 		{
