@@ -66,33 +66,6 @@
 			<image></image>
 		</objectTool>
 		<objectTool id="5">
-			<name>&amp;Info-&gt;&amp;Switch forwarding database (FDB)</name>
-			<guid>adc5168f-7e0b-f449-a876-cc4720d1a29a</guid>
-			<type>2</type>
-			<data>Forwarding database</data>
-			<description>Show switch forwarding database</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;1&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>MAC Address</name>
-					<oid>.1.3.6.1.2.1.17.4.3.1.1</oid>
-					<format>4</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="2">
-					<name>Port</name>
-					<oid>.1.3.6.1.2.1.17.4.3.1.2</oid>
-					<format>5</format>
-					<captureGroup>0</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="6">
 			<name>&amp;Connect-&gt;Open &amp;web browser</name>
 			<guid>fa403c91-28d6-2b49-a96b-fd4d688c5862</guid>
 			<type>4</type>
@@ -105,7 +78,7 @@
 			<commandShortName></commandShortName>
 			<image></image>
 		</objectTool>
-		<objectTool id="7">
+		<objectTool id="6">
 			<name>&amp;Connect-&gt;Open &amp;web browser (HTTPS)</name>
 			<guid>a4d9c827-916b-2640-b6e2-d5bf512c39d7</guid>
 			<type>4</type>
@@ -118,7 +91,7 @@
 			<commandShortName></commandShortName>
 			<image></image>
 		</objectTool>
-		<objectTool id="8">
+		<objectTool id="7">
 			<name>&amp;Info-&gt;&amp;Agent-&gt;&amp;Loaded subagents</name>
 			<guid>ded1f018-9659-c548-8adb-4af5c759c7ba</guid>
 			<type>9</type>
@@ -131,7 +104,7 @@
 			<commandShortName></commandShortName>
 			<image></image>
 		</objectTool>
-		<objectTool id="9">
+		<objectTool id="8">
 			<name>&amp;Info-&gt;&amp;Agent-&gt;Supported &amp;parameters</name>
 			<guid>cf606f35-ea88-2446-bdf5-366799e615c9</guid>
 			<type>3</type>
@@ -152,7 +125,7 @@
 				</column>
 			</columns>
 		</objectTool>
-		<objectTool id="10">
+		<objectTool id="9">
 			<name>&amp;Info-&gt;&amp;Agent-&gt;Supported &amp;lists</name>
 			<guid>84c8b119-fda0-5d4f-b480-75229315ce20</guid>
 			<type>3</type>
@@ -173,7 +146,7 @@
 				</column>
 			</columns>
 		</objectTool>
-		<objectTool id="11">
+		<objectTool id="10">
 			<name>&amp;Info-&gt;&amp;Agent-&gt;Supported &amp;actions</name>
 			<guid>d6ea7dcf-c342-b04e-a91b-566beda73c4d</guid>
 			<type>3</type>
@@ -206,7 +179,7 @@
 				</column>
 			</columns>
 		</objectTool>
-		<objectTool id="12">
+		<objectTool id="11">
 			<name>&amp;Info-&gt;&amp;Agent-&gt;Configured &amp;ICMP targets</name>
 			<guid>780a1b84-e600-a748-89af-c5e02e5b8cfc</guid>
 			<type>9</type>
@@ -219,299 +192,7 @@
 			<commandShortName></commandShortName>
 			<image></image>
 		</objectTool>
-		<objectTool id="13">
-			<name>&amp;Info-&gt;&amp;Current processes</name>
-			<guid>7afea6f9-ccd2-1d45-9e8c-3aafe14cb565</guid>
-			<type>9</type>
-			<data>Current processesSystem.Processes</data>
-			<description>Show information about currently running processes</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;2&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-		</objectTool>
-		<objectTool id="14">
-			<name>&amp;Info-&gt;Topology table (Nortel)</name>
-			<guid>80f3c244-87b1-954e-99e1-3c94062a2cc7</guid>
-			<type>2</type>
-			<data>Topology table</data>
-			<description>Show topology table (Nortel protocol)</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;1&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>Peer IP</name>
-					<oid>.1.3.6.1.4.1.45.1.6.13.2.1.1.3</oid>
-					<format>3</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="2">
-					<name>Peer MAC</name>
-					<oid>.1.3.6.1.4.1.45.1.6.13.2.1.1.5</oid>
-					<format>4</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="3">
-					<name>Slot</name>
-					<oid>.1.3.6.1.4.1.45.1.6.13.2.1.1.1</oid>
-					<format>1</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="4">
-					<name>Port</name>
-					<oid>.1.3.6.1.4.1.45.1.6.13.2.1.1.2</oid>
-					<format>1</format>
-					<captureGroup>0</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="15">
-			<name>&amp;Info-&gt;Topology table (CDP)</name>
-			<guid>e7f69f34-7956-674b-aa5f-aa6d07e3bba3</guid>
-			<type>2</type>
-			<data>Topology table</data>
-			<description>Show topology table (CDP)</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;1&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>Device ID</name>
-					<oid>.1.3.6.1.4.1.9.9.23.1.2.1.1.6</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="2">
-					<name>IP Address</name>
-					<oid>.1.3.6.1.4.1.9.9.23.1.2.1.1.4</oid>
-					<format>3</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="3">
-					<name>Platform</name>
-					<oid>.1.3.6.1.4.1.9.9.23.1.2.1.1.8</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="4">
-					<name>Version</name>
-					<oid>.1.3.6.1.4.1.9.9.23.1.2.1.1.5</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="5">
-					<name>Port</name>
-					<oid>.1.3.6.1.4.1.9.9.23.1.2.1.1.7</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="16">
-			<name>&amp;Info-&gt;Active &amp;user sessions</name>
-			<guid>87370de4-e760-904a-9f9d-dfdf15f4dd9e</guid>
-			<type>3</type>
-			<data>Active User SessionsSystem.ActiveUserSessions^&quot;(.*)&quot; &quot;(.*)&quot; &quot;(.*)&quot;</data>
-			<description>Show information about active user sessions</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;2&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>User</name>
-					<oid></oid>
-					<format>0</format>
-					<captureGroup>1</captureGroup>
-				</column>
-				<column id="2">
-					<name>Terminal</name>
-					<oid></oid>
-					<format>0</format>
-					<captureGroup>2</captureGroup>
-				</column>
-				<column id="3">
-					<name>From</name>
-					<oid></oid>
-					<format>0</format>
-					<captureGroup>3</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="17">
-			<name>&amp;Info-&gt;AR&amp;P cache (SNMP)</name>
-			<guid>81a0f545-3dbf-6c47-acfc-43ae88465360</guid>
-			<type>2</type>
-			<data>ARP Cache</data>
-			<description>Show ARP cache</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;1&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>IP Address</name>
-					<oid>.1.3.6.1.2.1.4.22.1.3</oid>
-					<format>3</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="2">
-					<name>MAC Address</name>
-					<oid>.1.3.6.1.2.1.4.22.1.2</oid>
-					<format>4</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="3">
-					<name>Interface</name>
-					<oid>.1.3.6.1.2.1.4.22.1.1</oid>
-					<format>5</format>
-					<captureGroup>0</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="18">
-			<name>&amp;Info-&gt;AR&amp;P cache (Agent)</name>
-			<guid>86b9772e-b939-1849-bc5b-d2c1a170ec96</guid>
-			<type>3</type>
-			<data>ARP CacheNet.ArpCache(.*) (.*) (.*)</data>
-			<description>Show ARP cache</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;2&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>IP Address</name>
-					<oid>.1.3.6.1.2.1.4.22.1.3</oid>
-					<format>0</format>
-					<captureGroup>2</captureGroup>
-				</column>
-				<column id="2">
-					<name>MAC Address</name>
-					<oid>.1.3.6.1.2.1.4.22.1.2</oid>
-					<format>0</format>
-					<captureGroup>1</captureGroup>
-				</column>
-				<column id="3">
-					<name>Interface</name>
-					<oid>.1.3.6.1.2.1.4.22.1.1</oid>
-					<format>5</format>
-					<captureGroup>3</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="19">
-			<name>&amp;Info-&gt;&amp;Routing table (SNMP)</name>
-			<guid>565bb6e4-cee3-4741-82d6-0f379c742c55</guid>
-			<type>2</type>
-			<data>Routing Table</data>
-			<description>Show IP routing table</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;1&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>Destination</name>
-					<oid>.1.3.6.1.2.1.4.21.1.1</oid>
-					<format>3</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="2">
-					<name>Mask</name>
-					<oid>.1.3.6.1.2.1.4.21.1.11</oid>
-					<format>3</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="3">
-					<name>Next hop</name>
-					<oid>.1.3.6.1.2.1.4.21.1.7</oid>
-					<format>3</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="4">
-					<name>Metric</name>
-					<oid>.1.3.6.1.2.1.4.21.1.3</oid>
-					<format>1</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="5">
-					<name>Interface</name>
-					<oid>.1.3.6.1.2.1.4.21.1.2</oid>
-					<format>5</format>
-					<captureGroup>0</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="20">
-			<name>&amp;Info-&gt;Topology table (LLDP)</name>
-			<guid>83eeea21-dd61-f84e-811d-3861ccee08ed</guid>
-			<type>2</type>
-			<data>Topology Table</data>
-			<description>Show topology table (LLDP)</description>
-			<flags>0</flags>
-			<filter>&lt;objectMenuFilter&gt;&lt;flags&gt;1&lt;/flags&gt;&lt;/objectMenuFilter&gt;</filter>
-			<confirmation></confirmation>
-			<commandName></commandName>
-			<commandShortName></commandShortName>
-			<image></image>
-			<columns>
-				<column id="1">
-					<name>Chassis ID</name>
-					<oid>.1.0.8802.1.1.2.1.4.1.1.5</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="2">
-					<name>Local port</name>
-					<oid>.1.0.8802.1.1.2.1.4.1.1.2</oid>
-					<format>5</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="3">
-					<name>System name</name>
-					<oid>.1.0.8802.1.1.2.1.4.1.1.9</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="4">
-					<name>System description</name>
-					<oid>.1.0.8802.1.1.2.1.4.1.1.10</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="5">
-					<name>Remote port ID</name>
-					<oid>.1.0.8802.1.1.2.1.4.1.1.7</oid>
-					<format>4</format>
-					<captureGroup>0</captureGroup>
-				</column>
-				<column id="6">
-					<name>Remote port description</name>
-					<oid>.1.0.8802.1.1.2.1.4.1.1.8</oid>
-					<format>0</format>
-					<captureGroup>0</captureGroup>
-				</column>
-			</columns>
-		</objectTool>
-		<objectTool id="21">
+		<objectTool id="12">
 			<name>QtechOLTsONT</name>
 			<guid>9b011dcc-a62a-c945-87c9-d12ea7b034ac</guid>
 			<type>2</type>
@@ -580,7 +261,7 @@
 				</column>
 			</columns>
 		</objectTool>
-		<objectTool id="22">
+		<objectTool id="13">
 			<name>QtechOLTsSFP</name>
 			<guid>4bbcd005-18ab-4b4d-ad57-d978ced60d4f</guid>
 			<type>2</type>
@@ -637,7 +318,7 @@
 				</column>
 			</columns>
 		</objectTool>
-		<objectTool id="23">
+		<objectTool id="14">
 			<name>&amp;Info-&gt;&amp;Agent-&gt;Supported &amp;tables</name>
 			<guid>281e3601-1cc6-4969-93f2-dfb86f9380b9</guid>
 			<type>3</type>
@@ -658,7 +339,7 @@
 				</column>
 			</columns>
 		</objectTool>
-		<objectTool id="24">
+		<objectTool id="15">
 			<name>&amp;Connect-&gt;&amp;SSH</name>
 			<guid>07185237-4f49-4d76-a9f4-bb21fbfa6083</guid>
 			<type>5</type>
@@ -679,7 +360,7 @@
 				</inputField>
 			</inputFields>
 		</objectTool>
-		<objectTool id="25">
+		<objectTool id="16">
 			<name>&amp;Connect-&gt;&amp;SSH</name>
 			<guid>f0a044f4-c2bd-4936-a821-87739dc1ab5d</guid>
 			<type>5</type>
@@ -700,7 +381,7 @@
 				</inputField>
 			</inputFields>
 		</objectTool>
-		<objectTool id="26">
+		<objectTool id="17">
 			<name>&amp;Connect-&gt;&amp;SSH</name>
 			<guid>7004a9c2-902d-4947-ab18-806167190cf5</guid>
 			<type>5</type>
