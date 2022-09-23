@@ -252,7 +252,7 @@ bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
 static bool GetHardwareProduct(char *buffer)
 {
    size_t len = INTERNAL_BUFFER_SIZE;
-   int ret = sysctlbyname("hw.model", buffer, &len, NULL, 0);
+   int ret = sysctlbyname("hw.model", buffer, &len, nullptr, 0);
    return (ret == 0) || (errno == ENOMEM);
 }
 
@@ -310,6 +310,7 @@ bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
    if (success)
       return true;
 
+#if _OPENWRT
    // Attempt to read serial number from /etc/config/mnf_info (works on Teltonika modems and possibly other OpenWRT platforms)
    FILE *fp = fopen("/etc/config/mnf_info", "r");
    if (fp != nullptr)
@@ -334,6 +335,46 @@ bool LIBNXAGENT_EXPORTABLE GetHardwareSerialNumber(char *buffer, size_t size)
       }
       fclose(fp);
    }
+   if (success)
+      return true;
+
+   // Attempt to read serial number from mnf_info command output (works on Teltonika modems and possibly other OpenWRT platforms)
+   OutputCapturingProcessExecutor executor(_T("/sbin/mnf_info"), false);
+   if (executor.execute())
+   {
+      if (executor.waitForCompletion(1000) && (executor.getExitCode() == 0))
+      {
+         const char *output = executor.getOutput();
+         if (*output != 0)
+         {
+            const char *nl = strchr(output, '\n');
+            if (nl != nullptr)
+            {
+               size_t len = nl - output;
+               if (len > 0)
+               {
+                  if (len >= size)
+                     len = size - 1;
+                  memcpy(buffer, output, len);
+                  buffer[len] = 0;
+                  success = true;
+               }
+            }
+            else
+            {
+               strlcpy(buffer, output, size);
+               success = true;
+            }
+         }
+      }
+      else
+      {
+         executor.stop();
+      }
+   }
+   if (success)
+      return true;
+#endif
 
    // Attempt to read serial number from /sys/devices/soc0/serial_number (works on Teltonika modems and possibly other Qualcomm SoC devices)
    fh = _open("/sys/devices/soc0/serial_number", O_RDONLY);
