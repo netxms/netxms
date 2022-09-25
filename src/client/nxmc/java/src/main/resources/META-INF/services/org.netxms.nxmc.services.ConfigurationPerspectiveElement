@@ -10,6 +10,7 @@ org.netxms.nxmc.modules.events.EPPConfigurationElement
 org.netxms.nxmc.modules.events.EventConfigurationElement
 org.netxms.nxmc.modules.filemanager.ServerFilesElement
 org.netxms.nxmc.modules.imagelibrary.ImageLibraryConfigurationElement
+org.netxms.nxmc.modules.nxsl.PersistentStorageConfigurationElement
 org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement
 org.netxms.nxmc.modules.objects.ObjectCategoriesConfigurationElement
 org.netxms.nxmc.modules.serverconfig.NetworkCredentialsElement

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,11 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.serverconfig.views;
+package org.netxms.nxmc.modules.nxsl.views;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,10 +27,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -43,54 +41,50 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.handlers.IHandlerService;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.serverconfig.Activator;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.ElementLabelComparator;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
-import org.netxms.ui.eclipse.widgets.helpers.KeyValuePairLabelProvider;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.dialogs.KeyValuePairEditDialog;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.widgets.helpers.KeyValuePairFilter;
+import org.netxms.nxmc.base.widgets.helpers.KeyValuePairLabelProvider;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.ElementLabelComparator;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Persistent storage view
  */
-public class PersistentStorageView extends ViewPart
+public class PersistentStorageView extends ConfigurationView
 {
-   public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.PersistentStorageView"; //$NON-NLS-1$
+   private static final I18n i18n = LocalizationHelper.getI18n(PersistentStorageView.class);
 
    private NXCSession session;
    private SortableTableViewer viewer;
-   private Action actionRefresh;
    private Action actionCreate;
    private Action actionEdit;
    private Action actionDelete;
    private Map<String, String> pStorageSet = new HashMap<String, String>();
 
    /**
-    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    * Create script library view
     */
-   @Override
-   public void init(IViewSite site) throws PartInitException
+   public PersistentStorageView()
    {
-      super.init(site);
-      session = ConsoleSharedData.getSession();
+      super(i18n.tr("Persistent Storage"), ResourceManager.getImageDescriptor("icons/config-views/persistent-storage.png"), "PersistentStorage", true);
+      session = Registry.getSession();
    }
 
    /**
-    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   public void createPartControl(Composite parent)
+   public void createContent(Composite parent)
    { 
-      final String[] setColumnNames = { "Key", "Value" };
+      final String[] setColumnNames = { i18n.tr("Key"), i18n.tr("Value") };
       final int[] setColumnWidths = { 200, 400 };
       viewer = new SortableTableViewer(parent, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -112,9 +106,20 @@ public class PersistentStorageView extends ViewPart
             editValue();
          }
       });
+      KeyValuePairFilter filter = new KeyValuePairFilter();
+      viewer.addFilter(filter);
+      setFilterClient(viewer, filter);
+
       createActions();
-      contributeToActionBars();
       createPopupMenu();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
       refresh();
    }
 
@@ -135,10 +140,6 @@ public class PersistentStorageView extends ViewPart
       // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
-
-      // Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-      getSite().registerContextMenu(menuMgr, viewer);      
    }
 
    /**
@@ -162,33 +163,21 @@ public class PersistentStorageView extends ViewPart
    }
 
    /**
-    * Contribute to action bars
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
     */
-   private void contributeToActionBars()
+   @Override
+   protected void fillLocalMenu(MenuManager manager)
    {
-      IActionBars bars = getViewSite().getActionBars();
-      fillLocalPullDown(bars.getMenuManager());
-      fillLocalToolBar(bars.getToolBarManager());
+      manager.add(actionCreate);
    }
 
    /**
-    * @param manager
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
     */
-   private void fillLocalPullDown(IMenuManager manager)
+   @Override
+   protected void fillLocalToolbar(ToolBarManager manager)
    {
       manager.add(actionCreate);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
-   }
-
-   /**
-    * @param manager
-    */
-   private void fillLocalToolBar(IToolBarManager manager)
-   {
-      manager.add(actionCreate);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
@@ -196,16 +185,6 @@ public class PersistentStorageView extends ViewPart
     */
    private void createActions()
    {
-      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      
-      actionRefresh = new RefreshAction(this) {
-         @Override
-         public void run()
-         {
-            refresh();
-         }
-      };
-      
       actionCreate = new Action("&New...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -213,9 +192,8 @@ public class PersistentStorageView extends ViewPart
             createValue();
          }
       };
-      actionCreate.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.new_task"); //$NON-NLS-1$
-      handlerService.activateHandler(actionCreate.getActionDefinitionId(), new ActionHandler(actionCreate));
-      
+      addKeyBinding("M1+N", actionCreate);
+
       actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
          @Override
          public void run()
@@ -223,8 +201,7 @@ public class PersistentStorageView extends ViewPart
             editValue();
          }
       };
-      actionEdit.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.edit_task"); //$NON-NLS-1$
-      handlerService.activateHandler(actionEdit.getActionDefinitionId(), new ActionHandler(actionEdit));
+      addKeyBinding("M3+ENTER", actionEdit);
 
       actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
@@ -233,16 +210,18 @@ public class PersistentStorageView extends ViewPart
             deleteValue();
          }
       };
+      addKeyBinding("M1+D", actionDelete);
    }
 
    /**
-    * Refresh this window
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
-   private void refresh()
+   @Override
+   public void refresh()
    {
-      new ConsoleJob("Loading persistent storage entries", this, Activator.PLUGIN_ID) {
+      new Job(i18n.tr("Loading persistent storage entries"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             pStorageSet = session.getPersistentStorageList();
             runInUIThread(new Runnable() {
@@ -253,43 +232,43 @@ public class PersistentStorageView extends ViewPart
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot load persistent storage entries";
+            return i18n.tr("Cannot load persistent storage entries");
          }
       }.start();
    }
-   
+
    /**
     * Create 
     */
    private void createValue()
    {
-      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), null, null, true, true);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getWindow().getShell(), null, null, true, true);
       if (dlg.open() != Window.OK)
          return;
-      
-      new ConsoleJob("Creating persistent storage entry", this, Activator.PLUGIN_ID) {
+
+      new Job(i18n.tr("Creating persistent storage entry"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.setPersistentStorageValue(dlg.getAtributeName(), dlg.getAttributeValue());
+            session.setPersistentStorageValue(dlg.getKey(), dlg.getValue());
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {                  
-                  pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
+                  pStorageSet.put(dlg.getKey(), dlg.getValue());
                   viewer.refresh();
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot create persistent storage entry";
+            return i18n.tr("Cannot create persistent storage entry");
          }
       }.start();   
    }
@@ -297,6 +276,7 @@ public class PersistentStorageView extends ViewPart
    /**
     * Delete value
     */
+   @SuppressWarnings("unchecked")
    private void deleteValue()
    {      
       IStructuredSelection selection = viewer.getStructuredSelection();
@@ -305,9 +285,9 @@ public class PersistentStorageView extends ViewPart
       for(Object o : selection.toList())
          keys.add(((Entry<String, String>)o).getKey());
 
-      new ConsoleJob("Deleting persistent storage entry", this, Activator.PLUGIN_ID) {
+      new Job(i18n.tr("Deleting persistent storage entry"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             for(String key : keys)
             {
@@ -326,7 +306,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot delete persistent storage entry";
+            return i18n.tr("Cannot delete persistent storage entry");
          }
       }.start();        
    }   
@@ -334,28 +314,28 @@ public class PersistentStorageView extends ViewPart
    /**
     * Edit value
     */
+   @SuppressWarnings("unchecked")
    private void editValue()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
-      @SuppressWarnings("unchecked")
       final Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
-      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), attr.getKey(), attr.getValue(), true, false);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getWindow().getShell(), attr.getKey(), attr.getValue(), true, false);
       if (dlg.open() != Window.OK)
          return;
 
-      new ConsoleJob("Updating persistent storage entry", this, Activator.PLUGIN_ID, null) {
+      new Job(i18n.tr("Updating persistent storage entry"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.setPersistentStorageValue(dlg.getAtributeName(), dlg.getAttributeValue());
+            session.setPersistentStorageValue(dlg.getKey(), dlg.getValue());
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {            
-                  pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
+                  pStorageSet.put(dlg.getKey(), dlg.getValue());
                   viewer.refresh();
                }
             });
@@ -364,7 +344,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot update persistent storage entry";
+            return i18n.tr("Cannot update persistent storage entry");
          }
       }.start();      
    }
@@ -376,5 +356,22 @@ public class PersistentStorageView extends ViewPart
    public void setFocus()
    {
       viewer.getTable().setFocus();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
+   @Override
+   public boolean isModified()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
+   @Override
+   public void save()
+   {
    }
 }

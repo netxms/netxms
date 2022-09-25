@@ -18,8 +18,10 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -204,7 +206,7 @@ public class PersistentStorageView extends ViewPart
          }
       };
       
-      actionCreate = new Action("Create new...", SharedIcons.ADD_OBJECT) {
+      actionCreate = new Action("&New...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -214,7 +216,7 @@ public class PersistentStorageView extends ViewPart
       actionCreate.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.new_task"); //$NON-NLS-1$
       handlerService.activateHandler(actionCreate.getActionDefinitionId(), new ActionHandler(actionCreate));
       
-      actionEdit = new Action("Change value...", SharedIcons.EDIT) {
+      actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
          @Override
          public void run()
          {
@@ -224,7 +226,7 @@ public class PersistentStorageView extends ViewPart
       actionEdit.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.edit_task"); //$NON-NLS-1$
       handlerService.activateHandler(actionEdit.getActionDefinitionId(), new ActionHandler(actionEdit));
 
-      actionDelete = new Action("Delete", SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
@@ -238,7 +240,7 @@ public class PersistentStorageView extends ViewPart
     */
    private void refresh()
    {
-      new ConsoleJob("Reloading persistent storage value list", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Loading persistent storage entries", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -247,7 +249,7 @@ public class PersistentStorageView extends ViewPart
                @Override
                public void run()
                {
-                  viewer.setInput(pStorageSet.entrySet().toArray());
+                  viewer.setInput(pStorageSet.entrySet());
                }
             });
          }
@@ -255,7 +257,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of persistent storage values";
+            return "Cannot load persistent storage entries";
          }
       }.start();
    }
@@ -269,7 +271,7 @@ public class PersistentStorageView extends ViewPart
       if (dlg.open() != Window.OK)
          return;
       
-      new ConsoleJob("Create persistent storage value", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Creating persistent storage entry", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -279,7 +281,7 @@ public class PersistentStorageView extends ViewPart
                public void run()
                {                  
                   pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
-                  viewer.setInput(pStorageSet.entrySet().toArray());   
+                  viewer.refresh();
                }
             });
          }
@@ -287,7 +289,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot create persistent storage value";
+            return "Cannot create persistent storage entry";
          }
       }.start();   
    }
@@ -297,35 +299,34 @@ public class PersistentStorageView extends ViewPart
     */
    private void deleteValue()
    {      
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      new ConsoleJob("Delete persistent storage value", this, Activator.PLUGIN_ID, null) {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+
+      final List<String> keys = new ArrayList<>();
+      for(Object o : selection.toList())
+         keys.add(((Entry<String, String>)o).getKey());
+
+      new ConsoleJob("Deleting persistent storage entry", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
-         {            
-            Iterator<?> it = selection.iterator();
-            if (it.hasNext())
+         {
+            for(String key : keys)
             {
-               while(it.hasNext())
-               {
-                  @SuppressWarnings("unchecked")
-                  final Entry<String, String> e = (Entry<String, String>) it.next();
-                  session.deletePersistentStorageValue(e.getKey());
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {                  
-                        pStorageSet.remove(e.getKey());
-                        viewer.setInput(pStorageSet.entrySet().toArray());   
-                     }
-                  });
-               }
+               session.deletePersistentStorageValue(key);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     pStorageSet.remove(key);
+                     viewer.refresh();
+                  }
+               });
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot delete persistent storage value";
+            return "Cannot delete persistent storage entry";
          }
       }.start();        
    }   
@@ -345,7 +346,7 @@ public class PersistentStorageView extends ViewPart
       if (dlg.open() != Window.OK)
          return;
 
-      new ConsoleJob("Change persistent storage value", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Updating persistent storage entry", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -355,7 +356,7 @@ public class PersistentStorageView extends ViewPart
                public void run()
                {            
                   pStorageSet.put(dlg.getAtributeName(), dlg.getAttributeValue());
-                  viewer.setInput(pStorageSet.entrySet().toArray());   
+                  viewer.refresh();
                }
             });
          }
@@ -363,7 +364,7 @@ public class PersistentStorageView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot edit persistent storage value";
+            return "Cannot update persistent storage entry";
          }
       }.start();      
    }
