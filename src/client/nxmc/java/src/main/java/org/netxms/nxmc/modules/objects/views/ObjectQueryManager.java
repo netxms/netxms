@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,14 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectbrowser.views;
+package org.netxms.nxmc.modules.objects.views;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -40,42 +39,41 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.queries.ObjectQuery;
 import org.netxms.client.objects.queries.ObjectQueryResult;
-import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldEntryDialog;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectQueryEditDialog;
-import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryComparator;
-import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryLabelProvider;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.RefreshTimer;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.dialogs.InputFieldEntryDialog;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectQueryEditDialog;
+import org.netxms.nxmc.modules.objects.views.helpers.ObjectQueryComparator;
+import org.netxms.nxmc.modules.objects.views.helpers.ObjectQueryFilter;
+import org.netxms.nxmc.modules.objects.views.helpers.ObjectQueryLabelProvider;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.RefreshTimer;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Predefined object query manager
  */
-public class ObjectQueryManager extends ViewPart
+public class ObjectQueryManager extends ConfigurationView
 {
-   public static final String ID = "org.netxms.ui.eclipse.objectbrowser.views.ObjectQueryManager";
+   private static final I18n i18n = LocalizationHelper.getI18n(ObjectQueryManager.class);
 
    public static final int COL_ID = 0;
    public static final int COL_NAME = 1;
    public static final int COL_DESCRIPTION = 2;
    public static final int COL_IS_VALID = 3;
 
-   private NXCSession session = ConsoleSharedData.getSession();
+   private NXCSession session;
    private SessionListener sessionListener;
    private SortableTableViewer viewer;
    private RefreshTimer refreshTimer;
@@ -83,15 +81,23 @@ public class ObjectQueryManager extends ViewPart
    private Action actionEdit;
    private Action actionDelete;
    private Action actionExecute;
-   private Action actionRefresh;
 
    /**
-    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    * Create object category manager view
+    */
+   public ObjectQueryManager()
+   {
+      super(i18n.tr("Object Queries"), ResourceManager.getImageDescriptor("icons/config-views/object-queries.png"), "ObjectQueryManager", true);
+      session = Registry.getSession();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
-   public void createPartControl(Composite parent)
+   public void createContent(Composite parent)
    {
-      final String[] names = new String[] { "ID", "Name", "Description", "Valid" };
+      final String[] names = new String[] { i18n.tr("ID"), i18n.tr("Name"), i18n.tr("Description"), i18n.tr("Valid") };
       final int[] widths = new int[] { 120, 300, 600, 60 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -104,12 +110,12 @@ public class ObjectQueryManager extends ViewPart
             editQuery();
          }
       });
+      ObjectQueryFilter filter = new ObjectQueryFilter();
+      viewer.addFilter(filter);
+      setFilterClient(viewer, filter);
 
       createActions();
-      contributeToActionBars();
       createContextMenu();
-
-      refresh();
 
       refreshTimer = new RefreshTimer(500, viewer.getControl(), new Runnable() {
          @Override
@@ -131,18 +137,19 @@ public class ObjectQueryManager extends ViewPart
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      refresh();
+   }
+
+   /**
     * Create actions
     */
    private void createActions()
    {
-      actionRefresh = new RefreshAction(this) {
-         @Override
-         public void run()
-         {
-            refresh();
-         }
-      };
-
       actionCreate = new Action("&New...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
@@ -150,6 +157,7 @@ public class ObjectQueryManager extends ViewPart
             createQuery();
          }
       };
+      addKeyBinding("M1+N", actionCreate);
 
       actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
          @Override
@@ -158,6 +166,7 @@ public class ObjectQueryManager extends ViewPart
             editQuery();
          }
       };
+      addKeyBinding("M3+ENTER", actionEdit);
 
       actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
@@ -166,6 +175,7 @@ public class ObjectQueryManager extends ViewPart
             deleteQueries();
          }
       };
+      addKeyBinding("M1+D", actionDelete);
 
       actionExecute = new Action("E&xecute", SharedIcons.EXECUTE) {
          @Override
@@ -174,40 +184,25 @@ public class ObjectQueryManager extends ViewPart
             executeQuery();
          }
       };
+      addKeyBinding("F9", actionExecute);
    }
 
    /**
-    * Fill action bars
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
     */
-   private void contributeToActionBars()
-   {
-      IActionBars bars = getViewSite().getActionBars();
-      fillLocalPullDown(bars.getMenuManager());
-      fillLocalToolBar(bars.getToolBarManager());
-   }
-
-   /**
-    * Fill local pull-down menu
-    * 
-    * @param manager
-    */
-   private void fillLocalPullDown(IMenuManager manager)
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionCreate);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
-    * Fill local tool bar
-    * 
-    * @param manager
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
     */
-   private void fillLocalToolBar(IToolBarManager manager)
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionCreate);
-      manager.add(new Separator());
-      manager.add(actionRefresh);
    }
 
    /**
@@ -259,13 +254,14 @@ public class ObjectQueryManager extends ViewPart
    }
 
    /**
-    * Refresh view
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
-   private void refresh()
+   @Override
+   public void refresh()
    {
-      new ConsoleJob("Loading predefined object queries", this, Activator.PLUGIN_ID) {
+      new Job(i18n.tr("Loading predefined object queries"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<ObjectQuery> queries = session.getObjectQueries();
             runInUIThread(new Runnable() {
@@ -299,7 +295,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot load predefined object queries";
+            return i18n.tr("Cannot load predefined object queries");
          }
       }.start();
    }
@@ -309,14 +305,14 @@ public class ObjectQueryManager extends ViewPart
     */
    private void createQuery()
    {
-      ObjectQueryEditDialog dlg = new ObjectQueryEditDialog(getSite().getShell(), null);
+      ObjectQueryEditDialog dlg = new ObjectQueryEditDialog(getWindow().getShell(), null);
       if (dlg.open() != Window.OK)
          return;
 
       final ObjectQuery query = dlg.getQuery();
-      new ConsoleJob("Creating object query", this, Activator.PLUGIN_ID) {
+      new Job(i18n.tr("Creating object query"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             session.modifyObjectQuery(query);
          }
@@ -324,7 +320,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot create object query";
+            return i18n.tr("Cannot create object query");
          }
       }.start();
    }
@@ -339,13 +335,13 @@ public class ObjectQueryManager extends ViewPart
          return;
 
       final ObjectQuery query = (ObjectQuery)selection.getFirstElement();
-      ObjectQueryEditDialog dlg = new ObjectQueryEditDialog(getSite().getShell(), query);
+      ObjectQueryEditDialog dlg = new ObjectQueryEditDialog(getWindow().getShell(), query);
       if (dlg.open() != Window.OK)
          return;
 
-      new ConsoleJob("Updating object query", this, Activator.PLUGIN_ID) {
+      new Job(i18n.tr("Updating object query"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             session.modifyObjectQuery(query);
          }
@@ -353,7 +349,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot update object query";
+            return i18n.tr("Cannot update object query");
          }
       }.start();
    }
@@ -367,16 +363,16 @@ public class ObjectQueryManager extends ViewPart
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Delete", "Selected object queries will be permanently deleted. Are you sure?"))
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete"), i18n.tr("Selected object queries will be permanently deleted. Are you sure?")))
          return;
 
       final List<Integer> idList = new ArrayList<>(selection.size());
       for(Object o : selection.toList())
          idList.add(((ObjectQuery)o).getId());
 
-      new ConsoleJob("Deleting object queries", this, Activator.PLUGIN_ID) {
+      new Job(i18n.tr("Deleting object queries"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             for(Integer id : idList)
                session.deleteObjectQuery(id);
@@ -385,7 +381,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot delete object query";
+            return i18n.tr("Cannot delete object query");
          }
       }.start();
    }
@@ -412,7 +408,7 @@ public class ObjectQueryManager extends ViewPart
                return f1.getSequence() - f2.getSequence();
             }
          });
-         inputValues = InputFieldEntryDialog.readInputFields(query.getName(), fields.toArray(new InputField[fields.size()]));
+         inputValues = InputFieldEntryDialog.readInputFields(getWindow().getShell(), query.getName(), fields.toArray(new InputField[fields.size()]));
          if (inputValues == null)
             return; // cancelled
       }
@@ -421,24 +417,16 @@ public class ObjectQueryManager extends ViewPart
          inputValues = new HashMap<String, String>(0);
       }
 
-      new ConsoleJob("Executing object query", this, Activator.PLUGIN_ID) {
+      new Job(i18n.tr("Executing object query"), this) {
          @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+         protected void run(IProgressMonitor monitor) throws Exception
          {
             final List<ObjectQueryResult> resultSet = session.queryObjectDetails(query.getSource(), null, null, inputValues, true, 0);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  try
-                  {
-                     ObjectQueryResultView view = (ObjectQueryResultView)getSite().getPage().showView(ObjectQueryResultView.ID, UUID.randomUUID().toString(), IWorkbenchPage.VIEW_ACTIVATE);
-                     view.setContent(resultSet, query.getName());
-                  }
-                  catch(PartInitException e)
-                  {
-                     MessageDialogHelper.openError(getSite().getShell(), "Error", String.format("Cannot open result view (%s)", e.getLocalizedMessage()));
-                  }
+                  openView(new ObjectQueryResultView(query.getName(), resultSet));
                }
             });
          }
@@ -446,8 +434,25 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot execute object query";
+            return i18n.tr("Cannot execute object query");
          }
       }.start();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
+    */
+   @Override
+   public boolean isModified()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ConfigurationView#save()
+    */
+   @Override
+   public void save()
+   {
    }
 }

@@ -363,7 +363,7 @@ public class ObjectQueryEditDialog extends Dialog
    private void addField()
    {
       InputField f = new InputField("Field" + Integer.toString(inputFields.size() + 1)); //$NON-NLS-1$
-      EditInputFieldDialog dlg = new EditInputFieldDialog(getShell(), true, f);
+      InputFieldEditDialog dlg = new InputFieldEditDialog(getShell(), true, f);
       if (dlg.open() == Window.OK)
       {
          if (inputFieldNameIsUnique(f.getName()))
@@ -399,7 +399,7 @@ public class ObjectQueryEditDialog extends Dialog
       if (selection.size() != 1)
          return;
 
-      EditInputFieldDialog dlg = new EditInputFieldDialog(getShell(), false, (InputField)selection.getFirstElement());
+      InputFieldEditDialog dlg = new InputFieldEditDialog(getShell(), false, (InputField)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
          inputFieldsViewer.update(selection.getFirstElement(), null);

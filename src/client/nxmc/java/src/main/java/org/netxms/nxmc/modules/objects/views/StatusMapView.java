@@ -19,9 +19,9 @@
 package org.netxms.nxmc.modules.objects.views;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
@@ -198,10 +198,10 @@ public class StatusMapView extends ObjectView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(IMenuManager)
     */
    @Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
 	{
       manager.add(actionFitToScreen);
       manager.add(new Separator());
@@ -211,10 +211,10 @@ public class StatusMapView extends ObjectView
 	}
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
 	{
       manager.add(actionFlatView);
       manager.add(actionGroupView);

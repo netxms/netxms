@@ -24,9 +24,9 @@ import java.util.Comparator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
@@ -582,10 +582,10 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(IMenuManager)
     */
    @Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionExecute);
       manager.add(actionClearOutput);
@@ -596,10 +596,10 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionExecute);
       manager.add(actionClearOutput);

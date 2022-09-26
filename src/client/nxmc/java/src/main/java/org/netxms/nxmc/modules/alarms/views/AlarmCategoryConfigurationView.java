@@ -18,8 +18,8 @@
  */
 package org.netxms.nxmc.modules.alarms.views;
 
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
@@ -72,7 +72,7 @@ public class AlarmCategoryConfigurationView extends ConfigurationView
     * @param manager toolbar manager
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(dataView.getAddCategoryAction());
       manager.add(new Separator());

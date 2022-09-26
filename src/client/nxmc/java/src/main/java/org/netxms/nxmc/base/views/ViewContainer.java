@@ -145,7 +145,7 @@ public abstract class ViewContainer extends Composite
    protected void updateViewToolBar(View view)
    {
       viewToolBarManager.removeAll();
-      view.fillLocalToolbar(viewToolBarManager);
+      view.fillLocalToolBar(viewToolBarManager);
       viewToolBarManager.update(true);
    }
 

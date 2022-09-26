@@ -19,8 +19,8 @@
 package org.netxms.nxmc.modules.events.views;
 
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
@@ -74,7 +74,7 @@ public class EventConfigurator extends ConfigurationView
     * @param manager toolbar manager
     */
 	@Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(dataView.getActionNewTemplate());
       manager.add(new Separator());

@@ -28,9 +28,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -827,10 +827,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
@@ -842,10 +842,10 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(IMenuManager)
     */
    @Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
    {
       MenuManager presets = new MenuManager(i18n.tr("&Presets"));
       for(int i = 0; i < presetActions.length; i++)

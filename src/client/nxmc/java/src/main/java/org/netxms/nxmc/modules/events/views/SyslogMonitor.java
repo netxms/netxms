@@ -18,7 +18,7 @@
  */
 package org.netxms.nxmc.modules.events.views;
 
-import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -46,10 +46,10 @@ public class SyslogMonitor extends AbstractTraceView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.AbstractTraceView#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    * @see org.netxms.nxmc.base.views.AbstractTraceView#fillLocalMenu(IMenuManager)
     */
 	@Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
 	{
       super.fillLocalMenu(manager);
 		manager.add(new Separator());

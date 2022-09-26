@@ -26,9 +26,9 @@ import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -586,10 +586,10 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillLocalMenu(IMenuManager)
     */
 	@Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
 	{
 	   if (!readOnly)
 	   {
@@ -604,10 +604,10 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#fillLocalToolBar(IToolBarManager)
     */
 	@Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
 	{
 	   if (!readOnly)
 	   {
@@ -615,7 +615,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    		manager.add(actionLinkObjects);
    		manager.add(new Separator());
 	   }
-      super.fillLocalToolbar(manager);
+      super.fillLocalToolBar(manager);
 	}
 
    /**

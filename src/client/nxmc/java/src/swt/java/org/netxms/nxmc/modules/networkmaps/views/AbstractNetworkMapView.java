@@ -43,9 +43,9 @@ import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -849,10 +849,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	}
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(IMenuManager)
     */
    @Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
 	{
       MenuManager zoom = new MenuManager(i18n.tr("&Zoom"));
 		for(int i = 0; i < actionZoomTo.length; i++)
@@ -894,10 +894,10 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	}
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);

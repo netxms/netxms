@@ -25,8 +25,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -244,11 +244,11 @@ public class SummaryTableManager extends ConfigurationView
     * @param manager Menu manager for local toolbar
     */
 	@Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionCreateSingleValue);
       manager.add(actionCreateTableValue);
-      super.fillLocalToolbar(manager);
+      super.fillLocalToolBar(manager);
    }
 
    /**

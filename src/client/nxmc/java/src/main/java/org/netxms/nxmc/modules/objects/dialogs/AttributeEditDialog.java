@@ -123,9 +123,9 @@ public class AttributeEditDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -156,20 +156,20 @@ public class AttributeEditDialog extends Dialog
 	{
 	   return flags;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
-	@Override
-	protected void okPressed()
-	{
-		name = textName.getText().trim();
-		value = textValue.getText();
-		flags = 0;
-		if(checkInherite.getSelection())
-		   flags |= CustomAttribute.INHERITABLE;
-		if(inherited)
-		   flags |= CustomAttribute.REDEFINED | CustomAttribute.INHERITABLE;
-		super.okPressed();
-	}
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
+   @Override
+   protected void okPressed()
+   {
+      name = textName.getText().trim();
+      value = textValue.getText();
+      flags = 0;
+      if (checkInherite.getSelection())
+         flags |= CustomAttribute.INHERITABLE;
+      if (inherited)
+         flags |= CustomAttribute.REDEFINED | CustomAttribute.INHERITABLE;
+      super.okPressed();
+   }
 }

@@ -26,9 +26,8 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -1175,17 +1174,17 @@ public class DataCollectionView extends BaseDataCollectionView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#fillLocalToolBar(IToolBarManager)
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionCreateItem);
       if ((getObject() instanceof Template) || (getObject() instanceof Cluster))
       {
          manager.add(actionApplyChanges);
       }
-      super.fillLocalToolbar(manager);
+      super.fillLocalToolBar(manager);
       if (editMode)
       {
          manager.add(actionHideTemplateItems);
@@ -1197,10 +1196,10 @@ public class DataCollectionView extends BaseDataCollectionView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#fillLocalMenu(org.eclipse.jface.action.MenuManager)
+    * @see org.netxms.nxmc.modules.datacollection.views.BaseDataCollectionView#fillLocalMenu(IMenuManager)
     */
    @Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionCreateItem);
       manager.add(new Separator());

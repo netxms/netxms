@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectbrowser.dialogs;
+package org.netxms.nxmc.modules.objects.dialogs;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,6 +36,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -51,17 +52,20 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.InputField;
 import org.netxms.client.objects.queries.ObjectQuery;
-import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
-import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.InputFieldLabelProvider;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
+import org.netxms.nxmc.modules.objects.dialogs.helpers.InputFieldLabelProvider;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Object query edit dialog
  */
 public class ObjectQueryEditDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectQueryEditDialog.class);
+
    private ObjectQuery query;
    private List<InputField> inputFields = new ArrayList<InputField>();
    private LabeledText name;
@@ -94,7 +98,7 @@ public class ObjectQueryEditDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText((query != null) ? "Edit Object Query" : "Create Object Query");
+      newShell.setText((query != null) ? i18n.tr("Edit Object Query") : i18n.tr("Create Object Query"));
    }
 
    /**
@@ -112,7 +116,7 @@ public class ObjectQueryEditDialog extends Dialog
       dialogArea.setLayout(layout);
 
       name = new LabeledText(dialogArea, SWT.NONE);
-      name.setLabel("Name");
+      name.setLabel(i18n.tr("Name"));
       name.setText((query != null) ? query.getName() : "");
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -134,7 +138,7 @@ public class ObjectQueryEditDialog extends Dialog
       gd.verticalSpan = 3;
       sourceGroup.setLayoutData(gd);
 
-      new Label(sourceGroup, SWT.NONE).setText("Source");
+      new Label(sourceGroup, SWT.NONE).setText(i18n.tr("Source"));
 
       source = new ScriptEditor(sourceGroup, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       source.setText((query != null) ? query.getSource() : "");
@@ -148,7 +152,7 @@ public class ObjectQueryEditDialog extends Dialog
       source.setLayoutData(gd);
 
       description = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.WRAP);
-      description.setLabel("Description");
+      description.setLabel(i18n.tr("Description"));
       description.setText((query != null) ? query.getDescription() : "");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -157,7 +161,7 @@ public class ObjectQueryEditDialog extends Dialog
       description.setLayoutData(gd);
 
       Group inputFieldsGroup = new Group(dialogArea, SWT.NONE);
-      inputFieldsGroup.setText("Input Fields");
+      inputFieldsGroup.setText(i18n.tr("Input Fields"));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -191,7 +195,7 @@ public class ObjectQueryEditDialog extends Dialog
       buttonsLeft.setLayoutData(gd);
 
       buttonUp = new Button(buttonsLeft, SWT.PUSH);
-      buttonUp.setText("&Up");
+      buttonUp.setText(i18n.tr("&Up"));
       buttonUp.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
@@ -211,7 +215,7 @@ public class ObjectQueryEditDialog extends Dialog
       buttonUp.setEnabled(false);
 
       buttonDown = new Button(buttonsLeft, SWT.PUSH);
-      buttonDown.setText("&Down");
+      buttonDown.setText(i18n.tr("Dow&n"));
       buttonDown.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
@@ -241,14 +245,8 @@ public class ObjectQueryEditDialog extends Dialog
       buttonsRight.setLayoutData(gd);
 
       buttonAdd = new Button(buttonsRight, SWT.PUSH);
-      buttonAdd.setText("&Add...");
-      buttonAdd.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      buttonAdd.setText(i18n.tr("&Add..."));
+      buttonAdd.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -261,13 +259,7 @@ public class ObjectQueryEditDialog extends Dialog
 
       buttonEdit = new Button(buttonsRight, SWT.PUSH);
       buttonEdit.setText("&Edit...");
-      buttonEdit.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      buttonEdit.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -280,14 +272,8 @@ public class ObjectQueryEditDialog extends Dialog
       buttonEdit.setEnabled(false);
 
       buttonRemove = new Button(buttonsRight, SWT.PUSH);
-      buttonRemove.setText("&Remove");
-      buttonRemove.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      buttonRemove.setText(i18n.tr("&Delete"));
+      buttonRemove.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -302,28 +288,31 @@ public class ObjectQueryEditDialog extends Dialog
       return dialogArea;
    }
 
+   /**
+    * Setup viewer for input fields
+    */
    private void setupInputFieldsViewer()
    {
       TableColumn column = new TableColumn(inputFieldsViewer.getTable(), SWT.LEFT);
-      column.setText("Name");
+      column.setText(i18n.tr("Name"));
       column.setWidth(200);
 
       column = new TableColumn(inputFieldsViewer.getTable(), SWT.LEFT);
-      column.setText("Type");
+      column.setText(i18n.tr("Type"));
       column.setWidth(90);
 
       column = new TableColumn(inputFieldsViewer.getTable(), SWT.LEFT);
-      column.setText("Display name");
+      column.setText(i18n.tr("Display name"));
       column.setWidth(200);
 
       inputFieldsViewer.getTable().setHeaderVisible(true);
 
-      WidgetHelper.restoreColumnSettings(inputFieldsViewer.getTable(), Activator.getDefault().getDialogSettings(), "ObjectQueryInputFields"); //$NON-NLS-1$
+      WidgetHelper.restoreColumnSettings(inputFieldsViewer.getTable(), "ObjectQueryInputFields");
       inputFieldsViewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(inputFieldsViewer.getTable(), Activator.getDefault().getDialogSettings(), "ObjectQueryInputFields"); //$NON-NLS-1$
+            WidgetHelper.saveColumnSettings(inputFieldsViewer.getTable(), "ObjectQueryInputFields");
          }
       });
 
@@ -362,7 +351,7 @@ public class ObjectQueryEditDialog extends Dialog
     */
    private void addField()
    {
-      InputField f = new InputField("Field" + Integer.toString(inputFields.size() + 1)); //$NON-NLS-1$
+      InputField f = new InputField("Field" + Integer.toString(inputFields.size() + 1));
       InputFieldEditDialog dlg = new InputFieldEditDialog(getShell(), true, f);
       if (dlg.open() == Window.OK)
       {
@@ -395,7 +384,7 @@ public class ObjectQueryEditDialog extends Dialog
     */
    private void editInputField()
    {
-      IStructuredSelection selection = (IStructuredSelection)inputFieldsViewer.getSelection();
+      IStructuredSelection selection = inputFieldsViewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -426,7 +415,7 @@ public class ObjectQueryEditDialog extends Dialog
     */
    private void moveInputFieldUp()
    {
-      IStructuredSelection selection = (IStructuredSelection)inputFieldsViewer.getSelection();
+      IStructuredSelection selection = inputFieldsViewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
@@ -444,7 +433,7 @@ public class ObjectQueryEditDialog extends Dialog
     */
    private void moveInputFieldDown()
    {
-      IStructuredSelection selection = (IStructuredSelection)inputFieldsViewer.getSelection();
+      IStructuredSelection selection = inputFieldsViewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 

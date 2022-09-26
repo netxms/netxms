@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.InputField;
 import org.netxms.client.objecttools.ObjectToolDetails;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.EditInputFieldDialog;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldEditDialog;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.InputFieldLabelProvider;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
@@ -288,7 +288,7 @@ public class InputFields extends PreferencePage
 	private void addField()
 	{
 		InputField f = new InputField("Field" + Integer.toString(fields.size() + 1)); //$NON-NLS-1$
-		EditInputFieldDialog dlg = new EditInputFieldDialog(getShell(), true, f);
+		InputFieldEditDialog dlg = new InputFieldEditDialog(getShell(), true, f);
 		if (dlg.open() == Window.OK)
 		{
 		   if (nameIsUnique(f.getName()))
@@ -324,7 +324,7 @@ public class InputFields extends PreferencePage
 		if (selection.size() != 1)
 			return;
 		
-		EditInputFieldDialog dlg = new EditInputFieldDialog(getShell(), false, (InputField)selection.getFirstElement());
+		InputFieldEditDialog dlg = new InputFieldEditDialog(getShell(), false, (InputField)selection.getFirstElement());
 		if (dlg.open() == Window.OK)
 		{
 		   viewer.update(selection.getFirstElement(), null);

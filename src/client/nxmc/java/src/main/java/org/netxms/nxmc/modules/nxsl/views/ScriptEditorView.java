@@ -20,7 +20,7 @@ package org.netxms.nxmc.modules.nxsl.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
@@ -71,10 +71,10 @@ public class ScriptEditorView extends ConfigurationView
    private Action actionPaste;
 
    /**
-    * @param name
-    * @param image
-    * @param id
-    * @param hasFilter
+    * Create new script editor view.
+    *
+    * @param scriptId script ID
+    * @param scriptName script name
     */
    public ScriptEditorView(long scriptId, String scriptName)
    {
@@ -212,12 +212,12 @@ public class ScriptEditorView extends ConfigurationView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
-      super.fillLocalToolbar(manager);
+      super.fillLocalToolBar(manager);
       manager.add(actionCompile);
       manager.add(actionSave);
    }

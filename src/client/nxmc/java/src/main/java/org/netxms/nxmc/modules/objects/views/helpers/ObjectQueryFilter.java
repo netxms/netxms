@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,27 +20,16 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.PhysicalLink;
+import org.netxms.client.objects.queries.ObjectQuery;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
- * Viewer filter for physical links
+ * Viewer filter for object queries
  */
-public class PhysicalLinkFilter extends ViewerFilter implements AbstractViewerFilter
+public class ObjectQueryFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
-   private PhysicalLinkLabelProvider labelProvider;
    
-   /**
-    * Create physical link viewer filter.
-    *
-    * @param labelProvider physical link label provider
-    */
-   public PhysicalLinkFilter(PhysicalLinkLabelProvider labelProvider)
-   {
-      this.labelProvider = labelProvider;
-   }
-
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
@@ -50,20 +39,8 @@ public class PhysicalLinkFilter extends ViewerFilter implements AbstractViewerFi
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      PhysicalLink link = (PhysicalLink)element;
-      if (Long.toString(link.getId()).contains(filterString))
-         return true;
-      if (link.getDescription().toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getObjectText(link, true).toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getPortText(link, true).toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getObjectText(link, false).toLowerCase().contains(filterString))
-         return true;
-      if (labelProvider.getPortText(link, false).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      ObjectQuery query = (ObjectQuery)element;
+      return query.getName().toLowerCase().contains(filterString) || query.getDescription().toLowerCase().contains(filterString);
    }
 
    /**

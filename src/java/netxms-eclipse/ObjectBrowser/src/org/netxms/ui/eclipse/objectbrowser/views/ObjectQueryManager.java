@@ -54,7 +54,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldReadDialog;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldEntryDialog;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectQueryEditDialog;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryComparator;
 import org.netxms.ui.eclipse.objectbrowser.views.helpers.ObjectQueryLabelProvider;
@@ -263,7 +263,7 @@ public class ObjectQueryManager extends ViewPart
     */
    private void refresh()
    {
-      new ConsoleJob("Get predefined object queries", this, Activator.PLUGIN_ID) {
+      new ConsoleJob("Loading predefined object queries", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -299,7 +299,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get predefined object queries";
+            return "Cannot load predefined object queries";
          }
       }.start();
    }
@@ -314,7 +314,7 @@ public class ObjectQueryManager extends ViewPart
          return;
 
       final ObjectQuery query = dlg.getQuery();
-      new ConsoleJob("Create object query", this, Activator.PLUGIN_ID) {
+      new ConsoleJob("Creating object query", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -343,7 +343,7 @@ public class ObjectQueryManager extends ViewPart
       if (dlg.open() != Window.OK)
          return;
 
-      new ConsoleJob("Modify object query", this, Activator.PLUGIN_ID) {
+      new ConsoleJob("Updating object query", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -353,7 +353,7 @@ public class ObjectQueryManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot modify object query";
+            return "Cannot update object query";
          }
       }.start();
    }
@@ -374,7 +374,7 @@ public class ObjectQueryManager extends ViewPart
       for(Object o : selection.toList())
          idList.add(((ObjectQuery)o).getId());
 
-      new ConsoleJob("Delete object queries", this, Activator.PLUGIN_ID) {
+      new ConsoleJob("Deleting object queries", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -412,7 +412,7 @@ public class ObjectQueryManager extends ViewPart
                return f1.getSequence() - f2.getSequence();
             }
          });
-         inputValues = InputFieldReadDialog.readInputFields(query.getName(), fields.toArray(new InputField[fields.size()]));
+         inputValues = InputFieldEntryDialog.readInputFields(query.getName(), fields.toArray(new InputField[fields.size()]));
          if (inputValues == null)
             return; // cancelled
       }
@@ -421,7 +421,7 @@ public class ObjectQueryManager extends ViewPart
          inputValues = new HashMap<String, String>(0);
       }
 
-      new ConsoleJob("Execute object query", this, Activator.PLUGIN_ID) {
+      new ConsoleJob("Executing object query", this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

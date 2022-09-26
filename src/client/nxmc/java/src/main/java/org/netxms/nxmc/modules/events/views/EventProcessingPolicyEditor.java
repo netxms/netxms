@@ -29,9 +29,8 @@ import java.util.TreeSet;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -322,7 +321,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
     * @param manager Menu manager for pull-down menu
     */
    @Override
-   protected void fillLocalMenu(MenuManager manager)
+   protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionSave);
       manager.add(new Separator());
@@ -339,7 +338,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
     * @param manager Menu manager for local toolbar
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionAddRule);
       manager.add(actionSave);

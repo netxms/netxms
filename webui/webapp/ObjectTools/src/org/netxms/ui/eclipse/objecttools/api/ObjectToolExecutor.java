@@ -45,7 +45,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldReadDialog;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldEntryDialog;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
@@ -145,7 +145,7 @@ public final class ObjectToolExecutor
                return f1.getSequence() - f2.getSequence();
             }
          });
-         inputValues = InputFieldReadDialog.readInputFields(tool.getDisplayName(), fields);
+         inputValues = InputFieldEntryDialog.readInputFields(tool.getDisplayName(), fields);
          if (inputValues == null)
             return;  // cancelled
          for (int i = 0; i < fields.length; i++)
@@ -677,7 +677,7 @@ public final class ObjectToolExecutor
                   {
                      statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
                   }
-                  else
+                  else if ((tool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) == 0)
                   {
                      runInUIThread(new Runnable() {
                         @Override
