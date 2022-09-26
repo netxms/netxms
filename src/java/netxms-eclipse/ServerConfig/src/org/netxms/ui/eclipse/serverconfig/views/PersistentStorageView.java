@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.serverconfig.views;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -297,6 +296,7 @@ public class PersistentStorageView extends ViewPart
    /**
     * Delete value
     */
+   @SuppressWarnings("unchecked")
    private void deleteValue()
    {      
       IStructuredSelection selection = viewer.getStructuredSelection();
