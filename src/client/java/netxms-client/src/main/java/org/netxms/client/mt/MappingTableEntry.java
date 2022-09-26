@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ public class MappingTableEntry
 	/**
 	 * @return the key
 	 */
-	public final String getKey()
+   public String getKey()
 	{
 		return key;
 	}
@@ -67,7 +67,7 @@ public class MappingTableEntry
 	/**
 	 * @return the value
 	 */
-	public final String getValue()
+   public String getValue()
 	{
 		return value;
 	}
@@ -75,7 +75,7 @@ public class MappingTableEntry
 	/**
 	 * @return the description
 	 */
-	public final String getDescription()
+   public String getDescription()
 	{
 		return description;
 	}
@@ -83,7 +83,7 @@ public class MappingTableEntry
 	/**
 	 * @param key the key to set
 	 */
-	public final void setKey(String key)
+   public void setKey(String key)
 	{
 		this.key = key;
 	}
@@ -91,7 +91,7 @@ public class MappingTableEntry
 	/**
 	 * @param value the value to set
 	 */
-	public final void setValue(String value)
+   public void setValue(String value)
 	{
 		this.value = value;
 	}
@@ -99,8 +99,18 @@ public class MappingTableEntry
 	/**
 	 * @param description the description to set
 	 */
-	public final void setDescription(String description)
+   public void setDescription(String description)
 	{
 		this.description = description;
 	}
+
+   /**
+    * Check if this entry is an empty one.
+    *
+    * @return true if this entry is an empty one
+    */
+   public boolean isEmpty()
+   {
+      return ((key == null) || key.isEmpty()) && ((value == null) || value.isEmpty()) && ((description == null) || description.isEmpty());
+   }
 }

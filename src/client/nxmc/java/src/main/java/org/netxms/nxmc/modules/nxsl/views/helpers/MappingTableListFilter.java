@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2021-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@ package org.netxms.nxmc.modules.nxsl.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.Script;
+import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
- * Script filtering class
+ * Filter for mapping table list
  */
-public final class ScriptFilter extends ViewerFilter implements AbstractViewerFilter
+public final class MappingTableListFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString;
 
@@ -38,9 +38,9 @@ public final class ScriptFilter extends ViewerFilter implements AbstractViewerFi
    {
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
-      
-      final Script script = (Script)element;      
-      return script.getName().toLowerCase().contains(filterString);
+
+      final MappingTableDescriptor mt = (MappingTableDescriptor)element;
+      return mt.getName().toLowerCase().contains(filterString) || mt.getDescription().toLowerCase().contains(filterString);
    }
 
    /**
