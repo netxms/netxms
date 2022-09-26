@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * This dialog collects input for provided input fields.
  */
-public class InputFieldReadDialog extends Dialog
+public class InputFieldEntryDialog extends Dialog
 {
    private String title;
    private InputField[] fields;
@@ -54,7 +54,7 @@ public class InputFieldReadDialog extends Dialog
     */
    public static Map<String, String> readInputFields(String title, InputField[] fields)
    {
-      InputFieldReadDialog dlg = new InputFieldReadDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), title, fields);
+      InputFieldEntryDialog dlg = new InputFieldEntryDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), title, fields);
       if (dlg.open() != Window.OK)
          return null;
       return dlg.getValues();
@@ -64,7 +64,7 @@ public class InputFieldReadDialog extends Dialog
     * @param parentShell
     * @param fields
     */
-   public InputFieldReadDialog(Shell parentShell, String title, InputField[] fields)
+   public InputFieldEntryDialog(Shell parentShell, String title, InputField[] fields)
    {
       super(parentShell);
       this.title = title;

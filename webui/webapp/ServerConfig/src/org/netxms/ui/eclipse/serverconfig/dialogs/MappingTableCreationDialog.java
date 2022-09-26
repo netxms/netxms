@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,24 +32,34 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * Create mapping table
  */
-public class CreateMappingTableDialog extends Dialog
+public class MappingTableCreationDialog extends Dialog
 {
 	private LabeledText textName;
 	private LabeledText textDescription;
 	private String name;
 	private String description;
-	
+
 	/**
 	 * @param parentShell
 	 */
-	public CreateMappingTableDialog(Shell parentShell)
+	public MappingTableCreationDialog(Shell parentShell)
 	{
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText(Messages.get().CreateMappingTableDialog_Title);
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -60,7 +70,7 @@ public class CreateMappingTableDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
-		
+
       textName = new LabeledText(dialogArea, SWT.NONE);
       textName.setLabel(Messages.get().CreateMappingTableDialog_Name);
       textName.getTextControl().setTextLimit(63);
@@ -80,16 +90,17 @@ public class CreateMappingTableDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-		newShell.setText(Messages.get().CreateMappingTableDialog_Title);
-	}
-	
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
+   @Override
+   protected void okPressed()
+   {
+      name = textName.getText();
+      description = textDescription.getText();
+      super.okPressed();
+   }
+
 	/**
 	 * Get table name
 	 * 
@@ -106,16 +117,5 @@ public class CreateMappingTableDialog extends Dialog
 	public String getDescription()
 	{
 		return description;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
-	@Override
-	protected void okPressed()
-	{
-		name = textName.getText();
-		description = textDescription.getText();
-		super.okPressed();
 	}
 }

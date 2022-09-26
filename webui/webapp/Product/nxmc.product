@@ -262,6 +262,26 @@
       <plugin id="org.eclipse.rap.jface.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.rap.jface.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.rap.jface.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_iw" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.jface.gridviewer.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_ar" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_fr" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_iw" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_pt" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_pt_BR" fragment="true"/>
+      <plugin id="org.eclipse.rap.nebula.widgets.grid.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.rap.rwt"/>
       <plugin id="org.eclipse.rap.rwt.nl_ar" fragment="true"/>
       <plugin id="org.eclipse.rap.rwt.nl_cs" fragment="true"/>

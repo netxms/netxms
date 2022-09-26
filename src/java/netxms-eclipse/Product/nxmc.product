@@ -715,6 +715,7 @@ Copyright (c) 2003-2022 Raden Solutions
       <plugin id="org.eclipse.jface.text.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.jface.text.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.jface.text.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.nebula.widgets.grid"/>
       <plugin id="org.eclipse.osgi"/>
       <plugin id="org.eclipse.osgi.compatibility.state" fragment="true"/>
       <plugin id="org.eclipse.osgi.nl_ar" fragment="true"/>

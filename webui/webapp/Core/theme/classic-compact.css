@@ -1323,6 +1323,222 @@ Tree-Indent:first:last:expanded:hover {
   background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
 }
 
+/* Grid default theme */
+
+Grid {
+   background-color: white;
+   background-image: none;
+   color: #4a4a4a;
+   border: none;
+ }
+ 
+ Grid[BORDER] {
+   border: 1px solid #828790;
+ }
+ 
+ GridItem {
+   background-color: transparent;
+   color: inherit;
+   text-decoration: none;
+   text-shadow: none;
+   background-image: none;
+ }
+ 
+ Grid-RowOverlay {
+   background-color: transparent;
+   color: inherit;
+   background-image: none;
+ }
+ 
+ Grid-RowOverlay:hover {
+   background-color: #dae9f7;
+ }
+ 
+ Grid-RowOverlay:selected {
+   color: white;
+   background-color: #00589f;
+ }
+ 
+ Grid-RowOverlay:selected:unfocused {
+   background-color: #959595;
+   color: #ffffff;
+ }
+ 
+ GridColumn {
+   background-color: #f8f8ff;
+   padding: 3px 1px;
+   background-image: gradient(
+     linear, left top, left bottom,
+     from( #fbfcfd ),
+     to( #ececec )
+   );
+   color: #666666;
+   font: 11px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+   border-bottom:none;
+   text-shadow: none;
+ }
+ 
+ GridColumn:hover {
+   background-image: gradient(
+     linear, left top, left bottom,
+     from( #f4f5f6 ),
+     to( #e6e6e6 )
+   );
+   border-bottom: none;
+ }
+ 
+ GridColumn-SortIndicator {
+   background-image: none;
+ }
+ 
+ GridColumn-SortIndicator:up {
+   background-image: url( theme/classic.resources/column/sort-indicator-up.png );
+ }
+ 
+ GridColumn-SortIndicator:down {
+   background-image: url( theme/classic.resources/column/sort-indicator-down.png );
+ }
+ 
+ Grid-Cell {
+   spacing: 3px;
+   padding: 2px 2px 1px 2px;
+ }
+ 
+ Grid-GridLine {
+   color: #dedede;
+ }
+ 
+ Grid-Checkbox {
+   /* 
+   For backward compatibility we have to keep the width property.
+   Deprecated, use "margin" instead.
+   */
+   width: 21px;
+   margin: 0px;
+   background-image: url( theme/classic.resources/button/check-unselected.png );
+ }
+ 
+ Grid-Checkbox:hover {
+   background-image: url( theme/classic.resources/button/check-unselected-hover.png );
+ }
+ 
+ Grid-Checkbox:checked {
+   background-image: url( theme/classic.resources/button/check-selected.png );
+ }
+ 
+ Grid-Checkbox:checked:hover {
+   background-image: url( theme/classic.resources/button/check-selected-hover.png );
+ }
+ 
+ Grid-Checkbox:checked:grayed {
+   background-image: url( theme/classic.resources/button/check-grayed.png );
+ }
+ 
+ Grid-Checkbox:checked:grayed:hover {
+   background-image: url( theme/classic.resources/button/check-grayed-hover.png );
+ }
+ 
+ /* Grid with individual cell selection */
+ Grid-RowOverlay.cellselect:hover {
+   background-color: transparent;
+   color: inherit;
+ }
+ 
+ Grid-RowOverlay.cellselect:selected {
+   background-color: transparent;
+   color: inherit;
+ }
+ 
+ Grid-RowOverlay.cellselect:selected:unfocused {
+   background-color: transparent;
+   color: inherit;
+ }
+ 
+ Grid-Indent {
+   width: 16px;
+   background-image: none;
+ }
+ 
+ Grid-Indent:collapsed {
+   background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:collapsed:hover {
+   background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:expanded {
+   background-image: url( theme/classic.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:expanded:hover {
+   background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+ }
+ 
+ Grid-Indent:line {
+   background-image: none;
+ }
+ 
+ Grid-Indent:first {
+   background-image: none;
+ }
+ 
+ Grid-Indent:first:collapsed {
+   background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:first:collapsed:hover {
+   background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:first:expanded {
+   background-image: url( theme/classic.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:first:expanded:hover {
+   background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+ }
+ 
+ Grid-Indent:last {
+   background-image: none;
+ }
+ 
+ Grid-Indent:last:collapsed {
+   background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:last:collapsed:hover {
+   background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:last:expanded {
+   background-image: url( theme/classic.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:last:expanded:hover {
+   background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+ }
+ 
+ Grid-Indent:first:last {
+   background-image: none;
+ }
+ 
+ Grid-Indent:first:last:collapsed {
+   background-image: url( theme/classic.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:first:last:collapsed:hover {
+   background-image: url( theme/classic.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:first:last:expanded {
+   background-image: url( theme/classic.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:first:last:expanded:hover {
+   background-image: url( theme/classic.resources/tree/tree-expanded-hover.png );
+ }
+ 
 /* Scale default theme */
 
 Scale {

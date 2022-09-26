@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views;
 
+import java.util.Comparator;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -28,16 +29,24 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.nebula.jface.gridviewer.GridTableViewer;
+import org.eclipse.nebula.jface.gridviewer.GridViewerEditor;
+import org.eclipse.nebula.widgets.grid.Grid;
+import org.eclipse.nebula.widgets.grid.GridColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
@@ -53,11 +62,10 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
-import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableEntryLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.ui.eclipse.tools.NaturalOrderComparator;
 
 /**
  * Mapping table editor
@@ -65,24 +73,24 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class MappingTableEditor extends ViewPart implements ISaveablePart2
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor"; //$NON-NLS-1$
-	
+
 	public static final int COLUMN_KEY = 0;
 	public static final int COLUMN_VALUE = 1;
 	public static final int COLUMN_DESCRIPTION = 2;
-	
+
 	private int mappingTableId;
 	private MappingTable mappingTable;
 	private NXCSession session;
-	private SortableTableViewer viewer;
+   private GridTableViewer viewer;
 	private boolean modified = false;
 	private Action actionNewRow;
 	private Action actionDelete;
 	private Action actionSave;
 	private Action actionRefresh;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -97,9 +105,9 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		}
 		if (mappingTableId <= 0)
 			throw new PartInitException("Internal error"); //$NON-NLS-1$
-		
+
 		setPartName(String.format(Messages.get().MappingTableEditor_InitialPartName, mappingTableId));
-		
+
 		session = ConsoleSharedData.getSession();
 	}
 
@@ -109,33 +117,55 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final int[] widths = { 200, 200, 400 };
-		final String[] names = { Messages.get().MappingTableEditor_ColKey, Messages.get().MappingTableEditor_ColValue, Messages.get().MappingTableEditor_ColComments };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_KEY, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new MappingTableEntryLabelProvider());
-		viewer.setComparator(new MappingTableEntryComparator());
-		
-		viewer.setColumnProperties(new String[] { "key", "value", "comments" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		CellEditor[] editors = new CellEditor[] { new TextCellEditor(viewer.getTable()), new TextCellEditor(viewer.getTable()), new TextCellEditor(viewer.getTable()) };
-		viewer.setCellEditors(editors);
-		viewer.setCellModifier(new CellModifier());
-		
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event)
-			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				actionDelete.setEnabled(selection.size() > 0);
-			}
-		});
+      viewer = new GridTableViewer(parent, SWT.V_SCROLL | SWT.H_SCROLL);
+      viewer.setContentProvider(new ArrayContentProvider());
+      viewer.setLabelProvider(new MappingTableEntryLabelProvider());
+
+      Grid grid = viewer.getGrid();
+      grid.setHeaderVisible(true);
+      grid.setCellSelectionEnabled(true);
+
+      GridColumn column = new GridColumn(grid, SWT.NONE);
+      column.setText(Messages.get().MappingTableEditor_ColKey);
+      column.setWidth(200);
+
+      column = new GridColumn(grid, SWT.NONE);
+      column.setText(Messages.get().MappingTableEditor_ColValue);
+      column.setWidth(200);
+
+      column = new GridColumn(grid, SWT.NONE);
+      column.setText(Messages.get().MappingTableEditor_ColComments);
+      column.setWidth(400);
+
+      viewer.setColumnProperties(new String[] { "key", "value", "comments" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      CellEditor[] editors = new CellEditor[] { new MappingTableCellEditor(viewer.getGrid()), new MappingTableCellEditor(viewer.getGrid()), new MappingTableCellEditor(viewer.getGrid()) };
+      viewer.setCellEditors(editors);
+      viewer.setCellModifier(new CellModifier());
+      ColumnViewerEditorActivationStrategy activationStrategy = new ColumnViewerEditorActivationStrategy(viewer) {
+         protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event)
+         {
+            return event.eventType == ColumnViewerEditorActivationEvent.TRAVERSAL || event.eventType == ColumnViewerEditorActivationEvent.MOUSE_DOUBLE_CLICK_SELECTION ||
+                  (event.eventType == ColumnViewerEditorActivationEvent.KEY_PRESSED && (event.keyCode == SWT.CR || Character.isLetterOrDigit(event.character)));
+         }
+      };
+      GridViewerEditor.create(viewer, activationStrategy,
+            ColumnViewerEditor.TABBING_HORIZONTAL | ColumnViewerEditor.TABBING_MOVE_TO_ROW_NEIGHBOR | ColumnViewerEditor.TABBING_VERTICAL | ColumnViewerEditor.KEYBOARD_ACTIVATION);
+
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+            actionDelete.setEnabled(selection.size() > 0);
+         }
+      });
 
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
+
 		activateContext();
-		
+
 		refresh();
 	}
 	
@@ -150,14 +180,14 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.MappingTableEditor"); //$NON-NLS-1$
 		}
 	}
-	
+
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-				
+
 		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
@@ -168,7 +198,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 				refresh();
 			}
 		};
-		
+
 		actionNewRow = new Action(Messages.get().MappingTableEditor_NewRow, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
@@ -179,7 +209,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		actionNewRow.setEnabled(false);
 		actionNewRow.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.add_new_row"); //$NON-NLS-1$
 		handlerService.activateHandler(actionNewRow.getActionDefinitionId(), new ActionHandler(actionNewRow));
-		
+
 		actionDelete = new Action(Messages.get().MappingTableEditor_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
@@ -190,7 +220,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		actionDelete.setEnabled(false);
 		actionDelete.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.delete_rows"); //$NON-NLS-1$
 		handlerService.activateHandler(actionDelete.getActionDefinitionId(), new ActionHandler(actionDelete));
-		
+
 		actionSave = new Action(Messages.get().MappingTableEditor_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
@@ -250,11 +280,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
-
-		// Register menu for extension.
-		getSite().setSelectionProvider(viewer);
-		getSite().registerContextMenu(menuMgr, viewer);
+      viewer.getControl().setMenu(menu);
 	}
 
 	/**
@@ -267,18 +293,18 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		manager.add(actionDelete);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
-		viewer.getTable().setFocus();
+      viewer.getGrid().setFocus();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
@@ -293,44 +319,44 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
 	@Override
 	public boolean isDirty()
 	{
 		return modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
 		return modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart2#promptToSaveOnClose()
+    */
 	@Override
 	public int promptToSaveOnClose()
 	{
@@ -347,19 +373,27 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final MappingTable t = session.getMappingTable(mappingTableId);
+            t.getData().sort(new Comparator<MappingTableEntry>() {
+               @Override
+               public int compare(MappingTableEntry e1, MappingTableEntry e2)
+               {
+                  return NaturalOrderComparator.compare(e1.getKey(), e2.getKey());
+               }
+            });
+            t.getData().add(new MappingTableEntry(null, null, null)); // pseudo-entry at the end
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
 						mappingTable = t;
 						setPartName(String.format(Messages.get().MappingTableEditor_PartName, mappingTable.getName()));
-						viewer.setInput(mappingTable.getData().toArray());
+                  viewer.setInput(mappingTable.getData());
 						actionNewRow.setEnabled(true);
 						setModified(false);
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -367,7 +401,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Set or clear "modified" flag
 	 * 
@@ -382,7 +416,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 		actionSave.setEnabled(m);
 		firePropertyChange(PROP_DIRTY);
 	}
-	
+
 	/**
 	 * Add new row
 	 */
@@ -390,28 +424,25 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 	{
 		if (mappingTable == null)
 			return;
-		
-		MappingTableEntry e = new MappingTableEntry("", "", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		mappingTable.getData().add(e);
-		viewer.setInput(mappingTable.getData().toArray());
+
+      MappingTableEntry e = mappingTable.getData().get(mappingTable.getData().size() - 1);
 		viewer.setSelection(new StructuredSelection(e));
-		setModified(true);
 		viewer.editElement(e, COLUMN_KEY);
 	}
-	
+
 	/**
 	 * Delete selected rows
 	 */
 	private void deleteRows()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if (selection.size() == 0)
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
 			return;
-		
+
 		for(Object o : selection.toList())
 			mappingTable.getData().remove(o);
-		
-		viewer.setInput(mappingTable.getData().toArray());
+
+      viewer.refresh();
 		setModified(true);
 	}
 
@@ -432,17 +463,21 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
     */
 	private class CellModifier implements ICellModifier
 	{
+      /**
+       * @see org.eclipse.jface.viewers.ICellModifier#modify(java.lang.Object, java.lang.String, java.lang.Object)
+       */
 		@Override
 		public void modify(Object element, String property, Object value)
 		{
 			if (element instanceof Item)
 				element = ((Item)element).getData();
-			
+
 			MappingTableEntry e = (MappingTableEntry)element;
+         boolean pseudoEntry = (e.getKey() == null) && (e.getValue() == null) && (e.getDescription() == null);
 			boolean changed = false;
 			if (property.equals("key")) //$NON-NLS-1$
 			{
-				if (!e.getKey().equals(value))
+            if ((e.getKey() == null) || !e.getKey().equals(value))
 				{
 					e.setKey((String)value);
 					changed = true;
@@ -450,7 +485,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			}
 			else if (property.equals("value")) //$NON-NLS-1$
 			{
-				if (!e.getValue().equals(value))
+            if ((e.getValue() == null) || !e.getValue().equals(value))
 				{
 					e.setValue((String)value);
 					changed = true;
@@ -458,20 +493,42 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			}
 			else if (property.equals("comments")) //$NON-NLS-1$
 			{
-				if (!e.getDescription().equals(value))
+            if ((e.getDescription() == null) || !e.getDescription().equals(value))
 				{
 					e.setDescription((String)value);
 					changed = true;
 				}
 			}
-			
+
 			if (changed)
 			{
+            if (pseudoEntry)
+            {
+               if (!e.isEmpty())
+               {
+                  if (e.getKey() == null)
+                     e.setKey("");
+                  if (e.getValue() == null)
+                     e.setValue("");
+                  if (e.getDescription() == null)
+                     e.setDescription("");
+                  mappingTable.getData().add(new MappingTableEntry(null, null, null)); // add new pseudo-entry at the end
+               }
+               else
+               {
+                  e.setKey(null);
+                  e.setValue(null);
+                  e.setDescription(null);
+               }
+            }
 				viewer.refresh();
 				setModified(true);
 			}
 		}
 
+      /**
+       * @see org.eclipse.jface.viewers.ICellModifier#getValue(java.lang.Object, java.lang.String)
+       */
 		@Override
 		public Object getValue(Object element, String property)
 		{
@@ -485,6 +542,9 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			return null;
 		}
 
+      /**
+       * @see org.eclipse.jface.viewers.ICellModifier#canModify(java.lang.Object, java.lang.String)
+       */
 		@Override
 		public boolean canModify(Object element, String property)
 		{
@@ -502,12 +562,13 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			super(Messages.get().MappingTableEditor_SaveJobName, MappingTableEditor.this, Activator.PLUGIN_ID, null);
 		}
 
-		/* (non-Javadoc)
-		 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#runInternal(org.eclipse.core.runtime.IProgressMonitor)
-		 */
+      /**
+       * @see org.netxms.ui.eclipse.jobs.ConsoleJob#runInternal(org.eclipse.core.runtime.IProgressMonitor)
+       */
 		@Override
 		protected void runInternal(IProgressMonitor monitor) throws Exception
 		{
+         mappingTable.getData().remove(mappingTable.getData().size() - 1); // Remove pseudo-row at the end
 			session.updateMappingTable(mappingTable);
 			runInUIThread(new Runnable() {				
 				@Override
@@ -518,13 +579,56 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 			});
 		}
 
-		/* (non-Javadoc)
-		 * @see org.netxms.ui.eclipse.jobs.ConsoleJob#getErrorMessage()
-		 */
+      /**
+       * @see org.netxms.ui.eclipse.jobs.ConsoleJob#getErrorMessage()
+       */
 		@Override
 		protected String getErrorMessage()
 		{
 			return Messages.get().MappingTableEditor_SaveJobError;
 		}
 	}
+
+   /**
+    * Custom text cell editor
+    */
+   private static class MappingTableCellEditor extends TextCellEditor
+   {
+      public MappingTableCellEditor(Composite parent)
+      {
+         super(parent);
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.TextCellEditor#doSetValue(java.lang.Object)
+       */
+      @Override
+      protected void doSetValue(Object value)
+      {
+         super.doSetValue((value != null) ? value : "");
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.CellEditor#activate(org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent)
+       */
+      @Override
+      public void activate(ColumnViewerEditorActivationEvent activationEvent)
+      {
+         super.activate(activationEvent);
+         if ((activationEvent.eventType == ColumnViewerEditorActivationEvent.KEY_PRESSED) && Character.isLetterOrDigit(activationEvent.character))
+         {
+            ((Text)getControl()).setText(new String(new char[] { activationEvent.character }));
+         }
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.TextCellEditor#doSetFocus()
+       */
+      @Override
+      protected void doSetFocus()
+      {
+         super.doSetFocus();
+         ((Text)getControl()).clearSelection();
+      }
+   }
 }

@@ -38,7 +38,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * Dialog for creating or editing object tool input field
  */
-public class EditInputFieldDialog extends Dialog
+public class InputFieldEditDialog extends Dialog
 {
 	private final String[] typeNames = { Messages.get().EditInputFieldDialog_Text, Messages.get().EditInputFieldDialog_Password, Messages.get().EditInputFieldDialog_Number };
 
@@ -48,14 +48,14 @@ public class EditInputFieldDialog extends Dialog
 	private Combo type;
 	private LabeledText displayName;
 	private Button checkValidatePassword;
-	
+
 	/**
 	 * 
 	 * @param parentShell
 	 * @param create
 	 * @param snmpColumn
 	 */
-	public EditInputFieldDialog(Shell parentShell, boolean create, InputField field)
+	public InputFieldEditDialog(Shell parentShell, boolean create, InputField field)
 	{
 		super(parentShell);
 		this.create = create;
@@ -79,13 +79,13 @@ public class EditInputFieldDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
-		
+
 		name = new LabeledText(dialogArea, SWT.NONE);
 		name.setLabel(Messages.get().EditInputFieldDialog_Name);
 		name.setText(field.getName());
@@ -95,7 +95,7 @@ public class EditInputFieldDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 350;
 		name.setLayoutData(gd);
-		
+
 		type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().EditInputFieldDialog_Type, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		for(int i = 0; i < typeNames.length; i++)
 			type.add(typeNames[i]);
@@ -141,7 +141,7 @@ public class EditInputFieldDialog extends Dialog
 	      field.setName(name.getText());    
       field.setType(InputFieldType.getByValue(type.getSelectionIndex()));
 	   field.setDisplayName(displayName.getText());
-	   
+
 	   if (field.getType() == InputFieldType.PASSWORD)
 	   {
          int flags = field.getFlags();

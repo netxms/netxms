@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
-import org.netxms.ui.eclipse.serverconfig.dialogs.CreateMappingTableDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.MappingTableCreationDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.MappingTableListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -77,8 +77,8 @@ public class MappingTables extends ViewPart
 	public static final int COLUMN_NAME = 1;
 	public static final int COLUMN_FLAGS = 2;
 	public static final int COLUMN_DESCRIPTION = 3;
-	
-	private NXCSession session;
+
+   private NXCSession session = ConsoleSharedData.getSession();
 	private SessionListener listener;
 	private Map<Integer, MappingTableDescriptor> mappingTables = new HashMap<Integer, MappingTableDescriptor>();
 	private SortableTableViewer viewer;
@@ -86,10 +86,10 @@ public class MappingTables extends ViewPart
 	private Action actionNewTable;
 	private Action actionEditTable;
 	private Action actionDeleteTables;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -115,7 +115,7 @@ public class MappingTables extends ViewPart
 				actionDeleteTables.setEnabled(selection.size() > 0);
 			}
 		});
-		
+
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTableViewerSettings(viewer, settings, "MappingTablesList"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -125,12 +125,11 @@ public class MappingTables extends ViewPart
 				WidgetHelper.saveTableViewerSettings(viewer, settings, "MappingTablesList"); //$NON-NLS-1$
 			}
 		});
-		
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
-		session = ConsoleSharedData.getSession();
+
 		refresh(0);
 
 		final Display display = getSite().getShell().getDisplay();
@@ -157,7 +156,7 @@ public class MappingTables extends ViewPart
 						public void run()
 						{
 							mappingTables.remove(id);
-							viewer.setInput(mappingTables.values().toArray());
+                     viewer.refresh();
 						}
 					});
 				}
@@ -166,9 +165,9 @@ public class MappingTables extends ViewPart
 		session.addListener(listener);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -177,9 +176,9 @@ public class MappingTables extends ViewPart
 		super.dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -198,7 +197,7 @@ public class MappingTables extends ViewPart
 				refresh(0);
 			}
 		};
-		
+
 		actionNewTable = new Action(Messages.get().MappingTables_NewTable, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
@@ -206,7 +205,7 @@ public class MappingTables extends ViewPart
 				createNewTable();
 			}
 		};
-		
+
 		actionEditTable = new Action(Messages.get().MappingTables_Edit, SharedIcons.EDIT) {
 			@Override
 			public void run()
@@ -215,7 +214,7 @@ public class MappingTables extends ViewPart
 			}
 		};
 		actionEditTable.setEnabled(false);
-		
+
 		actionDeleteTables = new Action(Messages.get().MappingTables_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
@@ -225,7 +224,7 @@ public class MappingTables extends ViewPart
 		};
 		actionDeleteTables.setEnabled(false);
 	}
-	
+
 	/**
 	 * Fill action bars
 	 */
@@ -274,10 +273,6 @@ public class MappingTables extends ViewPart
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-
-		// Register menu for extension.
-      getSite().setSelectionProvider(viewer);
-		getSite().registerContextMenu(menuMgr, viewer);
 	}
 
 	/**
@@ -290,13 +285,15 @@ public class MappingTables extends ViewPart
 		mgr.add(actionEditTable);
 		mgr.add(actionDeleteTables);
 	}
-	
+
 	/**
-	 * Refresh
-	 */
+    * Refresh
+    * 
+    * @param tableId ID of mapping table that has to be updated or 0 to update all entries
+    */
 	private void refresh(final int tableId)
 	{
-		new ConsoleJob(Messages.get().MappingTables_ReloadJobName, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().MappingTables_ReloadJobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -313,7 +310,10 @@ public class MappingTables extends ViewPart
 								{
 									MappingTableDescriptor od = mappingTables.get(tableId);
 									if (!d.equals(od))
+                           {
 										mappingTables.put(d.getId(), d);
+                              viewer.refresh();
+                           }
 									break;
 								}
 							}
@@ -323,12 +323,12 @@ public class MappingTables extends ViewPart
 							mappingTables.clear();
 							for(MappingTableDescriptor d : tables)
 								mappingTables.put(d.getId(), d);
+                     viewer.setInput(mappingTables.values());
 						}
-						viewer.setInput(mappingTables.values().toArray());
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -336,17 +336,17 @@ public class MappingTables extends ViewPart
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Create new table
 	 */
 	private void createNewTable()
 	{
-		final CreateMappingTableDialog dlg = new CreateMappingTableDialog(getSite().getShell());
+		final MappingTableCreationDialog dlg = new MappingTableCreationDialog(getSite().getShell());
 		if (dlg.open() != Window.OK)
 			return;
-		
-		new ConsoleJob(Messages.get().MappingTables_CreateJobName, this, Activator.PLUGIN_ID, null) {
+
+      new ConsoleJob(Messages.get().MappingTables_CreateJobName, this, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -363,13 +363,13 @@ public class MappingTables extends ViewPart
 							d = new MappingTableDescriptor(assignedId, dlg.getName(), dlg.getDescription(), 0);
 							mappingTables.put(assignedId, d);
 						}
-						viewer.setInput(mappingTables.values().toArray());
+                  viewer.refresh();
 						viewer.setSelection(new StructuredSelection(d));
 						editTable();
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -378,14 +378,14 @@ public class MappingTables extends ViewPart
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Edit selected table
 	 */
 	private void editTable()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if ((selection == null) || (selection.size() != 1))
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
 			return;
 		
 		MappingTableDescriptor d = (MappingTableDescriptor)selection.getFirstElement();
@@ -404,13 +404,13 @@ public class MappingTables extends ViewPart
 	 */
 	private void deleteTables()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if ((selection == null) || (selection.size() == 0))
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
 			return;
 
 		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().MappingTables_DeleteConfirmation, Messages.get().MappingTables_DeleteConfirmationText))
 			return;
-		
+
 		final List<Integer> tables = new ArrayList<Integer>(selection.size());
 		for(Object o : selection.toList())
 		{
@@ -429,7 +429,7 @@ public class MappingTables extends ViewPart
 					{
 						for(Integer id : tables)
 							mappingTables.remove(id);
-						viewer.setInput(mappingTables.values().toArray());
+                  viewer.refresh();
 					}
 				});
 			}
