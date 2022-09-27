@@ -1,4 +1,5 @@
 <assembly>
+   <id>nxmc</id>
    <formats>
       <format>war</format>
    </formats>

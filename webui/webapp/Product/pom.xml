@@ -14,7 +14,7 @@
 
 	<groupId>com.netxms.nxmc</groupId>
 	<artifactId>org.netxms.webui.product</artifactId>
-	<version>4.0.0</version>
+	<version>4.2.0</version>
 	<packaging>eclipse-repository</packaging>
 
 	<properties>
@@ -65,7 +65,6 @@
             </execution>
           </executions>
           <configuration>
-            <!-- The bundles.info is not used at the moment, but leave it here since it doesn't hurt anyone-->
             <includes>
               <include>target/products/org.netxms.nxmc/linux/gtk/x86_64/configuration/org.eclipse.equinox.simpleconfigurator/bundles.info</include>
               <include>target/products/org.netxms.nxmc/linux/gtk/x86_64/configuration/config.ini</include>
@@ -83,19 +82,19 @@
               </replacement>
               <replacement>
                 <token>osgi.bundles=</token>
-                <value>osgi.bundles=org.eclipse.equinox.servletbridge.extensionbundle@start,</value>
+                <value>osgi.bundles=org.eclipse.equinox.servletbridge.extensionbundle,</value>
               </replacement>
               <replacement>
                 <token>osgi\.framework=.*jar</token>
                 <value></value>
-              </replacement>
+		      </replacement>
             </replacements>
             <regexFlags>
               <regexFlag>CASE_INSENSITIVE</regexFlag>
               <regexFlag>UNIX_LINES</regexFlag>
             </regexFlags>
           </configuration>
-        </plugin>
+  </plugin>
 
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
@@ -143,7 +142,7 @@
 			<plugin>
                 <!--<groupId>org.apache.maven.plugins</groupId>-->
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2-beta-5</version>
+				<version>3.4.2</version>
 				<configuration>
 					<descriptors>
 						<descriptor>assembly.xml</descriptor>

@@ -5,12 +5,12 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.usermanager;singleton:=true
 Bundle-Version: 4.2.0
 Bundle-Activator: org.netxms.ui.eclipse.usermanager.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.rap.ui;bundle-version="3.19.0",
+Require-Bundle: org.eclipse.rap.ui;bundle-version="3.22.0",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="4.2.0",
  org.netxms.webui.core;bundle-version="4.2.0",
- org.eclipse.rap.filedialog;bundle-version="3.19.0",
+ org.eclipse.rap.filedialog;bundle-version="3.22.0",
  org.netxms.ui.base;bundle-version="4.2.0",
- org.apache.commons.codec
+ org.apache.commons.codec;bundle-version="1.14.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.usermanager.dialogs,

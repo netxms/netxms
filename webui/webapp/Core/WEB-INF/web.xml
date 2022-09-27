@@ -23,6 +23,22 @@
       <param-value>-registryMultiLanguage -ws rap</param-value>
     </init-param>
 
+    <!-- org.eclipse.equinox.servletbridge and the Servlet API are exported
+			automatically to the underlying OSGi framework. The extendedFrameworkExports
+			parameter allows the specification of additional java package exports. The
+			format is a comma separated list of exports as specified by the "Export-Package"
+			bundle manifest header. For example: com.mycompany.exports; version=1.0.0,
+			com.mycompany.otherexports; version=1.0.0 -->
+   <init-param>
+      <param-name>extendedFrameworkExports</param-name>
+      <param-value>javax.servlet;version="3.0",javax.servlet.http;version="3.0",javax.servlet.descriptor;version="2.6"</param-value>
+   </init-param>
+
+   <init-param>
+      <param-name>overrideAndReplaceExtensionBundle</param-name>
+      <param-value>true</param-value>
+   </init-param>
+
     <load-on-startup>1</load-on-startup>
   </servlet>
 

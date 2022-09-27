@@ -5,10 +5,10 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.alarmviewer;singleton:=true
 Bundle-Version: 4.2.0
 Bundle-Activator: org.netxms.ui.eclipse.alarmviewer.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.rap.ui;bundle-version="3.1.0",
+Require-Bundle: org.eclipse.rap.ui;bundle-version="3.22.0",
  org.netxms.ui.base;bundle-version="4.2.0",
- org.eclipse.rap.ui.forms;bundle-version="3.1.0",
- org.eclipse.core.expressions;bundle-version="3.5.100",
+ org.eclipse.rap.ui.forms;bundle-version="3.22.0",
+ org.eclipse.core.expressions;bundle-version="3.8.200",
  org.netxms.ui.base;bundle-version="4.2.0",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="4.2.0",
  org.netxms.webui.core;bundle-version="4.2.0",
