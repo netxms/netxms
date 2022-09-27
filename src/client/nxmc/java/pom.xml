@@ -40,7 +40,7 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <lib.scope>compile</lib.scope>
-      <rwt.version>3.21.0</rwt.version>
+      <rwt.version>3.22.0</rwt.version>
       <swt.version>3.118.0</swt.version>
       <packaging.type>jar</packaging.type>
    </properties>
@@ -437,6 +437,18 @@
                <groupId>org.netxms</groupId>
                <artifactId>rwtchart</artifactId>
                <version>1.3.2</version>
+               <scope>${lib.scope}</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.eclipse.rap.nebula</groupId>
+               <artifactId>org.eclipse.rap.nebula.widgets.grid</artifactId>
+               <version>${rwt.version}</version>
+               <scope>${lib.scope}</scope>
+            </dependency>
+            <dependency>
+               <groupId>org.eclipse.rap.nebula</groupId>
+               <artifactId>org.eclipse.rap.nebula.jface.gridviewer</artifactId>
+               <version>${rwt.version}</version>
                <scope>${lib.scope}</scope>
             </dependency>
             <dependency>

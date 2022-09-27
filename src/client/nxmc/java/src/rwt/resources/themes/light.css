@@ -126,7 +126,7 @@ Button[ARROW]:disabled, Button[PUSH]:disabled, Button[TOGGLE]:disabled {
 }
 
 Button[ARROW]:default:hover, Button[PUSH]:default:hover, Button[TOGGLE]:default:hover {
-   background-color: #00567A;
+   background-color: #49AEDA;
 }
 
 Button[ARROW]:hover, Button[PUSH]:hover, Button[TOGGLE]:hover {
@@ -134,7 +134,7 @@ Button[ARROW]:hover, Button[PUSH]:hover, Button[TOGGLE]:hover {
 }
 
 Button[ARROW]:default:pressed, Button[PUSH]:default:pressed, Button[TOGGLE]:default:pressed {
-   background-color: #00567A;
+   background-color: #49AEDA;
 }
 
 Button[ARROW]:pressed, Button[PUSH]:pressed, Button[TOGGLE]:pressed {
@@ -142,22 +142,13 @@ Button[ARROW]:pressed, Button[PUSH]:pressed, Button[TOGGLE]:pressed {
 }
 
 Button[TOGGLE]:selected {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e0e0e0 ),
-    color-stop( 30%, #f0f0f0 ),
-    color-stop( 70%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
+  color: #ffffff;
+  background-color: #0072A3;
 }
 
 Button[TOGGLE]:selected:hover {
-  background-image: gradient(
-    linear, left top, left bottom,
-    from( #e0e0e0 ),
-    color-stop( 52%, #e0e0e0 ),
-    to( #b0b0b0 )
-  );
+  color: #ffffff;
+  background-color: #49AEDA;
 }
 
 Button[CHECK], Button[RADIO] {
@@ -577,7 +568,7 @@ Shell.PopupWindow {
 Shell[TITLE], Shell[BORDER] {
   box-shadow: 5px 5px 3px rgba( 0, 0, 0, 0.5 );
   border: 1px solid #B3B3B3;
-  padding: 0px;
+  padding: 5px;
 }
 
 Shell[BORDER]:inactive, Shell[TITLE]:inactive {
@@ -926,6 +917,207 @@ Table-RowOverlay.cellselect:selected:unfocused {
   color: inherit;
 }
 
+/* Grid default theme */
+
+Grid {
+   background-color: white;
+   background-image: none;
+   color: #333333;
+   font: 13px "Metropolis Regular", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+   border: none;
+ }
+ 
+ GridItem {
+   background-color: transparent;
+   color: inherit;
+   text-decoration: none;
+   text-shadow: none;
+   background-image: none;
+ }
+ 
+ Grid-RowOverlay {
+   background-color: transparent;
+   color: inherit;
+   background-image: none;
+ }
+ 
+ Grid-RowOverlay:hover {
+   background-color: #E8E8E8;
+ }
+ 
+ Grid-RowOverlay:selected {
+   background-color: #D8E3E9;
+ }
+ 
+ Grid-RowOverlay:selected:unfocused {
+   background-color: #E8E8E8;
+ }
+ 
+ GridColumn {
+    background-color: #F0F0F0;
+    padding: 6px 3px;
+    color: #333333;
+    border: 1px solid #E8E8E8;
+    font: 14px "Metropolis Medium", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+    text-shadow: none;
+ }
+ 
+ GridColumn:hover {
+    background-color: #F0F0F0;
+ }
+ 
+ GridColumn-SortIndicator {
+   background-image: none;
+ }
+ 
+ GridColumn-SortIndicator:up {
+   background-image: url( themes/light.resources/column/sort-indicator-up.png );
+ }
+ 
+ GridColumn-SortIndicator:down {
+   background-image: url( thems/light.resources/column/sort-indicator-down.png );
+ }
+ 
+ Grid-Cell {
+    spacing: 3px;
+    padding: 4px 3px;
+ }
+ 
+ Grid-GridLine {
+   color: #dedede;
+ }
+ 
+ Grid-Checkbox {
+   /* 
+   For backward compatibility we have to keep the width property.
+   Deprecated, use "margin" instead.
+   */
+   width: 21px;
+   margin: 0px;
+   background-image: url( themes/light.resources/button/check-unselected.png );
+ }
+ 
+ Grid-Checkbox:hover {
+   background-image: url( themes/light.resources/button/check-unselected-hover.png );
+ }
+ 
+ Grid-Checkbox:checked {
+   background-image: url( themes/light.resources/button/check-selected.png );
+ }
+ 
+ Grid-Checkbox:checked:hover {
+   background-image: url( themes/light.resources/button/check-selected-hover.png );
+ }
+ 
+ Grid-Checkbox:checked:grayed {
+   background-image: url( themes/light.resources/button/check-grayed.png );
+ }
+ 
+ Grid-Checkbox:checked:grayed:hover {
+   background-image: url( themes/light.resources/button/check-grayed-hover.png );
+ }
+ 
+ /* Grid with individual cell selection */
+ Grid-RowOverlay.cellselect:hover {
+   background-color: transparent;
+   color: inherit;
+ }
+ 
+ Grid-RowOverlay.cellselect:selected {
+   background-color: transparent;
+   color: inherit;
+ }
+ 
+ Grid-RowOverlay.cellselect:selected:unfocused {
+   background-color: transparent;
+   color: inherit;
+ }
+ 
+ Grid-Indent {
+   width: 16px;
+   background-image: none;
+ }
+ 
+ Grid-Indent:collapsed {
+   background-image: url( themes/light.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:collapsed:hover {
+   background-image: url( themes/light.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:expanded {
+   background-image: url( themes/light.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:expanded:hover {
+   background-image: url( themes/light.resources/tree/tree-expanded-hover.png );
+ }
+ 
+ Grid-Indent:line {
+   background-image: none;
+ }
+ 
+ Grid-Indent:first {
+   background-image: none;
+ }
+ 
+ Grid-Indent:first:collapsed {
+   background-image: url( themes/light.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:first:collapsed:hover {
+   background-image: url( themes/light.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:first:expanded {
+   background-image: url( themes/light.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:first:expanded:hover {
+   background-image: url( themes/light.resources/tree/tree-expanded-hover.png );
+ }
+ 
+ Grid-Indent:last {
+   background-image: none;
+ }
+ 
+ Grid-Indent:last:collapsed {
+   background-image: url( themes/light.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:last:collapsed:hover {
+   background-image: url( themes/light.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:last:expanded {
+   background-image: url( themes/light.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:last:expanded:hover {
+   background-image: url( themes/light.resources/tree/tree-expanded-hover.png );
+ }
+ 
+ Grid-Indent:first:last {
+   background-image: none;
+ }
+ 
+ Grid-Indent:first:last:collapsed {
+   background-image: url( themes/light.resources/tree/tree-collapsed.png );
+ }
+ 
+ Grid-Indent:first:last:collapsed:hover {
+   background-image: url( themes/light.resources/tree/tree-collapsed-hover.png );
+ }
+ 
+ Grid-Indent:first:last:expanded {
+   background-image: url( themes/light.resources/tree/tree-expanded.png );
+ }
+ 
+ Grid-Indent:first:last:expanded:hover {
+   background-image: url( themes/light.resources/tree/tree-expanded-hover.png );
+ }
+ 
 /* Text default theme */
 
 Text {
@@ -2089,6 +2281,30 @@ Label.CardHeader {
 Label.ServerName {
    border-radius: 4px;
    padding: 4px 4px;
+}
+
+Button.DashboardEditorButton[PUSH] {
+  color: inherit;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  border-radius: 2px;
+  padding: 4px 4px;
+  spacing: 2px;
+  opacity: 1;
+  animation: none;
+  text-shadow: none;
+}
+
+Button.DashboardEditorButton[PUSH]:hover {
+  background-color: #f0f0f0;
+  border-radius: 2px;
+}
+
+Button.DashboardEditorButton[PUSH]:pressed {
+  border-radius: 2px;
+  padding: 3px 2px 1px 4px;
+  background-image: url( theme/clarity.resources/toolbar/dotted_white.gif );
 }
 
 /* FileUpload */

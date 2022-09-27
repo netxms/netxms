@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.objects.views;
 import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -48,8 +48,6 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectPollerView extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
-
-   public static final String ID = "ObjectPollerView";
 
    private static final String[] POLL_NAME = {
          "",
@@ -131,12 +129,12 @@ public class ObjectPollerView extends AdHocObjectView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#fillLocalToolbar(org.eclipse.jface.action.ToolBarManager)
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(IToolBarManager)
     */
    @Override
-   protected void fillLocalToolbar(ToolBarManager manager)
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
-      super.fillLocalToolbar(manager);
+      super.fillLocalToolBar(manager);
       manager.add(actionRestart);
       manager.add(actionClearOutput);
    }
