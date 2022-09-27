@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<formatVersion>4</formatVersion>
+	<server>
+		<version>4.2.327</version>
+		<buildTag>4.2-327-g5b8c7b6629</buildTag>
+		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+	</server>
+	<description></description>
+	<events>
+	</events>
+	<templates>
+	</templates>
+	<traps>
+	</traps>
+	<rules>
+		<rule id="27">
+			<guid>b76f142a-6932-499e-aa6e-ac16cf8effb1</guid>
+			<flags>7976</flags>
+			<alarmMessage>%m</alarmMessage>
+			<alarmImpact></alarmImpact>
+			<alarmKey>SYS_THREAD_HANG_.*</alarmKey>
+			<rootCauseAnalysisScript></rootCauseAnalysisScript>
+			<alarmSeverity>6</alarmSeverity>
+			<alarmTimeout>0</alarmTimeout>
+			<alarmTimeoutEvent>43</alarmTimeoutEvent>
+			<script></script>
+			<comments>Terminate alarms for hanged or unexpectedly stopped system threads that could have been created prior to server restart</comments>
+			<sources>
+			</sources>
+			<events>
+				<event id="97">
+					<name>SYS_SERVER_STARTED</name>
+				</event>
+			</events>
+			<actions>
+			</actions>
+			<timerCancellations>
+			</timerCancellations>
+			<pStorageActions>
+			</pStorageActions>
+			<alarmCategories>
+			</alarmCategories>
+		</rule>
+	</rules>
+	<ruleOrdering>
+		<rule id="1">9a9dec77-f128-411a-a99d-c2ba2c29fb18</rule>
+		<rule id="2">dedd5763-99d5-4fcf-afb0-8aac607aab96</rule>
+		<rule id="3">2d2c3d32-49d4-4e76-b6aa-782b30d90f28</rule>
+		<rule id="4">4fa20604-b56f-4f12-bb5d-2c3243a126c9</rule>
+		<rule id="5">45999e66-c16c-400d-8b79-63a0f8eb8958</rule>
+		<rule id="6">8537fa14-e824-435b-a1dd-be3e566b7f67</rule>
+		<rule id="7">2daa869f-9921-4f3e-9cb9-004c2f31f70a</rule>
+		<rule id="8">95d42ff2-6fe0-4b1c-9c7b-c18520393f9f</rule>
+		<rule id="9">6f46d451-ee66-4563-8747-d129877df24d</rule>
+		<rule id="10">727a0dca-ecc4-4490-bf4b-3fc8b5ff8cb4</rule>
+		<rule id="11">11176d3e-0149-448b-a5fe-2be764762775</rule>
+		<rule id="12">ecc3fb57-672d-489d-a0ef-4214ea896e0f</rule>
+		<rule id="13">5b8115f1-5c84-443a-9f88-18fc0b70f29e</rule>
+		<rule id="14">062228ef-c155-4669-a90a-603cae13240e</rule>
+		<rule id="15">943f5474-5614-44e1-820c-b8fe17bc4d0b</rule>
+		<rule id="16">9ce6b59e-e274-4c94-b314-4b4652c10c74</rule>
+		<rule id="17">e3120a33-216e-e048-aa3b-4f1a9f3f10fc</rule>
+		<rule id="18">bdc76d2e-967e-bf44-95a1-a229ef8b3ff4</rule>
+		<rule id="19">226de02d-9eb2-4ea1-a92c-2bdb1718f2ec</rule>
+		<rule id="20">02a21afe-c942-4953-8b5d-f463c597cff8</rule>
+		<rule id="21">47fd5c32-b6c9-48b8-99fb-c389dde63bee</rule>
+		<rule id="22">dcdd6f93-2f9e-4c3e-97cb-95b6847f13ce</rule>
+		<rule id="23">d3acabe8-717d-4ceb-bb7f-498d5af898f2</rule>
+		<rule id="24">8e26af4b-e478-44c9-9c12-0b049ccb6c3c</rule>
+		<rule id="25">ea1dee96-b42e-499c-a992-0b0f9e4874b9</rule>
+		<rule id="26">f0c5a6b2-7427-45e5-8333-7d60d2b408e6</rule>
+		<rule id="27">b76f142a-6932-499e-aa6e-ac16cf8effb1</rule>
+		<rule id="28">ed3397a8-a496-4534-839b-5a6fc77c167c</rule>
+		<rule id="29">20a0f4a5-d90e-4961-ba88-a65b9ee45d07</rule>
+		<rule id="30">c6f66840-4758-420f-a27d-7bbf7b66a511</rule>
+		<rule id="31">9fa60260-c2ec-4371-b4e4-f5346b1d8400</rule>
+		<rule id="32">20ef861f-b8e4-4e04-898e-e57d13863661</rule>
+		<rule id="33">33f6193a-e103-4f5f-8bee-870bbcc08066</rule>
+		<rule id="34">417648af-5361-49a5-9471-6ef31e857b2d</rule>
+		<rule id="35">19bd89ba-8bb2-4915-8546-a1ecc650dedd</rule>
+		<rule id="36">cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04</rule>
+		<rule id="37">68e102a3-58d3-4112-901c-f683356ba662</rule>
+		<rule id="38">68a629ef-c645-49e5-8a7b-c5e79308080e</rule>
+		<rule id="39">18507220-6a16-4e13-a6ba-141d907b924a</rule>
+		<rule id="40">8cca36cd-f821-43ae-8329-0eefe35df3b7</rule>
+		<rule id="41">404642a0-deb0-400d-b9f9-c86f5a83f7f5</rule>
+		<rule id="42">b8abb037-ab4a-4e05-adc4-9425ce440e4a</rule>
+		<rule id="43">2bb3df47-482b-4e4b-9b49-8c72c6b33011</rule>
+		<rule id="44">b517ca11-cdf8-4813-87fa-9a2ace070564</rule>
+		<rule id="45">bdd8f6b1-fe3a-4b20-bc0b-bb7507b264b2</rule>
+		<rule id="46">c19fbb37-98c9-43a5-90f2-7a54ba9116fa</rule>
+		<rule id="47">aa188673-049f-4c4d-8767-c1cf443c9547</rule>
+		<rule id="48">af00706c-b92a-4335-b441-190609c2494f</rule>
+		<rule id="49">9169a40b-cd9d-4328-b113-f690ef57773e</rule>
+		<rule id="50">81320995-d6db-4a3c-9670-12400eba4fe6</rule>
+		<rule id="51">96061edf-a46f-407a-a049-a55fa1ffb7e8</rule>
+		<rule id="52">75640293-d630-4bfc-9b5e-9655cf59fd00</rule>
+		<rule id="53">c00d895a-832a-431e-87b6-822064629c63</rule>
+		<rule id="54">73fbf22e-e101-4cd6-b51c-078589140d03</rule>
+	</ruleOrdering>
+	<scripts>
+	</scripts>
+	<objectTools>
+	</objectTools>
+	<dciSummaryTables>
+	</dciSummaryTables>
+	<actions>
+	</actions>
+	<webServiceDefinitions>
+	</webServiceDefinitions>
+</configuration>

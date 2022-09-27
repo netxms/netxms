@@ -19,6 +19,7 @@ templates_DATA = \
 	dell_hw.xml \
 	dell_idrac.xml \
 	eaton_ups.xml \
+	epp_terminate_thread_alarms.xml \
 	generic_unix.xml \
 	hp_ilo.xml \
 	hpux.xml \
@@ -29,7 +30,7 @@ templates_DATA = \
 	netgear_nas.xml \
 	netxms_agent.xml \
 	netxms_server.xml \
-        object_tools.xml \
+	object_tools.xml \
 	qnap.xml \
 	ruckus_zonedirector.xml \
 	sonicwall.xml \
