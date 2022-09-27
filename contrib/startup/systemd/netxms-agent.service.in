@@ -1,0 +1,13 @@
+[Unit]
+Description=NetXMS agent
+
+[Service]
+Type=simple
+ExecStart=~BINDIR~/nxagentd -S
+PIDFile=/var/run/nxagentd.pid
+LimitCORE=infinity
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=nxagentd.service

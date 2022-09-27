@@ -1,0 +1,11 @@
+[Unit]
+Description=NetXMS reporting server
+
+[Service]
+Type=simple
+ExecStart=~BINDIR~/nxreportd
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=nxreportd.service
