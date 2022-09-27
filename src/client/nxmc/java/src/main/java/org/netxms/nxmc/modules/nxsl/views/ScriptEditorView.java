@@ -54,7 +54,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ScriptEditorView extends ConfigurationView
 {
-   private I18n i18n = LocalizationHelper.getI18n(ScriptEditorView.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ScriptEditorView.class);
+
    private NXCSession session;
    private ScriptEditor editor;
    private long scriptId;

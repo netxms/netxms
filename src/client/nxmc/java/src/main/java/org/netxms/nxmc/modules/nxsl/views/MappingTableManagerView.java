@@ -384,8 +384,9 @@ public class MappingTableManagerView extends ConfigurationView
 			return;
 		
 		MappingTableDescriptor d = (MappingTableDescriptor)selection.getFirstElement();
+      openView(new MappingTableEditorView(d.getId(), d.getName()));
 	}
-	
+
 	/**
 	 * Delete selected tables
 	 */

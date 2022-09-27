@@ -85,10 +85,27 @@ public class MappingTable
 	}
 	
 	/**
-	 * Fill NXCP message with table's data
-	 * 
-	 * @param msg NXCP message
-	 */
+    * Copy constructor
+    * 
+    * @param src source mapping table
+    */
+   public MappingTable(MappingTable src)
+   {
+      this.id = src.id;
+      this.name = src.name;
+      this.description = src.description;
+      this.flags = src.flags;
+      this.guid = src.guid;
+      this.data = new ArrayList<MappingTableEntry>(src.data.size());
+      for(MappingTableEntry e : src.data)
+         this.data.add(new MappingTableEntry(e.getKey(), e.getValue(), e.getDescription()));
+   }
+
+   /**
+    * Fill NXCP message with table's data
+    * 
+    * @param msg NXCP message
+    */
 	public void fillMessage(NXCPMessage msg)
 	{
 		msg.setFieldInt32(NXCPCodes.VID_MAPPING_TABLE_ID, id);
