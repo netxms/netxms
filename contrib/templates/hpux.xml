@@ -1,65 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<formatVersion>4</formatVersion>
-	<description>HP-UX monitoring template</description>
+	<server>
+		<version>4.2.327</version>
+		<buildTag>4.2-327-g5b8c7b6629</buildTag>
+		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+	</server>
+	<description></description>
 	<events>
-		<event id="100008">
-			<name>OS_PROCESS_NOT_RUNNING</name>
+		<event id="100024">
 			<guid>3c9d6c4c-2ad8-40e1-a8e7-e5c865b07052</guid>
-			<code>100008</code>
+			<name>OS_PROCESS_NOT_RUNNING</name>
+			<code>100024</code>
+			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
 			<message>Process %6 is not running</message>
-			<description></description>
+			<tags></tags>
 		</event>
 	</events>
 	<templates>
-		<template id="156">
+		<template id="468">
 			<guid>5bf05838-aad4-4dc5-a4da-86422761936d</guid>
 			<name>HP-UX</name>
-			<flags>0</flags>
+			<comments></comments>
 			<path>
 				<element id="1">Operating Systems</element>
 			</path>
 			<dataCollection>
-				<dci id="201">
+				<dci id="1892">
 					<guid>5e742053-95a5-4d70-8bd2-d0a6cc6e6dc3</guid>
 					<name>System.IO.DiskQueue</name>
 					<description>I/O: average disk queue</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;8388736&lt;/color&gt;&#x0A;   &lt;title&gt;Disk Queue&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="202">
+				<dci id="1893">
 					<guid>4effde4c-f6f5-40bf-be15-434120d296a9</guid>
 					<name>Process.Count(cron)</name>
 					<description>System: number of cron processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>cron</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -73,26 +91,32 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>cron</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="203">
+				<dci id="1894">
 					<guid>4dba415f-186a-4dc9-8ac6-ed98feed9dd5</guid>
 					<name>Process.Count(syslogd)</name>
 					<description>System: number of syslogd processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>syslogd</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -106,26 +130,32 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>syslogd</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="204">
+				<dci id="1895">
 					<guid>c631efb5-cbdc-4d59-8cb0-f7b268c280a0</guid>
 					<name>Process.Count(syncer)</name>
 					<description>System: number of syncer processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>syncer</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -139,26 +169,32 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>syncer</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="205">
+				<dci id="1896">
 					<guid>7ce66120-309c-471e-acad-d3190a96992c</guid>
 					<name>Process.Count(fsdaemon)</name>
 					<description>System: number of fsdaemon processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>fsdaemon</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -172,26 +208,32 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>fsdaemon</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="206">
+				<dci id="1897">
 					<guid>82600792-50c5-4264-82fc-0709741b9552</guid>
 					<name>Process.Count(utmpd)</name>
 					<description>System: number of utmpd processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>utmpd</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -205,26 +247,32 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>utmpd</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="207">
+				<dci id="1898">
 					<guid>1371f952-72f9-42fc-8248-2c8c115fa1eb</guid>
 					<name>Process.Count(vxfsd)</name>
 					<description>System: number of vxfsd processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>vxfsd</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -238,26 +286,32 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>vxfsd</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="208">
+				<dci id="1899">
 					<guid>10203697-81cb-451d-84c6-a4d89abf61d0</guid>
 					<name>Process.Count(pagezerod)</name>
 					<description>System: number of pagezerod processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>pagezerod</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -271,26 +325,32 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>pagezerod</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="209">
+				<dci id="1900">
 					<guid>9c3d116a-b5c1-4ce7-a817-14b4214cf6dc</guid>
 					<name>Process.Count(ksyncer_daemon)</name>
 					<description>System: number of ksyncer_daemon processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>ksyncer_daemon</instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -304,11 +364,14 @@
 						</threshold>
 					</thresholds>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance>ksyncer_daemon</instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="true" autoRemove="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;HP-UX-*&quot;;</filter>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;HP-UX-*&quot;;</filter>
+			<filter2 autoBind="0" autoUnbind="0"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -321,4 +384,8 @@
 	</objectTools>
 	<dciSummaryTables>
 	</dciSummaryTables>
+	<actions>
+	</actions>
+	<webServiceDefinitions>
+	</webServiceDefinitions>
 </configuration>

@@ -1,101 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<formatVersion>4</formatVersion>
-	<description>Generic Windows monitoring template</description>
+	<server>
+		<version>4.2.327</version>
+		<buildTag>4.2-327-g5b8c7b6629</buildTag>
+		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+	</server>
+	<description></description>
 	<events>
-		<event id="100069">
-			<name>FS_NO_FREE_SPACE</name>
+		<event id="100025">
 			<guid>10dd5d6f-57c3-4da7-8a7c-0d02b949f0df</guid>
-			<code>100069</code>
+			<name>FS_NO_FREE_SPACE</name>
+			<code>100025</code>
+			<description></description>
 			<severity>4</severity>
 			<flags>1</flags>
 			<message>No free space left on file system %6</message>
-			<description></description>
+			<tags></tags>
 		</event>
-		<event id="100068">
-			<name>FS_LOW_FREE_SPACE</name>
-			<guid>73a523df-93b7-4072-8ef7-06afcd9e476f</guid>
-			<code>100068</code>
-			<severity>3</severity>
-			<flags>1</flags>
-			<message>Low free space on file system %6 (%4%% remaining)</message>
-			<description></description>
-		</event>
-		<event id="100070">
-			<name>OS_HIGH_CPU_UTILIZATION</name>
+		<event id="100027">
 			<guid>5619fef8-521e-46df-b8b5-882541c0112c</guid>
-			<code>100070</code>
+			<name>OS_HIGH_CPU_UTILIZATION</name>
+			<code>100027</code>
+			<description></description>
 			<severity>2</severity>
 			<flags>1</flags>
 			<message>High CPU utilization (%4%%)</message>
-			<description></description>
+			<tags></tags>
 		</event>
-		<event id="100089">
-			<name>OS_LOW_VIRTUAL_MEMORY</name>
-			<guid>e0b2e3ce-6a6e-4b5d-a1a5-7f8cc9f25208</guid>
-			<code>100089</code>
+		<event id="100026">
+			<guid>73a523df-93b7-4072-8ef7-06afcd9e476f</guid>
+			<name>FS_LOW_FREE_SPACE</name>
+			<code>100026</code>
+			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Low free virtual memory (%4%%)</message>
-			<description></description>
+			<message>Low free space on file system %6 (%4%% remaining)</message>
+			<tags></tags>
 		</event>
-		<event id="100088">
-			<name>OS_HIGH_DISK_QUEUE_LENGTH</name>
+		<event id="100029">
 			<guid>6e4645db-71bb-42e8-9b48-f2e08f2826e6</guid>
-			<code>100088</code>
+			<name>OS_HIGH_DISK_QUEUE_LENGTH</name>
+			<code>100029</code>
+			<description></description>
 			<severity>2</severity>
 			<flags>1</flags>
 			<message>Disk queue length is too high (%4)</message>
+			<tags></tags>
+		</event>
+		<event id="100028">
+			<guid>e0b2e3ce-6a6e-4b5d-a1a5-7f8cc9f25208</guid>
+			<name>OS_LOW_VIRTUAL_MEMORY</name>
+			<code>100028</code>
 			<description></description>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Low free virtual memory (%4%%)</message>
+			<tags></tags>
 		</event>
 	</events>
 	<templates>
-		<template id="6793">
+		<template id="457">
 			<guid>8d955f5e-1baa-4b0f-a1f8-3746c0346ed9</guid>
 			<name>Windows</name>
-			<flags>0</flags>
+			<comments></comments>
 			<path>
 				<element id="1">Operating Systems</element>
 			</path>
 			<dataCollection>
-				<dci id="3686">
+				<dci id="1735">
 					<guid>4b81c82b-9605-4e72-9330-369a32851dac</guid>
 					<name>System.ProcessCount</name>
 					<description>Total number of processes</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="3688">
+				<dci id="1736">
 					<guid>07ab8875-7847-4e27-8cb5-48e91f0517f2</guid>
 					<name>System.IO.DiskQueue</name>
-					<description>I/O: average disk queue</description>
+					<description>I/O: average disk queue length for last minute</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -108,90 +130,114 @@
 							<script></script>
 						</threshold>
 					</thresholds>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;8388736&lt;/color&gt;&#x0A;   &lt;title&gt;Disk Queue&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;8388736&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;Disk Queue&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="3690">
+				<dci id="1737">
 					<guid>f52da3bf-480c-4fb1-828f-515c0ef81cd4</guid>
 					<name>System.Memory.Physical.Free</name>
 					<description>System: free physical memory</description>
 					<dataType>3</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>B (IEC)</unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="3691">
+				<dci id="1738">
 					<guid>7c244ca7-20a2-40ab-bf78-78df888c8055</guid>
 					<name>System.ThreadCount</name>
 					<description>System: total threads</description>
 					<dataType>1</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="3692">
+				<dci id="1739">
 					<guid>d06f4ba0-6e65-400e-858c-461c9ca099c4</guid>
 					<name>System.Memory.Physical.Used</name>
 					<description>System: used physical memory</description>
 					<dataType>3</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>B (IEC)</unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="3693">
+				<dci id="1740">
 					<guid>f8e8ad73-137b-40d8-b4c2-faef276f5461</guid>
 					<name>System.CPU.Usage</name>
-					<description>CPU: usage (%)</description>
+					<description>CPU: usage</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>%</unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -204,14 +250,14 @@
 							<script></script>
 						</threshold>
 					</thresholds>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;false&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;2763429&lt;/color&gt;&#x0A;   &lt;title&gt;CPU Usage&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;false&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;2763429&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;CPU Usage&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="3698">
+				<dci id="1741">
 					<guid>df48c8fe-60b5-401b-8f9d-8d4ab3fdf07a</guid>
 					<name>FileSystem.FreePerc({instance})</name>
-					<description>File system: free space on {instance} (%)</description>
+					<description>File system: free space on {instance}</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -219,14 +265,18 @@
 					<interval>%{PollingInterval.FileSystemSpace:600}</interval>
 					<retentionType>0</retentionType>
 					<retention></retention>
-					<instance></instance>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>1</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>%</unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -249,14 +299,15 @@
 							<script></script>
 						</threshold>
 					</thresholds>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData>FileSystem.MountPoints</instanceDiscoveryData>
-					<instanceFilter>type = AgentReadParameter($node, &quot;FileSystem.Type(&quot; . $1 . &quot;)&quot;);&#x0A;if ((type == null) || (type == &quot;&quot;) || (type == &quot;CDFS&quot;)) &#x09;&#x0A;   return false;&#x0A;return true;&#x0A;</instanceFilter>
+					<instanceFilter>type = AgentReadParameter($node, &quot;FileSystem.Type(&quot; . $1 . &quot;)&quot;);&#x0A;if ((type == null) || (type == &quot;&quot;) || (type == &quot;CDFS&quot;)) &#x09;&#x0A;   return false;&#x0A;return true;</instanceFilter>
 				</dci>
-				<dci id="3699">
+				<dci id="1742">
 					<guid>733e4acf-2c19-4fb8-85e5-c574a1990795</guid>
 					<name>FileSystem.UsedPerc({instance})</name>
-					<description>File system: used space on {instance} (%)</description>
+					<description>File system: used space on {instance}</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
@@ -264,35 +315,46 @@
 					<interval>%{PollingInterval.FileSystemSpace:600}</interval>
 					<retentionType>0</retentionType>
 					<retention></retention>
-					<instance></instance>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>1</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>%</unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData>FileSystem.MountPoints</instanceDiscoveryData>
-					<instanceFilter>type = AgentReadParameter($node, &quot;FileSystem.Type(&quot; . $1 . &quot;)&quot;);&#x0A;if ((type == null) || (type == &quot;&quot;) || (type == &quot;CDFS&quot;)) &#x09;&#x0A;   return false;&#x0A;return true;&#x0A;</instanceFilter>
+					<instanceFilter>type = AgentReadParameter($node, &quot;FileSystem.Type(&quot; . $1 . &quot;)&quot;);&#x0A;if ((type == null) || (type == &quot;&quot;) || (type == &quot;CDFS&quot;)) &#x09;&#x0A;   return false;&#x0A;return true;</instanceFilter>
 				</dci>
-				<dci id="3704">
+				<dci id="1743">
 					<guid>824e9fa1-a0ac-410b-af7c-bc2cc5336116</guid>
 					<name>System.Memory.Virtual.FreePerc</name>
-					<description>System: free virtual memory (%)</description>
+					<description>System: free virtual memory</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>1</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
 					<snmpRawValueType>0</snmpRawValueType>
 					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
 					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>%</unitName>
+					<multiplier>0</multiplier>
 					<thresholds>
 						<threshold id="1">
 							<function>0</function>
@@ -305,12 +367,15 @@
 							<script></script>
 						</threshold>
 					</thresholds>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
 				</dci>
 			</dataCollection>
-			<filter autoBind="true" autoRemove="false">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;windows-*&quot;;</filter>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="1" autoUnbind="0">return classof($object) == &quot;Node&quot; &amp;&amp; $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;windows-*&quot;;</filter>
+			<filter2 autoBind="0" autoUnbind="0"></filter2>
 		</template>
 	</templates>
 	<traps>
@@ -323,4 +388,8 @@
 	</objectTools>
 	<dciSummaryTables>
 	</dciSummaryTables>
+	<actions>
+	</actions>
+	<webServiceDefinitions>
+	</webServiceDefinitions>
 </configuration>
