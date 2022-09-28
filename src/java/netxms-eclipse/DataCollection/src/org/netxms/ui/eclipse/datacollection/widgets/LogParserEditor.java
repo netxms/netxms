@@ -118,6 +118,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 
       tabFolder = new CTabFolder(this, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
       tabFolder.setUnselectedImageVisible(true);
+      tabFolder.setSelectionBarThickness(0);
       tabFolder.setSimple(true);
       tabFolder.addSelectionListener(new SelectionListener() {
          @Override

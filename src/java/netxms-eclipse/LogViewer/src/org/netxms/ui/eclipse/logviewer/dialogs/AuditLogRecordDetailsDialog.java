@@ -103,6 +103,7 @@ public class AuditLogRecordDetailsDialog extends Dialog
 
       tabFolder = new CTabFolder(dialogArea, SWT.BORDER);
       tabFolder.setTabHeight(24);
+      tabFolder.setSelectionBarThickness(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;

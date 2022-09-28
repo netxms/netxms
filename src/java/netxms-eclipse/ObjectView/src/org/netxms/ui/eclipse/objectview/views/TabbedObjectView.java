@@ -129,6 +129,7 @@ public class TabbedObjectView extends ViewPart
 		tabFolder = new CTabFolder(parent, SWT.TOP | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
       tabFolder.setSelectionBarThickness(0);
+      tabFolder.setTabHeight(24);
 		tabFolder.setSimple(true);
 		tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       tabFolder.addSelectionListener(new SelectionAdapter() {

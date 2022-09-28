@@ -323,6 +323,7 @@ public class ObjectFinder extends ViewPart
       searchArea.setLayout(layout);
 
       tabFolder = new CTabFolder(searchArea, SWT.TOP | SWT.FLAT | SWT.MULTI);
+      tabFolder.setSelectionBarThickness(0);
       tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       CTabItem filterTab = new CTabItem(tabFolder, SWT.NONE);
       filterTab.setText("Filter");
