@@ -1272,6 +1272,7 @@ fi
 check_substr "$COMPONENTS" "mariadb"
 if test $? = 0; then
 	DB_DRIVERS="$DB_DRIVERS mariadb"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS mysql"
 fi
 
 check_substr "$COMPONENTS" "pgsql"
