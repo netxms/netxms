@@ -771,6 +771,10 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
             }
             DBFreeResult(hResult);
          }
+         else
+         {
+            success = false;
+         }
          break;
       case DB_SYNTAX_MSSQL:
          success = false;
@@ -790,6 +794,10 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
                success = true; // No PK to drop
             }
             DBFreeResult(hResult);
+         }
+         else
+         {
+            success = false;
          }
          break;
       case DB_SYNTAX_SQLITE:
