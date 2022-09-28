@@ -943,7 +943,7 @@ public class DataCollectionEditor extends ViewPart
             hideModificationWarnings = data.getSaveSelection();
 		   }
 		}
-		
+
 		if ((data == null) || data.isOkPressed())
 		{
          ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, dco, ""); //$NON-NLS-1$

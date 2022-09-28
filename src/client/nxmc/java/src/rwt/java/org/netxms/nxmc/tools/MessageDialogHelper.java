@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,7 +71,7 @@ public class MessageDialogHelper
 	 */
 	public static boolean open(int kind, Shell parent, String title, String message)
 	{
-		return MessageDialog.open(kind, parent, title, message, SWT.SHEET);
+		return MessageDialog.open(kind, parent, title, message, SWT.NONE);
 	}
 
 	/**
@@ -170,39 +170,52 @@ public class MessageDialogHelper
 	{
 		open(MessageDialog.WARNING, parent, title, message);
 	}
-	
+
    /**
-    * Convenience method to open a standard warning dialog with a check box
-    * to remember selection. 
+    * Convenience method to open a standard warning dialog with a check box to remember selection.
     * 
     * @param parent the parent shell of the dialog, or <code>null</code> if none
     * @param title the dialog's title, or <code>null</code> if none
-    * @param label the label for the check box
+    * @param checkboxLabel the label for the check box
     * @param message the message
-    * @return 
+    * @return dialog execution result
     */
-   public static DialogData openWarningWithCheckbox(Shell parent, String title, String label, String message)
+   public static DialogData openWarningWithCheckbox(Shell parent, String title, String checkboxLabel, String message)
    {
-      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(
-            MessageDialog.WARNING, new String[] { JFaceResources.getString(IDialogLabelKeys.OK_LABEL_KEY), JFaceResources.getString(IDialogLabelKeys.CANCEL_LABEL_KEY) }, parent, title, label,
-            message);
+      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(MessageDialog.WARNING, 
+            new String[] { JFaceResources.getString(IDialogLabelKeys.OK_LABEL_KEY), JFaceResources.getString(IDialogLabelKeys.CANCEL_LABEL_KEY) }, parent, title, checkboxLabel, message);
       return msg.openMsg();
    }
 
    /**
-    * Convenience method to open a standard one button (OK) warning dialog with a check box
-    * to remember selection. 
+    * Convenience method to open a warning dialog with custom button labels and a check box to remember selection.
     * 
     * @param parent the parent shell of the dialog, or <code>null</code> if none
     * @param title the dialog's title, or <code>null</code> if none
-    * @param label the label for the check box
+    * @param checkboxLabel the label for the check box
     * @param message the message
-    * @return 
+    * @param buttonLabels button labels
+    * @return dialog execution result
     */
-   public static DialogData openOneButtonWarningWithCheckbox(Shell parent, String title, String label, String message)
+   public static DialogData openWarningWithCheckbox(Shell parent, String title, String checkboxLabel, String message, String[] buttonLabels)
    {
-      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(
-            MessageDialog.WARNING, new String[] { JFaceResources.getString(IDialogLabelKeys.OK_LABEL_KEY) }, parent, title, label, message);
+      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(MessageDialog.WARNING, buttonLabels, parent, title, checkboxLabel, message);
+      return msg.openMsg();
+   }
+
+   /**
+    * Convenience method to open a standard one button (OK) warning dialog with a check box to remember selection.
+    * 
+    * @param parent the parent shell of the dialog, or <code>null</code> if none
+    * @param title the dialog's title, or <code>null</code> if none
+    * @param checkboxLabel the label for the check box
+    * @param message the message
+    * @return dialog execution result
+    */
+   public static DialogData openOneButtonWarningWithCheckbox(Shell parent, String title, String checkboxLabel, String message)
+   {
+      MessageDialogWithCheckbox msg = new MessageDialogWithCheckbox(MessageDialog.WARNING,
+            new String[] { JFaceResources.getString(IDialogLabelKeys.OK_LABEL_KEY) }, parent, title, checkboxLabel, message);
       return msg.openMsg();
    }
 

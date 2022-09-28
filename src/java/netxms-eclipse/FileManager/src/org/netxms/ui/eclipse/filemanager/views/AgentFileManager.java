@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -393,7 +393,6 @@ public class AgentFileManager extends ViewPart
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final NestedVerifyOverwrite verify =  new NestedVerifyOverwrite(agentFile.getType(), newName, true, true, false) {
-               
                @Override
                public void executeAction() throws NXCException, IOException
                {
@@ -408,13 +407,13 @@ public class AgentFileManager extends ViewPart
             };
             verify.run(viewer.getControl().getDisplay());
     
-            if(verify.isOkPressed())
+            if (verify.isOkPressed())
             {
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     if(verify.isOkPressed())
+                     if (verify.isOkPressed())
                         refreshFileOrDirectory();
                      agentFile.setName(newName);
                      viewer.refresh(agentFile, true);
@@ -431,7 +430,7 @@ public class AgentFileManager extends ViewPart
    private void createActions()
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      
+
       actionRefreshDirectory = new Action(Messages.get().AgentFileManager_RefreshFolder, SharedIcons.REFRESH) {
          @Override
          public void run()
@@ -872,7 +871,7 @@ public class AgentFileManager extends ViewPart
          }.start();
       }
    }
-   
+
    class UploadConsoleJob extends ConsoleJob
    {
       private boolean askFolderOverwrite;
@@ -897,7 +896,6 @@ public class AgentFileManager extends ViewPart
       protected void runInternal(IProgressMonitor monitor) throws Exception
       {
          NestedVerifyOverwrite verify = new NestedVerifyOverwrite(AgentFile.DIRECTORY, folder.getName(), askFolderOverwrite, askFileOverwrite, overwrite) {
-            
             @Override
             public void executeAction() throws NXCException, IOException
             {                        
@@ -912,9 +910,9 @@ public class AgentFileManager extends ViewPart
          };
          verify.run(viewer.getControl().getDisplay());
          askFolderOverwrite = verify.askFolderOverwrite();
-         
+
          uploadFilesInFolder(folder, uploadFolder.getFullName()+"/"+remoteFileName, monitor); //$NON-NLS-1$
-         
+
          uploadFolder.setChildren(session.listAgentFiles(uploadFolder, uploadFolder.getFullName(), objectId));
          runInUIThread(new Runnable() {
             @Override
@@ -947,7 +945,6 @@ public class AgentFileManager extends ViewPart
              if (fileEntry.isDirectory()) 
              {
                 NestedVerifyOverwrite verify = new NestedVerifyOverwrite(AgentFile.DIRECTORY, fileEntry.getName(), askFolderOverwrite, askFileOverwrite, overwrite) {
-                   
                    @Override
                    public void executeAction() throws NXCException, IOException
                    {                        
@@ -962,13 +959,12 @@ public class AgentFileManager extends ViewPart
                 };
                 verify.run(viewer.getControl().getDisplay());
                 askFolderOverwrite = verify.askFolderOverwrite();
-                
+
                 uploadFilesInFolder(fileEntry, uploadFolder + "/" + fileEntry.getName(), monitor); //$NON-NLS-1$
              } 
              else 
              {      
                 NestedVerifyOverwrite verify = new NestedVerifyOverwrite(AgentFile.FILE, fileEntry.getName(), askFolderOverwrite, askFileOverwrite, overwrite) {
-                   
                    @Override
                    public void executeAction() throws NXCException, IOException
                    {                        
@@ -978,8 +974,7 @@ public class AgentFileManager extends ViewPart
                          @Override
                          public void setTotalWorkAmount(long workTotal)
                          {
-                            monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(),
-                                  (int)workTotal);
+                            monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(), (int)workTotal);
                          }
 
                          @Override
@@ -996,34 +991,33 @@ public class AgentFileManager extends ViewPart
                    public void executeSameFunctionWithOverwrite() throws NXCException, IOException
                    {
                       session.uploadLocalFileToAgent(objectId, fileEntry, uploadFolder + "/" + fileEntry.getName(), true, new ProgressListener() { //$NON-NLS-1$
-                      private long prevWorkDone = 0;
+                         private long prevWorkDone = 0;
 
-                      @Override
-                      public void setTotalWorkAmount(long workTotal)
-                      {
-                         monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(),
-                               (int)workTotal);
-                      }
+                         @Override
+                         public void setTotalWorkAmount(long workTotal)
+                         {
+                            monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(), (int)workTotal);
+                         }
 
-                      @Override
-                      public void markProgress(long workDone)
-                      {
-                         monitor.worked((int)(workDone - prevWorkDone));
-                         prevWorkDone = workDone;
-                      }
-                   });
-                   monitor.done(); 
+                         @Override
+                         public void markProgress(long workDone)
+                         {
+                            monitor.worked((int)(workDone - prevWorkDone));
+                            prevWorkDone = workDone;
+                         }
+                      });
+                      monitor.done();
                    }
                 };
                 verify.run(viewer.getControl().getDisplay());
                 askFileOverwrite = verify.askFileOverwrite();
-                if(!askFileOverwrite)
+                if (!askFileOverwrite)
                    overwrite = verify.isOkPressed();
              }
          }
      }
    }
-   
+
    /**
     * Upload local folder to agent
     */
@@ -1034,8 +1028,7 @@ public class AgentFileManager extends ViewPart
          return;
 
       final Object[] objects = selection.toArray();
-      final AgentFile upladFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
-            .getParent();
+      final AgentFile upladFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0]).getParent();
 
       final StartClientToAgentFolderUploadDialog dlg = new StartClientToAgentFolderUploadDialog(getSite().getShell());
       if (dlg.open() == Window.OK)
@@ -1644,7 +1637,6 @@ public class AgentFileManager extends ViewPart
    
    /**
     * Nested class that check if file already exist and it should be overwritten
-    *
     */
    abstract class NestedVerifyOverwrite
    {
@@ -1654,7 +1646,7 @@ public class AgentFileManager extends ViewPart
       private boolean askFolderOverwrite;
       private boolean askFileOverwrite;
       private boolean overwrite;
-      
+
       public NestedVerifyOverwrite(int fileType, String fileName, boolean askFolderOverwrite, boolean askFileOverwrite, boolean overwrite)
       {
          type = fileType;
@@ -1664,18 +1656,18 @@ public class AgentFileManager extends ViewPart
          this.overwrite = overwrite;
          okPresseed = true;
       }
-      
+
       public boolean askFolderOverwrite()
       {
          return askFolderOverwrite;
       }
-      
+
       public boolean askFileOverwrite()
       {
          return askFileOverwrite;
       }
-      
-      public void run(Display disp) throws IOException, NXCException
+
+      public void run(Display display) throws IOException, NXCException
       {         
          try
          {
@@ -1683,63 +1675,68 @@ public class AgentFileManager extends ViewPart
          }
          catch(final NXCException e)
          {
-            if(e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST || type == AgentFile.DIRECTORY)
+            if ((e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST) || (type == AgentFile.DIRECTORY))
             {
-               if(askFolderOverwrite)
+               if (askFolderOverwrite)
                {
-                  disp.syncExec(new Runnable() {
+                  display.syncExec(new Runnable() {
                      @Override
                      public void run()
                      {
                         DialogData data = MessageDialogHelper.openOneButtonWarningWithCheckbox(getSite().getShell(), 
-                              String.format("%s already exist", e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File"), 
-                              "Do not show again for this upload", String.format("%s %s already exist",e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name));
+                              "Folder Already Exists", "Do not show again for this upload", String.format("Folder %s already exist", name));
                         askFolderOverwrite = !data.getSaveSelection();
                         okPresseed = false;
                      }
                   });
                }
-            }   
-            else if(e.getErrorCode() == RCC.FILE_ALREADY_EXISTS ||  e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST)
+            }
+            else if ((e.getErrorCode() == RCC.FILE_ALREADY_EXISTS) || (e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST))
             {
-               if(askFileOverwrite)
+               if (askFileOverwrite)
                {
-                  disp.syncExec(new Runnable() {
+                  display.syncExec(new Runnable() {
                      @Override
                      public void run()
                      {
-   
                         DialogData data = MessageDialogHelper.openWarningWithCheckbox(getSite().getShell(), 
-                              String.format("%s overwrite confirmation", type == AgentFile.DIRECTORY ? "Folder" : "File"), 
-                              "Save chose for current upload files",
-                              String.format("%s with %s name already exists. Are you sure you want to overwrite it?", e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name));
+                              String.format("%s Overwrite Confirmation", type == AgentFile.DIRECTORY ? "Folder" : "File"),
+                              "Apply this action to all files",
+                              String.format("%s with name %s already exists. Are you sure you want to overwrite it?", e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name),
+                              new String[] { "&Overwrite", "&Skip" });
                         askFileOverwrite = !data.getSaveSelection();
                         okPresseed = data.isOkPressed();                           
                      }
                   });
-                  if(okPresseed)                     
+                  if (okPresseed)
+                  {
                      executeSameFunctionWithOverwrite();
+                  }
                }
                else
                {
-                  if(overwrite)
+                  if (overwrite)
                   {
                      executeSameFunctionWithOverwrite();
                   }
                }
             }
             else
+            {
                throw e;
+            }
          }
       }
+
       public boolean isOkPressed()
       {
          return okPresseed;
       }
+
       public abstract void executeAction() throws NXCException, IOException;
       public abstract void executeSameFunctionWithOverwrite() throws NXCException, IOException;
    }
-   
+
    /**
     * Custom implementation of ViewerDropAdapter for Agent File Manager
     */
@@ -1758,7 +1755,7 @@ public class AgentFileManager extends ViewPart
          super(viewer);
       }
 
-      /* (non-Javadoc)
+      /**
        * @see org.eclipse.jface.viewers.ViewerDropAdapter#performDrop(java.lang.Object)
        */
       @Override
@@ -1779,7 +1776,7 @@ public class AgentFileManager extends ViewPart
          return true;
       }
 
-      /* (non-Javadoc)
+      /**
        * @see org.eclipse.jface.viewers.ViewerDropAdapter#validateDrop(java.lang.Object, int, org.eclipse.swt.dnd.TransferData)
        */
       @Override

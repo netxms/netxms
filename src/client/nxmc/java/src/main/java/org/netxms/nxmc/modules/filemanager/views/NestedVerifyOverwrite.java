@@ -24,15 +24,18 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCException;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.server.AgentFile;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.DialogData;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Nested class that check if file already exist and it should be overwritten
- *
  */
 public abstract class NestedVerifyOverwrite
 {
+   private final I18n i18n = LocalizationHelper.getI18n(NestedVerifyOverwrite.class);
+
    private boolean okPresseed;
    private int type;
    private String name;
@@ -51,7 +54,7 @@ public abstract class NestedVerifyOverwrite
       okPresseed = true;
       this.shell = shell;
    }
-   
+
    public boolean askFolderOverwrite()
    {
       return askFolderOverwrite;
@@ -61,8 +64,8 @@ public abstract class NestedVerifyOverwrite
    {
       return askFileOverwrite;
    }
-   
-   public void run(Display disp) throws IOException, NXCException
+
+   public void run(Display display) throws IOException, NXCException
    {         
       try
       {
@@ -70,59 +73,65 @@ public abstract class NestedVerifyOverwrite
       }
       catch(final NXCException e)
       {
-         if(e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST || type == AgentFile.DIRECTORY)
+         if ((e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST) || (type == AgentFile.DIRECTORY))
          {
-            if(askFolderOverwrite)
+            if (askFolderOverwrite)
             {
-               disp.syncExec(new Runnable() {
+               display.syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
                      DialogData data = MessageDialogHelper.openOneButtonWarningWithCheckbox(shell, 
-                           String.format("%s already exist", e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File"), 
-                           "Do not show again for this upload", String.format("%s %s already exist",e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name));
+                           i18n.tr("Folder Already Exists"), i18n.tr("Do not show again for this upload"), String.format(i18n.tr("Folder %s already exist"), name));
                      askFolderOverwrite = !data.getSaveSelection();
                      okPresseed = false;
                   }
                });
             }
          }   
-         else if(e.getErrorCode() == RCC.FILE_ALREADY_EXISTS ||  e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST)
+         else if ((e.getErrorCode() == RCC.FILE_ALREADY_EXISTS) || (e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST))
          {
-            if(askFileOverwrite)
+            if (askFileOverwrite)
             {
-               disp.syncExec(new Runnable() {
+               display.syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
-
-                     DialogData data = MessageDialogHelper.openWarningWithCheckbox(shell, 
-                           String.format("%s overwrite confirmation", type == AgentFile.DIRECTORY ? "Folder" : "File"), 
-                           "Save chose for current upload files",
-                           String.format("%s with %s name already exists. Are you sure you want to overwrite it?", e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name));
+                     DialogData data = MessageDialogHelper.openWarningWithCheckbox(shell,
+                           String.format(i18n.tr("%s Overwrite Confirmation"), type == AgentFile.DIRECTORY ? "Folder" : "File"),
+                           i18n.tr("Apply this action to all files"),
+                           String.format(i18n.tr("%s with name %s already exists. Are you sure you want to overwrite it?"), e.getErrorCode() == RCC.FOLDER_ALREADY_EXIST ? "Folder" : "File", name),
+                           new String[] { i18n.tr("&Overwrite"), i18n.tr("&Skip") });
                      askFileOverwrite = !data.getSaveSelection();
                      okPresseed = data.isOkPressed();                           
                   }
                });
-               if(okPresseed)                     
+               if (okPresseed)
+               {
                   executeSameFunctionWithOverwrite();
+               }
             }
             else
             {
-               if(overwrite)
+               if (overwrite)
                {
                   executeSameFunctionWithOverwrite();
                }
             }
          }
          else
+         {
             throw e;
+         }
       }
    }
+
    public boolean isOkPressed()
    {
       return okPresseed;
    }
+
    public abstract void executeAction() throws NXCException, IOException;
+
    public abstract void executeSameFunctionWithOverwrite() throws NXCException, IOException;
 }

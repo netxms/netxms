@@ -117,7 +117,7 @@ public class AgentFileManager extends ObjectView
    private Action actionCalculateFolderSize;
    private Action actionCopyFilePath;
    private Action actionCopyFileName;
-   
+
    /**
     * Constructor
     */
@@ -273,7 +273,6 @@ public class AgentFileManager extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final NestedVerifyOverwrite verify =  new NestedVerifyOverwrite(getWindow().getShell(), agentFile.getType(), newName, true, true, false) {
-               
                @Override
                public void executeAction() throws NXCException, IOException
                {
@@ -1080,7 +1079,7 @@ public class AgentFileManager extends ObjectView
          super(viewer);
       }
 
-      /* (non-Javadoc)
+      /**
        * @see org.eclipse.jface.viewers.ViewerDropAdapter#performDrop(java.lang.Object)
        */
       @Override
@@ -1101,7 +1100,7 @@ public class AgentFileManager extends ObjectView
          return true;
       }
 
-      /* (non-Javadoc)
+      /**
        * @see org.eclipse.jface.viewers.ViewerDropAdapter#validateDrop(java.lang.Object, int, org.eclipse.swt.dnd.TransferData)
        */
       @Override
