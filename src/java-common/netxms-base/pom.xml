@@ -9,6 +9,7 @@
    <url>http://www.netxms.org</url>
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
    </properties>
    <licenses>

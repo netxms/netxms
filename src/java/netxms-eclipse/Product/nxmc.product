@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="%product.name" uid="org.netxms.ui.eclipse.console.product" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="4.1.0" useFeatures="false" includeLaunchers="true">
+<product name="%product.name" uid="org.netxms.ui.eclipse.console.product" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="4.1.0" useFeatures="false" includeLaunchers="true" autoIncludeRequirements="true">
 
    <aboutInfo>
       <image path="/Core/icons/about.png"/>
@@ -747,16 +747,6 @@ Copyright (c) 2003-2022 Raden Solutions
       <plugin id="org.eclipse.osgi.util.nl_pt" fragment="true"/>
       <plugin id="org.eclipse.osgi.util.nl_pt_BR" fragment="true"/>
       <plugin id="org.eclipse.osgi.util.nl_ru" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_ar" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_cs" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_de" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_es" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_fr" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_iw" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_pt" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_pt_BR" fragment="true"/>
-      <plugin id="org.eclipse.pde.ds.lib.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.swt"/>
       <plugin id="org.eclipse.swt.cocoa.macosx.aarch64" fragment="true"/>
       <plugin id="org.eclipse.swt.cocoa.macosx.x86_64" fragment="true"/>

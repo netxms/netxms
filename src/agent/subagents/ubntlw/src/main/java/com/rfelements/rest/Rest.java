@@ -66,12 +66,11 @@ public class Rest {
         try {
             ctx.loadTrustMaterial(KeyStore.getInstance(KeyStore.getDefaultType()), new TrustSelfSignedStrategy());
             client = HttpClientBuilder.create().setDefaultRequestConfig(request.build()).setSSLHostnameVerifier(new HostnameVerifier() {
-
                 @Override
                 public boolean verify(String s, SSLSession sslSession) {
                     return true;
                 }
-            }).setSslcontext(ctx.build()).setDefaultCookieStore(cs).build();
+            }).setSSLContext(ctx.build()).setDefaultCookieStore(cs).build();
         } catch (Exception e) {
            Platform.writeLog(LogLevel.ERROR, e.getLocalizedMessage());
             throw new CollectorException(e.getMessage(), e.getCause());

@@ -120,6 +120,7 @@ public class TimePeriodCompactSelector extends Composite
    /**
     * Show selector window
     */
+   @SuppressWarnings("unused")
    private void showSelector()
    {
       selectorShell = new Shell(getShell(), SWT.NO_TRIM);

@@ -31,6 +31,7 @@ import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.ST;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
@@ -1233,6 +1234,16 @@ public class WidgetHelper
     */
    public static void setControlCustomType(Control control, String type)
    {
+   }
+
+   /**
+    * Disable selection bar on tab folder (compatibility layer for RAP, has no effect in web build).
+    *
+    * @param tabFolder tab folder to disable selection bar in
+    */
+   public static void disableTabFolderSelectionBar(CTabFolder tabFolder)
+   {
+      tabFolder.setSelectionBarThickness(0);
    }
 
    /**

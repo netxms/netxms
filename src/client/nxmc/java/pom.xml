@@ -41,7 +41,7 @@
       <build.finalName>${project.artifactId}-${project.version}</build.finalName>
       <lib.scope>compile</lib.scope>
       <rwt.version>3.22.0</rwt.version>
-      <swt.version>3.118.0</swt.version>
+      <swt.version>3.121.0</swt.version>
       <packaging.type>jar</packaging.type>
    </properties>
    <profiles>
@@ -285,7 +285,7 @@
             <dependency>
                <groupId>org.eclipse.platform</groupId>
                <artifactId>org.eclipse.jface</artifactId>
-               <version>3.24.0</version>
+               <version>3.27.0</version>
                <scope>${lib.scope}</scope>
                <exclusions>
                   <exclusion>

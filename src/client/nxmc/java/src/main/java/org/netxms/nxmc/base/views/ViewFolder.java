@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -84,6 +85,7 @@ public class ViewFolder extends ViewContainer
       setLayout(new FillLayout());
       tabFolder = new CTabFolder(this, SWT.TOP | SWT.BORDER);
       tabFolder.setUnselectedCloseVisible(true);
+      WidgetHelper.disableTabFolderSelectionBar(tabFolder);
       tabFolder.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

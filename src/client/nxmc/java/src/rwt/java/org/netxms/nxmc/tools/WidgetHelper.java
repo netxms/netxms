@@ -36,6 +36,7 @@ import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.scripting.ClientListener;
 import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
@@ -1304,6 +1305,15 @@ public class WidgetHelper
    public static void setControlCustomType(Control control, String type)
    {
       control.setData(RWT.CUSTOM_VARIANT, type);
+   }
+
+   /**
+    * Disable selection bar on tab folder (compatibility layer for RAP, has no effect in web build).
+    *
+    * @param tabFolder tab folder to disable selection bar in
+    */
+   public static void disableTabFolderSelectionBar(CTabFolder tabFolder)
+   {
    }
 
    /**
