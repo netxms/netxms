@@ -484,7 +484,7 @@ void FileDeliveryPolicy::exportAdditionalData(StringBuffer &xml)
          if (fd != -1)
          {
             auto fileContent = MemAllocArrayNoInit<BYTE>(fileSize);
-            if (_read(fd, fileContent, static_cast<unsigned int>(fileSize)) == fileSize)
+            if (_read(fd, fileContent, static_cast<unsigned int>(fileSize)) == static_cast<ssize_t>(fileSize))
             {
                xml.append(_T("\t\t\t\t\t\t<file>\n\t\t\t\t\t\t\t<name>"));
                xml.append(EscapeStringForXML2(fileName));
@@ -585,7 +585,7 @@ void FileDeliveryPolicy::importAdditionalData(const ConfigEntry *config)
                fileContent = buffer;
             }
 
-            bool success = (_write(fd, fileContent, fileSize) == fileSize);
+            bool success = (_write(fd, fileContent, fileSize) == static_cast<ssize_t>(fileSize));
             _close(fd);
             MemFree(fileContent);
 

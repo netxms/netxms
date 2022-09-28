@@ -2598,7 +2598,6 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
          shared_ptr<GeoArea> area = GetGeoArea(m_geoAreas.get(i));
          if ((area != nullptr) && area->containsLocation(geoLocation))
          {
-            bool insideArea = true;
             if (!m_geoLocationRestrictionsViolated)
             {
                nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Device %s [%u] is within restricted area %s [%u] (current coordinates %s %s)"),

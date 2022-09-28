@@ -304,8 +304,8 @@ NotificationMessage::~NotificationMessage()
  * Notification channel constructor
  */
 NotificationChannel::NotificationChannel(NCDriver *driver, NCDriverServerStorageManager *storageManager, const TCHAR *name,
-         const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) :
-                  m_notificationQueue(64, Ownership::True), m_driverLock(MutexType::FAST)
+      const TCHAR *description, const TCHAR *driverName, char *config, const NCConfigurationTemplate *confTemplate, const TCHAR *errorMessage) :
+            m_driverLock(MutexType::FAST), m_notificationQueue(64, Ownership::True)
 {
    m_driver = driver;
    m_storageManager = storageManager;

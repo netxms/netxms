@@ -108,7 +108,6 @@ bool BusinessServicePrototype::saveToDatabase(DB_HANDLE hdb)
             _T("instance_method"), _T("instance_data"), _T("instance_filter"), _T("instance_source"), _T("object_status_threshold"), _T("dci_status_threshold"), nullptr
       };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("business_service_prototypes"), _T("id"), m_id, columns);
-      bool success = false;
       if (hStmt != nullptr)
       {
          lockProperties();
@@ -122,6 +121,10 @@ bool BusinessServicePrototype::saveToDatabase(DB_HANDLE hdb)
          success = DBExecute(hStmt);
          unlockProperties();
          DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
       }
    }
    return success;

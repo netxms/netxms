@@ -69,7 +69,7 @@ NetworkMap::NetworkMap() : super(), m_elements(0, 64, Ownership::True), m_links(
 /**
  * Network map object default constructor
  */
-NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects), m_seedObjects(src.m_seedObjects)
+NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_seedObjects(src.m_seedObjects), m_elements(0, 64, Ownership::True), m_links(0, 64, Ownership::True), m_deletedObjects(src.m_deletedObjects)
 {
    m_mapType = src.m_mapType;
    m_discoveryRadius = src.m_discoveryRadius;
@@ -99,7 +99,6 @@ NetworkMap::NetworkMap(const NetworkMap &src) : super(), m_elements(0, 64, Owner
    m_isHidden = true;
    setCreationTime();
 }
-
 
 /**
  * Create network map object from user session

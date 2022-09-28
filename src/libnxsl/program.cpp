@@ -65,7 +65,7 @@ static const char *s_nxslCommandMnemonic[] =
  * Constructor
  */
 NXSL_ProgramBuilder::NXSL_ProgramBuilder(NXSL_Environment *env) : NXSL_ValueManager(), m_instructionSet(256, 256),
-         m_constants(this, Ownership::True), m_functions(64, 64), m_requiredModules(0, 16)
+         m_requiredModules(0, 16), m_constants(this, Ownership::True), m_functions(64, 64)
 {
    m_environment = env;
    m_expressionVariables = nullptr;

@@ -503,6 +503,10 @@ uint32_t UpdateWellKnownPortList(const NXCPMessage& request, const TCHAR *tag, i
             rcc = RCC_SUCCESS;
          }
       }
+      else
+      {
+         rcc = RCC_DB_FAILURE;
+      }
       DBFreeStatement(hStmt);
    }
    else

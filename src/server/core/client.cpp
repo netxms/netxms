@@ -52,7 +52,7 @@ static bool RegisterClientSession(ClientSession *session)
 {
    bool success;
    s_sessionListLock.writeLock();
-   if (s_freePos < g_maxClientSessions)
+   if (s_freePos < static_cast<size_t>(g_maxClientSessions))
    {
       // Select socket poller
       BackgroundSocketPollerHandle *sp = nullptr;

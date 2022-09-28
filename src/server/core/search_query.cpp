@@ -34,7 +34,7 @@ SearchQuery::SearchQuery(const String &searchString)
 
    const TCHAR *input = searchString;
    size_t inputSize = searchString.length();
-   int position = 0, start = -1;
+   size_t position = 0, start = 0;
    int state = 0;
    bool negateNext = false;
    StringSet *attributeValues;

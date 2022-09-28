@@ -247,7 +247,7 @@ static uint32_t GetCommentCount(DB_HANDLE hdb, uint32_t alarmId)
  */
 Alarm::Alarm(Event *event, uint32_t parentAlarmId, const TCHAR *rcaScriptName, const uuid& ruleGuid, const TCHAR *ruleDescription,
          const TCHAR *message, const TCHAR *key, const TCHAR *impact, int severity, uint32_t timeout,
-         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_alarmCategoryList(alarmCategoryList), m_relatedEvents(16, 16)
+         uint32_t timeoutEvent, uint32_t ackTimeout, const IntegerArray<uint32_t>& alarmCategoryList) : m_relatedEvents(16, 16), m_alarmCategoryList(alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_parentAlarmId = parentAlarmId;
@@ -357,7 +357,7 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row) : m_relatedEvents(16, 16
 /**
  * Copy constructor
  */
-Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_alarmCategoryList(src->m_alarmCategoryList), m_relatedEvents(16, 16), m_subordinateAlarms(src->m_subordinateAlarms)
+Alarm::Alarm(const Alarm *src, bool copyEvents, uint32_t notificationCode) : m_relatedEvents(16, 16), m_alarmCategoryList(src->m_alarmCategoryList), m_subordinateAlarms(src->m_subordinateAlarms)
 {
    m_sourceEventId = src->m_sourceEventId;
    m_alarmId = src->m_alarmId;

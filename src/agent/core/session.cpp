@@ -90,9 +90,9 @@ LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstrac
 /**
  * Client session class constructor
  */
-CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr,
-         bool masterServer, bool controlServer) : m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True),
-         m_channel(channel), m_socketWriteMutex(MutexType::FAST), m_responseConditionMap(Ownership::True)
+CommSession::CommSession(const shared_ptr<AbstractCommChannel>& channel, const InetAddress &serverAddr, bool masterServer, bool controlServer) :
+         m_channel(channel), m_downloadFileMap(Ownership::True), m_tcpProxies(0, 16, Ownership::True), m_socketWriteMutex(MutexType::FAST),
+         m_tcpProxyLock(MutexType::FAST), m_responseConditionMap(Ownership::True)
 {
    m_id = InterlockedIncrement(&s_sessionId);
    m_index = INVALID_INDEX;

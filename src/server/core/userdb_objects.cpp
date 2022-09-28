@@ -845,7 +845,7 @@ void User::modifyFromMessage(const NXCPMessage& msg)
       StringSet currentMethods;
       size_t count = msg.getFieldAsUInt32(VID_2FA_METHOD_COUNT);
       uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
-      for(int i = 0; i < count; i++)
+      for(size_t i = 0; i < count; i++)
       {
          TCHAR methodName[MAX_OBJECT_NAME];
          msg.getFieldAsString(fieldId, methodName, MAX_OBJECT_NAME);

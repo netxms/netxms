@@ -667,8 +667,6 @@ static bool IsNetxmsdProcess(UINT32 pid)
  */
 static bool PeerNodeIsRunning(const InetAddress& addr)
 {
-   bool result = false;
-
    TCHAR keyFile[MAX_PATH];
    _tcscpy(keyFile, g_netxmsdDataDir);
    _tcscat(keyFile, DFILE_KEYS);

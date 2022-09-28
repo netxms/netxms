@@ -666,6 +666,10 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
                   _close(fd);
                   MemFree(data);
                }
+               else
+               {
+                  success = false;
+               }
                ft->mutex.unlock();
                if (success && msg->isEndOfFile())
                {
@@ -677,7 +681,7 @@ void ClientSession::processFileTransferMessage(NXCPMessage *msg)
 
                   NXCPMessage response(CMD_REQUEST_COMPLETED, msg->getId());
                   response.setField(VID_RCC, RCC_COMM_FAILURE);
-                  sendMessage(&response);
+                  sendMessage(response);
 
                   ft->failure = true;
                   ft->active = false;
@@ -6263,7 +6267,7 @@ void ClientSession::getAlarms(const NXCPMessage& request)
  */
 void ClientSession::getAlarm(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
    uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
@@ -6273,11 +6277,11 @@ void ClientSession::getAlarm(const NXCPMessage& request)
       // User should have "view alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.setField(VID_RCC, GetAlarm(alarmId, m_dwUserId, &msg, this));
+         response.setField(VID_RCC, GetAlarm(alarmId, m_dwUserId, &response, this));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on get alarm for object %s"), object->getName());
       }
    }
@@ -6285,10 +6289,10 @@ void ClientSession::getAlarm(const NXCPMessage& request)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -6296,14 +6300,10 @@ void ClientSession::getAlarm(const NXCPMessage& request)
  */
 void ClientSession::getAlarmEvents(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
+   uint32_t alarmId = request.getFieldAsUInt32(VID_ALARM_ID);
    shared_ptr<NetObj> object = GetAlarmSourceObject(alarmId);
    if (object != nullptr)
    {
@@ -6311,11 +6311,11 @@ void ClientSession::getAlarmEvents(const NXCPMessage& request)
 		// system-wide "view event log" access
       if ((m_systemAccessRights & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.setField(VID_RCC, GetAlarmEvents(alarmId, m_dwUserId, &msg, this));
+         response.setField(VID_RCC, GetAlarmEvents(alarmId, m_dwUserId, &response, this));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on get alarm events for object %s"), object->getName());
       }
    }
@@ -6323,11 +6323,10 @@ void ClientSession::getAlarmEvents(const NXCPMessage& request)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(&response);
 }
 
 /**
@@ -6335,14 +6334,10 @@ void ClientSession::getAlarmEvents(const NXCPMessage& request)
  */
 void ClientSession::acknowledgeAlarm(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId;
+   uint32_t alarmId = 0;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
@@ -6363,14 +6358,14 @@ void ClientSession::acknowledgeAlarm(const NXCPMessage& request)
       // User should have "acknowledge alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			msg.setField(VID_RCC,
+			response.setField(VID_RCC,
             byHelpdeskRef ?
             AckAlarmByHDRef(hdref, this, request.getFieldAsUInt16(VID_STICKY_FLAG) != 0, request.getFieldAsUInt32(VID_TIMESTAMP)) :
             AckAlarmById(alarmId, this, request.getFieldAsUInt16(VID_STICKY_FLAG) != 0, request.getFieldAsUInt32(VID_TIMESTAMP), false));
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Access denied on acknowledged alarm on object %s"), object->getName());
       }
    }
@@ -6378,11 +6373,10 @@ void ClientSession::acknowledgeAlarm(const NXCPMessage& request)
    {
       // Normally, for existing alarms object will not be nullptr,
       // so we assume that alarm id is invalid
-      msg.setField(VID_RCC, RCC_INVALID_ALARM_ID);
+      response.setField(VID_RCC, RCC_INVALID_ALARM_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -6414,7 +6408,7 @@ void ClientSession::resolveAlarm(const NXCPMessage& request, bool terminate)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and its source object
-   uint32_t alarmId;
+   uint32_t alarmId = 0;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
@@ -6573,7 +6567,7 @@ void ClientSession::unlinkHelpdeskIssue(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   uint32_t alarmId;
+   uint32_t alarmId = 0;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
@@ -6656,7 +6650,7 @@ void ClientSession::updateAlarmComment(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get alarm id and it's source object
-   uint32_t alarmId;
+   uint32_t alarmId = 0;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    shared_ptr<NetObj> object;
    bool byHelpdeskRef;
@@ -6677,7 +6671,7 @@ void ClientSession::updateAlarmComment(const NXCPMessage& request)
       // User should have "update alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			UINT32 commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
+			uint32_t commentId = request.getFieldAsUInt32(VID_COMMENT_ID);
 			TCHAR *text = request.getFieldAsString(VID_COMMENTS);
 			response.setField(VID_RCC,
             byHelpdeskRef ?
@@ -10209,7 +10203,7 @@ void ClientSession::getDciMeasurementUnits(const NXCPMessage& request)
 
    uint32_t returnCount = 0;
    uint32_t fieldId = VID_DCI_LIST_BASE;
-   for(int i = 0; i < count; i++)
+   for(size_t i = 0; i < count; i++)
    {
       shared_ptr<NetObj> object = FindObjectById(nodeList[i]);
       if (object != nullptr && object->isDataCollectionTarget())

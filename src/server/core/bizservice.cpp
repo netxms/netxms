@@ -239,7 +239,6 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
    {
       static const TCHAR *columns[] = { _T("prototype_id"), _T("instance"), _T("object_status_threshold"), _T("dci_status_threshold"), nullptr };
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("business_services"), _T("id"), m_id, columns);
-      bool success = false;
       if (hStmt != nullptr)
       {
          lockProperties();
@@ -251,6 +250,10 @@ bool BusinessService::saveToDatabase(DB_HANDLE hdb)
          success = DBExecute(hStmt);
          unlockProperties();
          DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
       }
    }
 
@@ -439,7 +442,6 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
 
    nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("BusinessService::statusPoll(%s [%u]): poll started"), m_name, m_id);
    sendPollerMsg(_T("Starting status poll of business service %s\r\n"), m_name);
-   int prevState = m_serviceState;
 
    poller->setStatus(_T("executing checks"));
    sendPollerMsg(_T("Executing business service checks\r\n"));

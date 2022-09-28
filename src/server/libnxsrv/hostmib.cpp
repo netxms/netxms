@@ -87,7 +87,7 @@ bool HostMibStorageEntry::getMetric(const TCHAR *metric, TCHAR *buffer, size_t l
 /**
  * Constructor
  */
-HostMibDriverData::HostMibDriverData() : DriverData(), m_storageCacheMutex(MutexType::FAST), m_storage(16, 16, Ownership::True)
+HostMibDriverData::HostMibDriverData() : DriverData(), m_storage(16, 16, Ownership::True), m_storageCacheMutex(MutexType::FAST)
 {
    m_storageCacheTimestamp = 0;
 }

@@ -27,7 +27,7 @@
 /**
  * Default constructor for the class
  */
-NObject::NObject() : m_customAttributes(Ownership::True), m_parentList(8, 8), m_childList(0, 32), m_customAttributeLock(MutexType::FAST)
+NObject::NObject() : m_childList(0, 32), m_parentList(8, 8), m_customAttributes(Ownership::True), m_customAttributeLock(MutexType::FAST)
 {
    m_id = 0;
    m_name[0] = 0;

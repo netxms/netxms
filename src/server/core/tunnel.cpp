@@ -1067,7 +1067,7 @@ void AgentTunnel::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 /**
  * Channel constructor
  */
-AgentTunnelCommChannel::AgentTunnelCommChannel(const shared_ptr<AgentTunnel>& tunnel, uint32_t id) : m_buffer(65536, 65536), m_tunnel(tunnel)
+AgentTunnelCommChannel::AgentTunnelCommChannel(const shared_ptr<AgentTunnel>& tunnel, uint32_t id) : m_tunnel(tunnel), m_buffer(65536, 65536)
 {
    m_id = id;
    m_active = true;

@@ -113,7 +113,7 @@ static void LoadDevices()
 
    if (hResult != NULL)
    {
-      UINT32 nRows = DBGetNumRows(hResult);
+      int nRows = DBGetNumRows(hResult);
       g_deviceMapMutex.lock();
       for(int i = 0; i < nRows; i++)
       {
