@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -108,8 +108,8 @@ struct ThreadPool
    SynchronizedObjectMemoryPool<WorkRequest> workRequestMemoryPool;
 
    ThreadPool(const TCHAR *name, int minThreads, int maxThreads, int stackSize) :
-         queue(64, Ownership::False), serializationQueues(Ownership::True), schedulerQueue(16, 16, Ownership::False),
-         mutex(MutexType::FAST), serializationLock(MutexType::FAST), schedulerLock(MutexType::FAST), maintThreadWakeup(false)
+         mutex(MutexType::FAST), maintThreadWakeup(false), queue(64, Ownership::False), serializationQueues(Ownership::True),
+         serializationLock(MutexType::FAST), schedulerQueue(16, 16, Ownership::False), schedulerLock(MutexType::FAST)
    {
       this->name = (name != nullptr) ? MemCopyString(name) : MemCopyString(_T("NONAME"));
       this->minThreads = std::max(minThreads, 1);

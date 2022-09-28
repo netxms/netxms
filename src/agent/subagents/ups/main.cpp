@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006-2021 Victor Kirhenshtein
+** Copyright (C) 2006-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ static bool AddDeviceFromConfig(const TCHAR *configString)
 	const TCHAR *ptr;
 	TCHAR *eptr;
 	TCHAR port[MAX_PATH], name[MAX_DB_STRING] = _T("");
-	int state, field, deviceIndex, pos, protocol;
+	int state, field, deviceIndex = 0, pos, protocol = 0;
 
 	// Parse line
 	TCHAR *currField = MemAllocString(_tcslen(configString) + 1);

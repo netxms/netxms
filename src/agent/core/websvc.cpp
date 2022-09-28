@@ -510,7 +510,6 @@ uint32_t ServiceEntry::getParams(StringList *params, NXCPMessage *response)
  */
 void ServiceEntry::getListFromXML(const TCHAR *path, StringList *result)
 {
-   uint32_t fieldId = VID_PARAM_LIST_BASE;
    if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 9)
       nxlog_debug_tag(DEBUG_TAG, 9, _T("XML: %s"), m_content.xml->createXml().cstr());
    nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromXML(): Get child tag list for path \"%s\""), path);
@@ -532,7 +531,6 @@ uint32_t ServiceEntry::getListFromText(const TCHAR *pattern, StringList *resultL
 {
    uint32_t retVal = ERR_SUCCESS;
    StringList *dataLines = String::split(m_content.text, _tcslen(m_content.text), _T("\n"));
-   uint32_t fieldId = VID_PARAM_LIST_BASE;
    nxlog_debug_tag(DEBUG_TAG, 8, _T("ServiceEntry::getListFromText(): get list of matched lines for pattern \"%s\""), pattern);
 
    const char *eptr;

@@ -75,7 +75,7 @@ off_t ByteStream::seek(off_t offset, int origin)
       default:
          return -1;
    }
-   if ((pos < 0) || (pos > m_size))
+   if ((pos < 0) || (pos > static_cast<off_t>(m_size)))
       return -1;
    m_pos = pos;
    return pos;
@@ -475,7 +475,7 @@ template<typename T, size_t (*Reader)(const T*, ssize_t, WCHAR*, size_t), T (*Sw
    T localBuffer[1024];
    T* conversionBuffer = (length < 1024) ? localBuffer : MemAllocArrayNoInit<T>(length);
    const T* s = reinterpret_cast<const T*>(source);
-   for (int i = 0; i < length; i++)
+   for (size_t i = 0; i < length; i++)
       conversionBuffer[i] = Swapper(*s++);
 
    size_t count = Reader(conversionBuffer, length, destination, length);
@@ -639,7 +639,7 @@ bool ByteStream::save(int f)
 #ifdef _WIN32
    return _write(f, m_data, static_cast<unsigned int>(m_size)) == static_cast<int>(m_size);
 #else
-   return ::write(f, m_data, m_size) == m_size;
+   return ::write(f, m_data, m_size) == static_cast<ssize_t>(m_size);
 #endif
 }
 

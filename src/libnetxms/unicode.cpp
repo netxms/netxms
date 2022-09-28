@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2021 Raden Solutions
+ ** Copyright (C) 2003-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -337,10 +337,10 @@ static size_t MultiByteToWideCharIconv(const char *codepage, const char *src, ss
    {
       count = (dstLen * sizeof(WCHAR) - outbytes) / sizeof(WCHAR);
    }
-   if (((char *) outbuf - (char *) dst > sizeof(WCHAR)) && (*dst == 0xFEFF))
+   if ((static_cast<size_t>(outbuf - (char *)dst) > sizeof(WCHAR)) && (*dst == 0xFEFF))
    {
       // Remove UNICODE byte order indicator if presented
-      memmove(dst, &dst[1], (char *) outbuf - (char *) dst - sizeof(WCHAR));
+      memmove(dst, &dst[1], outbuf - (char *)dst - sizeof(WCHAR));
       outbuf -= sizeof(WCHAR);
       count--;
    }

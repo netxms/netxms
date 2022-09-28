@@ -339,7 +339,7 @@ protected:
 
 	// --- constructors ---
    DCObject(const shared_ptr<DataCollectionOwner>& owner);
-   DCObject(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+   DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description = nullptr, const TCHAR *systemTag = nullptr);
 	DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& owner);

@@ -1852,53 +1852,6 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
 }
 
 /**
- * Prepare list of file parts
- */
-void AgentConnection::prepareFilePartList(const TCHAR *localFile, const TCHAR *destinationFile, StringList *partNames, ObjectArray<FilePartInfo> *fileInfo)
-{
-   uint64_t localFileSize = FileSize(localFile);
-
-   int handle = _topen(localFile, O_RDONLY | O_BINARY);
-   BYTE *buffer = (handle != -1) ? MemAllocArrayNoInit<BYTE>(FILE_PART_SIZE) : nullptr;
-
-   for(int i = 0; localFileSize > 0; i++)
-   {
-      TCHAR partFileName[MAX_PATH];
-      _sntprintf(partFileName, MAX_PATH, _T("%s.part%d"), destinationFile, i);
-      partNames->add(partFileName);
-
-      auto info = new FilePartInfo();
-      info->m_name = MemCopyString(partFileName);
-      info->m_offset = FILE_PART_SIZE * i;
-      if (localFileSize > FILE_PART_SIZE)
-      {
-         info->m_size = FILE_PART_SIZE;
-         localFileSize -= FILE_PART_SIZE;
-      }
-      else
-      {
-         info->m_size = static_cast<uint32_t>(localFileSize);
-         localFileSize = 0;
-      }
-
-      if ((handle != -1) && _read(handle, buffer, info->m_size) == info->m_size)
-      {
-         CalculateMD5Hash(buffer, info->m_size, info->m_hash);
-      }
-      else
-      {
-         debugPrintf(4, _T("Cannot calculate MD5 for file chunks while uploading file %s"), localFile);
-      }
-
-      fileInfo->add(info);
-   }
-
-   if (handle != -1)
-      _close(handle);
-   MemFree(buffer);
-}
-
-/**
  * Change file owner
  */
 uint32_t AgentConnection::changeFileOwner(const TCHAR *file, const TCHAR *newOwner, const TCHAR *newGroup)

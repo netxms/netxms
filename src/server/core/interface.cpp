@@ -740,7 +740,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 void Interface::icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    // Use ICMP ping as a last option
-	UINT32 icmpProxy = nodeIcmpProxy;
+	uint32_t icmpProxy = nodeIcmpProxy;
 
 	if (IsZoningEnabled() && (m_zoneUIN != 0) && (icmpProxy == 0))
 	{

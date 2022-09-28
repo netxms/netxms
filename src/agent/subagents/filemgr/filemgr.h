@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014 Raden Solutions
+ ** Copyright (C) 2014-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -85,8 +85,7 @@ private:
    void unlock() { m_mutex.unlock(); }
 
 public:
-   MonitoredFileList();
-   ~MonitoredFileList();
+   MonitoredFileList() : m_mutex(MutexType::FAST), m_files(16, 16, Ownership::True) {}
 
    void add(const TCHAR *fileName);
    bool contains(const TCHAR *fileName);

@@ -71,9 +71,10 @@ AsteriskSystem *AsteriskSystem::createFromConfig(ConfigEntry *config, bool defau
  * Constructor
  */
 AsteriskSystem::AsteriskSystem(const TCHAR *name) :
-         m_eventListeners(0, 16, Ownership::False), m_peerEventCounters(Ownership::True), m_peerRTCPStatistic(Ownership::True),
-         m_rtcpData(Ownership::True), m_registrationTests(Ownership::True), m_requestCompletion(false),
-         m_eventListenersLock(MutexType::FAST), m_eventCounterLock(MutexType::FAST)
+         m_requestCompletion(false), m_eventListeners(0, 16, Ownership::False), m_eventListenersLock(MutexType::FAST),
+         m_peerEventCounters(Ownership::True), m_eventCounterLock(MutexType::FAST), m_rtcpData(Ownership::True),
+         m_peerRTCPStatistic(Ownership::True), m_rtcpLock(MutexType::FAST), m_registrationTests(Ownership::True)
+
 {
    m_name = MemCopyString(name);
    m_port = 5038;

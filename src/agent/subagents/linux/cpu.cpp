@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -188,14 +188,15 @@ static void CpuUsageCollector()
 /**
  * CPU usage collector thread
  */
-static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
+static void CpuUsageCollectorThread()
 {
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("CPU usage collector thread started"));
 	while(m_stopCollectorThread == false)
 	{
 		CpuUsageCollector();
 		ThreadSleepMs(1000); // sleep 1 second
 	}
-	return THREAD_OK;
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("CPU usage collector thread stopped"));
 }
 
 /**
@@ -218,11 +219,8 @@ static uint32_t GetCpuCountFromStat()
       if (fgets(buffer, sizeof(buffer), hStat) == nullptr)
          break;
 
-      int ret;
       if (buffer[0] == 'c' && buffer[1] == 'p' && buffer[2] == 'u' && buffer[3] != ' ')
-      {
          count++;
-      }
    }
 
    fclose(hStat);
@@ -234,8 +232,6 @@ static uint32_t GetCpuCountFromStat()
  */
 void StartCpuUsageCollector()
 {
-	int i, j;
-
    uint32_t cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
    uint32_t cpuCount2 = GetCpuCountFromStat();
    cpuCount = std::max(cpuCount, cpuCount2);
@@ -273,7 +269,7 @@ void StartCpuUsageCollector()
 
 	// fill all slots with current cpu usage
 #define FILL(x) memcpy(x + i, x, sizeof(float));
-	for (i = 0; i < (CPU_USAGE_SLOTS * cpuCount) - 1; i++)
+	for (uint32_t i = 0; i < (CPU_USAGE_SLOTS * cpuCount) - 1; i++)
 	{
 			FILL(m_cpuUsage);
 			FILL(m_cpuUsageUser);
@@ -289,7 +285,7 @@ void StartCpuUsageCollector()
 #undef FILL
 
 	// start collector
-	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread, 0, NULL);
+	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread);
 }
 
 /**

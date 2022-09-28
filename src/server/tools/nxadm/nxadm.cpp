@@ -312,7 +312,7 @@ enum WorkMode
  */
 int main(int argc, char *argv[])
 {
-   int exitCode;
+   int exitCode = 99;
    bool start = true;
    bool useScriptReturnValue = false;
    WorkMode workMode = UNDEFINED;

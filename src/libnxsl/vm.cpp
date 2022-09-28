@@ -179,7 +179,7 @@ bool NXSL_SecurityContext::validateAccess(int accessType, const void *object)
 /**
  * Constructor
  */
-NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_objects(64), m_objectClassData(64),
+NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManager(), m_objectClassData(64), m_objects(64),
          m_instructionSet(256, 256), m_functions(0, 16), m_modules(0, 16, Ownership::True)
 {
    m_cp = INVALID_ADDRESS;

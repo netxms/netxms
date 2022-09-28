@@ -113,9 +113,9 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
  * Create DCObject from another DCObject
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
-         m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description),
-         m_systemTag(src->m_systemTag), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
-         m_instanceName(src->m_instanceName), m_mutex(MutexType::RECURSIVE), m_accessList(src->m_accessList)
+         m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
+         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
+         m_instanceName(src->m_instanceName), m_accessList(src->m_accessList)
 {
    m_id = src->m_id;
    m_guid = src->m_guid;
@@ -167,11 +167,11 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 /**
  * Constructor for creating new DCObject from scratch
  */
-DCObject::DCObject(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
+DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType, const TCHAR *pollingInterval,
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_instanceDiscoveryData(_T("")), m_instanceName(_T("")), m_mutex(MutexType::RECURSIVE),
+         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(_T("")), m_instanceName(_T("")),
          m_accessList(0, 16)
 {
    m_id = id;

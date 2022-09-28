@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -453,19 +453,19 @@ template<typename C, void (*__Init)(C*), void (*__Update)(C*, const void*, size_
 static inline void HashForPattern(const void *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
    C context;
-   int count, patternIndex;
+   size_t count, patternIndex;
    const unsigned char *src;
    BYTE *dst, patternBuffer[__blockSize];
 
    __Init(&context);
-   for(count = 0, src = static_cast<const unsigned char*>(data), patternIndex = 0; count < (int)fullSize; count += __blockSize)
+   for(count = 0, src = static_cast<const unsigned char*>(data), patternIndex = 0; count < fullSize; count += __blockSize)
    {
       dst = patternBuffer;
-      for(int i = 0; i < __blockSize; i++)
+      for(size_t i = 0; i < __blockSize; i++)
       {
          *dst++ = *src++;
          patternIndex++;
-         if (patternIndex >= (int)patternSize)
+         if (patternIndex >= patternSize)
          {
             patternIndex = 0;
             src = static_cast<const unsigned char*>(data);

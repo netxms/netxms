@@ -2629,11 +2629,11 @@ bool LIBNETXMS_EXPORTABLE ScanFile(const TCHAR *fileName, const void *data, size
    size_t offset = 0;
    while(true)
    {
-      int bytes = _read(fh, &buffer[offset], 8192 - offset);
+      ssize_t bytes = _read(fh, &buffer[offset], 8192 - offset);
       if (bytes <= 0)
          break;
 
-      if (bytes < size)
+      if (bytes < static_cast<ssize_t>(size))
          break;
 
       if (memmem(buffer, bytes, data, size) != nullptr)
@@ -2815,7 +2815,7 @@ SaveFileStatus LIBNETXMS_EXPORTABLE SaveFile(const TCHAR *fileName, const void *
       }
       else
       {
-         if (_write(hFile, data, static_cast<unsigned int>(size)) != size)
+         if (_write(hFile, data, static_cast<unsigned int>(size)) != static_cast<ssize_t>(size))
             status = SaveFileStatus::WRITE_ERROR;
       }
    }

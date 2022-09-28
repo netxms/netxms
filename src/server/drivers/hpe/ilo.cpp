@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Driver for HPE iLO controllers
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -79,8 +79,6 @@ bool ILODriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, Driv
    SNMP_PDU *response;
    if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
    {
-      TCHAR buffer[256];
-
       const SNMP_Variable *v = response->getVariable(0);
       if (v != nullptr)
       {

@@ -36,7 +36,7 @@ THREAD_RESULT THREAD_CALL NXMBDispatcher::workerThreadStarter(void *arg)
 /**
  * Constructor
  */
-NXMBDispatcher::NXMBDispatcher() : m_startCondition(true), m_stopCondition(true), m_subscriberListAccess(MutexType::FAST), m_callHandlerAccess(MutexType::FAST)
+NXMBDispatcher::NXMBDispatcher() : m_subscriberListAccess(MutexType::FAST), m_callHandlerAccess(MutexType::FAST), m_startCondition(true), m_stopCondition(true)
 {
 	m_queue = new Queue;
 	m_numSubscribers = 0;

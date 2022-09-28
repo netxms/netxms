@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -151,7 +151,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
    LONG rc = SYSINFO_RC_SUCCESS;
 
    FILE *in = fopen("/etc/mtab", "r");
-   if (in != NULL)
+   if (in != nullptr)
    {
       table->addColumn(_T("MOUNTPOINT"), DCI_DT_STRING, _T("Mount Point"), true);
       table->addColumn(_T("VOLUME"), DCI_DT_STRING, _T("Volume"));
@@ -168,7 +168,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
       while(1)
       {
          char line[4096];
-         if (fgets(line, 4096, in) == NULL)
+         if (fgets(line, 4096, in) == nullptr)
             break;
          if (!strncmp(line, "rootfs /", 8))
             continue;
@@ -193,11 +193,11 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
          struct statfs s;
          if (statfs(mountPoint, &s) == 0)
          {
-            QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
-            QWORD totalBlocks = (QWORD)s.f_blocks;
-            QWORD blockSize = (QWORD)s.f_bsize;
-            QWORD freeBlocks = (QWORD)s.f_bfree;
-            QWORD availableBlocks = (QWORD)s.f_bavail;
+            uint64_t usedBlocks = static_cast<uint64_t>(s.f_blocks - s.f_bfree);
+            uint64_t totalBlocks = static_cast<uint64_t>(s.f_blocks);
+            uint64_t blockSize = static_cast<uint64_t>(s.f_bsize);
+            uint64_t freeBlocks = static_cast<uint64_t>(s.f_bfree);
+            uint64_t availableBlocks = static_cast<uint64_t>(s.f_bavail);
 
             table->set(4, totalBlocks * blockSize);
             table->set(5, freeBlocks * blockSize);
@@ -209,16 +209,15 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
          }
          else
          {
-            TCHAR buffer[1024];
             nxlog_debug_tag(DEBUG_TAG, 4, _T("H_FileSystems: Call to statfs(\"%hs\") failed (%hs)"), mountPoint, strerror(errno));
 
-            table->set(4, (QWORD)0);
-            table->set(5, (QWORD)0);
-            table->set(6, (QWORD)0);
-            table->set(7, (QWORD)0);
-            table->set(8, (QWORD)0);
-            table->set(9, (QWORD)0);
-            table->set(10, (QWORD)0);
+            table->set(4, static_cast<uint64_t>(0));
+            table->set(5, static_cast<uint64_t>(0));
+            table->set(6, static_cast<uint64_t>(0));
+            table->set(7, static_cast<uint64_t>(0));
+            table->set(8, static_cast<uint64_t>(0));
+            table->set(9, static_cast<uint64_t>(0));
+            table->set(10, static_cast<uint64_t>(0));
          }
       }
       fclose(in);

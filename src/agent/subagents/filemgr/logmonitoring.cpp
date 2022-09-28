@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2020 Raden Solutions
+ ** Copyright (C) 2014-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -28,20 +28,6 @@
  * Max NXCP message size
  */
 #define MAX_MSG_SIZE    262144
-
-/**
- * File list constructor
- */
-MonitoredFileList::MonitoredFileList() : m_files(16, 16, Ownership::True), m_mutex(MutexType::FAST)
-{
-}
-
-/**
- * File list destructor
- */
-MonitoredFileList::~MonitoredFileList()
-{
-}
 
 /**
  * Add file to list

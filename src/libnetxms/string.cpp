@@ -980,7 +980,7 @@ void StringBuffer::escapeCharacter(int ch, int esc)
    m_length += nCount;
    for(int i = 0; m_buffer[i] != 0; i++)
    {
-      if (m_buffer[i] == ch)
+      if (m_buffer[i] == static_cast<TCHAR>(ch))
       {
          memmove(&m_buffer[i + 1], &m_buffer[i], (m_length - i) * sizeof(TCHAR));
          m_buffer[i] = esc;

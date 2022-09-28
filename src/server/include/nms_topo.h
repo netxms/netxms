@@ -408,7 +408,7 @@ private:
 
 public:
    MacAddressInfo(const MacAddress& macAddr, const shared_ptr<Interface>& owner, const shared_ptr<NetObj>& connectionPoint, int type)
-      : m_owner(owner), m_connectionPoint(connectionPoint), m_macAddr(macAddr)
+      : m_macAddr(macAddr), m_owner(owner), m_connectionPoint(connectionPoint)
    {
       m_type = type;
    }

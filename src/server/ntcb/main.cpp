@@ -46,7 +46,7 @@ static bool RegisterSession(const shared_ptr<NTCBDeviceSession>& session)
 {
    bool success;
    s_sessionListLock.writeLock();
-   if (s_freePos < s_maxDeviceSessions)
+   if (s_freePos < static_cast<size_t>(s_maxDeviceSessions))
    {
       session->setId(s_freeList[s_freePos++]);
       s_sessions.set(session->getId(), session);

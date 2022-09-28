@@ -104,7 +104,7 @@ bool InfluxDBStorageDriver::init(Config *config)
 #if HAVE_LIBCURL
       else if (!_tcsicmp(protocol, _T("api-v1")))
          sender = new APIv1Sender(*config);
-      else if (!_tcsicmp(protocol, _T("api-v2")))
+      else
          sender = new APIv2Sender(*config);
 #endif
       sender->start();

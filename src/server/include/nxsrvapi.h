@@ -914,7 +914,6 @@ private:
    uint32_t setupProxyConnection();
    uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append,
          void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg);
-   void prepareFilePartList(const TCHAR *localFile, const TCHAR *destinationFile, StringList *partNames, ObjectArray<FilePartInfo> *fileInfo);
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
 

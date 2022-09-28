@@ -41,7 +41,7 @@ static void AppAgentWriteLog(int level, const TCHAR *format, ...)
 	if (s_config.logger == NULL)
 		return;
 
-	va_list(args);
+	va_list args;
 	va_start(args, format);
 	s_config.logger(level, format, args);
 	va_end(args);

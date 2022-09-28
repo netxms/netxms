@@ -1178,12 +1178,12 @@ static bool H_UpgradeFromV69()
          {
             int periodStartTimestamp = 0;
             int periodEndTimestamp = 0;
-            uint32_t serviceId = DBGetFieldLong(slmHistoryResult, 0, 0);
+            uint32_t serviceId = DBGetFieldULong(slmHistoryResult, 0, 0);
             DBBind(hStmtInsert, 2, DB_SQLTYPE_INTEGER, serviceId);
             int i = 0;
             for(; i < slmHistoryCount; i++)
             {
-               if (serviceId == DBGetFieldLong(slmHistoryResult, i, 0))
+               if (serviceId == DBGetFieldULong(slmHistoryResult, i, 0))
                {
                   if (periodStartTimestamp == 0)
                   {
@@ -1216,9 +1216,9 @@ static bool H_UpgradeFromV69()
                   periodEndTimestamp = 0;
                }
 
-               if (serviceId != DBGetFieldLong(slmHistoryResult, i, 0))
+               if (serviceId != DBGetFieldULong(slmHistoryResult, i, 0))
                {
-                  serviceId = DBGetFieldLong(slmHistoryResult, i, 0);
+                  serviceId = DBGetFieldULong(slmHistoryResult, i, 0);
                   DBBind(hStmtInsert, 2, DB_SQLTYPE_INTEGER, serviceId);
                }
             }
