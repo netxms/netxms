@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -199,7 +199,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *type)
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize)
 {
 	for(int i = 0; s_typeList[i].text != nullptr; i++)
-		if (s_typeList[i].code == type)
+		if (static_cast<uint32_t>(s_typeList[i].code) == type)
 		{
 			_tcslcpy(buffer, s_typeList[i].text, bufferSize);
 			return buffer;

@@ -157,7 +157,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
 /**
  * Copy constructor
  */
-SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) : m_authoritativeEngine(&src.m_authoritativeEngine), m_trapId(src.m_trapId), m_variables(src.m_variables.size(), 16, Ownership::True)
+SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 16, Ownership::True), m_trapId(src.m_trapId), m_authoritativeEngine(&src.m_authoritativeEngine)
 {
    m_version = src.m_version;
    m_command = src.m_command;
@@ -1243,7 +1243,7 @@ static inline void CalculateMessageHash(const BYTE *msg, size_t msgLen, size_t s
    memcpy(k1, securityContext->getAuthKey(), __hashSize);
    memset(&k1[__hashSize], 0, __blockSize - __hashSize);
    memcpy(k2, k1, __blockSize);
-   for(int i = 0; i < __blockSize; i++)
+   for(size_t i = 0; i < __blockSize; i++)
    {
       k1[i] ^= 0x36;
       k2[i] ^= 0x5C;

@@ -263,7 +263,7 @@ static size_t EncodeContent(uint32_t type, const BYTE *data, size_t dataLength, 
          break;
       case ASN_INTEGER64:
          tempInt64 = htonq(*((uint64_t *)data));
-         pTemp = (BYTE *)&tempInt32;
+         pTemp = (BYTE *)&tempInt64;
          sign = (*pTemp & 0x80) ? 0xFF : 0;
          for(nBytes = 8; (*pTemp == sign) && (nBytes > 1); pTemp++, nBytes--);
          if ((*pTemp & 0x80) != (sign & 0x80))
