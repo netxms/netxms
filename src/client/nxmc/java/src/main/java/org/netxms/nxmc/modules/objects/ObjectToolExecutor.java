@@ -30,17 +30,31 @@ import java.util.Set;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
+import org.netxms.client.AgentFileData;
 import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProgressListener;
 import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.jobs.JobCallingServerJob;
+import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.filemanager.views.AgentFileViewer;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectToolInputDialog;
+import org.netxms.nxmc.modules.objects.views.AgentActionResults;
+import org.netxms.nxmc.modules.objects.views.LocalCommandResults;
+import org.netxms.nxmc.modules.objects.views.MultiNodeCommandExecutor;
+import org.netxms.nxmc.modules.objects.views.SSHCommandResults;
+import org.netxms.nxmc.modules.objects.views.ServerCommandResults;
+import org.netxms.nxmc.modules.objects.views.ServerScriptResults;
+import org.netxms.nxmc.modules.objects.views.TableToolResults;
+import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,18 +119,19 @@ public final class ObjectToolExecutor
    /**
     * Execute object tool on object set
     * 
-    * @param allObjects objects to execution tool on
+    * @param allObjects objects that involved in selection
+    * @param nodes objects to execution tool on
     * @param tool Object tool
     * @param viewPlacement view placement information
     */
-   public static void execute(final Set<ObjectContext> allObjects, final ObjectTool tool, final ViewPlacement viewPlacement)
+   public static void execute(final Set<ObjectContext> allObjects, Set<ObjectContext> nodes, final ObjectTool tool, final ViewPlacement viewPlacement)
    {
       // Filter allowed and applicable nodes for execution
       final Set<ObjectContext> objects = new HashSet<ObjectContext>();
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if ((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || handler != null)
       {
-         for(ObjectContext n : allObjects)
+         for(ObjectContext n : nodes)
             if (((tool.getToolType() != ObjectTool.TYPE_INTERNAL) || (n.isNode() && handler.canExecuteOnNode((AbstractNode)n.object, tool))) && tool.isApplicableForObject(n.object))
                objects.add(n);
       }
@@ -235,14 +250,15 @@ public final class ObjectToolExecutor
             int i = 0;
             if ((objects.size() > 1) &&
                   (tool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND || tool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND ||
-                  tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0))
+                  tool.getToolType() == ObjectTool.TYPE_ACTION || tool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) && 
+                  ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0 || tool.getToolType() == ObjectTool.TYPE_SSH_COMMAND))
             {
                final List<String> finalExpandedText = expandedText;
                getDisplay().syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
-                     executeOnMultipleNodes(objects, tool, inputValues, maskedFields, finalExpandedText, viewPlacement);
+                     executeOnMultipleNodes(allObjects, objects, tool, inputValues, maskedFields, finalExpandedText, viewPlacement);
                   }
                });
             }
@@ -340,7 +356,7 @@ public final class ObjectToolExecutor
             executeAgentAction(node, tool, inputValues, maskedFields, viewPlacement);
             break;
          case ObjectTool.TYPE_FILE_DOWNLOAD:
-            executeFileDownload(node, tool, inputValues);
+            executeFileDownload(node, tool, inputValues, viewPlacement);
             break;
          case ObjectTool.TYPE_INTERNAL:
             executeInternalTool(node, tool);
@@ -360,10 +376,10 @@ public final class ObjectToolExecutor
          case ObjectTool.TYPE_AGENT_LIST:
          case ObjectTool.TYPE_AGENT_TABLE:
          case ObjectTool.TYPE_SNMP_TABLE:
-            executeTableTool(node, tool);
+            executeTableTool(node, tool, viewPlacement);
             break;
          case ObjectTool.TYPE_URL:
-            openURL(node, tool, inputValues, expandedToolData);
+            openURL(expandedToolData);
             break;
       }
    }
@@ -378,22 +394,20 @@ public final class ObjectToolExecutor
     * @param expandedToolData expanded tool data
     * @param viewPlacement view placement information
     */
-   private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
+   private static void executeOnMultipleNodes(Set<ObjectContext> sourceObjects, Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
          List<String> maskedFields, List<String> expandedToolData, ViewPlacement viewPlacement)
    {
-      /*
-      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-      try
+      Perspective p = viewPlacement.getPerspective();   
+      MultiNodeCommandExecutor view = new MultiNodeCommandExecutor(tool, sourceObjects, nodes, inputValues, maskedFields, expandedToolData);
+      if (p != null)
       {
-         MultiNodeCommandExecutor view = (MultiNodeCommandExecutor)window.getActivePage().showView(MultiNodeCommandExecutor.ID, tool.getDisplayName() + nodes.toString(), IWorkbenchPage.VIEW_ACTIVATE);
-         view.execute(tool, nodes, inputValues, maskedFields, expandedToolData);
+         p.addMainView(view, true, false);
       }
-      catch(Exception e)
+      else
       {
-         e.printStackTrace();
-         MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+         PopOutViewWindow window = new PopOutViewWindow(view);
+         window.open();
       }
-      */
    }
 
    /**
@@ -402,22 +416,19 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     */
-   private static void executeTableTool(final ObjectContext node, final ObjectTool tool)
+   private static void executeTableTool(final ObjectContext node, final ObjectTool tool, ViewPlacement viewPlacement)
    {
-      /*
-      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-      try
+      Perspective p = viewPlacement.getPerspective();   
+      TableToolResults view = new TableToolResults(node, tool);
+      if (p != null)
       {
-         final IWorkbenchPage page = window.getActivePage();
-         final TableToolResults view = (TableToolResults)page.showView(TableToolResults.ID,
-               Long.toString(tool.getId()) + "&" + Long.toString(node.object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
-         view.refreshTable();
+         p.addMainView(view, true, false);
       }
-      catch(PartInitException e)
+      else
       {
-         MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+         PopOutViewWindow window = new PopOutViewWindow(view);
+         window.open();
       }
-      */
    }
    
    /**
@@ -462,19 +473,17 @@ public final class ObjectToolExecutor
       }
       else
       {
-         /*
-         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
-         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-         try
+         Perspective p = viewPlacement.getPerspective();   
+         AgentActionResults view = new AgentActionResults(node, tool, inputValues, maskedFields);
+         if (p != null)
          {
-            AgentActionResults view = (AgentActionResults)window.getActivePage().showView(AgentActionResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeAction(tool.getData(), node.getAlarmId(), inputValues, maskedFields);
+            p.addMainView(view, true, false);
          }
-         catch(Exception e)
+         else
          {
-            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+            PopOutViewWindow window = new PopOutViewWindow(view);
+            window.open();
          }
-         */
       }
    }
 
@@ -519,19 +528,17 @@ public final class ObjectToolExecutor
       }
       else
       {
-         /*
-         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
-         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-         try
+         Perspective p = viewPlacement.getPerspective();   
+         ServerCommandResults view = new ServerCommandResults(node, tool, inputValues, maskedFields);
+         if (p != null)
          {
-            ServerCommandResults view = (ServerCommandResults)window.getActivePage().showView(ServerCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeCommand(tool.getData(), inputValues, maskedFields);
+            p.addMainView(view, true, false);
          }
-         catch(Exception e)
+         else
          {
-            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+            PopOutViewWindow window = new PopOutViewWindow(view);
+            window.open();
          }
-         */
       }
    }
 
@@ -556,36 +563,24 @@ public final class ObjectToolExecutor
                try
                {
                   session.executeSshCommand(node.object.getObjectId(), tool.getData(), false, null, null);
-                  /*
-                  if (statusDialog != null)
-                  {
-                     statusDialog.updateExecutionStatus(node.object.getObjectId(), null);
-                  }
-                  else
-                  {
-                     runInUIThread(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                           MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_ToolExecution,
-                                 String.format(Messages.get().ObjectToolsDynamicMenu_ExecSuccess, tool.getData(), node.object.getObjectName()));
-                        }
-                     });
-                  }
-                  */
+
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.SUCCESS, String.format(i18n.tr("SSH command %s executed successfully on node %s"), tool.getData(), node.object.getObjectName()));
+                     }
+                  });
                }
                catch(Exception e)
                {
-                  /*
-                  if (statusDialog != null)
-                  {
-                     statusDialog.updateExecutionStatus(node.object.getObjectId(), e.getLocalizedMessage());
-                  }
-                  else
-                  {
-                     throw e;
-                  }
-                  */
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewPlacement.getMessageAreaHolder().addMessage(MessageArea.ERROR, String.format(i18n.tr("Filed to execute on node %s: %s"), node.object.getObjectName(), e.getLocalizedMessage()));
+                     }
+                  });
                }
             }
 
@@ -598,19 +593,17 @@ public final class ObjectToolExecutor
       }
       else
       {
-         /*
-         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
-         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-         try
+         Perspective p = viewPlacement.getPerspective();   
+         SSHCommandResults view = new SSHCommandResults(node, tool, inputValues, null);
+         if (p != null)
          {
-            SSHCommandResults view = (SSHCommandResults)window.getActivePage().showView(SSHCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeSshCommand(tool.getData());
+            p.addMainView(view, true, false);
          }
-         catch(Exception e)
+         else
          {
-            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+            PopOutViewWindow window = new PopOutViewWindow(view);
+            window.open();
          }
-         */
       }
    }
 
@@ -654,19 +647,17 @@ public final class ObjectToolExecutor
       }
       else
       {
-         /*
-         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
-         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-         try
+         Perspective p = viewPlacement.getPerspective();   
+         ServerScriptResults view = new ServerScriptResults(node, tool, inputValues, null);
+         if (p != null)
          {
-            ServerScriptResults view = (ServerScriptResults)window.getActivePage().showView(ServerScriptResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeScript(tool.getData(), node.getAlarmId(), inputValues);
+            p.addMainView(view, true, false);
          }
-         catch(Exception e)
+         else
          {
-            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+            PopOutViewWindow window = new PopOutViewWindow(view);
+            window.open();
          }
-         */
       }
    }
    
@@ -704,19 +695,17 @@ public final class ObjectToolExecutor
       }
       else
       {
-         /*
-         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
-         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-         try
+         Perspective p = viewPlacement.getPerspective();   
+         LocalCommandResults view = new LocalCommandResults(node, tool, inputValues, null);
+         if (p != null)
          {
-            LocalCommandResults view = (LocalCommandResults)window.getActivePage().showView(LocalCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.runCommand(command);
+            p.addMainView(view, true, false);
          }
-         catch(Exception e)
+         else
          {
-            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+            PopOutViewWindow window = new PopOutViewWindow(view);
+            window.open();
          }
-         */
       }
    }
 
@@ -725,9 +714,8 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues, ViewPlacement viewPlacement)
    {
-      /*
       final NXCSession session = Registry.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
       
@@ -735,15 +723,15 @@ public final class ObjectToolExecutor
       final int maxFileSize = (parameters.length > 0) ? Integer.parseInt(parameters[1]) : 0;
       final boolean follow = (parameters.length > 1) ? parameters[2].equals("true") : false; //$NON-NLS-1$
       
-      ConsoleJobCallingServerJob job = new ConsoleJobCallingServerJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
+      JobCallingServerJob job = new JobCallingServerJob("Download file from agent", null) {
          @Override
          protected String getErrorMessage()
          {
-            return String.format(Messages.get().ObjectToolsDynamicMenu_DownloadError, fileName, node.object.getObjectName());
+            return String.format("Cannot download file %s from node %s", fileName, node.object.getObjectName());
          }
 
          @Override
-         protected void runInternal(final IProgressMonitor monitor) throws Exception
+         protected void run(final IProgressMonitor monitor) throws Exception
          {
             final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, true, node.getAlarmId(), inputValues, maxFileSize, follow, new ProgressListener() {
                @Override
@@ -762,23 +750,22 @@ public final class ObjectToolExecutor
                @Override
                public void run()
                {
-                  try
+                  Perspective p = viewPlacement.getPerspective();   
+                  AgentFileViewer view = new AgentFileViewer(node.object.getObjectId(), file, follow);
+                  if (p != null)
                   {
-                     String secondaryId = Long.toString(node.object.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-                     AgentFileViewer.createView(secondaryId, node.object.getObjectId(), file, follow);
+                     p.addMainView(view, true, false);
                   }
-                  catch(Exception e)
+                  else
                   {
-                     final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-                     MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
-                     Activator.logError("Cannot open agent file viewer", e);
+                     PopOutViewWindow window = new PopOutViewWindow(view);
+                     window.open();
                   }
                }
             });
          }
       };
       job.start();
-      */
    }
 
    /**
@@ -803,20 +790,8 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void openURL(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String url)
+   private static void openURL(String url)
    {
-      /*
-      final String sid = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
-      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-      try
-      {
-         BrowserView view = (BrowserView)window.getActivePage().showView(BrowserView.ID, sid, IWorkbenchPage.VIEW_ACTIVATE);
-         view.openUrl(url);
-      }
-      catch(PartInitException e)
-      {
-         MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, Messages.get().ObjectToolsDynamicMenu_CannotOpenWebBrowser + e.getLocalizedMessage());
-      }
-      */
+      ExternalWebBrowser.open(url);
    }
 }

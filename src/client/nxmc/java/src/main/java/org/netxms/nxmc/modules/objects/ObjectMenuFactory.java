@@ -227,7 +227,7 @@ public final class ObjectMenuFactory
                @Override
                public void widgetSelected(SelectionEvent e)
                {
-                  ObjectToolExecutor.execute(objects, (ObjectTool)item.getData(), viewPlacement);
+                  ObjectToolExecutor.execute(objects, objects, (ObjectTool)item.getData(), viewPlacement);
                }
             });
          }

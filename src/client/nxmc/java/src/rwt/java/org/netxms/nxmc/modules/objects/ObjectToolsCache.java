@@ -120,7 +120,8 @@ public class ObjectToolsCache
 				objectTools.clear();
 				for(ObjectTool tool : list)
 				{
-					objectTools.put(tool.getId(), tool);
+				   if (tool.getToolType() != ObjectTool.TYPE_LOCAL_COMMAND)
+				      objectTools.put(tool.getId(), tool);
 				}
 			}
 			synchronized(icons)

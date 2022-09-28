@@ -32,7 +32,7 @@ public class InputFieldLabelProvider extends LabelProvider implements ITableLabe
 {
    private final I18n i18n = LocalizationHelper.getI18n(InputFieldLabelProvider.class);
    private final String[] typeNames = { i18n.tr("Text"), i18n.tr("Password"), i18n.tr("Number") };
-
+   
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */

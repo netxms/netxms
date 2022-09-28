@@ -19,7 +19,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.modules.objects.ObjectToolsCache;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 
@@ -27,9 +26,7 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
  * Object tool selection dialog
  */
 public class ObjectToolSelectionDialog extends Dialog
-{
-   private static final String CONFIG_PREFIX = "ObjectToolSelectionDialog";
-   
+{   
    private TableViewer viewer;
    private ObjectTool tool;
 
@@ -44,14 +41,12 @@ public class ObjectToolSelectionDialog extends Dialog
 
    /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-    */
+    */   
    @Override
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
       newShell.setText("Select Tool");
-      PreferenceStore settings = PreferenceStore.getInstance();
-      newShell.setSize(settings.getAsInteger(CONFIG_PREFIX + ".cx", SWT.DEFAULT), settings.getAsInteger(CONFIG_PREFIX + ".cy", SWT.DEFAULT));
    }
 
    /**

@@ -123,16 +123,24 @@ public class ObjectTools extends ElementWidget
       if (object == null)
          return;
       
+      Set<ObjectContext> allObjects = new HashSet<ObjectContext>();
       Set<ObjectContext> nodes = new HashSet<ObjectContext>();
       if (object instanceof AbstractNode)
       {
-         nodes.add(new ObjectContext((AbstractNode)object, null));
+         ObjectContext oc = new ObjectContext((AbstractNode)object, null);
+         nodes.add(oc);
+         allObjects.add(oc);
       }
       else if ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster))
       {
          for(AbstractObject n : object.getAllChildren(AbstractObject.OBJECT_NODE))
-            nodes.add(new ObjectContext((AbstractNode)n, null));
+         {
+            ObjectContext oc = new ObjectContext((AbstractNode)n, null);
+            nodes.add(oc);
+            allObjects.add(oc);
+            allObjects.add(new ObjectContext((AbstractNode)object, null));
+         }
       }
-      ObjectToolExecutor.execute(nodes, tool, new ViewPlacement(view));
+      ObjectToolExecutor.execute(allObjects, nodes, tool, new ViewPlacement(view));
    }
 }
