@@ -48,6 +48,7 @@
       <view
             allowMultiple="true"
             class="org.netxms.ui.eclipse.objectview.views.PhysicalLinkView"
+            icon="icons/physical_links.png"
             id="org.netxms.ui.eclipse.objectview.views.PhysicalLinkView"
             name="Physical links"
             restorable="true">
@@ -146,6 +147,7 @@
        <action
              class="org.netxms.ui.eclipse.objectview.actions.ShowPhysicalLink"
              definitionId="org.netxms.ui.eclipse.objectview.commands.open_physical_links"
+             icon="icons/physical_links.png"
              id="org.netxms.ui.eclipse.objectmanager.commands.open_physical_links"
              label="Physical Links"
              menubarPath="config/additions"

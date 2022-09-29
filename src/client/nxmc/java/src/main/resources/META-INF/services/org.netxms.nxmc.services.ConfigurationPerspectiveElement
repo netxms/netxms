@@ -16,6 +16,7 @@ org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement
 org.netxms.nxmc.modules.objects.ObjectCategoriesConfigurationElement
 org.netxms.nxmc.modules.objects.ObjectToolsEditorElement
 org.netxms.nxmc.modules.objects.ObjectQueriesConfigurationElement
+org.netxms.nxmc.modules.objects.PhysicalLinksConfigurationElement
 org.netxms.nxmc.modules.serverconfig.NetworkCredentialsElement
 org.netxms.nxmc.modules.serverconfig.NetworkDiscoveryElement
 org.netxms.nxmc.modules.serverconfig.NotificationChannelsElement

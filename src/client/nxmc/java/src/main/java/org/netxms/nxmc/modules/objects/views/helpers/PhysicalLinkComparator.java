@@ -23,7 +23,6 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.PhysicalLink;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
 
 /**
  * Physical link comparator
@@ -55,19 +54,19 @@ public class PhysicalLinkComparator extends ViewerComparator
       int result;
       switch(column)
       {
-         case PhysicalLinkView.COL_PHYSICAL_LINK_ID:
+         case PhysicalLinkManager.COL_PHYSICAL_LINK_ID:
             result = Long.compare(link1.getId(), link2.getId());
             break;
-         case PhysicalLinkView.COL_DESCRIPTOIN:
+         case PhysicalLinkManager.COL_DESCRIPTOIN:
             result = link1.getDescription().compareToIgnoreCase(link2.getDescription());
             break;
-         case PhysicalLinkView.COL_LEFT_OBJECT:
-         case PhysicalLinkView.COL_RIGHT_OBJECT:
-            result = labelProvider.getObjectText(link1, column == PhysicalLinkView.COL_LEFT_OBJECT).compareToIgnoreCase(labelProvider.getObjectText(link2, column == PhysicalLinkView.COL_LEFT_OBJECT));
+         case PhysicalLinkManager.COL_LEFT_OBJECT:
+         case PhysicalLinkManager.COL_RIGHT_OBJECT:
+            result = labelProvider.getObjectText(link1, column == PhysicalLinkManager.COL_LEFT_OBJECT).compareToIgnoreCase(labelProvider.getObjectText(link2, column == PhysicalLinkManager.COL_LEFT_OBJECT));
             break;
-         case PhysicalLinkView.COL_LEFT_PORT:
-         case PhysicalLinkView.COL_RIGHT_PORT:
-            result = labelProvider.getPortText(link1, column == PhysicalLinkView.COL_LEFT_OBJECT).compareToIgnoreCase(labelProvider.getPortText(link2, column == PhysicalLinkView.COL_LEFT_OBJECT));
+         case PhysicalLinkManager.COL_LEFT_PORT:
+         case PhysicalLinkManager.COL_RIGHT_PORT:
+            result = labelProvider.getPortText(link1, column == PhysicalLinkManager.COL_LEFT_OBJECT).compareToIgnoreCase(labelProvider.getPortText(link2, column == PhysicalLinkManager.COL_LEFT_OBJECT));
             break;
          default:
             result = 0;

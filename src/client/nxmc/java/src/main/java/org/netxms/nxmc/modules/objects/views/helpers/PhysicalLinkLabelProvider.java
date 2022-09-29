@@ -28,7 +28,6 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 
 /**
@@ -123,16 +122,16 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
       AbstractObject object = null;
       switch(columnIndex)
       {
-         case PhysicalLinkView.COL_LEFT_PORT:
+         case PhysicalLinkManager.COL_LEFT_PORT:
             object = session.findObjectById(((PhysicalLink)element).getLeftObjectId());
             return (object != null && object instanceof Interface) ? objectLabelProvider.getImage(object) : null;
-         case PhysicalLinkView.COL_RIGHT_PORT:
+         case PhysicalLinkManager.COL_RIGHT_PORT:
             object = session.findObjectById(((PhysicalLink)element).getRightObjectId());
             return (object != null && object instanceof Interface) ? objectLabelProvider.getImage(object) : null;
-         case PhysicalLinkView.COL_LEFT_OBJECT:
+         case PhysicalLinkManager.COL_LEFT_OBJECT:
             object = session.findObjectById(((PhysicalLink)element).getLeftObjectId());
             break;
-         case PhysicalLinkView.COL_RIGHT_OBJECT:
+         case PhysicalLinkManager.COL_RIGHT_OBJECT:
             object = session.findObjectById(((PhysicalLink)element).getRightObjectId());
             break;
 
@@ -157,16 +156,16 @@ public class PhysicalLinkLabelProvider extends LabelProvider implements ITableLa
       PhysicalLink link = (PhysicalLink)element;
       switch(columnIndex)
       {
-         case PhysicalLinkView.COL_PHYSICAL_LINK_ID:
+         case PhysicalLinkManager.COL_PHYSICAL_LINK_ID:
             return Long.toString(link.getId());
-         case PhysicalLinkView.COL_DESCRIPTOIN:
+         case PhysicalLinkManager.COL_DESCRIPTOIN:
             return link.getDescription();
-         case PhysicalLinkView.COL_LEFT_OBJECT:
-         case PhysicalLinkView.COL_RIGHT_OBJECT:
-            return getObjectText(link, columnIndex == PhysicalLinkView.COL_LEFT_OBJECT);
-         case PhysicalLinkView.COL_LEFT_PORT:
-         case PhysicalLinkView.COL_RIGHT_PORT:
-            return getPortText(link, columnIndex == PhysicalLinkView.COL_LEFT_PORT);
+         case PhysicalLinkManager.COL_LEFT_OBJECT:
+         case PhysicalLinkManager.COL_RIGHT_OBJECT:
+            return getObjectText(link, columnIndex == PhysicalLinkManager.COL_LEFT_OBJECT);
+         case PhysicalLinkManager.COL_LEFT_PORT:
+         case PhysicalLinkManager.COL_RIGHT_PORT:
+            return getPortText(link, columnIndex == PhysicalLinkManager.COL_LEFT_PORT);
       }
       return null;
    }
