@@ -2274,6 +2274,9 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("NodeState::EtherNetIPUnreachable", NSF_ETHERNET_IP_UNREACHABLE);
       NXSL_ENV_CONSTANT("NodeState::SNMPUnreachable", NSF_SNMP_UNREACHABLE);
       NXSL_ENV_CONSTANT("NodeState::CacheModeNotSupported", NSF_CACHE_MODE_NOT_SUPPORTED);
+      NXSL_ENV_CONSTANT("NodeState::SNMPTrapFlood", NSF_SNMP_TRAP_FLOOD);
+      NXSL_ENV_CONSTANT("NodeState::ICMPUnreachable", NSF_ICMP_UNREACHABLE);
+      NXSL_ENV_CONSTANT("NodeState::SSHUnreachable", NSF_SSH_UNREACHABLE);
    }
 
    if (name.value[0] == 'S')
