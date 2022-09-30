@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020 Raden Solutions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,27 +49,27 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class WindowsEventParserConfigurator extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"; //$NON-NLS-1$
-	
+
 	private NXCSession session;
 	private LogParserEditor editor;
 	private boolean modified = false;
 	private String content;
 	private Action actionRefresh;
 	private Action actionSave;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -301,4 +301,14 @@ public class WindowsEventParserConfigurator extends ViewPart implements ISaveabl
 			actionSave.setEnabled(modified);
 		}
 	}
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      setModified(false);
+      super.dispose();
+   }
 }

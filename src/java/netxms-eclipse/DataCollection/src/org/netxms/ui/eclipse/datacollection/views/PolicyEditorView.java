@@ -112,7 +112,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       actionSave.setEnabled(false);
       refresh();
    }
-   
+
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
@@ -150,7 +150,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
     */
    protected void createActions()
    {
-      actionSave = new Action("Save", SharedIcons.SAVE) {
+      actionSave = new Action("&Save", SharedIcons.SAVE) {
          @Override
          public void run()
          {
@@ -158,7 +158,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
          }
       };
       actionSave.setEnabled(false);
-      
+
       actionRefresh = new RefreshAction(this) {
          @Override
          public void run()
@@ -219,7 +219,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
-   
+
    /**
     * Refresh editor
     */
@@ -227,8 +227,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
    {
       if (modified)
       {
-         if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh policy",
-               "This will discard all unsaved changes. Do you really want to continue?"))
+         if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Refresh policy", "This will discard all unsaved changes. Do you really want to continue?"))
             return;
 
          modified = false;
@@ -316,7 +315,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       content.layout(true, true);
       editor.setFocus();
    }
-   
+
    /**
     * Mark content as modified
     */
@@ -329,7 +328,7 @@ public class PolicyEditorView extends ViewPart implements ISaveablePart2, Sessio
       firePropertyChange(PROP_DIRTY);
       actionSave.setEnabled(true);
    }
-   
+
    /**
     * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
     */

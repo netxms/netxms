@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2018 Raden Solutions
+ * Copyright (C) 2018-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -46,7 +45,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class LogParserFileEditor extends DashboardComposite
 {	
-	private FormToolkit toolkit;
 	private LogParserFile file;
 	private LogParserEditor editor;
 
@@ -62,14 +60,15 @@ public class LogParserFileEditor extends DashboardComposite
 	 * @param parent
 	 * @param style
 	 */
-	public LogParserFileEditor(Composite parent, FormToolkit toolkit, LogParserFile file, final LogParserEditor editor)
+   public LogParserFileEditor(Composite parent, LogParserFile file, final LogParserEditor editor)
 	{
 		super(parent, SWT.BORDER);
-		
-		this.toolkit = toolkit;
+
 		this.file = file;
 		this.editor = editor;
-		
+
+      setBackground(parent.getBackground());
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		layout.makeColumnsEqualWidth = false;
@@ -77,6 +76,7 @@ public class LogParserFileEditor extends DashboardComposite
 		
 		labelFileName = new LabeledText(this, SWT.NONE);
       labelFileName.setLabel("File path");
+      labelFileName.setBackground(getBackground());
       labelFileName.setText((file != null) ? file.getFile() : ""); //$NON-NLS-1$
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -91,8 +91,7 @@ public class LogParserFileEditor extends DashboardComposite
          }
       });
 
-      String[] items = { "AUTO", "ACP", "UTF-8", "UCS-2", "UCS-2LE" , "UCS-2BE", 
-                        "UCS-4", "UCS-4LE", "UCS-4BE" };
+      String[] items = { "AUTO", "ACP", "UTF-8", "UCS-2", "UCS-2LE", "UCS-2BE", "UCS-4", "UCS-4LE", "UCS-4BE" };
       
       gd = new GridData();
       gd.grabExcessHorizontalSpace = false;
@@ -114,15 +113,17 @@ public class LogParserFileEditor extends DashboardComposite
       gd.horizontalAlignment = SWT.RIGHT;
       controlBar.setLayoutData(gd);
       fillControlBar(controlBar);
-      
+
       final Composite checkboxBar = new Composite(this, SWT.NONE);
       checkboxBar.setLayout(new RowLayout(SWT.HORIZONTAL));
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.horizontalAlignment = SWT.LEFT;
       checkboxBar.setLayoutData(gd);
-            
-      checkPreallocated = toolkit.createButton(checkboxBar, "&Preallocated", SWT.CHECK);
+
+      checkPreallocated = new Button(checkboxBar, SWT.CHECK);
+      checkPreallocated.setBackground(getBackground());
+      checkPreallocated.setText("&Preallocated");
       checkPreallocated.setSelection(file.getPreallocated());
       checkPreallocated.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -131,8 +132,10 @@ public class LogParserFileEditor extends DashboardComposite
             editor.fireModifyListeners();
          }
       }); 
-      
-      checkSnapshot = toolkit.createButton(checkboxBar, "Use &snapshot", SWT.CHECK);
+
+      checkSnapshot = new Button(checkboxBar, SWT.CHECK);
+      checkSnapshot.setBackground(getBackground());
+      checkSnapshot.setText("Use &snapshot");
       checkSnapshot.setSelection(file.getSnapshot());
       checkSnapshot.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -141,8 +144,10 @@ public class LogParserFileEditor extends DashboardComposite
             editor.fireModifyListeners();
          }
       }); 
-      
-      checkKeepOpen = toolkit.createButton(checkboxBar, "&Keep open", SWT.CHECK);
+
+      checkKeepOpen = new Button(checkboxBar, SWT.CHECK);
+      checkKeepOpen.setBackground(getBackground());
+      checkKeepOpen.setText("&Keep open");
       checkKeepOpen.setSelection(file.getKeepOpen());
       checkKeepOpen.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -152,7 +157,9 @@ public class LogParserFileEditor extends DashboardComposite
          }
       }); 
       
-      checkIgnoreModificationTime = toolkit.createButton(checkboxBar, "Ignore &modification time", SWT.CHECK);
+      checkIgnoreModificationTime = new Button(checkboxBar, SWT.CHECK);
+      checkIgnoreModificationTime.setBackground(getBackground());
+      checkIgnoreModificationTime.setText("Ignore &modification time");
       checkIgnoreModificationTime.setSelection(file.getIgnoreModificationTime());
       checkIgnoreModificationTime.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -162,7 +169,9 @@ public class LogParserFileEditor extends DashboardComposite
          }
       }); 
       
-      checkRescan = toolkit.createButton(checkboxBar, "&Rescan", SWT.CHECK);
+      checkRescan = new Button(checkboxBar, SWT.CHECK);
+      checkRescan.setBackground(getBackground());
+      checkRescan.setText("&Rescan");
       checkRescan.setSelection(file.getRescan());
       checkRescan.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -172,7 +181,7 @@ public class LogParserFileEditor extends DashboardComposite
          }
       }); 
 	}
-	
+
 	/**
 	 * Fill control bar
 	 * 
@@ -180,9 +189,7 @@ public class LogParserFileEditor extends DashboardComposite
 	 */
 	private void fillControlBar(Composite parent)
 	{
-		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
-		
-		link = toolkit.createImageHyperlink(parent, SWT.NONE);
+      ImageHyperlink link = new ImageHyperlink(parent, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 		link.setToolTipText(Messages.get().LogParserRuleEditor_DeleteRule);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
@@ -193,7 +200,7 @@ public class LogParserFileEditor extends DashboardComposite
 			}
 		});
 	}
-	
+
 	/**
 	 * Save data from controls into parser rule
 	 */

@@ -111,8 +111,8 @@ public class PolicyListView extends ViewPart implements SessionListener
    private Action actionDuplicate;
    private Action actionShowFilter;
    private CompositeWithMessageBar viewerContainer;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -281,7 +281,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          }
       };
 
-      actionCreate = new Action("Create new", SharedIcons.ADD_OBJECT) {
+      actionCreate = new Action("&New...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -289,7 +289,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          }
       }; 
 
-      actionRename = new Action("Rename policy") {
+      actionRename = new Action("&Rename") {
          @Override
          public void run()
          {
@@ -297,7 +297,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          }
       };
 
-      actionEdit = new Action("Edit", SharedIcons.EDIT) {
+      actionEdit = new Action("&Edit", SharedIcons.EDIT) {
          @Override
          public void run()
          {
@@ -307,34 +307,34 @@ public class PolicyListView extends ViewPart implements SessionListener
       actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
       actionEdit.setEnabled(false);
 
-      actionCopy = new Action("Copy to another template(s)...") {
+      actionCopy = new Action("&Copy to another template(s)...") {
          @Override
          public void run()
          {
-            copyItems(false);
+            copyPolicies(false);
          }
       };
       actionCopy.setEnabled(false);
 
-      actionMove = new Action("Move to another template(s)...") {
+      actionMove = new Action("&Move to another template(s)...") {
          @Override
          public void run()
          {
-            copyItems(true);
+            copyPolicies(true);
          }
       };
       actionMove.setEnabled(false);
 
-      actionDuplicate = new Action("Duplicate") {
+      actionDuplicate = new Action("D&uplicate") {
          @Override
          public void run()
          {
-            duplicateItems();
+            duplicatePolicies();
          }
       };
       actionDuplicate.setEnabled(false);
       
-      actionDelete = new Action("Delete", SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
@@ -342,7 +342,7 @@ public class PolicyListView extends ViewPart implements SessionListener
          }
       };
       actionDelete.setEnabled(false);
-      
+
       actionShowFilter = new Action(Messages.get().DataCollectionEditor_ShowFilter, Action.AS_CHECK_BOX) {
          @Override
          public void run()
@@ -355,26 +355,23 @@ public class PolicyListView extends ViewPart implements SessionListener
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
    }
-  
+
    /**
     * Rename selected policy
     */
    protected void renamePolicy()
    {
-      IStructuredSelection selection = (IStructuredSelection)policyList.getSelection();
+      IStructuredSelection selection = policyList.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
       AgentPolicy policy = (AgentPolicy)selection.getFirstElement();
-
       CreatePolicyDialog dlg = new CreatePolicyDialog(getViewSite().getShell(), policy);  
       if (dlg.open() != Window.OK)
          return;
 
       final AgentPolicy newPolicy = dlg.getPolicy();
-      
       new ConsoleJob("Rename policy", this, Activator.PLUGIN_ID, null) {
-         
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -387,10 +384,14 @@ public class PolicyListView extends ViewPart implements SessionListener
             return "Cannot rename policy";
          }
       }.start();
-      
    }
 
-   protected void copyItems(boolean doMove)
+   /**
+    * Copy/move policies
+    *
+    * @param doMove true to move instead of copy
+    */
+   protected void copyPolicies(boolean doMove)
    {
       final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), ObjectSelectionDialog.createTemplateSelectionFilter());
       if (dlg.open() != Window.OK)
@@ -401,8 +402,8 @@ public class PolicyListView extends ViewPart implements SessionListener
          MessageDialogHelper.openError(getSite().getShell(), "Error", "Please select at least one destination template.");
          return;
       }
-      
-      IStructuredSelection selection = (IStructuredSelection)policyList.getSelection();
+
+      IStructuredSelection selection = policyList.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       final AgentPolicy[] policyList = new AgentPolicy[selection.size()];
       for(int i = 0; (i < policyList.length) && it.hasNext(); i++)
@@ -447,9 +448,12 @@ public class PolicyListView extends ViewPart implements SessionListener
       }.start();      
    }
 
-   protected void duplicateItems()
+   /**
+    * Duplicate policies
+    */
+   protected void duplicatePolicies()
    {
-      IStructuredSelection selection = (IStructuredSelection)policyList.getSelection();
+      IStructuredSelection selection = policyList.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       final AgentPolicy[] policyList = new AgentPolicy[selection.size()];
       for(int i = 0; (i < policyList.length) && it.hasNext(); i++)
@@ -481,9 +485,12 @@ public class PolicyListView extends ViewPart implements SessionListener
       
    }
 
+   /**
+    * Edit selected policy
+    */
    private void editPolicy()
    {
-      IStructuredSelection selection = (IStructuredSelection)policyList.getSelection();
+      IStructuredSelection selection = policyList.getStructuredSelection();
       AgentPolicy policy = (AgentPolicy)selection.getFirstElement();
       try
       {
@@ -509,17 +516,14 @@ public class PolicyListView extends ViewPart implements SessionListener
     */
    protected void deletePolicy()
    {      
+      IStructuredSelection selection = policyList.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+      
+      if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Delete policy", "Do you really want to delete selected policies?"))
+         return;
 
-      final IStructuredSelection selection = (IStructuredSelection)policyList.getSelection();
-      if (selection.size() <= 0)
-         return;
-      
-      if (!MessageDialogHelper.openConfirm(getSite().getShell(), "Delete policy",
-                                     "Do you really want to delete selected policies?"))
-         return;
-      
       new ConsoleJob("DeletePolicy", this, Activator.PLUGIN_ID, null) {
-         
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -536,7 +540,7 @@ public class PolicyListView extends ViewPart implements SessionListener
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -553,7 +557,7 @@ public class PolicyListView extends ViewPart implements SessionListener
       CreatePolicyDialog dlg = new CreatePolicyDialog(getViewSite().getShell(), null);  
       if (dlg.open() != Window.OK)
          return;
-      
+
       final AgentPolicy newPolicy = dlg.getPolicy();
       new ConsoleJob("Save policy", this, Activator.PLUGIN_ID, null) {
          @Override
@@ -561,7 +565,6 @@ public class PolicyListView extends ViewPart implements SessionListener
          {
             final UUID newObjectGuid = session.savePolicy(templateId, newPolicy, false);
             runInUIThread(new Runnable() {
-               
                @Override
                public void run()
                {

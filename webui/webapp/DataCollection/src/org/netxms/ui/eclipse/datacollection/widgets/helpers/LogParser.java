@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,16 +34,16 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Log parser configuration
  */
-@Root(name="parser", strict=false)
+@Root(name = "parser", strict = false)
 public class LogParser
 {   
-	@Attribute(required=false)
+   @Attribute(required = false)
 	private String processALL = null;
 
-	@Attribute(required=false)
-	private Integer trace = null;	
+   @Attribute(required = false)
+   private Integer checkInterval = null;
 
-   @Attribute(required=false)
+   @Attribute(required = false)
    private String name = null;
 
    @ElementMap(entry = "macro", key = "name", attribute = true, required = false)
@@ -128,19 +128,23 @@ public class LogParser
    }
 
    /**
-	 * @return
-	 */
-	public Integer getTrace()
+    * Get file check interval
+    *
+    * @return file check interval
+    */
+   public Integer getFileCheckInterval()
 	{
-		return trace;
+      return checkInterval;
 	}
 
 	/**
-	 * @param trace
-	 */
-	public void setTrace(Integer trace)
+    * Set file check interval
+    *
+    * @param checkInterval new file check interval
+    */
+   public void setFileCheckInterval(Integer checkInterval)
 	{
-		this.trace = trace;
+      this.checkInterval = checkInterval;
 	}
 
 	/**
@@ -150,7 +154,7 @@ public class LogParser
    {
       return stringToBoolean(processALL);
    }
-   
+
    /**
     * @param processALL the processALL to set
     */
@@ -226,16 +230,5 @@ public class LogParser
 	public static String booleanToString(boolean value)
 	{
 	   return value ? "true" : null;
-	}
-	
-	/**
-    * Convert integer to string value for attribute
-    * 
-	 * @param value integer value
-	 * @return corresponding string
-	 */
-	public static String integerToString(Integer value)
-	{
-	   return value == null ? "" : Integer.toString(value);
 	}
 }

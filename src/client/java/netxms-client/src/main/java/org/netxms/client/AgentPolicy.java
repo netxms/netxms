@@ -72,15 +72,15 @@ public class AgentPolicy
     * Create from NXCP message.
     *
     * @param msg NXCP message
-    * @param base base field ID
+    * @param baseId base field ID
     */
-   public AgentPolicy(NXCPMessage msg, long base)
+   public AgentPolicy(NXCPMessage msg, long baseId)
    {
-      guid = msg.getFieldAsUUID(base);
-      policyType = msg.getFieldAsString(base+1);
-      name = msg.getFieldAsString(base+2);
-      content = msg.getFieldAsString(base+3);    
-      flags = msg.getFieldAsInt32(base+4);   
+      guid = msg.getFieldAsUUID(baseId);
+      policyType = msg.getFieldAsString(baseId + 1);
+      name = msg.getFieldAsString(baseId + 2);
+      content = msg.getFieldAsString(baseId + 3);
+      flags = msg.getFieldAsInt32(baseId + 4);
    }
 
    /**

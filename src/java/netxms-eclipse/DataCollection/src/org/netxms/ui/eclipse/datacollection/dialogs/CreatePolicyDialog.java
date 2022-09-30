@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,9 +57,9 @@ public class CreatePolicyDialog extends Dialog
 		this.policy = policy;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -67,9 +67,9 @@ public class CreatePolicyDialog extends Dialog
 		newShell.setText("Create new policy");
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -85,7 +85,7 @@ public class CreatePolicyDialog extends Dialog
       textName.getShell().setMinimumSize(300, 0);
       textName.setTextLimit(63);
       textName.setFocus();
-      
+
       if (policy != null)
       {
          textName.setText(policy.getName());
@@ -121,6 +121,11 @@ public class CreatePolicyDialog extends Dialog
 		super.okPressed();
 	}
 
+   /**
+    * Get policy
+    *
+    * @return policy object
+    */
    public AgentPolicy getPolicy()
    {
       if (policy == null)

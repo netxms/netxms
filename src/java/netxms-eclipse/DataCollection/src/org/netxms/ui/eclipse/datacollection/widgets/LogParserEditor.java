@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,11 +33,13 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -49,14 +51,10 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.forms.widgets.ScrolledForm;
-import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.forms.widgets.TableWrapData;
-import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.LogMacroEditDialog;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParser;
@@ -68,11 +66,13 @@ import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserRuleEditor;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.LogParserType;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.MacroListLabelProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.ui.eclipse.widgets.Section;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.TextEditor;
+import org.netxms.ui.eclipse.widgets.helpers.ExpansionEvent;
+import org.netxms.ui.eclipse.widgets.helpers.ExpansionListener;
 
 /**
  * Log parser editor
@@ -83,25 +83,27 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    private static final int TAB_BUILDER = 1;
    private static final int TAB_XML = 2;
 
+   private static final int DEFAULT_FILE_CHECK_INTERVAL = 10000;
+
    private CTabFolder tabFolder;
    private int currentTab = TAB_NONE;
    private TextEditor xmlEditor;
-   private FormToolkit toolkit;
-   private ScrolledForm form;
    private Set<LogParserModifyListener> listeners = new HashSet<LogParserModifyListener>();
    private boolean enableModifyListeners = true;
    private LogParser parser = new LogParser();
+   private ScrolledComposite scroller;
+   private Composite visualEditorArea;
    private Composite rulesArea;
    private Composite fileArea;
-   private ImageHyperlink addColumnLink;
+   private ImageHyperlink addRuleLink;
    private ImageHyperlink addFileLink;
    private SortableTableViewer macroList;
    private LogParserType type;
    private FindReplaceAction actionFindReplace = null;
 
    /* General section */
-   private LabeledText labelName;
-   private Spinner spinnerTrace;
+   private LabeledText textName;
+   private Spinner spinnerFileCheckInterval;
    private Button checkProcessAll;
 
    /**
@@ -120,7 +122,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       tabFolder.setUnselectedImageVisible(true);
       tabFolder.setSelectionBarThickness(0);
       tabFolder.setSimple(true);
-      tabFolder.addSelectionListener(new SelectionListener() {
+      tabFolder.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -159,15 +161,9 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
                actionFindReplace.setEnabled(currentTab == TAB_XML);
             }
          }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
       });
 
-      createForm();
+      createVisualEditor();
       createTextEditor();
    }
 
@@ -192,77 +188,111 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    }
 
    /**
-    * Create policy edit form
+    * Create policy visual editor
     */
-   private void createForm()
+   private void createVisualEditor()
    {
-      /* FORM */
-      toolkit = new FormToolkit(getDisplay());
-      form = toolkit.createScrolledForm(tabFolder);
-      form.setText(Messages.get().LogParserEditor_LogParser);
+      scroller = new ScrolledComposite(tabFolder, SWT.V_SCROLL);
+      scroller.setExpandHorizontal(true);
+      scroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+      scroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            updateScroller();
+         }
+      });
 
       final CTabItem tabItem = new CTabItem(tabFolder, SWT.NONE);
       tabItem.setText(Messages.get().LogParserEditor_Editor);
       tabItem.setImage(SharedIcons.IMG_EDIT);
-      tabItem.setControl(form);
+      tabItem.setControl(scroller);
       tabItem.setData(TAB_BUILDER);
 
-      TableWrapLayout layout = new TableWrapLayout();
-      form.getBody().setLayout(layout);
+      visualEditorArea = new Composite(scroller, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      layout.horizontalSpacing = 8;
+      layout.verticalSpacing = 8;
+      layout.marginWidth = 8;
+      layout.marginHeight = 8;
+      visualEditorArea.setLayout(layout);
+      visualEditorArea.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+      scroller.setContent(visualEditorArea);
 
       /* General section */
-      Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-      section.setText("General");
-      TableWrapData td = new TableWrapData();
-      td.align = TableWrapData.FILL;
-      td.grabHorizontal = true;
-      section.setLayoutData(td);
+      Section section = new Section(visualEditorArea, "General", true);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.widthHint = 400;
+      section.setLayoutData(gd);
+      section.addExpansionListener(new ExpansionListener() {
+         @Override
+         public void expansionStateChanged(ExpansionEvent e)
+         {
+            ((GridData)((Control)e.widget).getLayoutData()).verticalAlignment = e.getState() ? SWT.FILL : SWT.TOP;
+         }
+      });
 
-      final Composite generalArea = toolkit.createComposite(section);
-      createGeneralArea(generalArea);
-      section.setClient(generalArea);
+      createGeneralArea(section.getClient());
 
       /* Macros section */
-      section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE);
-      section.setText(Messages.get().LogParserEditor_Macros);
-      td = new TableWrapData();
-      td.align = TableWrapData.FILL;
-      section.setLayoutData(td);
+      section = new Section(visualEditorArea, Messages.get().LogParserEditor_Macros, true);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      section.setLayoutData(gd);
+      section.addExpansionListener(new ExpansionListener() {
+         @Override
+         public void expansionStateChanged(ExpansionEvent e)
+         {
+            ((GridData)((Control)e.widget).getLayoutData()).verticalAlignment = e.getState() ? SWT.FILL : SWT.TOP;
+         }
+      });
 
-      final Composite macroArea = toolkit.createComposite(section);
-      createMacroSection(macroArea);
-
-      section.setClient(macroArea);
+      createMacroSection(section.getClient());
 
       /* Rules section */
-      section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE | Section.EXPANDED);
-      section.setText(Messages.get().LogParserEditor_Rules);
-      td = new TableWrapData();
-      td.align = TableWrapData.FILL;
-      td.grabHorizontal = true;
-      section.setLayoutData(td);
+      section = new Section(visualEditorArea, Messages.get().LogParserEditor_Rules, true);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      section.setLayoutData(gd);
 
-      rulesArea = toolkit.createComposite(section);
+      rulesArea = section.getClient();
       GridLayout rulesAreaLayout = new GridLayout();
       rulesAreaLayout.marginHeight = 0;
       rulesAreaLayout.marginWidth = 0;
       rulesAreaLayout.verticalSpacing = 1;
       rulesArea.setLayout(rulesAreaLayout);
 
-      section.setClient(rulesArea);
+      rulesArea.setBackground(visualEditorArea.getBackground());
 
-      addColumnLink = toolkit.createImageHyperlink(rulesArea, SWT.NONE);
-      addColumnLink.setText(Messages.get().LogParserEditor_AddRule);
-      addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
-      addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
+      addRuleLink = new ImageHyperlink(rulesArea, SWT.NONE);
+      addRuleLink.setText(Messages.get().LogParserEditor_AddRule);
+      addRuleLink.setImage(SharedIcons.IMG_ADD_OBJECT);
+      addRuleLink.setBackground(rulesArea.getBackground());
+      addRuleLink.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
             addRule();
          }
       });
+   }
 
-      form.reflow(true);
+   /**
+    * Recalculate scroller content size and update scroller
+    */
+   private void updateScroller()
+   {
+      visualEditorArea.layout(true, true);
+      scroller.setMinSize(visualEditorArea.computeSize(scroller.getSize().x, SWT.DEFAULT));
    }
 
    /**
@@ -271,28 +301,19 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    private void createGeneralArea(Composite generalArea)
    {
       GridLayout layout = new GridLayout();
-      layout.makeColumnsEqualWidth = false;
-      layout.numColumns = 3;
-      layout.marginWidth = 0;
-      layout.marginHeight = 0;
+      layout.numColumns = 2;
       generalArea.setLayout(layout);
 
-      final WidgetFactory spinnerFactory = new WidgetFactory() {
-         @Override
-         public Control createControl(Composite parent, int style)
-         {
-            return new Spinner(parent, style);
-         }
-      };
-
-      labelName = new LabeledText(generalArea, SWT.NONE);
-      labelName.setLabel("Parser name");
-      labelName.setText((parser.getName() != null) ? parser.getName() : ""); //$NON-NLS-1$
+      textName = new LabeledText(generalArea, SWT.NONE);
+      textName.setLabel("Parser name");
+      textName.setText((parser.getName() != null) ? parser.getName() : ""); //$NON-NLS-1$
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      labelName.setLayoutData(gd);
-      labelName.getTextControl().addModifyListener(new ModifyListener() {
+      gd.horizontalSpan = (type == LogParserType.POLICY) ? 1 : 2;
+      gd.verticalAlignment = SWT.BOTTOM;
+      textName.setLayoutData(gd);
+      textName.getTextControl().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -300,21 +321,24 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
          }
       });
 
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      spinnerTrace = (Spinner)WidgetHelper.createLabeledControl(generalArea, SWT.BORDER, spinnerFactory, "Trace level", gd);
-      spinnerTrace.setMinimum(0);
-      spinnerTrace.setMaximum(9);
-      spinnerTrace.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            fireModifyListeners();
-         }
-      });
-      spinnerTrace.setSelection(parser.getTrace() != null ? parser.getTrace() : 0);
+      if (type == LogParserType.POLICY)
+      {
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.verticalAlignment = SWT.BOTTOM;
+         spinnerFileCheckInterval = WidgetHelper.createLabeledSpinner(generalArea, SWT.BORDER, "File check interval", 1000, 60000, gd);
+         spinnerFileCheckInterval.addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               fireModifyListeners();
+            }
+         });
+         spinnerFileCheckInterval.setSelection(parser.getFileCheckInterval() != null ? parser.getFileCheckInterval() : DEFAULT_FILE_CHECK_INTERVAL);
+      }
 
-      checkProcessAll = toolkit.createButton(generalArea, "Process all", SWT.CHECK);
+      checkProcessAll = new Button(generalArea, SWT.CHECK);
+      checkProcessAll.setText("Always process all rules");
       checkProcessAll.setSelection(parser.getProcessALL());
       checkProcessAll.addSelectionListener(new SelectionAdapter() {
          @Override
@@ -340,7 +364,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
          fileArea.setLayoutData(gd);
 
          // add link to add file editor
-         addFileLink = toolkit.createImageHyperlink(fileArea, SWT.NONE);
+         addFileLink = new ImageHyperlink(fileArea, SWT.NONE);
          addFileLink.setText("Add file");
          addFileLink.setImage(SharedIcons.IMG_ADD_OBJECT);
          addFileLink.addHyperlinkListener(new HyperlinkAdapter() {
@@ -402,13 +426,6 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       macroList.setLabelProvider(new MacroListLabelProvider());
       macroList.setContentProvider(new ArrayContentProvider());
       macroList.setComparator(new ViewerComparator() {
-
-         /*
-          * (non-Javadoc)
-          * 
-          * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object,
-          * java.lang.Object)
-          */
          @SuppressWarnings("unchecked")
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
@@ -433,9 +450,10 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
          }
       });
 
-      ImageHyperlink link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
+      ImageHyperlink link = new ImageHyperlink(macroArea, SWT.NONE);
       link.setImage(SharedIcons.IMG_ADD_OBJECT);
       link.setText(Messages.get().LogParserEditor_Add);
+      link.setBackground(macroArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       link.setLayoutData(gd);
@@ -447,9 +465,10 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
          }
       });
 
-      link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
+      link = new ImageHyperlink(macroArea, SWT.NONE);
       link.setImage(SharedIcons.IMG_EDIT);
       link.setText(Messages.get().LogParserEditor_Edit);
+      link.setBackground(macroArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       link.setLayoutData(gd);
@@ -461,9 +480,10 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
          }
       });
 
-      link = toolkit.createImageHyperlink(macroArea, SWT.NONE);
+      link = new ImageHyperlink(macroArea, SWT.NONE);
       link.setImage(SharedIcons.IMG_DELETE_OBJECT);
       link.setText(Messages.get().LogParserEditor_Delete);
+      link.setBackground(macroArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       link.setLayoutData(gd);
@@ -531,10 +551,10 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       {
          for(LogParserFile file : parser.getFiles())
             file.getEditor().save();
+         parser.setFileCheckInterval(spinnerFileCheckInterval.getSelection());
       }
-      parser.setName(labelName.getText());
+      parser.setName(textName.getText());
       parser.setProcessALL(checkProcessAll.getSelection());
-      parser.setTrace(spinnerTrace.getSelection());
 
       for(LogParserRule rule : parser.getRules())
          rule.getEditor().save();
@@ -545,7 +565,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         Activator.logError("Unexpected error creating parser XML", e);
          return "<parser>\n</parser>"; //$NON-NLS-1$
       }
    }
@@ -585,9 +605,8 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       }
       catch(Exception e)
       {
-         e.printStackTrace();
-         MessageDialogHelper.openError(getShell(), Messages.get().LogParserEditor_Error,
-               Messages.get().LogParserEditor_InvalidDefinition);
+         Activator.logError("Error creating log parser object from XML", e);
+         MessageDialogHelper.openError(getShell(), Messages.get().LogParserEditor_Error, Messages.get().LogParserEditor_InvalidDefinition);
          parser = null;
          selectXmlEditor();
          return;
@@ -599,20 +618,19 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       {
          for(LogParserFile file : parser.getFiles())
             createFileEditor(file).moveAbove(addFileLink);
+         spinnerFileCheckInterval.setSelection(parser.getFileCheckInterval() != null ? parser.getFileCheckInterval() : DEFAULT_FILE_CHECK_INTERVAL);
       }
-      labelName.setText(parser.getName());
-      spinnerTrace.setSelection(parser.getTrace() != null ? parser.getTrace() : 0);
+      textName.setText(parser.getName());
       checkProcessAll.setSelection(parser.getProcessALL());
 
       /* rules */
       for(LogParserRule rule : parser.getRules())
-         createRuleEditor(rule).moveAbove(addColumnLink);
+         createRuleEditor(rule).moveAbove(addRuleLink);
 
       /* macros */
       macroList.setInput(parser.getMacros().entrySet().toArray());
 
-      form.reflow(true);
-      form.getParent().layout(true, true);
+      updateScroller();
    }
 
    /**
@@ -620,7 +638,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
     */
    private LogParserRuleEditor createRuleEditor(LogParserRule rule)
    {
-      LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, toolkit, rule, this);
+      LogParserRuleEditor editor = new LogParserRuleEditor(rulesArea, rule, this);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -636,9 +654,9 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    {
       LogParserRule rule = new LogParserRule();
       LogParserRuleEditor editor = createRuleEditor(rule);
-      editor.moveAbove(addColumnLink);
+      editor.moveAbove(addRuleLink);
       parser.getRules().add(rule);
-      form.reflow(true);
+      updateScroller();
       fireModifyListeners();
    }
 
@@ -647,7 +665,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
     */
    private LogParserFileEditor createFileEditor(LogParserFile file)
    {
-      LogParserFileEditor editor = new LogParserFileEditor(fileArea, toolkit, file, this);
+      LogParserFileEditor editor = new LogParserFileEditor(fileArea, file, this);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -665,7 +683,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       LogParserFileEditor editor = createFileEditor(file);
       editor.moveAbove(addFileLink);
       parser.getFiles().add(file);
-      form.reflow(true);
+      updateScroller();
       fireModifyListeners();
    }
 
@@ -731,7 +749,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    {
       parser.getRules().remove(rule);
       rule.getEditor().dispose();
-      form.reflow(true);
+      updateScroller();
       getParent().layout(true, true);
       fireModifyListeners();
    }
@@ -745,7 +763,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
    {
       parser.getFiles().remove(file);
       file.getEditor().dispose();
-      form.reflow(true);
+      updateScroller();
       getParent().layout(true, true);
       fireModifyListeners();
    }
@@ -763,7 +781,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 
       rule.getEditor().moveAbove(parser.getRules().get(index - 1).getEditor());
       Collections.swap(parser.getRules(), index - 1, index);
-      form.reflow(true);
+      updateScroller();
       getParent().layout(true, true);
       fireModifyListeners();
    }
@@ -781,7 +799,7 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
 
       rule.getEditor().moveBelow(parser.getRules().get(index + 1).getEditor());
       Collections.swap(parser.getRules(), index + 1, index);
-      form.reflow(true);
+      updateScroller();
       getParent().layout(true, true);
       fireModifyListeners();
    }
@@ -833,12 +851,18 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       return currentTab == TAB_XML;
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#canPerformFind()
+    */
    @Override
    public boolean canPerformFind()
    {
       return isEditorTabSelected();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#findAndSelect(int, java.lang.String, boolean, boolean, boolean)
+    */
    @Override
    public int findAndSelect(int widgetOffset, String findString, boolean searchForward, boolean caseSensitive, boolean wholeWord)
    {
@@ -848,30 +872,40 @@ public class LogParserEditor extends Composite implements IFindReplaceTarget
       return xmlEditor.findAndSelect(widgetOffset, findString, searchForward, caseSensitive, wholeWord);
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#getSelection()
+    */
    @Override
    public Point getSelection()
    {
       return xmlEditor.getSelection();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#getSelectionText()
+    */
    @Override
    public String getSelectionText()
    {
       return xmlEditor.getSelectionText();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#isEditable()
+    */
    @Override
    public boolean isEditable()
    {
       return isEditorTabSelected();
    }
 
+   /**
+    * @see org.eclipse.jface.text.IFindReplaceTarget#replaceSelection(java.lang.String)
+    */
    @Override
    public void replaceSelection(String text)
    {
-      if (!isEditorTabSelected())
-         return;
-
-      xmlEditor.replaceSelection(text);
+      if (isEditorTabSelected())
+         xmlEditor.replaceSelection(text);
    }
 }

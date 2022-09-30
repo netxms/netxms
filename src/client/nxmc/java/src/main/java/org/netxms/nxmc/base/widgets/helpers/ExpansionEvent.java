@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.widgets.helpers;
 
 import org.eclipse.swt.events.TypedEvent;
+import org.eclipse.swt.widgets.Widget;
 
 /**
  * Widget expansion state change event
@@ -31,9 +32,11 @@ public class ExpansionEvent extends TypedEvent
     * @param source event source
     * @param state the new expansion state
     */
-   public ExpansionEvent(Object source, boolean state)
+   public ExpansionEvent(Widget source, boolean state)
    {
       super(source);
+      widget = source;
+      display = widget.getDisplay();
       data = state ? Boolean.TRUE : Boolean.FALSE;
    }
 

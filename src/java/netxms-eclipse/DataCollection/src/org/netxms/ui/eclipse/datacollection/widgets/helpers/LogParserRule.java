@@ -188,12 +188,7 @@ public class LogParserRule
 	 */
 	public String getSeverityOrLevel(boolean isSyslogParser)
 	{
-	   if(isSyslogParser)
-      {
-	      return LogParser.integerToString(severity);
-      }
-	   else
-	      return LogParser.integerToString(level);
+      return isSyslogParser ? integerToString(severity) : integerToString(level);
 	}
 
 	/**
@@ -201,7 +196,7 @@ public class LogParserRule
 	 */
 	public void setSeverityOrLevel(Integer severity)
 	{
-      if(editor.getParserType() == LogParserType.SYSLOG)
+      if (editor.getParserType() == LogParserType.SYSLOG)
       {
          this.severity = severity;
          this.level = null;
@@ -218,12 +213,7 @@ public class LogParserRule
 	 */
 	public String getFacilityOrId(boolean isSyslogParser)
 	{
-	   if(isSyslogParser)
-	   {
-	      return LogParser.integerToString(facility);
-	   }
-	   else
-	      return LogParser.integerToString(id);
+      return isSyslogParser ? integerToString(facility) : integerToString(id);
 	}
 
 	/**
@@ -400,5 +390,16 @@ public class LogParserRule
    public void setPushDci(LogParserPushDci pushDci)
    {
       this.pushDci = pushDci;
+   }
+
+   /**
+    * Null-safe Integer.toString()
+    *
+    * @param n integer value or null
+    * @return string value
+    */
+   private static String integerToString(Integer n)
+   {
+      return (n != null) ? n.toString() : "";
    }
 }

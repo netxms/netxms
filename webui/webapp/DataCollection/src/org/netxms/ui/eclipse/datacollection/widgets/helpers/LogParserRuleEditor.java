@@ -33,10 +33,10 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -59,7 +59,6 @@ public class LogParserRuleEditor extends DashboardComposite
    private static final Color ACTION_BORDER_COLOR = new Color(Display.getCurrent(), 186, 176, 201);
    private static final Color TITLE_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 
-   private FormToolkit toolkit;
    private LogParserRule rule;
    private LogParserEditor editor;
    private LabeledText name;
@@ -90,11 +89,10 @@ public class LogParserRuleEditor extends DashboardComposite
     * @param parent
     * @param style
     */
-   public LogParserRuleEditor(Composite parent, FormToolkit toolkit, LogParserRule rule, final LogParserEditor editor)
+   public LogParserRuleEditor(Composite parent, LogParserRule rule, final LogParserEditor editor)
    {
-      super(parent, SWT.BORDER);
+      super(parent, SWT.NONE);
 
-      this.toolkit = toolkit;
       this.rule = rule;
       this.editor = editor;
 
@@ -103,9 +101,16 @@ public class LogParserRuleEditor extends DashboardComposite
       layout.makeColumnsEqualWidth = true;
       setLayout(layout);
 
+      Label separator = new Label(this, SWT.HORIZONTAL | SWT.SEPARATOR);
+      GridData gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.horizontalAlignment = SWT.FILL;
+      separator.setLayoutData(gd);
+
       final Composite controlBar = new Composite(this, SWT.NONE);
       controlBar.setLayout(new RowLayout(SWT.HORIZONTAL));
-      GridData gd = new GridData();
+      controlBar.setBackground(parent.getBackground());
+      gd = new GridData();
       gd.horizontalSpan = 2;
       gd.horizontalAlignment = SWT.RIGHT;
       controlBar.setLayoutData(gd);
@@ -113,6 +118,7 @@ public class LogParserRuleEditor extends DashboardComposite
 
       name = new LabeledText(this, SWT.NONE);
       name.setLabel("Name");
+      name.setBackground(parent.getBackground());
       gd = new GridData();
       gd.horizontalSpan = 2;
       gd.horizontalAlignment = SWT.FILL;
@@ -167,9 +173,10 @@ public class LogParserRuleEditor extends DashboardComposite
     */
    private void fillControlBar(Composite parent)
    {
-      ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
+      ImageHyperlink link = new ImageHyperlink(parent, SWT.NONE);
       link.setImage(SharedIcons.IMG_UP);
       link.setToolTipText(Messages.get().LogParserRuleEditor_MoveUp);
+      link.setBackground(parent.getBackground());
       link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
@@ -178,9 +185,10 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       });
 
-      link = toolkit.createImageHyperlink(parent, SWT.NONE);
+      link = new ImageHyperlink(parent, SWT.NONE);
       link.setImage(SharedIcons.IMG_DOWN);
       link.setToolTipText(Messages.get().LogParserRuleEditor_MoveDown);
+      link.setBackground(parent.getBackground());
       link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
@@ -189,9 +197,10 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       });
 
-      link = toolkit.createImageHyperlink(parent, SWT.NONE);
+      link = new ImageHyperlink(parent, SWT.NONE);
       link.setImage(SharedIcons.IMG_DELETE_OBJECT);
       link.setToolTipText(Messages.get().LogParserRuleEditor_DeleteRule);
+      link.setBackground(parent.getBackground());
       link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
@@ -220,7 +229,6 @@ public class LogParserRuleEditor extends DashboardComposite
       };
 
       Composite matcher = new Composite(area, SWT.NONE);
-      toolkit.adapt(matcher);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -240,7 +248,8 @@ public class LogParserRuleEditor extends DashboardComposite
       regexp.setLayoutData(gd);
       regexp.getTextControl().addModifyListener(listener);
 
-      checkboxInvert = toolkit.createButton(matcher, "Invert", SWT.CHECK);
+      checkboxInvert = new Button(matcher, SWT.CHECK);
+      checkboxInvert.setText("Invert");
       checkboxInvert.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -253,7 +262,6 @@ public class LogParserRuleEditor extends DashboardComposite
       if (editor.getParserType() == LogParserType.POLICY)
       {
          Composite matcherRepeatConf = new Composite(matcher, SWT.NONE);
-         toolkit.adapt(matcherRepeatConf);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
@@ -273,9 +281,7 @@ public class LogParserRuleEditor extends DashboardComposite
             }
          };
          
-         repeatCount = (Spinner)WidgetHelper.createLabeledControl(matcherRepeatConf, SWT.BORDER, factory, "Repeat count",
-               WidgetHelper.DEFAULT_LAYOUT_DATA);
-         toolkit.adapt(repeatCount);
+         repeatCount = (Spinner)WidgetHelper.createLabeledControl(matcherRepeatConf, SWT.BORDER, factory, "Repeat count", WidgetHelper.DEFAULT_LAYOUT_DATA);
          repeatCount.setMinimum(0);
          repeatCount.setSelection(rule.getMatch().getRepeatCount());
          repeatCount.addModifyListener(new ModifyListener() {
@@ -292,7 +298,6 @@ public class LogParserRuleEditor extends DashboardComposite
          repeatCount.setLayoutData(gd);
          
          Composite timeBackGroup = new Composite(matcherRepeatConf, SWT.NONE);
-         toolkit.adapt(timeBackGroup);
          layout = new GridLayout();
          layout.marginWidth = 0;
          layout.marginHeight = 0;
@@ -304,11 +309,9 @@ public class LogParserRuleEditor extends DashboardComposite
          gd.grabExcessHorizontalSpace = true;
          timeBackGroup.setLayoutData(gd);
    
-         timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Repeat interval", 1, 10000,
-               WidgetHelper.DEFAULT_LAYOUT_DATA);
+         timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Repeat interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
          timeRange.setSelection(rule.getMatch().getTimeRagne());
          timeRange.addModifyListener(listener);
-         toolkit.adapt(timeRange);
    
          timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "", WidgetHelper.DEFAULT_LAYOUT_DATA);
          timeUnits.add("Seconds");
@@ -316,10 +319,9 @@ public class LogParserRuleEditor extends DashboardComposite
          timeUnits.add("Hours");
          timeUnits.select(rule.getMatch().getTimeUnit());
          timeUnits.addModifyListener(listener);
-         toolkit.adapt(timeUnits);
-         // time range
    
-         checkboxReset = toolkit.createButton(matcherRepeatConf, "Reset repeat count", SWT.CHECK);
+         checkboxReset = new Button(matcherRepeatConf, SWT.CHECK);
+         checkboxReset.setText("Reset repeat count");
          checkboxReset.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
@@ -331,7 +333,6 @@ public class LogParserRuleEditor extends DashboardComposite
       }
 
       severity = new LabeledText(area, SWT.NONE);
-      toolkit.adapt(severity);
       severity.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Severity : "Level");
       severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
       gd = new GridData();
@@ -341,7 +342,6 @@ public class LogParserRuleEditor extends DashboardComposite
       severity.getTextControl().addModifyListener(listener);
 
       facility = new LabeledText(area, SWT.NONE);
-      toolkit.adapt(facility);
       facility.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Facility : "Id");
       facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
       gd = new GridData();
@@ -351,7 +351,6 @@ public class LogParserRuleEditor extends DashboardComposite
       facility.getTextControl().addModifyListener(listener);
 
       tag = new LabeledText(area, SWT.NONE);
-      toolkit.adapt(tag);
       tag.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
       tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
       gd = new GridData();
@@ -363,7 +362,6 @@ public class LogParserRuleEditor extends DashboardComposite
       if (editor.getParserType() == LogParserType.WIN_EVENT)
       {
          logName = new LabeledText(area, SWT.NONE);
-         toolkit.adapt(logName);
          logName.setLabel("Log name");
          logName.setText(rule.getLogName()); // $NON-NLS-1$
          gd = new GridData();
@@ -376,7 +374,6 @@ public class LogParserRuleEditor extends DashboardComposite
       if (editor.getParserType() == LogParserType.POLICY)
       {
          activeContext = new LabeledText(area, SWT.NONE);
-         toolkit.adapt(activeContext);
          activeContext.setLabel(Messages.get().LogParserRuleEditor_ActiveContext);
          activeContext.setText((rule.getContext() != null) ? rule.getContext() : ""); //$NON-NLS-1$
          gd = new GridData();
@@ -387,7 +384,6 @@ public class LogParserRuleEditor extends DashboardComposite
       }
 
       description = new LabeledText(area, SWT.NONE);
-      toolkit.adapt(description);
       description.setLabel("Description");
       description.setText((rule.getDescription() != null) ? rule.getDescription() : ""); //$NON-NLS-1$
       gd = new GridData();
@@ -449,7 +445,6 @@ public class LogParserRuleEditor extends DashboardComposite
       }
 
       event = new EventSelector(area, SWT.NONE, true);
-      toolkit.adapt(event);
       event.setLabel(Messages.get().LogParserRuleEditor_GenerateEvent);
       event.setEventCode(eventCode);
       GridData gd = new GridData();
@@ -472,7 +467,6 @@ public class LogParserRuleEditor extends DashboardComposite
       }
 
       eventTag = new LabeledText(area, SWT.NONE);
-      toolkit.adapt(eventTag);
       eventTag.setLabel("Event tag");
       eventTag.setText(eventTagText);
       gd = new GridData();
@@ -493,7 +487,6 @@ public class LogParserRuleEditor extends DashboardComposite
          final LogParserContext contextDefinition = rule.getContextDefinition();
 
          context = new LabeledText(area, SWT.NONE);
-         toolkit.adapt(context);
          context.setLabel(Messages.get().LogParserRuleEditor_ChangeContext);
          context.setText((contextDefinition != null) ? contextDefinition.getData() : ""); //$NON-NLS-1$
          gd = new GridData();
@@ -528,9 +521,7 @@ public class LogParserRuleEditor extends DashboardComposite
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
-         contextAction = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY,
-               Messages.get().LogParserRuleEditor_ContextAction, gd);
-         toolkit.adapt(contextAction);
+         contextAction = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY, Messages.get().LogParserRuleEditor_ContextAction, gd);
          contextAction.add(Messages.get().LogParserRuleEditor_CtxActionActivate);
          contextAction.add(Messages.get().LogParserRuleEditor_CtxActionClear);
          if (contextDefinition != null)
@@ -560,9 +551,7 @@ public class LogParserRuleEditor extends DashboardComposite
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
-         contextResetMode = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY,
-               Messages.get().LogParserRuleEditor_ContextResetMode, gd);
-         toolkit.adapt(contextResetMode);
+         contextResetMode = WidgetHelper.createLabeledCombo(contextOptions, SWT.READ_ONLY, Messages.get().LogParserRuleEditor_ContextResetMode, gd);
          contextResetMode.add(Messages.get().LogParserRuleEditor_CtxModeAuto);
          contextResetMode.add(Messages.get().LogParserRuleEditor_CtxModeManual);
          if (contextDefinition != null)
@@ -593,7 +582,6 @@ public class LogParserRuleEditor extends DashboardComposite
       if (editor.getParserType() == LogParserType.POLICY)
       {
          agentAction = new LabeledText(area, SWT.NONE);
-         toolkit.adapt(agentAction);
          agentAction.setLabel("Execute action");
          agentAction.setText((rule.getAgentAction() != null) ? rule.getAgentAction().getAction() : ""); //$NON-NLS-1$
          gd = new GridData();
@@ -610,7 +598,6 @@ public class LogParserRuleEditor extends DashboardComposite
          });
          
          pushDciName = new LabeledText(area, SWT.NONE);
-         toolkit.adapt(pushDciName);
          pushDciName.setLabel("Push DCI name");
          pushDciName.setText((rule.getPushDci() != null) ? rule.getPushDci().getData() : ""); //$NON-NLS-1$
          gd = new GridData();
@@ -630,8 +617,7 @@ public class LogParserRuleEditor extends DashboardComposite
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
-         pushGroup = (Spinner)WidgetHelper.createLabeledSpinner(area, SWT.BORDER, "Push group", 1, 500, gd);
-         toolkit.adapt(pushGroup);
+         pushGroup = WidgetHelper.createLabeledSpinner(area, SWT.BORDER, "Push group", 1, 500, gd);
          pushGroup.setMinimum(0);
          pushGroup.setSelection((rule.getPushDci() != null) ? rule.getPushDci().getGroup() : 1);
          pushGroup.addModifyListener(new ModifyListener() {
@@ -644,44 +630,32 @@ public class LogParserRuleEditor extends DashboardComposite
          pushGroup.setEnabled(rule.getPushDci() != null);
       }
 
-      checkboxBreak = toolkit.createButton(area, "Break", SWT.CHECK);
+      checkboxBreak = new Button(area, SWT.CHECK);
+      checkboxBreak.setText("Break");
       checkboxBreak.setSelection(rule.isBreakProcessing());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       checkboxBreak.setLayoutData(gd);
-      checkboxBreak.addSelectionListener(new SelectionListener() {
-
+      checkboxBreak.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             editor.fireModifyListeners();
          }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
       });
 
       if (editor.getParserType() != LogParserType.POLICY)
       {
-         checkboxDoNotSaveToDB = toolkit.createButton(area, "Do not save to database", SWT.CHECK);
+         checkboxDoNotSaveToDB = new Button(area, SWT.CHECK);
+         checkboxDoNotSaveToDB.setText("Do not save to database");
          checkboxDoNotSaveToDB.setSelection(rule.isDoNotSaveToDatabase());
-         checkboxDoNotSaveToDB.addSelectionListener(new SelectionListener() {
-
+         checkboxDoNotSaveToDB.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
                editor.fireModifyListeners();
-            }
-
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e)
-            {
-               widgetSelected(e);
             }
          });
       }

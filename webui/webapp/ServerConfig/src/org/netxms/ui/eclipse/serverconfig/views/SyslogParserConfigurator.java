@@ -57,20 +57,20 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	private String content;
 	private Action actionRefresh;
 	private Action actionSave;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -82,10 +82,10 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 				setModified(true);
 			}
 		});
-		
+
 		createActions();
 		contributeToActionBars();
-		
+
 		refresh();
 	}
 
@@ -101,7 +101,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 				refresh();
 			}
 		};
-		
+
 		actionSave = new Action(Messages.get().SyslogParserConfigurator_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
@@ -147,18 +147,18 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		manager.add(actionRefresh);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
 		editor.setFocus();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+    */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
@@ -180,35 +180,35 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#doSaveAs()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#doSaveAs()
+    */
 	@Override
 	public void doSaveAs()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isDirty()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isDirty()
+    */
 	@Override
 	public boolean isDirty()
 	{
 		return modified;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
+    */
 	@Override
 	public boolean isSaveAsAllowed()
 	{
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
-	 */
+   /**
+    * @see org.eclipse.ui.ISaveablePart#isSaveOnCloseNeeded()
+    */
 	@Override
 	public boolean isSaveOnCloseNeeded()
 	{
@@ -225,7 +225,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().SyslogParserConfigurator_ConfirmRefresh, Messages.get().SyslogParserConfigurator_ConfirmRefreshText))
 				return;
 		}
-		
+
 		actionSave.setEnabled(false);
 		new ConsoleJob(Messages.get().SyslogParserConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -260,7 +260,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Save config
 	 */
@@ -289,7 +289,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Mark view as modified
 	 */
@@ -302,4 +302,14 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 			actionSave.setEnabled(modified);
 		}
 	}
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      setModified(false);
+      super.dispose();
+   }
 }

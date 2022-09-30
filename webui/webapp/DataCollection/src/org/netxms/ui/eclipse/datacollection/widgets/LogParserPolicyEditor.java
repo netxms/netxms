@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 Raden Solutions
+ * Copyright (C) 2019-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,9 +42,9 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
    public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
    {
       super(parent, style, policy, viewPart);      
-      
+
       setLayout(new FillLayout());
-      
+
       editor = new LogParserEditor(this, SWT.NONE, LogParserType.POLICY);
       editor.addModifyListener(new LogParserModifyListener() {
          @Override
@@ -53,7 +53,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
             fireModifyListeners();
          }
       });
-      
+
       updateControlFromPolicy();
    }
    

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -32,8 +35,7 @@ import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Shows prompt for saving agent's config
- * 
+ * Shows prompt for saving agent's policy
  */
 public class SavePolicyDialog extends Dialog
 {
@@ -48,21 +50,17 @@ public class SavePolicyDialog extends Dialog
       super(parentShell);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Unsaved changes");
+      newShell.setText("Unsaved Changes");
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -73,9 +71,7 @@ public class SavePolicyDialog extends Dialog
       createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -90,8 +86,16 @@ public class SavePolicyDialog extends Dialog
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final Label image = new Label(dialogArea, SWT.NONE);
-      image.setImage(Activator.getImageDescriptor("icons/unsaved-document.png").createImage()); //$NON-NLS-1$
+      final Label imageLabel = new Label(dialogArea, SWT.NONE);
+      final Image image = Activator.getImageDescriptor("icons/unsaved-document.png").createImage(); //$NON-NLS-1$
+      imageLabel.setImage(image);
+      imageLabel.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            image.dispose();
+         }
+      });
 
       final CLabel text = new CLabel(dialogArea, SWT.LEFT);
       text.setText("Policy is not Saved.\n Save it, discard changes or return to the editor.");
@@ -103,9 +107,7 @@ public class SavePolicyDialog extends Dialog
       return dialogArea;
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.dialogs.Dialog#buttonPressed(int)
     */
    @Override
