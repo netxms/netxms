@@ -206,7 +206,7 @@ public class DataFormatter
             boolean useBinaryMultipliers = (unit != null) && unit.isBinary();
             int multiplierPower = (unit != null) ? unit.getMultipierPower() : 0;
             Double d = Double.parseDouble(value);
-            boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && d != 0 && multiplierPower <= 0) || multiplierPower < 0;
+            boolean isSmallNumber = ((d > -0.01) && (d < 0.01) && d != 0 && multiplierPower <= 0 && unit.useMultiplierForUnit()) || multiplierPower < 0;
             double[] multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
 
             int i = 0;

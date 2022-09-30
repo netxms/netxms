@@ -2110,6 +2110,8 @@ void DCItem::updateFromImport(ConfigEntry *config)
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
+   m_unitName = config->getSubEntryValue(_T("unitName"));
+   m_multiplier = config->getSubEntryValueAsInt(_T("multiplier"));
 
    ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
    if (thresholdsRoot != nullptr)

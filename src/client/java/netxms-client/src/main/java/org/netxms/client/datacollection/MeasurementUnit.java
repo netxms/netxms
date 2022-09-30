@@ -35,7 +35,7 @@ public class MeasurementUnit
    public static final MeasurementUnit HZ = new MeasurementUnit("Hz");
    
    public static final Set<String> UNITS_WITHOUT_MULTIPLIERS = 
-         new HashSet<>(Arrays.asList( "%", "°C", "°F"));
+         new HashSet<>(Arrays.asList( "%", "°C", "°F", "dbm"));
 
    private String name;
    private boolean binary;
