@@ -114,6 +114,7 @@ struct LogParser_XmlParserState
 	   repeatInterval = 0;
 	   resetRepeat = true;
 	   eventTag = nullptr;
+	   pushGroup = 0;
 	}
 };
 
@@ -432,7 +433,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->parser->setProcessAllFlag(XMLGetAttrBoolean(attrs, "processAll", false));
       ps->parser->setFileCheckInterval(XMLGetAttrUInt32(attrs, "checkInterval", 10000));
 		const char *name = XMLGetAttr(attrs, "name");
-		if (name != NULL)
+		if (name != nullptr)
 		{
 #ifdef UNICODE
 			WCHAR *wname = WideStringFromUTF8String(name);

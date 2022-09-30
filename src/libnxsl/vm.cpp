@@ -26,8 +26,8 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER               39
-#define CONTROL_STACK_LIMIT            32768
+const int MAX_ERROR_NUMBER = 39;
+const uint32_t CONTROL_STACK_LIMIT = 32768;
 
 /**
  * Class registry
@@ -3043,15 +3043,15 @@ void NXSL_VM::getArrayAttribute(NXSL_Array *a, const NXSL_Identifier& attribute,
 
    if (A_maxIndex.equals(attribute))
    {
-      m_dataStack.push((a->size() > 0) ? createValue(static_cast<int32_t>(a->getMaxIndex())) : createValue());
+      m_dataStack.push((a->size() > 0) ? createValue(a->getMaxIndex()) : createValue());
    }
    else if (A_minIndex.equals(attribute))
    {
-      m_dataStack.push((a->size() > 0) ? createValue(static_cast<int32_t>(a->getMinIndex())) : createValue());
+      m_dataStack.push((a->size() > 0) ? createValue(a->getMinIndex()) : createValue());
    }
    else if (A_size.equals(attribute))
    {
-      m_dataStack.push(createValue(static_cast<int32_t>(a->size())));
+      m_dataStack.push(createValue(a->size()));
    }
    else
    {
@@ -3077,7 +3077,7 @@ void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const NXSL_Identifier& attrib
    }
    else if (A_size.equals(attribute))
    {
-      m_dataStack.push(createValue((INT32)m->size()));
+      m_dataStack.push(createValue(m->size()));
    }
    else if (A_values.equals(attribute))
    {

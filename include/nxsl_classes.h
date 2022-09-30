@@ -36,7 +36,7 @@
 /**
  * Invalid address value
  */
-#define INVALID_ADDRESS                ((uint32_t)0xFFFFFFFF)
+const uint32_t INVALID_ADDRESS = 0xFFFFFFFF;
 
 /**
  * Limit on nested function calls
@@ -456,9 +456,9 @@ public:
    NXSL_StringValueMap(const NXSL_StringValueMap& src) = delete;
 
    void set(const TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, false); }
-   void setPreallocated(TCHAR *key, NXSL_Value *object) { setObject((TCHAR *)key, (void *)object, true); }
-   NXSL_Value *get(const TCHAR *key) const { return (NXSL_Value*)getObject(key); }
-   NXSL_Value *get(const TCHAR *key, size_t keyLen) const { return (NXSL_Value*)getObject(key, keyLen); }
+   void setPreallocated(TCHAR *key, NXSL_Value *object) { setObject(key, (void *)object, true); }
+   NXSL_Value *get(const TCHAR *key) const { return static_cast<NXSL_Value*>(getObject(key)); }
+   NXSL_Value *get(const TCHAR *key, size_t keyLen) const { return static_cast<NXSL_Value*>(getObject(key, keyLen)); }
 };
 
 /**
