@@ -44,6 +44,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
@@ -90,6 +91,9 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionUnbind;
    private Action actionBindTo;
    private Action actionUnbindFrom;
+   private Action actionApply;
+   private Action actionRemove;
+   
 
    /**
     * Create new object context menu manager.
@@ -235,6 +239,22 @@ public class ObjectContextMenuManager extends MenuManager
             unbindFromObjects();
          }
       };
+
+      actionApply = new Action(i18n.tr("&Apply")) {
+         @Override
+         public void run()
+         {
+            bindObjects();
+         }
+      };
+
+      actionRemove = new Action(i18n.tr("&Remove...")) {
+         @Override
+         public void run()
+         {
+            unbindObjects();
+         }
+      };
    }
 
    /**
@@ -261,6 +281,12 @@ public class ObjectContextMenuManager extends MenuManager
          {
             add(actionBind);
             add(actionUnbind);
+            add(new Separator());
+         }
+         if (object instanceof Template)
+         {
+            add(actionApply);
+            add(actionRemove);
             add(new Separator());
          }
       }
