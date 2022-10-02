@@ -381,7 +381,6 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count;
-
 	switch(CPU_USAGE_PARAM_INTERVAL(pArg))
 	{
 		case INTERVAL_5MIN:
@@ -401,17 +400,15 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 
 LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int count, cpu;
 	TCHAR buffer[256], *eptr;
-	struct CpuUsageParam *p = (struct CpuUsageParam *)pValue;
-
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 		
-	cpu = _tcstol(buffer, &eptr, 0);
+	int cpu = _tcstol(buffer, &eptr, 0);
 	if ((*eptr != 0) || (cpu < 0) || (cpu >= m_maxCPU))
 		return SYSINFO_RC_UNSUPPORTED;
 
+   int count;
 	switch(CPU_USAGE_PARAM_INTERVAL(pArg))
 	{
 		case INTERVAL_5MIN:
@@ -426,7 +423,6 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 	}
 
 	GetUsage(CPU_USAGE_PARAM_SOURCE(pArg), cpu + 1, count, pValue);
-
 	return SYSINFO_RC_SUCCESS;
 }
 

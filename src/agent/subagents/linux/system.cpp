@@ -31,11 +31,10 @@
 LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
-	FILE *f;
 	struct utmp rec;
 	int nCount = 0;
 
-	f = fopen(UTMP_FILE, "r");
+	FILE *f = fopen(UTMP_FILE, "r");
 	if (f != NULL)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
@@ -59,20 +58,18 @@ LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
-	FILE *f;
 	struct utmp rec;
 	TCHAR szBuffer[1024];
 
-	f = fopen(UTMP_FILE, "r");
-	if (f != NULL)
+	FILE *f = fopen(UTMP_FILE, "r");
+	if (f != nullptr)
 	{
 		nRet = SYSINFO_RC_SUCCESS;
 		while(fread(&rec, sizeof(rec), 1, f) == 1)
 		{
 			if (rec.ut_type == USER_PROCESS)
 			{
-				_sntprintf(szBuffer, 1024, _T("\"%hs\" \"%hs\" \"%hs\""), rec.ut_user,
-				           rec.ut_line, rec.ut_host);
+				_sntprintf(szBuffer, 1024, _T("\"%hs\" \"%hs\" \"%hs\""), rec.ut_user, rec.ut_line, rec.ut_host);
 				pValue->add(szBuffer);
 			}
 		}
@@ -87,32 +84,27 @@ LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *
  */
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	FILE *hFile;
-	unsigned int uUptime = 0;
-
-	hFile = fopen("/proc/uptime", "r");
-	if (hFile != NULL)
+	unsigned int uptime = 0;
+	FILE *hFile = fopen("/proc/uptime", "r");
+	if (hFile != nullptr)
 	{
-		char szTmp[64];
-
-		if (fgets(szTmp, sizeof(szTmp), hFile) != NULL)
+		char buffer[64];
+		if (fgets(buffer, sizeof(buffer), hFile) != nullptr)
 		{
-			double dTmp;
-
-			if (sscanf(szTmp, "%lf", &dTmp) == 1)
+			double tmp;
+			if (sscanf(buffer, "%lf", &tmp) == 1)
 			{
-				uUptime = (unsigned int)dTmp;
+				uptime = (unsigned int)tmp;
 			}
 		}
 		fclose(hFile);
 	}
 
-	if (uUptime > 0)
+	if (uptime > 0)
 	{
-		ret_uint(pValue, uUptime);
+		ret_uint(pValue, uptime);
 	}
-
-	return uUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+	return uptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
@@ -121,23 +113,13 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractC
 LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct utsname utsName;
-	int nRet = SYSINFO_RC_ERROR;
+	if (uname(&utsName) != 0)
+	   return SYSINFO_RC_ERROR;
 
-	if (uname(&utsName) == 0)
-	{
-		char szBuff[1024];
-
-		snprintf(szBuff, sizeof(szBuff), "%s %s %s %s %s", utsName.sysname,
-				utsName.nodename, utsName.release, utsName.version,
-				utsName.machine);
-		// TODO: processor & platform
-
-		ret_mbstring(pValue, szBuff);
-
-		nRet = SYSINFO_RC_SUCCESS;
-	}
-
-	return nRet;
+   char buffer[1024];
+   snprintf(buffer, sizeof(buffer), "%s %s %s %s %s", utsName.sysname, utsName.nodename, utsName.release, utsName.version, utsName.machine);
+   ret_mbstring(pValue, buffer);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -145,40 +127,34 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCo
  */
 LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	struct statvfs s;
-	FILE *hFile;
+	FILE *hFile = fopen("/proc/loadavg", "r");
+	if (hFile == nullptr)
+	   return SYSINFO_RC_ERROR;
 
-	hFile = fopen("/proc/loadavg", "r");
-	if (hFile != NULL)
-	{
-		char szTmp[64];
+   LONG nRet = SYSINFO_RC_ERROR;
+   char szTmp[64];
+   if (fgets(szTmp, sizeof(szTmp), hFile) != nullptr)
+   {
+      double dLoad1, dLoad5, dLoad15;
+      if (sscanf(szTmp, "%lf %lf %lf", &dLoad1, &dLoad5, &dLoad15) == 3)
+      {
+         switch (CAST_FROM_POINTER(pArg, int))
+         {
+            case INTERVAL_5MIN:
+               ret_double(pValue, dLoad5);
+               break;
+            case INTERVAL_15MIN:
+               ret_double(pValue, dLoad15);
+               break;
+            default: // 1 min
+               ret_double(pValue, dLoad1);
+               break;
+         }
+         nRet = SYSINFO_RC_SUCCESS;
+      }
+   }
 
-		if (fgets(szTmp, sizeof(szTmp), hFile) != NULL)
-		{
-			double dLoad1, dLoad5, dLoad15;
-
-			if (sscanf(szTmp, "%lf %lf %lf", &dLoad1, &dLoad5, &dLoad15) == 3)
-			{
-				switch (CAST_FROM_POINTER(pArg, int))
-				{
-					case INTERVAL_5MIN:
-						ret_double(pValue, dLoad5);
-						break;
-					case INTERVAL_15MIN:
-						ret_double(pValue, dLoad15);
-						break;
-					default: // 1 min
-						ret_double(pValue, dLoad1);
-						break;
-				}
-				nRet = SYSINFO_RC_SUCCESS;
-			}
-		}
-
-		fclose(hFile);
-	}
-
+   fclose(hFile);
 	return nRet;
 }
 
@@ -312,40 +288,40 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
    switch((long)pArg)
    {
       case PHYSICAL_FREE: // ph-free
-         ret_uint64(pValue, ((QWORD)s_memFree) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memFree) * 1024);
          break;
       case PHYSICAL_FREE_PCT: // ph-free percentage
          ret_double(pValue, ((double)s_memFree * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_TOTAL: // ph-total
-         ret_uint64(pValue, ((QWORD)s_memTotal) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memTotal) * 1024);
          break;
       case PHYSICAL_USED: // ph-used
-         ret_uint64(pValue, ((QWORD)(s_memTotal - s_memFree)) * 1024);
+         ret_uint64(pValue, ((uint64_t)(s_memTotal - s_memFree)) * 1024);
          break;
       case PHYSICAL_USED_PCT: // ph-used percentage
          ret_double(pValue, (((double)s_memTotal - s_memFree) * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_AVAILABLE:
-         ret_uint64(pValue, ((QWORD)s_memAvailable) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memAvailable) * 1024);
          break;
       case PHYSICAL_AVAILABLE_PCT:
          ret_double(pValue, ((double)s_memAvailable * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_CACHED:
-         ret_uint64(pValue, ((QWORD)s_memCached) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memCached) * 1024);
          break;
       case PHYSICAL_CACHED_PCT:
          ret_double(pValue, ((double)s_memCached * 100.0 / s_memTotal), 2);
          break;
       case PHYSICAL_BUFFERS:
-         ret_uint64(pValue, ((QWORD)s_memBuffers) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memBuffers) * 1024);
          break;
       case PHYSICAL_BUFFERS_PCT:
          ret_double(pValue, ((double)s_memBuffers * 100.0 / s_memTotal), 2);
          break;
       case SWAP_FREE: // sw-free
-         ret_uint64(pValue, ((QWORD)s_swapFree) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_swapFree) * 1024);
          break;
       case SWAP_FREE_PCT: // sw-free percentage
          if (s_swapTotal > 0)
@@ -354,10 +330,10 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
             ret_double(pValue, 100.0, 2);
          break;
       case SWAP_TOTAL: // sw-total
-         ret_uint64(pValue, ((QWORD)s_swapTotal) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_swapTotal) * 1024);
          break;
       case SWAP_USED: // sw-used
-         ret_uint64(pValue, ((QWORD)(s_swapTotal - s_swapFree)) * 1024);
+         ret_uint64(pValue, ((uint64_t)(s_swapTotal - s_swapFree)) * 1024);
          break;
       case SWAP_USED_PCT: // sw-used percentage
          if (s_swapTotal > 0)
@@ -366,22 +342,22 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
             ret_double(pValue, 0.0, 2);
          break;
       case VIRTUAL_FREE: // vi-free
-         ret_uint64(pValue, ((QWORD)s_memFree + (QWORD)s_swapFree) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memFree + (uint64_t)s_swapFree) * 1024);
          break;
       case VIRTUAL_FREE_PCT: // vi-free percentage
          ret_double(pValue, (((double)s_memFree + s_swapFree) * 100.0 / (s_memTotal + s_swapTotal)), 2);
          break;
       case VIRTUAL_TOTAL: // vi-total
-         ret_uint64(pValue, ((QWORD)s_memTotal + (QWORD)s_swapTotal) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memTotal + (uint64_t)s_swapTotal) * 1024);
          break;
       case VIRTUAL_USED: // vi-used
-         ret_uint64(pValue, ((QWORD)(s_memTotal - s_memFree) + (QWORD)(s_swapTotal - s_swapFree)) * 1024);
+         ret_uint64(pValue, ((uint64_t)(s_memTotal - s_memFree) + (uint64_t)(s_swapTotal - s_swapFree)) * 1024);
          break;
       case VIRTUAL_USED_PCT: // vi-used percentage
          ret_double(pValue, ((((double)s_memTotal - s_memFree) + (s_swapTotal - s_swapFree)) * 100.0 / (s_memTotal + s_swapTotal)), 2);
          break;
       case VIRTUAL_AVAILABLE:
-         ret_uint64(pValue, ((QWORD)s_memAvailable + (QWORD)s_swapFree) * 1024);
+         ret_uint64(pValue, ((uint64_t)s_memAvailable + (uint64_t)s_swapFree) * 1024);
          break;
       case VIRTUAL_AVAILABLE_PCT:
          ret_double(pValue, (((double)s_memAvailable + s_swapFree) * 100.0 / (s_memTotal + s_swapTotal)), 2);

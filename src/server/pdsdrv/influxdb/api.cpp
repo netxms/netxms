@@ -194,7 +194,7 @@ void APIv1Sender::buildURL(char *url)
  * Constructor for API v2 sender
  */
 APIv2Sender::APIv2Sender(const Config& config) : APISender(config),
-         m_bucket(config.getValue(_T("/InfluxDB/Bucket"), _T(""))), m_organization(config.getValue(_T("/InfluxDB/Organization"), _T("")))
+         m_organization(config.getValue(_T("/InfluxDB/Organization"), _T(""))), m_bucket(config.getValue(_T("/InfluxDB/Bucket"), _T("")))
 {
    m_token = UTF8StringFromTString(config.getValue(_T("/InfluxDB/Token"), _T("")));
 }

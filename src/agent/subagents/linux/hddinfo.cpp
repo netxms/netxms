@@ -1,5 +1,3 @@
-/* $Id$ */
-
 /* 
 ** NetXMS Linux subagent
 ** Copyright (C) 2005 Victor Kirhenshtein
@@ -77,7 +75,7 @@ static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
 
 LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	LONG nRet = SYSINFO_RC_ERROR, nDisk, nCmd;
+	LONG nRet = SYSINFO_RC_ERROR, nCmd;
 	char szBuffer[MAX_PATH];
 	int hDevice;
 	BYTE ioBuff[1024];

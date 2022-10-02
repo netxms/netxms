@@ -351,8 +351,6 @@ bool InfluxDBStorageDriver::saveDCItemValue(DCItem *dci, time_t timestamp, const
    }
 
    // Get RelatedObject (Interface) CA's
-   const TCHAR *relatedObject_type = _T("none");
-
    shared_ptr<NetObj> relatedObject = FindObjectById(dci->getRelatedObject());
    if (relatedObject != nullptr)
    {

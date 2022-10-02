@@ -190,8 +190,8 @@ void ClientSession::terminate(ClientSession *session)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_subscriptions(Ownership::True),
-         m_subscriptionLock(MutexType::FAST), m_pendingObjectNotificationsLock(MutexType::FAST), m_condEncryptionSetup(false)
+ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downloadFileMap(Ownership::True), m_condEncryptionSetup(false),
+         m_subscriptions(Ownership::True), m_subscriptionLock(MutexType::FAST), m_pendingObjectNotificationsLock(MutexType::FAST)
 {
    m_id = -1;
    m_socket = hSocket;
@@ -5286,7 +5286,6 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
    int size = request.getFieldAsInt32(VID_NUM_ITEMS);
    uint32_t incomingIndex = VID_DCI_VALUES_BASE;
    uint32_t outgoingIndex = VID_DCI_VALUES_BASE;
-   uint32_t itemCount = 0;
    for(int i = 0; i < size; i++, incomingIndex += 10)
    {
       shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(incomingIndex));

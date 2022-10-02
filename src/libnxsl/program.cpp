@@ -669,7 +669,7 @@ uint64_t NXSL_ProgramBuilder::getMemoryUsage() const
  * Create empty compiled script
  */
 NXSL_Program::NXSL_Program(size_t valueRegionSize, size_t identifierRegionSize) : NXSL_ValueManager(valueRegionSize, identifierRegionSize),
-         m_instructionSet(0, 256), m_constants(this, Ownership::True), m_functions(0, 64), m_requiredModules(0, 16)
+         m_instructionSet(0, 256), m_requiredModules(0, 16), m_constants(this, Ownership::True), m_functions(0, 64)
 {
 }
 
@@ -689,9 +689,9 @@ EnumerationCallbackResult CopyConstantsCallback(const void *key, void *value, vo
 NXSL_Program::NXSL_Program(NXSL_ProgramBuilder *builder) :
          NXSL_ValueManager(builder->m_values.getElementCount(), builder->m_identifiers.getElementCount()),
          m_instructionSet(builder->m_instructionSet.size(), 256),
+         m_requiredModules(builder->m_requiredModules.getBuffer(), builder->m_requiredModules.size()),
          m_constants(this, Ownership::True),
          m_functions(builder->m_functions.getBuffer(), builder->m_functions.size()),
-         m_requiredModules(builder->m_requiredModules.getBuffer(), builder->m_requiredModules.size()),
          m_metadata(builder->m_metadata)
 {
    for(int i = 0; i < builder->m_instructionSet.size(); i++)

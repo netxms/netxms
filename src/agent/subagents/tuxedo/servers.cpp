@@ -193,7 +193,7 @@ public:
 /**
  * Create new Tuxedo server object
  */
-TuxedoServer::TuxedoServer(TuxedoServerInstance *base) : m_summary(base), m_instances(64, 64, Ownership::True)
+TuxedoServer::TuxedoServer(TuxedoServerInstance *base) : m_instances(64, 64, Ownership::True), m_summary(base)
 {
    m_uniqueId = (base->m_groupId << 16) | base->m_baseId;
    m_running = !strncmp(base->m_state, "ACT", 3) ? 1 : 0;

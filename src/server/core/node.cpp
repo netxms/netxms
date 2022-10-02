@@ -94,7 +94,7 @@ bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *
  * Node class default constructor
  */
 Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
-         m_topologyMutex(MutexType::FAST), m_routingTableMutex(MutexType::FAST)
+         m_routingTableMutex(MutexType::FAST), m_topologyMutex(MutexType::FAST)
 {
    m_status = STATUS_UNKNOWN;
    m_type = NODE_TYPE_UNKNOWN;
@@ -202,9 +202,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
  * Create new node from new node data
  */
 Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISCOVERY | Pollable::TOPOLOGY | Pollable::ROUTING_TABLE | Pollable::ICMP),
-         m_topologyMutex(MutexType::FAST), m_routingTableMutex(MutexType::FAST), m_primaryHostName(newNodeData->ipAddr.toString()), m_ipAddress(newNodeData->ipAddr),
+         m_ipAddress(newNodeData->ipAddr), m_primaryHostName(newNodeData->ipAddr.toString()), m_routingTableMutex(MutexType::FAST), m_topologyMutex(MutexType::FAST),
          m_sshLogin(newNodeData->sshLogin), m_sshPassword(newNodeData->sshPassword)
-
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_status = STATUS_UNKNOWN;

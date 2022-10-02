@@ -63,7 +63,7 @@ static const char *s_classNameA[]=
 /**
  * Default constructor
  */
-NetObj::NetObj() : NObject(), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_mutexProperties(MutexType::FAST), m_mutexACL(MutexType::FAST), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST)
+NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0, 8), m_urls(0, 8, Ownership::True), m_mutexACL(MutexType::FAST), m_moduleDataLock(MutexType::FAST), m_mutexResponsibleUsers(MutexType::FAST)
 {
    m_status = STATUS_UNKNOWN;
    m_savedStatus = STATUS_UNKNOWN;
