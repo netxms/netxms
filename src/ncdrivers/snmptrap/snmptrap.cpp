@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for sending SNMP traps
-** Copyright (C) 2021 Raden Solutions
+** Copyright (C) 2021-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -106,70 +106,72 @@ int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
 
    pdu.bindVariable(CreateVarbind(m_messageFieldId, ASN_OCTET_STRING, body));
    if ((subject != nullptr) && (*subject != 0))
+   {
       pdu.bindVariable(CreateVarbind(m_additionalDataFieldId, ASN_OCTET_STRING, subject));
 
-   if (*subject == _T('{'))
-   {
-      // JSON format
-#ifdef UNICODE
-      char *utfString = UTF8StringFromWideString(subject);
-#else
-      char *utfString = UTF8StringFromMBString(subject);
-#endif
-      json_error_t error;
-      json_t *json = json_loads(utfString, 0, &error);
-      MemFree(utfString);
-      if (json != nullptr)
+      if (*subject == _T('{'))
       {
-         TCHAR *sv = json_object_get_string_t(json, "source", nullptr);
-         if (sv != nullptr)
+         // JSON format
+#ifdef UNICODE
+         char *utfString = UTF8StringFromWideString(subject);
+#else
+         char *utfString = UTF8StringFromMBString(subject);
+#endif
+         json_error_t error;
+         json_t *json = json_loads(utfString, 0, &error);
+         MemFree(utfString);
+         if (json != nullptr)
          {
-            pdu.bindVariable(CreateVarbind(m_sourceFieldId, ASN_OCTET_STRING, sv));
-            MemFree(sv);
-         }
+            TCHAR *sv = json_object_get_string_t(json, "source", nullptr);
+            if (sv != nullptr)
+            {
+               pdu.bindVariable(CreateVarbind(m_sourceFieldId, ASN_OCTET_STRING, sv));
+               MemFree(sv);
+            }
 
-         int64_t iv = json_object_get_integer(json, "severity", -1);
-         if (iv != -1)
+            int64_t iv = json_object_get_integer(json, "severity", -1);
+            if (iv != -1)
+            {
+               TCHAR buffer[16];
+               _sntprintf(buffer, 16, INT64_FMT, iv);
+               pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, buffer));
+            }
+
+            iv = json_object_get_integer(json, "timestamp", -1);
+            if (iv != -1)
+            {
+               TCHAR buffer[16];
+               _sntprintf(buffer, 16, INT64_FMT, iv);
+               pdu.bindVariable(CreateVarbind(m_timestampFieldId, ASN_TIMETICKS, buffer));
+            }
+
+            sv = json_object_get_string_t(json, "key", nullptr);
+            if (sv != nullptr)
+            {
+               pdu.bindVariable(CreateVarbind(m_keyFieldId, ASN_OCTET_STRING, sv));
+               MemFree(sv);
+            }
+
+            json_decref(json);
+         }
+         else
          {
-            TCHAR buffer[16];
-            _sntprintf(buffer, 16, INT64_FMT, iv);
-            pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, buffer));
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse options as JSON object (%hs)"), error.text);
          }
-
-         iv = json_object_get_integer(json, "timestamp", -1);
-         if (iv != -1)
-         {
-            TCHAR buffer[16];
-            _sntprintf(buffer, 16, INT64_FMT, iv);
-            pdu.bindVariable(CreateVarbind(m_timestampFieldId, ASN_TIMETICKS, buffer));
-         }
-
-         sv = json_object_get_string_t(json, "key", nullptr);
-         if (sv != nullptr)
-         {
-            pdu.bindVariable(CreateVarbind(m_keyFieldId, ASN_OCTET_STRING, sv));
-            MemFree(sv);
-         }
-
-         json_decref(json);
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse options as JSON object (%hs)"), error.text);
+         // Key=value format
+         TCHAR value[256];
+         if (ExtractNamedOptionValue(subject, _T("source"), value, 256))
+            pdu.bindVariable(CreateVarbind(m_sourceFieldId, ASN_OCTET_STRING, value));
+         if (ExtractNamedOptionValue(subject, _T("severity"), value, 256))
+            pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, value));
+         if (ExtractNamedOptionValue(subject, _T("timestamp"), value, 256))
+            pdu.bindVariable(CreateVarbind(m_timestampFieldId, ASN_TIMETICKS, value));
+         if (ExtractNamedOptionValue(subject, _T("key"), value, 256))
+            pdu.bindVariable(CreateVarbind(m_keyFieldId, ASN_OCTET_STRING, value));
       }
-   }
-   else
-   {
-      // Key=value format
-      TCHAR value[256];
-      if (ExtractNamedOptionValue(subject, _T("source"), value, 256))
-         pdu.bindVariable(CreateVarbind(m_sourceFieldId, ASN_OCTET_STRING, value));
-      if (ExtractNamedOptionValue(subject, _T("severity"), value, 256))
-         pdu.bindVariable(CreateVarbind(m_severityFieldId, ASN_INTEGER, value));
-      if (ExtractNamedOptionValue(subject, _T("timestamp"), value, 256))
-         pdu.bindVariable(CreateVarbind(m_timestampFieldId, ASN_TIMETICKS, value));
-      if (ExtractNamedOptionValue(subject, _T("key"), value, 256))
-         pdu.bindVariable(CreateVarbind(m_keyFieldId, ASN_OCTET_STRING, value));
    }
 
    SNMP_UDPTransport transport;
