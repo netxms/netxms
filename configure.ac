@@ -893,6 +893,12 @@ AC_ARG_WITH(rpi-agent,
 	COMPONENTS="$COMPONENTS raspberrypi"
 ])
 
+AC_ARG_WITH(lorawan,
+[AS_HELP_STRING(--with-lorawan,build LoraWAN subagent)],
+[
+	COMPONENTS="$COMPONENTS lorawan"
+])
+
 AC_ARG_WITH(openwrt,
 [AS_HELP_STRING(--with-openwrt,build for OpenWrt platform)],
 [
@@ -4358,7 +4364,7 @@ fi
 # LoraWAN
 #--------------------------------------------------------------------
 
-check_substr "$COMPONENTS" "agent"
+check_substr "$COMPONENTS" "lorawan"
 if test $? = 0; then
 	if test "x$HAVE_LIBCURL" = "xyes" -a "x$MQTT_SUPPORT" = "xyes"; then
 		SUBAGENT_DIRS="$SUBAGENT_DIRS lorawan"
