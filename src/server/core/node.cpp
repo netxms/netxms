@@ -5843,7 +5843,7 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
       {
          if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
          {
-            Interface *iface = (Interface *)getChildList().get(i);
+            auto iface = static_cast<Interface*>(getChildList().get(i));
             if (iface->isFake())
             {
                // always delete fake interfaces if we got actual interface list
@@ -5955,6 +5955,11 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                   if (ifInfo->speed != pInterface->getSpeed())
                   {
                      pInterface->setSpeed(ifInfo->speed);
+                     interfaceUpdated = true;
+                  }
+                  if (ifInfo->type != pInterface->getIfType())
+                  {
+                     pInterface->setIfType(ifInfo->type);
                      interfaceUpdated = true;
                   }
                   if ((ifInfo->ifTableSuffixLength != pInterface->getIfTableSuffixLen()) ||

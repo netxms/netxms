@@ -2164,6 +2164,13 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
+   void setIfType(uint32_t type)
+   {
+      lockProperties();
+      m_type = type;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
    void setIfTableSuffix(int len, const uint32_t *suffix)
    {
       lockProperties();
