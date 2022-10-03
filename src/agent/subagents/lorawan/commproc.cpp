@@ -93,9 +93,13 @@ void MqttMessageHandler(const char *payload, char *topic)
             else
                nxlog_debug(6, _T("LoraWAN Module:[MqttMessageHandler] No RX quality data received..."));
 
+	    // FIXME: call decoders
+	    // Code below is an old variant using libnxmb which is no longer accessible
+	    /*
             NXMBDispatcher *dispatcher = NXMBDispatcher::getInstance();
             if (!dispatcher->call(_T("NOTIFY_DECODERS"), data, NULL))
                nxlog_debug(6, _T("LoraWAN Module:[MqttMessageHandler] Call to NXMBDispacher failed..."));
+	    */
 
             data->updateLastContact();
          }

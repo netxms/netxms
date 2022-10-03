@@ -1079,7 +1079,7 @@ if test $? = 0; then
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
-	MODULES="$MODULES appagent libnxlp libnxmb db agent"
+	MODULES="$MODULES appagent libnxlp db agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
@@ -1176,7 +1176,7 @@ fi
 check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
-	MODULES="$MODULES appagent libnxlp libnxmb db agent"
+	MODULES="$MODULES appagent libnxlp db agent"
 	TOOLS="$TOOLS nxlptest"
 
 	case "$PLATFORM" in
@@ -1343,9 +1343,9 @@ fi
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
 	if test "x$STATIC_BUILD" = "xyes"; then
-		MODULES="$MODULES appagent client"
+		MODULES="$MODULES libnxmb appagent client"
 	else
-		MODULES="$MODULES appagent client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
+		MODULES="$MODULES libnxmb appagent client libnxsl libnxlp libnxcc db nxscript ncdrivers snmp"
 		TEST_MODULES="$TEST_MODULES test-libnxcc test-libnxsl test-libnxsnmp"
 		TOOLS="$TOOLS nxlptest"
 	fi

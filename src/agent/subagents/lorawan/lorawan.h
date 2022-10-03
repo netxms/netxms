@@ -22,7 +22,6 @@
 #include <nms_util.h>
 #include <mosquitto.h>
 #include <curl/curl.h>
-#include <nxmbapi.h>
 
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)
