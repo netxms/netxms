@@ -1146,7 +1146,7 @@ struct FileSendData
    TCHAR *fileName;
    TCHAR *fileId;
    bool follow;
-   bool allowCompression;
+   NXCPStreamCompressionMethod compressionMethod;
    uint32_t id;
    off64_t offset;
    shared_ptr<AbstractCommSession> session;
@@ -1156,7 +1156,15 @@ struct FileSendData
       fileName = _fileName;
       fileId = request.getFieldAsString(VID_NAME);
       follow = request.getFieldAsBoolean(VID_FILE_FOLLOW);
-      allowCompression = request.getFieldAsBoolean(VID_ENABLE_COMPRESSION);
+      if (request.isFieldExist(VID_COMPRESSION_METHOD))
+      {
+         compressionMethod = static_cast<NXCPStreamCompressionMethod>(request.getFieldAsInt16(VID_COMPRESSION_METHOD));
+      }
+      else // Servers before 4.2 will not send VID_COMPRESSION_METHOD
+      {
+         bool allowCompression = request.getFieldAsBoolean(VID_ENABLE_COMPRESSION);
+         compressionMethod = allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE;
+      }
       id = request.getId();
       offset = request.getFieldAsInt32(VID_FILE_OFFSET);
    }
@@ -1173,9 +1181,25 @@ struct FileSendData
  */
 static void SendFile(FileSendData *data)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("SendFile: request for file \"%s\", follow = %s, compress = %s"),
-               data->fileName, data->follow ? _T("true") : _T("false"), data->allowCompression ? _T("true") : _T("false"));
-   bool success = data->session->sendFile(data->id, data->fileName, data->offset, data->allowCompression, s_downloadFileStopMarkers->get(data->id));
+   const TCHAR *compressionMethodName;
+   switch(data->compressionMethod)
+   {
+      case NXCP_STREAM_COMPRESSION_DEFLATE:
+         compressionMethodName = _T("DEFLATE");
+         break;
+      case NXCP_STREAM_COMPRESSION_LZ4:
+         compressionMethodName = _T("LZ4");
+         break;
+      case NXCP_STREAM_COMPRESSION_NONE:
+         compressionMethodName = _T("NONE");
+         break;
+      default:
+         compressionMethodName = _T("UNKNOWN");
+         break;
+   }
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("SendFile: request for file \"%s\", follow = %s, compression = %s"),
+               data->fileName, data->follow ? _T("true") : _T("false"), compressionMethodName);
+   bool success = data->session->sendFile(data->id, data->fileName, data->offset, data->compressionMethod, s_downloadFileStopMarkers->get(data->id));
    if (data->follow && success)
    {
       g_monitorFileList.add(data->fileId);

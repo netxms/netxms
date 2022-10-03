@@ -1925,6 +1925,8 @@ uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *des
    msg.setField(VID_FILE_NAME, sourceFile);
    msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
    msg.setField(VID_FILE_OFFSET, 0);
+   msg.setField(VID_ENABLE_COMPRESSION, compMethod != NXCP_STREAM_COMPRESSION_NONE);
+   msg.setField(VID_COMPRESSION_METHOD, static_cast<uint16_t>(compMethod));
 
    NXCPMessage *response = customRequest(&msg, destinationFile, false, progressCallback, nullptr, nullptr);
    uint32_t rcc;

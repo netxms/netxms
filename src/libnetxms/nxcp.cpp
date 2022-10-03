@@ -682,10 +682,10 @@ bool LIBNETXMS_EXPORTABLE SendFileOverNXCP(AbstractCommChannel *channel, uint32_
    if (!stream->fail())
    {
       StreamCompressor *compressor = (compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : nullptr;
-      BYTE *compBuffer = (compressor != nullptr) ? (BYTE *)MemAlloc(FILE_BUFFER_SIZE) : nullptr;
+      BYTE *compBuffer = (compressor != nullptr) ? MemAllocArrayNoInit<BYTE>(FILE_BUFFER_SIZE) : nullptr;
 
       // Allocate message and prepare it's header
-      NXCP_MESSAGE *msg = (NXCP_MESSAGE *)MemAlloc(NXCP_HEADER_SIZE + 8 + ((compressor != nullptr) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
+      NXCP_MESSAGE *msg = static_cast<NXCP_MESSAGE*>(MemAlloc(NXCP_HEADER_SIZE + 8 + ((compressor != nullptr) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE)));
       msg->id = htonl(requestId);
       msg->code = htons(CMD_FILE_DATA);
       msg->flags = htons(MF_BINARY | MF_STREAM | ((compressionMethod != NXCP_STREAM_COMPRESSION_NONE) ? MF_COMPRESSED : 0));

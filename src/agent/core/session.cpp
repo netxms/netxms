@@ -1076,23 +1076,20 @@ static void SendFileProgressCallback(size_t bytesTransferred, void *cbArg)
 /**
  * Send file to server
  */
-bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, bool allowCompression, VolatileCounter *cancellationFlag)
+bool CommSession::sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancellationFlag)
 {
    if (m_disconnected)
       return false;
 
    if (!m_acceptKeepalive)
-   {
-      return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, &m_socketWriteMutex,
-            allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
-   }
+      return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallback, this, &m_socketWriteMutex, compressionMethod, cancellationFlag);
 
    FileSendContext context;
    context.session = this;
    context.lastProbeTime = time(nullptr);
    context.msgCount = 0;
    return SendFileOverNXCP(m_channel.get(), requestId, file, m_encryptionContext.get(), offset, SendFileProgressCallbackWithKeepalive, &context,
-         &m_socketWriteMutex, allowCompression ? NXCP_STREAM_COMPRESSION_DEFLATE : NXCP_STREAM_COMPRESSION_NONE, cancellationFlag);
+         &m_socketWriteMutex, compressionMethod, cancellationFlag);
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021 Raden Solutions
+** Copyright (C) 2021-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    StringBuffer privateKey;
    privateKey.append(_T("-----BEGIN RSA PRIVATE KEY-----\n"));
    char buf[4096];
-   BYTE *pBufPos = reinterpret_cast<BYTE *>(buf);
+   BYTE *pBufPos = reinterpret_cast<BYTE*>(buf);
    uint32_t privateLen = i2d_RSAPrivateKey(key, &pBufPos);
    base64_encode_alloc(buf, privateLen, &data->m_privateKey);
    privateKey.appendUtf8String(data->m_privateKey);
@@ -171,36 +171,36 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    }
 
    int nLen = BN_num_bytes(n);
-   unsigned char* nBytes = (unsigned char*) MemAlloc(nLen);
+   auto nBytes = MemAllocArrayNoInit<BYTE>(nLen);
    BN_bn2bin(n, nBytes);
 
    // reading the public exponent
    int eLen = BN_num_bytes(e);
-   unsigned char *eBytes = (unsigned char*) MemAlloc(eLen);
+   auto eBytes = MemAllocArrayNoInit<BYTE>(eLen);
    BN_bn2bin(e, eBytes);
 
-   int encodingLength = 11 + 4 + eLen + 4 + nLen;
+   int binaryDataLength = 11 + 4 + eLen + 4 + nLen;
    // correct depending on the MSB of e and N
    if (eBytes[0] & 0x80)
-      encodingLength++;
+      binaryDataLength++;
    if (nBytes[0] & 0x80)
-      encodingLength++;
+      binaryDataLength++;
 
-   unsigned char* encoding = (unsigned char*) MemAlloc(encodingLength);
-   memcpy(encoding, s_sshHeader, 11);
+   auto binaryData = MemAllocArrayNoInit<BYTE>(binaryDataLength);
+   memcpy(binaryData, s_sshHeader, 11);
 
-   int index = SshEncodeBuffer(&encoding[11], eLen, eBytes);
-   index = SshEncodeBuffer(&encoding[11 + index], nLen, nBytes);
+   int index = SshEncodeBuffer(&binaryData[11], eLen, eBytes);
+   SshEncodeBuffer(&binaryData[11 + index], nLen, nBytes);
 
    StringBuffer publicKey;
    publicKey.append(_T("ssh-rsa "));
    char *out;
-   size_t len = base64_encode_alloc(reinterpret_cast<const char *>(encoding), encodingLength, &out);
+   size_t len = base64_encode_alloc(reinterpret_cast<const char*>(binaryData), binaryDataLength, &out);
    publicKey.appendUtf8String(out, len);
 
    MemFree(nBytes);
    MemFree(eBytes);
-   MemFree(encoding);
+   MemFree(binaryData);
    MemFree(out);
 
    publicKey.append(_T(" "));

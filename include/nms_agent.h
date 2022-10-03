@@ -790,7 +790,7 @@ public:
    virtual void postMessage(const NXCPMessage *msg) = 0;
    virtual bool sendRawMessage(const NXCP_MESSAGE *msg) = 0;
    virtual void postRawMessage(const NXCP_MESSAGE *msg) = 0;
-	virtual bool sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, bool allowCompression, VolatileCounter *cancelationFlag) = 0;
+	virtual bool sendFile(uint32_t requestId, const TCHAR *file, off64_t offset, NXCPStreamCompressionMethod compressionMethod, VolatileCounter *cancelationFlag) = 0;
    virtual uint32_t doRequest(NXCPMessage *msg, uint32_t timeout) = 0;
    virtual NXCPMessage *doRequestEx(NXCPMessage *msg, uint32_t timeout) = 0;
    virtual NXCPMessage *waitForMessage(UINT16 code, UINT32 id, UINT32 timeout) = 0;

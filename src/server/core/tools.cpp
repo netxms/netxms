@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -176,128 +176,6 @@ StringList *SplitCommandLine(const TCHAR *command)
       listOfStrings->add(tmp);
 
    return listOfStrings;
-}
-
-/**
- * Execute external command
- */
-BOOL ExecCommand(TCHAR *pszCommand)
-{
-   BOOL bSuccess = TRUE;
-
-#ifdef _WIN32
-   STARTUPINFO si;
-   PROCESS_INFORMATION pi;
-
-   // Fill in process startup info structure
-   memset(&si, 0, sizeof(STARTUPINFO));
-   si.cb = sizeof(STARTUPINFO);
-   si.dwFlags = 0;
-
-   // Create new process
-   if (!CreateProcess(nullptr, pszCommand, nullptr, nullptr, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, nullptr, nullptr, &si, &pi))
-   {
-      TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
-            pszCommand, GetSystemErrorText(GetLastError(), buffer, 1024));
-      bSuccess = FALSE;
-   }
-   else
-   {
-      // Close all handles
-      CloseHandle(pi.hThread);
-      CloseHandle(pi.hProcess);
-   }
-#else
-	bSuccess = FALSE;
-	{
-		int nPid;
-		char *pCmd[128];
-		int nCount = 0;
-		char *pTmp;
-		struct stat st;
-		int state = 0;
-
-#ifdef UNICODE
-		pTmp = MBStringFromWideString(pszCommand);
-#else
-		pTmp = strdup(pszCommand);
-#endif
-		if (pTmp != nullptr)
-		{
-			pCmd[nCount++] = pTmp;
-			int nLen = strlen(pTmp);
-			for (int i = 0; (i < nLen) && (nCount < 127); i++)
-			{
-				switch(pTmp[i])
-				{
-					case ' ':
-						if (state == 0)
-						{
-							pTmp[i] = 0;
-							if (pTmp[i + 1] != 0)
-							{
-								pCmd[nCount++] = pTmp + i + 1;
-							}
-						}
-						break;
-					case '"':
-						state == 0 ? state++ : state--;
-
-						memmove(pTmp + i, pTmp + i + 1, nLen - i);
-						i--;
-						break;
-					case '\\':
-						if (pTmp[i+1] == '"')
-						{
-							memmove(pTmp + i, pTmp + i + 1, nLen - i);
-						}
-						break;
-					default:
-						break;
-				}
-			}
-			pCmd[nCount] = nullptr;
-
-			if ((stat(pCmd[0], &st) == 0) && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
-			{
-				switch ((nPid = fork()))
-				{
-					case -1:
-                  nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"), pszCommand, _tcserror(errno));
-						break;
-					case 0: // child
-						{
-							int sd = open("/dev/null", O_RDWR);
-							if (sd == -1)
-							{
-								sd = open("/dev/null", O_RDONLY);
-							}
-							close(0);
-							close(1);
-							close(2);
-							dup2(sd, 0);
-							dup2(sd, 1);
-							dup2(sd, 2);
-							close(sd);
-							execv(pCmd[0], pCmd);
-							// should not be reached
-							//_exit((errno == EACCES || errno == ENOEXEC) ? 126 : 127);
-							_exit(127);
-						}
-						break;
-					default: // parent
-						bSuccess = TRUE;
-						break;
-				}
-			}
-
-			free(pTmp);
-		}
-	}
-#endif
-
-   return bSuccess;
 }
 
 /**

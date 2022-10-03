@@ -159,7 +159,7 @@ static void FindAndReplaceAll(StringBuffer *data, const TCHAR *toSearch, const T
       // Replace this occurrence of Sub String
       data->replace(toSearch, replaceStr);
       // Get the next occurrence from the current position
-      pos = pos = data->find(toSearch);
+      pos = data->find(toSearch);
    }
 }
 

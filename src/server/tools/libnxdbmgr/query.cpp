@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -126,7 +126,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
    if (!_tcsnicmp(realQuery, _T("SELECT "), 7))
    {
       DB_RESULT hResult = DBSelectEx(g_dbHandle, realQuery, errorText);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          if (showOutput)
          {
@@ -157,11 +157,6 @@ bool LIBNXDBMGR_EXPORTABLE SQLQuery(const TCHAR *query, bool showOutput)
 bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
 {
    StringBuffer batch(batchSource);
-   TCHAR *pszBuffer, *pszQuery, *ptr;
-   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   bool success = true;
-   TCHAR table[128], column[128];
-
    if (g_dbSyntax != DB_SYNTAX_UNKNOWN)
    {
       batch.replace(_T("$SQL:BLOB"), g_sqlTypes[g_dbSyntax][SQL_TYPE_BLOB]);
@@ -170,15 +165,18 @@ bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
       batch.replace(_T("$SQL:INT64"), g_sqlTypes[g_dbSyntax][SQL_TYPE_INT64]);
    }
 
-   pszQuery = pszBuffer = batch.getBuffer();
+   bool success = true;
+
+   TCHAR *pszQuery = batch.getBuffer();
    while(true)
    {
-      ptr = _tcschr(pszQuery, _T('\n'));
-      if (ptr != NULL)
+      TCHAR *ptr = _tcschr(pszQuery, _T('\n'));
+      if (ptr != nullptr)
          *ptr = 0;
       if (!_tcscmp(pszQuery, _T("<END>")))
          break;
 
+      TCHAR table[128], column[128];
       if (_stscanf(pszQuery, _T("ALTER TABLE %127s DROP COLUMN %127s"), table, column) == 2)
       {
          if (!DBDropColumn(g_dbHandle, table, column))
@@ -196,6 +194,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
          if (g_queryTrace)
             ShowQuery(pszQuery);
 
+         TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
          if (!DBQueryEx(g_dbHandle, pszQuery, errorText))
          {
             WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
@@ -207,7 +206,7 @@ bool LIBNXDBMGR_EXPORTABLE SQLBatch(const TCHAR *batchSource)
          }
       }
 
-      if (ptr == NULL)
+      if (ptr == nullptr)
          break;
       ptr++;
       pszQuery = ptr;

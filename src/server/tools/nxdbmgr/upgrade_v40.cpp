@@ -1233,8 +1233,6 @@ static bool H_UpgradeFromV69()
                   DBFreeStatement(hStmtInsert);
                   return false;
                }
-               periodStartTimestamp = 0;
-               periodEndTimestamp = 0;
             }
          }
 

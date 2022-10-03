@@ -1503,6 +1503,7 @@ typedef struct
 #define VID_OSPF_INTERFACE_STATE    ((uint32_t)798)
 #define VID_OSPF_AREA_COUNT         ((uint32_t)799)
 #define VID_OSPF_NEIGHBOR_COUNT     ((uint32_t)800)
+#define VID_COMPRESSION_METHOD      ((uint32_t)801)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

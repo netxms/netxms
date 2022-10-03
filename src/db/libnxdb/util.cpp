@@ -777,7 +777,6 @@ bool LIBNXDB_EXPORTABLE DBDropPrimaryKey(DB_HANDLE hdb, const TCHAR *table)
          }
          break;
       case DB_SYNTAX_MSSQL:
-         success = false;
          _sntprintf(query, 1024, _T("SELECT name FROM sysobjects WHERE xtype='PK' AND parent_obj=OBJECT_ID('%s')"), table);
          hResult = DBSelect(hdb, query);
          if (hResult != nullptr)

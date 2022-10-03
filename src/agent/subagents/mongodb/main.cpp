@@ -156,15 +156,15 @@ static BOOL LoadConfiguration(Config *config)
 	}
 
    //create list
-   int paramCount;
+   int paramCount = 0;
    for(int i = 0; i < g_instances->size(); i++)
    {
       s_parameters = g_instances->get(i)->getParameters(&paramCount);
-      if(s_parameters != NULL)
+      if (s_parameters != nullptr)
          break;
    }
 
-   if(s_parameters == NULL)
+   if (s_parameters == nullptr)
    {
       delete g_instances;
       mongoc_cleanup();
@@ -173,14 +173,14 @@ static BOOL LoadConfiguration(Config *config)
    }
 
    int predefParamCount = sizeof(s_parametersPredef) / sizeof(NETXMS_SUBAGENT_PARAM);
-   if(predefParamCount > 0)
+   if (predefParamCount > 0)
    {
-      s_parameters = (NETXMS_SUBAGENT_PARAM *)realloc(s_parameters, (paramCount+predefParamCount) * sizeof(NETXMS_SUBAGENT_PARAM));
-      memcpy(s_parameters+paramCount, s_parametersPredef, predefParamCount * sizeof(NETXMS_SUBAGENT_PARAM));
+      s_parameters = MemRealloc(s_parameters, (paramCount + predefParamCount) * sizeof(NETXMS_SUBAGENT_PARAM));
+      memcpy(s_parameters + paramCount, s_parametersPredef, predefParamCount * sizeof(NETXMS_SUBAGENT_PARAM));
       paramCount += predefParamCount;
    }
 
-	for(int i = 0; i < g_instances->size(); i++)
+   for(int i = 0; i < g_instances->size(); i++)
       g_instances->get(i)->run();
 
    s_info.numParameters = paramCount;

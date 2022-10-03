@@ -1335,7 +1335,6 @@ InetAddress GetLocalIpAddr();
 InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname);
 bool EventNameResolver(const TCHAR *name, UINT32 *code);
 
-BOOL ExecCommand(TCHAR *pszCommand);
 bool SendMagicPacket(const InetAddress& ipAddr, const MacAddress& macAddr, int count);
 StringList *SplitCommandLine(const TCHAR *command);
 
