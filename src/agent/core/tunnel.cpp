@@ -837,9 +837,9 @@ static bool VerifyServerCertificate(X509 *cert)
             }
          }
 #else
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: CRL check is not implemented for this OpenSSL version"));
-#endif
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("VerifyServerCertificate: CRL check is not implemented for this OpenSSL version"));
          valid = true;
+#endif
       }
       else
       {
