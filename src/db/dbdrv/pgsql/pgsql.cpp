@@ -285,7 +285,7 @@ static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *query, 
       PGresult	*pResult = PQprepare(static_cast<PG_CONN*>(connection)->handle, hStmt->name, queryUTF8, 0, nullptr);
       if ((pResult == nullptr) || (PQresultStatus(pResult) != PGRES_COMMAND_OK))
       {
-         delete hStmt;
+         delete_and_null(hStmt);
 
          *errorCode = (PQstatus(static_cast<PG_CONN*>(connection)->handle) == CONNECTION_BAD) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
 
