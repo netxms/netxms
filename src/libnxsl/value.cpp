@@ -686,8 +686,7 @@ const char *NXSL_Value::getValueAsMBString()
 {
    if ((m_dataType == NXSL_DT_ARRAY) || (m_dataType == NXSL_DT_HASHMAP) || (m_dataType == NXSL_DT_OBJECT))
    {
-      MemFree(m_mbString);
-      updateString();
+      updateString();   // Will also free existing m_mbString
       m_mbString = MBStringFromWideString((m_length < NXSL_SHORT_STRING_LENGTH) ? m_stringValue : CHECK_NULL_EX(m_stringPtr));
    }
    else if (m_mbString == nullptr)
