@@ -191,6 +191,7 @@
     <ClCompile Include="base32.cpp" />
     <ClCompile Include="base64.cpp" />
     <ClCompile Include="bytestream.cpp" />
+    <ClCompile Include="calltbl.cpp" />
     <ClCompile Include="cch.cpp" />
     <ClCompile Include="cc_mb.cpp" />
     <ClCompile Include="cc_ucs2.cpp" />

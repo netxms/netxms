@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libnetxms.la
 
 libnetxms_la_SOURCES = \
-	array.cpp base32.cpp base64.cpp bytestream.cpp cc_mb.cpp cc_ucs2.cpp cc_ucs4.cpp \
+	array.cpp base32.cpp base64.cpp bytestream.cpp calltbl.cpp cc_mb.cpp cc_ucs2.cpp cc_ucs4.cpp \
 	cc_utf8.cpp cch.cpp cert.cpp config.cpp crypto.cpp debug_tag_tree.cpp \
 	diff.cpp dirw_unix.cpp geolocation.cpp getopt.cpp getoptw.cpp dload.cpp hash.cpp \
 	hashmapbase.cpp hashsetbase.cpp ice.c icmp.cpp iconv.cpp inet_pton.cpp \

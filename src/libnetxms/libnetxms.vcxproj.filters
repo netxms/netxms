@@ -27,6 +27,9 @@
     <ClCompile Include="bytestream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="calltbl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="cc_mb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
