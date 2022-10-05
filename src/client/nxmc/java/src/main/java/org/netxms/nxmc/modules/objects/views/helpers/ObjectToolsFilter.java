@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016 RadenSolutions
+ * Copyright (C) 2016-2022 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,13 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
+/**
+ * Filter for object tool list
+ */
 public class ObjectToolsFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
+   private String[] toolTypes = ObjectToolsLabelProvider.getToolTypeNames();
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -74,7 +78,7 @@ public class ObjectToolsFilter extends ViewerFilter implements AbstractViewerFil
     */
    public boolean containsType(Object element)
    {
-      if (ObjectToolsLabelProvider.getAllToolTypes()[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
+      if (toolTypes[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
          return true;
       return false;
    }

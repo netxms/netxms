@@ -114,9 +114,9 @@ public abstract class AbstractCommandResults extends ObjectToolResults
 			   console.setAutoScroll(!actionScrollLock.isChecked());
 			}
 		};
-		actionScrollLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/scroll_lock.gif")); 
+		actionScrollLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/scroll-lock.png")); 
 		actionScrollLock.setChecked(false);
-		
+
 		actionCopy = new Action(i18n.tr("&Copy")) {
 			@Override
 			public void run()

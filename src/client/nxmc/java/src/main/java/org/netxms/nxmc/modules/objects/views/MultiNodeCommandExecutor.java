@@ -185,7 +185,7 @@ public class MultiNodeCommandExecutor extends ObjectView
                currentExecutor.setAutoScroll(!actions.actionScrollLock.isChecked());
          }
       };
-      actions.actionScrollLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
+      actions.actionScrollLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/scroll-lock.png"));
       actions.actionScrollLock.setChecked(false);
 
       actions.actionCopy = new Action(i18n.tr("&Copy")) {

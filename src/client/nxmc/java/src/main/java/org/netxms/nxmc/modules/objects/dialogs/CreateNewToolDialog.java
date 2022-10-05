@@ -55,9 +55,9 @@ public class CreateNewToolDialog extends Dialog
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -78,16 +78,16 @@ public class CreateNewToolDialog extends Dialog
 		textName.setLayoutData(gd);
 
 		comboType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Tool type"), WidgetHelper.DEFAULT_LAYOUT_DATA);
-		for(String s : ObjectToolsLabelProvider.getAllToolTypes())
+      for(String s : ObjectToolsLabelProvider.getToolTypeNames())
 			comboType.add(s);
 		comboType.select(0);
 
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{

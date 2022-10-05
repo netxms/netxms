@@ -59,7 +59,7 @@ public class ObjectToolsGeneral extends PropertyPage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectToolsGeneral.class);
    private static final Logger logger = LoggerFactory.getLogger(ObjectToolsGeneral.class);
-   
+
 	private ObjectToolDetails objectTool;
 	private LabeledText textName;
 	private LabeledText textDescription;
@@ -100,25 +100,25 @@ public class ObjectToolsGeneral extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{			
-		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
-		GridLayout layout = new GridLayout();
-      		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
-      		layout.numColumns = 2;
-		dialogArea.setLayout(layout);
+      Composite dialogArea = new Composite(parent, SWT.NONE);
 
-		textName = new LabeledText(dialogArea, SWT.NONE);
-		textName.setLabel(i18n.tr("Name"));
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		textName.setLayoutData(gd);
-		textName.setText(objectTool.getName());
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.numColumns = 2;
+      dialogArea.setLayout(layout);
 
-		createIcon();
-		createIconSelector(dialogArea);
+      textName = new LabeledText(dialogArea, SWT.NONE);
+      textName.setLabel(i18n.tr("Name"));
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      textName.setLayoutData(gd);
+      textName.setText(objectTool.getName());
+
+      createIcon();
+      createIconSelector(dialogArea);
 
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
 		textDescription.setLabel(i18n.tr("Description"));
@@ -347,23 +347,32 @@ public class ObjectToolsGeneral extends PropertyPage
       textCommandShortName.setText(objectTool.getCommandShortName());
       textCommandShortName.setEnabled(checkCommand.getSelection());
 
+      Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText(i18n.tr("Other options"));
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      optionsGroup.setLayoutData(gd);
+      optionsGroup.setLayout(new GridLayout());
+
       // Disable option
-      checkDisable = new Button(dialogArea, SWT.CHECK);
+      checkDisable = new Button(optionsGroup, SWT.CHECK);
       gd = new GridData();
       gd.horizontalSpan = 2;
       checkDisable.setLayoutData(gd);
-		checkDisable.setText(i18n.tr("Disable Object Tool"));
-		checkDisable.setSelection((objectTool.getFlags() & ObjectTool.DISABLED) > 0);
+      checkDisable.setText(i18n.tr("&Disabled"));
+      checkDisable.setSelection(!objectTool.isEnabled());
 
       // Run in container context
       if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) || (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) || (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
             (objectTool.getToolType() == ObjectTool.TYPE_URL))
       {
-         checkRunInContainerContext = new Button(dialogArea, SWT.CHECK);
+         checkRunInContainerContext = new Button(optionsGroup, SWT.CHECK);
          gd = new GridData();
          gd.horizontalSpan = 2;
          checkDisable.setLayoutData(gd);
-         checkRunInContainerContext.setText(i18n.tr("Run in container context"));
+         checkRunInContainerContext.setText(i18n.tr("Run in &container context"));
          checkRunInContainerContext.setSelection(objectTool.isRunInContainerContext());
       }
 
