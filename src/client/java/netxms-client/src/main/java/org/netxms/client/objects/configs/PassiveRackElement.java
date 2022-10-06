@@ -18,8 +18,10 @@
  */
 package org.netxms.client.objects.configs;
 
+import java.util.UUID;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.constants.RackElementType;
+import org.netxms.base.NXCommon;
+import org.netxms.client.constants.PassiveRackElementType;
 import org.netxms.client.constants.RackOrientation;
 
 /**
@@ -29,10 +31,13 @@ public class PassiveRackElement
 {
    public long id;
    public String name;
-   public RackElementType type;
+   public PassiveRackElementType type;
    public int position;
+   public int height;
    public RackOrientation orientation;
    public int portCount;
+   public UUID frontImage;
+   public UUID rearImage;
 
    /**
     * Create empty rack attribute entry
@@ -41,55 +46,69 @@ public class PassiveRackElement
    {
       id = 0;
       name = "";
-      type = RackElementType.PATCH_PANEL;
+      type = PassiveRackElementType.FILLER_PANEL;
       position = 0;
+      height = 1;
       orientation = RackOrientation.FILL;
       portCount = 0;
+      frontImage = NXCommon.EMPTY_GUID;
+      rearImage = NXCommon.EMPTY_GUID;
    }
 
    /**
-    * Rack passive element constructor 
+    * Rack passive element constructor
     * 
     * @param msg message from server
-    * @param base base id for creation
+    * @param baseId base field ID
     */
-   public PassiveRackElement(NXCPMessage msg, long base)
+   public PassiveRackElement(NXCPMessage msg, long baseId)
    {
-      id = msg.getFieldAsInt32(base++);
-      name = msg.getFieldAsString(base++);
-      type = RackElementType.getByValue(msg.getFieldAsInt32(base++));
-      position = msg.getFieldAsInt32(base++);
-      orientation = RackOrientation.getByValue(msg.getFieldAsInt32(base++));
-      portCount = msg.getFieldAsInt32(base++);
+      id = msg.getFieldAsInt32(baseId++);
+      name = msg.getFieldAsString(baseId++);
+      type = PassiveRackElementType.getByValue(msg.getFieldAsInt32(baseId++));
+      position = msg.getFieldAsInt32(baseId++);
+      height = msg.getFieldAsInt32(baseId++);
+      orientation = RackOrientation.getByValue(msg.getFieldAsInt32(baseId++));
+      portCount = msg.getFieldAsInt32(baseId++);
+      frontImage = msg.getFieldAsUUID(baseId++);
+      rearImage = msg.getFieldAsUUID(baseId++);
    }
 
-
    /**
-    * Rack passive element copy constructor 
-    * @param element element to copy
+    * Rack passive element copy constructor
+    *
+    * @param src element to copy
     */
-   public PassiveRackElement(PassiveRackElement element)
+   public PassiveRackElement(PassiveRackElement src)
    {
-      id = element.id;
-      name = element.name;
-      type = element.type;
-      position = element.position;
-      orientation = element.orientation;
+      id = src.id;
+      name = src.name;
+      type = src.type;
+      position = src.position;
+      height = src.height;
+      orientation = src.orientation;
+      portCount = src.portCount;
+      frontImage = src.frontImage;
+      rearImage = src.rearImage;
    }
 
    /**
     * Fill message with passive rack element data 
     * 
     * @param msg message to fill
-    * @param base base id to start from
+    * @param baseId base id to start from
     */
-   public void fillMessage(NXCPMessage msg, long base)
+   public void fillMessage(NXCPMessage msg, long baseId)
    {
-      msg.setFieldInt32(base++, (int)id);
-      msg.setField(base++, name);
-      msg.setFieldInt32(base++, type.getValue());
-      msg.setFieldInt32(base++, position);
-      msg.setFieldInt32(base++, orientation.getValue());
+      msg.setFieldInt32(baseId++, (int)id);
+      msg.setField(baseId++, name);
+      msg.setFieldInt16(baseId++, type.getValue());
+      msg.setFieldInt16(baseId++, position);
+      msg.setFieldInt16(baseId++, height);
+      msg.setFieldInt16(baseId++, orientation.getValue());
+      msg.setFieldInt16(baseId++, portCount);
+      msg.setField(baseId++, frontImage);
+      msg.setField(baseId++, rearImage);
    }
 
    /**
@@ -97,7 +116,7 @@ public class PassiveRackElement
     * 
     * @param type to set
     */
-   public void setType(RackElementType type)
+   public void setType(PassiveRackElementType type)
    {
       this.type = type;
    }
@@ -107,7 +126,7 @@ public class PassiveRackElement
     * 
     * @return element type
     */
-   public RackElementType getType()
+   public PassiveRackElementType getType()
    {
       return type;
    }
@@ -202,6 +221,54 @@ public class PassiveRackElement
    public void setPortCount(int portCount)
    {
       this.portCount = portCount;
+   }
+
+   /**
+    * @return the height
+    */
+   public int getHeight()
+   {
+      return height;
+   }
+
+   /**
+    * @param height the height to set
+    */
+   public void setHeight(int height)
+   {
+      this.height = height;
+   }
+
+   /**
+    * @return the frontImage
+    */
+   public UUID getFrontImage()
+   {
+      return frontImage;
+   }
+
+   /**
+    * @param frontImage the frontImage to set
+    */
+   public void setFrontImage(UUID frontImage)
+   {
+      this.frontImage = frontImage;
+   }
+
+   /**
+    * @return the rearImage
+    */
+   public UUID getRearImage()
+   {
+      return rearImage;
+   }
+
+   /**
+    * @param rearImage the rearImage to set
+    */
+   public void setRearImage(UUID rearImage)
+   {
+      this.rearImage = rearImage;
    }
 
    /**

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,19 +24,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Rack attribute
+ * Passive rack element type
  */
-public enum RackElementType
+public enum PassiveRackElementType
 {
    PATCH_PANEL(0),
    FILLER_PANEL(1),
-   ORGANISER(2);
-   
-   private static Logger logger = LoggerFactory.getLogger(RackElementType.class);
-   private static Map<Integer, RackElementType> lookupTable = new HashMap<Integer, RackElementType>();
+   ORGANISER(2),
+   PDU(3);
+
+   private static Logger logger = LoggerFactory.getLogger(PassiveRackElementType.class);
+   private static Map<Integer, PassiveRackElementType> lookupTable = new HashMap<Integer, PassiveRackElementType>();
    static
    {
-      for(RackElementType element : RackElementType.values())
+      for(PassiveRackElementType element : PassiveRackElementType.values())
       {
          lookupTable.put(element.value, element);
       }
@@ -49,7 +50,7 @@ public enum RackElementType
     * 
     * @param value integer value
     */
-   private RackElementType(int value)
+   private PassiveRackElementType(int value)
    {
       this.value = value;
    }
@@ -70,9 +71,9 @@ public enum RackElementType
     * @param value integer value
     * @return enum element corresponding to given integer value or fall-back element for invalid value
     */
-   public static RackElementType getByValue(int value)
+   public static PassiveRackElementType getByValue(int value)
    {
-      final RackElementType element = lookupTable.get(value);
+      final PassiveRackElementType element = lookupTable.get(value);
       if (element == null)
       {
          logger.warn("Unknown element " + value);

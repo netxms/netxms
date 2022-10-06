@@ -3831,11 +3831,12 @@ public:
 /**
  * Rack element type
  */
-enum RackElementType
+enum class RackElementType
 {
    PATCH_PANEL = 0,
    FILLER_PANEL = 1,
-   ORGANISER = 2
+   ORGANISER = 2,
+   PDU = 3
 };
 
 /**
@@ -3847,12 +3848,14 @@ private:
    uint32_t m_id;
    TCHAR *m_name;
    RackElementType m_type;
-   uint32_t m_position;
+   uint16_t m_position;
+   uint16_t m_height;
    RackOrientation m_orientation;
    uint32_t m_portCount;
+   uuid m_imageFront;
+   uuid m_imageRear;
 
 public:
-   RackPassiveElement();
    RackPassiveElement(DB_RESULT hResult, int row);
    RackPassiveElement(const NXCPMessage& request, uint32_t base);
    ~RackPassiveElement()
@@ -3866,8 +3869,9 @@ public:
    void fillMessage(NXCPMessage *pMsg, uint32_t base) const;
    json_t *toJson() const;
 
-   RackElementType getType() const { return m_type; }
    uint32_t getId() const { return m_id; }
+   RackElementType getType() const { return m_type; }
+
    String toString() const;
 };
 

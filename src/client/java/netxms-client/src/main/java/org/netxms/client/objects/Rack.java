@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ public class Rack extends GenericObject
 	private int height;
 	private boolean topBottomNumbering;
    private List<PassiveRackElement> passiveElements;
-	
+
 	/**
     * Create from NXCP message.
     *
@@ -50,14 +50,14 @@ public class Rack extends GenericObject
 		topBottomNumbering = msg.getFieldAsBoolean(NXCPCodes.VID_TOP_BOTTOM);
 		passiveElements = new ArrayList<PassiveRackElement>();
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
-		long base = NXCPCodes.VID_ELEMENT_LIST_BASE;
+		long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for (int i = 0; i < count; i++)
 		{
-		   passiveElements.add(new PassiveRackElement(msg, base));
-		   base+=10;
+		   passiveElements.add(new PassiveRackElement(msg, fieldId));
+         fieldId += 10;
 		}
 	}
-	
+
 	/**
 	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
 	 */
@@ -133,21 +133,18 @@ public class Rack extends GenericObject
       });
 	   return units;
 	}
-	
+
 	/**
-	 * Get passive element by id
-	 * 
-	 * @param id element ID
-	 * @return passive element with given ID or null if such element does not exist	 
-	 */
+    * Get passive element by ID.
+    * 
+    * @param id element ID
+    * @return passive element with given ID or null if such element does not exist
+    */
 	public PassiveRackElement getPassiveElement(long id)
 	{
-	   PassiveRackElement element = null;
-	   for(PassiveRackElement el : passiveElements)
-	      if (el.getId() == id)
-	         element = el;
-	   
-	   return element;
+	   for(PassiveRackElement e : passiveElements)
+	      if (e.getId() == id)
+            return e;
+      return null;
 	}
-	
 }

@@ -23,6 +23,23 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.17 to 42.18
+ */
+static bool H_UpgradeFromV17()
+{
+   const TCHAR batch[] =
+      _T("ALTER TABLE rack_passive_elements ADD height integer\n")
+      _T("ALTER TABLE rack_passive_elements ADD image_front varchar(36)\n")
+      _T("ALTER TABLE rack_passive_elements ADD image_rear varchar(36)\n")
+      _T("UPDATE rack_passive_elements SET height=1\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("rack_passive_elements"), _T("height")));
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 42.16 to 42.17
  */
 static bool H_UpgradeFromV16()
@@ -341,6 +358,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 17, 42, 18, H_UpgradeFromV17 },
    { 16, 42, 17, H_UpgradeFromV16 },
    { 15, 42, 16, H_UpgradeFromV15 },
    { 14, 42, 15, H_UpgradeFromV14 },

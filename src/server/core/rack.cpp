@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,14 +59,14 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 		return false;
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num FROM racks WHERE id=?"));
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		return false;
 
 	bool success = false;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
-	if (hResult != NULL)
+	if (hResult != nullptr)
 	{
 		if (DBGetNumRows(hResult) > 0)
 		{
@@ -78,31 +78,33 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	}
 	DBFreeStatement(hStmt);
 
-   hStmt = DBPrepare(hdb, _T("SELECT id,name,type,position,orientation,port_count FROM rack_passive_elements WHERE rack_id=?"));
-   if (hStmt == NULL)
-      success = false;
-	if(success)
+	if (success)
 	{
-	   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-	   DB_RESULT hResult = DBSelectPrepared(hStmt);
-	   if (hResult != NULL)
-	   {
-	      int count = DBGetNumRows(hResult);
-	      for(int i = 0; i < count; i++)
-	      {
-	         RackPassiveElement *element = new RackPassiveElement(hResult, i);
-	         m_passiveElements->add(element);
-	      }
-	      DBFreeResult(hResult);
-	      success = true;
-	   }
-	   else
-	   {
-	      success = false;
-	   }
+      hStmt = DBPrepare(hdb, _T("SELECT id,name,type,position,height,orientation,port_count,image_front,image_rear FROM rack_passive_elements WHERE rack_id=?"));
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != nullptr)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               m_passiveElements->add(new RackPassiveElement(hResult, i));
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            success = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
 	}
-	if (hStmt != NULL)
-	   DBFreeStatement(hStmt);
 
 	return success;
 }
@@ -164,14 +166,14 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
 {
    super::fillMessageInternal(pMsg, userId);
-   pMsg->setField(VID_HEIGHT, (WORD)m_height);
-   pMsg->setField(VID_TOP_BOTTOM, (INT16)(m_topBottomNumbering ? 1 : 0));
+   pMsg->setField(VID_HEIGHT, static_cast<uint16_t>(m_height));
+   pMsg->setField(VID_TOP_BOTTOM, m_topBottomNumbering);
    pMsg->setField(VID_NUM_ELEMENTS, m_passiveElements->size());
-   UINT32 base = VID_ELEMENT_LIST_BASE;
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < m_passiveElements->size(); i++)
    {
-      m_passiveElements->get(i)->fillMessage(pMsg, base);
-      base += 10;
+      m_passiveElements->get(i)->fillMessage(pMsg, fieldId);
+      fieldId += 10;
    }
 }
 
@@ -190,7 +192,7 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
    {
       int count = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
       ObjectArray<RackPassiveElement> newElements(count);
-      UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+      uint32_t fieldId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
          newElements.add(new RackPassiveElement(msg, fieldId));
@@ -200,7 +202,7 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
       for(int i = 0; i < m_passiveElements->size(); i++) //delete links for deleted patch panels
       {
          RackPassiveElement *e = m_passiveElements->get(i);
-         if (e->getType() == PATCH_PANEL)
+         if (e->getType() == RackElementType::PATCH_PANEL)
          {
             int j;
             for(j = 0; j < newElements.size(); j++)
@@ -278,29 +280,19 @@ String Rack::getRackPasiveElementDescription(uint32_t id)
 }
 
 /**
- * Default constructor for rack passive element
- */
-RackPassiveElement::RackPassiveElement()
-{
-   m_id = CreateUniqueId(IDG_RACK_ELEMENT);
-   m_name = MemCopyString(_T(""));
-   m_type = PATCH_PANEL;
-   m_position = 0;
-   m_orientation = FILL;
-   m_portCount = 0;
-}
-
-/**
  * Create rack passive element form database
  */
 RackPassiveElement::RackPassiveElement(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldLong(hResult, row, 0);
-   m_name = DBGetField(hResult, row, 1, NULL, 0);
-   m_type = (RackElementType)DBGetFieldLong(hResult, row, 2);
-   m_position = DBGetFieldLong(hResult, row, 3);
-   m_orientation = (RackOrientation)DBGetFieldLong(hResult, row, 4);
-   m_portCount = DBGetFieldLong(hResult, row, 5);
+   m_name = DBGetField(hResult, row, 1, nullptr, 0);
+   m_type = static_cast<RackElementType>(DBGetFieldLong(hResult, row, 2));
+   m_position = static_cast<uint16_t>(DBGetFieldLong(hResult, row, 3));
+   m_height = static_cast<uint16_t>(DBGetFieldLong(hResult, row, 4));
+   m_orientation = static_cast<RackOrientation>(DBGetFieldLong(hResult, row, 5));
+   m_portCount = DBGetFieldLong(hResult, row, 6);
+   m_imageFront = DBGetFieldGUID(hResult, row, 7);
+   m_imageRear = DBGetFieldGUID(hResult, row, 8);
 }
 
 /**
@@ -314,10 +306,13 @@ RackPassiveElement::RackPassiveElement(const NXCPMessage& request, uint32_t base
       m_id = CreateUniqueId(IDG_RACK_ELEMENT);
    }
    m_name = request.getFieldAsString(base++);
-   m_type = (RackElementType)request.getFieldAsInt32(base++);
-   m_position = request.getFieldAsInt32(base++);
-   m_orientation = (RackOrientation)request.getFieldAsInt32(base++);
+   m_type = (RackElementType)request.getFieldAsInt16(base++);
+   m_position = request.getFieldAsInt16(base++);
+   m_height = request.getFieldAsInt16(base++);
+   m_orientation = (RackOrientation)request.getFieldAsInt16(base++);
    m_portCount = request.getFieldAsInt32(base++);
+   m_imageFront = request.getFieldAsGUID(base++);
+   m_imageRear = request.getFieldAsGUID(base++);
 }
 
 /**
@@ -328,14 +323,16 @@ json_t *RackPassiveElement::toJson() const
    json_t *root = json_object();
    json_object_set_new(root, "id", json_integer(m_id));
    json_object_set_new(root, "name", json_string_t(m_name));
-   json_object_set_new(root, "type", json_integer(m_type));
+   json_object_set_new(root, "type", json_integer(static_cast<int32_t>(m_type)));
    json_object_set_new(root, "position", json_integer(m_position));
+   json_object_set_new(root, "height", json_integer(m_height));
    json_object_set_new(root, "orientation", json_integer(m_orientation));
-   if(m_type == PATCH_PANEL)
-   {
+   if (m_type == RackElementType::PATCH_PANEL)
       json_object_set_new(root, "portCount", json_integer(m_portCount));
-   }
-
+   if (!m_imageFront.isNull())
+      json_object_set_new(root, "imageFront", json_string_t(m_imageFront.toString()));
+   if (!m_imageRear.isNull())
+      json_object_set_new(root, "imageFront", json_string_t(m_imageRear.toString()));
    return root;
 }
 
@@ -344,17 +341,20 @@ json_t *RackPassiveElement::toJson() const
  */
 bool RackPassiveElement::saveToDatabase(DB_HANDLE hdb, uint32_t parentId) const
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO rack_passive_elements (name,type,position,orientation,port_count,id,rack_id) VALUES (?,?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO rack_passive_elements (id,rack_id,name,type,position,height,orientation,port_count,image_front,image_rear) VALUES (?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt == nullptr)
       return false;
 
-   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_type);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_position);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_orientation);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (m_type == PATCH_PANEL) ? m_portCount  : 0);
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
-   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, parentId);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, parentId);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, static_cast<int32_t>(m_type));
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_position);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_height);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_orientation);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (m_type == RackElementType::PATCH_PANEL) ? m_portCount  : 0);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_imageFront);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_imageRear);
 
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -367,27 +367,26 @@ bool RackPassiveElement::saveToDatabase(DB_HANDLE hdb, uint32_t parentId) const
  */
 bool RackPassiveElement::deleteChildren(DB_HANDLE hdb, uint32_t parentId)
 {
-   bool success = true;
-   if(m_type == PATCH_PANEL)
-   {
+   if (m_type == RackElementType::PATCH_PANEL)
       DeletePatchPanelFromPhysicalLinks(parentId, m_id);
-   }
-   return success;
+   return true;
 }
 
 /**
  * Fill message for rack passive element
  */
-void RackPassiveElement::fillMessage(NXCPMessage *pMsg, uint32_t base) const
+void RackPassiveElement::fillMessage(NXCPMessage *msg, uint32_t base) const
 {
-   pMsg->setField(base++, m_id);
-   pMsg->setField(base++, m_name);
-   pMsg->setField(base++, m_type);
-   pMsg->setField(base++, m_position);
-   pMsg->setField(base++, m_orientation);
-   pMsg->setField(base++, m_portCount);
+   msg->setField(base++, m_id);
+   msg->setField(base++, m_name);
+   msg->setField(base++, static_cast<uint16_t>(m_type));
+   msg->setField(base++, m_position);
+   msg->setField(base++, m_height);
+   msg->setField(base++, static_cast<uint16_t>(m_orientation));
+   msg->setField(base++, m_portCount);
+   msg->setField(base++, m_imageFront);
+   msg->setField(base++, m_imageRear);
 }
-
 
 static const TCHAR *s_passiveElementTypeLabel[] = {
     _T("FILL"),
@@ -404,6 +403,8 @@ String RackPassiveElement::toString() const
    sb.append(s_passiveElementTypeLabel[m_orientation]);
    sb.append(_T(" "));
    sb.append(m_position);
+   sb.append(_T("/"));
+   sb.append(m_height);
    sb.append(_T(" ("));
    sb.append(m_name);
    sb.append(_T(")"));

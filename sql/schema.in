@@ -306,8 +306,11 @@ CREATE TABLE rack_passive_elements
   name varchar(255) null,
   type integer not null,
   position integer not null,
+  height integer not null,
   orientation integer not null,
   port_count integer not null, //only for patch pannel
+  image_front varchar(36) null,
+  image_rear varchar(36) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
