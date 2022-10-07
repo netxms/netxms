@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,12 +40,18 @@ public class RackPassiveElementComparator extends ViewerComparator
       TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
       if (sortColumn == null)
          return 0;
-      
+
       int rc;
       switch((Integer)sortColumn.getData("ID"))
       {
+         case RackPassiveElements.COLUMN_HEIGHT:
+            rc = Integer.signum(((PassiveRackElement)e1).getHeight() - ((PassiveRackElement)e2).getHeight());
+            break;
          case RackPassiveElements.COLUMN_NAME:
             rc = ((PassiveRackElement)e1).getName().compareToIgnoreCase(((PassiveRackElement)e2).getName());
+            break;
+         case RackPassiveElements.COLUMN_ORIENTATION:
+            rc = Integer.signum(((PassiveRackElement)e1).getOrientation().getValue() - ((PassiveRackElement)e2).getOrientation().getValue());
             break;
          case RackPassiveElements.COLUMN_POSITION:
             rc = Integer.signum(((PassiveRackElement)e1).getPosition() - ((PassiveRackElement)e2).getPosition());
@@ -53,8 +59,6 @@ public class RackPassiveElementComparator extends ViewerComparator
          case RackPassiveElements.COLUMN_TYPE:
             rc = Integer.signum(((PassiveRackElement)e1).getType().getValue() - ((PassiveRackElement)e2).getType().getValue());
             break;
-         case RackPassiveElements.COLUMN_ORIENTATION:
-            rc = Integer.signum(((PassiveRackElement)e1).getOrientation().getValue() - ((PassiveRackElement)e2).getOrientation().getValue());
          default:
             rc = 0;
             break;
@@ -62,5 +66,4 @@ public class RackPassiveElementComparator extends ViewerComparator
       int dir = ((TableViewer)viewer).getTable().getSortDirection();
       return (dir == SWT.UP) ? rc : -rc;
    }
-   
 }

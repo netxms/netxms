@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,33 +24,34 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.nxmc.modules.objects.propertypages.RackPassiveElements;
 
+/**
+ * Label provider for list of passive rack elements
+ */
 public class RackPassiveElementLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    private final static String[] ORIENTATION = { "Fill", "Front", "Rear" };
-   private final static String[] TYPE = { "Patch panel", "Filler panel", "Organiser panel" };
-   
+   private final static String[] TYPE = { "Patch panel", "Filler panel", "Organiser", "PDU" };
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      if (element == null)
-         return null;
-      
       PassiveRackElement entry = (PassiveRackElement)element;
       switch(columnIndex)
       {
+         case RackPassiveElements.COLUMN_HEIGHT:
+            return Integer.toString(entry.getHeight());
          case RackPassiveElements.COLUMN_NAME:
             return entry.getName();
+         case RackPassiveElements.COLUMN_ORIENTATION:
+            return ORIENTATION[entry.getOrientation().getValue()];
          case RackPassiveElements.COLUMN_POSITION:
             return Integer.toString(entry.getPosition());
          case RackPassiveElements.COLUMN_TYPE:
             return TYPE[entry.getType().getValue()];
-         case RackPassiveElements.COLUMN_ORIENTATION:
-            return ORIENTATION[entry.getOrientation().getValue()];
       }
-      
       return null;
    }
 
@@ -62,5 +63,4 @@ public class RackPassiveElementLabelProvider extends LabelProvider implements IT
    {
       return null;
    }
-   
 }

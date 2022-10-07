@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.constants.RackElementType;
+import org.netxms.client.constants.PassiveRackElementType;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.configs.PassiveRackElement;
 import org.netxms.nxmc.PreferenceStore;
@@ -64,7 +64,7 @@ public class PatchPanelSelectonDialog extends Dialog
       super(parentShell);
       passiveElements = new ArrayList<PassiveRackElement>();
       for(PassiveRackElement el : rack.getPassiveElements())
-         if (el.getType() == RackElementType.PATCH_PANEL)
+         if (el.getType() == PassiveRackElementType.PATCH_PANEL)
             passiveElements.add(el);
    }
 

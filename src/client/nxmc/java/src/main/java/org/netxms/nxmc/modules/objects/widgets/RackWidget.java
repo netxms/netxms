@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 /**
  * Rack display widget
  */
-public class RackWidget extends Canvas implements PaintListener, DisposeListener, ImageUpdateListener, MouseListener, MouseTrackListener
+public class RackWidget extends Canvas implements PaintListener, ImageUpdateListener, MouseListener, MouseTrackListener
 {
    private static final double UNIT_WH_RATIO = 10.85;
    private static final int BORDER_WIDTH_RATIO = 15;
@@ -70,7 +70,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static final int TITLE_HEIGHT = 20;
    private static final int MAX_BORDER_WIDTH = 30;
    private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
-   private static final String[] VIEW_LABELS = { "Front", "Back" };
+   private static final String[] SIDE_LABELS = { "Front", "Back" };
 
    private static Image imageDefaultTop = null;
    private static Image imageDefaultMiddle;
@@ -78,7 +78,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static Image imageDefaultRear;
    private static Image imagePatchPanel;
    private static Image imageFillerPanel;
-   private static Image imageOrganiserPanel;
+   private static Image imageOrganiser;
+   private static Image imagePDU;
 
    /**
     * Create images required for rack drawing
@@ -93,8 +94,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultBottom = ResourceManager.getImage("icons/rack/rack-default-bottom.png");
       imageDefaultRear = ResourceManager.getImage("icons/rack/rack-default-rear.png");
       imagePatchPanel = ResourceManager.getImage("icons/rack/rack-patch-panel.png");
-      imageOrganiserPanel = ResourceManager.getImage("icons/rack/rack-filler-panel.png"); // FIXME use actual organiser panel image once available!
+      imageOrganiser = ResourceManager.getImage("icons/rack/rack-filler-panel.png"); // FIXME use actual organizer image once available!
       imageFillerPanel = ResourceManager.getImage("icons/rack/rack-filler-panel.png");
+      imagePDU = ResourceManager.getImage("icons/rack/rack-pdu.png");
    }
 
    private Rack rack;
@@ -127,9 +129,16 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       addPaintListener(this);
       addMouseListener(this);
       WidgetHelper.attachMouseTrackListener(this, this);
-      addDisposeListener(this);
       ImageProvider.getInstance().addUpdateListener(this);
       createImages();
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            ImageProvider.getInstance().removeUpdateListener(RackWidget.this);
+         }
+      });
    }
 
    /**
@@ -175,9 +184,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       rect.x += borderWidth / 2;
 
       // Title
-      gc.setFont(WidgetHelper.getBestFittingFont(gc, titleFonts, VIEW_LABELS[0], rect.width, TITLE_HEIGHT)); //$NON-NLS-1$
-      Point titleSize = gc.textExtent(VIEW_LABELS[side.getValue() - 1]);
-      gc.drawText(VIEW_LABELS[side.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2 - borderWidth / 2);
+      gc.setFont(WidgetHelper.getBestFittingFont(gc, titleFonts, SIDE_LABELS[0], rect.width, TITLE_HEIGHT)); //$NON-NLS-1$
+      Point titleSize = gc.textExtent(SIDE_LABELS[side.getValue() - 1]);
+      gc.drawText(SIDE_LABELS[side.getValue() - 1], (rect.width / 2 - titleSize.x / 2) + UNIT_NUMBER_WIDTH + MARGIN_WIDTH, rect.y - TITLE_HEIGHT - MARGIN_HEIGHT / 2 - borderWidth / 2);
 
       // Rack itself
       gc.setBackground(ThemeEngine.getBackgroundColor("Rack.EmptySpace"));
@@ -223,22 +232,23 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       
       // Draw attributes
       objects.clear();
-      List<PassiveRackElement> attributes = rack.getPassiveElements();
-      for(PassiveRackElement c : attributes)
+      for(PassiveRackElement c : rack.getPassiveElements())
       {
          if ((c.getPosition() < 1) || (c.getPosition() > rack.getHeight()) ||
-            (c.getOrientation() != side) && (c.getOrientation() != RackOrientation.FILL))
+             (rack.isTopBottomNumbering() && (c.getPosition() + c.getHeight() > rack.getHeight() + 1)) ||
+             (!rack.isTopBottomNumbering() && (c.getPosition() - c.getHeight() < 0)) || 
+             (c.getOrientation() != side) && (c.getOrientation() != RackOrientation.FILL))
             continue;
-         
+
          int topLine, bottomLine;
          if (rack.isTopBottomNumbering())
          {
-            bottomLine = unitBaselines[c.getPosition()]; // lower border
+            bottomLine = unitBaselines[c.getPosition() + c.getHeight() - 1]; // lower border
             topLine = unitBaselines[c.getPosition() - 1];   // upper border
          }
          else
          {
-            bottomLine = unitBaselines[c.getPosition() - 1]; // lower border
+            bottomLine = unitBaselines[c.getPosition() - c.getHeight()]; // lower border
             topLine = unitBaselines[c.getPosition()];   // upper border
          }
          final Rectangle unitRect = new Rectangle(rect.x + (borderWidth + 1) / 2, topLine + 1, rect.width - borderWidth, bottomLine - topLine);
@@ -247,26 +257,48 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             break;
 
          objects.add(new ObjectImage(c, unitRect));
-         Image image;
-         switch(c.getType())
-         {
-            case FILLER_PANEL:
-               image = imageFillerPanel;
-               break;
-            case PATCH_PANEL:
-               image = imagePatchPanel;
-               break;
-            case ORGANISER:
-               image = imageOrganiserPanel;
-               break;
-            default:
-               continue;
-         }
 
-         Rectangle r = image.getBounds();
-         gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+         if ((c.getRearImage() != null) && !c.getRearImage().equals(NXCommon.EMPTY_GUID) && (side == RackOrientation.REAR))
+         {
+            Image image = ImageProvider.getInstance().getImage(c.getRearImage());
+            Rectangle r = image.getBounds();
+            gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+         }
+         else if ((c.getFrontImage() != null) && !c.getFrontImage().equals(NXCommon.EMPTY_GUID) && (side == RackOrientation.FRONT))
+         {
+            Image image = ImageProvider.getInstance().getImage(c.getFrontImage());
+            Rectangle r = image.getBounds();
+            gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+         }         
+         else // Draw default representation
+         {         
+            Image image;
+            switch(c.getType())
+            {
+               case PATCH_PANEL:
+                  image = imagePatchPanel;
+                  break;
+               case ORGANISER:
+                  image = imageOrganiser;
+                  break;
+               case PDU:
+                  image = imagePDU;
+                  break;
+               default:
+                  image = imageFillerPanel;
+                  break;
+            }
+            Rectangle r = image.getBounds();
+            int u = rack.isTopBottomNumbering() ? c.getPosition() : c.getPosition() - c.getHeight() + 1;
+            for(int i = 0; i < c.getHeight(); i++, u++)
+            {
+               unitRect.y = unitBaselines[u];
+               unitRect.height = unitBaselines[u - 1] - unitRect.y;
+               gc.drawImage(image, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+            }
+         }
       }
-      
+
       // Draw units
       List<HardwareEntity> units = rack.getUnits();
       for(HardwareEntity n : units)
@@ -276,7 +308,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
              (!rack.isTopBottomNumbering() && (n.getRackPosition() - n.getRackHeight() < 0)) || 
              ((n.getRackOrientation() != side) && (n.getRackOrientation() != RackOrientation.FILL)))
             continue;
-         
+
          int topLine, bottomLine;
          if (rack.isTopBottomNumbering())
          {
@@ -299,7 +331,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          gc.setBackground(StatusDisplayInfo.getStatusColor(n.getStatus()));
          gc.fillRectangle(unitRect.x - borderWidth + borderWidth / 4 + 1, unitRect.y + 1, borderWidth / 2 - 1, Math.min(borderWidth, (int)unitHeight - 2));
 
-         if(n instanceof Chassis)
+         if (n instanceof Chassis)
          {
             ChassisWidget.drawChassis(gc, unitRect, (Chassis)n, side, null);
          }
@@ -397,15 +429,6 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
 
       unitWidth = (int)((double)(hHint - ((borderWidth + 1) / 2) * 2 - MARGIN_HEIGHT * 2) / (double)rack.getHeight() * UNIT_WH_RATIO);
       return new Point(unitWidth + MARGIN_WIDTH * 2 + UNIT_NUMBER_WIDTH + borderWidth * 2 + borderWidth / 2, hHint);
-   }
-
-   /**
-    * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
-    */
-   @Override
-   public void widgetDisposed(DisposeEvent e)
-   {      
-      ImageProvider.getInstance().removeUpdateListener(this);
    }
 
    /**
@@ -591,12 +614,12 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          this.object = object;
          this.rect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
       }
-      
+
       public boolean contains(Point p)
       {
          return rect.contains(p);
       }
-      
+
       public Object getObject()
       {
          return object;

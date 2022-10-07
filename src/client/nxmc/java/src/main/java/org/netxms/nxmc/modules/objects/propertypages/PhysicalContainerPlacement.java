@@ -56,10 +56,6 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "Rack" property page for NetXMS object
  */
-/**
- * @author victor
- *
- */
 public class PhysicalContainerPlacement extends ObjectPropertyPage
 {
    private static final Logger logger = LoggerFactory.getLogger(PhysicalContainerPlacement.class);
@@ -362,7 +358,7 @@ public class PhysicalContainerPlacement extends ObjectPropertyPage
          chassisElements.dispose();
          chassisElements = null;
       }
-         
+
 	   rackElements = new Composite(dialogArea, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

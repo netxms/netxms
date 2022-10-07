@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -51,7 +51,6 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.RackPassiveElementEditDialog;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.RackPassiveElementComparator;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.RackPassiveElementLabelProvider;
-import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -65,7 +64,8 @@ public class RackPassiveElements extends ObjectPropertyPage
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_TYPE = 1;
    public static final int COLUMN_POSITION = 2;
-   public static final int COLUMN_ORIENTATION = 3;
+   public static final int COLUMN_HEIGHT = 3;
+   public static final int COLUMN_ORIENTATION = 4;
 
    private Rack rack = null;
    private SortableTableViewer viewer;
@@ -119,7 +119,7 @@ public class RackPassiveElements extends ObjectPropertyPage
    protected Control createContents(Composite parent)
    {
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      
+
       rack = (Rack)object;
       
       GridLayout layout = new GridLayout();
@@ -127,17 +127,16 @@ public class RackPassiveElements extends ObjectPropertyPage
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
-      final String[] columnNames = { "Name", "Type", "Position", "Orientation" };
-      final int[] columnWidths = { 150, 100, 70, 30 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
-                                       SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+
+      final String[] columnNames = { "Name", "Type", "Position", "Height", "Orientation" };
+      final int[] columnWidths = { 150, 100, 70, 70, 80 };
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new RackPassiveElementLabelProvider());
       viewer.setComparator(new RackPassiveElementComparator());
-      
+
       passiveElements = new ArrayList<PassiveRackElement>();
-      for(PassiveRackElement element  : rack.getPassiveElements())
+      for(PassiveRackElement element : rack.getPassiveElements())
          passiveElements.add(new PassiveRackElement(element));
       viewer.setInput(passiveElements);
 
@@ -165,13 +164,7 @@ public class RackPassiveElements extends ObjectPropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
-      addButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -184,19 +177,13 @@ public class RackPassiveElements extends ObjectPropertyPage
             }
          }
       });
-      
+
       editButton = new Button(buttons, SWT.PUSH);
       editButton.setText("&Edit...");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
-      editButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      editButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -212,19 +199,13 @@ public class RackPassiveElements extends ObjectPropertyPage
             }
          }
       });
-      
+
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText("&Delete...");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-      deleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -234,7 +215,7 @@ public class RackPassiveElements extends ObjectPropertyPage
             isModified = true;
          }
       });
-      
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -242,7 +223,7 @@ public class RackPassiveElements extends ObjectPropertyPage
             editButton.notifyListeners(SWT.Selection, new Event());
          }
       });
-      
+
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
@@ -252,7 +233,7 @@ public class RackPassiveElements extends ObjectPropertyPage
             deleteButton.setEnabled(selection.size() > 0);
          }
       });
-      
+
       return dialogArea;
    }
 
@@ -269,14 +250,7 @@ public class RackPassiveElements extends ObjectPropertyPage
          setValid(false);
 
       final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
-      try
-      {
-         md.setPassiveElements(passiveElements);
-      }
-      catch(Exception e)
-      {
-         MessageDialogHelper.openError(getShell(), "Rack attribute error", "Unable to save rack attribute configuration" + e.getMessage());
-      }
+      md.setPassiveElements(passiveElements);
       final NXCSession session = Registry.getSession();
       new Job("Update rack attributes", null) {
          @Override

@@ -88,11 +88,10 @@ public class PhysicalContainerPlacement extends PropertyPage
    private LabeledSpinner chassisHorizontalPosition;
    private Combo chassisHorizontalPositionUnits;
    private Combo chassisOrientation;
-	
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -331,7 +330,7 @@ public class PhysicalContainerPlacement extends PropertyPage
          chassisElements.dispose();
          chassisElements = null;
       }
-         
+
 	   rackElements = new Composite(dialogArea, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -345,29 +344,27 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       rackElements.setLayoutData(gd);
-	         
+
 	   rackImageFrontSelector = new ImageSelector(rackElements, SWT.NONE);
       rackImageFrontSelector.setLabel("Rack front image");
       rackImageFrontSelector.setImageGuid(object.getFrontRackImage(), true);
-      rackImageFrontSelector.setEnabled(object.getRackOrientation() == RackOrientation.FRONT ||
-                                        object.getRackOrientation() == RackOrientation.FILL);
+      rackImageFrontSelector.setEnabled(object.getRackOrientation() == RackOrientation.FRONT || object.getRackOrientation() == RackOrientation.FILL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
       rackImageFrontSelector.setLayoutData(gd);
-      
+
       rackImageRearSelector = new ImageSelector(rackElements, SWT.NONE);
       rackImageRearSelector.setLabel("Rack rear image");
       rackImageRearSelector.setImageGuid(object.getRearRackImage(), true);
-      rackImageRearSelector.setEnabled(object.getRackOrientation() == RackOrientation.REAR ||
-                                       object.getRackOrientation() == RackOrientation.FILL);
+      rackImageRearSelector.setEnabled(object.getRackOrientation() == RackOrientation.REAR || object.getRackOrientation() == RackOrientation.FILL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
       rackImageRearSelector.setLayoutData(gd);
-      
+
       rackPosition = new LabeledSpinner(rackElements, SWT.NONE);
       rackPosition.setLabel(Messages.get().RackPlacement_Position);
       rackPosition.setRange(1, 50);
@@ -376,7 +373,7 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       rackPosition.setLayoutData(gd);
-      
+
       rackHeight = new LabeledSpinner(rackElements, SWT.NONE);
       rackHeight.setLabel(Messages.get().RackPlacement_Height);
       rackHeight.setRange(1, 50);
@@ -385,7 +382,7 @@ public class PhysicalContainerPlacement extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       rackHeight.setLayoutData(gd);
-      
+
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -474,8 +471,8 @@ public class PhysicalContainerPlacement extends PropertyPage
          md.setChassisPlacement("");
       }
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.get().RackPlacement_UpdatingRackPlacement, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		final NXCSession session = ConsoleSharedData.getSession();
+		new ConsoleJob(String.format(Messages.get().RackPlacement_UpdatingRackPlacement, object.getObjectName()), null, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -505,7 +502,7 @@ public class PhysicalContainerPlacement extends PropertyPage
 		}.start();
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
@@ -515,7 +512,7 @@ public class PhysicalContainerPlacement extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -524,7 +521,7 @@ public class PhysicalContainerPlacement extends PropertyPage
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
 	 */
 	@Override
