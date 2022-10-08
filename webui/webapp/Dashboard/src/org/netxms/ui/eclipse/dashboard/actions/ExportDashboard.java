@@ -53,7 +53,7 @@ public class ExportDashboard implements IObjectActionDelegate
 {
 	private Dashboard dashboard = null;
 	private IWorkbenchPart wbPart = null;
-	
+
    /**
     * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
     */
@@ -152,7 +152,8 @@ public class ExportDashboard implements IObjectActionDelegate
 				}
 				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$
 
-				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(dashboard.getObjectName() + ".xml"), "UTF-8"); //$NON-NLS-1$
+            final File dashboardFile = File.createTempFile("export_dashboard_" + dashboard.getObjectId(), "_" + System.currentTimeMillis()); 
+				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(dashboardFile), "UTF-8"); //$NON-NLS-1$
 				try
 				{
 					out.write(xml.toString());
@@ -160,10 +161,9 @@ public class ExportDashboard implements IObjectActionDelegate
 				finally
 				{
 					out.close();
-					final File dashboardFile = new File(dashboard.getObjectName() + ".xml");
 					if (dashboardFile.length() > 0)
 					{
-   	            DownloadServiceHandler.addDownload(dashboardFile.getName(), dashboardFile.getName(), dashboardFile, "application/octet-stream");
+   	            DownloadServiceHandler.addDownload(dashboardFile.getName(), dashboard.getObjectName() + ".xml", dashboardFile, "application/octet-stream");
    	            runInUIThread(new Runnable() {
    	               @Override
    	               public void run()
