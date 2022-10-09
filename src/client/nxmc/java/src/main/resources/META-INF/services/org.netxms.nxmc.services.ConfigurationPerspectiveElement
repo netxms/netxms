@@ -10,6 +10,8 @@ org.netxms.nxmc.modules.events.EPPConfigurationElement
 org.netxms.nxmc.modules.events.EventConfigurationElement
 org.netxms.nxmc.modules.filemanager.ServerFilesElement
 org.netxms.nxmc.modules.imagelibrary.ImageLibraryConfigurationElement
+org.netxms.nxmc.modules.logwatch.SyslogParserConfigurationElement
+org.netxms.nxmc.modules.logwatch.WinEventLogParserConfigurationElement
 org.netxms.nxmc.modules.nxsl.MappingTablesConfigurationElement
 org.netxms.nxmc.modules.nxsl.PersistentStorageConfigurationElement
 org.netxms.nxmc.modules.nxsl.ScriptLibraryConfigurationElement

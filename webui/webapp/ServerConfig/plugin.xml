@@ -22,7 +22,7 @@
       <view
             allowMultiple="false"
             class="org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"
-            icon="icons/syslog_cfg.gif"
+            icon="icons/log-parser.png"
             id="org.netxms.ui.eclipse.serverconfig.views.SyslogParserConfigurator"
             name="%view.name.SyslogParser"
             restorable="true">
@@ -81,7 +81,7 @@
       <view
             allowMultiple="false"
             class="org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"
-            icon="icons/syslog_cfg.gif"
+            icon="icons/log-parser.png"
             id="org.netxms.ui.eclipse.serverconfig.views.WindowsEventParserConfigurator"
             name="Windows Event Parser"
             restorable="true">
@@ -248,7 +248,7 @@
      <action
            class="org.netxms.ui.eclipse.serverconfig.actions.OpenSyslogParserConfig"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_syslog_config"
-           icon="icons/syslog_cfg.gif"
+           icon="icons/log-parser.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_syslog_config"
            label="%action.label.SyslogParser"
            menubarPath="config/additions"
@@ -301,7 +301,7 @@
            allowLabelUpdate="true"
            class="org.netxms.ui.eclipse.serverconfig.actions.OpenWindowsEventParserConfig"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_windows_event"
-           icon="icons/syslog_cfg.gif"
+           icon="icons/log-parser.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_windows_event_config"
            label="Windows event parser"
            menubarPath="config/additions"
