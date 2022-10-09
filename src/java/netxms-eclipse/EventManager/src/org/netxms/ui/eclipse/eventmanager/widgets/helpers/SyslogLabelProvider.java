@@ -52,32 +52,32 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 		  Messages.get().SyslogLabelProvider_FacFTPD, Messages.get().SyslogLabelProvider_FacNTP, Messages.get().SyslogLabelProvider_FacLogAudit, Messages.get().SyslogLabelProvider_FacLogAlert, Messages.get().SyslogLabelProvider_FacClock, Messages.get().SyslogLabelProvider_FacLocal0, Messages.get().SyslogLabelProvider_FacLocal1, Messages.get().SyslogLabelProvider_FacLocal2, Messages.get().SyslogLabelProvider_FacLocal3, Messages.get().SyslogLabelProvider_FacLocal4,
 		  Messages.get().SyslogLabelProvider_FacLocal5, Messages.get().SyslogLabelProvider_FacLocal6, Messages.get().SyslogLabelProvider_FacLocal7
 		};
-	
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+   private NXCSession session = ConsoleSharedData.getSession();
 	private boolean showColor = true;
 	private boolean showIcons = false;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
 	@Override
 	public Color getForeground(Object element)
 	{
 		return showColor ? FOREGROUND_COLORS[severityMap[((SyslogRecord)element).getSeverity()].getValue()] : null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
 	@Override
 	public Color getBackground(Object element)
 	{
 		return showColor ? StatusDisplayInfo.getStatusColor(severityMap[((SyslogRecord)element).getSeverity()]) : null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
