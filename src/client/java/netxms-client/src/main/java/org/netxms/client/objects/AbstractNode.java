@@ -127,6 +127,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	protected long pollerNodeId;
 	protected long agentProxyId;
 	protected long snmpProxyId;
+   protected long mqttProxyId;
    protected long etherNetIpProxyId;
    protected long icmpProxyId;
 	protected int agentPort;
@@ -234,6 +235,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 		pollerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
 		agentProxyId = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		snmpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SNMP_PROXY);
+      mqttProxyId = msg.getFieldAsInt64(NXCPCodes.VID_MQTT_PROXY);
       etherNetIpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_ETHERNET_IP_PROXY);
       icmpProxyId = msg.getFieldAsInt64(NXCPCodes.VID_ICMP_PROXY);
 		agentPort = msg.getFieldAsInt32(NXCPCodes.VID_AGENT_PORT);
@@ -424,12 +426,22 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 		return agentProxyId;
 	}
 
+   /**
+    * @return the snmpProxyId
+    */
+   public long getSnmpProxyId()
+   {
+      return snmpProxyId;
+   }
+
 	/**
-	 * @return the snmpProxyId
-	 */
-	public long getSnmpProxyId()
+    * Get ID of MQTT proxy node.
+    *
+    * @return MQTT proxy node ID
+    */
+   public long getMqttProxyId()
 	{
-		return snmpProxyId;
+      return mqttProxyId;
 	}
 
    /**

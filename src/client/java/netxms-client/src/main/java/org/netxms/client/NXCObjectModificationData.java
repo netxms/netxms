@@ -79,6 +79,7 @@ public class NXCObjectModificationData
    private String snmpAuthPassword;
    private String snmpPrivPassword;
    private Long snmpProxy;
+   private Long mqttProxy;
    private Long icmpProxy;
    private Long webServiceProxy;
    private Long[] trustedNodes;
@@ -501,6 +502,26 @@ public class NXCObjectModificationData
    public void setSnmpProxy(long snmpProxy)
    {
       this.snmpProxy = snmpProxy;
+   }
+
+   /**
+    * Get MQTT proxy node ID
+    *
+    * @return MQTT proxy node ID
+    */
+   public Long getMqttProxy()
+   {
+      return mqttProxy;
+   }
+
+   /**
+    * Set MQTT proxy node ID.
+    * 
+    * @param mqttProxy MQTT proxy node ID
+    */
+   public void setMqttProxy(long mqttProxy)
+   {
+      this.mqttProxy = mqttProxy;
    }
 
    /**

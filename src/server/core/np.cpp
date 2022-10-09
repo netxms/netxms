@@ -37,6 +37,7 @@ NewNodeData::NewNodeData(const InetAddress& ipAddress) : ipAddr(ipAddress)
    name[0] = 0;
    agentProxyId = 0;
    snmpProxyId = 0;
+   mqttProxyId = 0;
    eipProxyId = 0;
    icmpProxyId = 0;
    sshProxyId = 0;
@@ -62,6 +63,7 @@ NewNodeData::NewNodeData(const InetAddress& ipAddress, const MacAddress& macAddr
    name[0] = 0;
    agentProxyId = 0;
    snmpProxyId = 0;
+   mqttProxyId = 0;
    eipProxyId = 0;
    icmpProxyId = 0;
    sshProxyId = 0;
@@ -88,6 +90,7 @@ NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress) :
    msg.getFieldAsString(VID_OBJECT_NAME, name, MAX_OBJECT_NAME);
    agentProxyId = msg.getFieldAsUInt32(VID_AGENT_PROXY);
    snmpProxyId = msg.getFieldAsUInt32(VID_SNMP_PROXY);
+   mqttProxyId = msg.getFieldAsUInt32(VID_MQTT_PROXY);
    eipProxyId = msg.getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
    icmpProxyId = msg.getFieldAsUInt32(VID_ICMP_PROXY);
    sshProxyId = msg.getFieldAsUInt32(VID_SSH_PROXY);

@@ -146,6 +146,26 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
          case DS_WEB_SERVICE:
             *error = dcTarget->getMetricFromWebService(pItem->getName(), buffer, MAX_LINE_SIZE);
             break;
+         case DS_MQTT:
+            if (dcTarget->getObjectClass() == OBJECT_NODE)
+            {
+               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Node*>(dcTarget)->getEffectiveMqttProxy(), OBJECT_NODE));
+               if (proxy != nullptr)
+               {
+                  TCHAR name[MAX_PARAM_NAME];
+                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(pItem->getName()).cstr());
+                  *error = proxy->getMetricFromAgent(name, buffer, MAX_LINE_SIZE);
+               }
+               else
+               {
+                  *error = DCE_COMM_ERROR;
+               }
+            }
+            else
+            {
+               *error = DCE_NOT_SUPPORTED;
+            }
+            break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;

@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017-2021 Raden Solutions
+ ** Copyright (C) 2017-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -30,6 +30,18 @@ Topic::Topic(const TCHAR *pattern, const TCHAR *event)
    m_pattern = MemCopyStringA(pattern);
 #endif
    m_event = MemCopyString(event);
+   m_lastName[0] = 0;
+   m_lastValue[0] = 0;
+   m_timestamp = 0;
+}
+
+/**
+ * Topic constructor
+ */
+Topic::Topic(const char *pattern)
+{
+   m_pattern = MemCopyStringA(pattern);
+   m_event = nullptr;
    m_lastName[0] = 0;
    m_lastValue[0] = 0;
    m_timestamp = 0;

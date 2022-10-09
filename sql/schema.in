@@ -432,6 +432,7 @@ CREATE TABLE nodes
   syslog_codepage varchar(15) null,
   snmp_codepage varchar(15) null,
   ospf_router_id varchar(15) null,
+  mqtt_proxy integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

@@ -452,15 +452,15 @@ public class General extends AbstractDCIPropertyPage
 	{
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
 		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH);
-		
-		boolean enableSchedule = (dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT);
+
+      boolean enableSchedule = (dataOrigin != DataOrigin.PUSH);
 		scheduleDefault.setEnabled(enableSchedule);
       scheduleFixed.setEnabled(enableSchedule);
       scheduleAdvanced.setEnabled(enableSchedule);
       pollingInterval.setEnabled(enableSchedule);
       pollingIntervalLabel.setEnabled(enableSchedule);
       scheduleLink.setEnabled(enableSchedule);
-      
+
       metricSelector.setSelectioEnabled(
 		      (dataOrigin == DataOrigin.AGENT) || 
 		      (dataOrigin == DataOrigin.SNMP) || 
@@ -470,7 +470,7 @@ public class General extends AbstractDCIPropertyPage
             (dataOrigin == DataOrigin.DEVICE_DRIVER) || 
 		      (dataOrigin == DataOrigin.SCRIPT));
 	}
-   
+
    /**
     * Apply changes
     * 

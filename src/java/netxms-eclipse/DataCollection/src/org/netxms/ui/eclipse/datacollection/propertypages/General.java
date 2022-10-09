@@ -449,7 +449,7 @@ public class General extends AbstractDCIPropertyPage
       DataOrigin dataOrigin = DataOrigin.getByValue(origin.getSelectionIndex());
 		sourceNode.setEnabled(dataOrigin != DataOrigin.PUSH);
 		
-		boolean enableSchedule = (dataOrigin != DataOrigin.PUSH) && (dataOrigin != DataOrigin.MQTT);
+      boolean enableSchedule = (dataOrigin != DataOrigin.PUSH);
 		scheduleDefault.setEnabled(enableSchedule);
       scheduleFixed.setEnabled(enableSchedule);
       scheduleAdvanced.setEnabled(enableSchedule);

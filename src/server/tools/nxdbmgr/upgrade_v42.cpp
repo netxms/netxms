@@ -23,6 +23,21 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.18 to 42.19
+ */
+static bool H_UpgradeFromV18()
+{
+   const TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD mqtt_proxy integer\n")
+      _T("UPDATE nodes SET mqtt_proxy=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("mqtt_proxy")));
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 42.17 to 42.18
  */
 static bool H_UpgradeFromV17()
@@ -358,6 +373,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 42, 19, H_UpgradeFromV18 },
    { 17, 42, 18, H_UpgradeFromV17 },
    { 16, 42, 17, H_UpgradeFromV16 },
    { 15, 42, 16, H_UpgradeFromV15 },

@@ -28,6 +28,8 @@
 #include <nms_agent.h>
 #include <mosquitto.h>
 
+#define DEBUG_TAG _T("mqtt")
+
 /**
  * Topic definition
  */
@@ -42,7 +44,8 @@ private:
    Mutex m_mutex;
 
 public:
-   Topic(const TCHAR *pattern, const TCHAR *event = NULL);
+   Topic(const TCHAR *pattern, const TCHAR *event);
+   Topic(const char *pattern);
    ~Topic();
 
    const char *getPattern() const { return m_pattern; }
@@ -59,17 +62,19 @@ class MqttBroker
 {
 private:
    uuid m_guid;
+   char *m_name;
    bool m_locallyConfigured;
    char *m_hostname;
    uint16_t m_port;
    char *m_login;
    char *m_password;
    ObjectArray<Topic> m_topics;
+   Mutex m_topicLock;
    struct mosquitto *m_handle;
    THREAD m_loopThread;
    bool m_connected;
-   
-   MqttBroker(const uuid& guid);
+
+   MqttBroker(const uuid& guid, const TCHAR *name);
 
    static void messageCallback(struct mosquitto *handle, void *context, const struct mosquitto_message *msg);
    void processMessage(const struct mosquitto_message *msg);
@@ -83,12 +88,15 @@ public:
    void stopNetworkLoop();
 
    const uuid& getGuid() const { return m_guid; }
+   const char *getName() const { return m_name; }
    bool isLocallyConfigured() const { return m_locallyConfigured; }
    const char *getHostname() const { return m_hostname; }
-   UINT16 getPort() const { return m_port; }
+   uint16_t getPort() const { return m_port; }
    const char *getLogin() const { return m_login; }
    int getTopicCount() const { return m_topics.size(); }
    bool isConnected() const { return m_connected; }
+
+   LONG getTopicData(const char *topicName, TCHAR *value, bool enableAutoRegistration);
 
    static MqttBroker *createFromConfig(const ConfigEntry *e, StructArray<NETXMS_SUBAGENT_PARAM> *parameters);
    static MqttBroker *createFromMessage(const NXCPMessage *msg);

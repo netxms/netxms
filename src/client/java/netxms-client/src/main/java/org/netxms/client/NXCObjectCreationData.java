@@ -59,6 +59,7 @@ public class NXCObjectCreationData
 	private InetAddressEx ipAddress;
 	private long agentProxyId;
 	private long snmpProxyId;
+   private long mqttProxyId;
    private long etherNetIpProxyId;
    private long icmpProxyId;
    private long sshProxyId;
@@ -133,6 +134,7 @@ public class NXCObjectCreationData
 		creationFlags = 0;
 		agentProxyId = 0;
 		snmpProxyId = 0;
+      mqttProxyId = 0;
       etherNetIpProxyId = 0;
 		icmpProxyId = 0;
 		sshProxyId = 0;
@@ -176,40 +178,74 @@ public class NXCObjectCreationData
 	 */
 	public void updateFromMofidyData(NXCObjectModificationData data)
 	{
-	   if (data.getPrimaryName() != null) primaryName = data.getPrimaryName();
+      if (data.getPrimaryName() != null)
+         primaryName = data.getPrimaryName();
       if (data.getAlias() != null)
          alias = data.getAlias();
-	   if (data.getAgentPort() != null) agentPort = data.getAgentPort();
-      if (data.getSnmpPort() != null) snmpPort = data.getSnmpPort();
-      if (data.getEtherNetIPPort() != null) etherNetIpPort = data.getEtherNetIPPort();
-      if (data.getSshPort() != null) sshPort = data.getSshPort();
-      if (data.getIpAddress() != null) ipAddress = data.getIpAddress();      
-      if (data.getAgentProxy() != null) agentProxyId = data.getAgentProxy();
-      if (data.getSnmpProxy() != null) snmpProxyId = data.getSnmpProxy();
-      if (data.getEtherNetIPProxy() != null) etherNetIpProxyId = data.getEtherNetIPProxy();
-      if (data.getIcmpProxy() != null) icmpProxyId = data.getIcmpProxy();
-      if (data.getSshProxy() != null) sshProxyId = data.getSshProxy();
-      if (data.getSeedObjectIdsAsList() != null) seedObjectIds = data.getSeedObjectIdsAsList();
-      if (data.getServiceType() != null) serviceType = data.getServiceType();
-      if (data.getIpProtocol() != null) ipProtocol = data.getIpProtocol();
-      if (data.getIpPort() != null) ipPort = data.getIpPort();
-      if (data.getRequest() != null) request = data.getRequest();
-      if (data.getResponse() != null) response = data.getResponse();
-      if (data.getMacAddress() != null) macAddress = data.getMacAddress();
-      if (data.getHeight() != null) height = data.getHeight();
-      if (data.getControllerId() != null) controllerId = data.getControllerId();
-      if (data.getChassisId() != null) chassisId = data.getChassisId();
-      if (data.getSshLogin() != null) sshLogin = data.getSshLogin();
-      if (data.getSshPassword() != null) sshPassword = data.getSshPassword();
-      if (data.getDeviceClass() != null) deviceClass = data.getDeviceClass();
-      if (data.getVendor()!= null) vendor = data.getVendor();
-      if (data.getXmlConfig()!= null) xmlConfig = data.getXmlConfig();
-      if (data.getSerialNumber()!= null) serialNumber = data.getSerialNumber();
-      if (data.getDeviceAddress()!= null) deviceAddress = data.getDeviceAddress();
-      if (data.getMetaType()!= null) metaType = data.getMetaType();
-      if (data.getDescription()!= null) description = data.getDescription();
-      if (data.getSensorProxy()!= null) sensorProxy = data.getSensorProxy();
-      if (data.getWebServiceProxy()!= null) webServiceProxyId = data.getWebServiceProxy();
+      if (data.getAgentPort() != null)
+         agentPort = data.getAgentPort();
+      if (data.getSnmpPort() != null)
+         snmpPort = data.getSnmpPort();
+      if (data.getEtherNetIPPort() != null)
+         etherNetIpPort = data.getEtherNetIPPort();
+      if (data.getSshPort() != null)
+         sshPort = data.getSshPort();
+      if (data.getIpAddress() != null)
+         ipAddress = data.getIpAddress();
+      if (data.getAgentProxy() != null)
+         agentProxyId = data.getAgentProxy();
+      if (data.getSnmpProxy() != null)
+         snmpProxyId = data.getSnmpProxy();
+      if (data.getMqttProxy() != null)
+         mqttProxyId = data.getMqttProxy();
+      if (data.getEtherNetIPProxy() != null)
+         etherNetIpProxyId = data.getEtherNetIPProxy();
+      if (data.getIcmpProxy() != null)
+         icmpProxyId = data.getIcmpProxy();
+      if (data.getSshProxy() != null)
+         sshProxyId = data.getSshProxy();
+      if (data.getSeedObjectIdsAsList() != null)
+         seedObjectIds = data.getSeedObjectIdsAsList();
+      if (data.getServiceType() != null)
+         serviceType = data.getServiceType();
+      if (data.getIpProtocol() != null)
+         ipProtocol = data.getIpProtocol();
+      if (data.getIpPort() != null)
+         ipPort = data.getIpPort();
+      if (data.getRequest() != null)
+         request = data.getRequest();
+      if (data.getResponse() != null)
+         response = data.getResponse();
+      if (data.getMacAddress() != null)
+         macAddress = data.getMacAddress();
+      if (data.getHeight() != null)
+         height = data.getHeight();
+      if (data.getControllerId() != null)
+         controllerId = data.getControllerId();
+      if (data.getChassisId() != null)
+         chassisId = data.getChassisId();
+      if (data.getSshLogin() != null)
+         sshLogin = data.getSshLogin();
+      if (data.getSshPassword() != null)
+         sshPassword = data.getSshPassword();
+      if (data.getDeviceClass() != null)
+         deviceClass = data.getDeviceClass();
+      if (data.getVendor() != null)
+         vendor = data.getVendor();
+      if (data.getXmlConfig() != null)
+         xmlConfig = data.getXmlConfig();
+      if (data.getSerialNumber() != null)
+         serialNumber = data.getSerialNumber();
+      if (data.getDeviceAddress() != null)
+         deviceAddress = data.getDeviceAddress();
+      if (data.getMetaType() != null)
+         metaType = data.getMetaType();
+      if (data.getDescription() != null)
+         description = data.getDescription();
+      if (data.getSensorProxy() != null)
+         sensorProxy = data.getSensorProxy();
+      if (data.getWebServiceProxy() != null)
+         webServiceProxyId = data.getWebServiceProxy();
 	}
 
 	/**
@@ -341,6 +377,22 @@ public class NXCObjectCreationData
 	}
 
 	/**
+    * @return the mqttProxyId
+    */
+   public long getMqttProxyId()
+   {
+      return mqttProxyId;
+   }
+
+   /**
+    * @param mqttProxyId the mqttProxyId to set
+    */
+   public void setMqttProxyId(long mqttProxyId)
+   {
+      this.mqttProxyId = mqttProxyId;
+   }
+
+   /**
     * @return the icmpProxyId
     */
    public long getIcmpProxyId()

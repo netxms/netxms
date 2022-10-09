@@ -1,6 +1,6 @@
 /*
  ** MQTT subagent
- ** Copyright (C) 2017-2020 Raden Solutions
+ ** Copyright (C) 2017-2022 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
  */
 static void LogCallback(struct mosquitto *handle, void *userData, int level, const char *message)
 {
-   nxlog_debug((level == MOSQ_LOG_DEBUG) ? 7 : 3, _T("MQTT: %hs"), message);
+   nxlog_debug_tag(DEBUG_TAG, (level == MOSQ_LOG_DEBUG) ? 7 : 3, _T("libmosquitto: %hs"), message);
 }
 
 /**
@@ -32,16 +32,16 @@ static void LogCallback(struct mosquitto *handle, void *userData, int level, con
  */
 static LONG H_TopicData(const TCHAR *name, const TCHAR *arg, TCHAR *result, AbstractCommSession *session)
 {
-   Topic *topic = (Topic *)arg;
-   return topic->retrieveData(result, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   return ((Topic*)arg)->retrieveData(result, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
 /**
  * Broker constructor
  */
-MqttBroker::MqttBroker(const uuid& guid) : m_topics(16, 16, Ownership::True)
+MqttBroker::MqttBroker(const uuid& guid, const TCHAR *name) : m_topics(16, 16, Ownership::True), m_topicLock(MutexType::FAST)
 {
    m_guid = guid;
+   m_name = UTF8StringFromTString(name);
    m_locallyConfigured = true;
    m_hostname = nullptr;
    m_port = 0;
@@ -59,7 +59,6 @@ MqttBroker::MqttBroker(const uuid& guid) : m_topics(16, 16, Ownership::True)
 #if HAVE_MOSQUITTO_THREADED_SET
       mosquitto_threaded_set(m_handle, true);
 #endif
-
       mosquitto_log_callback_set(m_handle, LogCallback);
       mosquitto_message_callback_set(m_handle, MqttBroker::messageCallback);
    }
@@ -77,6 +76,7 @@ MqttBroker::~MqttBroker()
    MemFree(m_hostname);
    MemFree(m_login);
    MemFree(m_password);
+   MemFree(m_name);
 }
 
 /**
@@ -84,10 +84,10 @@ MqttBroker::~MqttBroker()
  */
 MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<NETXMS_SUBAGENT_PARAM> *parameters)
 {
-   MqttBroker *broker = new MqttBroker(uuid::generate());
+   MqttBroker *broker = new MqttBroker(uuid::generate(), config->getName());
    if (broker->m_handle == nullptr)
    {
-      nxlog_debug(3, _T("MQTT: cannot create client instance"));
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("Cannot create MQTT client instance"));
       delete broker;
       return nullptr;
    }
@@ -113,7 +113,7 @@ MqttBroker *MqttBroker::createFromConfig(const ConfigEntry *config, StructArray<
       for(int i = 0; i < metrics->size(); i++)
       {
          ConfigEntry *e = metrics->get(i);
-         Topic *t = new Topic(e->getValue());
+         Topic *t = new Topic(e->getValue(), nullptr);
          broker->m_topics.add(t);
 
          NETXMS_SUBAGENT_PARAM p;
@@ -150,10 +150,13 @@ MqttBroker *MqttBroker::createFromMessage(const NXCPMessage *msg)
    if (guid.isNull())
       guid = uuid::generate();
 
-   MqttBroker *broker = new MqttBroker(guid);
+   TCHAR name[128];
+   msg->getFieldAsString(VID_NAME, name, 128);
+
+   MqttBroker *broker = new MqttBroker(guid, name);
    if (broker->m_handle == nullptr)
    {
-      nxlog_debug(3, _T("MQTT: cannot create client instance"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create MQTT client instance"));
       delete broker;
       return nullptr;
    }
@@ -181,25 +184,27 @@ void MqttBroker::networkLoop()
 
    while(mosquitto_connect(m_handle, m_hostname, m_port, 600) != MOSQ_ERR_SUCCESS)
    {
-      nxlog_debug(4, _T("MQTT: unable to connect to broker at %hs:%d, will retry in 60 seconds"), m_hostname, (int)m_port);
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Unable to connect to MQTT broker at %hs:%d, will retry in 60 seconds"), m_hostname, (int)m_port);
       if (AgentSleepAndCheckForShutdown(60000))
          return;  // Agent shutdown
    }
 
-   nxlog_debug(3, _T("MQTT: connected to broker %hs:%d as %hs"), m_hostname, (int)m_port, (m_login != nullptr) ? m_login : "anonymous");
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Connected to MQTT broker %hs:%d as %hs"), m_hostname, (int)m_port, (m_login != nullptr) ? m_login : "anonymous");
    m_connected = true;
 
+   m_topicLock.lock();
    for(int i = 0; i < m_topics.size(); i++)
    {
       Topic *t = m_topics.get(i);
       if (mosquitto_subscribe(m_handle, nullptr, t->getPattern(), 0) == MOSQ_ERR_SUCCESS)
-         nxlog_debug(4, _T("MQTT: subscribed to topic %hs on broker %hs:%d"), t->getPattern(), m_hostname, (int)m_port);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Subscribed to topic %hs on broker %hs:%d"), t->getPattern(), m_hostname, (int)m_port);
       else
-         AgentWriteDebugLog(NXLOG_WARNING, _T("MQTT: cannot subscribe to topic %hs on broker %hs:%d"), t->getPattern(), m_hostname, (int)m_port);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot subscribe to topic %hs on MQTT broker %hs:%d"), t->getPattern(), m_hostname, (int)m_port);
    }
+   m_topicLock.unlock();
 
    mosquitto_loop_forever(m_handle, -1, 1);
-   nxlog_debug(3, _T("MQTT: network loop stopped for broker %hs:%d"), m_hostname, (int)m_port);
+   nxlog_debug_tag(DEBUG_TAG, 3, _T("Network loop stopped for MQTT broker %hs:%d"), m_hostname, (int)m_port);
    m_connected = false;
 }
 
@@ -237,9 +242,44 @@ void MqttBroker::processMessage(const struct mosquitto_message *msg)
    if (msg->payloadlen <= 0)
       return;  // NULL message
 
-   nxlog_debug(6, _T("MQTT: message received: %hs=\"%hs\""), msg->topic, static_cast<const char*>(msg->payload));
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("MQTT message received: %hs=\"%hs\""), msg->topic, static_cast<const char*>(msg->payload));
+   m_topicLock.lock();
    for(int i = 0; i < m_topics.size(); i++)
    {
       m_topics.get(i)->processMessage(msg->topic, static_cast<const char*>(msg->payload));
    }
+   m_topicLock.unlock();
+}
+
+/**
+ * Get data for given topic
+ */
+LONG MqttBroker::getTopicData(const char *topicName, TCHAR *value, bool enableAutoRegistration)
+{
+   LONG rc = SYSINFO_RC_NO_SUCH_INSTANCE;
+   m_topicLock.lock();
+   for(int i = 0; i < m_topics.size(); i++)
+   {
+      Topic *topic = m_topics.get(i);
+      if (!stricmp(topic->getPattern(), topicName))
+      {
+         rc = topic->retrieveData(value, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+         break;
+      }
+   }
+   if ((rc == SYSINFO_RC_NO_SUCH_INSTANCE) && enableAutoRegistration)
+   {
+      if (mosquitto_subscribe(m_handle, nullptr, topicName, 0) == MOSQ_ERR_SUCCESS)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Subscribed to topic %hs on MQTT broker %hs:%d"), topicName, m_hostname, (int)m_port);
+         m_topics.add(new Topic(topicName));
+         rc = SYSINFO_RC_ERROR;
+      }
+      else
+      {
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot subscribe to topic %hs on MQT broker %hs:%d"), topicName, m_hostname, (int)m_port);
+      }
+   }
+   m_topicLock.unlock();
+   return rc;
 }

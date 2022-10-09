@@ -140,6 +140,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_agentProxy = 0;
    m_snmpProxy = 0;
    m_eipProxy = 0;
+   m_mqttProxy = 0;
    m_icmpProxy = 0;
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
@@ -258,6 +259,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_agentProxy = newNodeData->agentProxyId;
    m_snmpProxy = newNodeData->snmpProxyId;
    m_eipProxy = newNodeData->eipProxyId;
+   m_mqttProxy = newNodeData->mqttProxyId;
    m_icmpProxy = newNodeData->icmpProxyId;
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
@@ -385,7 +387,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("rack_image_rear,agent_id,agent_cert_subject,hypervisor_type,hypervisor_info,icmp_poll_mode,")
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
-      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id FROM nodes WHERE id=?"));
+      _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
+      _T("mqtt_proxy FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -553,6 +556,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetFieldUTF8(hResult, 0, 75, m_syslogCodepage, 16);
    DBGetFieldUTF8(hResult, 0, 76, m_snmpCodepage, 16);
    m_ospfRouterId = DBGetFieldIPAddr(hResult, 0, 77);
+   m_mqttProxy = DBGetFieldIPAddr(hResult, 0, 78);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -980,7 +984,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("syslog_codepage"), _T("snmp_codepage"),
-         _T("ospf_router_id"),
+         _T("ospf_router_id"), _T("mqtt_proxy"),
          nullptr
       };
 
@@ -1117,7 +1121,8 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
             DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfRouterId, routerId), DB_BIND_STATIC);
          else
             DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-         DBBind(hStmt, 79, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 79, DB_SQLTYPE_INTEGER, m_mqttProxy);
+         DBBind(hStmt, 80, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -7918,6 +7923,7 @@ void Node::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
    msg->setField(VID_ZONE_UIN, m_zoneUIN);
    msg->setField(VID_AGENT_PROXY, m_agentProxy);
    msg->setField(VID_SNMP_PROXY, m_snmpProxy);
+   msg->setField(VID_MQTT_PROXY, m_mqttProxy);
    msg->setField(VID_ETHERNET_IP_PROXY, m_eipProxy);
    msg->setField(VID_ICMP_PROXY, m_icmpProxy);
    msg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
@@ -8217,7 +8223,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
    // Change SNMP proxy node
    if (msg.isFieldExist(VID_SNMP_PROXY))
    {
-      UINT32 oldProxy = m_snmpProxy;
+      uint32_t oldProxy = m_snmpProxy;
       m_snmpProxy = msg.getFieldAsUInt32(VID_SNMP_PROXY);
       if (oldProxy != m_snmpProxy)
       {
@@ -8232,6 +8238,10 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
    // Change EtherNet/IP proxy node
    if (msg.isFieldExist(VID_ETHERNET_IP_PROXY))
       m_eipProxy = msg.getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
+
+   // Change MQTT proxy node
+   if (msg.isFieldExist(VID_MQTT_PROXY))
+      m_mqttProxy = msg.getFieldAsUInt32(VID_MQTT_PROXY);
 
    // Number of required polls
    if (msg.isFieldExist(VID_REQUIRED_POLLS))
@@ -9360,21 +9370,29 @@ shared_ptr<Cluster> Node::getMyCluster()
 }
 
 /**
+ * Generic function for calculating effective proxy node ID
+ */
+static uint32_t GetEffectiveProtocolProxy(Node *node, uint32_t configuredProxy, uint32_t zoneUIN, bool backup = false, uint32_t defaultProxy = 0)
+{
+   uint32_t effectiveProxy = backup ? 0 : configuredProxy;
+   if (IsZoningEnabled() && (effectiveProxy == 0) && (zoneUIN != 0))
+   {
+      // Use zone default proxy if set
+      shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
+      if (zone != nullptr)
+      {
+         effectiveProxy = zone->isProxyNode(node->getId()) ? node->getId() : zone->getProxyNodeId(node, backup);
+      }
+   }
+   return (effectiveProxy != 0) ? effectiveProxy : defaultProxy;
+}
+
+/**
  * Get effective SNMP proxy for this node
  */
 uint32_t Node::getEffectiveSnmpProxy(bool backup)
 {
-   uint32_t snmpProxy = backup ? 0 : m_snmpProxy;
-   if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneUIN != 0))
-   {
-      // Use zone default proxy if set
-      shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != nullptr)
-      {
-         snmpProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this, backup);
-      }
-   }
-   return snmpProxy;
+   return GetEffectiveProtocolProxy(this, m_snmpProxy, m_zoneUIN, backup);
 }
 
 /**
@@ -9382,17 +9400,15 @@ uint32_t Node::getEffectiveSnmpProxy(bool backup)
  */
 uint32_t Node::getEffectiveEtherNetIPProxy(bool backup)
 {
-   uint32_t eipProxy = backup ? 0 : m_eipProxy;
-   if (IsZoningEnabled() && (eipProxy == 0) && (m_zoneUIN != 0))
-   {
-      // Use zone default proxy if set
-      shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != nullptr)
-      {
-         eipProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this, backup);
-      }
-   }
-   return eipProxy;
+   return GetEffectiveProtocolProxy(this, m_eipProxy, m_zoneUIN, backup);
+}
+
+/**
+ * Get effective MQTT proxy for this node
+ */
+uint32_t Node::getEffectiveMqttProxy()
+{
+   return GetEffectiveProtocolProxy(this, m_mqttProxy, m_zoneUIN, false, g_dwMgmtNode);
 }
 
 /**
@@ -9400,17 +9416,7 @@ uint32_t Node::getEffectiveEtherNetIPProxy(bool backup)
  */
 uint32_t Node::getEffectiveSshProxy()
 {
-   uint32_t sshProxy = m_sshProxy;
-   if (IsZoningEnabled() && (sshProxy == 0) && (m_zoneUIN != 0))
-   {
-      // Use zone default proxy if set
-      shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != nullptr)
-      {
-         sshProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
-      }
-   }
-   return (sshProxy != 0) ? sshProxy : g_dwMgmtNode;
+   return GetEffectiveProtocolProxy(this, m_sshProxy, m_zoneUIN, false, g_dwMgmtNode);
 }
 
 /**
@@ -9418,17 +9424,7 @@ uint32_t Node::getEffectiveSshProxy()
  */
 uint32_t Node::getEffectiveIcmpProxy()
 {
-   uint32_t icmpProxy = m_icmpProxy;
-   if (IsZoningEnabled() && (icmpProxy == 0) && (m_zoneUIN != 0))
-   {
-      // Use zone default proxy if set
-      shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-      if (zone != nullptr)
-      {
-         icmpProxy = zone->isProxyNode(m_id) ? m_id : zone->getProxyNodeId(this);
-      }
-   }
-   return icmpProxy;
+   return GetEffectiveProtocolProxy(this, m_sshProxy, m_zoneUIN);
 }
 
 /**

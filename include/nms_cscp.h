@@ -631,10 +631,10 @@ typedef struct
 #define CMD_UPDATE_PHYSICAL_LINK          0x018A
 #define CMD_DELETE_PHYSICAL_LINK          0x018B
 #define CMD_GET_FILE_SET_DETAILS          0x018C
-#define CMD_CONFIGURE_MQTT_BROKER         0x018D
-#define CMD_REMOVE_MQTT_BROKER            0x018E
-#define CMD_ADD_MQTT_TOPIC                0x018F
-#define CMD_REMOVE_MQTT_TOPIC             0x0190
+// unused: #define CMD_CONFIGURE_MQTT_BROKER         0x018D
+// unused: #define CMD_REMOVE_MQTT_BROKER            0x018E
+// unused: #define CMD_ADD_MQTT_TOPIC                0x018F
+// unused: #define CMD_REMOVE_MQTT_TOPIC             0x0190
 #define CMD_QUERY_WEB_SERVICE             0x0191
 #define CMD_GET_WEB_SERVICES              0x0192
 #define CMD_MODIFY_WEB_SERVICE            0x0193
@@ -1504,6 +1504,7 @@ typedef struct
 #define VID_OSPF_AREA_COUNT         ((uint32_t)799)
 #define VID_OSPF_NEIGHBOR_COUNT     ((uint32_t)800)
 #define VID_COMPRESSION_METHOD      ((uint32_t)801)
+#define VID_MQTT_PROXY              ((uint32_t)802)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

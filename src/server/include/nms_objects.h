@@ -777,6 +777,7 @@ struct NXCORE_EXPORTABLE NewNodeData
    uint32_t agentProxyId;
    uint32_t snmpProxyId;
    uint32_t eipProxyId;
+   uint32_t mqttProxyId;
    uint32_t icmpProxyId;
    uint32_t sshProxyId;
    uint32_t webServiceProxyId;
@@ -3187,6 +3188,7 @@ protected:
    uint32_t m_agentProxy;      // Node used as proxy for agent connection
    uint32_t m_snmpProxy;       // Node used as proxy for SNMP requests
    uint32_t m_eipProxy;        // Node used as proxy for EtherNet/IP requests
+   uint32_t m_mqttProxy;       // Node used as proxy for MQTT metrics
    uint32_t m_icmpProxy;       // Node used as proxy for ICMP ping
    uint64_t m_lastEvents[MAX_LAST_EVENTS];
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
@@ -3584,6 +3586,7 @@ public:
 
    uint32_t getEffectiveSnmpProxy(bool backup = false);
    uint32_t getEffectiveEtherNetIPProxy(bool backup = false);
+   uint32_t getEffectiveMqttProxy();
    uint32_t getEffectiveSshProxy();
    uint32_t getEffectiveIcmpProxy();
    uint32_t getEffectiveAgentProxy();

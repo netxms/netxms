@@ -5766,6 +5766,7 @@ public class NXCSession
             msg.setFieldInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
             msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
             msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
+            msg.setFieldInt32(NXCPCodes.VID_MQTT_PROXY, (int)data.getMqttProxyId());
             msg.setFieldInt32(NXCPCodes.VID_ETHERNET_IP_PROXY, (int)data.getEtherNetIpProxyId());
             msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, (int)data.getIcmpProxyId());
             msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxyId());
@@ -6100,6 +6101,11 @@ public class NXCSession
       if (data.getSnmpPort() != null)
       {
          msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
+      }
+
+      if (data.getMqttProxy() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_MQTT_PROXY, data.getMqttProxy().intValue());
       }
 
       if (data.getIcmpProxy() != null)
