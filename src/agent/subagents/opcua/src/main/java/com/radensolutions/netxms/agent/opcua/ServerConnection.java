@@ -122,7 +122,7 @@ public class ServerConnection
          throw e;
       }
    }
-   
+
    /**
     * Disconnect from server
     */
