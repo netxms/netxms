@@ -3,7 +3,7 @@ JAR_BASE_NAME=netxms-subagent-$(SUBAGENT_NAME)
 
 install-exec-hook:
 if RELEASE_BUILD
-	@top_srcdir@/build/get_jar_file.sh $(JAR_BASE_NAME) @NETXMS_JAR_VERSION@
+	@top_srcdir@/build/get_jar_file.sh $(JAR_BASE_NAME) @NETXMS_JAR_VERSION@ com.rfelements
 else
 	mvn clean package
 	cp target/$(JAR_BASE_NAME)-@NETXMS_JAR_VERSION@.jar .
