@@ -484,6 +484,17 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              category="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.MQTT"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.MQTT"
+              name="MQTT">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.AbstractNode">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
