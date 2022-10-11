@@ -975,7 +975,7 @@ Grid {
  }
  
  GridColumn-SortIndicator:down {
-   background-image: url( thems/light.resources/column/sort-indicator-down.png );
+   background-image: url( themes/light.resources/column/sort-indicator-down.png );
  }
  
  Grid-Cell {
@@ -2122,11 +2122,29 @@ Label.standaloneView {
 
 /* Custom Variants */
 
+Label.MainWindowHeaderBold {
+   font: bold 16px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Label.MainWindowHeaderNormal {
+   font: 16px "Metropolis Medium", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Label.ServerClock {
+   font: bold 16px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
 Composite.LoginForm {
-   border: solid 2px #666666;
-   border-radius: 6px;
+   border: none;
    box-shadow: none;
-   opacity: 0.9;
+}
+
+Label.LoginHeader {
+   font: bold 28px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
+}
+
+Label.LoginTitle {
+   font: bold 24px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
 Label.login {
@@ -2304,7 +2322,7 @@ Button.DashboardEditorButton[PUSH]:hover {
 Button.DashboardEditorButton[PUSH]:pressed {
   border-radius: 2px;
   padding: 3px 2px 1px 4px;
-  background-image: url( theme/clarity.resources/toolbar/dotted_white.gif );
+  background-image: url( themes/light.resources/toolbar/dotted_white.gif );
 }
 
 /* FileUpload */

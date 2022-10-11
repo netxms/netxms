@@ -70,7 +70,6 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
-import org.netxms.nxmc.tools.FontTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -97,7 +96,6 @@ public class MainWindow extends Window implements MessageAreaHolder
    private ServerClock serverClock;
    private HeaderButton userMenuButton;
    private UserMenuManager userMenuManager;
-   private Font headerFontBold;
 
    /**
     * @param parentShell
@@ -153,8 +151,6 @@ public class MainWindow extends Window implements MessageAreaHolder
       NXCSession session = Registry.getSession();
 
       Font perspectiveSwitcherFont = ThemeEngine.getFont("Window.PerspectiveSwitcher");
-      Font headerFont = ThemeEngine.getFont("Window.Header");
-      headerFontBold = FontTools.createAdjustedFont(headerFont, 2, SWT.BOLD);
 
       windowContent = new Composite(parent, SWT.NONE);
 
@@ -192,8 +188,8 @@ public class MainWindow extends Window implements MessageAreaHolder
       Label title = new Label(headerArea, SWT.LEFT);
       title.setBackground(headerBackgroundColor);
       title.setForeground(headerForegroundColor);
-      title.setFont(headerFontBold);
-      title.setText("NetXMS");
+      title.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderBold");
+      title.setText("NETXMS");
 
       Label filler = new Label(headerArea, SWT.CENTER);
       filler.setBackground(headerBackgroundColor);
@@ -221,7 +217,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       Label serverName = new Label(serverNameHolder, SWT.CENTER);
       serverName.setBackground(headerBackgroundColor);
       serverName.setForeground(headerForegroundColor);
-      serverName.setFont(headerFont);
+      serverName.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
       serverName.setText(session.getServerName());
       serverName.setToolTipText(i18n.tr("Server name"));
       RGB serverColor = ColorConverter.parseColorDefinition(session.getServerColor());
@@ -251,7 +247,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       Label userInfo = new Label(headerArea, SWT.LEFT);
       userInfo.setBackground(headerBackgroundColor);
       userInfo.setForeground(headerForegroundColor);
-      userInfo.setFont(headerFont);
+      serverName.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
       userInfo.setText(session.getUserName() + "@" + session.getServerAddress());
       userInfo.setToolTipText(i18n.tr("Login name and server address"));
 
@@ -364,14 +360,6 @@ public class MainWindow extends Window implements MessageAreaHolder
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())
          addMessage(MessageArea.INFORMATION, session.getMessageOfTheDay());
-
-      getShell().addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            headerFontBold.dispose();
-         }
-      });
 
       return windowContent;
    }
@@ -547,7 +535,6 @@ public class MainWindow extends Window implements MessageAreaHolder
       serverClock = new ServerClock(serverClockArea, SWT.NONE);
       serverClock.setBackground(serverClockArea.getBackground());
       serverClock.setForeground(ThemeEngine.getForegroundColor("Window.Header"));
-      serverClock.setFont(headerFontBold);
       serverClock.setDisplayFormatChangeListener(new Runnable() {
          @Override
          public void run()

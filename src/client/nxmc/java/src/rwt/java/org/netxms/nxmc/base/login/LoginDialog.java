@@ -19,26 +19,29 @@
 package org.netxms.nxmc.base.login;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.base.VersionInfo;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -62,7 +65,7 @@ public class LoginDialog extends Dialog
 
       loginImage = BrandingManager.getInstance().getLoginTitleImage();
       if (loginImage == null)
-         loginImage = ResourceManager.getImageDescriptor("icons/login.png"); //$NON-NLS-1$
+         loginImage = ResourceManager.getImageDescriptor("icons/app_logo.png");
    }
 
    /**
@@ -73,7 +76,7 @@ public class LoginDialog extends Dialog
    {
       super.configureShell(shell);
       String customTitle = BrandingManager.getInstance().getLoginTitle();
-      shell.setText((customTitle != null) ? customTitle : i18n.tr("NetXMS - Connect to Server")); //$NON-NLS-1$
+      shell.setText((customTitle != null) ? customTitle : i18n.tr("NetXMS - Connect to Server"));
 
       shell.setMaximized(true);
       shell.setFullScreen(true);
@@ -89,23 +92,28 @@ public class LoginDialog extends Dialog
       outerArea.setLayout(new GridLayout());
       outerArea.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-      Label background = new Label(outerArea, SWT.NONE);
-      GridData gd = new GridData();
-      gd.exclude = true;
-      background.setLayoutData(gd);
-      background.setData(RWT.MARKUP_ENABLED, Boolean.TRUE);
-      background.setText("<span style='width: 100px; height: 100px; display: flex; width: 100vw; height: 100vh;" + "background-image: url(" +
-            RWT.getResourceManager().getLocation("login-background") + "); background-size: cover; background-position: center; filter: blur(8px); -webkit-filter: blur(8px);'></span>");
-      outerArea.addControlListener(new ControlAdapter() {
+      initializeDialogUnits(outerArea);
+
+      Composite header = new Composite(outerArea, SWT.NONE);
+      GridLayout headerLayout = new GridLayout();
+      headerLayout.numColumns = 2;
+      header.setLayout(headerLayout);
+      header.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+
+      Label appIcon = new Label(header, SWT.CENTER);
+      appIcon.setImage(loginImage.createImage());
+      appIcon.addDisposeListener(new DisposeListener() {
          @Override
-         public void controlResized(ControlEvent e)
+         public void widgetDisposed(DisposeEvent event)
          {
-            background.setSize(outerArea.getSize());
-            background.moveBelow(null);
+            ((Label)event.widget).getImage().dispose();
          }
       });
 
-      initializeDialogUnits(outerArea);
+      Label title = new Label(header, SWT.NONE);
+      title.setText("NETXMS");
+      title.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
+      title.setData(RWT.CUSTOM_VARIANT, "LoginTitle");
 
       Composite innerArea = new Composite(outerArea, SWT.NONE);
       GridLayout layout = new GridLayout();
@@ -117,7 +125,30 @@ public class LoginDialog extends Dialog
       innerArea.setData(RWT.CUSTOM_VARIANT, "LoginForm");
 
       dialogArea = createDialogArea(innerArea);
+      dialogArea.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+
+      Composite spacer = new Composite(outerArea, SWT.NONE);
+      GridData gd = new GridData();
+      gd.heightHint = 100;
+      spacer.setLayoutData(gd);
+
       buttonBar = createButtonBar(innerArea);
+      ((GridData)buttonBar.getLayoutData()).horizontalAlignment = SWT.FILL;
+      ((GridData)buttonBar.getLayoutData()).grabExcessHorizontalSpace = true;
+
+      Composite footer = new Composite(outerArea, SWT.NONE);
+      GridLayout footerLayout = new GridLayout();
+      footerLayout.numColumns = 2;
+      footer.setLayout(footerLayout);
+      footer.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+
+      Label copyright = new Label(footer, SWT.LEFT);
+      copyright.setText("Copyright \u00a9 2013-2022 Raden Solutions");
+      copyright.setLayoutData(new GridData(SWT.LEFT, SWT.BOTTOM, true, false));
+
+      Label version = new Label(footer, SWT.RIGHT);
+      version.setText(VersionInfo.version());
+      version.setLayoutData(new GridData(SWT.RIGHT, SWT.BOTTOM, true, false));
 
       applyDialogFont(outerArea);
       return outerArea;
@@ -132,26 +163,21 @@ public class LoginDialog extends Dialog
       PreferenceStore settings = PreferenceStore.getInstance();
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      dialogArea.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
       applyDialogFont(dialogArea);
 
       GridLayout dialogLayout = new GridLayout();
       dialogLayout.numColumns = 1;
-      dialogLayout.marginWidth = 20;
-      dialogLayout.marginHeight = 20;
-      dialogLayout.verticalSpacing = 50;
+      dialogLayout.marginWidth = 0;
+      dialogLayout.marginHeight = 0;
+      dialogLayout.verticalSpacing = 30;
       dialogArea.setLayout(dialogLayout);
 
       // Login image
       Label label = new Label(dialogArea, SWT.CENTER);
-      label.setImage(loginImage.createImage());
-      label.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent event)
-         {
-            ((Label)event.widget).getImage().dispose();
-         }
-      });
+      // label.setImage(loginImage.createImage());
+      label.setText("Log in");
+      label.setData(RWT.CUSTOM_VARIANT, "LoginHeader");
+      // label.setFont(JFaceResources.getBannerFont());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.verticalAlignment = SWT.CENTER;
@@ -171,26 +197,32 @@ public class LoginDialog extends Dialog
       gd.grabExcessVerticalSpace = true;
       fields.setLayoutData(gd);
 
-      textLogin = new Text(fields, SWT.SINGLE | SWT.BORDER);
-      textLogin.setMessage(i18n.tr("Login"));
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.widthHint = WidgetHelper.getTextWidth(textLogin, "M") * 48;
-      textLogin.setLayoutData(gd);
-      textLogin.setData(RWT.CUSTOM_VARIANT, "login");
+      textLogin = createTextField(fields, i18n.tr("Login name"), SWT.NONE);
+      textPassword = createTextField(fields, i18n.tr("Password"), SWT.PASSWORD);
 
-      textPassword = new Text(fields, SWT.SINGLE | SWT.BORDER | SWT.PASSWORD);
-      textPassword.setMessage(i18n.tr("Password"));
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      textPassword.setLayoutData(gd);
-      textPassword.setData(RWT.CUSTOM_VARIANT, "login");
-
-      String text = settings.getAsString("Connect.Login"); //$NON-NLS-1$
+      String text = settings.getAsString("Connect.Login");
       if (text != null)
          textLogin.setText(text);
+
+      Button button = new Button(dialogArea, SWT.PUSH);
+      button.setText(i18n.tr("Log in"));
+      button.setFont(JFaceResources.getDialogFont());
+      button.setData(Integer.valueOf(IDialogConstants.OK_ID));
+      button.addSelectionListener(new SelectionAdapter() {
+         public void widgetSelected(SelectionEvent event)
+         {
+            buttonPressed(((Integer)event.widget.getData()).intValue());
+         }
+      });
+      Shell shell = parent.getShell();
+      if (shell != null)
+      {
+         shell.setDefaultButton(button);
+      }
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      button.setLayoutData(gd);
 
       // Set initial focus
       if (textLogin.getText().isEmpty())
@@ -203,6 +235,49 @@ public class LoginDialog extends Dialog
       }
 
       return dialogArea;
+   }
+
+   /**
+    * Create text field.
+    *
+    * @param parent parent composite
+    * @param name field name
+    * @param style text control style
+    * @return text control
+    */
+   private static Text createTextField(Composite parent, String name, int style)
+   {
+      Composite area = new Composite(parent, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 5;
+      area.setLayout(layout);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.widthHint = 300;
+      area.setLayoutData(gd);
+
+      Label label = new Label(area, SWT.NONE);
+      label.setText(name);
+
+      Composite textWrapper = new Composite(area, SWT.BORDER);
+      textWrapper.setLayout(new GridLayout());
+      textWrapper.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      Text text = new Text(textWrapper, style);
+      text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      return text;
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createButtonsForButtonBar(Composite parent)
+   {
    }
 
    /**
