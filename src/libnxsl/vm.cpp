@@ -289,6 +289,10 @@ bool NXSL_VM::load(const NXSL_Program *program)
 
    // Load modules
    m_modules.clear();
+
+   static NXSL_ModuleImport systemModule = { _T("stdlib"), 0 };
+   m_env->loadModule(this, &systemModule);
+
    for(int i = 0; i < program->m_requiredModules.size(); i++)
    {
       const NXSL_ModuleImport *importInfo = program->m_requiredModules.get(i);
