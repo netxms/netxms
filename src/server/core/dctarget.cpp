@@ -1799,13 +1799,13 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
 /**
  * Update cache size for given data collection item
  */
-void DataCollectionTarget::updateDCItemCacheSize(uint32_t dciId, uint32_t conditionId)
+void DataCollectionTarget::updateDCItemCacheSize(uint32_t dciId)
 {
    readLockDciAccess();
    shared_ptr<DCObject> dci = getDCObjectById(dciId, 0, false);
    if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
    {
-      static_cast<DCItem*>(dci.get())->updateCacheSize(conditionId);
+      static_cast<DCItem*>(dci.get())->updateCacheSize();
    }
    unlockDciAccess();
 }

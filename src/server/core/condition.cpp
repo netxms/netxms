@@ -211,26 +211,42 @@ bool ConditionObject::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void ConditionObject::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void ConditionObject::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
-   super::fillMessageInternal(pMsg, userId);
+   super::fillMessageInternal(msg, userId);
 
-   pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
-   pMsg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
-   pMsg->setField(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
-   pMsg->setField(VID_SOURCE_OBJECT, m_sourceObject);
-   pMsg->setField(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
-   pMsg->setField(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
-   pMsg->setField(VID_NUM_ITEMS, m_dciList.size());
+   msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
+   msg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
+   msg->setField(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
+   msg->setField(VID_SOURCE_OBJECT, m_sourceObject);
+   msg->setField(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
+   msg->setField(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
+   msg->setField(VID_NUM_ITEMS, m_dciList.size());
+}
+
+/**
+ * Fill NXCP message with object's data - stage 2
+ */
+void ConditionObject::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
+{
+   super::fillMessageInternalStage2(msg, userId);
+
+   // Create a copy of input DCI list and fill message with condition object properties unlocked
+   // to avoid possible deadlock inside GetDCObjectType (which will lock DCI list on node while
+   // other thread my attempt to lock condition object properties within ConditionObject::getCacheSizeForDCI
+   // called from DataCollectionTarget::updateDCItemCacheSize)
+   lockProperties();
+   StructArray<INPUT_DCI> dciList(m_dciList);
+   unlockProperties();
    uint32_t fieldId = VID_DCI_LIST_BASE;
-   for(int i = 0; (i < m_dciList.size()) && (fieldId < (VID_DCI_LIST_LAST + 1)); i++)
+   for(int i = 0; (i < dciList.size()) && (fieldId < (VID_DCI_LIST_LAST + 1)); i++)
    {
-      INPUT_DCI *dci = m_dciList.get(i);
-      pMsg->setField(fieldId++, dci->id);
-      pMsg->setField(fieldId++, dci->nodeId);
-      pMsg->setField(fieldId++, static_cast<uint16_t>(dci->function));
-      pMsg->setField(fieldId++, static_cast<uint16_t>(dci->polls));
-      pMsg->setField(fieldId++, static_cast<uint16_t>(GetDCObjectType(dci->nodeId, dci->id)));
+      INPUT_DCI *dci = dciList.get(i);
+      msg->setField(fieldId++, dci->id);
+      msg->setField(fieldId++, dci->nodeId);
+      msg->setField(fieldId++, static_cast<uint16_t>(dci->function));
+      msg->setField(fieldId++, static_cast<uint16_t>(dci->polls));
+      msg->setField(fieldId++, static_cast<uint16_t>(GetDCObjectType(dci->nodeId, dci->id)));
       fieldId += 5;
    }
 }
@@ -279,16 +295,16 @@ uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
    {
       m_dciList.clear();
       int dciCount = msg.getFieldAsInt32(VID_NUM_ITEMS);
-      uint32_t dwId = VID_DCI_LIST_BASE;
-      for(int i = 0; (i < dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+      uint32_t fieldId = VID_DCI_LIST_BASE;
+      for(int i = 0; (i < dciCount) && (fieldId < (VID_DCI_LIST_LAST + 1)); i++)
       {
          INPUT_DCI dci;
-         dci.id = msg.getFieldAsUInt32(dwId++);
-         dci.nodeId = msg.getFieldAsUInt32(dwId++);
-         dci.function = msg.getFieldAsUInt16(dwId++);
-         dci.polls = msg.getFieldAsUInt16(dwId++);
+         dci.id = msg.getFieldAsUInt32(fieldId++);
+         dci.nodeId = msg.getFieldAsUInt32(fieldId++);
+         dci.function = msg.getFieldAsUInt16(fieldId++);
+         dci.polls = msg.getFieldAsUInt16(fieldId++);
          m_dciList.add(dci);
-         dwId += 6;
+         fieldId += 6;
       }
 
       // Update cache size of DCIs
@@ -297,7 +313,7 @@ uint32_t ConditionObject::modifyFromMessageInternal(const NXCPMessage& msg)
          shared_ptr<NetObj> object = FindObjectById(m_dciList.get(i)->nodeId);
          if ((object != nullptr) && object->isDataCollectionTarget())
          {
-            ThreadPoolExecute(g_mainThreadPool, static_pointer_cast<DataCollectionTarget>(object), &DataCollectionTarget::updateDCItemCacheSize, m_dciList.get(i)->id, m_id);
+            ThreadPoolExecute(g_mainThreadPool, static_pointer_cast<DataCollectionTarget>(object), &DataCollectionTarget::updateDCItemCacheSize, m_dciList.get(i)->id);
          }
       }
    }
@@ -480,12 +496,11 @@ void ConditionObject::check()
 /**
  * Determine DCI cache size required by condition object
  */
-int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
+int ConditionObject::getCacheSizeForDCI(uint32_t itemId)
 {
    int nSize = 0;
 
-   if (!noLock)
-      lockProperties();
+   lockProperties();
    for(int i = 0; i < m_dciList.size(); i++)
    {
       INPUT_DCI *dci = m_dciList.get(i);
@@ -506,8 +521,7 @@ int ConditionObject::getCacheSizeForDCI(UINT32 itemId, bool noLock)
          break;
       }
    }
-   if (!noLock)
-      unlockProperties();
+   unlockProperties();
    return nSize;
 }
 

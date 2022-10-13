@@ -1277,73 +1277,73 @@ enum class ServerActionType
 /**
  * IP network
  */
-typedef struct
+struct IP_NETWORK
 {
    UINT32 dwAddr;
    UINT32 dwMask;
-} IP_NETWORK;
+};
 
 /**
  * Agent's parameter information
  */
-typedef struct
+struct NXC_AGENT_PARAM
 {
    TCHAR szName[MAX_PARAM_NAME];
    TCHAR szDescription[MAX_DB_STRING];
    int iDataType;
-} NXC_AGENT_PARAM;
+};
 
 /**
  * Alarm structure
  */
-typedef struct
+struct NXC_ALARM
 {
-   UINT64 sourceEventId;   // Originating event ID
-   UINT32 alarmId;         // Unique alarm ID
-   UINT32 creationTime;    // Alarm creation time in UNIX time format
-   UINT32 lastChangeTime;  // Alarm's last change time in UNIX time format
-   UINT32 sourceObject;    // Source object ID
-   UINT32 sourceEventCode; // Originating event code
-   UINT32 dciId;           // related DCI ID
+   uint64_t sourceEventId;   // Originating event ID
+   uint32_t alarmId;         // Unique alarm ID
+   uint32_t creationTime;    // Alarm creation time in UNIX time format
+   uint32_t lastChangeTime;  // Alarm's last change time in UNIX time format
+   uint32_t sourceObject;    // Source object ID
+   uint32_t sourceEventCode; // Originating event code
+   uint32_t dciId;           // related DCI ID
    BYTE currentSeverity;   // Alarm's current severity
    BYTE originalSeverity;  // Alarm's original severity
    BYTE state;             // Current state
    BYTE helpDeskState;     // State of alarm in helpdesk system
-   UINT32 ackByUser;       // ID of user who was acknowledged this alarm (0 for system)
-	UINT32 resolvedByUser;  // ID of user who was resolved this alarm (0 for system)
-   UINT32 termByUser;      // ID of user who was terminated this alarm (0 for system)
-   UINT32 repeatCount;
-	UINT32 timeout;
-	UINT32 timeoutEvent;
+   uint32_t ackByUser;       // ID of user who was acknowledged this alarm (0 for system)
+   uint32_t resolvedByUser;  // ID of user who was resolved this alarm (0 for system)
+   uint32_t termByUser;      // ID of user who was terminated this alarm (0 for system)
+   uint32_t repeatCount;
+   uint32_t timeout;
+   uint32_t timeoutEvent;
    TCHAR message[MAX_EVENT_MSG_LENGTH];
    TCHAR key[MAX_DB_STRING];
    TCHAR helpDeskRef[MAX_HELPDESK_REF_LEN];
    void *userData;         // Can be freely used by client application
-	UINT32 noteCount;       // Number of notes added to alarm
-   UINT32 ackTimeout;      // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
-} NXC_ALARM;
+   uint32_t noteCount;       // Number of notes added to alarm
+   uint32_t ackTimeout;      // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
+};
 
 /**
  * Condition's input DCI definition
  */
-typedef struct
+struct INPUT_DCI
 {
    uint32_t id;
    uint32_t nodeId;
    int function;    // Average, last, diff
    int polls;       // Number of polls used for average
-} INPUT_DCI;
+};
 
 /**
  * Cluster resource
  */
-typedef struct
+struct CLUSTER_RESOURCE
 {
    uint32_t dwId;
 	TCHAR szName[MAX_DB_STRING];
 	InetAddress ipAddr;
 	uint32_t dwCurrOwner;
-} CLUSTER_RESOURCE;
+};
 
 #endif	/* __cplusplus */
 

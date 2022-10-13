@@ -532,7 +532,7 @@ static void UpdateTableList(NetObj *object, void *data)
 /**
  * Write full (from all nodes) agent parameters list to NXCP message
  */
-void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
+void WriteFullParamListToMessage(NXCPMessage *msg, int origin, uint16_t flags)
 {
    // Gather full parameter list
 	if (flags & 0x01)
@@ -544,11 +544,11 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
 		g_idxNodeById.forEach(UpdateParamList, &data);
 
 		// Put list into the message
-		pMsg->setField(VID_NUM_PARAMETERS, (UINT32)fullList.size());
+		msg->setField(VID_NUM_PARAMETERS, (UINT32)fullList.size());
       UINT32 varId = VID_PARAM_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{
-         varId += fullList.get(i)->fillMessage(pMsg, varId);
+         varId += fullList.get(i)->fillMessage(msg, varId);
 		}
 	}
 
@@ -559,11 +559,11 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
 		g_idxNodeById.forEach(UpdateTableList, &fullList);
 
 		// Put list into the message
-		pMsg->setField(VID_NUM_TABLES, (UINT32)fullList.size());
-      UINT32 varId = VID_TABLE_LIST_BASE;
+		msg->setField(VID_NUM_TABLES, (UINT32)fullList.size());
+		uint32_t fieldId = VID_TABLE_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{
-         varId += fullList.get(i)->fillMessage(pMsg, varId);
+         fieldId += fullList.get(i)->fillMessage(msg, fieldId);
 		}
 	}
 }
@@ -571,7 +571,7 @@ void WriteFullParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags)
 /**
  * Get type of data collection object
  */
-int GetDCObjectType(UINT32 nodeId, UINT32 dciId)
+int GetDCObjectType(uint32_t nodeId, uint32_t dciId)
 {
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(nodeId, OBJECT_NODE));
    if (node != nullptr)

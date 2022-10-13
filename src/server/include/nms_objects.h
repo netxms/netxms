@@ -2455,7 +2455,7 @@ public:
    uint64_t getCacheMemoryUsage();
 
    void updateDciCache();
-   void updateDCItemCacheSize(uint32_t dciId, uint32_t conditionId = 0);
+   void updateDCItemCacheSize(uint32_t dciId);
    void reloadDCItemCache(uint32_t dciId);
    void cleanDCIData(DB_HANDLE hdb);
    void calculateDciCutoffTimes(time_t *cutoffTimeIData, time_t *cutoffTimeTData);
@@ -4129,7 +4129,8 @@ protected:
    time_t m_lastPoll;
    bool m_queuedForPolling;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    void check();
@@ -4152,7 +4153,7 @@ public:
 
    virtual bool lockForStatusPoll() override;
 
-   int getCacheSizeForDCI(UINT32 itemId, bool noLock);
+   int getCacheSizeForDCI(uint32_t itemId);
 
    bool isUsingEvent(uint32_t eventCode) const { return (eventCode == m_activationEventCode || eventCode == m_deactivationEventCode); }
 };
