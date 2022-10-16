@@ -1286,8 +1286,7 @@ retry_db_lock:
       ThreadCreate(ReportingServerConnector);
 
    // Start LDAP synchronization
-   if (ConfigReadInt(_T("LDAP.SyncInterval"), 0))
-      ThreadCreate(LDAPSyncThread);
+   ThreadCreate(LDAPSyncThread);
 
    // Wait for initialization of critical threads
    pollManagerInitialized.wait(INFINITE);

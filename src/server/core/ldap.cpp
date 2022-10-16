@@ -381,7 +381,7 @@ void LDAPConnection::open()
 }
 
 /**
- * Get users, according to search line & insetr in netxms DB missing
+ * Read users according to search filter and add missing ones to internal database
  */
 void LDAPConnection::syncUsers()
 {
@@ -389,11 +389,11 @@ void LDAPConnection::syncUsers()
    uint32_t rcc = login(true);
    if (rcc != RCC_SUCCESS)
    {
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::syncUsers(): login failed (error %u)"), rcc);
+      nxlog_write_tag(NXLOG_ERROR, LDAP_DEBUG_TAG, _T("LDAP user synchronization: login failed (error %u)"), rcc);
       return;
    }
 
-   struct ldap_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
+   struct ldap_timeval timeOut = { 10, 0 }; // 10 second connection/search timeout
    delete_and_null(m_userDnEntryList);
    delete_and_null(m_userIdEntryList);
    delete_and_null(m_groupDnEntryList);
@@ -439,7 +439,7 @@ void LDAPConnection::syncUsers()
          break;
       }
 
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::syncUsers(): search base DN = ") LDAP_TFMT, base);
+      nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::syncUsers(): search base DN = ") LDAP_TFMT, base);
       LDAPMessage *searchResult;
       rc = ldap_search_ext_s(
                m_ldapConn,		// LDAP session handle
@@ -457,12 +457,12 @@ void LDAPConnection::syncUsers()
       {
          if (rc == LDAP_SIZELIMIT_EXCEEDED)
          {
-            nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::syncUsers(): got LDAP_SIZELIMIT_EXCEEDED, will use paged read"));
+            nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::syncUsers(): got LDAP_SIZELIMIT_EXCEEDED, will use paged read"));
             rc = readInPages(base);
          }
          else
          {
-            nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::syncUsers(): LDAP could not get search results. Error code: %s"), getErrorString(rc).cstr());
+            nxlog_write_tag(NXLOG_ERROR, LDAP_DEBUG_TAG, _T("LDAP user synchronization: could not get search results (%s)"), getErrorString(rc).cstr());
          }
       }
       else
@@ -488,13 +488,13 @@ void LDAPConnection::syncUsers()
    if (rc == LDAP_SUCCESS)
    {
       // compare new LDAP list with old users
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::syncUsers(): read completed, updating user database"));
+      nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::syncUsers(): read completed, updating user database"));
       compareUserLists();
       compareGroupList();
    }
    else
    {
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::syncUsers(): LDAP will not sync users. Error code: %s"), getErrorString(rc).cstr());
+      nxlog_write_tag(NXLOG_ERROR, LDAP_DEBUG_TAG, _T("LDAP user synchronization failed (%s)"), getErrorString(rc).cstr());
    }
 
    delete_and_null(m_userDnEntryList);
@@ -508,10 +508,10 @@ void LDAPConnection::syncUsers()
  */
 int LDAPConnection::readInPages(LDAP_CHAR *base)
 {
-   nxlog_debug_tag(LDAP_DEBUG_TAG, 7, _T("LDAPConnection::readInPages(): reading directory in pages"));
+   nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::readInPages(): reading directory in pages"));
 
-   LDAPControl *pageControl = NULL, *controls[2] = { NULL, NULL };
-	LDAPControl **returnedControls = NULL;
+   LDAPControl *pageControl = nullptr, *controls[2] = { nullptr, nullptr };
+	LDAPControl **returnedControls = nullptr;
 #if defined(__sun) && !SUNOS_OPENLDAP
    unsigned int pageSize = m_pageSize;
    unsigned int totalCount = 0;
@@ -523,7 +523,7 @@ int LDAPConnection::readInPages(LDAP_CHAR *base)
    ber_int_t totalCount = 0;
 #endif
    char pagingCriticality = 'T';
-   struct berval *cookie = NULL;
+   struct berval *cookie = nullptr;
 
    struct ldap_timeval timeOut = { 10, 0 }; // 10 second connection/search timeout
    int rc;
@@ -533,14 +533,14 @@ int LDAPConnection::readInPages(LDAP_CHAR *base)
       rc = ldap_create_page_control(m_ldapConn, pageSize, cookie, pagingCriticality, &pageControl);
       if (rc != LDAP_SUCCESS)
       {
-         nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::readInPages(): LDAP could not create page control. Error code: %s"), getErrorString(rc).cstr());
+         nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::readInPages(): could not create page control (%s)"), getErrorString(rc).cstr());
          break;
       }
 
       /* Insert the control into a list to be passed to the search. */
       controls[0] = pageControl;
 
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 6, _T("LDAPConnection::readInPages(): search base DN = ") LDAP_TFMT, base);
+      nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::readInPages(): search base DN = ") LDAP_TFMT, base);
       LDAPMessage *searchResult;
       rc = ldap_search_ext_s(
                m_ldapConn,		// LDAP session handle
@@ -556,17 +556,17 @@ int LDAPConnection::readInPages(LDAP_CHAR *base)
                &searchResult);
       if ((rc != LDAP_SUCCESS) && (rc != LDAP_PARTIAL_RESULTS))
       {
-         nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::readInPages(): Error reading result page: %s"), getErrorString(rc).cstr());
+         nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::readInPages(): error reading result page (%s)"), getErrorString(rc).cstr());
          ldap_msgfree(searchResult);
          ldap_control_free(pageControl);
          break;
       }
 
       /* Parse the results to retrieve the controls being returned. */
-      rc = ldap_parse_result(m_ldapConn, searchResult, NULL, NULL, NULL, NULL, &returnedControls, FALSE);
+      rc = ldap_parse_result(m_ldapConn, searchResult, nullptr, nullptr, nullptr, nullptr, &returnedControls, FALSE);
       if (rc != LDAP_SUCCESS)
       {
-         nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::readInPages(): Error parsing results: %s"), getErrorString(rc).cstr());
+         nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::readInPages(): error parsing results (%s)"), getErrorString(rc).cstr());
          ldap_msgfree(searchResult);
          ldap_control_free(pageControl);
          break;
@@ -589,7 +589,7 @@ int LDAPConnection::readInPages(LDAP_CHAR *base)
       rc = ldap_parse_page_control(m_ldapConn, returnedControls, &totalCount, &cookie);
       if (rc != LDAP_SUCCESS)
       {
-         nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::readInPages(): Error parsing page control: %s"), getErrorString(rc).cstr());
+         nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::readInPages(): error parsing page control (%s)"), getErrorString(rc).cstr());
          ldap_control_free(pageControl);
          break;
       }
@@ -720,16 +720,15 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
             TCHAR *value = getAttrValue(entry, attribute, i);
             while(value != nullptr)
             {
-               nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): member: %s"), value);
+               nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): member = %s"), value);
                ldapObject->m_memberList.addPreallocated(value);
                value = getAttrValue(entry, attribute, ++i);
             }
          }
          if (!strncmp(attribute, "member;range=", 13))
          {
-            nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): found member attr: %hs"), attribute);
+            nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): found member attribute %hs"), attribute);
             nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::fillLists(): there are more members, than can be provided in one request"));
-            //There are more members than can be provided in one request
 #if !defined(_WIN32) && defined(UNICODE)
             char *tmpDn = UTF8StringFromWideString(dn);
             updateMembers(&ldapObject->m_memberList, attribute, entry, tmpDn);
@@ -849,12 +848,12 @@ static void ParseRange(const char *attr, int *start, int *end)
    *start = -1;
 
    const char *tmpS = strchr(attr, '=');
-   if (tmpS == NULL)
+   if (tmpS == nullptr)
       return;
 
    char *tmpAttr = MemCopyStringA(tmpS + 1);
    char *tmpE = strchr(tmpAttr, '-');
-   if (tmpE == NULL)
+   if (tmpE == nullptr)
    {
       MemFree(tmpAttr);
       return;
@@ -882,9 +881,9 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
    // add received members
    int i = 0;
    TCHAR *value = getAttrValue(firstEntry, firstAttr, i);
-   while(value != NULL)
+   while(value != nullptr)
    {
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): member: %s"), value);
+      nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): member = %s"), value);
       memberList->addPreallocated(value);
       value = getAttrValue(firstEntry, firstAttr, ++i);
    }
@@ -921,7 +920,7 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
                &searchResult);
       if (rc != LDAP_SUCCESS)
       {
-         nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPConnection::updateMembers(): LDAP could not get search results. Error code: %s"), getErrorString(rc).cstr());
+         nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): could not get search results (%s)"), getErrorString(rc).cstr());
          ldap_msgfree(searchResult);
          break;
       }
@@ -945,7 +944,7 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
 
                while(value != NULL)
                {
-                  nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): member: %s"), value);
+                  nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): member = %s"), value);
                   memberList->addPreallocated(value);
                   value = getAttrValue(entry, attribute, ++i);
                }
@@ -961,19 +960,10 @@ void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr,
 
       if (start == -1)
       {
-         nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): member start interval returned as: %d"), start);
+         nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::updateMembers(): member start interval returned as %d"), start);
          break;
       }
    }
-}
-
-/**
- * Update user callback
- */
-static EnumerationCallbackResult UpdateUserCallback(const TCHAR *key, const LDAP_Object *value, LDAPConnection *connection)
-{
-   UpdateLDAPUser(key, value);
-   return _CONTINUE;
 }
 
 /**
@@ -981,26 +971,13 @@ static EnumerationCallbackResult UpdateUserCallback(const TCHAR *key, const LDAP
  */
 void LDAPConnection::compareUserLists()
 {
-   m_userDnEntryList->forEach(UpdateUserCallback, this);
+   m_userDnEntryList->forEach(
+      [] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+      {
+         UpdateLDAPUser(key, static_cast<const LDAP_Object*>(value));
+         return _CONTINUE;
+      });
    RemoveDeletedLDAPEntries(m_userDnEntryList, m_userIdEntryList, m_action, true);
-}
-
-/**
- * Update group callback
- */
-static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const LDAP_Object *value, LDAPConnection *connection)
-{
-   UpdateLDAPGroup(key, value);
-   return _CONTINUE;
-}
-
-/**
- * Update group callback
- */
-static EnumerationCallbackResult SyncGroupMembersCallback(const TCHAR *key, const LDAP_Object *value, LDAPConnection *connection)
-{
-   SyncLDAPGroupMembers(key, value);
-   return _CONTINUE;
 }
 
 /**
@@ -1008,9 +985,19 @@ static EnumerationCallbackResult SyncGroupMembersCallback(const TCHAR *key, cons
  */
 void LDAPConnection::compareGroupList()
 {
-   m_groupDnEntryList->forEach(UpdateGroupCallback, this);
+   m_groupDnEntryList->forEach(
+      [] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+      {
+         UpdateLDAPGroup(key, static_cast<const LDAP_Object*>(value));
+         return _CONTINUE;
+      });
    RemoveDeletedLDAPEntries(m_groupDnEntryList, m_groupIdEntryList, m_action, false);
-   m_groupDnEntryList->forEach(SyncGroupMembersCallback, this);
+   m_groupDnEntryList->forEach(
+      [] (const TCHAR *key, const void *value) -> EnumerationCallbackResult
+      {
+         SyncLDAPGroupMembers(key, static_cast<const LDAP_Object*>(value));
+         return _CONTINUE;
+      });
 }
 
 /**
@@ -1211,7 +1198,7 @@ void LDAPConnection::syncUsers()
 /**
  * Login via LDAP - stub for server without LDAP support
  */
-UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
+uint32_t LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 {
    nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::ldapUserLogin(): FAILED - server was compiled without LDAP support"));
    return RCC_INTERNAL_ERROR;
@@ -1220,7 +1207,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 #endif
 
 /**
- * Read users from LDAP directory according to search expression and add missing to NetXMS user database
+ * LDAP user synchronization thread
  */
 void LDAPSyncThread()
 {
@@ -1228,16 +1215,15 @@ void LDAPSyncThread()
    uint32_t syncInterval = ConfigReadInt(_T("LDAP.SyncInterval"), 0);
    if (syncInterval == 0)
    {
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPSyncThread: sync thread will not start because LDAP sync is disabled"));
+      nxlog_write_tag(NXLOG_INFO, LDAP_DEBUG_TAG, _T("LDAP synchronization thread will not start because LDAP synchronization is disabled"));
       return;
    }
 
-   nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPSyncThread: sync thread started, interval %d minutes"), syncInterval);
+   nxlog_write_tag(NXLOG_INFO, LDAP_DEBUG_TAG, _T("LDAP synchronization thread started, interval %d minutes"), syncInterval);
    syncInterval *= 60;
    while(!SleepAndCheckForShutdown(syncInterval))
    {
-      LDAPConnection conn;
-      conn.syncUsers();
+      LDAPConnection().syncUsers();
    }
-   nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAPSyncThread: sync thread stopped"));
+   nxlog_debug_tag(LDAP_DEBUG_TAG, 1, _T("LDAP synchronization thread stopped"));
 }

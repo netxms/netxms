@@ -420,8 +420,7 @@ uint32_t AuthenticateUser(const TCHAR *login, const TCHAR *password, size_t sigL
          case UserAuthenticationMethod::LDAP:
             if (user->isLDAPUser())
             {
-               LDAPConnection conn;
-               rcc = conn.ldapUserLogin(user->getDN(), password);
+               rcc = LDAPConnection().ldapUserLogin(user->getDN(), password);
                if (rcc == RCC_SUCCESS)
                   passwordValid = true;
             }
@@ -1518,8 +1517,7 @@ uint32_t NXCORE_EXPORTABLE ValidateUserPassword(uint32_t userId, const TCHAR *lo
          case UserAuthenticationMethod::LDAP:
             if (user->isLDAPUser())
             {
-               LDAPConnection conn;
-               rcc = conn.ldapUserLogin(user->getDN(), password);
+               rcc = LDAPConnection().ldapUserLogin(user->getDN(), password);
                if (rcc == RCC_SUCCESS)
                {
                   *isValid = true;
