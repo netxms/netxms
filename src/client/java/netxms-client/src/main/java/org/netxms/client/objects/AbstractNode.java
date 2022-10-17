@@ -811,7 +811,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneId()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneId()
     */
 	@Override
 	public int getZoneId()
@@ -820,7 +820,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
 	}
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneName()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneName()
     */
 	@Override
 	public String getZoneName()
