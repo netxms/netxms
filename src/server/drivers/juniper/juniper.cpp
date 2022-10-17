@@ -144,7 +144,7 @@ InterfaceList *JuniperDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
 VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    BYTE buffer[256];
-   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.2636.3.48.1.3.1.1.2"), nullptr, 0, buffer, 256, SNMP_GET_NEXT_REQUEST | SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.2636.3.48.1.3.1.1.2"), nullptr, 0, buffer, 256, SG_GET_NEXT_REQUEST | SG_RAW_RESULT, nullptr) == SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(JUNIPER_DEBUG_TAG, 5, _T("getVlans: device supports jnxL2aldVlanTable, will use NetworkDeviceDriver::getVlans"));
       return NetworkDeviceDriver::getVlans(snmp, node, driverData);
