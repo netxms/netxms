@@ -1355,13 +1355,13 @@ void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
 bool IsTableTool(uint32_t toolId);
 bool CheckObjectToolAccess(uint32_t toolId, uint32_t userId);
 uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session);
-UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
-UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
+uint32_t DeleteObjectToolFromDB(uint32_t toolId);
+uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled);
 uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg);
 void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id);
 bool ImportObjectTool(ConfigEntry *config, bool overwrite);
-UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
-UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
+uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
+uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
 
 uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t DeleteSummaryTable(uint32_t tableId);

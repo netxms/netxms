@@ -9056,11 +9056,11 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_TOOLS);
       final List<ObjectTool> list = new ArrayList<ObjectTool>(count);
 
-      long varId = NXCPCodes.VID_OBJECT_TOOLS_BASE;
+      long fieldId = NXCPCodes.VID_OBJECT_TOOLS_BASE;
       for(int i = 0; i < count; i++)
       {
-         list.add(new ObjectTool(response, varId));
-         varId += 10000;
+         list.add(new ObjectTool(response, fieldId));
+         fieldId += 10000;
       }
 
       return list;

@@ -1628,6 +1628,7 @@ CREATE TABLE object_tools
   command_name varchar(255) null,
   command_short_name varchar(31) null,
   icon SQL_TEXT null,
+  remote_port integer not null,
   PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
 

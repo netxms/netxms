@@ -23,6 +23,21 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 42.19 to 42.20
+ */
+static bool H_UpgradeFromV19()
+{
+   const TCHAR batch[] =
+      _T("ALTER TABLE object_tools ADD remote_port integer\n")
+      _T("UPDATE object_tools SET remote_port=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_tools"), _T("remote_port")));
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 42.18 to 42.19
  */
 static bool H_UpgradeFromV18()
@@ -373,6 +388,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 42, 20, H_UpgradeFromV19 },
    { 18, 42, 19, H_UpgradeFromV18 },
    { 17, 42, 18, H_UpgradeFromV17 },
    { 16, 42, 17, H_UpgradeFromV16 },

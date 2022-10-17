@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,10 @@ import java.io.FileInputStream;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
@@ -39,6 +40,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -61,7 +63,10 @@ public class General extends PreferencePage
 	private LabeledSpinner maxFileSize;
 	private LabeledText textParameter;
 	private LabeledText textRegexp;
-	private Button checkOutput;
+	private Button checkShowOutput;
+   private Button checkSuppressSuccessMessage;
+   private Button checkSetupTCPTunnel;
+   private Spinner remotePort;
 	private Button checkConfirmation;
    private LabeledText textConfirmation;
 	private Button checkDisable;
@@ -86,22 +91,22 @@ public class General extends PreferencePage
       noDefaultAndApplyButton();
 	   objectTool = toolDetails;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{			
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+      		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
-		layout.numColumns = 2;
+      		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
+
 		textName = new LabeledText(dialogArea, SWT.NONE);
 		textName.setLabel(Messages.get().General_Name);
 		GridData gd = new GridData();
@@ -109,10 +114,10 @@ public class General extends PreferencePage
 		gd.grabExcessHorizontalSpace = true;
 		textName.setLayoutData(gd);
 		textName.setText(objectTool.getName());
-		
+
 		createIcon();
 		createIconSelector(dialogArea);
-		
+
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
 		textDescription.setLabel(Messages.get().General_Description);
 		gd = new GridData();
@@ -121,7 +126,7 @@ public class General extends PreferencePage
       gd.horizontalSpan = 2;
 		textDescription.setLayoutData(gd);
 		textDescription.setText(objectTool.getDescription());
-		
+
 		textData = new LabeledText(dialogArea, SWT.NONE);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -129,13 +134,17 @@ public class General extends PreferencePage
 		gd.horizontalSpan = 2;
 		textData.setLayoutData(gd);
 		textData.setText(objectTool.getData());
-		
+
 		switch(objectTool.getToolType())
 		{
 			case ObjectTool.TYPE_INTERNAL:
 				textData.setLabel(Messages.get().General_Operation);
 				break;
 			case ObjectTool.TYPE_LOCAL_COMMAND:
+            textData.setLabel(Messages.get().General_Command);
+            createTCPTunnelGroup(dialogArea);
+            createOutputGroup(dialogArea);
+            break;
 			case ObjectTool.TYPE_SERVER_COMMAND:
 			case ObjectTool.TYPE_SSH_COMMAND:
 				textData.setLabel(Messages.get().General_Command);
@@ -154,10 +163,10 @@ public class General extends PreferencePage
 				break;
 			case ObjectTool.TYPE_FILE_DOWNLOAD:
 			   String[] parameters = objectTool.getData().split("\u007F"); //$NON-NLS-1$
-			   
+
 				textData.setLabel(Messages.get().General_RemoteFileName);
 				textData.setText((parameters.length > 0) ? parameters[0] : ""); //$NON-NLS-1$
-				
+
 				Group fileOptionsGoup = new Group(dialogArea, SWT.NONE);
 				fileOptionsGoup.setText(Messages.get().General_FileOptions);
             gd = new GridData();
@@ -166,11 +175,11 @@ public class General extends PreferencePage
             gd.horizontalSpan = 2;
             fileOptionsGoup.setLayoutData(gd);
 
-				GridLayout fileGroupLayout = new GridLayout();
+            GridLayout fileGroupLayout = new GridLayout();
 				fileGroupLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 				fileGroupLayout.numColumns = 1;
 				fileOptionsGoup.setLayout(fileGroupLayout);
-				
+
 		      maxFileSize  = new LabeledSpinner(fileOptionsGoup, SWT.NONE);
 		      gd = new GridData();
 		      gd.horizontalAlignment = SWT.FILL;
@@ -191,7 +200,7 @@ public class General extends PreferencePage
 				checkFollow.setText(Messages.get().General_FollowFileChanges);
 				if(parameters.length > 2) //$NON-NLS-1$
 				{
-				   checkFollow.setSelection( parameters[2].equals("true") ? true : false);  //$NON-NLS-1$
+				   checkFollow.setSelection(parameters[2].equals("true"));  //$NON-NLS-1$
 				}	
 				break;
 			case ObjectTool.TYPE_SNMP_TABLE:
@@ -206,9 +215,9 @@ public class General extends PreferencePage
 				snmpOptGroup.setLayoutData(gd);
 				layout = new GridLayout();
 				snmpOptGroup.setLayout(layout);
-				
+
 				new Label(snmpOptGroup, SWT.NONE).setText(Messages.get().General_UseAsIndex);
-				
+
 				radioIndexOID = new Button(snmpOptGroup, SWT.RADIO);
 				radioIndexOID.setText(Messages.get().General_OIDSuffix);
 				radioIndexOID.setSelection((objectTool.getFlags() & ObjectTool.SNMP_INDEXED_BY_VALUE) == 0);
@@ -258,7 +267,7 @@ public class General extends PreferencePage
             textParameter.setText((tableParts.length > 1) ? tableParts[1] : ""); //$NON-NLS-1$
             break;
 		}
-		
+
 		Group confirmationGroup = new Group(dialogArea, SWT.NONE);
 		confirmationGroup.setText(Messages.get().General_Confirmation);
 		gd = new GridData();
@@ -268,11 +277,11 @@ public class General extends PreferencePage
 		confirmationGroup.setLayoutData(gd);
 		layout = new GridLayout();
 		confirmationGroup.setLayout(layout);
-		
+
 		checkConfirmation = new Button(confirmationGroup, SWT.CHECK);
 		checkConfirmation.setText(Messages.get().General_RequiresConfirmation);
 		checkConfirmation.setSelection((objectTool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0);
-		checkConfirmation.addSelectionListener(new SelectionListener()	{
+      checkConfirmation.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -280,14 +289,8 @@ public class General extends PreferencePage
 				if (checkConfirmation.getSelection())
 					textConfirmation.setFocus();
 			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
 		});
-		
+
 		textConfirmation = new LabeledText(confirmationGroup, SWT.NONE);
 		textConfirmation.setLabel(Messages.get().General_ConfirmationMessage);
 		gd = new GridData();
@@ -296,7 +299,7 @@ public class General extends PreferencePage
 		textConfirmation.setLayoutData(gd);
 		textConfirmation.setText(objectTool.getConfirmationText());
 		textConfirmation.setEnabled(checkConfirmation.getSelection());
-		
+
       Group commandGroup = new Group(dialogArea, SWT.NONE);
       commandGroup.setText(Messages.get().General_ShowInCommands);
       gd = new GridData();
@@ -308,11 +311,11 @@ public class General extends PreferencePage
       layout.numColumns = 2;
       layout.makeColumnsEqualWidth = true;
       commandGroup.setLayout(layout);
-      
+
       checkCommand = new Button(commandGroup, SWT.CHECK);
       checkCommand.setText(Messages.get().General_ShowInCommandsTooltip);
       checkCommand.setSelection((objectTool.getFlags() & ObjectTool.SHOW_IN_COMMANDS) != 0);
-      checkCommand.addSelectionListener(new SelectionListener() {
+      checkCommand.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -321,19 +324,13 @@ public class General extends PreferencePage
             if (checkCommand.getSelection())
                textCommandName.setFocus();
          }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
       });
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       checkCommand.setLayoutData(gd);
-      
+
       textCommandName = new LabeledText(commandGroup, SWT.NONE);
       textCommandName.setLabel(Messages.get().General_CommandName);
       gd = new GridData();
@@ -352,19 +349,28 @@ public class General extends PreferencePage
       textCommandShortName.setText(objectTool.getCommandShortName());
       textCommandShortName.setEnabled(checkCommand.getSelection());
 
+      Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText("Other options");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      optionsGroup.setLayoutData(gd);
+      optionsGroup.setLayout(new GridLayout());
+
       // Disable option
-      checkDisable = new Button(dialogArea, SWT.CHECK);
+      checkDisable = new Button(optionsGroup, SWT.CHECK);
       gd = new GridData();
       gd.horizontalSpan = 2;
       checkDisable.setLayoutData(gd);
-		checkDisable.setText(Messages.get().General_DisableObjectToll);
-		checkDisable.setSelection((objectTool.getFlags() & ObjectTool.DISABLED) > 0);
+      checkDisable.setText(Messages.get().General_DisableObjectToll);
+      checkDisable.setSelection(!objectTool.isEnabled());
 
       // Run in container context
       if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) || (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) || (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
             (objectTool.getToolType() == ObjectTool.TYPE_URL))
       {
-         checkRunInContainerContext = new Button(dialogArea, SWT.CHECK);
+         checkRunInContainerContext = new Button(optionsGroup, SWT.CHECK);
          gd = new GridData();
          gd.horizontalSpan = 2;
          checkDisable.setLayoutData(gd);
@@ -385,29 +391,72 @@ public class General extends PreferencePage
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
 		outputGroup.setLayoutData(gd);
 		outputGroup.setLayout(new GridLayout());
-		
-		checkOutput = new Button(outputGroup, SWT.CHECK);
-		checkOutput.setText(Messages.get().General_GeneratesOutput);
-		checkOutput.setSelection((objectTool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0);
+
+		checkShowOutput = new Button(outputGroup, SWT.CHECK);
+		checkShowOutput.setText(Messages.get().General_GeneratesOutput);
+		checkShowOutput.setSelection((objectTool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0);
+
+      checkSuppressSuccessMessage = new Button(outputGroup, SWT.CHECK);
+      checkSuppressSuccessMessage.setText("&Suppress notification of successful execution");
+      checkSuppressSuccessMessage.setSelection((objectTool.getFlags() & ObjectTool.SUPPRESS_SUCCESS_MESSAGE) != 0);
 	}
-	
+
+   /**
+    * @param parent
+    */
+   private void createTCPTunnelGroup(Composite parent)
+   {
+      Group tcpTunnelGroup = new Group(parent, SWT.NONE);
+      tcpTunnelGroup.setText("TCP tunnel");
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      tcpTunnelGroup.setLayoutData(gd);
+
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      tcpTunnelGroup.setLayout(layout);
+
+      checkSetupTCPTunnel = new Button(tcpTunnelGroup, SWT.CHECK);
+      checkSetupTCPTunnel.setText("Setup &TCP tunnel to remote port");
+      checkSetupTCPTunnel.setSelection((objectTool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0);
+      checkSetupTCPTunnel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+      checkSetupTCPTunnel.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            remotePort.setEnabled(checkSetupTCPTunnel.getSelection());
+         }
+      });
+
+      remotePort = new Spinner(tcpTunnelGroup, SWT.NONE);
+      remotePort.setMinimum(1);
+      remotePort.setMaximum(65535);
+      remotePort.setSelection(objectTool.getRemotePort());
+      remotePort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+      remotePort.setEnabled(checkSetupTCPTunnel.getSelection());
+   }
+
 	/**
 	 * Create icon
 	 */
-	private void createIcon()
+	@SuppressWarnings("deprecation")
+   private void createIcon()
 	{
 	   if (icon != null)
 	   {
 	      icon.dispose();
 	      icon = null;
 	   }
-	   
+
       byte[] imageBytes = objectTool.getImageData();
       if ((imageBytes == null) || (imageBytes.length == 0))
          return;
-      
+
       ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
       try
       {
@@ -419,7 +468,7 @@ public class General extends PreferencePage
          Activator.logError("Exception in General.createIcon()", e); //$NON-NLS-1$
       }
 	}
-	
+
 	/**
 	 * @param parent
 	 */
@@ -466,6 +515,14 @@ public class General extends PreferencePage
                icon.dispose();
                icon = null;
             }
+         }
+      });
+      link.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (icon != null)
+               icon.dispose();
          }
       });
 	}
@@ -563,20 +620,14 @@ public class General extends PreferencePage
       {
          objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.DISABLED);
       }
-      
-      if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
-            (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) ||
-            (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
-            (objectTool.getToolType() == ObjectTool.TYPE_URL))
+
+      if ((checkRunInContainerContext != null) && checkRunInContainerContext.getSelection())
       {
-         if (checkRunInContainerContext.getSelection())
-         {
-            objectTool.setFlags(objectTool.getFlags() | ObjectTool.RUN_IN_CONTAINER_CONTEXT);
-         }
-         else
-         {
-            objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.RUN_IN_CONTAINER_CONTEXT);
-         } 
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.RUN_IN_CONTAINER_CONTEXT);
+      }
+      else
+      {
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.RUN_IN_CONTAINER_CONTEXT);
       }
 
 		if (objectTool.getToolType() == ObjectTool.TYPE_SNMP_TABLE)
@@ -590,23 +641,39 @@ public class General extends PreferencePage
 				objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.SNMP_INDEXED_BY_VALUE);
 			}
 		}
-		
-		if ((objectTool.getToolType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
-		    (objectTool.getToolType() == ObjectTool.TYPE_SERVER_COMMAND) ||
-          (objectTool.getToolType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
-		    (objectTool.getToolType() == ObjectTool.TYPE_ACTION) ||
-		    (objectTool.getToolType() == ObjectTool.TYPE_SSH_COMMAND))
+
+      if ((checkShowOutput != null) && checkShowOutput.getSelection())
+      {
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.GENERATES_OUTPUT);
+      }
+      else
 		{
-			if (checkOutput.getSelection())
-			{
-				objectTool.setFlags(objectTool.getFlags() | ObjectTool.GENERATES_OUTPUT);
-			}
-			else
-			{
-				objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.GENERATES_OUTPUT);
-			}
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.GENERATES_OUTPUT);
 		}
-		
+
+      if ((checkSuppressSuccessMessage != null) && checkSuppressSuccessMessage.getSelection())
+      {
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.SUPPRESS_SUCCESS_MESSAGE);
+      }
+      else
+      {
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.SUPPRESS_SUCCESS_MESSAGE);
+      }
+
+      if ((checkSetupTCPTunnel != null) && checkSetupTCPTunnel.getSelection())
+      {
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.SETUP_TCP_TUNNEL);
+      }
+      else
+      {
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.SETUP_TCP_TUNNEL);
+      }
+
+      if (remotePort != null)
+      {
+         objectTool.setRemotePort(remotePort.getSelection());
+      }
+
 		if (icon != null)
 		{
 		   ImageLoader loader = new ImageLoader();
@@ -620,19 +687,19 @@ public class General extends PreferencePage
 		   objectTool.setImageData(null);
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{

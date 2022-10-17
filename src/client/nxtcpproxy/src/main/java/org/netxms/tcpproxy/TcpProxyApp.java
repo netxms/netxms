@@ -64,7 +64,7 @@ public class TcpProxyApp
       session.login(login, password);
 
       logger.info("Synchronizing objects");
-      session.syncObjects();
+      session.syncObjects(false);
       AbstractObject object = session.findObjectByName(node);
       if ((object == null) || (!(object instanceof Node) && !(object instanceof Zone)))
          throw new IllegalArgumentException("Node or zone object with given name does not exist");

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ public class ObjectToolDetails extends ObjectTool
 		commandName = "";
 		commandShortName = "";
 		imageData = null;
+      remotePort = 0;
 		inputFields = new HashMap<String, InputField>();
 
 		createDisplayName();
@@ -90,6 +91,7 @@ public class ObjectToolDetails extends ObjectTool
 		confirmationText = msg.getFieldAsString(NXCPCodes.VID_CONFIRMATION_TEXT);
 		commandName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_NAME);
       commandShortName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_SHORT_NAME);
+      remotePort = msg.getFieldAsInt32(NXCPCodes.VID_PORT);
 		imageData = msg.getFieldAsBinary(NXCPCodes.VID_IMAGE_DATA);
       try
       {
@@ -100,10 +102,10 @@ public class ObjectToolDetails extends ObjectTool
          filter = new ObjectMenuFilter();
          logger.debug("Cannot create ObjectMenuFilter object from XML document", e);
       }
-		
+
 		Long[] acl = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
 		accessList = (acl != null) ? new ArrayList<Long>(Arrays.asList(acl)) : new ArrayList<Long>(0);
-		
+
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new ArrayList<ObjectToolTableColumn>(count);
 		long varId = NXCPCodes.VID_COLUMN_INFO_BASE;
@@ -153,6 +155,7 @@ public class ObjectToolDetails extends ObjectTool
 		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
 		msg.setField(NXCPCodes.VID_COMMAND_NAME, commandName);
       msg.setField(NXCPCodes.VID_COMMAND_SHORT_NAME, commandShortName);
+      msg.setFieldInt32(NXCPCodes.VID_PORT, remotePort);
 		if (imageData != null)
 		   msg.setField(NXCPCodes.VID_IMAGE_DATA, imageData);
 
@@ -286,6 +289,17 @@ public class ObjectToolDetails extends ObjectTool
 		this.confirmationText = confirmationText;
 		modified = true;
 	}
+
+   /**
+    * Set remote TCP port number for TCP tunnel.
+    *
+    * @param remotePort remote TCP port number
+    */
+   public void setRemotePort(int remotePort)
+   {
+      this.remotePort = remotePort;
+      modified = true;
+   }
 
 	/**
 	 * @return the modified
