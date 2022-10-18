@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.swt.SWT;
@@ -26,16 +25,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.netxms.client.ObjectUrl;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.ExternalWebBrowser;
 
 /**
  * "External Resources" element
@@ -55,7 +51,7 @@ public class ExternalResources extends OverviewPageElement
       super(parent, anchor, objectTab);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#getTitle()
     */
    @Override
@@ -64,7 +60,7 @@ public class ExternalResources extends OverviewPageElement
       return "External Resources";
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -73,7 +69,7 @@ public class ExternalResources extends OverviewPageElement
       return (object != null) && object.hasUrls();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#createClientArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -87,7 +83,7 @@ public class ExternalResources extends OverviewPageElement
       return content;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#onObjectChange()
     */
    @Override
@@ -99,24 +95,6 @@ public class ExternalResources extends OverviewPageElement
       for(ObjectUrl u : getObject().getUrls())
          elements.add(new Element(content, u));
       content.layout();
-   }
-   
-   /**
-    * Open URL
-    * 
-    * @param url URL to open
-    */
-   private void openUrl(URL url)
-   {
-      try
-      {
-         PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(url);
-      }
-      catch(PartInitException e)
-      {
-         Activator.log("Exception when trying to open URL " + url.toExternalForm(), e);
-         MessageDialogHelper.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Error", "Cannot start external web browser");
-      }
    }
    
    /**
@@ -140,16 +118,15 @@ public class ExternalResources extends OverviewPageElement
             @Override
             public void linkActivated(HyperlinkEvent e)
             {
-               openUrl(Element.this.url.getUrl());
+               ExternalWebBrowser.open(Element.this.url.getUrl());
             }
-            
          });
-         
+
          description = new Label(parent, SWT.NONE);
          description.setBackground(content.getBackground());
          description.setText(url.getDescription());
       }
-      
+
       void dispose()
       {
          link.dispose();

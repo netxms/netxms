@@ -19,13 +19,10 @@
 package org.netxms.ui.eclipse.alarmviewer.views;
 
 import java.io.IOException;
-import java.net.URL;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.browser.IWebBrowser;
 import org.netxms.client.NXCException;
 import org.netxms.client.TableRow;
 import org.netxms.client.constants.UserAccessRights;
@@ -34,7 +31,7 @@ import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.ExternalWebBrowser;
 
 /**
  * Alarm log viewer
@@ -152,16 +149,7 @@ public class AlarmLogViewer extends LogViewer
                @Override
                public void run()
                {
-                  try
-                  {
-                     final IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
-                     browser.openURL(new URL(url));
-                  }
-                  catch(Exception e)
-                  {
-                     Activator.logError("Exception in AlarmList.showIssue (url=\"" + url + "\")", e); //$NON-NLS-1$ //$NON-NLS-2$
-                     MessageDialogHelper.openError(getSite().getShell(), "Error", "Internal error: unable to open web browser");
-                  }
+                  ExternalWebBrowser.open(url);
                }
             });
          }

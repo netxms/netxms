@@ -59,8 +59,8 @@ import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerScriptResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ExternalWebBrowser;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.views.BrowserView;
 
 /**
  * Executor for object tool
@@ -391,7 +391,7 @@ public final class ObjectToolExecutor
             executeTableTool(node, tool);
             break;
          case ObjectTool.TYPE_URL:
-            openURL(node, tool, inputValues, expandedToolData);
+            openURL(node, tool, expandedToolData);
             break;
       }
    }
@@ -405,8 +405,7 @@ public final class ObjectToolExecutor
     * @param maskedFields list of input fields to be masked
     * @param expandedToolData expanded tool data
     */
-   private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
-         List<String> maskedFields, List<String> expandedToolData)
+   private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields, List<String> expandedToolData)
    {
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
       try
@@ -887,18 +886,8 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void openURL(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String url)
+   private static void openURL(final ObjectContext node, final ObjectTool tool, String url)
    {
-      final String sid = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
-      final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-      try
-      {
-         BrowserView view = (BrowserView)window.getActivePage().showView(BrowserView.ID, sid, IWorkbenchPage.VIEW_ACTIVATE);
-         view.openUrl(url);
-      }
-      catch(PartInitException e)
-      {
-         MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, Messages.get().ObjectToolsDynamicMenu_CannotOpenWebBrowser + e.getLocalizedMessage());
-      }
+      ExternalWebBrowser.open(url);
    }
 }

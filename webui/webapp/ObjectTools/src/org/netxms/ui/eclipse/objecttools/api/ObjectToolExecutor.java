@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -57,6 +55,7 @@ import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerScriptResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ExternalWebBrowser;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -385,7 +384,7 @@ public final class ObjectToolExecutor
             executeTableTool(node, tool);
             break;
          case ObjectTool.TYPE_URL:
-            openURL(node, tool, inputValues, expandedToolData);
+            openURL(node, tool, expandedToolData);
             break;
       }
    }
@@ -399,8 +398,7 @@ public final class ObjectToolExecutor
     * @param maskedFields list of input fields to be masked
     * @param expandedToolData expanded tool data
     */
-   private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
-         List<String> maskedFields, List<String> expandedToolData)
+   private static void executeOnMultipleNodes(Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields, List<String> expandedToolData)
    {
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
       try
@@ -805,9 +803,8 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void openURL(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String url)
+   private static void openURL(final ObjectContext node, final ObjectTool tool, String url)
    {
-      final UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
-      launcher.openURL(url);
+      ExternalWebBrowser.open(url);
    }
 }

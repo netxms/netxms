@@ -444,7 +444,6 @@ public class General extends PreferencePage
 	/**
 	 * Create icon
 	 */
-	@SuppressWarnings("deprecation")
    private void createIcon()
 	{
 	   if (icon != null)
