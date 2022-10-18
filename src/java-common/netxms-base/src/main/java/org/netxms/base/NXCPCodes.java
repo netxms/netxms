@@ -1285,6 +1285,7 @@ public class NXCPCodes
    public static final long VID_OSPF_NEIGHBOR_COUNT = 800;
    public static final long VID_COMPRESSION_METHOD = 801;
    public static final long VID_MQTT_PROXY = 802;
+   public static final long VID_TCP_PROXY = 803;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

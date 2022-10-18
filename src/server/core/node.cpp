@@ -9420,6 +9420,14 @@ uint32_t Node::getEffectiveSshProxy()
 }
 
 /**
+ * Get effective TCP proxy for this node
+ */
+uint32_t Node::getEffectiveTcpProxy()
+{
+   return GetEffectiveProtocolProxy(this, 0, m_zoneUIN, false, g_dwMgmtNode);
+}
+
+/**
  * Get effective ICMP proxy for this node
  */
 uint32_t Node::getEffectiveIcmpProxy()

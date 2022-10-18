@@ -3590,6 +3590,7 @@ public:
    uint32_t getEffectiveSshProxy();
    uint32_t getEffectiveIcmpProxy();
    uint32_t getEffectiveAgentProxy();
+   uint32_t getEffectiveTcpProxy();
 
    void writeParamListToMessage(NXCPMessage *pMsg, int origin, WORD flags);
    void writeWinPerfObjectsToMessage(NXCPMessage *msg);

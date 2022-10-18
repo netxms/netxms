@@ -1505,6 +1505,7 @@ typedef struct
 #define VID_OSPF_NEIGHBOR_COUNT     ((uint32_t)800)
 #define VID_COMPRESSION_METHOD      ((uint32_t)801)
 #define VID_MQTT_PROXY              ((uint32_t)802)
+#define VID_TCP_PROXY               ((uint32_t)803)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

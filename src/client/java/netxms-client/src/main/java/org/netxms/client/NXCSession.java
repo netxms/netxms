@@ -9171,18 +9171,18 @@ public class NXCSession
    }
 
    /**
-    * Delete object tool.
+    * Enable or disable object tool/
     *
     * @param toolId Object tool ID
-    * @param enable true if object tool should be enabled, false if disabled
-    * @throws IOException  if socket I/O error occurs
+    * @param enable true if object tool should be enabled, false if it should be disabled
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void changeObjecToolDisableStatuss(long toolId, boolean enable) throws IOException, NXCException
+   public void enableObjectTool(long toolId, boolean enable) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_OBJECT_TOOL_STATUS);
       msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)toolId);
-      msg.setFieldInt32(NXCPCodes.VID_STATE, enable ? 1 : 0);
+      msg.setField(NXCPCodes.VID_STATE, enable);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
@@ -12342,11 +12342,43 @@ public class NXCSession
    public TcpProxy setupTcpProxy(long proxyId, InetAddress address, int port) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SETUP_TCP_PROXY);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)proxyId);
+      msg.setFieldInt32(NXCPCodes.VID_TCP_PROXY, (int)proxyId);
       msg.setField(NXCPCodes.VID_IP_ADDRESS, address);
       msg.setFieldInt16(NXCPCodes.VID_PORT, port);
-      sendMessage(msg);
-      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return setupTcpProxyInternal(msg);
+   }
+
+   /**
+    * Setup new TCP proxy channel to given node. Server will select appropriate proxy node. Proxy object should be disposed with
+    * TcpProxy.close() call when no longer needed.
+    *
+    * @param nodeId target node ID
+    * @param port target TCP port
+    * @return TCP proxy object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public TcpProxy setupTcpProxy(long nodeId, int port) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SETUP_TCP_PROXY);
+      msg.setFieldInt32(NXCPCodes.VID_TCP_PROXY, 0);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      msg.setFieldInt16(NXCPCodes.VID_PORT, port);
+      return setupTcpProxyInternal(msg);
+   }
+
+   /**
+    * Internal implementation of different setupTcpProxy() variants
+    *
+    * @param request prepared request message
+    * @return TCP proxy object
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   private TcpProxy setupTcpProxyInternal(NXCPMessage request) throws IOException, NXCException
+   {
+      sendMessage(request);
+      final NXCPMessage response = waitForRCC(request.getMessageId());
       synchronized(tcpProxies)
       {
          TcpProxy proxy = new TcpProxy(this, response.getFieldAsInt32(NXCPCodes.VID_CHANNEL_ID));
