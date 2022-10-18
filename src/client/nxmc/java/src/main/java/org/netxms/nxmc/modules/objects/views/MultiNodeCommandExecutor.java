@@ -84,7 +84,7 @@ public class MultiNodeCommandExecutor extends ObjectView
    public MultiNodeCommandExecutor(ObjectTool tool, Set<ObjectContext> sourceObjects, Set<ObjectContext> nodes, Map<String, String> inputValues, List<String> maskedFields,
          List<String> expandedText)
    {
-      super(tool.getDisplayName(), ResourceManager.getImageDescriptor("icons/object-tools/console.png"), nodes.toString(), false);
+      super(tool.getDisplayName(), ResourceManager.getImageDescriptor("icons/object-tools/terminal.png"), nodes.toString(), false);
       applicableObjects = nodes;
       this.tool = tool;
       this.inputValues = inputValues;
