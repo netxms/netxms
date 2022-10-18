@@ -26,13 +26,11 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
@@ -108,7 +106,6 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    public void executeAction(final String executionString, final long alarmId, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       actionRestart.setEnabled(false);
-      final NXCSession session = ConsoleSharedData.getSession();
       out = console.newOutputStream();
       this.alarmId = alarmId;
       this.executionString = executionString;

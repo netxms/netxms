@@ -24,13 +24,11 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
@@ -103,7 +101,6 @@ public class SSHCommandResults extends AbstractCommandResults implements TextOut
    public void executeSshCommand(final String executionString)
    {
       actionRestart.setEnabled(false);
-      final NXCSession session = ConsoleSharedData.getSession();
       out = console.newOutputStream();
       this.executionString = executionString;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {

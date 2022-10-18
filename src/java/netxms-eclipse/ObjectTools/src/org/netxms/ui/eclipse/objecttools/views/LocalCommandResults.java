@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,13 +30,12 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.handlers.IHandlerService;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.TcpProxy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.objecttools.TcpPortForwarder;
 
 /**
  * Results of local command execution
@@ -45,8 +44,8 @@ public class LocalCommandResults extends AbstractCommandResults
 {
 	public static final String ID = "org.netxms.ui.eclipse.objecttools.views.LocalCommandResults"; //$NON-NLS-1$
 
-   private NXCSession session = ConsoleSharedData.getSession();
 	private Process process;
+   private TcpPortForwarder tcpPortForwarder = null;
 	private boolean running = false;
 	private String lastCommand = null;
 	private Object mutex = new Object();
@@ -59,9 +58,9 @@ public class LocalCommandResults extends AbstractCommandResults
 	protected void createActions()
 	{
 	   super.createActions();
-	   
+
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-		
+
 		actionTerminate = new Action(Messages.get().LocalCommandResults_Terminate, SharedIcons.TERMINATE) {
 			@Override
 			public void run()
@@ -71,6 +70,11 @@ public class LocalCommandResults extends AbstractCommandResults
 					if (running)
 					{
 						process.destroy();
+                  if (tcpPortForwarder != null)
+                  {
+                     tcpPortForwarder.close();
+                     tcpPortForwarder = null;
+                  }
 					}
 				}
 			}
@@ -78,7 +82,7 @@ public class LocalCommandResults extends AbstractCommandResults
 		actionTerminate.setEnabled(false);
       actionTerminate.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.terminate_process"); //$NON-NLS-1$
 		handlerService.activateHandler(actionTerminate.getActionDefinitionId(), new ActionHandler(actionTerminate));
-		
+
 		actionRestart = new Action(Messages.get().LocalCommandResults_Restart, SharedIcons.RESTART) {
 			@Override
 			public void run()
@@ -88,7 +92,7 @@ public class LocalCommandResults extends AbstractCommandResults
 		};
 		actionRestart.setEnabled(false);
 	}
-	
+
 	/**
 	 * Fill local pull-down menu
 	 * 
@@ -127,7 +131,7 @@ public class LocalCommandResults extends AbstractCommandResults
 		manager.add(new Separator());
 		super.fillContextMenu(manager);
 	}
-	
+
 	/**
 	 * Run command (called by tool execution action)
 	 * 
@@ -147,13 +151,18 @@ public class LocalCommandResults extends AbstractCommandResults
 				catch(InterruptedException e)
 				{
 				}
+            if (tcpPortForwarder != null)
+            {
+               tcpPortForwarder.close();
+               tcpPortForwarder = null;
+            }
 			}
 			running = true;
 			lastCommand = command;
 			actionTerminate.setEnabled(true);
 			actionRestart.setEnabled(false);
 		}
-		
+
 		final IOConsoleOutputStream out = console.newOutputStream();
 		ConsoleJob job = new ConsoleJob(Messages.get().LocalCommandResults_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
@@ -165,56 +174,19 @@ public class LocalCommandResults extends AbstractCommandResults
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            if (command.startsWith("#{"))
+            String commandLine;
+            if (remotePort > 0)
             {
-               int index = command.indexOf('}');
-               if (index == -1)
-               {
-                  out.write("Malformed command line (missing closing bracket for #{)");
-                  out.close();
-                  return;
-               }
-
-               // Expect proxy configuration in form
-               // proxy:remoteAddress:remotePort:localPort
-               // Can use "auto" as proxy name to find suitable proxy node automatically
-               String[] proxyConfig = command.substring(2, index).split(":");
-               if (proxyConfig.length != 4)
-               {
-                  out.write("Malformed command line (proxy configuration should be in form proxy:remoteAddress:remotePort:localPort)");
-                  out.close();
-                  return;
-               }
-
-               long proxyId;
-               if (proxyConfig[0].equals("auto"))
-               {
-                  proxyId = session.findProxyForNode(nodeId);
-                  if (proxyId == 0)
-                  {
-                     out.write("Cannot find suitable proxy");
-                     out.close();
-                     return;
-                  }
-               }
-               else
-               {
-                  AbstractObject object = session.findObjectByName(proxyConfig[0]);
-                  if (object == null)
-                  {
-                     out.write("Cannot find proxy " + proxyConfig[0]);
-                     out.close();
-                     return;
-                  }
-                  proxyId = object.getObjectId();
-               }
-
-               process = Runtime.getRuntime().exec(command.substring(index + 1).trim());
+               TcpProxy tcpProxy = session.setupTcpProxy(nodeId, remotePort);
+               tcpPortForwarder = new TcpPortForwarder(tcpProxy);
+               commandLine = command.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+               tcpPortForwarder.run();
             }
             else
             {
-               process = Runtime.getRuntime().exec(command);
+               commandLine = command;
             }
+            process = Runtime.getRuntime().exec(commandLine);
 				InputStream in = process.getInputStream();
 				try
 				{
@@ -226,7 +198,7 @@ public class LocalCommandResults extends AbstractCommandResults
 						if (bytes == -1)
 							break;
 						String s = new String(Arrays.copyOf(data, bytes));
-						
+
 						// The following is a workaround for issue NX-65
 						// Problem is that on Windows XP many system commands
 						// (like ping, tracert, etc.) generates output with lines
@@ -236,7 +208,7 @@ public class LocalCommandResults extends AbstractCommandResults
 						else
 							out.write(s);
 					}
-					
+
 					out.write(Messages.get().LocalCommandResults_Terminated);
 				}
 				catch(IOException e)
@@ -255,6 +227,11 @@ public class LocalCommandResults extends AbstractCommandResults
 			{
 				synchronized(mutex)
 				{
+               if (tcpPortForwarder != null)
+               {
+                  tcpPortForwarder.close();
+                  tcpPortForwarder = null;
+               }
 					running = false;
 					process = null;
 					mutex.notifyAll();
@@ -278,9 +255,9 @@ public class LocalCommandResults extends AbstractCommandResults
 		job.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -289,6 +266,11 @@ public class LocalCommandResults extends AbstractCommandResults
 			if (running)
 			{
 				process.destroy();
+            if (tcpPortForwarder != null)
+            {
+               tcpPortForwarder.close();
+               tcpPortForwarder = null;
+            }
 			}
 		}
 		super.dispose();

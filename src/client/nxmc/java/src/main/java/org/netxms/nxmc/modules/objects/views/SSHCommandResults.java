@@ -26,10 +26,8 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -40,13 +38,13 @@ import org.xnap.commons.i18n.I18n;
 /**
  * View for agent action execution results
  */
-public class SSHCommandResults extends AbstractCommandResults implements TextOutputListener
+public class SSHCommandResults extends AbstractCommandResultView implements TextOutputListener
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerCommandResults.class);
   
    private IOConsoleOutputStream out;
    private Action actionRestart;
-   
+
    /**
     * Constructor
     * 
@@ -114,7 +112,6 @@ public class SSHCommandResults extends AbstractCommandResults implements TextOut
    public void execute()
    {
       actionRestart.setEnabled(false);
-      final NXCSession session = Registry.getSession();
       out = console.newOutputStream();
       Job job = new Job(String.format(i18n.tr("Execute action on node %s"), object.object.getObjectName()), this) {
          @Override

@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objecttools.api;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +38,7 @@ import org.netxms.client.AgentFileData;
 import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
+import org.netxms.client.TcpProxy;
 import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
@@ -49,6 +49,7 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldEntryDialog;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.objecttools.TcpPortForwarder;
 import org.netxms.ui.eclipse.objecttools.dialogs.ToolExecutionStatusDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
@@ -737,33 +738,61 @@ public final class ObjectToolExecutor
     * @param inputValues input values
     * @param command command to execute
     */
-   private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String command)
+   private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, final String command)
    {      
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
-         final String os = Platform.getOS();
-         
-         try
-         {
-            if (os.equals(Platform.OS_WIN32))
+         ConsoleJob job = new ConsoleJob("Execute external command", null, Activator.PLUGIN_ID) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               command = "CMD.EXE /C START \"NetXMS\" " + command; //$NON-NLS-1$
-               Runtime.getRuntime().exec(command);
+               TcpPortForwarder tcpPortForwarder = null;
+               try
+               {
+                  String commandLine = command;
+                  if (node.isNode() && ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0))
+                  {
+                     NXCSession session = ConsoleSharedData.getSession();
+                     TcpProxy tcpProxy = session.setupTcpProxy(node.object.getObjectId(), tool.getRemotePort());
+                     tcpPortForwarder = new TcpPortForwarder(tcpProxy);
+                     commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+                     tcpPortForwarder.run();
+                  }
+
+                  Process process;
+                  if (Platform.getOS().equals(Platform.OS_WIN32))
+                  {
+                     commandLine = "CMD.EXE /C START \"NetXMS\" " + commandLine; //$NON-NLS-1$
+                     process = Runtime.getRuntime().exec(command);
+                  }
+                  else
+                  {
+                     process = Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", commandLine }); //$NON-NLS-1$ //$NON-NLS-2$
+                  }
+
+                  if (tcpPortForwarder != null)
+                     process.waitFor();
+               }
+               finally
+               {
+                  if (tcpPortForwarder != null)
+                     tcpPortForwarder.close();
+               }
             }
-            else
+
+            @Override
+            protected String getErrorMessage()
             {
-               Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", command }); //$NON-NLS-1$ //$NON-NLS-2$
+               return "Cannot execute external process";
             }
-         }
-         catch(IOException e)
-         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-         }
+         };
+         job.setUser(false);
+         job.start();
       }
       else
       {
-         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
+         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()) + "&" + //$NON-NLS-1$ //$NON-NLS-2$
+               ((node.isNode() && ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0) ? tool.getRemotePort() : 0));
          final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
          try
          {

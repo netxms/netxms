@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,9 @@ public abstract class AbstractCommandResults extends ViewPart
 {
 	protected long nodeId;
 	protected long toolId;
+   protected int remotePort;
 	protected TextConsole console;
+   protected NXCSession session;
 
 	private Action actionClear;
 	private Action actionScrollLock;
@@ -67,17 +69,19 @@ public abstract class AbstractCommandResults extends ViewPart
 	{
 		super.init(site);
 
-		// Secondary ID must be in form toolId&nodeId
+      // Secondary ID must be in form toolId&nodeId or toolId&nodeId&remotePort
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
-		if (parts.length != 2)
+      if (parts.length < 2)
 			throw new PartInitException("Internal error"); //$NON-NLS-1$
-		
+
+      session = ConsoleSharedData.getSession();
+
 		try
 		{
 			nodeId = Long.parseLong(parts[0]);
 			toolId = Long.parseLong(parts[1]);
-			
-			NXCSession session = ConsoleSharedData.getSession();
+         remotePort = (parts.length > 2) ? Integer.parseInt(parts[2]) : 0;
+
 			AbstractObject object = session.findObjectById(nodeId);
 			setPartName(object.getObjectName() + " - " + ObjectToolsCache.getInstance().findTool(toolId).getDisplayName()); //$NON-NLS-1$
 		}
@@ -127,7 +131,7 @@ public abstract class AbstractCommandResults extends ViewPart
 	protected void createActions()
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-		
+
 		actionClear = new Action(Messages.get().LocalCommandResults_ClearConsole, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
@@ -149,7 +153,7 @@ public abstract class AbstractCommandResults extends ViewPart
 		actionScrollLock.setChecked(false);
 		actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
       handlerService.activateHandler(actionScrollLock.getActionDefinitionId(), new ActionHandler(actionScrollLock));
-		
+
 		actionCopy = new Action(Messages.get().LocalCommandResults_Copy) {
 			@Override
 			public void run()
@@ -160,7 +164,7 @@ public abstract class AbstractCommandResults extends ViewPart
 		actionCopy.setEnabled(false);
       actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.copy"); //$NON-NLS-1$
 		handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
-		
+
 		actionSelectAll = new Action(Messages.get().LocalCommandResults_SelectAll) {
 			@Override
 			public void run()

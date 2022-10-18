@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Display results of table tool execution
  */
-public class TableToolResults extends ObjectToolResults
+public class TableToolResults extends ObjectToolResultView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(TableToolResults.class);
    

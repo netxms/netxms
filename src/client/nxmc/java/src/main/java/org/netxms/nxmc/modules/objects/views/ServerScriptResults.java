@@ -38,13 +38,13 @@ import org.xnap.commons.i18n.I18n;
 /**
  * View for server script execution results
  */
-public class ServerScriptResults extends AbstractCommandResults implements TextOutputListener
+public class ServerScriptResults extends AbstractCommandResultView implements TextOutputListener
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerCommandResults.class);
 
    private IOConsoleOutputStream out;
    private Action actionRestart;
-   
+
    /**
     * Constructor
     * 
@@ -64,7 +64,7 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    protected void createActions()
    {
       super.createActions();
-      
+
       actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
          @Override
          public void run()

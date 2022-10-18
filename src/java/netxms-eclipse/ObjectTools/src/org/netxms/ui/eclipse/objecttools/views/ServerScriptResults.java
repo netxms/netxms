@@ -26,13 +26,11 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.console.IOConsoleOutputStream;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * View for server script execution results
@@ -108,7 +106,6 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    public void executeScript(final String script, final long alarmId, final Map<String, String> inputValues)
    {
       actionRestart.setEnabled(false);
-      final NXCSession session = ConsoleSharedData.getSession();
       out = console.newOutputStream();
       lastScript = script;
       this.alarmId = alarmId;

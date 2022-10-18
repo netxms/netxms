@@ -30,13 +30,11 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISaveablePart2;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
@@ -52,7 +50,6 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    private Action actionStop;
    private Map<String, String> lastInputValues = null;
    private long streamId = 0;
-   private NXCSession session;
    private boolean isRunning = false;
    private List<String> maskedFields;
 
@@ -62,7 +59,6 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    protected void createActions()
    {
       super.createActions();
-      session = ConsoleSharedData.getSession();
       
       actionRestart = new Action(Messages.get().LocalCommandResults_Restart, SharedIcons.RESTART) {
          @Override

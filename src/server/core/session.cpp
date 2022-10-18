@@ -14030,11 +14030,12 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
             }
             if (rcc == RCC_SUCCESS)
             {
+               uint16_t port = request.getFieldAsUInt16(VID_PORT);
+               debugPrintf(4, _T("Setting up TCP proxy to %s:%d via node %s [%u]"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId());
                shared_ptr<AgentConnectionEx> conn = proxyNode->createAgentConnection();
                if (conn != nullptr)
                {
                   conn->setTcpProxySession(this);
-                  uint16_t port = request.getFieldAsUInt16(VID_PORT);
                   uint32_t agentChannelId;
                   rcc = conn->setupTcpProxy(ipAddr, port, &agentChannelId);
                   if (rcc == ERR_SUCCESS)
@@ -14047,17 +14048,18 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
                      msg.setField(VID_CHANNEL_ID, clientChannelId);
                      writeAuditLog(AUDIT_SYSCFG, true, proxyNode->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
                               (const TCHAR *)ipAddr.toString(), (int)port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
-                     debugPrintf(3, _T("Created TCP proxy to %s port %d via %s [%d]"),
-                              (const TCHAR *)ipAddr.toString(), (int)port, proxyNode->getName(), proxyNode->getId());
+                     debugPrintf(3, _T("Created TCP proxy to %s:%d via node %s [%d]"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId());
                   }
                   else
                   {
                      msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+                     debugPrintf(4, _T("TCP proxy setup failed (%s)"), AgentErrorCodeToText(rcc));
                   }
                }
                else
                {
                   msg.setField(VID_RCC, RCC_COMM_FAILURE);
+                  debugPrintf(4, _T("TCP proxy setup failed (no connection to agent)"));
                }
             }
             else

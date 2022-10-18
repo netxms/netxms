@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.objects;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -34,6 +33,7 @@ import org.netxms.client.AgentFileData;
 import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
+import org.netxms.client.TcpProxy;
 import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
@@ -56,8 +56,6 @@ import org.netxms.nxmc.modules.objects.views.ServerScriptResults;
 import org.netxms.nxmc.modules.objects.views.TableToolResults;
 import org.netxms.nxmc.tools.ExternalWebBrowser;
 import org.netxms.nxmc.tools.MessageDialogHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -66,7 +64,6 @@ import org.xnap.commons.i18n.I18n;
 public final class ObjectToolExecutor
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectToolExecutor.class);
-   private static final Logger logger = LoggerFactory.getLogger(ObjectToolExecutor.class);
 
    /**
     * Private constructor to forbid instantiation 
@@ -607,7 +604,6 @@ public final class ObjectToolExecutor
       }
    }
 
-   
    /**
     * Execute server script
     * 
@@ -660,7 +656,7 @@ public final class ObjectToolExecutor
          }
       }
    }
-   
+
    /**
     * Execute local command
     * 
@@ -670,28 +666,56 @@ public final class ObjectToolExecutor
     * @param command command to execute
     * @param viewPlacement view placement information
     */
-   private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, String command, ViewPlacement viewPlacement)
+   private static void executeLocalCommand(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues, final String command, ViewPlacement viewPlacement)
    {      
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {
-         try
-         {
-            if (SystemUtils.IS_OS_WINDOWS)
+         Job job = new Job(i18n.tr("Execute external command"), null, viewPlacement.getMessageAreaHolder()) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
             {
-               command = "CMD.EXE /C START \"NetXMS\" " + command;
-               Runtime.getRuntime().exec(command);
+               TcpPortForwarder tcpPortForwarder = null;
+               try
+               {
+                  String commandLine = command;
+                  if (node.isNode() && ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0))
+                  {
+                     NXCSession session = Registry.getSession();
+                     TcpProxy tcpProxy = session.setupTcpProxy(node.object.getObjectId(), tool.getRemotePort());
+                     tcpPortForwarder = new TcpPortForwarder(tcpProxy);
+                     commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+                     tcpPortForwarder.run();
+                  }
+
+                  Process process;
+                  if (SystemUtils.IS_OS_WINDOWS)
+                  {
+                     commandLine = "CMD.EXE /C START \"NetXMS\" " + commandLine;
+                     process = Runtime.getRuntime().exec(command);
+                  }
+                  else
+                  {
+                     process = Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", commandLine });
+                  }
+
+                  if (tcpPortForwarder != null)
+                     process.waitFor();
+               }
+               finally
+               {
+                  if (tcpPortForwarder != null)
+                     tcpPortForwarder.close();
+               }
             }
-            else
+
+            @Override
+            protected String getErrorMessage()
             {
-               Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", command });
+               return "Cannot execute external process";
             }
-         }
-         catch(IOException e)
-         {
-            logger.error("Exception while executing local command", e);
-            String m = e.getLocalizedMessage();
-            viewPlacement.getMessageAreaHolder().addMessage(MessageArea.ERROR, i18n.tr("Cannot execute local command") + (((m != null) && !m.isEmpty()) ? " (" + m + ")" : ""));
-         }
+         };
+         job.setUser(false);
+         job.start();
       }
       else
       {

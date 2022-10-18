@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2020-2022 Raden Soultions
+ * Copyright (C) 2020-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -271,8 +271,7 @@ public class MultiNodeCommandExecutor extends ViewPart
 	 * @param maskedFields list of the fields that should be masked in audit log
 	 * @param expandedText expanded command for local command
 	 */
-   public void execute(ObjectTool tool, Set<ObjectContext> nodes, Map<String, String> inputValues, List<String> maskedFields,
-         List<String> expandedText)
+   public void execute(ObjectTool tool, Set<ObjectContext> nodes, Map<String, String> inputValues, List<String> maskedFields, List<String> expandedText)
    {
       setPartName(tool.getDisplayName()); //$NON-NLS-1$
       executors.clear();
