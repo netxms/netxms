@@ -32,6 +32,8 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -69,7 +71,6 @@ import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.CreateNewToolDialog;
@@ -567,7 +568,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void deleteTools()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.isEmpty())
 			return;
 		
@@ -653,31 +654,38 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
    private void cloneTool()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
+      if (selection.size() != 1)
          return;
 
-      final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), Messages.get().ObjectToolsEditor_ObjectTool);
-      if (dlg.open() == Window.OK)
-      {
-         new ConsoleJob(Messages.get().ObjectToolsEditor_CloneObjectTool, this, Activator.PLUGIN_ID) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
-            {
-               final long toolId = session.generateObjectToolId();
-               ObjectTool objTool = (ObjectTool)selection.toArray()[0];
-               ObjectToolDetails details = session.getObjectToolDetails(objTool.getId());
-               details.setId(toolId);
-               details.setName(dlg.getObjectName());
-               session.modifyObjectTool(details);
-            }
+      final ObjectTool currentTool = (ObjectTool)selection.getFirstElement();
 
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().ObjectToolsEditor_CloneError;
-            }
-         }.start();
-      }
+      final InputDialog dlg = new InputDialog(getSite().getShell(), "Clone Object Tool", "Enter name for cloned object tool", currentTool.getName() + "2", new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            return newText.isBlank() ? "Name should not be blank" : null;
+         }
+      });
+      if (dlg.open() != Window.OK)
+         return;
+
+      new ConsoleJob(Messages.get().ObjectToolsEditor_CloneObjectTool, this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final long toolId = session.generateObjectToolId();
+            ObjectToolDetails details = session.getObjectToolDetails(currentTool.getId());
+            details.setId(toolId);
+            details.setName(dlg.getValue());
+            session.modifyObjectTool(details);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ObjectToolsEditor_CloneError;
+         }
+      }.start();
    }
 
    /**

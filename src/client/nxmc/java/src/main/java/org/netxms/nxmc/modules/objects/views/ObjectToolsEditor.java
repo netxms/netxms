@@ -28,6 +28,8 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.IInputValidator;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -55,7 +57,6 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNewToolDialog;
-import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
 import org.netxms.nxmc.modules.objects.propertypages.ObjectToolsAccessControl;
 import org.netxms.nxmc.modules.objects.propertypages.ObjectToolsColumns;
 import org.netxms.nxmc.modules.objects.propertypages.ObjectToolsFilterPropertyPage;
@@ -500,11 +501,19 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
     */
    private void cloneTool()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty())
+      final IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
          return;
 
-      final CreateObjectDialog dlg = new CreateObjectDialog(getWindow().getShell(), i18n.tr("Object tool"));
+      final ObjectTool currentTool = (ObjectTool)selection.getFirstElement();
+
+      final InputDialog dlg = new InputDialog(getWindow().getShell(), "Clone Object Tool", "Enter name for cloned object tool", currentTool.getName() + "2", new IInputValidator() {
+         @Override
+         public String isValid(String newText)
+         {
+            return newText.isBlank() ? "Name should not be blank" : null;
+         }
+      });
       if (dlg.open() != Window.OK)
          return;
 
@@ -513,10 +522,9 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final long toolId = session.generateObjectToolId();
-            ObjectTool objTool = (ObjectTool)selection.toArray()[0];
-            ObjectToolDetails details = session.getObjectToolDetails(objTool.getId());
+            ObjectToolDetails details = session.getObjectToolDetails(currentTool.getId());
             details.setId(toolId);
-            details.setName(dlg.getObjectName());
+            details.setName(dlg.getValue());
             session.modifyObjectTool(details);
          }
 
