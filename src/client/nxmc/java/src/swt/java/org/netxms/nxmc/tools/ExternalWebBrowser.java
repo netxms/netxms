@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.URL;
 import org.eclipse.jface.util.Util;
 import org.eclipse.swt.program.Program;
+import org.eclipse.swt.widgets.Display;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,5 +106,17 @@ public class ExternalWebBrowser
          }
       }
       return sb.toString();
+   }
+
+   /**
+    * Get local address that can be used for connecting to this client. It is always 127.0.0.1 for desktop client but can be
+    * different for web client.
+    * 
+    * @param display current display
+    * @return local address that can be used for connecting to this client
+    */
+   public static String getLocalAddress(Display display)
+   {
+      return "127.0.0.1";
    }
 }

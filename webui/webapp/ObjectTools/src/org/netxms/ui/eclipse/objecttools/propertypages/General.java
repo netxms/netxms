@@ -79,7 +79,7 @@ public class General extends PreferencePage
 	private Button radioIndexValue;
 	private Label iconLabel;
 	private Image icon;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -160,6 +160,7 @@ public class General extends PreferencePage
 				break;
 			case ObjectTool.TYPE_URL:
 				textData.setLabel(Messages.get().General_URL);
+            createTCPTunnelGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_FILE_DOWNLOAD:
 			   String[] parameters = objectTool.getData().split("\u007F"); //$NON-NLS-1$
@@ -433,7 +434,7 @@ public class General extends PreferencePage
          }
       });
 
-      remotePort = new Spinner(tcpTunnelGroup, SWT.NONE);
+      remotePort = new Spinner(tcpTunnelGroup, SWT.BORDER);
       remotePort.setMinimum(1);
       remotePort.setMaximum(65535);
       remotePort.setSelection(objectTool.getRemotePort());

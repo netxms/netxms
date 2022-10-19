@@ -20,23 +20,24 @@ package org.netxms.nxmc.modules.objects.widgets;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 
 /**
- * Empty view
+ * Empty command executor for code compatibility with desktop version.
  */
-@SuppressWarnings("serial")
 public class LocalCommandExecutor extends AbstractObjectToolExecutor
 {
-
-   public LocalCommandExecutor(Composite parent, ObjectContext objectContext, ActionSet actions, String string)
+   public LocalCommandExecutor(Composite resultArea, ObjectContext objectContext, ActionSet actionSet, ObjectTool tool, String command)
    {
-      super(parent, objectContext, actions);
+      super(resultArea, objectContext, actionSet);
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
+    */
    @Override
    protected void executeInternal(Display display) throws Exception
    {
    }
-
 }

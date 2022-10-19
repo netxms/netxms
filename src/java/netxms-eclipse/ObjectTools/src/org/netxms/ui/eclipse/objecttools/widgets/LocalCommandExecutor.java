@@ -27,7 +27,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.TcpProxy;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -108,10 +107,10 @@ public class LocalCommandExecutor extends AbstractObjectToolExecutor
       String commandLine;
       if ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0)
       {
-         TcpProxy tcpProxy = session.setupTcpProxy(objectContext.object.getObjectId(), tool.getRemotePort());
-         tcpPortForwarder = new TcpPortForwarder(tcpProxy);
-         commandLine = command.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+         tcpPortForwarder = new TcpPortForwarder(session, objectContext.object.getObjectId(), tool.getRemotePort(), 0);
+         tcpPortForwarder.setConsoleOutputStream(out);
          tcpPortForwarder.run();
+         commandLine = command.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
       }
       else
       {

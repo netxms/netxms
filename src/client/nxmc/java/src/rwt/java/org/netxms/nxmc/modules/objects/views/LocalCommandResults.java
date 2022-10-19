@@ -24,19 +24,20 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 
 /**
- * Empty view
+ * Empty view placeholder for code compatibility with desktop version
  */
-public class LocalCommandResults extends AbstractCommandResults
+public class LocalCommandResults extends AbstractCommandResultView
 {
-
    public LocalCommandResults(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
       super(node, tool, inputValues, maskedFields);
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.AbstractCommandResultView#execute()
+    */
    @Override
    protected void execute()
    {
    }
-
 }

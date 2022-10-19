@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objecttools.api;
 
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -47,6 +49,7 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.InputFieldEntryDialog;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.objecttools.TcpPortForwarder;
 import org.netxms.ui.eclipse.objecttools.dialogs.ToolExecutionStatusDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.MultiNodeCommandExecutor;
@@ -729,7 +732,7 @@ public final class ObjectToolExecutor
     */
    private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
       
       final String fileName = parameters[0];
@@ -803,8 +806,37 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void openURL(final ObjectContext node, final ObjectTool tool, String url)
+   private static void openURL(final ObjectContext node, final ObjectTool tool, final String url)
    {
-      ExternalWebBrowser.open(url);
+      if (node.isNode() && ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0))
+      {
+         final NXCSession session = ConsoleSharedData.getSession();
+         final String requestURL = RWT.getRequest().getRequestURL().toString();
+         ConsoleJob job = new ConsoleJob("Setup TCP port forwarding", null, Activator.PLUGIN_ID) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.object.getObjectId(), tool.getRemotePort(), 600000); // Close underlying proxy after 10 minutes of inactivity
+               tcpPortForwarder.setDisplay(getDisplay());
+               tcpPortForwarder.run();
+               final String realUrl = url.replace("${local-address}", new URL(requestURL).getHost()).replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+               runInUIThread(() -> {
+                  ExternalWebBrowser.open(realUrl);
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Cannot setup TCP port forwarding";
+            }
+         };
+         job.setUser(false);
+         job.start();
+      }
+      else
+      {
+         ExternalWebBrowser.open(url);
+      }
    }
 }

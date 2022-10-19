@@ -28,7 +28,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.netxms.client.TcpProxy;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
@@ -186,10 +185,10 @@ public class LocalCommandResults extends AbstractCommandResultView
             String commandLine;
             if (((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0) && object.isNode())
             {
-               TcpProxy tcpProxy = session.setupTcpProxy(object.object.getObjectId(), tool.getRemotePort());
-               tcpPortForwarder = new TcpPortForwarder(tcpProxy);
-               commandLine = executionString.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+               tcpPortForwarder = new TcpPortForwarder(session, object.object.getObjectId(), tool.getRemotePort(), 0);
+               tcpPortForwarder.setConsoleOutputStream(out);
                tcpPortForwarder.run();
+               commandLine = executionString.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
             }
             else
             {

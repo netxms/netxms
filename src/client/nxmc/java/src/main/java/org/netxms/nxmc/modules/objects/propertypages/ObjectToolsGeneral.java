@@ -84,7 +84,7 @@ public class ObjectToolsGeneral extends PropertyPage
 	private Button radioIndexValue;
 	private Label iconLabel;
 	private Image icon;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -165,6 +165,7 @@ public class ObjectToolsGeneral extends PropertyPage
 				break;
 			case ObjectTool.TYPE_URL:
 				textData.setLabel(i18n.tr("URL"));
+            createTCPTunnelGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_FILE_DOWNLOAD:
 			   String[] parameters = objectTool.getData().split("\u007F"); //$NON-NLS-1$
@@ -438,7 +439,7 @@ public class ObjectToolsGeneral extends PropertyPage
          }
       });
 
-      remotePort = new Spinner(tcpTunnelGroup, SWT.NONE);
+      remotePort = new Spinner(tcpTunnelGroup, SWT.BORDER);
       remotePort.setMinimum(1);
       remotePort.setMaximum(65535);
       remotePort.setSelection(objectTool.getRemotePort());

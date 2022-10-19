@@ -70,14 +70,6 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
 
       app.addStyleSheet("org.netxms.themes.light", "/themes/light.css");
 
-      app.addResource("login-background", new ResourceLoader() {
-         @Override
-         public InputStream getResourceAsStream(String resourceName) throws IOException
-         {
-            return getClass().getResourceAsStream("/themes/light.resources/login-background.jpg");
-         }
-      });
-
       Map<String, String> properties = new HashMap<>();
       properties.put(WebClient.THEME_ID, "org.netxms.themes.light");
       app.addEntryPoint("/nxmc-light.app", Startup.class, properties);

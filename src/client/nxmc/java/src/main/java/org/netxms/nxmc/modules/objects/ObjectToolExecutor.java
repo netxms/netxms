@@ -33,7 +33,6 @@ import org.netxms.client.AgentFileData;
 import org.netxms.client.InputField;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
-import org.netxms.client.TcpProxy;
 import org.netxms.client.constants.InputFieldType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objecttools.ObjectTool;
@@ -376,7 +375,7 @@ public final class ObjectToolExecutor
             executeTableTool(node, tool, viewPlacement);
             break;
          case ObjectTool.TYPE_URL:
-            openURL(expandedToolData);
+            openURL(node, tool, expandedToolData, viewPlacement);
             break;
       }
    }
@@ -680,11 +679,11 @@ public final class ObjectToolExecutor
                   String commandLine = command;
                   if (node.isNode() && ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0))
                   {
-                     NXCSession session = Registry.getSession();
-                     TcpProxy tcpProxy = session.setupTcpProxy(node.object.getObjectId(), tool.getRemotePort());
-                     tcpPortForwarder = new TcpPortForwarder(tcpProxy);
-                     commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+                     tcpPortForwarder = new TcpPortForwarder(Registry.getSession(), node.object.getObjectId(), tool.getRemotePort(), 0);
+                     tcpPortForwarder.setDisplay(getDisplay());
+                     tcpPortForwarder.setMessageArea(viewPlacement.getMessageAreaHolder());
                      tcpPortForwarder.run();
+                     commandLine = commandLine.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
                   }
 
                   Process process;
@@ -814,8 +813,37 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void openURL(String url)
+   private static void openURL(final ObjectContext node, final ObjectTool tool, final String url, ViewPlacement viewPlacement)
    {
-      ExternalWebBrowser.open(url);
+      if (node.isNode() && ((tool.getFlags() & ObjectTool.SETUP_TCP_TUNNEL) != 0))
+      {
+         final NXCSession session = Registry.getSession();
+         Job job = new Job(i18n.tr("Setup TCP port forwarding"), null, viewPlacement.getMessageAreaHolder()) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               TcpPortForwarder tcpPortForwarder = new TcpPortForwarder(session, node.object.getObjectId(), tool.getRemotePort(), 600000); // Close underlying proxy after 10 minutes of inactivity
+               tcpPortForwarder.setDisplay(getDisplay());
+               tcpPortForwarder.setMessageArea(viewPlacement.getMessageAreaHolder());
+               tcpPortForwarder.run();
+               final String realUrl = url.replace("${local-address}", ExternalWebBrowser.getLocalAddress(getDisplay())).replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+               runInUIThread(() -> {
+                  ExternalWebBrowser.open(realUrl);
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot setup TCP port forwarding");
+            }
+         };
+         job.setUser(false);
+         job.start();
+      }
+      else
+      {
+         ExternalWebBrowser.open(url);
+      }
    }
 }

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects;
+package org.netxms.ui.eclipse.objecttools;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,11 +26,11 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TcpProxy;
-import org.netxms.nxmc.base.widgets.MessageArea;
-import org.netxms.nxmc.base.widgets.MessageAreaHolder;
-import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class TcpPortForwarder
    private static final Logger logger = LoggerFactory.getLogger(TcpPortForwarder.class);
 
    private Display display = null;
-   private MessageAreaHolder messageArea = null;
+   private Shell parentShell = null;
    private NXCSession session;
    private long nodeId;
    private int remotePort;
@@ -111,10 +111,10 @@ public class TcpPortForwarder
                      {
                         consoleOutputStream.write("\n*** " + msg + " ***\n");
                      }
-                     else if ((display != null) && (messageArea != null))
+                     else if (display != null)
                      {
                         display.asyncExec(() -> {
-                           messageArea.addMessage(MessageArea.ERROR, msg);
+                           MessageDialogHelper.openError(parentShell, "TCP Port Forwarding Error", msg);
                         });
                      }
 
@@ -213,19 +213,19 @@ public class TcpPortForwarder
    }
 
    /**
-    * @return the messageArea
+    * @return the parentShell
     */
-   public MessageAreaHolder getMessageArea()
+   public Shell getParentShell()
    {
-      return messageArea;
+      return parentShell;
    }
 
    /**
-    * @param messageArea the messageArea to set
+    * @param parentShell the parentShell to set
     */
-   public void setMessageArea(MessageAreaHolder messageArea)
+   public void setParentShell(Shell parentShell)
    {
-      this.messageArea = messageArea;
+      this.parentShell = parentShell;
    }
 
    /**

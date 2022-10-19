@@ -23,7 +23,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.console.IOConsoleOutputStream;
+import org.netxms.client.NXCSession;
 import org.netxms.client.TcpProxy;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,29 +41,32 @@ public class TcpPortForwarder
 {
    private static final Logger logger = LoggerFactory.getLogger(TcpPortForwarder.class);
 
-   private TcpProxy proxy;
+   private Display display = null;
+   private Shell parentShell = null;
+   private NXCSession session;
+   private long nodeId;
+   private int remotePort;
    private ServerSocket listener;
    private int sessionId = 0;
+   private Map<Integer, Session> sessions = new HashMap<>();
+   private IOConsoleOutputStream consoleOutputStream = null;
 
    /**
-    * Create new port forwarder instance. Became owner of TCP proxy and will call <code>TCPProxy.close()</code> as needed (including
-    * listener setup error).
+    * Create new port forwarder instance.
     *
-    * @param proxy underlying TCP proxy object
+    * @param session client session
+    * @param nodeId target node ID
+    * @param remotePort port number on target node
+    * @param listenerTimeout listener timeout (0 for infinite)
     * @throws IOException if cannot setup local TCP port listener
     */
-   public TcpPortForwarder(TcpProxy proxy) throws IOException
+   public TcpPortForwarder(NXCSession session, long nodeId, int remotePort, int listenerTimeout) throws IOException
    {
-      this.proxy = proxy;
-      try
-      {
-         listener = new ServerSocket(0);
-      }
-      catch(IOException e)
-      {
-         proxy.close();
-         throw e;
-      }
+      this.session = session;
+      this.nodeId = nodeId;
+      this.remotePort = remotePort;
+      listener = new ServerSocket(0);
+      listener.setSoTimeout(listenerTimeout);
    }
 
    /**
@@ -83,12 +93,32 @@ public class TcpPortForwarder
                   final Socket socket = listener.accept();
                   try
                   {
-                     new Session(++sessionId, socket);
+                     final TcpProxy proxy = session.setupTcpProxy(nodeId, remotePort);
+                     Session session = new Session(++sessionId, socket, proxy);
+                     synchronized(sessions)
+                     {
+                        sessions.put(session.getId(), session);
+                     }
                   }
                   catch(Exception e)
                   {
-                     socket.close();
                      logger.error("TCP port forwarder session setup error", e);
+
+                     String emsg = e.getLocalizedMessage();
+                     String msg = String.format("TCP port forwarder session setup error (%s)", (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
+
+                     if (consoleOutputStream != null)
+                     {
+                        consoleOutputStream.write("\n*** " + msg + " ***\n");
+                     }
+                     else if (display != null)
+                     {
+                        display.asyncExec(() -> {
+                           MessageDialogHelper.openError(parentShell, "TCP Port Forwarding Error", msg);
+                        });
+                     }
+
+                     socket.close();
                   }
                }
             }
@@ -98,7 +128,6 @@ public class TcpPortForwarder
             }
             finally
             {
-               proxy.close();
                try
                {
                   listener.close();
@@ -119,7 +148,7 @@ public class TcpPortForwarder
    }
 
    /**
-    * Close port forwarder. Will also close underlying TCP proxy object.
+    * Close port forwarder. Will also close all underlying TCP proxy objects.
     */
    public void close()
    {
@@ -131,6 +160,13 @@ public class TcpPortForwarder
       catch(Exception e)
       {
          logger.debug("Error closing listening socket", e);
+      }
+
+      synchronized(sessions)
+      {
+         for(Session s : sessions.values())
+            s.close();
+         sessions.clear();
       }
    }
 
@@ -145,17 +181,76 @@ public class TcpPortForwarder
    }
 
    /**
+    * @return the consoleOutputStream
+    */
+   public IOConsoleOutputStream getConsoleOutputStream()
+   {
+      return consoleOutputStream;
+   }
+
+   /**
+    * @param consoleOutputStream the consoleOutputStream to set
+    */
+   public void setConsoleOutputStream(IOConsoleOutputStream consoleOutputStream)
+   {
+      this.consoleOutputStream = consoleOutputStream;
+   }
+
+   /**
+    * @return the display
+    */
+   public Display getDisplay()
+   {
+      return display;
+   }
+
+   /**
+    * @param display the display to set
+    */
+   public void setDisplay(Display display)
+   {
+      this.display = display;
+   }
+
+   /**
+    * @return the parentShell
+    */
+   public Shell getParentShell()
+   {
+      return parentShell;
+   }
+
+   /**
+    * @param parentShell the parentShell to set
+    */
+   public void setParentShell(Shell parentShell)
+   {
+      this.parentShell = parentShell;
+   }
+
+   /**
     * Port forwarding session
     */
    private class Session
    {
+      private int id;
       private Socket socket;
+      private TcpProxy proxy;
       private Thread socketReaderThread;
       private Thread proxyReaderThread;
 
-      public Session(int id, Socket socket)
+      /**
+       * Create new session.
+       *
+       * @param id session ID
+       * @param socket local socket
+       * @param proxy TCP proxy session
+       */
+      public Session(int id, Socket socket, TcpProxy proxy)
       {
+         this.id = id;
          this.socket = socket;
+         this.proxy = proxy;
 
          socketReaderThread = new Thread(new Runnable() {
             @Override
@@ -181,6 +276,39 @@ public class TcpPortForwarder
          proxyReaderThread.start();
       }
 
+      /**
+       * Close session
+       */
+      public void close()
+      {
+         try
+         {
+            socket.shutdownInput();
+         }
+         catch(IOException e)
+         {
+         }
+
+         try
+         {
+            socket.shutdownOutput();
+         }
+         catch(IOException e)
+         {
+         }
+      }
+
+      /**
+       * @return the id
+       */
+      public int getId()
+      {
+         return id;
+      }
+
+      /**
+       * Local socket reader thread
+       */
       private void socketReader()
       {
          try
@@ -224,10 +352,18 @@ public class TcpPortForwarder
          }
          logger.info("Socket reader terminated");
 
+         synchronized(sessions)
+         {
+            sessions.remove(id);
+         }
+
          socket = null;
          proxy = null;
       }
 
+      /**
+       * Proxy reader thread
+       */
       private void proxyReader()
       {
          try

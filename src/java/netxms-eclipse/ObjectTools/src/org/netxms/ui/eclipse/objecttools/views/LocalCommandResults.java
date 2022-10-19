@@ -30,7 +30,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.handlers.IHandlerService;
-import org.netxms.client.TcpProxy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -177,10 +176,10 @@ public class LocalCommandResults extends AbstractCommandResults
             String commandLine;
             if (remotePort > 0)
             {
-               TcpProxy tcpProxy = session.setupTcpProxy(nodeId, remotePort);
-               tcpPortForwarder = new TcpPortForwarder(tcpProxy);
-               commandLine = command.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
+               tcpPortForwarder = new TcpPortForwarder(session, nodeId, remotePort, 0);
+               tcpPortForwarder.setConsoleOutputStream(out);
                tcpPortForwarder.run();
+               commandLine = command.replace("${local-port}", Integer.toString(tcpPortForwarder.getLocalPort()));
             }
             else
             {

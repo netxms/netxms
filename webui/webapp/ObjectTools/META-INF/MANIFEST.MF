@@ -22,4 +22,5 @@ Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objecttools.api,
  org.netxms.ui.eclipse.objecttools.propertypages,
  org.netxms.ui.eclipse.objecttools.widgets
+Import-Package: javax.servlet.http;version="4.0.0"
 Automatic-Module-Name: org.netxms.ui.eclipse.objecttools
