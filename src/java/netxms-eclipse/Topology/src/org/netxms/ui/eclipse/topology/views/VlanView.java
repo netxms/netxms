@@ -214,7 +214,7 @@ public class VlanView extends ViewPart
 			}
 		});
 
-      splitter.setWeights(60, 40);
+      splitter.setWeights(new int[] { 60, 40 });
 
 		createActions();
 		contributeToActionBars();
