@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -196,7 +197,7 @@ public class LocalCommandResults extends AbstractCommandResultView
             }
 
             Process process;
-            if (Platform.getOS().equals(Platform.OS_WIN32))
+            if (SystemUtils.IS_OS_WINDOWS)
             {
                commandLine = "CMD.EXE /C " + commandLine;
                process = Runtime.getRuntime().exec(commandLine);
@@ -210,8 +211,6 @@ public class LocalCommandResults extends AbstractCommandResultView
 				try
 				{
 					byte[] data = new byte[16384];
-		         String os = System.getProperty("os.name").toLowerCase();
-					boolean isWindows =  os.contains("windows");
 					while(true)
 					{
 						int bytes = in.read(data);
@@ -223,7 +222,7 @@ public class LocalCommandResults extends AbstractCommandResultView
 						// Problem is that on Windows XP many system commands
 						// (like ping, tracert, etc.) generates output with lines
 						// ending in 0x0D 0x0D 0x0A
-						if (isWindows)
+                  if (SystemUtils.IS_OS_WINDOWS)
 							out.write(s.replace("\r\r\n", " \r\n")); //$NON-NLS-1$ //$NON-NLS-2$
 						else
 							out.write(s);
