@@ -14,18 +14,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-EXTRA_DIST = netxmsd.in nxagentd.in
+EXTRA_DIST = netxms-agent.service.in netxms-server.service.in
 
 REPLACE_CMD = sed "s,~BINDIR~,$(bindir),g" < $@.in | \
-    sed "s,~LIBDIR~,$(libdir),g" > $@.service
+    sed "s,~LIBDIR~,$(libdir),g" > $@
 
-all: netxmsd nxagentd
+all: netxms-server.service netxms-agent.service
 
-netxmsd: netxmsd.in
+netxms-server.service: netxms-server.service.in
 	$(REPLACE_CMD)
 
-nxagentd: nxagentd.in
+netxms-agent.service: netxms-agent.service.in
 	$(REPLACE_CMD)
 
 clean-local:
-	rm -f netxmsd.service nxagentd.service
+	rm -f netxms-agent.service netxms-server.service
