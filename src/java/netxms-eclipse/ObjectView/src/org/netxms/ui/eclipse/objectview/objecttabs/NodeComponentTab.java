@@ -154,12 +154,12 @@ public abstract class NodeComponentTab extends ObjectTab
       final Composite label = new Composite(mainArea, SWT.NONE);
       label.setLayout(new GridLayout());
       label.setBackground(label.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-      
+
       Label labelText = new Label(label, SWT.CENTER);
       labelText.setText("Loading...");
       labelText.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));      
       labelText.setBackground(label.getBackground());
-      
+
       label.moveAbove(null);
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -168,7 +168,7 @@ public abstract class NodeComponentTab extends ObjectTab
       fd.right = new FormAttachment(100, 0);
       label.setLayoutData(fd);
       mainArea.layout();
-      
+
       ConsoleJob job = new ConsoleJob("Synchronize node components", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception

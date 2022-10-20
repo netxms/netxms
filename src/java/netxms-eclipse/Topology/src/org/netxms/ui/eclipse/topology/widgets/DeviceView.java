@@ -110,7 +110,7 @@ public class DeviceView extends DashboardComposite
 		}
 		slots.clear();
 		ports.clear();
-		
+
 		if (headerVisible)
 		{
 		   if (header == null)
@@ -132,7 +132,7 @@ public class DeviceView extends DashboardComposite
 		   }
 		   header.setText(object.getObjectName());
 		}
-		
+
 		List<Interface> interfaces = new ArrayList<Interface>();
 		for(AbstractObject o: object.getAllChildren(AbstractObject.OBJECT_INTERFACE))
 		{
@@ -206,7 +206,7 @@ public class DeviceView extends DashboardComposite
 	{
 		this.portStatusVisible = portStatusVisible;
 	}
-	
+
 	/**
     * @return the headerVisible
     */
@@ -260,7 +260,7 @@ public class DeviceView extends DashboardComposite
 		for(SlotView sv : slots.values())
 			sv.redraw();
 	}
-	
+
 	/**
 	 * Clear port highlight.
 	 * 
@@ -276,9 +276,9 @@ public class DeviceView extends DashboardComposite
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setMenu(org.eclipse.swt.widgets.Menu)
-	 */
+   /**
+    * @see org.eclipse.swt.widgets.Control#setMenu(org.eclipse.swt.widgets.Menu)
+    */
 	@Override
 	public void setMenu(Menu menu)
 	{

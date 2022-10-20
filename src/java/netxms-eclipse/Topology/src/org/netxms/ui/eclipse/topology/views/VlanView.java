@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,15 +33,16 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
@@ -73,12 +74,12 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class VlanView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.VlanView"; //$NON-NLS-1$
-	
+
 	public static final int COLUMN_VLAN_ID = 0;
 	public static final int COLUMN_NAME = 1;
 	public static final int COLUMN_PORTS = 2;
    public static final int COLUMN_INTERFACES = 3;
-	
+
 	private long nodeId;
 	private List<VlanInfo> vlans = new ArrayList<VlanInfo>(0);
 	private NXCSession session;
@@ -86,15 +87,15 @@ public class VlanView extends ViewPart
 	private ScrolledComposite scroller;
 	private DeviceView deviceView;
 	private boolean refreshOnStartup = false;
-	
+
 	private Action actionRefresh; 
 	private Action actionShowVlanMap;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -105,9 +106,9 @@ public class VlanView extends ViewPart
 		setPartName(String.format(Messages.get().VlanView_PartName, (object != null) ? object.getObjectName() : "<" + site.getSecondaryId() + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
+    */
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
@@ -116,36 +117,36 @@ public class VlanView extends ViewPart
 			refreshOnStartup = true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		GridLayout layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		parent.setLayout(layout);
-		
+      SashForm splitter = new SashForm(parent, SWT.VERTICAL);
+      splitter.setSashWidth(3);
+
+      Composite vlanListArea = new Composite(splitter, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      vlanListArea.setLayout(layout);
+
 		final String[] names = { Messages.get().VlanView_ColumnID, Messages.get().VlanView_ColumnName, Messages.get().VlanView_ColumnPorts, "Interfaces" };
 		final int[] widths = { 80, 180, 400, 400 };
-		vlanList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
+      vlanList = new SortableTableViewer(vlanListArea, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		vlanList.setContentProvider(new ArrayContentProvider());
 		final VlanLabelProvider labelProvider = new VlanLabelProvider();
 		vlanList.setLabelProvider(labelProvider);
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.verticalAlignment = SWT.FILL;
-		gd.grabExcessVerticalSpace = true;
-		vlanList.getTable().setLayoutData(gd);
+      vlanList.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		vlanList.setInput(vlans.toArray());
 		vlanList.addSelectionChangedListener(new ISelectionChangedListener() {
 		   @Override
 		   public void selectionChanged(SelectionChangedEvent event)
 		   {
-		      IStructuredSelection selection = (IStructuredSelection)vlanList.getSelection();
-		      
+            IStructuredSelection selection = vlanList.getStructuredSelection();
+
 		      VlanInfo vlan = (VlanInfo)selection.getFirstElement();
 		      if (vlan != null)
 		      {
@@ -164,7 +165,7 @@ public class VlanView extends ViewPart
             }
 		   }
 		});
-		
+
 		WidgetHelper.restoreTableViewerSettings(vlanList, Activator.getDefault().getDialogSettings(), "VlanList");
 		vlanList.getTable().addDisposeListener(new DisposeListener() {
          @Override
@@ -174,19 +175,20 @@ public class VlanView extends ViewPart
          }
       });
 
-		Composite deviceViewArea = new Composite(parent, SWT.NONE);
-		deviceViewArea.setLayout(new FillLayout());
-		gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		deviceViewArea.setLayoutData(gd);
-		
+      new Label(vlanListArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
+      Composite deviceViewArea = new Composite(splitter, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      deviceViewArea.setLayout(layout);
+
+      new Label(deviceViewArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
 		scroller = new ScrolledComposite(deviceViewArea, SWT.H_SCROLL | SWT.V_SCROLL);
+      scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		deviceView = new DeviceView(scroller, SWT.NONE);
-		gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		deviceView.setLayoutData(gd);
 		deviceView.setPortStatusVisible(false);
 		deviceView.setNodeId(nodeId);
 		deviceView.addSelectionListener(new PortSelectionListener() {
@@ -200,7 +202,7 @@ public class VlanView extends ViewPart
       });
 
 		scroller.setContent(deviceView);
-		scroller.setBackground(deviceView.getBackground());
+      scroller.setBackground(deviceView.getBackground());
 		scroller.setExpandVertical(true);
 		scroller.setExpandHorizontal(true);
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
@@ -211,11 +213,13 @@ public class VlanView extends ViewPart
 				scroller.setMinSize(deviceView.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 			}
 		});
-		
+
+      splitter.setWeights(60, 40);
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
+
 		if (refreshOnStartup)
 			refreshVlanList();
 	}
@@ -313,9 +317,9 @@ public class VlanView extends ViewPart
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -336,7 +340,7 @@ public class VlanView extends ViewPart
 	 */
 	private void showVlanMap()
 	{
-		IStructuredSelection selection = (IStructuredSelection)vlanList.getSelection();
+      IStructuredSelection selection = vlanList.getStructuredSelection();
 		IWorkbenchPage page = getSite().getWorkbenchWindow().getActivePage();
 		for(final Object o : selection.toList())
 		{
@@ -351,23 +355,31 @@ public class VlanView extends ViewPart
 			}
 		}
 	}
-	
+
 	/**
 	 * Reload list of VLANs from server and update table view
 	 */
 	private void refreshVlanList()
 	{
+      final boolean syncChildren = !ConsoleSharedData.getSettings().getBoolean("ObjectsFullSync") && !session.areChildrenSynchronized(nodeId);
 		new ConsoleJob(Messages.get().VlanView_JobTitle, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+            if (syncChildren)
+            {
+               AbstractObject nodeObject = session.findObjectById(nodeId);
+               if (nodeObject != null)
+               {
+                  session.syncChildren(nodeObject);
+                  runInUIThread(() -> {
+                     deviceView.refresh();
+                  });
+               }
+            }
 				final List<VlanInfo> vlans = session.getVlans(nodeId);
-				getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						setVlans(vlans);
-					}
+            runInUIThread(() -> {
+               setVlans(vlans);
 				});
 			}
 
