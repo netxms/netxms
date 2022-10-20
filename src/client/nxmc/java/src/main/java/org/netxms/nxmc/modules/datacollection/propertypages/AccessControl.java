@@ -47,7 +47,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.AccessListComparator;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.AccessListLabelProvider;
-import org.netxms.nxmc.modules.users.dialogs.SelectUserDialog;
+import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -225,7 +225,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 	 */
 	public void addUser()
 	{
-		SelectUserDialog dlg = new SelectUserDialog(getShell(), AbstractUserObject.class);
+		UserSelectionDialog dlg = new UserSelectionDialog(getShell(), AbstractUserObject.class);
 		if (dlg.open() == Window.OK)
 		{
 			for(AbstractUserObject o : dlg.getSelection())

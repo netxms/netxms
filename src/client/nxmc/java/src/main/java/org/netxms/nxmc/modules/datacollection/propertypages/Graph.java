@@ -49,7 +49,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.AccessListComparator;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.AccessListLabelProvider;
-import org.netxms.nxmc.modules.users.dialogs.SelectUserDialog;
+import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -178,7 +178,7 @@ public class Graph extends PreferencePage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(Graph.this.getShell(), AbstractUserObject.class);
+				UserSelectionDialog dlg = new UserSelectionDialog(Graph.this.getShell(), AbstractUserObject.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();

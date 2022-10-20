@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,14 +37,26 @@ public class ZoneSelector extends AbstractSelector
    private String emptySelectionName = i18n.tr("<none>");
 
    /**
+    * Create zone selector.
+    *
+    * @param parent parent composite
+    * @param style widget style
+    * @param options selector options
+    */
+   public ZoneSelector(Composite parent, int style, int options)
+   {
+      super(parent, style, options);
+      setText(emptySelectionName);
+   }
+
+   /**
     * @param parent
     * @param style
     * @param showClearButton
     */
    public ZoneSelector(Composite parent, int style, boolean showClearButton)
    {
-      super(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
-      setText(emptySelectionName);
+      this(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
    }
 
    /**

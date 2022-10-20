@@ -50,9 +50,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * User selection dialog
  */
-public class SelectUserDialog extends DialogWithFilter
+public class UserSelectionDialog extends DialogWithFilter
 {
-   private I18n i18n = LocalizationHelper.getI18n(SelectUserDialog.class);
+   private I18n i18n = LocalizationHelper.getI18n(UserSelectionDialog.class);
 	private TableViewer userList;
 	private NXCSession session;
 	private Class<? extends AbstractUserObject> classFilter;
@@ -62,7 +62,7 @@ public class SelectUserDialog extends DialogWithFilter
 	/**
 	 * @param parentShell
 	 */
-	public SelectUserDialog(Shell parentShell, Class<? extends AbstractUserObject> classFilter)
+	public UserSelectionDialog(Shell parentShell, Class<? extends AbstractUserObject> classFilter)
 	{
 		super(parentShell);
 		this.classFilter = classFilter;
@@ -118,7 +118,7 @@ public class SelectUserDialog extends DialogWithFilter
 			public void doubleClick(DoubleClickEvent event)
 			{
 			   if (getButton(IDialogConstants.OK_ID).isEnabled())
-			      SelectUserDialog.this.okPressed();
+			      UserSelectionDialog.this.okPressed();
 			}
       });
 

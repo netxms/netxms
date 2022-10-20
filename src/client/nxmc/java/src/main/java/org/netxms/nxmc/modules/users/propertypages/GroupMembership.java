@@ -46,7 +46,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.users.dialogs.SelectUserDialog;
+import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -125,7 +125,7 @@ public class GroupMembership extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(GroupMembership.this.getShell(), UserGroup.class);
+				UserSelectionDialog dlg = new UserSelectionDialog(GroupMembership.this.getShell(), UserGroup.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();

@@ -46,7 +46,7 @@ import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.editors.AlarmCategoryEditor;
-import org.netxms.nxmc.modules.users.dialogs.SelectUserDialog;
+import org.netxms.nxmc.modules.users.dialogs.UserSelectionDialog;
 import org.netxms.nxmc.modules.users.views.helpers.BaseUserLabelProvider;
 import org.netxms.nxmc.modules.users.views.helpers.UserComparator;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -120,7 +120,7 @@ public class AccessControl extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            SelectUserDialog dlg = new SelectUserDialog(AccessControl.this.getShell(), AbstractUserObject.class);
+            UserSelectionDialog dlg = new UserSelectionDialog(AccessControl.this.getShell(), AbstractUserObject.class);
             if (dlg.open() == Window.OK)
             {
                AbstractUserObject[] selection = dlg.getSelection();

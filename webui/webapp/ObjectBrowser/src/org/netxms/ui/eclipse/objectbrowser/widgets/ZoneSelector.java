@@ -112,7 +112,7 @@ public class ZoneSelector extends AbstractSelector
       this.zoneUIN = zoneUIN;
       if (zoneUIN == -1)
       {
-         setText(emptySelectionName); //$NON-NLS-1$
+         setText(emptySelectionName);
       }
       else
       {

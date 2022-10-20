@@ -280,7 +280,7 @@ public class LogParserRuleEditor extends DashboardComposite
                return new Spinner(parent, style);
             }
          };
-         
+
          repeatCount = (Spinner)WidgetHelper.createLabeledControl(matcherRepeatConf, SWT.BORDER, factory, "Repeat count", WidgetHelper.DEFAULT_LAYOUT_DATA);
          repeatCount.setMinimum(0);
          repeatCount.setSelection(rule.getMatch().getRepeatCount());
@@ -291,12 +291,12 @@ public class LogParserRuleEditor extends DashboardComposite
                editor.fireModifyListeners();
             }
          });
-   
+
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          repeatCount.setLayoutData(gd);
-         
+
          Composite timeBackGroup = new Composite(matcherRepeatConf, SWT.NONE);
          layout = new GridLayout();
          layout.marginWidth = 0;
@@ -308,18 +308,18 @@ public class LogParserRuleEditor extends DashboardComposite
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          timeBackGroup.setLayoutData(gd);
-   
+
          timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Repeat interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
          timeRange.setSelection(rule.getMatch().getTimeRagne());
          timeRange.addModifyListener(listener);
-   
+
          timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "", WidgetHelper.DEFAULT_LAYOUT_DATA);
          timeUnits.add("Seconds");
          timeUnits.add("Minutes");
          timeUnits.add("Hours");
          timeUnits.select(rule.getMatch().getTimeUnit());
          timeUnits.addModifyListener(listener);
-   
+
          checkboxReset = new Button(matcherRepeatConf, SWT.CHECK);
          checkboxReset.setText("Reset repeat count");
          checkboxReset.addSelectionListener(new SelectionAdapter() {
@@ -334,7 +334,7 @@ public class LogParserRuleEditor extends DashboardComposite
 
       severity = new LabeledText(area, SWT.NONE);
       severity.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Severity : "Level");
-      severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
+      severity.setText(rule.getSeverityOrLevel(editor.getParserType() == LogParserType.SYSLOG));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -343,7 +343,7 @@ public class LogParserRuleEditor extends DashboardComposite
 
       facility = new LabeledText(area, SWT.NONE);
       facility.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_Facility : "Id");
-      facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
+      facility.setText(rule.getFacilityOrId(editor.getParserType() == LogParserType.SYSLOG));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -352,7 +352,7 @@ public class LogParserRuleEditor extends DashboardComposite
 
       tag = new LabeledText(area, SWT.NONE);
       tag.setLabel(editor.getParserType() == LogParserType.SYSLOG ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
-      tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserType.SYSLOG)); // $NON-NLS-1$
+      tag.setText(rule.getTagOrSource(editor.getParserType() == LogParserType.SYSLOG));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

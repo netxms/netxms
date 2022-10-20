@@ -51,12 +51,11 @@ public class ObjectSelector extends AbstractSelector
    /**
     * @param parent parent composite
     * @param style control style
-    * @param showClearButton true to show "Clear" button
-    * @param showContextButton true to show "Context" button
+    * @param options selector options
     */
-   public ObjectSelector(Composite parent, int style, boolean showClearButton, boolean showContextButton)
+   public ObjectSelector(Composite parent, int style, int options)
 	{
-      super(parent, style, (showClearButton ? SHOW_CLEAR_BUTTON : 0) | (showContextButton ? SHOW_CONTEXT_BUTTON : 0));
+      super(parent, style, options);
 		setText(emptySelectionName);
 		objectClassSet.add(Node.class);
       addDisposeListener(new DisposeListener() {
@@ -67,6 +66,17 @@ public class ObjectSelector extends AbstractSelector
          }
       });
 	}
+
+   /**
+    * @param parent parent composite
+    * @param style control style
+    * @param showClearButton true to show "Clear" button
+    * @param showContextButton true to show "Context" button
+    */
+   public ObjectSelector(Composite parent, int style, boolean showClearButton, boolean showContextButton)
+   {
+      this(parent, style, (showClearButton ? SHOW_CLEAR_BUTTON : 0) | (showContextButton ? SHOW_CONTEXT_BUTTON : 0));
+   }
 
    /**
     * @param parent parent composite
@@ -211,6 +221,7 @@ public class ObjectSelector extends AbstractSelector
    {
       objectClassSet = filterSet;
    }
+
 	/**
 	 * @return the emptySelectionName
 	 */

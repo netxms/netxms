@@ -393,7 +393,7 @@ public class LogParserRuleEditor extends DashboardComposite
 
       description = new LabeledText(area, SWT.NONE);
       description.setLabel(i18n.tr("Description"));
-      description.setText((rule.getDescription() != null) ? rule.getDescription() : ""); //$NON-NLS-1$
+      description.setText((rule.getDescription() != null) ? rule.getDescription() : "");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -452,7 +452,7 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       }
 
-      event = new EventSelector(area, SWT.NONE, true);
+      event = new EventSelector(area, SWT.NONE, EventSelector.USE_HYPERLINK | EventSelector.SHOW_CLEAR_BUTTON);
       event.setLabel(i18n.tr("Generate event"));
       event.setEventCode(eventCode);
       GridData gd = new GridData();
