@@ -185,7 +185,18 @@ public class LocalCommandResults extends AbstractCommandResults
             {
                commandLine = command;
             }
-            process = Runtime.getRuntime().exec(commandLine);
+
+            Process process;
+            if (Platform.getOS().equals(Platform.OS_WIN32))
+            {
+               commandLine = "CMD.EXE /C " + commandLine; //$NON-NLS-1$
+               process = Runtime.getRuntime().exec(commandLine);
+            }
+            else
+            {
+               process = Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", commandLine }); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+
 				InputStream in = process.getInputStream();
 				try
 				{
@@ -264,7 +275,8 @@ public class LocalCommandResults extends AbstractCommandResults
 		{
 			if (running)
 			{
-				process.destroy();
+			   if (process != null)
+			      process.destroy();
             if (tcpPortForwarder != null)
             {
                tcpPortForwarder.close();

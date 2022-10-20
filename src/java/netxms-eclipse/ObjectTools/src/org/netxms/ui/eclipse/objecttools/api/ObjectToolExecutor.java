@@ -759,8 +759,8 @@ public final class ObjectToolExecutor
                   Process process;
                   if (Platform.getOS().equals(Platform.OS_WIN32))
                   {
-                     commandLine = "CMD.EXE /C START \"NetXMS\" " + commandLine; //$NON-NLS-1$
-                     process = Runtime.getRuntime().exec(command);
+                     commandLine = "CMD.EXE /C START \"NetXMS\" " + ((tcpPortForwarder != null) ? "/WAIT " : "") + commandLine; //$NON-NLS-1$ //$NON-NLS-2$
+                     process = Runtime.getRuntime().exec(commandLine);
                   }
                   else
                   {

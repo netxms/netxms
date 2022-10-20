@@ -194,7 +194,18 @@ public class LocalCommandResults extends AbstractCommandResultView
             {
                commandLine = executionString;
             }
-            process = Runtime.getRuntime().exec(commandLine);
+
+            Process process;
+            if (Platform.getOS().equals(Platform.OS_WIN32))
+            {
+               commandLine = "CMD.EXE /C " + commandLine;
+               process = Runtime.getRuntime().exec(commandLine);
+            }
+            else
+            {
+               process = Runtime.getRuntime().exec(new String[] { "/bin/sh", "-c", commandLine });
+            }
+
 				InputStream in = process.getInputStream();
 				try
 				{
@@ -274,7 +285,8 @@ public class LocalCommandResults extends AbstractCommandResultView
 		{
 			if (running)
 			{
-				process.destroy();
+			   if (process != null)
+			      process.destroy();
             if (tcpPortForwarder != null)
             {
                tcpPortForwarder.close();
