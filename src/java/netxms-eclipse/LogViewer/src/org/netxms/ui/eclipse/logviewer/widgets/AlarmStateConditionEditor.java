@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,14 @@
 package org.netxms.ui.eclipse.logviewer.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.log.ColumnFilter;
-import org.netxms.ui.eclipse.logviewer.Activator;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.helpers.LogLabelProvider;
-import org.netxms.ui.eclipse.widgets.ImageCombo;
 
 /**
  * Condition editor for alarm state columns
@@ -39,58 +34,43 @@ import org.netxms.ui.eclipse.widgets.ImageCombo;
 public class AlarmStateConditionEditor extends ConditionEditor
 {
 	private static final String[] OPERATIONS = { Messages.get().AlarmStateConditionEditor_Is, Messages.get().AlarmStateConditionEditor_IsNot };
-	
-	private ImageCombo state;
-	
+
+   private Combo state;
+
 	/**
 	 * @param parent
 	 * @param toolkit
 	 * @param column
 	 * @param parentElement
 	 */
-	public AlarmStateConditionEditor(Composite parent, FormToolkit toolkit)
+   public AlarmStateConditionEditor(Composite parent)
 	{
-		super(parent, toolkit);
+      super(parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
+    */
 	@Override
 	protected String[] getOperations()
 	{
 		return OPERATIONS;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.netxms.client.log.ColumnFilter)
+    */
 	@Override
-	protected void createContent(Composite parent, ColumnFilter initialFilter)
+   protected void createContent(ColumnFilter initialFilter)
 	{
-		final Image[] stateImages = new Image[4];
-		stateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
-		stateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
-		stateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage(); //$NON-NLS-1$
-		stateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
-		
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				for(Image i : stateImages)
-					i.dispose();
-			}
-		});
-		
-		state = new ImageCombo(this, SWT.READ_ONLY | SWT.BORDER);
-		toolkit.adapt(state);
+      state = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
 		for(int i = Alarm.STATE_OUTSTANDING; i <= Alarm.STATE_TERMINATED; i++)
-			state.add(stateImages[i], LogLabelProvider.ALARM_STATE_TEXTS[i]);
+         state.add(LogLabelProvider.ALARM_STATE_TEXTS[i]);
 		state.select(0);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
 		state.setLayoutData(gd);
 
       if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.EQUALS))
@@ -100,9 +80,9 @@ public class AlarmStateConditionEditor extends ConditionEditor
       }
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
+    */
 	@Override
 	public ColumnFilter createFilter()
 	{

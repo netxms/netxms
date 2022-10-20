@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.log.ColumnFilter;
@@ -35,45 +34,42 @@ import org.netxms.ui.eclipse.logviewer.Messages;
 public class SeverityConditionEditor extends ConditionEditor
 {
 	private final String[] OPERATIONS = { Messages.get().SeverityConditionEditor_Is, Messages.get().SeverityConditionEditor_IsNot, Messages.get().SeverityConditionEditor_Below, Messages.get().SeverityConditionEditor_Above };
-	
-	private Combo severity;
-	
+
+   private Combo severity;
+
 	/**
 	 * @param parent
-	 * @param toolkit
-	 * @param column
-	 * @param parentElement
 	 */
-	public SeverityConditionEditor(Composite parent, FormToolkit toolkit)
+   public SeverityConditionEditor(Composite parent)
 	{
-		super(parent, toolkit);
+      super(parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
+    */
 	@Override
 	protected String[] getOperations()
 	{
 		return OPERATIONS;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.netxms.client.log.ColumnFilter)
+    */
 	@Override
-	protected void createContent(Composite parent, ColumnFilter initialFilter)
+   protected void createContent(ColumnFilter initialFilter)
 	{
-		severity = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
-		toolkit.adapt(severity);
+      severity = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
 		for(int i = Severity.NORMAL.getValue(); i <= Severity.CRITICAL.getValue(); i++)
-			severity.add(StatusDisplayInfo.getStatusText(i));
+         severity.add(StatusDisplayInfo.getStatusText(i));
 		severity.select(0);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
 		severity.setLayoutData(gd);
-		
+
 		if (initialFilter != null)
       {
          switch(initialFilter.getType())
@@ -94,9 +90,9 @@ public class SeverityConditionEditor extends ConditionEditor
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
+    */
 	@Override
 	public ColumnFilter createFilter()
 	{

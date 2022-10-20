@@ -35,24 +35,23 @@ public class EventSelector extends AbstractSelector
 {
 	private long eventCode = 0;
    private String eventName = null;
-	
+
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public EventSelector(Composite parent, int style)
+   public EventSelector(Composite parent, int style)
 	{
-		super(parent, style, 0);
-		setText(Messages.get().EventSelector_None);
+      this(parent, style, 0);
 	}
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public EventSelector(Composite parent, int style, boolean useHyperlink)
+   public EventSelector(Composite parent, int style, int options)
 	{
-		super(parent, style, (useHyperlink ? USE_HYPERLINK : 0) | SHOW_CLEAR_BUTTON);
+      super(parent, style, options);
 		setText(Messages.get().EventSelector_None);
 	}
 

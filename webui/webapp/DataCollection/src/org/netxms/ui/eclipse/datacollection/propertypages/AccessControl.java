@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ElementLabelComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.usermanager.dialogs.UserSelectionDialog;
 
 /**
  * "Access Control" property page
@@ -218,7 +218,7 @@ public class AccessControl extends AbstractDCIPropertyPage
 	 */
 	public void addUser()
 	{
-		SelectUserDialog dlg = new SelectUserDialog(getShell(), AbstractUserObject.class);
+		UserSelectionDialog dlg = new UserSelectionDialog(getShell(), AbstractUserObject.class);
 		if (dlg.open() == Window.OK)
 		{
 			for(AbstractUserObject o : dlg.getSelection())

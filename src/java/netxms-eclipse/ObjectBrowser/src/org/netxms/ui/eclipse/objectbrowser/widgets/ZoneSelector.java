@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,20 @@ public class ZoneSelector extends AbstractSelector
 {
    private int zoneUIN = -1;
    private String emptySelectionName = "<none>";
-   
+
+   /**
+    * Create zone selector.
+    *
+    * @param parent parent composite
+    * @param style widget style
+    * @param options selector options
+    */
+   public ZoneSelector(Composite parent, int style, int options)
+   {
+      super(parent, style, options);
+      setText(emptySelectionName);
+   }
+
    /**
     * @param parent
     * @param style
@@ -40,11 +53,10 @@ public class ZoneSelector extends AbstractSelector
     */
    public ZoneSelector(Composite parent, int style, boolean showClearButton)
    {
-      super(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
-      setText(emptySelectionName);
+      this(parent, style, showClearButton ? SHOW_CLEAR_BUTTON : 0);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
     */
    @Override
@@ -59,7 +71,7 @@ public class ZoneSelector extends AbstractSelector
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#clearButtonHandler()
     */
    @Override
@@ -108,7 +120,7 @@ public class ZoneSelector extends AbstractSelector
          setText((zone != null) ? zone.getObjectName() : ("<" + Long.toString(zoneUIN) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
       }
    }
-   
+
    /**
     * Set empty selection text
     * @param text to set

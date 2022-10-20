@@ -20,13 +20,10 @@ package org.netxms.ui.eclipse.logviewer.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.ColumnFilterType;
-import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.log.ColumnFilter;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.widgets.ImageCombo;
 
 /**
  * Condition editor for operation completion status columns
@@ -35,17 +32,14 @@ public class CompletionStatusConditionEditor extends ConditionEditor
 {
    private static final String[] OPERATIONS = { "IS", "IS NOT" };
 
-   private ImageCombo state;
+   private Combo state;
 
    /**
     * @param parent
-    * @param toolkit
-    * @param column
-    * @param parentElement
     */
-   public CompletionStatusConditionEditor(Composite parent, FormToolkit toolkit)
+   public CompletionStatusConditionEditor(Composite parent)
    {
-      super(parent, toolkit);
+      super(parent);
    }
 
    /**
@@ -58,19 +52,19 @@ public class CompletionStatusConditionEditor extends ConditionEditor
    }
 
    /**
-    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.netxms.client.log.ColumnFilter)
     */
    @Override
-   protected void createContent(Composite parent, ColumnFilter initialFilter)
+   protected void createContent(ColumnFilter initialFilter)
    {
-      state = new ImageCombo(this, SWT.READ_ONLY | SWT.BORDER);
-      toolkit.adapt(state);
-      state.add(StatusDisplayInfo.getStatusImage(ObjectStatus.MAJOR.getValue()), "Failure");
-      state.add(StatusDisplayInfo.getStatusImage(ObjectStatus.NORMAL.getValue()), "Success");
+      state = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
+      state.add("Failure");
+      state.add("Success");
       state.select(0);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
       state.setLayoutData(gd);
 
       if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.EQUALS))

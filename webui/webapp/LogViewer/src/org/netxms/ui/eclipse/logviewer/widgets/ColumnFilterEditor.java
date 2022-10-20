@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.log.ColumnFilter;
@@ -44,7 +43,6 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
  */
 public class ColumnFilterEditor extends DashboardComposite
 {
-	private FormToolkit toolkit;
 	private LogColumn column;
 	private FilterBuilder filterBuilder;
 	private List<ConditionEditor> conditions = new ArrayList<ConditionEditor>();
@@ -56,20 +54,18 @@ public class ColumnFilterEditor extends DashboardComposite
 	 * @param columnElement 
 	 * @param column 
 	 */
-	public ColumnFilterEditor(Composite parent, FormToolkit toolkit, LogColumn column, ColumnFilterSetOperation operation, final Runnable deleteHandler)
+   public ColumnFilterEditor(Composite parent, LogColumn column, ColumnFilterSetOperation operation, final Runnable deleteHandler)
 	{
 		super(parent, SWT.BORDER);
 
-		this.toolkit = toolkit;
 		this.column = column;
 		this.booleanOperation = operation;
 
-		toolkit.adapt(this);
-
 		GridLayout layout = new GridLayout();
 		setLayout(layout);
-		
-		final Composite header = toolkit.createComposite(this);
+
+      final Composite header = new Composite(this, SWT.NONE);
+      header.setBackground(getBackground());
 		layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
@@ -80,13 +76,16 @@ public class ColumnFilterEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		header.setLayoutData(gd);
 
-		final Label title = toolkit.createLabel(header, column.getDescription());
+      final Label title = new Label(header, SWT.NONE);
+      title.setText(column.getDescription());
+      title.setBackground(header.getBackground());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = false;
 		title.setLayoutData(gd);
 
-		final Composite buttons = toolkit.createComposite(header); 
+      final Composite buttons = new Composite(header, SWT.NONE);
+      buttons.setBackground(header.getBackground());
 		layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
@@ -97,7 +96,9 @@ public class ColumnFilterEditor extends DashboardComposite
 		gd.grabExcessHorizontalSpace = true;
 		buttons.setLayoutData(gd);
 
-		final Button radioAnd = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_AndCondition, SWT.RADIO);
+      final Button radioAnd = new Button(buttons, SWT.RADIO);
+      radioAnd.setText(Messages.get().ColumnFilterEditor_AndCondition);
+      radioAnd.setBackground(buttons.getBackground());
 		radioAnd.setSelection(booleanOperation == ColumnFilterSetOperation.AND);
       radioAnd.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -106,8 +107,10 @@ public class ColumnFilterEditor extends DashboardComposite
 				setBooleanOperation(ColumnFilterSetOperation.AND);
 			}
 		});
-		
-		final Button radioOr = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_OrCondition, SWT.RADIO);
+
+      final Button radioOr = new Button(buttons, SWT.RADIO);
+      radioOr.setText(Messages.get().ColumnFilterEditor_OrCondition);
+      radioOr.setBackground(buttons.getBackground());
 		radioOr.setSelection(booleanOperation == ColumnFilterSetOperation.OR);
       radioOr.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -116,9 +119,10 @@ public class ColumnFilterEditor extends DashboardComposite
 				setBooleanOperation(ColumnFilterSetOperation.OR);
 			}
 		});
-		
-		ImageHyperlink link = toolkit.createImageHyperlink(header, SWT.NONE);
+
+      ImageHyperlink link = new ImageHyperlink(header, SWT.NONE);
 		link.setImage(SharedIcons.IMG_ADD_OBJECT);
+      link.setBackground(header.getBackground());
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -127,8 +131,9 @@ public class ColumnFilterEditor extends DashboardComposite
 			}
 		});
 
-		link = toolkit.createImageHyperlink(header, SWT.NONE);
+      link = new ImageHyperlink(header, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      link.setBackground(header.getBackground());
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -168,7 +173,7 @@ public class ColumnFilterEditor extends DashboardComposite
 				filterBuilder.updateLayout();
 			}
 		});
-		
+
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -179,7 +184,7 @@ public class ColumnFilterEditor extends DashboardComposite
 
 		filterBuilder.updateLayout();
 	}
-	
+
 	/**
 	 * @param currentElement
 	 * @return
@@ -190,40 +195,40 @@ public class ColumnFilterEditor extends DashboardComposite
 		switch(column.getType())
 		{
 			case LogColumn.LC_ALARM_HD_STATE:
-				editor = new AlarmHDStateConditionEditor(this, toolkit);
+            editor = new AlarmHDStateConditionEditor(this);
 				break;
 			case LogColumn.LC_ALARM_STATE:
-			   editor = new AlarmStateConditionEditor(this, toolkit);
+            editor = new AlarmStateConditionEditor(this);
             break;
          case LogColumn.LC_COMPLETION_STATUS:
-            editor = new CompletionStatusConditionEditor(this, toolkit);
+            editor = new CompletionStatusConditionEditor(this);
             break;
 			case LogColumn.LC_EVENT_CODE:
-			   editor = new EventConditionEditor(this, toolkit);
+            editor = new EventConditionEditor(this);
             break;
          case LogColumn.LC_EVENT_ORIGIN:
-            editor = new EventOriginConditionEditor(this, toolkit);
+            editor = new EventOriginConditionEditor(this);
             break;
 			case LogColumn.LC_INTEGER:
-			   editor = new IntegerConditionEditor(this, toolkit);
+            editor = new IntegerConditionEditor(this);
             break;
 			case LogColumn.LC_OBJECT_ID:
-			   editor = new ObjectConditionEditor(this, toolkit);
+            editor = new ObjectConditionEditor(this);
             break;
 			case LogColumn.LC_SEVERITY:
-			   editor = new SeverityConditionEditor(this, toolkit);
+            editor = new SeverityConditionEditor(this);
             break;
 			case LogColumn.LC_TIMESTAMP:
-			   editor = new TimestampConditionEditor(this, toolkit);
+            editor = new TimestampConditionEditor(this);
             break;
 			case LogColumn.LC_USER_ID:
-			   editor = new UserConditionEditor(this, toolkit);
+            editor = new UserConditionEditor(this);
             break;
          case LogColumn.LC_ZONE_UIN:
-            editor = new ZoneConditionEditor(this, toolkit);
+            editor = new ZoneConditionEditor(this);
             break;
 			default:
-			   editor = new TextConditionEditor(this, toolkit);
+            editor = new TextConditionEditor(this);
             break;
 		}
 		editor.initialize(initialFilter);
@@ -249,7 +254,7 @@ public class ColumnFilterEditor extends DashboardComposite
          }
       }
 	}
-	
+
 	/**
 	 * Build filter tree
 	 */

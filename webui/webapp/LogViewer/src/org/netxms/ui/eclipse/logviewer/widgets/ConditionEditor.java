@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 package org.netxms.ui.eclipse.logviewer.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -28,7 +28,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -38,7 +37,6 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
  */
 public abstract class ConditionEditor extends Composite
 {
-	protected FormToolkit toolkit;
 	private Runnable deleteHandler;
 	private Label logicalOperation;
 	private Combo operation;
@@ -47,12 +45,12 @@ public abstract class ConditionEditor extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	protected ConditionEditor(Composite parent, FormToolkit toolkit)
+   protected ConditionEditor(Composite parent)
 	{
 		super(parent, SWT.NONE);		
-		this.toolkit = toolkit;
+      setBackground(parent.getBackground());
 	}
-	
+
 	/**
 	 * Initialize editor
 	 */
@@ -61,36 +59,34 @@ public abstract class ConditionEditor extends Composite
       GridLayout layout = new GridLayout();
       layout.numColumns = 4;
       setLayout(layout);
-      
+
       logicalOperation = new Label(this, SWT.NONE);
       GridData gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
       gd.horizontalAlignment = SWT.CENTER;
       gd.widthHint = 30;
       logicalOperation.setLayoutData(gd);
-      
+
       operation = new Combo(this, SWT.READ_ONLY);
-      toolkit.adapt(operation);
       for(String s : getOperations())
          operation.add(s);
       operation.select(0);
-      operation.addSelectionListener(new SelectionListener() {
+      operation.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             operationSelectionChanged(operation.getSelectionIndex());
          }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
       });
-      
-      createContent(this, initialFilter);
-      
+      gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      operation.setLayoutData(gd);
+
+      createContent(initialFilter);
+
       ImageHyperlink link = new ImageHyperlink(this, SWT.NONE);
       link.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      link.setBackground(getBackground());
       link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
@@ -99,10 +95,13 @@ public abstract class ConditionEditor extends Composite
             deleteHandler.run();
          }
       });
-      
+      gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      link.setLayoutData(gd);
+
       layout(true, true);
 	}
-	
+
 	/**
 	 * @param selectionIndex
 	 */
@@ -116,14 +115,14 @@ public abstract class ConditionEditor extends Composite
 	 * @return
 	 */
 	protected abstract String[] getOperations();
-	
+
 	/**
-	 * Create editor content
-	 * 
-	 * @param parent
-	 */
-	protected abstract void createContent(Composite parent, ColumnFilter initialFilter);
-	
+    * Create editor content. Should create exactly one control within grid layout.
+    * 
+    * @param initialFilter initial filter data
+    */
+   protected abstract void createContent(ColumnFilter initialFilter);
+
 	/**
 	 * Create log filter
 	 * 

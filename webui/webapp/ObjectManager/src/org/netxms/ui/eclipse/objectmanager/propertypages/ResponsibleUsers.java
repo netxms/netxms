@@ -65,7 +65,7 @@ import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.usermanager.dialogs.UserSelectionDialog;
 
 /**
  * Object`s "responsible users" property page
@@ -184,7 +184,7 @@ public class ResponsibleUsers extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            SelectUserDialog dlg = new SelectUserDialog(getShell(), AbstractUserObject.class);
+            UserSelectionDialog dlg = new UserSelectionDialog(getShell(), AbstractUserObject.class);
             if (dlg.open() == Window.OK)
             {
                AbstractUserObject[] selection = dlg.getSelection();

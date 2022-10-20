@@ -25,7 +25,6 @@ import org.netxms.client.objecttools.ObjectTool;
 public class ObjectToolsFilter extends ViewerFilter
 {
    private String filterString = null;
-   private ObjectToolsLabelProvider labelProvider = new ObjectToolsLabelProvider();
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -56,7 +55,7 @@ public class ObjectToolsFilter extends ViewerFilter
          return true;
       return false;
    }
-   
+
    /**
     * @param element
     * @return
@@ -67,18 +66,18 @@ public class ObjectToolsFilter extends ViewerFilter
          return true;
       return false;
    }
-   
+
    /**
     * @param element
     * @return
     */
    public boolean containsType(Object element)
    {
-      if (labelProvider.getAllToolTypes()[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
+      if (ObjectToolsLabelProvider.getAllToolTypes()[((ObjectTool)element).getToolType()].toLowerCase().contains(filterString))
          return true;
       return false;
    }
-   
+
    /**
     * @param element
     * @return
@@ -89,6 +88,7 @@ public class ObjectToolsFilter extends ViewerFilter
          return true;
       return false;
    }
+
    /**
     * @param filterString the filterString to set
     */

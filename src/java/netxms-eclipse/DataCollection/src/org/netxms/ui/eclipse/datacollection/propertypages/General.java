@@ -640,8 +640,8 @@ public class General extends AbstractDCIPropertyPage
       {
          super(parent, SWT.NONE, AbstractSelector.EDITABLE_TEXT);
       }
-   
-      /* (non-Javadoc)
+
+      /**
        * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
        */
       @Override

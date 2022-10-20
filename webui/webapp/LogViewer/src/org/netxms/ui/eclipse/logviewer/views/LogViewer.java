@@ -84,7 +84,7 @@ public class LogViewer extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.logviewer.view.log_viewer"; //$NON-NLS-1$
 
 	private static final int PAGE_SIZE = 400;
-		
+
 	protected NXCSession session;
 	private FilterBuilder filterBuilder;
 	protected TableViewer viewer;
@@ -113,7 +113,7 @@ public class LogViewer extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		logName = site.getSecondaryId();
 		setPartName(Messages.getString("LogViewer_" + logName)); //$NON-NLS-1$
 		final ImageDescriptor img = Activator.getImageDescriptor("icons/" + logName + ".png"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -186,11 +186,11 @@ public class LogViewer extends ViewPart
 		fd.top = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
 		filterBuilder.setLayoutData(fd);
-		
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
+
 		new ConsoleJob(String.format(Messages.get().LogViewer_OpenLogJobName, logName), this, Activator.PLUGIN_ID) {
 			@Override
 			protected String getErrorMessage()

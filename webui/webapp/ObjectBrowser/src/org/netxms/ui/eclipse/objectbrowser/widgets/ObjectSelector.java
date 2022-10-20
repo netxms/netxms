@@ -42,9 +42,28 @@ public class ObjectSelector extends AbstractSelector
 	private AbstractObject object = null;
 	private Set<Class<? extends AbstractObject>> objectClassSet = new HashSet<Class<? extends AbstractObject>>();
 	private Set<Integer> classFilter = null;
-	private String emptySelectionName = Messages.get().ObjectSelector_None;
+   private String emptySelectionName = Messages.get().ObjectSelector_None;
    private String contextSelectionName = "<context>";
    private WorkbenchLabelProvider labelProvider = new WorkbenchLabelProvider();
+
+   /**
+    * @param parent parent composite
+    * @param style control style
+    * @param options selector option
+    */
+   public ObjectSelector(Composite parent, int style, int options)
+   {
+      super(parent, style, options);
+      setText(emptySelectionName);
+      objectClassSet.add(Node.class);
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            labelProvider.dispose();
+         }
+      });
+   }
 
 	/**
     * @param parent parent composite
@@ -54,16 +73,7 @@ public class ObjectSelector extends AbstractSelector
     */
    public ObjectSelector(Composite parent, int style, boolean showClearButton, boolean showContextButton)
 	{
-      super(parent, style, (showClearButton ? SHOW_CLEAR_BUTTON : 0) | (showContextButton ? SHOW_CONTEXT_BUTTON : 0));
-		setText(emptySelectionName);
-		objectClassSet.add(Node.class);
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            labelProvider.dispose();
-         }
-      });
+      this(parent, style, (showClearButton ? SHOW_CLEAR_BUTTON : 0) | (showContextButton ? SHOW_CONTEXT_BUTTON : 0));
 	}
 
    /**

@@ -38,7 +38,7 @@ import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.usermanager.dialogs.UserSelectionDialog;
 
 /**
  * User selection field editor
@@ -107,7 +107,7 @@ public class UserFieldEditor extends FieldEditor
 	 */
 	protected void selectUser()
 	{
-		final SelectUserDialog dialog = new SelectUserDialog(getShell(), User.class);
+		final UserSelectionDialog dialog = new UserSelectionDialog(getShell(), User.class);
 		if (dialog.open() == Window.OK)
 		{
 			final AbstractUserObject[] selection = dialog.getSelection();

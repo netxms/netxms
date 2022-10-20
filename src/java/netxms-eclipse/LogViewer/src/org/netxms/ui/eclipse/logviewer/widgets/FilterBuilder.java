@@ -31,6 +31,9 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MenuEvent;
@@ -47,12 +50,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.forms.widgets.ScrolledForm;
-import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.forms.widgets.TableWrapData;
-import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.Log;
@@ -64,6 +62,10 @@ import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.ColumnSelectionHandler;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingColumnEditingSupport;
 import org.netxms.ui.eclipse.logviewer.widgets.helpers.OrderingListLabelProvider;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.Section;
+import org.netxms.ui.eclipse.widgets.helpers.ExpansionEvent;
+import org.netxms.ui.eclipse.widgets.helpers.ExpansionListener;
 
 /**
  * Log filter builder control
@@ -73,8 +75,8 @@ public class FilterBuilder extends Composite
 	private Log logHandle = null;
 	private Map<String, ColumnFilterEditor> columns = new HashMap<String, ColumnFilterEditor>();
 	private List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>();
-	private FormToolkit toolkit;
-	private ScrolledForm form;
+   private ScrolledComposite scroller;
+   private Composite content;
 	private Section condition;
 	private Section ordering;
    private ImageHyperlink addColumnLink;
@@ -91,11 +93,25 @@ public class FilterBuilder extends Composite
 
 		setLayout(new FillLayout());
 
-		toolkit = new FormToolkit(getDisplay());
-		form = toolkit.createScrolledForm(this);
-		TableWrapLayout layout = new TableWrapLayout();
+      scroller = new ScrolledComposite(this, SWT.V_SCROLL);
+      scroller.setExpandHorizontal(true);
+      scroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+      scroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            content.layout(true, true);
+            scroller.setMinSize(content.computeSize(scroller.getSize().x, SWT.DEFAULT));
+         }
+      });
+
+      content = new Composite(scroller, SWT.NONE);
+      GridLayout layout = new GridLayout();
       layout.numColumns = 2;
-		form.getBody().setLayout(layout);
+      content.setLayout(layout);
+      content.setBackground(content.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+
+      scroller.setContent(content);
 
 		createConditionSection();
 		createOrderingSection();
@@ -116,7 +132,7 @@ public class FilterBuilder extends Composite
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
-		Point size = super.computeSize(wHint, hHint, changed);
+      Point size = content.computeSize(wHint, hHint, changed);
       if (size.y > 600)
          size.y = 600;
 		return size;
@@ -127,22 +143,29 @@ public class FilterBuilder extends Composite
 	 */
 	private void createConditionSection()
 	{
-      condition = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE);
-		condition.setText(Messages.get().FilterBuilder_Condition);
-		TableWrapData twd = new TableWrapData();
-		twd.grabHorizontal = true;
-      twd.grabVertical = true;
-		twd.align = TableWrapData.FILL;
-		condition.setLayoutData(twd);
+      condition = new Section(content, Messages.get().FilterBuilder_Condition, true);
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.grabExcessVerticalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
+      condition.setLayoutData(gd);
+      condition.addExpansionListener(new ExpansionListener() {
+         @Override
+         public void expansionStateChanged(ExpansionEvent e)
+         {
+            FilterBuilder.this.updateLayout();
+         }
+      });
 
-		final Composite clientArea = toolkit.createComposite(condition);
+      final Composite clientArea = condition.getClient();
 		GridLayout layout = new GridLayout();
 		clientArea.setLayout(layout);
-		condition.setClient(clientArea);
 
-		addColumnLink = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      addColumnLink = new ImageHyperlink(clientArea, SWT.NONE);
 		addColumnLink.setText(Messages.get().FilterBuilder_AddColumn);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
+      addColumnLink.setBackground(clientArea.getBackground());
 		addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -157,22 +180,27 @@ public class FilterBuilder extends Composite
 	 */
 	private void createOrderingSection()
 	{
-      ordering = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE);
-		ordering.setText(Messages.get().FilterBuilder_Ordering);
-		TableWrapData twd = new TableWrapData();
-		twd.grabHorizontal = false;
-      twd.grabVertical = true;
-		twd.align = TableWrapData.FILL;
-		ordering.setLayoutData(twd);
+      ordering = new Section(content, Messages.get().FilterBuilder_Ordering, true);
+      GridData gd = new GridData();
+      gd.grabExcessVerticalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.widthHint = 400;
+      ordering.setLayoutData(gd);
+      ordering.addExpansionListener(new ExpansionListener() {
+         @Override
+         public void expansionStateChanged(ExpansionEvent e)
+         {
+            FilterBuilder.this.updateLayout();
+         }
+      });
 
-		final Composite clientArea = toolkit.createComposite(ordering);
+      final Composite clientArea = ordering.getClient();
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		clientArea.setLayout(layout);
-		ordering.setClient(clientArea);
 
 		orderingList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
-		toolkit.adapt(orderingList.getTable());
 
 		TableViewerColumn column = new TableViewerColumn(orderingList, SWT.LEFT);
 		column.getColumn().setText(Messages.get().FilterBuilder_Column);
@@ -189,7 +217,7 @@ public class FilterBuilder extends Composite
 		orderingList.setLabelProvider(new OrderingListLabelProvider());
 		orderingList.setInput(orderingColumns.toArray());
 
-		GridData gd = new GridData();
+      gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.TOP;
 		gd.grabExcessHorizontalSpace = true;
@@ -197,9 +225,10 @@ public class FilterBuilder extends Composite
 		gd.verticalSpan = 2;
 		orderingList.getControl().setLayoutData(gd);
 
-		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
 		linkAdd.setText(Messages.get().FilterBuilder_Add);
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
 		linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -211,9 +240,10 @@ public class FilterBuilder extends Composite
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
 
-		final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
 		linkRemove.setText(Messages.get().FilterBuilder_Remove);
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
 		linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -225,7 +255,7 @@ public class FilterBuilder extends Composite
 		gd.verticalAlignment = SWT.TOP;
 		linkRemove.setLayoutData(gd);
 		linkRemove.setEnabled(false);
-		
+
 		orderingList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -341,7 +371,7 @@ public class FilterBuilder extends Composite
    private void createColumnFilterEditor(final LogColumn column, final Control lastControl, ColumnFilter initialFilter)
    {
       final ColumnFilterEditor editor = new ColumnFilterEditor((Composite)condition.getClient(), 
-            toolkit, column, (initialFilter != null) ? initialFilter.getOperation() : ColumnFilterSetOperation.AND, new Runnable() {
+            column, (initialFilter != null) ? initialFilter.getOperation() : ColumnFilterSetOperation.AND, new Runnable() {
                @Override
                public void run()
                {
@@ -355,7 +385,7 @@ public class FilterBuilder extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       editor.setLayoutData(gd);
-      
+
       columns.put(column.getName(), editor);
    }
 
@@ -432,8 +462,8 @@ public class FilterBuilder extends Composite
 	 */
 	public void updateLayout()
 	{
-		form.reflow(true);
-		getParent().layout(true, true);
+      getParent().layout(true, true);
+      scroller.setMinSize(content.computeSize(scroller.getSize().x, SWT.DEFAULT));
 	}
 
    /**

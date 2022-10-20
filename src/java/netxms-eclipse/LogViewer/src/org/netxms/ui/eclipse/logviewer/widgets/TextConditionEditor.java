@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Messages;
@@ -42,32 +41,34 @@ public class TextConditionEditor extends ConditionEditor
 	 * @param column
 	 * @param parentElement
 	 */
-	public TextConditionEditor(Composite parent, FormToolkit toolkit)
+   public TextConditionEditor(Composite parent)
 	{
-		super(parent, toolkit);
+      super(parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
+    */
 	@Override
 	protected String[] getOperations()
 	{
 		return OPERATIONS;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.netxms.client.log.ColumnFilter)
+    */
 	@Override
-	protected void createContent(Composite parent, ColumnFilter initialFilter)
+   protected void createContent(ColumnFilter initialFilter)
 	{
-		value = toolkit.createText(this, "%"); //$NON-NLS-1$
+      value = new Text(this, SWT.BORDER);
+      value.setText("%"); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
 		value.setLayoutData(gd);
-		
+
       if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.LIKE))
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
@@ -75,9 +76,9 @@ public class TextConditionEditor extends ConditionEditor
       }
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
+    */
 	@Override
 	public ColumnFilter createFilter()
 	{

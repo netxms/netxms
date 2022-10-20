@@ -444,7 +444,7 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       }
 
-      event = new EventSelector(area, SWT.NONE, true);
+      event = new EventSelector(area, SWT.NONE, EventSelector.USE_HYPERLINK | EventSelector.SHOW_CLEAR_BUTTON);
       event.setLabel(Messages.get().LogParserRuleEditor_GenerateEvent);
       event.setEventCode(eventCode);
       GridData gd = new GridData();

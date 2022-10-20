@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
-import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.usermanager.dialogs.UserSelectionDialog;
 
 /**
  * "Group Membership" page for user
@@ -116,7 +116,7 @@ public class GroupMembership extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(GroupMembership.this.getShell(), UserGroup.class);
+				UserSelectionDialog dlg = new UserSelectionDialog(GroupMembership.this.getShell(), UserGroup.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();

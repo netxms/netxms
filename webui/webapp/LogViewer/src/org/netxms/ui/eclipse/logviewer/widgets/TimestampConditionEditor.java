@@ -22,11 +22,10 @@ import java.util.Calendar;
 import java.util.Date;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Messages;
@@ -46,41 +45,38 @@ public class TimestampConditionEditor extends ConditionEditor
 	
 	/**
 	 * @param parent
-	 * @param toolkit
-	 * @param column
-	 * @param parentElement
 	 */
-	public TimestampConditionEditor(Composite parent, FormToolkit toolkit)
+   public TimestampConditionEditor(Composite parent)
 	{
-		super(parent, toolkit);
+      super(parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
+    */
 	@Override
 	protected String[] getOperations()
 	{
 		return OPERATIONS;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.netxms.client.log.ColumnFilter)
+    */
 	@Override
-	protected void createContent(Composite parent, ColumnFilter initialFilter)
+   protected void createContent(ColumnFilter initialFilter)
 	{
-		Composite group = new Composite(this, SWT.NONE);
-		RowLayout layout = new RowLayout();
-		layout.type = SWT.HORIZONTAL;
-		layout.marginBottom = 0;
-		layout.marginTop = 0;
-		layout.marginLeft = 0;
-		layout.marginRight = 0;
+      Composite group = new Composite(this, SWT.NONE);
+      group.setBackground(getBackground());
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.numColumns = 5;
 		group.setLayout(layout);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
 		group.setLayoutData(gd);
 
 		final Calendar c = Calendar.getInstance();
@@ -88,22 +84,29 @@ public class TimestampConditionEditor extends ConditionEditor
 
 		datePicker1 = new DateTime(group, SWT.DATE | SWT.DROP_DOWN);
 		datePicker1.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+      datePicker1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
 		timePicker1 = new DateTime(group, SWT.TIME);
 		timePicker1.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
+      timePicker1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		
-		andLabel = toolkit.createLabel(group, Messages.get().TimestampConditionEditor_And);
+      andLabel = new Label(group, SWT.NONE);
+      andLabel.setText(Messages.get().TimestampConditionEditor_And);
+      andLabel.setBackground(getBackground());
+      andLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
 		datePicker2 = new DateTime(group, SWT.DATE | SWT.DROP_DOWN);
 		datePicker2.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+      datePicker2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
 		timePicker2 = new DateTime(group, SWT.TIME);
 		timePicker2.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
-	}
+      timePicker2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#operationSelectionChanged(int)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#operationSelectionChanged(int)
+    */
 	@Override
 	protected void operationSelectionChanged(int selectionIndex)
 	{
@@ -133,9 +136,9 @@ public class TimestampConditionEditor extends ConditionEditor
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
+    */
 	@Override
 	public ColumnFilter createFilter()
 	{

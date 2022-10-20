@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,10 @@ package org.netxms.ui.eclipse.logviewer.widgets;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.RowData;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Messages;
@@ -43,53 +41,61 @@ public class IntegerConditionEditor extends ConditionEditor
 	
 	/**
 	 * @param parent
-	 * @param toolkit
-	 * @param column
-	 * @param parentElement
 	 */
-	public IntegerConditionEditor(Composite parent, FormToolkit toolkit)
+   public IntegerConditionEditor(Composite parent)
 	{
-		super(parent, toolkit);
+      super(parent);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#getOperations()
+    */
 	@Override
 	protected String[] getOperations()
 	{
 		return OPERATIONS;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.netxms.client.log.ColumnFilter)
+    */
 	@Override
-	protected void createContent(Composite parent, ColumnFilter initialFilter)
+   protected void createContent(ColumnFilter initialFilter)
 	{
 		Composite group = new Composite(this, SWT.NONE);
-		RowLayout layout = new RowLayout();
-		layout.type = SWT.HORIZONTAL;
-		layout.marginBottom = 0;
-		layout.marginTop = 0;
-		layout.marginLeft = 0;
-		layout.marginRight = 0;
+      group.setBackground(getBackground());
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.numColumns = 3;
 		group.setLayout(layout);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
 		group.setLayoutData(gd);
 
-		value1 = toolkit.createText(group, "0"); //$NON-NLS-1$
-		RowData rd = new RowData();
-		rd.width = 90;
-		value1.setLayoutData(rd);
-		andLabel = toolkit.createLabel(group, Messages.get().IntegerConditionEditor_And);
+      value1 = new Text(group, SWT.BORDER);
+      value1.setText("0"); //$NON-NLS-1$
+      gd = new GridData();
+      gd.widthHint = 90;
+      gd.verticalAlignment = SWT.CENTER;
+      value1.setLayoutData(gd);
+
+      andLabel = new Label(group, SWT.NONE);
+      andLabel.setText(Messages.get().IntegerConditionEditor_And);
+      andLabel.setBackground(getBackground());
 		andLabel.setVisible(false);
-		value2 = toolkit.createText(group, "0"); //$NON-NLS-1$
-		rd = new RowData();
-		rd.width = 90;
-		value2.setLayoutData(rd);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      andLabel.setLayoutData(gd);
+
+      value2 = new Text(group, SWT.BORDER);
+      value2.setText("0"); //$NON-NLS-1$
+      gd = new GridData();
+      gd.widthHint = 90;
+      gd.verticalAlignment = SWT.CENTER;
+      value2.setLayoutData(gd);
 		value2.setVisible(false);
 
       if (initialFilter != null)
@@ -121,9 +127,9 @@ public class IntegerConditionEditor extends ConditionEditor
       }
    }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#operationSelectionChanged(int)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#operationSelectionChanged(int)
+    */
 	@Override
 	protected void operationSelectionChanged(int selectionIndex)
 	{
@@ -139,9 +145,9 @@ public class IntegerConditionEditor extends ConditionEditor
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createFilter()
+    */
 	@Override
 	public ColumnFilter createFilter()
 	{
@@ -154,7 +160,7 @@ public class IntegerConditionEditor extends ConditionEditor
 		{
 			n1 = 0;
 		}
-		
+
 		ColumnFilter filter;
 		switch(getSelectedOperation())
 		{

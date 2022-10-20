@@ -57,7 +57,7 @@ import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AccessListLabel
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.usermanager.dialogs.UserSelectionDialog;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -140,7 +140,7 @@ public class AccessControl extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(AccessControl.this.getShell(), AbstractUserObject.class);
+				UserSelectionDialog dlg = new UserSelectionDialog(AccessControl.this.getShell(), AbstractUserObject.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();

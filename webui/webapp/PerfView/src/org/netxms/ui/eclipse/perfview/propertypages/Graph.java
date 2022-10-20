@@ -50,7 +50,7 @@ import org.netxms.ui.eclipse.perfview.propertypages.helpers.AccessListComparator
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.AccessListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.usermanager.dialogs.UserSelectionDialog;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -180,7 +180,7 @@ public class Graph extends PreferencePage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				SelectUserDialog dlg = new SelectUserDialog(Graph.this.getShell(), AbstractUserObject.class);
+				UserSelectionDialog dlg = new UserSelectionDialog(Graph.this.getShell(), AbstractUserObject.class);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractUserObject[] selection = dlg.getSelection();

@@ -53,9 +53,8 @@ import org.netxms.ui.eclipse.usermanager.dialogs.helpers.UserListLabelProvider;
 
 /**
  * User selection dialog
- *
  */
-public class SelectUserDialog extends Dialog
+public class UserSelectionDialog extends Dialog
 {
 	private Text filterText;
 	private TableViewer userList;
@@ -64,11 +63,11 @@ public class SelectUserDialog extends Dialog
 	private boolean multiSelection = true;
 	private AbstractUserObject[] selection;
 	private UserListFilter filter;
-	
+
 	/**
 	 * @param parentShell
 	 */
-	public SelectUserDialog(Shell parentShell, Class<? extends AbstractUserObject> classFilter)
+	public UserSelectionDialog(Shell parentShell, Class<? extends AbstractUserObject> classFilter)
 	{
 		super(parentShell);
 		this.classFilter = classFilter;
@@ -140,7 +139,7 @@ public class SelectUserDialog extends Dialog
 			public void doubleClick(DoubleClickEvent event)
 			{
 			   if (getButton(IDialogConstants.OK_ID).isEnabled())
-			      SelectUserDialog.this.okPressed();
+			      UserSelectionDialog.this.okPressed();
 			}
       });
       userList.setInput(getFilteredUserDatabaseObjects());
