@@ -3,9 +3,25 @@
    <groupId>com.rfelements</groupId>
    <artifactId>netxms-subagent-ubntlw</artifactId>
    <version>4.2-SNAPSHOT</version>
+
    <properties>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
    </properties>
+
+   <profiles>
+      <profile>
+         <id>windows</id>
+         <activation>
+            <os>
+               <family>windows</family>
+            </os>
+         </activation>
+         <properties>
+            <jar.name>ubntlw</jar.name>
+         </properties>
+      </profile>
+   </profiles>
+
    <dependencies>
       <dependency>
          <groupId>net.htmlparser.jericho</groupId>
@@ -46,6 +62,7 @@
          <scope>provided</scope>
       </dependency>
    </dependencies>
+
    <build>
       <plugins>
          <plugin>
@@ -81,6 +98,7 @@
             <artifactId>maven-assembly-plugin</artifactId>
             <version>3.4.2</version>
             <configuration>
+               <finalName>${jar.name}</finalName>
                <archive>
                   <manifest>
                   </manifest>

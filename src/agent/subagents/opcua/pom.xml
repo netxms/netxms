@@ -11,6 +11,20 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+   <profiles>
+      <profile>
+         <id>windows</id>
+         <activation>
+            <os>
+               <family>windows</family>
+            </os>
+         </activation>
+         <properties>
+            <jar.name>opcua</jar.name>
+         </properties>
+      </profile>
+   </profiles>
+
     <dependencies>
         <dependency>
             <groupId>org.netxms</groupId>
@@ -61,6 +75,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.4.2</version>
                 <configuration>
+                    <finalName>${jar.name}</finalName>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
