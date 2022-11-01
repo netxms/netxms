@@ -905,7 +905,7 @@ extern TCHAR g_snmpTrapListenAddress[];
 extern uint16_t g_wListenPort;
 extern TCHAR g_systemName[];
 extern ObjectArray<ServerInfo> g_serverList;
-extern time_t g_tmAgentStartTime;
+extern time_t g_agentStartTime;
 extern TCHAR g_szPlatformSuffix[];
 extern uint32_t g_startupDelay;
 extern uint32_t g_dwIdleTimeout;
