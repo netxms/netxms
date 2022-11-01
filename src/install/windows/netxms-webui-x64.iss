@@ -32,12 +32,11 @@ Source: ..\files\windows\x64\prunsrv.exe; DestDir: "{app}\bin"; BeforeInstall: S
 Source: ..\files\windows\x64\prunmgr.exe; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
 Source: ..\files\java\jetty\jetty-runner.jar; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
 Source: ..\files\java\jetty\start.jar; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
-Source: web\server.xml; DestDir: "{app}\config"; Flags: ignoreversion; Components: webui
-Source: web\nxmc.xml; DestDir: "{app}\config"; Flags: ignoreversion; Components: webui
-Source: web\api.xml; DestDir: "{app}\config"; Flags: ignoreversion; Components: api
+Source: web\api.war; DestDir: "{app}\webapps"; Flags: ignoreversion; Components: api
+Source: web\logback.xml; DestDir: "{app}\lib"; Flags: ignoreversion; Components: webui
 Source: web\nxmc.war; DestDir: "{app}\webapps"; Flags: ignoreversion; Components: webui
 Source: web\nxmc.properties.sample; DestDir: "{app}\lib"; Flags: ignoreversion; Components: webui
-Source: web\api.war; DestDir: "{app}\webapps"; Flags: ignoreversion; Components: api
+Source: web\server.xml; DestDir: "{app}\config"; Flags: ignoreversion; Components: webui
 Source: ..\files\windows\x64\jre\*; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
 
 [Dirs]
@@ -56,8 +55,8 @@ Filename: "{app}\bin\prunsrv.exe"; Parameters: "install nxWebUI {code:GenerateIn
 Filename: "{app}\bin\prunsrv.exe"; Parameters: "start nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Starting WebUI service..."; Flags: runhidden
 
 [UninstallRun]
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "stop nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Stopping WebUI service..."; Flags: runhidden
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "delete nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Removing WebUI service..."; Flags: runhidden
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "stop nxWebUI"; WorkingDir: "{app}\bin"; RunOnceId: "nxWebUIStopSvc"; Flags: runhidden
+Filename: "{app}\bin\prunsrv.exe"; Parameters: "delete nxWebUI"; WorkingDir: "{app}\bin"; RunOnceId: "nxWebUIDeleteSvc"; Flags: runhidden
 
 [Code]
 var
@@ -98,23 +97,23 @@ Function GenerateInstallParameters(Param: String): String;
 Var
   strJvmArgument: String;
 Begin
-  strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (jetty)" --Install="{app}\bin\prunsrv.exe" --Startup=auto --ServiceUser=LocalSystem --LogPath="{app}\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\bin\jetty-runner.jar;{app}\bin\start.jar" --StartClass=org.eclipse.jetty.runner.Runner ++StartParams=--stop-port ++StartParams=17003 ++StartParams=--stop-key ++StartParams=nxmc$jetty$key ++StartParams=--classes ++StartParams="{app}\lib"');
+  strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (jetty)" --Install="{app}\bin\prunsrv.exe" --Startup=auto --ServiceUser=LocalSystem --LogPath="{app}\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\bin\jetty-runner.jar;{app}\bin\start.jar;{app}\bin\logback-classic-1.4.4.jar;{app}\bin\logback-core-1.4.4.jar;{app}\lib" --StartClass=org.eclipse.jetty.runner.Runner ++StartParams=--stop-port ++StartParams=17003 ++StartParams=--stop-key ++StartParams=nxmc$jetty$key');
   strJvmArgument := strJvmArgument + ' ++StartParams=--port ++StartParams=' + GetJettyPort();
-  strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams=--config ++StartParams="{app}\config\server.xml" ++StartParams="{app}\config\nxmc.xml"');
+  strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams=--config ++StartParams="{app}\config\server.xml" ++StartParams="--path" ++StartParams="/" ++StartParams="{app}\webapps\nxmc.war"');
 
   If IsComponentSelected('api') Then
   Begin
-    strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams="{app}\config\api.xml"');
+    strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams="--path" ++StartParams="/api" ++StartParams="{app}\webapps\api.war"');
   End;
 
-  strJvmArgument := strJvmArgument + ExpandConstant(' --StopClass=org.eclipse.jetty.start.Main ++StopParams=-DSTOP.PORT=17003 ++StopParams=-DSTOP.KEY=nxmc$jetty$key ++StopParams=--stop');
+  strJvmArgument := strJvmArgument + ExpandConstant(' --StopClass=org.eclipse.jetty.start.Main ++StopParams=--stop ++StopParams=STOP.PORT=17003 ++StopParams=STOP.KEY=nxmc$jetty$key');
 
   If IsComponentSelected('jre') Then
   Begin
     strJvmArgument := strJvmArgument + ExpandConstant(' --Jvm="{app}\jre\bin\server\jvm.dll"');
   End;
 
-  strJvmArgument := strJvmArgument + ExpandConstant(' --JvmOptions=-Duser.dir="{app}\base";-Djava.io.tmpdir="{app}\work";-Djetty.home="{app}";-Djetty.base="{app}\base"');
+  strJvmArgument := strJvmArgument + ExpandConstant(' --JvmOptions=-Duser.dir="{app}\base";-Djava.io.tmpdir="{app}\work";-Djetty.home="{app}";-Djetty.base="{app}\base;-Dnxmc.logfile={app}\logs\jetty.log"');
 
   Result := strJvmArgument;
 End;

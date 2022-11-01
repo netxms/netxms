@@ -1,0 +1,16 @@
+<configuration>
+   <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${nxmc.logfile}</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>${nxmc.logfile}.%d{yyyy-MM-dd}</fileNamePattern>
+         <maxHistory>30</maxHistory>
+         <totalSizeCap>2GB</totalSizeCap>
+      </rollingPolicy>
+      <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+         <pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
+      </encoder>
+   </appender>
+   <root level="info">
+      <appender-ref ref="LOGFILE"/>
+   </root>
+</configuration>

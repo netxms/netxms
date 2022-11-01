@@ -1,5 +1,0 @@
-<Configure class="org.eclipse.jetty.webapp.WebAppContext">
-  <Set name="contextPath">/</Set>
-  <Set name="war"><SystemProperty name="jetty.home"/>\webapps\nxmc.war</Set>
-  <Set name="tempDirectory">nxmc</Set>
-</Configure>
