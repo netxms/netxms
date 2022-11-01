@@ -124,7 +124,7 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
       TCHAR buffer[256];
 
       const SNMP_Variable *v = response->getVariable(0);
-      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          v->getValueAsString(buffer, 256);
          TCHAR *p = !_tcsnicmp(buffer, _T("RouterOS "), 9) ? &buffer[9] : buffer;
@@ -132,7 +132,7 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
       }
 
       v = response->getVariable(1);
-      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
       }
@@ -143,7 +143,7 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
       }
 
       v = response->getVariable(2);
-      if ((v != NULL) && (v->getType() == ASN_OCTET_STRING))
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
       {
          _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
       }

@@ -61,6 +61,57 @@ bool JuniperDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 }
 
 /**
+ * Get hardware information from device.
+ *
+ * @param snmp SNMP transport
+ * @param node Node
+ * @param driverData driver data
+ * @param hwInfo pointer to hardware information structure to fill
+ * @return true if hardware information is available
+ */
+bool JuniperDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, DriverData *driverData, DeviceHardwareInfo *hwInfo)
+{
+   _tcscpy(hwInfo->vendor, _T("Juniper Networks"));
+
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.2636.3.1.2.0")));  // Product name
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.2636.3.1.3.0")));  // Serial number
+   request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.2636.3.1.4.0")));  // Revision
+
+   // Return success only if at least product name is available.
+   // Driver should return false if product name cannot be retrieved to allow server to try ENTITY MIB.
+   bool success = false;
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   {
+      TCHAR buffer[256];
+
+      const SNMP_Variable *v = response->getVariable(0);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productName, v->getValueAsString(buffer, 256), 128);
+         success = true;
+      }
+
+      v = response->getVariable(1);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->serialNumber, v->getValueAsString(buffer, 256), 32);
+      }
+
+      v = response->getVariable(2);
+      if ((v != nullptr) && (v->getType() == ASN_OCTET_STRING))
+      {
+         _tcslcpy(hwInfo->productVersion, v->getValueAsString(buffer, 256), 16);
+      }
+
+      delete response;
+   }
+
+   return success;
+}
+
+/**
  * Get list of interfaces for given node
  *
  * @param snmp SNMP transport
