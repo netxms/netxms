@@ -186,7 +186,7 @@ public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
 	              const TCHAR *regexp, bool ignoreCase = true, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
 					  const TCHAR *eventTag = NULL, int repeatInterval = 0, int repeatCount = 0,
-					  bool resetRepeat = true, const TCHAR *source = NULL, const TCHAR *push = NULL, int pushGroup = 0, UINT32 level = 0xFFFFFFFF,
+					  bool resetRepeat = true, const TCHAR *push = NULL, int pushGroup = 0, UINT32 level = 0xFFFFFFFF,
 					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
@@ -227,15 +227,13 @@ public:
 	const TCHAR *getContext() const { return m_context; }
 	const TCHAR *getContextToChange() const { return m_contextToChange; }
 	int getContextAction() const { return m_contextAction; }
+   const TCHAR *getPushParam() const { return CHECK_NULL_EX(m_pushParam); }
 
 	void setDescription(const TCHAR *descr) { MemFree(m_description); m_description = MemCopyString(descr); }
 	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 
 	void setSource(const TCHAR *source) { MemFree(m_source); m_source = MemCopyString(source); }
 	const TCHAR *getSource() const { return CHECK_NULL_EX(m_source); }
-
-	void setPushParam(const TCHAR *pushParam) { MemFree(m_pushParam); m_pushParam = MemCopyString(pushParam); }
-	const TCHAR *getPushParam() const { return CHECK_NULL_EX(m_pushParam); }
 
 	void setLevel(uint32_t level) { m_level = level; }
    uint32_t getLevel() const { return m_level; }

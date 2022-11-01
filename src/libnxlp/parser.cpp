@@ -726,7 +726,8 @@ static void EndElement(void *userData, const char *name)
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
 		LogParserRule *rule = new LogParserRule(ps->parser, ps->ruleName, ps->regexp, ps->ignoreCase,
-		         eventCode, eventName, ps->eventTag, ps->repeatInterval, ps->repeatCount, ps->resetRepeat, ps->source, ps->pushParam, ps->pushGroup);
+		         eventCode, eventName, ps->eventTag, ps->repeatInterval, ps->repeatCount, ps->resetRepeat,
+		         ps->pushParam, ps->pushGroup);
 		if (!ps->agentAction.isEmpty())
 		   rule->setAgentAction(ps->agentAction);
 		if (!ps->agentActionArgs.isEmpty())
@@ -746,9 +747,6 @@ static void EndElement(void *userData, const char *name)
 
 		if (!ps->source.isEmpty())
 			rule->setSource(ps->source);
-
-		if (!ps->pushParam.isEmpty())
-			rule->setPushParam(ps->pushParam);
 
 		if (!ps->level.isEmpty())
 			rule->setLevel(_tcstoul(ps->level, nullptr, 0));
