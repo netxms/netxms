@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ LONG H_SystemTimeZone(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
  */
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   ret_uint(value, static_cast<uint32_t>(time(nullptr) - g_tmAgentStartTime));
+   ret_uint(value, static_cast<uint32_t>(time(nullptr) - g_agentStartTime));
    return SYSINFO_RC_SUCCESS;
 }
 

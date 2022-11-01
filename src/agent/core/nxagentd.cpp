@@ -224,7 +224,7 @@ uint32_t g_externalMetricTimeout = 0;  // External process execution timeout for
 uint32_t g_externalMetricProviderTimeout = 30000;  // External metric provider timeout in milliseconds
 uint32_t g_snmpTimeout = 0;
 uint16_t g_snmpTrapPort = 162;
-time_t g_tmAgentStartTime;
+time_t g_agentStartTime;
 uint32_t g_startupDelay = 0;
 uint32_t g_maxCommSessions = 0;
 uint32_t g_longRunningQueryThreshold = 250;
@@ -1474,7 +1474,7 @@ BOOL Initialize()
    StartExternalParameterProviders();
 
    // Agent start time
-   g_tmAgentStartTime = time(nullptr);
+   g_agentStartTime = time(nullptr);
 
    StartNotificationProcessor();
 
@@ -2295,18 +2295,6 @@ int main(int argc, char *argv[])
 		      g_failFlags |= FAIL_LOAD_CONFIG;
 			}
 
-			// Calculate execution timeouts
-         // Default value is in DefaultExecutionTimeout (old versions may use ExecTimeout)
-         // Then individual timeouts can be set by ExternalCommandTimeout, ExternalParameterTimeout, and ExternalParameterProviderTimeout
-         if (s_defaultExecutionTimeout == 0)
-            s_defaultExecutionTimeout = 5000;   // 5 seconds default
-         if (g_externalCommandTimeout == 0)
-            g_externalCommandTimeout = s_defaultExecutionTimeout;
-         if (g_externalMetricTimeout == 0)
-            g_externalMetricTimeout = s_defaultExecutionTimeout;
-         if (g_externalMetricProviderTimeout == 0)
-            g_externalMetricProviderTimeout = s_defaultExecutionTimeout;
-
          config = g_config;
          // Check if master section starts with EXT:
          // If yes, switch to external subagent mode
@@ -2321,6 +2309,18 @@ int main(int argc, char *argv[])
             g_failFlags |= FAIL_LOAD_CONFIG;
          }
          DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
+
+         // Calculate execution timeouts
+         // Default value is in DefaultExecutionTimeout (old versions may use ExecTimeout)
+         // Then individual timeouts can be set by ExternalCommandTimeout, ExternalParameterTimeout, and ExternalParameterProviderTimeout
+         if (s_defaultExecutionTimeout == 0)
+            s_defaultExecutionTimeout = 5000;   // 5 seconds default
+         if (g_externalCommandTimeout == 0)
+            g_externalCommandTimeout = s_defaultExecutionTimeout;
+         if (g_externalMetricTimeout == 0)
+            g_externalMetricTimeout = s_defaultExecutionTimeout;
+         if (g_externalMetricProviderTimeout == 0)
+            g_externalMetricProviderTimeout = s_defaultExecutionTimeout;
 
          // try to guess executable path
 #ifdef _WIN32
