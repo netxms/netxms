@@ -41,6 +41,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.worldmap.GeoLocationCache;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +73,9 @@ public class MapLoader
 	public MapLoader(Display display)
 	{
 		this.display = display;
+      missingTile = ResourceManager.getImage(display, "icons/worldmap/missing_tile.png");
+      loadingTile = ResourceManager.getImage(display, "icons/worldmap/loading_tile.png");
+      borderTile = ResourceManager.getImage(display, "icons/worldmap/border_tile.png");
       session = Registry.getSession();
       workers = Executors.newFixedThreadPool(16, new ThreadFactory() {
          private int threadNumber = 1;
@@ -121,42 +125,6 @@ public class MapLoader
 	}
 
 	/**
-    * get image for missing tile
-    * 
-    * @return image for missing tile
-    */
-	private Image getMissingTileImage()
-	{
-		if (missingTile == null)
-         missingTile = ResourceManager.getImage("icons/worldmap/missing_tile.png");
-		return missingTile;
-	}
-
-	/**
-    * get image for tile being loaded
-    * 
-    * @return image for tile being loaded
-    */
-	private Image getLoadingTileImage()
-	{
-		if (loadingTile == null)
-         loadingTile = ResourceManager.getImage("icons/worldmap/loading_tile.png");
-		return loadingTile;
-	}
-
-	/**
-    * get image for border tile (tile out of map boundaries)
-    * 
-    * @return image for border tile (tile out of map boundaries)
-    */
-	private Image getBorderTileImage()
-	{
-		if (borderTile == null)
-         borderTile = ResourceManager.getImage("icons/worldmap/border_tile.png");
-		return borderTile;
-	}
-
-	/**
 	 * Load tile from tile server. Expected to be executed on background thread.
 	 * 
 	 * @param zoom
@@ -169,7 +137,7 @@ public class MapLoader
 		// check x and y for validity
 		int maxTileNum = (1 << zoom) - 1;
 		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
-			return getBorderTileImage();
+         return borderTile;
 
 		final String tileServerURL = session.getTileServerURL();
 		URL url = null;
@@ -192,7 +160,7 @@ public class MapLoader
 		   conn.setRequestProperty("User-Agent", "nxmc/" + VersionInfo.version());
          conn.setAllowUserInteraction(false);
          in = new BufferedInputStream(conn.getInputStream());
-         image = new Image(display, in);
+         image = WidgetHelper.createImageFromStream(display, in);
       }
       catch(IOException e)
       {
@@ -237,7 +205,7 @@ public class MapLoader
 	 * @param y
 	 * @return
 	 */
-	private static File buildCacheFileName(int zoom, int x, int y)
+   private File buildCacheFileName(int zoom, int x, int y)
 	{
       StringBuilder sb = new StringBuilder("MapTiles"); //$NON-NLS-1$
 		sb.append(File.separatorChar);
@@ -247,7 +215,7 @@ public class MapLoader
 		sb.append(File.separatorChar);
 		sb.append(y);
 		sb.append(".png"); //$NON-NLS-1$
-      return new File(Registry.getStateDir(), sb.toString());
+      return new File(Registry.getStateDir(display), sb.toString());
 	}
 
 	/**
@@ -269,7 +237,7 @@ public class MapLoader
             ImageLoader imageLoader = new ImageLoader();
             imageData = imageLoader.load(imageFile.getAbsolutePath());
          }
-         return new Image(display, imageData[0]);
+         return WidgetHelper.createImageFromImageData(display, imageData[0]);
 		}
 		catch(Exception e)
 		{
@@ -277,7 +245,7 @@ public class MapLoader
 			return null;
 		}
 	}
-	
+
 	/**
 	 * @param zoom
 	 * @param x
@@ -289,16 +257,16 @@ public class MapLoader
 		// check x and y for validity
 		int maxTileNum = (1 << zoom) - 1;
 		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
-			return new Tile(x, y, getBorderTileImage(), true, true);
+         return new Tile(x, y, borderTile, true, true);
 
 		Image tileImage = loadTileFromCache(zoom, x, y);
 		if (tileImage == null)
 		{
 			if (cachedOnly)
-				return new Tile(x, y, getLoadingTileImage(), false, true);
+            return new Tile(x, y, loadingTile, false, true);
 			tileImage = loadTile(zoom, x, y);
 		}
-		return (tileImage != null) ? new Tile(x, y, tileImage, true, false) : new Tile(x, y, getMissingTileImage(), true, true);
+      return (tileImage != null) ? new Tile(x, y, tileImage, true, false) : new Tile(x, y, missingTile, true, true);
 	}
 
 	/**
@@ -326,11 +294,11 @@ public class MapLoader
 	{
 		if ((mapSize.x < 32) || (mapSize.y < 32) || (basePoint == null))
 			return null;
-		
+
 		Area coverage = GeoLocationCache.calculateCoverage(mapSize, basePoint, pointLocation, zoom);
 		Point bottomLeft = tileFromLocation(coverage.getxLow(), coverage.getyLow(), zoom);
 		Point topRight = tileFromLocation(coverage.getxHigh(), coverage.getyHigh(), zoom);
-		
+
 		Tile[][] tiles = new Tile[bottomLeft.y - topRight.y + 1][topRight.x - bottomLeft.x + 1];
 
 		int x = bottomLeft.x;
@@ -346,12 +314,12 @@ public class MapLoader
 				y++;
 			}
 		}
-		
+
 		double lat = latitudeFromTile(topRight.y, zoom);
 		double lon = longitudeFromTile(bottomLeft.x, zoom);
 		Point realTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(lat, lon), zoom);
 		Point reqTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), zoom);
-		
+
 		return new TileSet(tiles, realTopLeft.x - reqTopLeft.x, realTopLeft.y - reqTopLeft.y, zoom);
 	}
 

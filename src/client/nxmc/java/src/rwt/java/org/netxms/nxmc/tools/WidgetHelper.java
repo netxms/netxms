@@ -46,6 +46,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -1324,7 +1326,47 @@ public class WidgetHelper
     */
    public static TransferData[] getAvailableTypes(Clipboard cb)
    {
-      //TODO: implement types for web
+      // TODO: implement types for web
       return new TransferData[] {};
+   }
+
+   /**
+    * Create image from input stream.
+    *
+    * @param display owning display
+    * @param stream input stream
+    * @return image object or null on error
+    */
+   public static Image createImageFromStream(Display display, InputStream stream)
+   {
+      return createImageFromImageData(display, new ImageData(stream));
+   }
+
+   /**
+    * Create image from image data (intended for use in non-UI threads).
+    *
+    * @param display owning display
+    * @param imageData image data
+    * @return image object or null on error
+    */
+   public static Image createImageFromImageData(Display display, ImageData imageData)
+   {
+      final Image[] imageContainer = new Image[1];
+      display.syncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            try
+            {
+               imageContainer[0] = new Image(display, imageData);
+            }
+            catch(Exception e)
+            {
+               logger.error("Image creation failed", e);
+               imageContainer[0] = null;
+            }
+         }
+      });
+      return imageContainer[0];
    }
 }

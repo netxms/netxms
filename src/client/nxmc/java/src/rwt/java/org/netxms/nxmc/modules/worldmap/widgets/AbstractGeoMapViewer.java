@@ -98,8 +98,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
    protected View view = null;
    protected Point currentPoint;
 
-   private Image currentImage = null;
-	private Image bufferImage = null;
 	private MapLoader mapLoader;
 	private Point dragStartPoint = null;
 	private Point selectionStartPoint = null;
@@ -158,11 +156,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			{
 				getDisplay().timerExec(-1, timer);
 				getDisplay().timerExec(1000, timer);
-
-				if (bufferImage != null)
-					bufferImage.dispose();
-				Rectangle rect = getClientArea();
-				bufferImage = new Image(getDisplay(), rect.width, rect.height);
 			}
 		});
 
@@ -172,10 +165,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			{
 				labelProvider.dispose();
 				GeoLocationCache.getInstance().removeListener(AbstractGeoMapViewer.this);
-				if (bufferImage != null)
-					bufferImage.dispose();
-				if (currentImage != null)
-					currentImage.dispose();
 				mapLoader.dispose();
 				imageZoomIn.dispose();
 				imageZoomOut.dispose();
@@ -227,7 +216,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
       dragSource.addDragListener(listener);
       /* end of mouse drag hack */
 
-		GeoLocationCache.getInstance().addListener(this);
+      GeoLocationCache.getInstance().addListener(this);
 	}
 
    /**
@@ -309,10 +298,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		accessor.setMapWidth(rect.width);
 		accessor.setMapHeight(rect.height);
 
-		if (currentImage != null)
-			currentImage.dispose();
-		currentImage = null;
-
 		if (!accessor.isValid())
 			return;
 
@@ -330,23 +315,14 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
                   if (isDisposed())
                      return;
                   
-						currentTileSet = null;
-						if (tiles != null)
-						{
-							drawTiles(tiles);
-                     AbstractGeoMapViewer.this.redraw();
-							if (tiles.missingTiles > 0)
-							{
-								currentTileSet = tiles;
-								loadMissingTiles(tiles);
-							}
-							else
-							{
-								tiles.dispose();
-							}
-						}
-						
-						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
+                  if (currentTileSet != null)
+                     currentTileSet.dispose();
+                  currentTileSet = tiles;
+                  if ((tiles != null) && (tiles.missingTiles > 0))
+                     loadMissingTiles(tiles);
+                  
+                  Rectangle clientArea = getClientArea();
+                  Point mapSize = new Point(clientArea.width, clientArea.height);
                   coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
                   onMapLoad();
 					}
@@ -385,7 +361,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 					{
 						if (!AbstractGeoMapViewer.this.isDisposed() && (currentTileSet == tiles))
 						{
-							drawTiles(tiles);
 							AbstractGeoMapViewer.this.redraw();
 						}
 						else
@@ -411,40 +386,28 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	/**
 	 * @param tiles
 	 */
-	private void drawTiles(TileSet tileSet)
+	private void drawTiles(GC gc, TileSet tileSet)
 	{
-		if (currentImage != null)
-			currentImage.dispose();
+      final Tile[][] tiles = tileSet.tiles;
 
-		if ((tileSet == null) || (tileSet.tiles == null) || (tileSet.tiles.length == 0))
-		{
-			currentImage = null;
-			return;
-		}
+      Point size = getSize();
 
-		final Tile[][] tiles = tileSet.tiles;
-
-		Point size = getSize();
-		currentImage = new Image(getDisplay(), size.x, size.y);
-		GC gc = new GC(currentImage);
-
-		int x = tileSet.xOffset;
-		int y = tileSet.yOffset;
-		for(int i = 0; i < tiles.length; i++)
-		{
-			for(int j = 0; j < tiles[i].length; j++)
-			{
-				gc.drawImage(tiles[i][j].getImage(), x, y);
-				x += 256;
-				if (x >= size.x)
-				{
-					x = tileSet.xOffset;
-					y += 256;
-				}
-			}
-		}
-
-		gc.dispose();
+      int x = tileSet.xOffset;
+      int y = tileSet.yOffset;
+      for(int i = 0; i < tiles.length; i++)
+      {
+         for(int j = 0; j < tiles[i].length; j++)
+         {
+            if (!tiles[i][j].getImage().isDisposed())
+               gc.drawImage(tiles[i][j].getImage(), x, y);
+            x += 256;
+            if (x >= size.x)
+            {
+               x = tileSet.xOffset;
+               y += 256;
+            }
+         }
+      }
 	}
 
    /**
@@ -453,13 +416,13 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	@Override
 	public void paintControl(PaintEvent e)
 	{
-      if (bufferImage == null)
-         return;
-
-		final GC gc = new GC(bufferImage);
+      final GC gc = e.gc;
       gc.setAntialias(SWT.ON);
       gc.setTextAntialias(SWT.ON);
-      
+
+      if (currentTileSet != null)
+         drawTiles(gc, currentTileSet);
+
 		GeoLocation currentLocation;
 
 		// Draw objects and decorations if user is not dragging map
@@ -467,21 +430,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		if (dragStartPoint == null)
 		{
          currentLocation = accessor.getCenterPoint();
-         
-	      int imgW, imgH;
-	      if (currentImage != null)
-	      {
-	         gc.drawImage(currentImage, -offsetX, -offsetY);
-	         imgW = currentImage.getImageData().width;
-	         imgH = currentImage.getImageData().height;
-	      }
-	      else
-	      {
-	         imgW = -1;
-	         imgH = -1;
-	      }
-
-	      drawContent(gc, currentLocation, imgW, imgH);
+         Rectangle rect = getClientArea();
+	      drawContent(gc, currentLocation, rect.width, rect.height);
 		}
 		else
 		{
@@ -489,28 +439,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		   cp.x += offsetX;
 		   cp.y += offsetY;
 		   currentLocation = GeoLocationCache.displayToCoordinates(cp, accessor.getZoom());
-		   
-	      Point size = getSize();
-		   TileSet tileSet = mapLoader.getAllTiles(size, currentLocation, MapLoader.CENTER, accessor.getZoom(), true);
-	      int x = tileSet.xOffset;
-	      int y = tileSet.yOffset;
-	      final Tile[][] tiles = tileSet.tiles;
-	      for(int i = 0; i < tiles.length; i++)
-	      {
-	         for(int j = 0; j < tiles[i].length; j++)
-	         {
-	            gc.drawImage(tiles[i][j].getImage(), x, y);
-	            x += 256;
-	            if (x >= size.x)
-	            {
-	               x = tileSet.xOffset;
-	               y += 256;
-	            }
-	         }
-	      }
-	      tileSet.dispose();
 		}
-		
+
 		// Draw selection rectangle
 		if ((selectionStartPoint != null) && (selectionEndPoint != null))
 		{
@@ -526,7 +456,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			gc.setLineWidth(2);
 			gc.drawRectangle(x, y, w, h);
 		}
-		
+
 		// Draw current location info
       String text = currentLocation.toString();
       Point textSize = gc.textExtent(text);
@@ -544,7 +474,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
       gc.setForeground(INFO_BLOCK_TEXT);
       gc.drawText(text, rect.x + 5, rect.y + 4, true);
-		
+
 		// Draw title
 		if ((title != null) && !title.isEmpty())
 		{
@@ -554,7 +484,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
          gc.setForeground(ThemeEngine.getForegroundColor("GeoMap.Title"));
 			gc.drawText(title, x, 10, true);
 		}
-		
+
 		// Draw zoom control
       if (enableControls)
       {
@@ -580,9 +510,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
          zoomControlRect = rect;
       }
-
-      gc.dispose();
-      e.gc.drawImage(bufferImage, 0, 0);      
 	}
 
 	/**

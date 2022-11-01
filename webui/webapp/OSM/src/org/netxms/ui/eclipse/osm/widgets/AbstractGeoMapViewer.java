@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -214,7 +214,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
       GeoLocationCache.getInstance().addListener(this);
 	}
-		
+
    /**
     * Enable/disable map controls (zoom, scroll, etc.)
     *
@@ -334,17 +334,17 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		job.setUser(false);
 		job.start();
 	}
-	
+
 	/**
 	 * Map load handler. Called on UI thread after map was (re)loaded.
 	 */
 	protected abstract void onMapLoad();
 
 	/**
-	 * Load missing tiles in tile set
-	 * 
-	 * @param tiles
-	 */
+    * Load missing tiles in tile set
+    * 
+    * @param tiles tile set to load tiles for
+    */
 	private void loadMissingTiles(final TileSet tiles)
 	{
 		ConsoleJob job = new ConsoleJob(Messages.get().GeoMapViewer_LoadMissingJob_Title, viewPart, Activator.PLUGIN_ID, null) {
@@ -368,7 +368,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -436,7 +436,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		   cp.y += offsetY;
 		   currentLocation = GeoLocationCache.displayToCoordinates(cp, accessor.getZoom());
 		}
-		
+
 		// Draw selection rectangle
 		if ((selectionStartPoint != null) && (selectionEndPoint != null))
 		{
@@ -541,10 +541,10 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 * @param prevLocation
 	 */
 	protected abstract void onCacheChange(final AbstractObject object, final GeoLocation prevLocation);
-	
-	/**
-	 * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
-	 */
+
+   /**
+    * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
+    */
 	@Override
 	public void mouseDoubleClick(MouseEvent e)
 	{

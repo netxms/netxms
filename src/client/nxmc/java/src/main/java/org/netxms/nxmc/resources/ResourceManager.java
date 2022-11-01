@@ -21,6 +21,7 @@ package org.netxms.nxmc.resources;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * Resource manager
@@ -55,6 +56,18 @@ public final class ResourceManager
    {
       ImageDescriptor d = getImageDescriptor(path);
       return (d != null) ? d.createImage() : null;
+   }
+
+   /**
+    * Get image from resources. Image should be disposed by caller.
+    * 
+    * @param path image path
+    * @return image object
+    */
+   public static Image getImage(Display display, String path)
+   {
+      ImageDescriptor d = getImageDescriptor(path);
+      return (d != null) ? d.createImage(display) : null;
    }
 
    /**

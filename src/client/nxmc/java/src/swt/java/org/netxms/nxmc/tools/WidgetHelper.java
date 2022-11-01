@@ -19,6 +19,7 @@
 package org.netxms.nxmc.tools;
 
 import java.io.File;
+import java.io.InputStream;
 import java.text.BreakIterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -43,6 +44,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -1255,5 +1258,29 @@ public class WidgetHelper
    public static TransferData[] getAvailableTypes(Clipboard cb)
    {
       return cb.getAvailableTypes();
+   }
+
+   /**
+    * Create image from input stream.
+    *
+    * @param display owning display
+    * @param stream input stream
+    * @return image object or null on error
+    */
+   public static Image createImageFromStream(Display display, InputStream stream)
+   {
+      return new Image(display, stream);
+   }
+
+   /**
+    * Create image from image data (intended for use in non-UI threads).
+    *
+    * @param display owning display
+    * @param imageData image data
+    * @return image object or null on error
+    */
+   public static Image createImageFromImageData(Display display, ImageData imageData)
+   {
+      return new Image(display, imageData);
    }
 }
