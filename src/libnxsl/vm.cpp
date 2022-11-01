@@ -2568,12 +2568,12 @@ void NXSL_VM::relocateCode(uint32_t start, uint32_t len, uint32_t shift)
 /**
  * Use external module
  */
-void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo)
+bool NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo)
 {
    // Check if module already loaded
    for(int i = 0; i < m_modules.size(); i++)
       if (!_tcsicmp(importInfo->name, m_modules.get(i)->m_name))
-         return;  // Already loaded
+         return true;  // Already loaded
 
    // Add code from module
    int start = m_instructionSet.size();
@@ -2617,13 +2617,27 @@ void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importIn
    }
 
    // Register module as loaded
-   NXSL_Module *m = new NXSL_Module;
+   auto m = new NXSL_Module;
    _tcslcpy(m->m_name, importInfo->name, MAX_PATH);
-   m->m_codeStart = (UINT32)start;
+   m->m_codeStart = static_cast<uint32_t>(start);
    m->m_codeSize = module->m_instructionSet.size();
    m->m_functionStart = fnstart;
    m->m_numFunctions = m_functions.size() - fnstart;
    m_modules.add(m);
+
+   // Load dependencies
+   bool success = true;
+   for(int i = 0; i < module->m_requiredModules.size(); i++)
+   {
+      const NXSL_ModuleImport *importInfo = module->m_requiredModules.get(i);
+      if (!m_env->loadModule(this, importInfo))
+      {
+         error(NXSL_ERR_MODULE_NOT_FOUND, importInfo->lineNumber);
+         success = false;
+         break;
+      }
+   }
+   return success;
 }
 
 /**

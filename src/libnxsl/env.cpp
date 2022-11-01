@@ -325,39 +325,37 @@ void NXSL_Environment::registerSelectorSet(size_t count, const NXSL_ExtSelector 
  */
 bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importInfo)
 {
-   bool bRet = false;
+   bool success = false;
 
    // First, try to find module in library
    if (m_library != nullptr)
    {
-      NXSL_Program *pScript = m_library->findNxslProgram(importInfo->name);
-      if (pScript != nullptr)
+      NXSL_Program *libraryModule = m_library->findNxslProgram(importInfo->name);
+      if (libraryModule != nullptr)
       {
-         vm->loadModule(pScript, importInfo);
-         bRet = true;
+         success = vm->loadModule(libraryModule, importInfo);
       }
    }
 
    // If failed, try to load it from file
-   if (!bRet)
+   if (!success)
    {
       TCHAR fileName[MAX_PATH];
       _sntprintf(fileName, MAX_PATH, _T("%s.nxsl"), importInfo->name);
       TCHAR *source = NXSLLoadFile(fileName);
       if (source != nullptr)
       {
-         NXSL_Program *pScript = NXSLCompile(source, nullptr, 0, nullptr, this);
-         if (pScript != nullptr)
+         NXSL_Program *libraryModule = NXSLCompile(source, nullptr, 0, nullptr, this);
+         if (libraryModule != nullptr)
          {
-            vm->loadModule(pScript, importInfo);
-            delete pScript;
-            bRet = true;
+            success = vm->loadModule(libraryModule, importInfo);
+            delete libraryModule;
          }
          MemFree(source);
       }
    }
 
-   return bRet;
+   return success;
 }
 
 /**

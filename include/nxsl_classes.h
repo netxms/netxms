@@ -1335,7 +1335,7 @@ public:
    NXSL_VM(NXSL_Environment *env = nullptr, NXSL_Storage *storage = nullptr);
    virtual ~NXSL_VM();
 
-   void loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
+   bool loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
 
 	void setGlobalVariable(const NXSL_Identifier& name, NXSL_Value *value);
 	void removeGlobalVariable(const NXSL_Identifier& name) { m_globalVariables->remove(name); }
