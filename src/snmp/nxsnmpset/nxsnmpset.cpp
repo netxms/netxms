@@ -32,16 +32,18 @@ NETXMS_EXECUTABLE_HEADER(nxsnmpset)
 //
 // Static data
 //
-static char m_community[256] = "public";
-static char m_user[256] = "";
-static char m_authPassword[256] = "";
-static char m_encryptionPassword[256] = "";
-static SNMP_AuthMethod m_authMethod = SNMP_AUTH_NONE;
-static SNMP_EncryptionMethod m_encryptionMethod = SNMP_ENCRYPT_NONE;
-static uint16_t m_port = 161;
-static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
-static uint32_t m_timeout = 3000;
-static uint32_t m_type = ASN_OCTET_STRING;
+static char s_community[256] = "public";
+static char s_user[256] = "";
+static char s_authPassword[256] = "";
+static char s_encryptionPassword[256] = "";
+static SNMP_AuthMethod s_authMethod = SNMP_AUTH_NONE;
+static SNMP_EncryptionMethod s_encryptionMethod = SNMP_ENCRYPT_NONE;
+static uint16_t s_port = 161;
+static SNMP_Version s_snmpVersion = SNMP_VERSION_2C;
+static uint32_t s_timeout = 3000;
+static uint32_t s_type = ASN_OCTET_STRING;
+static bool s_base64 = false;
+static bool s_hexString = false;
 
 /**
  * Set variables
@@ -52,21 +54,21 @@ static int SetVariables(int argc, TCHAR *argv[])
 
    // Create SNMP transport
    auto transport = new SNMP_UDPTransport;
-   uint32_t snmpResult = transport->createUDPTransport(argv[0], m_port);
+   uint32_t snmpResult = transport->createUDPTransport(argv[0], s_port);
    if (snmpResult == SNMP_ERR_SUCCESS)
    {
-      transport->setSnmpVersion(m_snmpVersion);
-		if (m_snmpVersion == SNMP_VERSION_3)
-			transport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
+      transport->setSnmpVersion(s_snmpVersion);
+		if (s_snmpVersion == SNMP_VERSION_3)
+			transport->setSecurityContext(new SNMP_SecurityContext(s_user, s_authPassword, s_encryptionPassword, s_authMethod, s_encryptionMethod));
 		else
-			transport->setSecurityContext(new SNMP_SecurityContext(m_community));
+			transport->setSecurityContext(new SNMP_SecurityContext(s_community));
 
 		// Create request
-      auto request = new SNMP_PDU(SNMP_SET_REQUEST, GetCurrentProcessId(), m_snmpVersion);
+      auto request = new SNMP_PDU(SNMP_SET_REQUEST, GetCurrentProcessId(), s_snmpVersion);
       for(int i = 1; i < argc; i += 2)
       {
          TCHAR *p = _tcschr(argv[i], _T('@'));
-         uint32_t type = m_type;
+         uint32_t type = s_type;
          if (p != nullptr)
          {
             *p = 0;
@@ -81,7 +83,35 @@ static int SetVariables(int argc, TCHAR *argv[])
          if (SNMPIsCorrectOID(argv[i]))
          {
             auto varbind = new SNMP_Variable(argv[i]);
-            varbind->setValueFromString(type, argv[i + 1]);
+            if (s_hexString)
+            {
+               BYTE value[4096];
+               size_t size = StrToBin(argv[i + 1], value, sizeof(value));
+               varbind->setValueFromByteArray(type, value, size);
+            }
+            else if (s_base64)
+            {
+#ifdef UNICODE
+               char *in = MBStringFromWideString(argv[i + 1]);
+#else
+               const char *in = argv[i + 1];
+#endif
+               size_t ilen = strlen(in);
+               size_t olen = 3 * (ilen / 4) + 8;
+               char *out = MemAllocArray<char>(olen);
+               if (base64_decode(in, ilen, out, &olen))
+               {
+                  varbind->setValueFromByteArray(type, reinterpret_cast<BYTE*>(out), olen);
+               }
+               MemFree(out);
+#ifdef UNICODE
+               MemFree(in);
+#endif
+            }
+            else
+            {
+               varbind->setValueFromString(type, argv[i + 1]);
+            }
             request->bindVariable(varbind);
          }
          else
@@ -95,7 +125,7 @@ static int SetVariables(int argc, TCHAR *argv[])
       if (exitCode == 0)
       {
          SNMP_PDU *response;
-         if ((snmpResult = transport->doRequest(request, &response, m_timeout, 3)) == SNMP_ERR_SUCCESS)
+         if ((snmpResult = transport->doRequest(request, &response, s_timeout, 3)) == SNMP_ERR_SUCCESS)
          {
             if (response->getErrorCode() != 0)
             {
@@ -136,7 +166,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:e:E:hp:t:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:Bc:e:E:hHp:t:u:v:w:")) != -1)
    {
       switch(ch)
       {
@@ -145,10 +175,12 @@ int main(int argc, char *argv[])
                      _T("Valid options are:\n")
 						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
                      _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
+                     _T("   -B           : Provided value is a base64 encoded raw value\n")
                      _T("   -c <string>  : Community string. Default is \"public\"\n")
 						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
                      _T("   -E <passwd>  : User's encryption password for SNMP v3 USM\n")
                      _T("   -h           : Display help and exit\n")
+                     _T("   -H           : Provided value is a raw value encoded as hexadecimal string\n")
                      _T("   -p <port>    : Agent's port number. Default is 161\n")
                      _T("   -t <type>    : Specify variable's data type. Default is octet string.\n")
                      _T("   -u <user>    : User name for SNMP v3 USM\n")
@@ -182,48 +214,48 @@ int main(int argc, char *argv[])
                }
                else
                {
-                  m_type = value;
+                  s_type = value;
                }
             }
             else
             {
-               m_type = value;
+               s_type = value;
             }
             break;
          case 'c':   // Community
-            strlcpy(m_community, optarg, 256);
+            strlcpy(s_community, optarg, 256);
             break;
          case 'u':   // User
-            strlcpy(m_user, optarg, 256);
+            strlcpy(s_user, optarg, 256);
             break;
 			case 'a':   // authentication method
 				if (!stricmp(optarg, "md5"))
 				{
-					m_authMethod = SNMP_AUTH_MD5;
+					s_authMethod = SNMP_AUTH_MD5;
 				}
 				else if (!stricmp(optarg, "sha1"))
 				{
-					m_authMethod = SNMP_AUTH_SHA1;
+					s_authMethod = SNMP_AUTH_SHA1;
 				}
             else if (!stricmp(optarg, "sha224"))
             {
-               m_authMethod = SNMP_AUTH_SHA224;
+               s_authMethod = SNMP_AUTH_SHA224;
             }
             else if (!stricmp(optarg, "sha256"))
             {
-               m_authMethod = SNMP_AUTH_SHA256;
+               s_authMethod = SNMP_AUTH_SHA256;
             }
             else if (!stricmp(optarg, "sha384"))
             {
-               m_authMethod = SNMP_AUTH_SHA384;
+               s_authMethod = SNMP_AUTH_SHA384;
             }
             else if (!stricmp(optarg, "sha512"))
             {
-               m_authMethod = SNMP_AUTH_SHA512;
+               s_authMethod = SNMP_AUTH_SHA512;
             }
 				else if (!stricmp(optarg, "none"))
 				{
-					m_authMethod = SNMP_AUTH_NONE;
+					s_authMethod = SNMP_AUTH_NONE;
 				}
 				else
 				{
@@ -232,8 +264,8 @@ int main(int argc, char *argv[])
 				}
 				break;
          case 'A':   // authentication password
-            strlcpy(m_authPassword, optarg, 256);
-				if (strlen(m_authPassword) < 8)
+            strlcpy(s_authPassword, optarg, 256);
+				if (strlen(s_authPassword) < 8)
 				{
                _tprintf(_T("Authentication password should be at least 8 characters long\n"));
 					start = false;
@@ -242,15 +274,15 @@ int main(int argc, char *argv[])
 			case 'e':   // encryption method
 				if (!stricmp(optarg, "des"))
 				{
-					m_encryptionMethod = SNMP_ENCRYPT_DES;
+					s_encryptionMethod = SNMP_ENCRYPT_DES;
 				}
 				else if (!stricmp(optarg, "aes"))
 				{
-					m_encryptionMethod = SNMP_ENCRYPT_AES;
+					s_encryptionMethod = SNMP_ENCRYPT_AES;
 				}
 				else if (!stricmp(optarg, "none"))
 				{
-					m_encryptionMethod = SNMP_ENCRYPT_NONE;
+					s_encryptionMethod = SNMP_ENCRYPT_NONE;
 				}
 				else
 				{
@@ -259,8 +291,8 @@ int main(int argc, char *argv[])
 				}
 				break;
          case 'E':   // encription password
-            strlcpy(m_encryptionPassword, optarg, 256);
-				if (strlen(m_encryptionPassword) < 8)
+            strlcpy(s_encryptionPassword, optarg, 256);
+				if (strlen(s_encryptionPassword) < 8)
 				{
                _tprintf(_T("Encryption password should be at least 8 characters long\n"));
 					start = false;
@@ -275,21 +307,21 @@ int main(int argc, char *argv[])
             }
             else
             {
-               m_port = static_cast<uint16_t>(value);
+               s_port = static_cast<uint16_t>(value);
             }
             break;
          case 'v':   // Version
             if (!strcmp(optarg, "1"))
             {
-               m_snmpVersion = SNMP_VERSION_1;
+               s_snmpVersion = SNMP_VERSION_1;
             }
             else if (!stricmp(optarg, "2c"))
             {
-               m_snmpVersion = SNMP_VERSION_2C;
+               s_snmpVersion = SNMP_VERSION_2C;
             }
             else if (!stricmp(optarg, "3"))
             {
-               m_snmpVersion = SNMP_VERSION_3;
+               s_snmpVersion = SNMP_VERSION_3;
             }
             else
             {
@@ -306,8 +338,14 @@ int main(int argc, char *argv[])
             }
             else
             {
-               m_timeout = value;
+               s_timeout = value;
             }
+            break;
+         case 'B':
+            s_base64 = true;
+            break;
+         case 'H':
+            s_hexString = true;
             break;
          case '?':
             start = false;
@@ -315,6 +353,12 @@ int main(int argc, char *argv[])
          default:
             break;
       }
+   }
+
+   if (start && s_base64 && s_hexString)
+   {
+      start = false;
+      _tprintf(_T("Options -B and -H are mutually exclusive.\n"));
    }
 
    if (start)

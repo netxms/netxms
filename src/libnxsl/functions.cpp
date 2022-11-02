@@ -1581,7 +1581,7 @@ int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm
 
    size_t olen = 3 * (ilen / 4) + 8;
    char *out = MemAllocArray<char>(olen);
-   BOOL success = base64_decode(in, ilen, out, &olen);
+   bool success = base64_decode(in, ilen, out, &olen);
 #ifdef UNICODE
    MemFree(in);
 #endif
