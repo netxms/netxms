@@ -86,7 +86,7 @@ public class SummaryTablesCache
 			}
 		});
 	}
-	
+
 	/**
 	 * Reload tables from server
 	 */
@@ -114,7 +114,7 @@ public class SummaryTablesCache
 		   Activator.logError("Exception in SummaryTablesCache.reload()", e); //$NON-NLS-1$
 		}
 	}
-	
+
 	/**
 	 * Handler for table change
 	 * 

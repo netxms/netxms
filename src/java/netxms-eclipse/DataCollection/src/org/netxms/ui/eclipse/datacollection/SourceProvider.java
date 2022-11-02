@@ -37,12 +37,12 @@ public class SourceProvider extends AbstractSourceProvider
       { 
          SUMMARY_TABLES_EXIST 
       };
-   
+
    private static SourceProvider instance = null;   
-   
+
    private Display display;
    private Map<String, Object> stateMap = new HashMap<String, Object>(1);
-   
+
    /**
     * Get source provider instance.
     * 
@@ -52,8 +52,8 @@ public class SourceProvider extends AbstractSourceProvider
    {
       return instance;
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.AbstractSourceProvider#initialize(org.eclipse.ui.services.IServiceLocator)
     */
    @Override
@@ -82,7 +82,7 @@ public class SourceProvider extends AbstractSourceProvider
    {
       return stateMap;
    }
-   
+
    /**
     * Update provider
     */
@@ -92,13 +92,14 @@ public class SourceProvider extends AbstractSourceProvider
          @Override
          public void run()
          {
-            stateMap.put(SUMMARY_TABLES_EXIST, !SummaryTablesCache.getInstance().isEmpty(true));
+            SummaryTablesCache cache = SummaryTablesCache.getInstance();
+            stateMap.put(SUMMARY_TABLES_EXIST, (cache != null) && !cache.isEmpty(true));
             fireSourceChanged(ISources.WORKBENCH, getCurrentState());
          }
       });
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISourceProvider#dispose()
     */
    @Override
