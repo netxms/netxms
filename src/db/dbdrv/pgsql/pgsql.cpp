@@ -448,7 +448,6 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
 static void FreeStatement(DBDRV_STATEMENT hStmt)
 {
    auto stmt = static_cast<PG_STATEMENT*>(hStmt);
-
    if (stmt->name[0] != 0)
    {
       char query[256];
