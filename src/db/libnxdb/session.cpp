@@ -26,7 +26,7 @@
 /**
  * Check if statement handle is valid
  */
-#define IS_VALID_STATEMENT_HANDLE(s) ((s != nullptr) && (s->m_connection != nullptr))
+#define IS_VALID_STATEMENT_HANDLE(s) ((s != nullptr) && (s->m_connection != nullptr) && (s->m_statement != nullptr))
 
 /**
  * Performance counters
@@ -1267,7 +1267,10 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
       hStmt->m_connection->m_preparedStatements->remove(hStmt);
       hStmt->m_connection->m_preparedStatementsLock->unlock();
    }
-   hStmt->m_driver->m_callTable.FreeStatement(hStmt->m_statement);
+   if (hStmt->m_statement != nullptr)
+   {
+      hStmt->m_driver->m_callTable.FreeStatement(hStmt->m_statement);
+   }
    MemFree(hStmt->m_query);
    MemFree(hStmt);
 }
