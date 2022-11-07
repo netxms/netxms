@@ -69,7 +69,6 @@ import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.epp.Messages;
@@ -181,8 +180,7 @@ public class RuleEditor extends Composite
             editRule("org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"); //$NON-NLS-1$
          }
       };
-      condition.addButton(new DashboardElementButton(Messages.get().RuleEditor_EditCondition, editor.getImageEdit(),
-            editRuleCondition));
+      condition.addButton(new DashboardElementButton(Messages.get().RuleEditor_EditCondition, editor.getImageEdit(), editRuleCondition));
       condition.setDoubleClickAction(editRuleCondition);
 
       action = new Card(mainArea, Messages.get().RuleEditor_Action) {
@@ -208,7 +206,7 @@ public class RuleEditor extends Composite
       dragEnable();
       dropEnable();
    }
-   
+
    /**
     * Enables drag functionality of the rule
     */
@@ -500,22 +498,20 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, Messages.get().RuleEditor_SourceIs, needAnd, rule.isSourceInverted(), listener);
 
-         for(Long id : rule.getSources())
+         List<AbstractObject> sortedObjects = session.findMultipleObjects(rule.getSources(), true);
+         sortedObjects.sort(new Comparator<AbstractObject>() {
+            @Override
+            public int compare(AbstractObject o1, AbstractObject o2)
+            {
+               return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+            }
+         });
+         for(AbstractObject object : sortedObjects)
          {
             CLabel clabel = createCLabel(clientArea, 2, false);
             clabel.addMouseListener(listener);
-
-            AbstractObject object = session.findObjectById(id);
-            if (object != null)
-            {
-               clabel.setText(object.getObjectName());
-               clabel.setImage(editor.getWorkbenchLabelProvider().getImage(object));
-            }
-            else
-            {
-               clabel.setText("[" + id.toString() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-               clabel.setImage(SharedIcons.IMG_UNKNOWN_OBJECT);
-            }
+            clabel.setText(object.getObjectName());
+            clabel.setImage(editor.getWorkbenchLabelProvider().getImage(object));
          }
          needAnd = true;
       }
@@ -534,7 +530,7 @@ public class RuleEditor extends Composite
             {
                event = new EventTemplate(code);
                event.setSeverity(Severity.UNKNOWN);
-               event.setName("<" + code.toString() + ">"); //$NON-NLS-1$ //$NON-NLS-2$
+               event.setName("[" + code.toString() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
             }
             sortedEvents.add(event);
          }
@@ -653,9 +649,10 @@ public class RuleEditor extends Composite
     * @param parent parent composite
     * @param title group's title
     * @param needAnd true if AND clause have to be added
+    * @param inverted true if condition is inverted
+    * @param mouseListener mouse listener to attach
     */
-   private void addConditionGroupLabel(Composite parent, String title, boolean needAnd, boolean inverted,
-         MouseListener mouseListener)
+   private void addConditionGroupLabel(Composite parent, String title, boolean needAnd, boolean inverted, MouseListener mouseListener)
    {
       if (needAnd)
          createLabel(parent, 0, true, inverted ? Messages.get().RuleEditor_AND_NOT : Messages.get().RuleEditor_AND, null);
@@ -792,7 +789,7 @@ public class RuleEditor extends Composite
             }
             else
             {
-               clabel.setText("<" + Long.toString(c.getActionId()) + ">"); //$NON-NLS-1$ //$NON-NLS-2$
+               clabel.setText("[" + Long.toString(c.getActionId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
             }
             if (!c.getTimerDelay().isEmpty())
             {
@@ -1135,30 +1132,52 @@ public class RuleEditor extends Composite
 
    /**
     * DropTargetListener for Rule editor
-    *
     */
    private class RuleDropTargetListener implements DropTargetListener
    {
+      /**
+       * @see org.eclipse.swt.dnd.DropTargetListener#dragEnter(org.eclipse.swt.dnd.DropTargetEvent)
+       */
       @Override
       public void dragEnter(DropTargetEvent event)
       {
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DropTargetListener#dragOver(org.eclipse.swt.dnd.DropTargetEvent)
+       */
       @Override
       public void dragOver(DropTargetEvent event)
       {
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DropTargetListener#dragLeave(org.eclipse.swt.dnd.DropTargetEvent)
+       */
       @Override
       public void dragLeave(DropTargetEvent event)
       {
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DropTargetListener#dropAccept(org.eclipse.swt.dnd.DropTargetEvent)
+       */
       @Override
       public void dropAccept(DropTargetEvent event)
       {
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DropTargetListener#dragOperationChanged(org.eclipse.swt.dnd.DropTargetEvent)
+       */
       @Override
       public void dragOperationChanged(DropTargetEvent event)
       {
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DropTargetListener#drop(org.eclipse.swt.dnd.DropTargetEvent)
+       */
       @Override
       public void drop(DropTargetEvent event)
       {
@@ -1172,12 +1191,11 @@ public class RuleEditor extends Composite
          RuleEditor.this.editor.moveSelection(RuleEditor.this);
       }
    }
-   
+
    /**
     * DragSourceListener for Rule editor
-    *
     */
-   private class RuleDragSourceListener implements DragSourceListener
+   private static class RuleDragSourceListener implements DragSourceListener
    {
       private RuleEditor editor;
 
@@ -1185,15 +1203,27 @@ public class RuleEditor extends Composite
       {
          this.editor = editor;
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DragSourceListener#dragStart(org.eclipse.swt.dnd.DragSourceEvent)
+       */
       @Override
       public void dragStart(DragSourceEvent event)
       {
          LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(editor));
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DragSourceListener#dragFinished(org.eclipse.swt.dnd.DragSourceEvent)
+       */
       @Override
       public void dragFinished(DragSourceEvent event)
       {
       }
+
+      /**
+       * @see org.eclipse.swt.dnd.DragSourceListener#dragSetData(org.eclipse.swt.dnd.DragSourceEvent)
+       */
       @Override
       public void dragSetData(DragSourceEvent event)
       {

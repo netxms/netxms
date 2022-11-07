@@ -503,22 +503,20 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("SourceObjects");
          addConditionGroupLabel(clientArea, i18n.tr("source object is one of the following:"), needAnd, rule.isSourceInverted(), listener);
 
-         for(Long id : rule.getSources())
+         List<AbstractObject> sortedObjects = session.findMultipleObjects(rule.getSources(), true);
+         sortedObjects.sort(new Comparator<AbstractObject>() {
+            @Override
+            public int compare(AbstractObject o1, AbstractObject o2)
+            {
+               return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+            }
+         });
+         for(AbstractObject object : sortedObjects)
          {
             CLabel clabel = createCLabel(clientArea, 2, false);
             clabel.addMouseListener(listener);
-
-            AbstractObject object = session.findObjectById(id);
-            if (object != null)
-            {
-               clabel.setText(object.getObjectName());
-               clabel.setImage(editor.getObjectLabelProvider().getImage(object));
-            }
-            else
-            {
-               clabel.setText("[" + id.toString() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-               clabel.setImage(SharedIcons.IMG_UNKNOWN_OBJECT);
-            }
+            clabel.setText(object.getObjectName());
+            clabel.setImage(editor.getObjectLabelProvider().getImage(object));
          }
          needAnd = true;
       }
@@ -537,7 +535,7 @@ public class RuleEditor extends Composite
             {
                event = new EventTemplate(code);
                event.setSeverity(Severity.UNKNOWN);
-               event.setName("<" + code.toString() + ">");
+               event.setName("[" + code.toString() + "]");
             }
             sortedEvents.add(event);
          }
@@ -796,7 +794,7 @@ public class RuleEditor extends Composite
             }
             else
             {
-               clabel.setText("<" + Long.toString(c.getActionId()) + ">");
+               clabel.setText("[" + Long.toString(c.getActionId()) + "]");
             }
             if (!c.getTimerDelay().isEmpty())
             {
@@ -1168,7 +1166,6 @@ public class RuleEditor extends Composite
 
    /**
     * DragSourceListener for Rule editor
-    *
     */
    private static class RuleDragSourceListener implements DragSourceListener
    {

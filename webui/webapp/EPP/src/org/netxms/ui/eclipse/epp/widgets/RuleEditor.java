@@ -69,7 +69,6 @@ import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.epp.Messages;
@@ -500,22 +499,20 @@ public class RuleEditor extends Composite
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, Messages.get().RuleEditor_SourceIs, needAnd, rule.isSourceInverted(), listener);
 
-         for(Long id : rule.getSources())
+         List<AbstractObject> sortedObjects = session.findMultipleObjects(rule.getSources(), true);
+         sortedObjects.sort(new Comparator<AbstractObject>() {
+            @Override
+            public int compare(AbstractObject o1, AbstractObject o2)
+            {
+               return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+            }
+         });
+         for(AbstractObject object : sortedObjects)
          {
             CLabel clabel = createCLabel(clientArea, 2, false);
             clabel.addMouseListener(listener);
-
-            AbstractObject object = session.findObjectById(id);
-            if (object != null)
-            {
-               clabel.setText(object.getObjectName());
-               clabel.setImage(editor.getWorkbenchLabelProvider().getImage(object));
-            }
-            else
-            {
-               clabel.setText("[" + id.toString() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
-               clabel.setImage(SharedIcons.IMG_UNKNOWN_OBJECT);
-            }
+            clabel.setText(object.getObjectName());
+            clabel.setImage(editor.getWorkbenchLabelProvider().getImage(object));
          }
          needAnd = true;
       }

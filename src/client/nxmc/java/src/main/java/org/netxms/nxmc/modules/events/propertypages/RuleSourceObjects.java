@@ -88,12 +88,14 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       checkInverted = new Button(dialogArea, SWT.CHECK);
       checkInverted.setText(i18n.tr("Inverted rule (match objects NOT in the list below)"));
       checkInverted.setSelection(rule.isSourceInverted());
       
-      viewer = new SortableTableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      final String[] columnNames = { i18n.tr("Objects") };
+      final int[] columnWidths = { 300 };
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new BaseObjectLabelProvider());
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
@@ -101,7 +103,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				int size = ((IStructuredSelection)viewer.getSelection()).size();
+            int size = viewer.getStructuredSelection().size();
 				deleteButton.setEnabled(size > 0);
 			}
       });
@@ -179,7 +181,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 	@SuppressWarnings("unchecked")
 	private void deleteSourceObject()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		Iterator<AbstractObject> it = selection.iterator();
 		if (it.hasNext())
 		{

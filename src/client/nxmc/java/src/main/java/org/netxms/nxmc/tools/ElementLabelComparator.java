@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ public class ElementLabelComparator extends ViewerComparator
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		int rc, column;
-		
+
 		if (((TableViewer)viewer).getTable().getColumnCount() > 0)
 		{
 			TableColumn sortColumn = ((TableViewer)viewer).getTable().getSortColumn();
@@ -64,7 +64,7 @@ public class ElementLabelComparator extends ViewerComparator
 			// Table control in simple mode, assume column #0
 			column = 0;
 		}
-		
+
 		if (labelProvider instanceof ITableLabelProvider)
 		{
 			rc = ((ITableLabelProvider)labelProvider).getColumnText(e1, column).compareToIgnoreCase(((ITableLabelProvider)labelProvider).getColumnText(e2, column));
@@ -73,7 +73,6 @@ public class ElementLabelComparator extends ViewerComparator
 		{
 			if (column == 0)
 			{
-				
 				rc = labelProvider.getText(e1).compareToIgnoreCase(labelProvider.getText(e2));
 			}
 			else

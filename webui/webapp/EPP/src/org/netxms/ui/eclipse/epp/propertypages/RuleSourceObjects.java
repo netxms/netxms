@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -30,8 +29,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -65,14 +64,14 @@ public class RuleSourceObjects extends PropertyPage
 	private Button addButton;
 	private Button deleteButton;
 	private Button checkInverted;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
 		rule = editor.getRule();
 		
@@ -82,7 +81,7 @@ public class RuleSourceObjects extends PropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       checkInverted = new Button(dialogArea, SWT.CHECK);
       checkInverted.setText(Messages.get().RuleSourceObjects_InvertRule);
       checkInverted.setSelection(rule.isSourceInverted());
@@ -97,7 +96,7 @@ public class RuleSourceObjects extends PropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				int size = ((IStructuredSelection)viewer.getSelection()).size();
+            int size = viewer.getStructuredSelection().size();
 				deleteButton.setEnabled(size > 0);
 			}
       });
@@ -105,7 +104,7 @@ public class RuleSourceObjects extends PropertyPage
       for(AbstractObject o : session.findMultipleObjects(rule.getSources(), true))
       	objects.put(o.getObjectId(), o);
       viewer.setInput(objects.values().toArray());
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -113,7 +112,7 @@ public class RuleSourceObjects extends PropertyPage
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
       viewer.getControl().setLayoutData(gridData);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -127,13 +126,7 @@ public class RuleSourceObjects extends PropertyPage
 
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(Messages.get().RuleSourceObjects_Add);
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -146,23 +139,17 @@ public class RuleSourceObjects extends PropertyPage
 		
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(Messages.get().RuleSourceObjects_Delete);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				deleteEvent();
+				deleteSourceObject();
 			}
       });
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
-		
+
 		return dialogArea;
 	}
 
@@ -185,9 +172,9 @@ public class RuleSourceObjects extends PropertyPage
 	 * Delete object from list
 	 */
 	@SuppressWarnings("unchecked")
-	private void deleteEvent()
+	private void deleteSourceObject()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		IStructuredSelection selection = viewer.getStructuredSelection();
 		Iterator<AbstractObject> it = selection.iterator();
 		if (it.hasNext())
 		{

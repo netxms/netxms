@@ -88,12 +88,14 @@ public class RuleEvents extends RuleBasePropertyPage
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       checkInverted = new Button(dialogArea, SWT.CHECK);
       checkInverted.setText(i18n.tr("Inverted rule (match events NOT in the list below)"));
       checkInverted.setSelection(rule.isEventsInverted());
-      
-      viewer = new SortableTableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+
+      final String[] columnNames = { i18n.tr("Events") };
+      final int[] columnWidths = { 300 };
+      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new BaseEventTemplateLabelProvider());
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
