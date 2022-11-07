@@ -30,7 +30,7 @@
  */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, bool ignoreCase,
       UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
-      bool resetRepeat, const TCHAR *pushParam, int pushGroup, UINT32 level, UINT32 idStart, UINT32 idEnd)
+      bool resetRepeat, const TCHAR *pushParam, int pushGroup)
 {
 	StringBuffer expandedRegexp;
 
@@ -43,9 +43,9 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
    m_eventTag = MemCopyString(eventTag);
 	m_pmatch = MemAllocArray<int>(MAX_PARAM_COUNT * 3);
 	m_source = nullptr;
-	m_level = level;
-	m_idStart = idStart;
-	m_idEnd = idEnd;
+	m_level = 0xFFFFFFFF;
+	m_idStart = 0;
+	m_idEnd = 0xFFFFFFFF;
 	m_context = nullptr;
 	m_contextAction = 0;
 	m_contextToChange = nullptr;

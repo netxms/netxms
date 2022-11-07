@@ -184,10 +184,9 @@ private:
 
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
-	              const TCHAR *regexp, bool ignoreCase = true, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
-					  const TCHAR *eventTag = NULL, int repeatInterval = 0, int repeatCount = 0,
-					  bool resetRepeat = true, const TCHAR *push = NULL, int pushGroup = 0, UINT32 level = 0xFFFFFFFF,
-					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
+	              const TCHAR *regexp, bool ignoreCase, UINT32 eventCode, const TCHAR *eventName,
+					  const TCHAR *eventTag, int repeatInterval, int repeatCount,
+					  bool resetRepeat, const TCHAR *push, int pushGroup);
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
 
