@@ -474,6 +474,10 @@ static void HouseKeeper()
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Queue template updates"));
 		g_idxObjectById.forEach(QueueTemplateUpdate, nullptr);
 
+	   //Validate scripts in script library
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Validate server NXSL scripts"));
+	   ValidateScripts();
+
       // Call hooks in loaded modules
 		ENUMERATE_MODULES(pfHousekeeperHook)
 		{

@@ -1152,6 +1152,8 @@ public:
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(void*), bool (*scriptValidator)(NXSL_LibraryScript*, void*), void *context);
 
+   void enumirateScripts(void (*cb)(const NXSL_LibraryScript *, void *), void *data);
+
    void fillMessage(NXCPMessage *msg);
 };
 

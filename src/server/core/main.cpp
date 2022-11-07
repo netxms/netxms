@@ -1334,6 +1334,9 @@ retry_db_lock:
    InitMobileDeviceListeners();
    s_mobileDeviceListenerThread = ThreadCreateEx(MobileDeviceListenerThread);
 
+   //Validate scripts in script library
+   ValidateScripts();
+
    // Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());
 

@@ -123,6 +123,17 @@ NXSL_LibraryScript *NXSL_Library::findScript(const TCHAR *name)
 }
 
 /**
+ * Find script by name
+ */
+void NXSL_Library::enumirateScripts(void (*cb)(const NXSL_LibraryScript *, void *), void *data)
+{
+   for(int i = 0; i < m_scriptList->size(); i++)
+   {
+      cb(m_scriptList->get(i), data);
+   }
+}
+
+/**
  * Create ready to run VM for given script using provided environment creator and script validator.
  * This method will do library lock internally.
  * VM must be deleted by caller when no longer needed.

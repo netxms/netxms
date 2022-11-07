@@ -183,6 +183,18 @@ void LoadScripts()
 }
 
 /**
+ * Validate all scripts in script library
+ */
+void ValidateScripts()
+{
+   s_scriptLibrary.lock();
+   s_scriptLibrary.enumirateScripts([] (const NXSL_LibraryScript *script, void *data)
+                                 { if (!script->isValid()) ReportScriptError(_T("ValidateScripts"), nullptr, 0, script->getError(), _T("ScriptLibrarrie::%s"), script->getName()); }
+   , nullptr);
+   s_scriptLibrary.unlock();
+}
+
+/**
  * Load script name and code from database
  */
 static NXSL_LibraryScript *LoadScriptFromDatabase(uint32_t id)
