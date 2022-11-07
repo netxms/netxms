@@ -461,6 +461,10 @@ static void HouseKeeper()
                static_cast<Template*>(object)->queueUpdate();
 		   });
 
+	   //Validate scripts in script library
+      nxlog_debug_tag(DEBUG_TAG, 2, _T("Validate server NXSL scripts"));
+	   ValidateScripts();
+
       // Call hooks in loaded modules
 		ENUMERATE_MODULES(pfHousekeeperHook)
 		{

@@ -531,6 +531,7 @@ bool NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj* obj
  * Functions
  */
 void LoadScripts();
+void ValidateScripts();
 void ReloadScript(uint32_t scriptId);
 bool IsValidScriptId(uint32_t id);
 uint32_t ResolveScriptName(const TCHAR *name);

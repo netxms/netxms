@@ -416,8 +416,8 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
    }
 
    bool success = false;
-	NXSL_VM *vm = CreateServerScriptVM(name, FindObjectById(event->getSourceId()));
-	if (vm != nullptr)
+	ScriptVMHandle vm = CreateServerScriptVM(name, FindObjectById(event->getSourceId()));
+	if (vm.isValid())
 	{
 		vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
 
@@ -444,11 +444,11 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
          // argument parsing error
          nxlog_debug(6, _T("ExecuteActionScript: Argument parsing error for script %s"), name);
       }
-      delete vm;
+      vm.destroy();
 	}
 	else
 	{
-		nxlog_debug_tag(DEBUG_TAG, 4, _T("ExecuteActionScript: Cannot find script %s"), name);
+	   ReportScriptError(_T("ExecuteActionScript"), nullptr, 0, vm->getErrorText(), _T("ScriptLibrarrie::%s"), name);
 	}
 	return success;
 }
