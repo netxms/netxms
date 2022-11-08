@@ -23,40 +23,40 @@
 /**
  * Find mount point by device
  */
-static void FindMountpointByDevice(char *dev, int size)
+static void FindMountpointByDevice(char *dev, size_t size)
 {
 	FILE *f = setmntent(_PATH_MOUNTED, "r");
-	if (f != NULL) 
+	if (f == nullptr)
+	   return;
+
+	struct mntent *mnt;
+   while ((mnt = getmntent(f)) != nullptr)
    {
-      struct mntent *mnt;
-		while ((mnt = getmntent(f)) != NULL)
-		{
-			if (!strcmp(mnt->mnt_fsname, dev))
-			{
-				strncpy(dev, mnt->mnt_dir, size);
-				break;
-			}
-		}
-		endmntent(f);
-	}
+      if (!strcmp(mnt->mnt_fsname, dev))
+      {
+         strlcpy(dev, mnt->mnt_dir, size);
+         break;
+      }
+   }
+   endmntent(f);
 }
 
 /**
  * Handler for FileSystem.* parameters
  */
-LONG H_DiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_FileSystemInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
-	char szArg[512] = {0};
+	char mountPoint[512] = {0};
 
-	AgentGetParameterArgA(param, 1, szArg, sizeof(szArg));
-	if (szArg[0] == 0)
+	AgentGetParameterArgA(param, 1, mountPoint, sizeof(mountPoint));
+	if (mountPoint[0] == 0)
 	   return SYSINFO_RC_UNSUPPORTED;
 
-   FindMountpointByDevice(szArg, sizeof(szArg));
+   FindMountpointByDevice(mountPoint, sizeof(mountPoint));
 
    struct statfs s;
-   if (statfs(szArg, &s) == 0)
+   if (statfs(mountPoint, &s) == 0)
    {
       nRet = SYSINFO_RC_SUCCESS;
 
@@ -236,12 +236,12 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
    LONG rc = SYSINFO_RC_SUCCESS;
 
    FILE *in = fopen("/etc/mtab", "r");
-   if (in != NULL)
+   if (in != nullptr)
    {
       while(1)
       {
          char line[4096];
-         if (fgets(line, 4096, in) == NULL)
+         if (fgets(line, 4096, in) == nullptr)
             break;
          if (!strncmp(line, "rootfs /", 8))
             continue;
