@@ -48,8 +48,6 @@
 #define TRAP_UPDATE     2
 #define TRAP_DELETE     3
 
-#define MAX_MSG_SIZE    4194304
-
 #define DEBUG_TAG _T("client.session")
 
 /**
@@ -110,6 +108,11 @@ unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode
 uint32_t ReadMaintenanceJournal(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries);
 uint32_t AddMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
+
+/**
+ * Maximum client message size
+ */
+uint64_t g_maxClientMessageSize = 4 * 1024 * 1024; // 4MB
 
 /**
  * Client session console constructor
@@ -271,7 +274,7 @@ bool ClientSession::start()
 {
    if (m_socketPoller == nullptr)
       return false;
-   m_messageReceiver = new SocketMessageReceiver(m_socket, 4096, MAX_MSG_SIZE);
+   m_messageReceiver = new SocketMessageReceiver(m_socket, 4096, static_cast<size_t>(g_maxClientMessageSize));
    m_socketPoller->poller.poll(m_socket, 900000, socketPollerCallback, this);
    return true;
 }
