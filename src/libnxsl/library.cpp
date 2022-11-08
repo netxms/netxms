@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -125,12 +125,10 @@ NXSL_LibraryScript *NXSL_Library::findScript(const TCHAR *name)
 /**
  * Find script by name
  */
-void NXSL_Library::enumirateScripts(void (*cb)(const NXSL_LibraryScript *, void *), void *data)
+void NXSL_Library::forEach(std::function<void (const NXSL_LibraryScript*)> callback)
 {
    for(int i = 0; i < m_scriptList->size(); i++)
-   {
-      cb(m_scriptList->get(i), data);
-   }
+      callback(m_scriptList->get(i));
 }
 
 /**

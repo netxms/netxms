@@ -188,9 +188,10 @@ void LoadScripts()
 void ValidateScripts()
 {
    s_scriptLibrary.lock();
-   s_scriptLibrary.enumirateScripts([] (const NXSL_LibraryScript *script, void *data)
-                                 { if (!script->isValid()) ReportScriptError(_T("ValidateScripts"), nullptr, 0, script->getError(), _T("ScriptLibrarrie::%s"), script->getName()); }
-   , nullptr);
+   s_scriptLibrary.forEach([] (const NXSL_LibraryScript *script) {
+      if (!script->isValid())
+         ReportScriptError(_T("ValidateScripts"), nullptr, 0, script->getError(), _T("%s"), script->getName());
+   });
    s_scriptLibrary.unlock();
 }
 
