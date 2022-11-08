@@ -41,6 +41,7 @@ extern TCHAR g_internalCACertificateKeyPath[];
 extern char g_internalCACertificatePassword[];
 extern char g_auditLogKey[];
 extern int32_t g_maxClientSessions;
+extern uint64_t g_maxClientMessageSize;
 
 TCHAR s_serverCertificatePath[MAX_PATH] = _T("");
 TCHAR s_serverCertificateKeyPath[MAX_PATH] = _T("");
@@ -121,6 +122,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, nullptr },
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_logHistorySize, nullptr },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_logRotationMode, nullptr },
+   { _T("MaxClientMessageSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxClientMessageSize, nullptr },
    { _T("MaxClientSessions"), CT_LONG, 0, 0, 0, 0, &g_maxClientSessions, nullptr },
    { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &g_maxLogSize, nullptr },
    { _T("Module"), CT_STRING_LIST, 0, 0, 0, 0, &g_moduleLoadList, nullptr },
