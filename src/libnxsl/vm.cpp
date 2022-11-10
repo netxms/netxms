@@ -3192,3 +3192,21 @@ void NXSL_VM::dump(FILE *fp) const
       }
    }
 }
+
+const TCHAR *ScriptVMHandle::failureReasonText() const
+{
+   switch (m_failureReason)
+   {
+      case ScriptVMFailureReason::SUCCESS:
+         return _T("Success");
+      case ScriptVMFailureReason::SCRIPT_NOT_FOUND:
+         return _T("Script not found");
+      case ScriptVMFailureReason::SCRIPT_IS_EMPTY:
+         return _T("Script is empty");
+      case ScriptVMFailureReason::SCRIPT_LOAD_ERROR:
+         return _T("Script load error");
+      case ScriptVMFailureReason::SCRIPT_VALIDATION_ERROR:
+         return _T("Script validation error");
+   }
+   return _T("Unknown");
+}

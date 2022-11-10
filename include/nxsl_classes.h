@@ -1135,6 +1135,9 @@ public:
    void fillMessage(NXCPMessage *msg) const;
 };
 
+class ScriptVMHandle;
+enum class ScriptVMFailureReason;
+
 /**
  * Script library
  */
@@ -1161,7 +1164,7 @@ public:
    NXSL_LibraryScript *findScript(const TCHAR *name);
    StringList *getScriptDependencies(const TCHAR *name);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
-   NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(void*), bool (*scriptValidator)(NXSL_LibraryScript*, void*), void *context);
+   ScriptVMHandle createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(), ScriptVMFailureReason (*scriptValidator)(NXSL_LibraryScript*));
 
    void forEach(std::function<void (const NXSL_LibraryScript*)> callback);
 
@@ -1390,6 +1393,41 @@ public:
 
    __nxsl_class_data *allocateObjectClassData() { return m_objectClassData.allocate(); }
    void freeObjectClassData(__nxsl_class_data *data) { m_objectClassData.free(data); }
+};
+
+/**
+ * Script VM creation failure reason
+ */
+enum class ScriptVMFailureReason
+{
+   SUCCESS,
+   SCRIPT_NOT_FOUND,
+   SCRIPT_IS_EMPTY,
+   SCRIPT_LOAD_ERROR,
+   SCRIPT_VALIDATION_ERROR
+};
+
+/**
+ * Script VM handle
+ */
+class LIBNXSL_EXPORTABLE ScriptVMHandle
+{
+private:
+   NXSL_VM *m_vm;
+   ScriptVMFailureReason m_failureReason;
+
+public:
+   ScriptVMHandle(NXSL_VM *vm) { m_vm = vm; m_failureReason = ScriptVMFailureReason::SUCCESS; }
+   ScriptVMHandle(ScriptVMFailureReason failureReason) { m_vm = nullptr; m_failureReason = failureReason; }
+
+   operator NXSL_VM *() { return m_vm; }
+   NXSL_VM *operator->() { return m_vm; }
+   NXSL_VM *vm() const { return m_vm; }
+   ScriptVMFailureReason failureReason() const { return m_failureReason; }
+   const TCHAR *failureReasonText() const;
+   bool isValid() const { return m_vm != nullptr; }
+
+   void destroy() { delete m_vm; }
 };
 
 /**

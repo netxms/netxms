@@ -136,22 +136,39 @@ void NXSL_Library::forEach(std::function<void (const NXSL_LibraryScript*)> callb
  * This method will do library lock internally.
  * VM must be deleted by caller when no longer needed.
  */
-NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(void*), bool (*scriptValidator)(NXSL_LibraryScript*, void*), void *context)
+ScriptVMHandle NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(), ScriptVMFailureReason (*scriptValidator)(NXSL_LibraryScript*))
 {
-   NXSL_VM *vm = nullptr;
    lock();
    NXSL_LibraryScript *s = findScript(name);
-   if ((s != NULL) && s->isValid() && ((scriptValidator == nullptr) || scriptValidator(s, context)))
+   ScriptVMFailureReason reson = ScriptVMFailureReason::SCRIPT_NOT_FOUND;
+   NXSL_VM *vm = nullptr;
+   if (s != NULL)
    {
-      vm = new NXSL_VM(environmentCreator(context));
-      if (!vm->load(s->getProgram()))
+      if (s->isValid())
       {
-         delete vm;
-         vm = nullptr;
+         if (scriptValidator != nullptr)
+         {
+            reson = scriptValidator(s);
+         }
+      }
+      else
+      {
+         reson = ScriptVMFailureReason::SCRIPT_VALIDATION_ERROR;
+      }
+
+      if (reson == ScriptVMFailureReason::SUCCESS)
+      {
+         vm = new NXSL_VM(environmentCreator());
+         if (!vm->load(s->getProgram()))
+         {
+            delete vm;
+            vm = nullptr;
+            reson = ScriptVMFailureReason::SCRIPT_LOAD_ERROR;
+         }
       }
    }
    unlock();
-   return vm;
+   return (vm != nullptr) ? ScriptVMHandle(vm) : ScriptVMHandle(reson);
 }
 
 /**

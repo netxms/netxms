@@ -448,7 +448,7 @@ static bool ExecuteActionScript(const TCHAR *script, const Event *event)
 	}
 	else
 	{
-	   ReportScriptError(_T("ExecuteActionScript"), nullptr, 0, _T("script is not found or is not valid"), _T("ScriptLibrarrie::%s"), name);
+	   ReportScriptError(_T("ExecuteActionScript"), nullptr, 0, vm.failureReasonText(), _T("ScriptLibrarrie::%s"), name);
 	}
 	return success;
 }

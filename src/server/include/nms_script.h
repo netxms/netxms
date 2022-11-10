@@ -470,39 +470,6 @@ public:
 class ScheduleParameters;
 
 /**
- * Script VM creation failure reason
- */
-enum class ScriptVMFailureReason
-{
-   SUCCESS,
-   SCRIPT_NOT_FOUND,
-   SCRIPT_IS_EMPTY,
-   SCRIPT_LOAD_ERROR
-};
-
-/**
- * Script VM handle
- */
-class NXCORE_EXPORTABLE ScriptVMHandle
-{
-private:
-   NXSL_VM *m_vm;
-   ScriptVMFailureReason m_failureReason;
-
-public:
-   ScriptVMHandle(NXSL_VM *vm) { m_vm = vm; m_failureReason = ScriptVMFailureReason::SUCCESS; }
-   ScriptVMHandle(ScriptVMFailureReason failureReason) { m_vm = nullptr; m_failureReason = failureReason; }
-
-   operator NXSL_VM *() { return m_vm; }
-   NXSL_VM *operator->() { return m_vm; }
-   NXSL_VM *vm() const { return m_vm; }
-   ScriptVMFailureReason failureReason() const { return m_failureReason; }
-   bool isValid() const { return m_vm != nullptr; }
-
-   void destroy() { delete m_vm; }
-};
-
-/**
  * Get server script library
  */
 NXSL_Library NXCORE_EXPORTABLE *GetServerScriptLibrary();

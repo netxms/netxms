@@ -107,7 +107,7 @@ NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, const shared_ptr<Net
 /**
  * Server environment creator
  */
-static NXSL_Environment *CreateServerEnvironment(void *context)
+static NXSL_Environment *CreateServerEnvironment()
 {
    return new NXSL_ServerEnv();
 }
@@ -115,14 +115,17 @@ static NXSL_Environment *CreateServerEnvironment(void *context)
 /**
  * Server script validator
  */
-static bool ScriptValidator(NXSL_LibraryScript *script, void *context)
+static ScriptVMFailureReason ScriptValidator(NXSL_LibraryScript *script)
 {
-   if (script->isValid() && script->isEmpty())
+   if (script->isValid())
    {
-      *static_cast<ScriptVMFailureReason*>(context) = ScriptVMFailureReason::SCRIPT_IS_EMPTY;
-      return false;
+      return ScriptVMFailureReason::SCRIPT_VALIDATION_ERROR;
    }
-   return true;
+   if (script->isEmpty())
+   {
+      return ScriptVMFailureReason::SCRIPT_IS_EMPTY;
+   }
+   return ScriptVMFailureReason::SUCCESS;
 }
 
 /**
@@ -130,9 +133,12 @@ static bool ScriptValidator(NXSL_LibraryScript *script, void *context)
  */
 ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo)
 {
-   ScriptVMFailureReason failureReason = ScriptVMFailureReason::SCRIPT_NOT_FOUND;
-   NXSL_VM *vm = s_scriptLibrary.createVM(name, CreateServerEnvironment, ScriptValidator, &failureReason);
-   return (vm != nullptr) ? ScriptVMHandle(SetupServerScriptVM(vm, object, dciInfo)) : ScriptVMHandle(failureReason);
+   ScriptVMHandle vm = s_scriptLibrary.createVM(name, CreateServerEnvironment, ScriptValidator);
+   if (vm.isValid())
+   {
+      vm = ScriptVMHandle(SetupServerScriptVM(vm, object, dciInfo));
+   }
+   return vm;
 }
 
 /**
