@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class DataCollectionObjectPropertyTester extends PropertyTester
 {
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.core.expressions.IPropertyTester#test(java.lang.Object, java.lang.String, java.lang.Object[], java.lang.Object)
 	 */
 	@Override
@@ -40,10 +40,10 @@ public class DataCollectionObjectPropertyTester extends PropertyTester
 	{
 		if (!(receiver instanceof DataCollectionObject))
 			return false;
-		
+
 		if (property.equals("isClusterObject")) //$NON-NLS-1$
 		{
-			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         NXCSession session = ConsoleSharedData.getSession();
 			AbstractObject owner = session.findObjectById(((DataCollectionObject)receiver).getNodeId());		
 			if (owner instanceof Cluster)
 				return true;
@@ -58,14 +58,14 @@ public class DataCollectionObjectPropertyTester extends PropertyTester
 			}
 			return false;
 		}
-		
+
 		if (property.equals("isTemplateObject")) //$NON-NLS-1$
 		{
-			NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         NXCSession session = ConsoleSharedData.getSession();
 			AbstractObject owner = session.findObjectById(((DataCollectionObject)receiver).getNodeId());		
 			return (owner instanceof Template);
 		}
-		
+
 		return false;
 	}
 }

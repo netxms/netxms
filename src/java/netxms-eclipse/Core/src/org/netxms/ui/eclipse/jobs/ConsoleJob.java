@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,10 +72,8 @@ public abstract class ConsoleJob extends Job
       this.messageBar = messageBar;
       try
       {
-         IWorkbenchPart part = (wbPart != null) ? wbPart : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-               .getActivePart();
-         siteService = (part != null) ? (IWorkbenchSiteProgressService)wbPart.getSite().getService(
-               IWorkbenchSiteProgressService.class) : null;
+         IWorkbenchPart part = (wbPart != null) ? wbPart : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActivePart();
+         siteService = (part != null) ? (IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
       }
       catch(NullPointerException e)
       {
@@ -84,9 +82,7 @@ public abstract class ConsoleJob extends Job
       setUser(true);
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override

@@ -98,7 +98,7 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 		final Object selection = evalService.getCurrentState().getVariable(ISources.ACTIVE_MENU_SELECTION_NAME);
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
-		
+
       final Object selectedElement = ((IStructuredSelection)selection).getFirstElement();
       final AbstractObject baseObject = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
 		if (!(baseObject instanceof Container) && 

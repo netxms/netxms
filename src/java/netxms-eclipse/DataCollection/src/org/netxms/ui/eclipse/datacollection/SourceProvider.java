@@ -63,6 +63,7 @@ public class SourceProvider extends AbstractSourceProvider
       stateMap.put(SUMMARY_TABLES_EXIST, false);
       instance = this;
       display = Display.getCurrent();
+      Activator.logInfo("Data collection source provider initialized");
    }
 
    /**

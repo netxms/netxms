@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ public abstract class ConsoleJob extends Job
 		this.display = display;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
@@ -168,7 +168,7 @@ public abstract class ConsoleJob extends Job
          else
             schedule();
       }
-	}
+   }
 
    /**
     * Executes job. Called from within Job.run(). If job fails, this method should throw appropriate exception.

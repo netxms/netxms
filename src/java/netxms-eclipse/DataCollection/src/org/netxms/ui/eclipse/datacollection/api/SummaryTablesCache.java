@@ -46,6 +46,7 @@ public class SummaryTablesCache
    public static void attachSession(NXCSession session)
    {
       instance = new SummaryTablesCache(session);
+      Activator.logInfo("Instance of summary tables cache created");
    }
 
    /**
@@ -99,6 +100,7 @@ public class SummaryTablesCache
 				{
 					tables.put(d.getId(), d);
 				}
+            Activator.logInfo(tables.size() + " summary tables registered");
 			}
 	      SourceProvider.getInstance().update();
 		}
