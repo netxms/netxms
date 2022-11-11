@@ -168,7 +168,8 @@ public class Startup implements EntryPoint, StartupParameters
          autoConnect = true;
       }
 
-      settings.set("Connect.Server", "127.0.0.1"); // FIXME: read from properties
+      AppPropertiesLoader appProperties = new AppPropertiesLoader();
+      settings.set("Connect.Server", appProperties.getProperty("server", "127.0.0.1"));
 
       LoginDialog loginDialog = new LoginDialog(shell);
       while(!success)
