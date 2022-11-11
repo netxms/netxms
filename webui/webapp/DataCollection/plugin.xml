@@ -661,11 +661,5 @@
          </variable>
       </sourceProvider>
    </extension>
-   <extension
-         point="org.netxms.ui.eclipse.tweaklets">
-      <tweaklet
-            class="org.netxms.ui.eclipse.datacollection.DataCollectionTweaklet">
-      </tweaklet>
-   </extension>
 
 </plugin>
