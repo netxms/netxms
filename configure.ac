@@ -1511,6 +1511,10 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
 	CPPFLAGS="$CPPFLAGS -Wformat"
 
+	if test "x$CXX" = "xg++"; then
+		SQLFLAGS="-P $SQLFLAGS"
+	fi
+
 	AC_LANG_PUSH([C++])
 	AC_MSG_CHECKING(whether C++ compiler accepts -std=c++14)
 	OLD_CXXFLAGS="$CXXFLAGS"

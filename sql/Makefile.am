@@ -22,7 +22,7 @@ sql_DATA = dbinit_mysql.sql \
 ROOT_FILE = dbinit.in
 SOURCE = $(ROOT_FILE) database.in schema.in metadata.in setup.in events.in policy.in scripts.in images.in traps.in country_codes.in currency_codes.in devdb.in
 HEADER_FILES = ../include/netxmsdb.h ../include/nxevent.h ../src/server/include/nms_locks.h
-COMMAND = $(CPP) @SQLFLAGS@ -P -D_NETXMS_DB_SCHEMA_ -I@top_srcdir@/include -I@top_srcdir@/src/server/include
+COMMAND = $(CPP) @SQLFLAGS@ -D_NETXMS_DB_SCHEMA_ -I@top_srcdir@/include -I@top_srcdir@/src/server/include
 SQUEEZE = perl -n strip.pl
 
 all: $(sql_DATA)
