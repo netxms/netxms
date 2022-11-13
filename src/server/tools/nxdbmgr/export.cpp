@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -554,7 +554,7 @@ void ExportDatabase(char *file, const StringList& excludedTables, const StringLi
 		goto cleanup;
 	}
 
-	INT32 dbmajor, dbminor;
+	int32_t dbmajor, dbminor;
 	if (!DBGetSchemaVersion(g_dbHandle, &dbmajor, &dbminor))
 	{
 	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Cannot determine database schema version. Please check that NetXMS server installed correctly.\n"));
