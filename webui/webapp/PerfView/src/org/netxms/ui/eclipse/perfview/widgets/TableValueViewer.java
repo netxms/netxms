@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -158,7 +158,7 @@ public class TableValueViewer extends BaseTableValueViewer
       ViewerCell[] cells = cellSelectionManager.getSelectedCells();
       if (cells.length == 0)
          return;
-      
+
       for(int i = 0; i < cells.length; i++)
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
@@ -167,9 +167,8 @@ public class TableValueViewer extends BaseTableValueViewer
          String id = Long.toString(objectId) + "&" + Long.toString(dciId) + "@" //$NON-NLS-1$ //$NON-NLS-2$
                + safeEncode(column.getDisplayName() + ": " + instance.replace("~~~", " / ")) + "@" //$NON-NLS-1$
                + safeEncode(instance) + "@" + safeEncode(column.getName());//$NON-NLS-1$ //$NON-NLS-2$
-         
-         final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench()
-               .getActiveWorkbenchWindow().getActivePage();
+
+         final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
          try
          {
             page.showView(HistoricalDataView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
@@ -253,8 +252,7 @@ public class TableValueViewer extends BaseTableValueViewer
                + safeEncode(column.getName());
       }
 
-      final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench()
-            .getActiveWorkbenchWindow().getActivePage();
+      final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
       try
       {
          page.showView(DataComparisonView.ID, id, IWorkbenchPage.VIEW_ACTIVATE);
@@ -317,7 +315,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return (currentData != null) ? currentData.getTitle() : ("[" + dciId + "]"); //$NON-NLS-1$ //$NON-NLS-2$
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#readData()
     */
    @Override
@@ -326,7 +324,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return session.getTableLastValues(objectId, dciId);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#getReadJobName()
     */
    @Override
@@ -335,7 +333,7 @@ public class TableValueViewer extends BaseTableValueViewer
       return String.format(Messages.get().TableValue_JobName, dciId);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#getReadJobErrorMessage()
     */
    @Override

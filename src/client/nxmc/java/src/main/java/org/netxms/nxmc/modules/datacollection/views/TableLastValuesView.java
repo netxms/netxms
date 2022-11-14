@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,6 +67,13 @@ public class TableLastValuesView extends ObjectView
       return sb.toString();
    }  
 
+   /**
+    * Create table last value view.
+    *
+    * @param contextObject context object
+    * @param ownerId owning object ID
+    * @param dciId DCI ID
+    */
    public TableLastValuesView(AbstractObject contextObject, long ownerId, long dciId)
    {
       super(i18n.tr("Table Last Value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png"), 
@@ -142,7 +149,7 @@ public class TableLastValuesView extends ObjectView
    {
 		manager.add(actionExportAllToCsv);
 	}
-	
+
 	/**
 	 * Refresh table
 	 */

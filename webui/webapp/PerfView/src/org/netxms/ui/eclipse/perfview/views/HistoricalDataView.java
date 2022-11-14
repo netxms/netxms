@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,10 +76,10 @@ public class HistoricalDataView extends ViewPart
 	private long nodeId;
 	private long dciId;
 	private String nodeName;
-	private String[] subparts;
 	private String tableName;
 	private String instance;
 	private String column;
+   private boolean tableCellHistory;
 	private SortableTableViewer viewer;
 	private Date timeFrom = null;
 	private Date timeTo = null;
@@ -90,10 +90,10 @@ public class HistoricalDataView extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private Action actionDeleteDciEntry;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -111,10 +111,11 @@ public class HistoricalDataView extends ViewPart
 		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof MobileDevice) && !(object instanceof Cluster) && !(object instanceof Sensor)))
 			throw new PartInitException(Messages.get().HistoricalDataView_InvalidObjectID);
 		nodeName = object.getObjectName();
-		
+
       if (parts[1].contains("@"))
       {
-         subparts = parts[1].split("@");
+         String[] subparts = parts[1].split("@");
+         tableCellHistory = true;
          try
          {
             dciId = Long.parseLong(subparts[0]);
@@ -122,13 +123,9 @@ public class HistoricalDataView extends ViewPart
             instance = URLDecoder.decode(subparts[2], "UTF-8"); //$NON-NLS-1$
             column = URLDecoder.decode(subparts[3], "UTF-8"); //$NON-NLS-1$
          }
-         catch(NumberFormatException e)
+         catch(NumberFormatException | UnsupportedEncodingException e)
          {
-            e.printStackTrace();
-         }
-         catch(UnsupportedEncodingException e)
-         {
-            e.printStackTrace();
+            Activator.logError("Invalid view secondary ID", e);
          }
       }
       else
@@ -138,9 +135,9 @@ public class HistoricalDataView extends ViewPart
 		setPartName(nodeName + ": [" + (tableName == null ? Long.toString(dciId) : tableName) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -283,17 +280,15 @@ public class HistoricalDataView extends ViewPart
 		if (updateInProgress)
 			return;
 		updateInProgress = true;
-		
+
 		new ConsoleJob(Messages.get().HistoricalDataView_RefreshJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-			   final DciData data;
-			   if (subparts != null)
-			      data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
-			   else
-               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
-			   
+			   final DciData data = tableCellHistory ?
+                  session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit) :
+                  session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
+
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -303,7 +298,7 @@ public class HistoricalDataView extends ViewPart
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -327,6 +322,9 @@ public class HistoricalDataView extends ViewPart
 		}
 	}
 
+   /**
+    * Delete selected value form database
+    */
 	private void deleteValue()
 	{
       final IStructuredSelection selection = viewer.getStructuredSelection();
@@ -342,12 +340,10 @@ public class HistoricalDataView extends ViewPart
             for(DciDataRow r : list)
                session.deleteDciEntry(nodeId, dciId, r.getTimestamp().getTime() / 1000); // Convert back to seconds
 
-            final DciData data;
-            if (subparts != null)
-               data = session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit);
-            else
-               data = session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
-            
+            final DciData data = tableCellHistory ?
+                  session.getCollectedTableData(nodeId, dciId, instance, column, timeFrom, timeTo, recordLimit) :
+                  session.getCollectedData(nodeId, dciId, timeFrom, timeTo, recordLimit, HistoricalDataType.RAW_AND_PROCESSED);
+
             runInUIThread(new Runnable() {
                @Override
                public void run()

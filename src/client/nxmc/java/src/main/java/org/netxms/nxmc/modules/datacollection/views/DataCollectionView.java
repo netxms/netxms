@@ -790,7 +790,7 @@ public class DataCollectionView extends BaseDataCollectionView
             hideModificationWarnings = data.getSaveSelection();
          }
       }
-      
+
       if ((data == null) || data.isOkPressed())
       {
          showDCIPropertyPages(dco);

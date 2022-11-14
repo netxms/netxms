@@ -504,12 +504,12 @@ public abstract class BaseDataCollectionView extends ObjectView
             refreshController.dispose();
          }
       });
-      
+
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            showLineChart(false);
+            onDoubleClick();
          }
       });
 
@@ -527,7 +527,7 @@ public abstract class BaseDataCollectionView extends ObjectView
             ds.set(configPrefix + ".showHidden", isShowHidden());
          }
       });      
-      
+
       autoRefreshInterval = ds.getAsInteger(configPrefix + ".autoRefreshInterval", autoRefreshInterval);
       setAutoRefreshEnabled(ds.getAsBoolean(configPrefix + ".autoRefresh", true));
       labelProvider.setUseMultipliers(ds.getAsBoolean(configPrefix + ".useMultipliers", true));
@@ -720,6 +720,28 @@ public abstract class BaseDataCollectionView extends ObjectView
       if (viewer != null)
       {
          viewer.refresh(true);
+      }
+   }
+
+   /**
+    * Process double click on element
+    */
+   private void onDoubleClick()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return;
+
+      Object dcObject = selection.getFirstElement();
+      if ((dcObject instanceof DataCollectionTable) || ((dcObject instanceof DciValue) && ((DciValue)dcObject).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
+      {
+         openView(new TableLastValuesView(getObject(), getObjectId(dcObject), getDciId(dcObject)));
+      }
+      else 
+      {
+         List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(1);
+         items.add(getConfigFromObject(dcObject));
+         openView(new HistoricalGraphView(getObject(), items));
       }
    }
 

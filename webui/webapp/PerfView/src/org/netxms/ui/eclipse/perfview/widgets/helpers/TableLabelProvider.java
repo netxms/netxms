@@ -40,10 +40,10 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	private TableColumnDefinition[] columns = null;
 	private Font keyColumnFont;
    private boolean useMultipliers = true;
-	
+
 	/**
-	 * 
-	 */
+    * Create table label provider
+    */
 	public TableLabelProvider()
 	{
 		FontData fd = JFaceResources.getDefaultFont().getFontData()[0];

@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.perfview.widgets;
 
@@ -32,6 +47,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.TableRow;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -83,7 +99,7 @@ public abstract class BaseTableValueViewer extends Composite
       super(parent, style);
       this.viewPart = viewPart;
       this.saveTableSettings = saveTableSettings;
-      
+
       configId = buildConfigId(configSubId);
       session = ConsoleSharedData.getSession();
 
@@ -262,7 +278,7 @@ public abstract class BaseTableValueViewer extends Composite
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));        
       }
-      
+
       labelProvider.setColumns(table.getColumns());
       viewer.setInput(table);
       if (!saveTableSettings)
@@ -277,6 +293,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected String buildInstanceString(ViewerRow viewerRow)
    {
       StringBuilder instance = new StringBuilder();
+      TableRow row = (TableRow)viewerRow.getElement();
       boolean first = true;
       for(int i = 0; i < currentData.getColumnCount(); i++)
       {
@@ -285,13 +302,13 @@ public abstract class BaseTableValueViewer extends Composite
          {
             if (!first)
                instance.append("~~~"); //$NON-NLS-1$
-            instance.append(viewerRow.getText(i));
+            instance.append(row.getValue(i));
             first = false;
          }
       }
       return instance.toString();
    }
-   
+
    /**
     * @return
     */

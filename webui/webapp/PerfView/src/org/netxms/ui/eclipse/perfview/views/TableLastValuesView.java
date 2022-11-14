@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,35 +53,35 @@ public class TableLastValuesView extends ViewPart
    private TableValueViewer viewer;
    private Action actionRefresh;
    private Action actionExportAllToCsv;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		
+      final NXCSession session = ConsoleSharedData.getSession();
+
 		// Secondary ID must by in form nodeId&dciId
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
 		if (parts.length != 2)
 			throw new PartInitException("Internal error"); //$NON-NLS-1$
-		
+
 		objectId = Long.parseLong(parts[0]);
 		AbstractObject object = session.findObjectById(objectId);
 		if ((object == null) || (!(object instanceof AbstractNode) && !(object instanceof Cluster) && !(object instanceof MobileDevice)  && !(object instanceof Sensor)))
 			throw new PartInitException(Messages.get().TableLastValuesView_InvalidObjectID);
-		
+
 		dciId = Long.parseLong(parts[1]);
-		
+
 		setPartName(object.getObjectName() + ": [" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -159,10 +159,10 @@ public class TableLastValuesView extends ViewPart
 		manager.add(actionExportAllToCsv);
 		manager.add(actionRefresh);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{

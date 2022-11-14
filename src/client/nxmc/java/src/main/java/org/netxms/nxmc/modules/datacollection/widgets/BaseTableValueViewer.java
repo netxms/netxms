@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.TableRow;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -183,7 +184,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected void updateViewer(final Table table)
    {
       final PreferenceStore ds = PreferenceStore.getInstance();
-      
+
       if (!viewer.isInitialized())
       {
          final String[] names = table.getColumnDisplayNames();
@@ -204,7 +205,7 @@ public abstract class BaseTableValueViewer extends Composite
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));        
       }
-      
+
       labelProvider.setColumns(table.getColumns());
       viewer.setInput(table);
       if (!saveTableSettings)
@@ -219,6 +220,7 @@ public abstract class BaseTableValueViewer extends Composite
    protected String buildInstanceString(ViewerRow viewerRow)
    {
       StringBuilder instance = new StringBuilder();
+      TableRow row = (TableRow)viewerRow.getElement();
       boolean first = true;
       for(int i = 0; i < currentData.getColumnCount(); i++)
       {
@@ -227,13 +229,13 @@ public abstract class BaseTableValueViewer extends Composite
          {
             if (!first)
                instance.append("~~~"); 
-            instance.append(viewerRow.getText(i));
+            instance.append(row.getValue(i));
             first = false;
          }
       }
       return instance.toString();
    }
-   
+
    /**
     * @return
     */
@@ -275,7 +277,7 @@ public abstract class BaseTableValueViewer extends Composite
                {
                   if (viewer.getControl().isDisposed())
                      return;
-                  
+
                   if (errorLabel != null)
                   {
                      errorLabel.dispose();

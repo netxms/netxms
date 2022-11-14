@@ -88,7 +88,6 @@ public class DataFormatter
             }
             else
             {
-
                boolean useMultipliers = false;
                boolean useUnits = false;
 
@@ -104,9 +103,9 @@ public class DataFormatter
                      ;
                   if (format[end] == '}' && (end + 1 < format.length))
                   {
-                     if (i+1 != end)
+                     if (i + 1 != end)
                      {
-                        String[] items = new String(Arrays.copyOfRange(format, i+1, end)).split(",");
+                        String[] items = new String(Arrays.copyOfRange(format, i + 1, end)).split(",");
                         for (String item : items)
                         {
                            if ((item.trim().compareToIgnoreCase("u") == 0) || (item.trim().compareToIgnoreCase("units") == 0))
@@ -150,11 +149,12 @@ public class DataFormatter
                      sb.append(v.suffix);
                      if (useUnits)
                      {
-                        if (v.suffix.isEmpty())
+                        String unitName = unit.getName();
+                        if (v.suffix.isEmpty() && !unitName.isEmpty())
                         {
                            sb.append(" ");
                         }
-                        sb.append(unit.getName());
+                        sb.append(unitName);
                      }
                   }
                   catch(IndexOutOfBoundsException | IllegalFormatException e) // out of bound may occur if there is no letter after % sign. Like: %*3
