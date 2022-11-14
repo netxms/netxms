@@ -49,98 +49,94 @@ static void FindMountpointByDevice(char *dev, size_t size)
  */
 LONG H_FileSystemInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	char mountPoint[512] = {0};
-
-	AgentGetParameterArgA(param, 1, mountPoint, sizeof(mountPoint));
-	if (mountPoint[0] == 0)
-	   return SYSINFO_RC_UNSUPPORTED;
+   char mountPoint[512] = "";
+   AgentGetParameterArgA(param, 1, mountPoint, sizeof(mountPoint));
+   if (mountPoint[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
 
    FindMountpointByDevice(mountPoint, sizeof(mountPoint));
 
    struct statfs s;
-   if (statfs(mountPoint, &s) == 0)
+   if (statfs(mountPoint, &s) != 0)
    {
-      nRet = SYSINFO_RC_SUCCESS;
-
-      uint64_t usedBlocks = static_cast<uint64_t>(s.f_blocks - s.f_bfree);
-      uint64_t totalBlocks = static_cast<uint64_t>(s.f_blocks);
-      uint64_t blockSize = static_cast<uint64_t>(s.f_bsize);
-      uint64_t freeBlocks = static_cast<uint64_t>(s.f_bfree);
-      uint64_t availableBlocks = static_cast<uint64_t>(s.f_bavail);
-
-      switch(CAST_FROM_POINTER(arg, int))
-      {
-         case DISK_TOTAL:
-            ret_uint64(value, totalBlocks * blockSize);
-            break;
-         case DISK_USED:
-            ret_uint64(value, usedBlocks * blockSize);
-            break;
-         case DISK_FREE:
-            ret_uint64(value, freeBlocks * blockSize);
-            break;
-         case DISK_AVAIL:
-            ret_uint64(value, availableBlocks * blockSize);
-            break;
-         case DISK_USED_PERC:
-            if (totalBlocks > 0)
-            {
-               ret_double(value, (usedBlocks * 100.0) / totalBlocks);
-            }
-            else
-            {
-               ret_double(value, 0.0);
-            }
-            break;
-         case DISK_AVAIL_PERC:
-            if (totalBlocks > 0)
-            {
-               ret_double(value, (availableBlocks * 100.0) / totalBlocks);
-            }
-            else
-            {
-               ret_double(value, 0.0);
-            }
-            break;
-         case DISK_FREE_PERC:
-            if (totalBlocks > 0)
-            {
-               ret_double(value, (freeBlocks * 100.0) / totalBlocks);
-            }
-            else
-            {
-               ret_double(value, 0.0);
-            }
-            break;
-         case DISK_TOTAL_INODES:
-            ret_uint64(value, s.f_files);
-            break;
-         case DISK_FREE_INODES:
-         case DISK_AVAIL_INODES:
-            ret_uint64(value, s.f_ffree);
-            break;
-         case DISK_FREE_INODES_PERC:
-         case DISK_AVAIL_INODES_PERC:
-            ret_double(value, (s.f_files > 0) ? s.f_ffree * 100.0 / s.f_files : 0);
-            break;
-         case DISK_USED_INODES:
-            ret_uint64(value, s.f_files - s.f_ffree);
-            break;
-         case DISK_USED_INODES_PERC:
-            ret_double(value, (s.f_files > 0) ? (s.f_files - s.f_ffree) * 100.0 / s.f_files : 0);
-            break;
-         default:
-            nRet = SYSINFO_RC_UNSUPPORTED;
-            break;
-      }
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("H_FileSystemInfo: Call to statfs(\"%hs\") failed (%hs)"), mountPoint, strerror(errno));
+      return (errno == ENOENT) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
    }
-   else
+
+   uint64_t usedBlocks = static_cast<uint64_t>(s.f_blocks - s.f_bfree);
+   uint64_t totalBlocks = static_cast<uint64_t>(s.f_blocks);
+   uint64_t blockSize = static_cast<uint64_t>(s.f_bsize);
+   uint64_t freeBlocks = static_cast<uint64_t>(s.f_bfree);
+   uint64_t availableBlocks = static_cast<uint64_t>(s.f_bavail);
+
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("H_FileSystemInfo: statfs(\"%hs\"): blockSize=") UINT64_FMT _T(" totalBlocks=") UINT64_FMT _T(" freeBlocks=") UINT64_FMT _T(" availableBlocks=") UINT64_FMT,
+      mountPoint, blockSize, totalBlocks, freeBlocks, availableBlocks);
+
+   switch(CAST_FROM_POINTER(arg, int))
    {
-      if (errno == ENOENT)
-         nRet = SYSINFO_RC_NO_SUCH_INSTANCE;
+      case DISK_TOTAL:
+         ret_uint64(value, totalBlocks * blockSize);
+         break;
+      case DISK_USED:
+         ret_uint64(value, usedBlocks * blockSize);
+         break;
+      case DISK_FREE:
+         ret_uint64(value, freeBlocks * blockSize);
+         break;
+      case DISK_AVAIL:
+         ret_uint64(value, availableBlocks * blockSize);
+         break;
+      case DISK_USED_PERC:
+         if (totalBlocks > 0)
+         {
+            ret_double(value, (usedBlocks * 100.0) / totalBlocks);
+         }
+         else
+         {
+            ret_double(value, 0.0);
+         }
+         break;
+      case DISK_AVAIL_PERC:
+         if (totalBlocks > 0)
+         {
+            ret_double(value, (availableBlocks * 100.0) / totalBlocks);
+         }
+         else
+         {
+            ret_double(value, 0.0);
+         }
+         break;
+      case DISK_FREE_PERC:
+         if (totalBlocks > 0)
+         {
+            ret_double(value, (freeBlocks * 100.0) / totalBlocks);
+         }
+         else
+         {
+            ret_double(value, 0.0);
+         }
+         break;
+      case DISK_TOTAL_INODES:
+         ret_uint64(value, s.f_files);
+         break;
+      case DISK_FREE_INODES:
+      case DISK_AVAIL_INODES:
+         ret_uint64(value, s.f_ffree);
+         break;
+      case DISK_FREE_INODES_PERC:
+      case DISK_AVAIL_INODES_PERC:
+         ret_double(value, (s.f_files > 0) ? s.f_ffree * 100.0 / s.f_files : 0);
+         break;
+      case DISK_USED_INODES:
+         ret_uint64(value, s.f_files - s.f_ffree);
+         break;
+      case DISK_USED_INODES_PERC:
+         ret_double(value, (s.f_files > 0) ? (s.f_files - s.f_ffree) * 100.0 / s.f_files : 0);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
    }
-	return nRet;
+	return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -240,7 +236,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
    FILE *in = fopen("/etc/mtab", "r");
    if (in != nullptr)
    {
-      while(1)
+      while(true)
       {
          char line[4096];
          if (fgets(line, 4096, in) == nullptr)
@@ -248,12 +244,12 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
          if (!strncmp(line, "rootfs /", 8))
             continue;
          char *ptr = strchr(line, ' ');
-         if (ptr != NULL)
+         if (ptr != nullptr)
          {
             ptr++;
             char *mp = ptr;
             ptr = strchr(mp, ' ');
-            if (ptr != NULL)
+            if (ptr != nullptr)
                *ptr = 0;
 #ifdef UNICODE
             value->addPreallocated(WideStringFromMBString(mp));
@@ -284,10 +280,10 @@ LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
    LONG rc = SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	FILE *f = setmntent(_PATH_MOUNTED, "r");
-	if (f != NULL) 
+	if (f != nullptr)
    {
       struct mntent *mnt;
-		while((mnt = getmntent(f)) != NULL)
+		while((mnt = getmntent(f)) != nullptr)
 		{
 		   if (!strcmp(mnt->mnt_type, "rootfs"))
 		      continue;  // ignore rootfs entries
