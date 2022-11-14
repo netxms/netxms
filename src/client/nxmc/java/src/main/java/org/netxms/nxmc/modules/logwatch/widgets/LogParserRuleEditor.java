@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -604,13 +604,22 @@ public class LogParserRuleEditor extends DashboardComposite
                editor.fireModifyListeners();
             }
          });
-         
-         pushDciName = new LabeledText(area, SWT.NONE);
+
+         Composite pushDataArea = new Composite(area, SWT.NONE);
+         GridLayout pushDataAreaLayout = new GridLayout();
+         pushDataAreaLayout.marginHeight = 0;
+         pushDataAreaLayout.marginWidth = 0;
+         pushDataAreaLayout.numColumns = 2;
+         pushDataArea.setLayout(pushDataAreaLayout);
+         pushDataArea.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+         pushDciName = new LabeledText(pushDataArea, SWT.NONE);
          pushDciName.setLabel(i18n.tr("Push DCI name"));
          pushDciName.setText((rule.getPushDci() != null) ? rule.getPushDci().getData() : ""); //$NON-NLS-1$
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
+         gd.verticalAlignment = SWT.BOTTOM;
          pushDciName.setLayoutData(gd);
          pushDciName.getTextControl().addModifyListener(new ModifyListener() {
             @Override
@@ -624,8 +633,9 @@ public class LogParserRuleEditor extends DashboardComposite
 
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         pushGroup = WidgetHelper.createLabeledSpinner(area, SWT.BORDER, i18n.tr("Push group"), 1, 500, gd);
+         gd.grabExcessHorizontalSpace = false;
+         gd.verticalAlignment = SWT.BOTTOM;
+         pushGroup = WidgetHelper.createLabeledSpinner(pushDataArea, SWT.BORDER, i18n.tr("Capture group used for data push"), 1, 500, gd);
          pushGroup.setMinimum(0);
          pushGroup.setSelection((rule.getPushDci() != null) ? rule.getPushDci().getGroup() : 1);
          pushGroup.addModifyListener(new ModifyListener() {
