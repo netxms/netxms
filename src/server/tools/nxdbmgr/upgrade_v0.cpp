@@ -2739,7 +2739,7 @@ static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
       { EVENT_SUBNET_DELETED, _T("af188eb3-e84f-4fd9-aecf-f1ba934a9f1a") },
       { EVENT_THREAD_HANGS, _T("df247d13-a63a-43fe-bb02-cb41718ee387") },
       { EVENT_THREAD_RUNNING, _T("5589f6ce-7133-44db-8e7a-e1452d636a9a") },
-      { EVENT_NOTIFICATION_FAILURE, _T("1e376009-0d26-4b86-87a2-f4715a02fb38") }, //Old name EVENT_SMTP_FAILURE
+      { EVENT_NOTIFICATION_FAILURE, _T("1e376009-0d26-4b86-87a2-f4715a02fb38") }, // Old name EVENT_SMTP_FAILURE
       { EVENT_MAC_ADDR_CHANGED, _T("61916ef0-1eee-4df7-a95b-150928d47962") },
       { EVENT_INCORRECT_NETMASK, _T("86c08c55-416e-4ac4-bf2b-302b5fddbd68") },
       { EVENT_NODE_DOWN, _T("ce34f0d0-5b21-48c2-8788-8ed5ee547023") },
@@ -2747,7 +2747,7 @@ static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
       { EVENT_SERVICE_DOWN, _T("89caacb5-d2cf-493b-862f-cddbfecac5b6") },
       { EVENT_SERVICE_UP, _T("ab35e7c7-2428-44db-ad43-57fe551bb8cc") },
       { EVENT_SERVICE_UNKNOWN, _T("d891adae-49fe-4442-a8f3-0ca37ca8820a") },
-      { EVENT_SMS_FAILURE, _T("c349bf75-458a-4d43-9c27-f71ea4bb06e2") },
+      { 30, _T("c349bf75-458a-4d43-9c27-f71ea4bb06e2") }, // Was EVENT_SMS_FAILURE
       { EVENT_SNMP_OK, _T("a821086b-1595-40db-9148-8d770d30a54b") },
       { EVENT_AGENT_OK, _T("9c15299a-f2e3-4440-84c5-b17dea87ae2a") },
       { EVENT_SCRIPT_ERROR, _T("2cc78efe-357a-4278-932f-91e36754c775") },

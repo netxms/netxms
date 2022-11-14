@@ -411,15 +411,6 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
-		EVENT_SMS_FAILURE, 'SYS_SMS_FAILURE', 'c349bf75-458a-4d43-9c27-f71ea4bb06e2',
-		EVENT_SEVERITY_WARNING, 1,
-		'Unable to send SMS to phone %1',
-		'Generated when server is unable to send SMS.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Phone number'
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
 		EVENT_SNMP_OK, 'SYS_SNMP_OK', 'a821086b-1595-40db-9148-8d770d30a54b',
 		EVENT_SEVERITY_NORMAL, 1,
 		'Connectivity with SNMP agent restored',
