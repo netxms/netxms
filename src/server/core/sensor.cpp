@@ -48,7 +48,7 @@ Sensor::Sensor() : super(Pollable::STATUS | Pollable::CONFIGURATION)
 /**
  * Constructor with all fields for Sensor class
  */
-Sensor::Sensor(const TCHAR *name, const NXCPMessage& request) : super(Pollable::STATUS | Pollable::CONFIGURATION)
+Sensor::Sensor(const TCHAR *name, const NXCPMessage& request) : super(name, Pollable::STATUS | Pollable::CONFIGURATION)
 {
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PENDING;
    m_flags = request.getFieldAsUInt32(VID_SENSOR_FLAGS);
