@@ -1151,4 +1151,22 @@ public class NXCObjectCreationData
    {
       this.instanceDiscoveryMethod = instanceDiscoveryMethod;
    }
+
+   /**
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "NXCObjectCreationData [objectClass=" + objectClass + ", name=" + name + ", alias=" + alias + ", parentId=" + parentId + ", comments=" + comments + ", creationFlags=" + creationFlags +
+            ", primaryName=" + primaryName + ", agentPort=" + agentPort + ", snmpPort=" + snmpPort + ", etherNetIpPort=" + etherNetIpPort + ", sshPort=" + sshPort + ", ipAddress=" + ipAddress +
+            ", agentProxyId=" + agentProxyId + ", snmpProxyId=" + snmpProxyId + ", mqttProxyId=" + mqttProxyId + ", etherNetIpProxyId=" + etherNetIpProxyId + ", icmpProxyId=" + icmpProxyId +
+            ", sshProxyId=" + sshProxyId + ", webServiceProxyId=" + webServiceProxyId + ", mapType=" + mapType + ", seedObjectIds=" + seedObjectIds + ", zoneUIN=" + zoneUIN + ", serviceType=" +
+            serviceType + ", ipProtocol=" + ipProtocol + ", ipPort=" + ipPort + ", request=" + request + ", response=" + response + ", linkedNodeId=" + linkedNodeId + ", template=" + template +
+            ", macAddress=" + macAddress + ", ifIndex=" + ifIndex + ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" +
+            physicalPort + ", createStatusDci=" + createStatusDci + ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" +
+            chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" + sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", commProtocol=" + commProtocol + ", xmlConfig=" +
+            xmlConfig + ", xmlRegConfig=" + xmlRegConfig + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", metaType=" + metaType + ", description=" + description +
+            ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + "]";
+   }
 }

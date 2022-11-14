@@ -5729,7 +5729,7 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_PARENT_ID, (int)data.getParentId());
       msg.setFieldInt16(NXCPCodes.VID_OBJECT_CLASS, data.getObjectClass());
       msg.setField(NXCPCodes.VID_OBJECT_NAME, data.getName());
-      if (data.getObjectAlias() != null && !data.getObjectAlias().isEmpty())
+      if ((data.getObjectAlias() != null) && !data.getObjectAlias().isEmpty())
          msg.setField(NXCPCodes.VID_ALIAS, data.getObjectAlias());
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, data.getZoneUIN());
       if (data.getComments() != null)

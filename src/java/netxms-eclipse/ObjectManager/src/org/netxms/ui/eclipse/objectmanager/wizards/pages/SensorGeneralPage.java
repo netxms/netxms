@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2017 Raden Solutions
+ * Copyright (C) 2017-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ public class SensorGeneralPage extends WizardPage
    private LabeledText textObjectAlias;
    private Combo comboCommMethod;
    private SensorCommon commonData;
-   
+
    /**
     * Constructor for Sensor general property page
     */
@@ -53,7 +53,7 @@ public class SensorGeneralPage extends WizardPage
       setDescription(Messages.get().SensorWizard_General_Description);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.dialogs.IDialogPage#createControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -67,7 +67,7 @@ public class SensorGeneralPage extends WizardPage
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       container.setLayout(layout);
-      
+
       textObjectName = new LabeledText(container, SWT.NONE);
       textObjectName.setLabel(Messages.get().General_ObjectName);
       textObjectName.setText("");
@@ -82,7 +82,7 @@ public class SensorGeneralPage extends WizardPage
             getWizard().getContainer().updateButtons();
          }
       });
-      
+
       textObjectAlias = new LabeledText(container, SWT.NONE);
       textObjectAlias.setLabel(Messages.get().General_Alias);
       textObjectAlias.setText("");
@@ -98,8 +98,7 @@ public class SensorGeneralPage extends WizardPage
          }
       });
 
-      comboCommMethod = (Combo)WidgetHelper.createLabeledCombo(container, SWT.BORDER | SWT.READ_ONLY, Messages.get().SensorWizard_General_CommMethod, 
-            WidgetHelper.DEFAULT_LAYOUT_DATA);
+      comboCommMethod = (Combo)WidgetHelper.createLabeledCombo(container, SWT.BORDER | SWT.READ_ONLY, Messages.get().SensorWizard_General_CommMethod, WidgetHelper.DEFAULT_LAYOUT_DATA);
       comboCommMethod.setItems(Sensor.COMM_METHOD);
       comboCommMethod.select(0);
       gd = new GridData();
@@ -125,31 +124,30 @@ public class SensorGeneralPage extends WizardPage
       
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.wizard.WizardPage#canFlipToNextPage()
     */
    @Override
    public boolean canFlipToNextPage()
    {
-      if(!isCurrentPage())
+      if (!isCurrentPage())
          return true;
-      if(textObjectName.getText().isEmpty())
+      if (textObjectName.getText().isEmpty())
          return false;
-      
       return commonData.validate();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.wizard.WizardPage#isPageComplete()
     */
    @Override
    public boolean isPageComplete()
    {
-      if(!isCurrentPage())
+      if (!isCurrentPage())
          return true;
-      if(textObjectName.getText().isEmpty())
+      if (textObjectName.getText().isEmpty())
          return false;
-      if(comboCommMethod.getSelectionIndex() != Sensor.COMM_LORAWAN)
+      if (comboCommMethod.getSelectionIndex() != Sensor.COMM_LORAWAN)
          return true;
       return false;
    }

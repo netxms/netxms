@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2017 Raden Solutions
+ * Copyright (C) 2017-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,53 +33,68 @@ import org.netxms.ui.eclipse.objectmanager.wizards.pages.SensorLoraWan;
 public class CreateSensorWizard extends Wizard
 {
    private NXCObjectCreationData cd;
-   private SensorGeneralPage first;
-   private SensorLoraWan lora;
-   
+   private SensorGeneralPage generalPage;
+   private SensorLoraWan loraWanPage;
+
    /**
-    * Wizard constructor. Also creates NXCObjectCreationData for new object. 
+    * Wizard constructor. Also creates NXCObjectCreationData for new object.
     * 
     * @param parentId parent object ID in object tree
     */
    public CreateSensorWizard(long parentId)
    {
       super();
-      cd = new NXCObjectCreationData(AbstractObject.OBJECT_SENSOR,  "", parentId);
+      cd = new NXCObjectCreationData(AbstractObject.OBJECT_SENSOR, "", parentId);
    }
-   
+
+   /**
+    * @see org.eclipse.jface.wizard.Wizard#getWindowTitle()
+    */
    @Override
-   public String getWindowTitle() {
-       return "Create sensor";
+   public String getWindowTitle()
+   {
+      return "Create Sensor";
    }
-   
+
+   /**
+    * @see org.eclipse.jface.wizard.Wizard#addPages()
+    */
    @Override
-   public void addPages() {
-       first = new SensorGeneralPage();
-       lora = new SensorLoraWan();
-       
-       
-       addPage(first);
-       addPage(lora);
+   public void addPages()
+   {
+      generalPage = new SensorGeneralPage();
+      loraWanPage = new SensorLoraWan();
+
+      addPage(generalPage);
+      addPage(loraWanPage);
    }
-   
+
+   /**
+    * @see org.eclipse.jface.wizard.Wizard#getNextPage(org.eclipse.jface.wizard.IWizardPage)
+    */
    @Override
-   public IWizardPage getNextPage(IWizardPage currentPage) {
-      if(currentPage == first)
+   public IWizardPage getNextPage(IWizardPage currentPage)
+   {
+      if (currentPage == generalPage)
       {
-         if (first.getCommMethod() == Sensor.COMM_LORAWAN) {
-            return lora;
+         if (generalPage.getCommMethod() == Sensor.COMM_LORAWAN)
+         {
+            return loraWanPage;
          }
       }
       return null;
    }
-   
+
+   /**
+    * @see org.eclipse.jface.wizard.Wizard#performFinish()
+    */
    @Override
    public boolean performFinish()
    {
-      cd.setName(first.getObjectName());
-      cd.setObjectAlias(first.getObjectAlias());
-      cd.setCommProtocol(first.getCommMethod());
-      SensorCommon commonData =  first.getCommonData();
+      cd.setName(generalPage.getObjectName());
+      cd.setObjectAlias(generalPage.getObjectAlias());
+      cd.setCommProtocol(generalPage.getCommMethod());
+      SensorCommon commonData = generalPage.getCommonData();
       cd.setMacAddress(commonData.getMacAddress());
       cd.setDeviceClass(commonData.getDeviceClass());
       cd.setVendor(commonData.getVendor());
@@ -88,20 +103,20 @@ public class CreateSensorWizard extends Wizard
       cd.setDeviceAddress(commonData.getDeviceAddress());
       cd.setDescription(commonData.getDescription());
       cd.setSensorProxy(commonData.getProxyNode());
-      if(cd.getCommProtocol() == Sensor.COMM_LORAWAN)
-         cd.setXmlRegConfig(lora.getRegConfig());
-      if(cd.getCommProtocol() == Sensor.COMM_LORAWAN)
-         cd.setXmlConfig(lora.getConfig());
+      if (cd.getCommProtocol() == Sensor.COMM_LORAWAN)
+         cd.setXmlRegConfig(loraWanPage.getRegConfig());
+      if (cd.getCommProtocol() == Sensor.COMM_LORAWAN)
+         cd.setXmlConfig(loraWanPage.getConfig());
       return true;
    }
 
    /**
     * Returns filled object creation object for Sensor object
+    * 
     * @return
     */
    public NXCObjectCreationData getCreationData()
    {
       return cd;
    }
-
 }
