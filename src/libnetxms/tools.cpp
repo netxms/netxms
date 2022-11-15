@@ -4737,3 +4737,81 @@ char LIBNETXMS_EXPORTABLE *URLEncode(const char *src, char *dst, size_t size)
    *d = 0;
    return dst;
 }
+
+/**
+ * Seconds to uptime
+ */
+String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds)
+{
+   uint32_t d, h, n;
+   d = (UINT32)(arg / 86400);
+   arg -= d * 86400;
+   h = (UINT32)(arg / 3600);
+   arg -= h * 3600;
+   n = (UINT32)(arg / 60);
+   arg -= n * 60;
+   if (arg >= 30 && !withSeconds)
+   {
+       n++;
+       if (n == 60)
+       {
+          n = 0;
+          h++;
+          if (h == 24)
+          {
+             h = 0;
+             d++;
+          }
+       }
+   }
+
+   StringBuffer sb;
+   if (withSeconds)
+      sb.appendFormattedString(_T("%u days, %2u:%02u:%02u"), d, h, n, arg);
+   else
+      sb.appendFormattedString(_T("%u days, %2u:%02u"), d, h, n);
+   return sb;
+}
+
+static double DECIMAL_MULTIPLIERS[] = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L };
+static double DECIMAL_MULTIPLIERS_SMALL[] = { 0.000000000000001, 0.000000000001, 0.000000001, 0.000001, 0.001, 1 };
+static double BINARY_MULTIPLIERS[] = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x4000000000000L }; //TODO: s_decimalMultipliers
+static const TCHAR *SUFFIX[] = { _T(""), _T(" k"), _T(" M"), _T(" G"), _T(" T"), _T(" P") };
+static const TCHAR *BINARY_SUFFIX[] = { _T(""), _T(" Ki"), _T(" Mi"), _T(" Gi"), _T(" Ti"), _T(" Pi") };
+static const TCHAR *SUFFIX_SMALL[] = { _T(" f"), _T(" p"), _T(" n"), _T(" μ"), _T(" m"), _T("") };
+
+/**
+ * Convert number to short form using decadic unit prefixes
+ */
+double LIBNETXMS_EXPORTABLE FromatNumber(double n, bool useBinaryMultipliers, int multiplierPower, TCHAR* prefixSymbol)
+{
+   bool isSmallNumber = ((n > -0.01) && (n < 0.01) && n != 0 && multiplierPower <= 0) || multiplierPower < 0;
+   const double *multipliers = isSmallNumber ? DECIMAL_MULTIPLIERS_SMALL : useBinaryMultipliers ? BINARY_MULTIPLIERS : DECIMAL_MULTIPLIERS;
+
+   int i = 0;
+   if (multiplierPower != 0)
+   {
+      if (isSmallNumber)
+         multiplierPower = 5 + multiplierPower;
+      i = MIN(multiplierPower, 5);
+   }
+   else
+   {
+      for(i = 5; i >= 0; i--)
+      {
+         if ((n >= multipliers[i]) || (n <= -multipliers[i]))
+            break;
+      }
+   }
+
+   if (i >= 0)
+   {
+      _tcscpy(prefixSymbol, isSmallNumber ? SUFFIX_SMALL[i] : useBinaryMultipliers ? BINARY_SUFFIX[i] : SUFFIX[i]);
+      return n / multipliers[i];
+   }
+   else
+   {
+      *prefixSymbol = 0;
+      return n;
+   }
+}

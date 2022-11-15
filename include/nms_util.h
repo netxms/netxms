@@ -1157,7 +1157,7 @@ public:
    String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<ssize_t>(len)); }
 
    StringList *split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
-   static StringList *split(TCHAR *str, size_t len, const TCHAR *separator);
+   static StringList *split(TCHAR *str, size_t len, const TCHAR *separator, bool trim = false);
 
    static String toString(int32_t v, const TCHAR *format = nullptr);
    static String toString(uint32_t v, const TCHAR *format = nullptr);
@@ -5202,6 +5202,9 @@ int32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString
 uint32_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUIntA(const char *optString, const char *option, uint32_t defVal);
 uint64_t LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsUInt64A(const char *optString, const char *option, uint64_t defVal);
 uuid LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsGUIDA(const char *optString, const char *option, const uuid& defVal);
+
+String LIBNETXMS_EXPORTABLE SecondsToUptime(uint64_t arg, bool withSeconds);
+double LIBNETXMS_EXPORTABLE FromatNumber(double n, bool useBinaryMultipliers, int multiplierPower, TCHAR* prefixSymbol);
 
 #ifdef UNICODE
 #define ExtractNamedOptionValue ExtractNamedOptionValueW

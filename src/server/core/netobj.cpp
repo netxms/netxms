@@ -2896,7 +2896,12 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      }
                      Trim(buffer);
 
-                     NXSL_VM *vm = CreateServerScriptVM(buffer, self(), dci);
+                     shared_ptr<DCObjectInfo> tmpDci = dci;
+                     if (tmpDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
+                     {
+                        tmpDci = ((DataCollectionTarget *)this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+                     }
+                     NXSL_VM *vm = CreateServerScriptVM(buffer, self(), tmpDci);
                      if (vm != nullptr)
                      {
                         if (event != nullptr)
@@ -3009,26 +3014,40 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      else
                      {
                         buffer[i] = 0;
-                        const StringList *names = event->getParameterNames();
-                        TCHAR *defaultValue = _tcschr(buffer, _T(':'));
-                        if (defaultValue != nullptr)
+                        TCHAR *modifierEnd = _tcschr(buffer, _T('}'));
+                        StringList *list = nullptr;
+                        if (buffer[0] == '{' && modifierEnd != nullptr)
                         {
-                           *defaultValue = 0;
-                           defaultValue++;
-                           Trim(buffer);
-                           int index = names->indexOfIgnoreCase(buffer);
-                           if (index != -1)
-                              output.append(event->getParameter(index));
-                           else
-                              output.append(defaultValue);
+                           *modifierEnd = 0;
+                           list = String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true);
+
+                           memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
+                        }
+                        const StringList *names = event->getParameterNames();
+                        const TCHAR *defaultValue = _T("");
+                        TCHAR *tmp = _tcschr(buffer, _T(':'));
+                        if (tmp != nullptr)
+                        {
+                           tmp = 0;
+                           defaultValue = tmp + 1;
+                        }
+
+                        shared_ptr<DCObjectInfo> tmpDci = dci;
+                        if (tmpDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
+                        {
+                           tmpDci = ((DataCollectionTarget *)this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+                        }
+
+                        Trim(buffer);
+                        if (tmpDci != nullptr && list != nullptr)
+                        {
+                           output.append(tmpDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
                         }
                         else
                         {
-                           Trim(buffer);
-                           int index = names->indexOfIgnoreCase(buffer);
-                           if (index != -1)
-                              output.append(event->getParameter(index));
+                           output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
                         }
+                        delete list;
                      }
                   }
                   break;

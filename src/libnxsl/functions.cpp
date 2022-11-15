@@ -531,33 +531,7 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
       return NXSL_ERR_NOT_NUMBER;
 
    uint64_t arg = argv[0]->getValueAsUInt64();
-
-   uint32_t d, h, n;
-   d = (UINT32)(arg / 86400);
-   arg -= d * 86400;
-   h = (UINT32)(arg / 3600);
-   arg -= h * 3600;
-   n = (UINT32)(arg / 60);
-   arg -= n * 60;
-   if (arg >= 30)
-   {
-       n++;
-       if (n == 60)
-       {
-          n = 0;
-          h++;
-          if (h == 24)
-          {
-             h = 0;
-             d++;
-          }
-       }
-   }
-
-   TCHAR result[128];
-   _sntprintf(result, 128, _T("%u days, %2u:%02u"), d, h, n);
-
-   *ppResult = vm->createValue(result);
+   *ppResult = vm->createValue(SecondsToUptime(arg, false));
    return 0;
 }
 
@@ -1755,102 +1729,6 @@ int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
 }
 
 /**
- * Convert number to short form using decadic unit prefixes
- */
-static double ConvertNumberDecadic(double n, char* prefixSymbol)
-{
-   if (n == LONG_MIN)
-   {
-      strcpy(prefixSymbol, "E");
-      return -9.223372036854775807;
-   }
-
-   if (n < 0)
-      return -ConvertNumberDecadic(-n, prefixSymbol);
-
-   if (n < 1000)
-   {
-      prefixSymbol[0] = 0;
-      return n;
-   }
-   if (n < 1000000) // kilo
-   {
-      strcpy(prefixSymbol, "k");
-      return n / 1000.0;
-   }
-   else if (n < 1000000000) // mega
-   {
-      strcpy(prefixSymbol, "M");
-      return n / 1000000.0;
-   }
-   else if (n < 1000000000000) // giga
-   {
-      strcpy(prefixSymbol, "G");
-      return n / 1000000000.0;
-   }
-   else if (n < 1000000000000000) // tera
-   {
-      strcpy(prefixSymbol, "T");
-      return n / 1000000000000.0;
-   }
-   else if (n < 1000000000000000000) // peta
-   {
-      strcpy(prefixSymbol, "P");
-      return n / 1000000000000000.0;
-   }
-   else // exa
-   {
-      strcpy(prefixSymbol, "E");
-      return n / 1000000000000000000.0;
-   }
-}
-
-/**
- * Convert number to short form using binary unit prefixes
- */
-static double ConvertNumberBinary(double n, char* prefixSymbol)
-{
-   if (n < 0)
-      return -ConvertNumberBinary(-n, prefixSymbol);
-
-   if (n < 1024)
-   {
-      prefixSymbol[0] = 0;
-      return n;
-   }
-   else if (n < 1048576) // kibi
-   {
-      strcpy(prefixSymbol, "Ki");
-      return n / 1024.0;
-   }
-   else if (n < 1073741824) // mebi
-   {
-      strcpy(prefixSymbol, "Mi");
-      return n / 1048576.0;
-   }
-   else if (n < 1099511627776) // gibi
-   {
-      strcpy(prefixSymbol, "Gi");
-      return n / 1073741824.0;
-   }
-   else if (n < 1125899906842620) // tebi
-   {
-      strcpy(prefixSymbol, "Ti");
-      return n / 1099511627776.0;
-   }
-   else if (n < 1152921504606850000) // pebi
-   {
-      strcpy(prefixSymbol, "Pi");
-      return n / 1125899906842620.0;
-   }
-   else // exbi
-   {
-      strcpy(prefixSymbol, "Ei");
-      return n / 1152921504606850000.0;
-   }
-}
-
-/**
  * Convert numeric value to human-readable form with metric prefix
  */
 int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm)
@@ -1871,11 +1749,11 @@ int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_
    if (precision > 20)
       precision = 20;
 
-   char prefixSymbol[3];
-   double outVal = useBinaryPrefixes ? ConvertNumberBinary(inVal, prefixSymbol) : ConvertNumberDecadic(inVal, prefixSymbol);
+   TCHAR prefixSymbol[3];
+   double outVal = FromatNumber(inVal, useBinaryPrefixes, 0, prefixSymbol);
 
-   char outStr[128];
-   snprintf(outStr, 128, "%.*f%s", precision, outVal, prefixSymbol);
+   TCHAR outStr[128];
+   _sntprintf(outStr, 128, _T("%.*f%s"), precision, outVal, prefixSymbol);
 
    *result = vm->createValue(outStr);
    return NXSL_ERR_SUCCESS;

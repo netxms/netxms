@@ -1813,6 +1813,11 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
    _tcslcpy(m_description, object.m_description, MAX_DB_STRING);
    _tcslcpy(m_systemTag, object.m_systemTag, MAX_DB_STRING);
    _tcslcpy(m_instanceName, object.m_instanceName, MAX_DB_STRING);
+   if (m_type == DCO_TYPE_ITEM)
+   {
+      m_unitName = static_cast<const DCItem&>(object).m_unitName;
+      m_multiplier = static_cast<const DCItem&>(object).m_multiplier;
+   }
    m_instanceData = MemCopyString(object.m_instanceDiscoveryData);
    m_comments = MemCopyString(object.m_comments);
    m_dataType = (m_type == DCO_TYPE_ITEM) ? static_cast<const DCItem&>(object).m_dataType : -1;
@@ -1841,6 +1846,11 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
    msg.getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
    msg.getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
    msg.getFieldAsString(VID_INSTANCE, m_instanceName, MAX_DB_STRING);
+   if (m_type == DCO_TYPE_ITEM)
+   {
+      m_unitName = static_cast<const DCItem*>(object)->m_unitName;
+      m_multiplier = static_cast<const DCItem*>(object)->m_multiplier;
+   }
    m_instanceData = msg.getFieldAsString(VID_INSTD_DATA);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
    m_dataType = (m_type == DCO_TYPE_ITEM) ? msg.getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
@@ -1862,4 +1872,82 @@ DCObjectInfo::~DCObjectInfo()
 {
    MemFree(m_instanceData);
    MemFree(m_comments);
+}
+
+static const TCHAR *UNITS_WITHOUT_MULTIPLIERS[] = {_T("%"), _T("°C"), _T("°F"), _T("dbm")};
+static const int UNITS_WITHOUT_MULTIPLIERS_SIZE = 4;
+
+String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameters) const
+{
+   if (parameters == nullptr || parameters->isEmpty())
+      return String(value);
+   bool useUnits = parameters->containsIgnoreCase(_T("u")) || parameters->containsIgnoreCase(_T("units"));
+   bool useMultiplier = parameters->containsIgnoreCase(_T("m")) || parameters->containsIgnoreCase(_T("multipliers"));
+   StringBuffer units = m_unitName;
+   bool useBinaryPrefixes = units.containsIgnoreCase(_T(" (IEC)"));
+   units.replace(_T(" (IEC)"), _T(""));
+   units.replace(_T(" (Metric)"), _T(""));
+
+   for (int i = 0; useMultiplier && !units.isEmpty() && i < UNITS_WITHOUT_MULTIPLIERS_SIZE; i++)
+   {
+      if (!_tcscmp(UNITS_WITHOUT_MULTIPLIERS[i], units))
+      {
+         useMultiplier = false;
+      }
+   }
+
+   if (useUnits && !_tcsicmp(m_unitName, _T("Uptime")))
+   {
+      TCHAR *eptr;
+      uint64_t time = _tcstol(value, &eptr, 10);
+      if (*eptr != 0)
+      {
+         return String(value);
+      }
+
+      return SecondsToUptime(time, true);
+   }
+
+   if (useUnits && !_tcsicmp(m_unitName, _T("Epoch time")))
+   {
+      TCHAR *eptr;
+      time_t time = static_cast<time_t>(_tcstol(value, &eptr, 10));
+      if (*eptr != 0)
+      {
+         return String(value);
+      }
+      return FormatTimestamp(time);
+   }
+
+   TCHAR *eptr;
+   double inVal = _tcstod(value, &eptr);
+
+   if (*eptr != 0)
+   {
+      return String(value);
+   }
+
+   StringBuffer result;
+   TCHAR prefixSymbol[8] = _T("");
+   if (useMultiplier)
+   {
+      double outVal = FromatNumber(inVal, useBinaryPrefixes, m_multiplier, prefixSymbol);
+      if (*prefixSymbol == 0)
+         result.append(value);
+      else
+         result.appendFormattedString(_T("%.*f%s"), 2, outVal, prefixSymbol);
+   }
+   else
+   {
+      result.append(value);
+   }
+
+   if (useUnits && !units.isEmpty())
+   {
+      if (*prefixSymbol == 0)
+         result.append(_T(" "));
+      result.append(units);
+   }
+
+   return result;
 }

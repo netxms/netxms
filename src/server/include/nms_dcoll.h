@@ -879,6 +879,8 @@ private:
    TCHAR m_instanceName[MAX_DB_STRING];
    TCHAR *m_instanceData;
    TCHAR *m_comments;
+   SharedString m_unitName;
+   int m_multiplier;
    int m_dataType;
    int m_origin;
    int m_status;
@@ -916,6 +918,7 @@ public:
    bool hasActiveThreshold() const { return m_hasActiveThreshold; }
    int getThresholdSeverity() const { return m_thresholdSeverity; }
    uint32_t getRelatedObject() const { return m_relatedObject; }
+   String formatValue(const TCHAR *value, const StringList *parameters) const;
 };
 
 /**

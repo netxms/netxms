@@ -346,14 +346,17 @@ bool String::endsWith(const TCHAR *s) const
 /**
  * Split string
  */
-StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator)
+StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator, bool trim)
 {
    StringList *result = new StringList();
 
    size_t slen = _tcslen(separator);
    if (slen == 0)
    {
-      result->add(CHECK_NULL(str));
+      if (trim)
+         result->addPreallocated(Trim(MemCopyString(CHECK_NULL(str))));
+      else
+         result->add(CHECK_NULL(str));
       return result;
    }
    if (len < slen)
@@ -368,12 +371,18 @@ StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator)
       TCHAR *next = _tcsstr(curr, separator);
       if (next == nullptr)
       {
-         result->add(curr);
+         if (trim)
+            result->addPreallocated(Trim(MemCopyString(curr)));
+         else
+            result->add(curr);
          break;
       }
 
       *next = 0;
-      result->add(curr);
+      if (trim)
+         result->addPreallocated(Trim(MemCopyString(curr)));
+      else
+         result->add(curr);
       *next = *separator;
       curr = next + slen;
    }

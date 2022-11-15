@@ -214,7 +214,7 @@ public class DataFormatter
             {
                if (isSmallNumber)
                   multiplierPower = 5 + multiplierPower;
-               i = Integer.min(multiplierPower, multipliers.length);
+               i = Integer.min(multiplierPower, multipliers.length - 1);
             }
             else if ((unit == null || unit.useMultiplierForUnit()))
             {
