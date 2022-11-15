@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ public class EditThresholdDialog extends Dialog
 	private String savedScript = null;
 	private int savedOperation = -1;
 	private String savedValue = null;
-	
+
 	/**
 	 * @param parentShell
 	 * @param threshold
@@ -122,7 +122,7 @@ public class EditThresholdDialog extends Dialog
             if ((f != Threshold.F_SCRIPT) && (selectedFunction == Threshold.F_SCRIPT))
             {
                disposeScriptGroup();
-               createOperGroup();
+               createOperGroup(f);
                parent.getParent().layout(true, true);
             }
             else if ((f == Threshold.F_SCRIPT) && (selectedFunction != Threshold.F_SCRIPT))
@@ -153,7 +153,7 @@ public class EditThresholdDialog extends Dialog
 		if (threshold.getFunction() == Threshold.F_SCRIPT)
 		   createScriptGroup();
 		else
-		   createOperGroup();
+         createOperGroup(threshold.getFunction());
 
 		// Event area
 		Group eventGroup = new Group(dialogArea, SWT.NONE);
@@ -222,9 +222,11 @@ public class EditThresholdDialog extends Dialog
 	}
 
 	/**
-	 * Create "operation" group
-	 */
-	private void createOperGroup()
+    * Create "operation" group
+    * 
+    * @param function selected function
+    */
+   private void createOperGroup(int function)
 	{
       operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Operation"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       operation.add(i18n.tr("<  : less than"));
@@ -236,9 +238,11 @@ public class EditThresholdDialog extends Dialog
       operation.add(i18n.tr("like"));
       operation.add(i18n.tr("not like"));
       operation.select((savedOperation != -1) ? savedOperation : threshold.getOperation());
+      operation.setEnabled(function != Threshold.F_ERROR);
 
       value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, i18n.tr("Value"), 
             (savedValue != null) ? savedValue : threshold.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      value.setEnabled(function != Threshold.F_ERROR);
 	}
 
 	/**

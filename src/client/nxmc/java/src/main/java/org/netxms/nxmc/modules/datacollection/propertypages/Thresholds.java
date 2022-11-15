@@ -321,7 +321,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	private void deleteThresholds()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+      final IStructuredSelection selection = thresholdList.getStructuredSelection();
 		if (!selection.isEmpty())
 		{
 			Iterator<?> it = selection.iterator();
@@ -339,7 +339,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 	 */
 	private void editThreshold()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)thresholdList.getSelection();
+      final IStructuredSelection selection = thresholdList.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			final Threshold threshold = (Threshold)selection.getFirstElement();
@@ -459,7 +459,7 @@ public class Thresholds extends AbstractDCIPropertyPage
 		dci.setProcessAllThresholds(checkAllThresholds.getSelection());
 		dci.getThresholds().clear();
 		dci.getThresholds().addAll(thresholds);
-		editor.modify();		
+		editor.modify();
 		return true;
 	}
 }

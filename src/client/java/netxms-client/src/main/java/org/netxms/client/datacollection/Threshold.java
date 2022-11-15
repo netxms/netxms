@@ -320,7 +320,7 @@ public class Threshold
       StringBuilder text = new StringBuilder(FUNCTION_NAMES[function]);
       text.append(sampleCount);
       text.append(") "); //$NON-NLS-1$
-      if (function != Threshold.F_SCRIPT)
+      if ((function != Threshold.F_SCRIPT) && (function != Threshold.F_ERROR))
       {
          text.append(OPERATION_NAMES[operation]);
          text.append(' ');
