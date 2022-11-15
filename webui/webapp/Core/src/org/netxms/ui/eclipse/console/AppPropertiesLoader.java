@@ -171,7 +171,7 @@ public class AppPropertiesLoader
 		InputStream in = null;
 		try
 		{
-			in = getClass().getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
+			in = getClass().getClassLoader().getResourceAsStream("/nxmc.properties"); //$NON-NLS-1$
 			if (in == null)
 			{
 				ServletContext context = RWT.getRequest().getSession().getServletContext();
@@ -192,10 +192,14 @@ public class AppPropertiesLoader
                }
             });
 			}
+			else
+			{
+	         Activator.logInfo("Properties file nxmc.properties not found in classpath");
+			}
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+		   Activator.logError("Cannot load application configuration from nxmc.properties", e);
 		}
 		finally
 		{
