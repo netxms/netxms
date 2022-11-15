@@ -1164,7 +1164,7 @@ public:
    NXSL_LibraryScript *findScript(const TCHAR *name);
    StringList *getScriptDependencies(const TCHAR *name);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
-   ScriptVMHandle createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(), ScriptVMFailureReason (*scriptValidator)(NXSL_LibraryScript*));
+   ScriptVMHandle createVM(const TCHAR *name, std::function<NXSL_Environment *()> environmentCreator, std::function<ScriptVMFailureReason (NXSL_LibraryScript*)> scriptValidator);
 
    void forEach(std::function<void (const NXSL_LibraryScript*)> callback);
 

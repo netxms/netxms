@@ -105,14 +105,6 @@ NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, const shared_ptr<Net
 }
 
 /**
- * Server environment creator
- */
-static NXSL_Environment *CreateServerEnvironment()
-{
-   return new NXSL_ServerEnv();
-}
-
-/**
  * Server script validator
  */
 static ScriptVMFailureReason ScriptValidator(NXSL_LibraryScript *script)
@@ -133,7 +125,7 @@ static ScriptVMFailureReason ScriptValidator(NXSL_LibraryScript *script)
  */
 ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, const shared_ptr<NetObj>& object, const shared_ptr<DCObjectInfo>& dciInfo)
 {
-   ScriptVMHandle vm = s_scriptLibrary.createVM(name, CreateServerEnvironment, ScriptValidator);
+   ScriptVMHandle vm = s_scriptLibrary.createVM(name, [] { return new NXSL_ServerEnv(); }, ScriptValidator);
    if (vm.isValid())
    {
       vm = ScriptVMHandle(SetupServerScriptVM(vm, object, dciInfo));

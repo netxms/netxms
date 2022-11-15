@@ -136,7 +136,7 @@ void NXSL_Library::forEach(std::function<void (const NXSL_LibraryScript*)> callb
  * This method will do library lock internally.
  * VM must be deleted by caller when no longer needed.
  */
-ScriptVMHandle NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *(*environmentCreator)(), ScriptVMFailureReason (*scriptValidator)(NXSL_LibraryScript*))
+ScriptVMHandle NXSL_Library::createVM(const TCHAR *name, std::function<NXSL_Environment *()> environmentCreator, std::function<ScriptVMFailureReason (NXSL_LibraryScript*)> scriptValidator)
 {
    lock();
    NXSL_LibraryScript *s = findScript(name);
