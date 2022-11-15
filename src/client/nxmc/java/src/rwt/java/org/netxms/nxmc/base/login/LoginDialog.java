@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.base.login;
 
+import java.io.IOException;
+import java.io.InputStream;
+import javax.servlet.ServletContext;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -28,6 +31,8 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -38,10 +43,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.constants.AuthenticationType;
+import org.netxms.nxmc.AppPropertiesLoader;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -49,6 +57,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LoginDialog extends Dialog
 {
+   private static final Logger logger = LoggerFactory.getLogger(LoginDialog.class);
+
    private I18n i18n = LocalizationHelper.getI18n(LoginDialog.class);
    private ImageDescriptor loginImage;
    private Text textLogin;
@@ -59,11 +69,13 @@ public class LoginDialog extends Dialog
    /**
     * @param parentShell
     */
-   public LoginDialog(Shell parentShell)
+   public LoginDialog(Shell parentShell, AppPropertiesLoader appProperties)
    {
       super(parentShell);
 
-      loginImage = BrandingManager.getInstance().getLoginTitleImage();
+      loginImage = loadUserImage(appProperties);
+      if (loginImage == null)
+         loginImage = BrandingManager.getInstance().getLoginTitleImage();
       if (loginImage == null)
          loginImage = ResourceManager.getImageDescriptor("icons/app_logo.png");
    }
@@ -301,5 +313,53 @@ public class LoginDialog extends Dialog
    public String getPassword()
    {
       return password;
+   }
+
+   /**
+    * Load user image for login form
+    * 
+    * @param appProperties application properties loader
+    * @return
+    */
+   private ImageDescriptor loadUserImage(AppPropertiesLoader appProperties)
+   {
+      InputStream in = null;
+      try
+      {
+         String name = appProperties.getProperty("loginFormImage");
+         in = getClass().getResourceAsStream(name);
+         if (in == null)
+         {
+            ServletContext context = RWT.getRequest().getSession().getServletContext();
+            if (context != null)
+            {
+               in = context.getResourceAsStream(name);
+            }
+         }
+         if (in != null)
+         {
+            ImageLoader loader = new ImageLoader();
+            ImageData[] data = loader.load(in);
+            return ImageDescriptor.createFromImageData(data[0]);
+         }
+      }
+      catch(Exception e)
+      {
+         logger.error("Exception while reading user image", e);
+      }
+      finally
+      {
+         if (in != null)
+         {
+            try
+            {
+               in.close();
+            }
+            catch(IOException e)
+            {
+            }
+         }
+      }
+      return null;
    }
 }

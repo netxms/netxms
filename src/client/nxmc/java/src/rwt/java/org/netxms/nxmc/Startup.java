@@ -171,7 +171,7 @@ public class Startup implements EntryPoint, StartupParameters
       AppPropertiesLoader appProperties = new AppPropertiesLoader();
       settings.set("Connect.Server", appProperties.getProperty("server", "127.0.0.1"));
 
-      LoginDialog loginDialog = new LoginDialog(shell);
+      LoginDialog loginDialog = new LoginDialog(shell, appProperties);
       while(!success)
       {
          if (!autoConnect)
