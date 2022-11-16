@@ -46,12 +46,12 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation('org.netxms:netxms-client:4.2-SNAPSHOT') {
+    implementation('org.netxms:netxms-client:4.3-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
     }
-    implementation('org.netxms:netxms-base:4.2-SNAPSHOT') {
+    implementation('org.netxms:netxms-base:4.3-SNAPSHOT') {
         exclude module: 'stax'
         exclude module: 'stax-api'
         exclude module: 'xpp3'
