@@ -204,7 +204,7 @@ static bool ConsoleCommandHandler(const TCHAR *command, ServerConsole *console)
    if (!IsCommand(_T("NTCB"), buffer, 4))
       return false;
 
-   arg = ExtractWord(arg, buffer);
+   ExtractWord(arg, buffer);
    if (IsCommand(_T("SESSIONS"), buffer, 2))
    {
       console->print(_T(" ID  | Address         | Device\n"));

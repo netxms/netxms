@@ -223,7 +223,7 @@ static int CASValidate(const char *ticket, char *loginName)
    InetAddress a;
    SockAddrBuffer sa;
    SOCKET s = INVALID_SOCKET;
-   int err, b, ret;
+   int b, ret;
    size_t total;
    SSL *ssl = nullptr;
    X509 *s_cert = nullptr;
@@ -259,7 +259,7 @@ static int CASValidate(const char *ticket, char *loginName)
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
    }
-   if (! (err = SSL_connect(ssl)))
+   if (SSL_connect(ssl) <= 0)
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CONN);
    }
