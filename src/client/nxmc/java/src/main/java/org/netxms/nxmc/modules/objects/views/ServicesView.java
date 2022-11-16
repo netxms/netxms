@@ -78,7 +78,7 @@ public class ServicesView extends ObjectView
    private String filterString = null;
 
    /**
-    * Create "Processes" view
+    * Create "Services" view
     */
    public ServicesView()
    {
@@ -91,7 +91,7 @@ public class ServicesView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof Node) && ((Node)context).hasAgent();
+      return (context != null) && (context instanceof Node) && ((Node)context).hasAgent() && ((Node)context).getPlatformName().startsWith("windows-");
    }
 
    /**
