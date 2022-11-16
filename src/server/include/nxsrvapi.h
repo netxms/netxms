@@ -986,13 +986,13 @@ public:
    uint32_t getTable(const TCHAR *param, Table **table);
    uint32_t queryWebService(WebServiceRequestType requestType, const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData,
          uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType,
-         const StringMap& headers, const StringList& pathList, bool verifyCert, bool verifyHost, bool forcePlainTextParser, void *results);
+         const StringMap& headers, const StringList& pathList, bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, void *results);
    uint32_t queryWebServiceParameters(const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData, uint32_t requestTimeout,
          uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
-         const StringList& parameters, bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringMap *results);
+         const StringList& parameters, bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, StringMap *results);
    uint32_t queryWebServiceList(const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData, uint32_t requestTimeout,
          uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
-         const TCHAR *path, bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringList *results);
+         const TCHAR *path, bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, StringList *results);
    uint32_t nop();
    uint32_t setServerCapabilities();
    uint32_t setServerId(uint64_t serverId);

@@ -1061,7 +1061,7 @@ uint32_t AgentConnection::getParameter(const TCHAR *param, TCHAR *buffer, size_t
  */
 uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData,
       uint32_t requestTimeout, uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
-      const StringList& pathList, bool verifyCert, bool verifyHost, bool forcePlainTextParser, void *results)
+      const StringList& pathList, bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, void *results)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1080,6 +1080,7 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
    msg.setField(VID_AUTH_TYPE, static_cast<uint16_t>(authType));
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
+   msg.setField(VID_FOLLOW_LOCATION, followLocation);
    msg.setField(VID_FORCE_PLAIN_TEXT_PARSER, forcePlainTextParser);
    headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
    msg.setField(VID_REQUEST_TYPE, static_cast<uint16_t>(requestType));
@@ -1129,12 +1130,12 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
  */
 uint32_t AgentConnection::queryWebServiceList(const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData, uint32_t requestTimeout,
       uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers, const TCHAR *path,
-      bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringList *results)
+      bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, StringList *results)
 {
    StringList pathList;
    pathList.add(path);
    return queryWebService(WebServiceRequestType::LIST, url, httpRequestMethod, requestData, requestTimeout, retentionTime, login, password,
-         authType, headers, pathList, verifyCert, verifyHost, forcePlainTextParser, results);
+         authType, headers, pathList, verifyCert, verifyHost, followLocation, forcePlainTextParser, results);
 }
 
 /**
@@ -1142,10 +1143,10 @@ uint32_t AgentConnection::queryWebServiceList(const TCHAR *url, HttpRequestMetho
  */
 uint32_t AgentConnection::queryWebServiceParameters(const TCHAR *url, HttpRequestMethod httpRequestMethod, const TCHAR *requestData, uint32_t requestTimeout,
       uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers, const StringList& pathList,
-      bool verifyCert, bool verifyHost, bool forcePlainTextParser, StringMap *results)
+      bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, StringMap *results)
 {
    return queryWebService(WebServiceRequestType::PARAMETER, url, httpRequestMethod, requestData, requestTimeout, retentionTime, login, password,
-         authType, headers, pathList, verifyCert, verifyHost, forcePlainTextParser, results);
+         authType, headers, pathList, verifyCert, verifyHost, followLocation, forcePlainTextParser, results);
 }
 
 /**

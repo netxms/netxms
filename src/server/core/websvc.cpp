@@ -183,7 +183,7 @@ uint32_t WebServiceDefinition::query(DataCollectionTarget *object, WebServiceReq
 
    StringMap resultSet;
    uint32_t rcc = conn->queryWebService(requestType, url, m_httpRequestMethod, requestData, m_requestTimeout, m_cacheRetentionTime,
-         m_login, m_password, m_authType, headers, pathList, isVerifyCertificate(), isVerifyHost(), isForcePlainTextParser(),
+         m_login, m_password, m_authType, headers, pathList, isVerifyCertificate(), isVerifyHost(), isFollowLocation(), isForcePlainTextParser(),
          (requestType == WebServiceRequestType::PARAMETER) ? &resultSet : result);
    if ((rcc == ERR_SUCCESS) && (requestType == WebServiceRequestType::PARAMETER))
    {
@@ -221,7 +221,7 @@ WebServiceCallResult *WebServiceDefinition::makeCustomRequest(shared_ptr<Node> n
    if (contentType != nullptr)
       headers.set(_T("Content-Type"), contentType);
 
-   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(), isVerifyHost(), data);
+   return conn->webServiceCustomRequest(requestType, url, m_requestTimeout, m_login, m_password, m_authType, headers, isVerifyCertificate(), isVerifyHost(), isFollowLocation(), data);
 }
 
 /**

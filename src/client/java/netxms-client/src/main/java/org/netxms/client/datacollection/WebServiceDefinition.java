@@ -31,9 +31,10 @@ import org.netxms.client.constants.HttpRequestMethod;
  */
 public class WebServiceDefinition
 {
-   private final int FLAG_VERIFY_CERTIFICATE = 1;
-   private final int FLAG_VERIFY_HOST = 2;
-   private final int FLAG_PARSE_AS_TEXT = 4;
+   public static final int VERIFY_CERTIFICATE = 0x01;
+   public static final int VERIFY_HOST        = 0x02;
+   public static final int PARSE_AS_TEXT      = 0x04;
+   public static final int FOLLOW_LOCATION    = 0x08;
 
    private int id;
    private UUID guid;
@@ -70,7 +71,7 @@ public class WebServiceDefinition
       cacheRetentionTime = 0;
       requestTimeout = 0;
       headers = new HashMap<String, String>();
-      flags = FLAG_VERIFY_CERTIFICATE | FLAG_VERIFY_HOST;
+      flags = VERIFY_CERTIFICATE | VERIFY_HOST;
    }
 
    /**
@@ -372,11 +373,31 @@ public class WebServiceDefinition
    }
 
    /**
+    * Get flags.
+    *
+    * @return flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * Set flags.
+    *
+    * @param flags new flags
+    */
+   public void setFlags(int flags)
+   {
+      this.flags = flags;
+   }
+
+   /**
     * @return the verifyCertificate
     */
    public boolean isVerifyCertificate()
    {
-      return (flags & FLAG_VERIFY_CERTIFICATE) > 0;
+      return (flags & VERIFY_CERTIFICATE) > 0;
    }
 
    /**
@@ -385,9 +406,9 @@ public class WebServiceDefinition
    public void setVerifyCertificate(boolean verifyCertificate)
    {
       if (verifyCertificate)
-         flags |= FLAG_VERIFY_CERTIFICATE;
+         flags |= VERIFY_CERTIFICATE;
       else
-         flags &= ~FLAG_VERIFY_CERTIFICATE;
+         flags &= ~VERIFY_CERTIFICATE;
    }
 
    /**
@@ -395,7 +416,7 @@ public class WebServiceDefinition
     */
    public boolean isVerifyHost()
    {
-      return (flags & FLAG_VERIFY_HOST) > 0;
+      return (flags & VERIFY_HOST) > 0;
    }
 
    /**
@@ -404,9 +425,32 @@ public class WebServiceDefinition
    public void setVerifyHost(boolean verifyHost)
    {
       if (verifyHost)
-         flags |= FLAG_VERIFY_HOST;
+         flags |= VERIFY_HOST;
       else
-         flags &= ~FLAG_VERIFY_HOST;         
+         flags &= ~VERIFY_HOST;
+   }
+
+   /**
+    * Get "follow location" flag.
+    *
+    * @return "follow location" flag
+    */
+   public boolean isFollowLocation()
+   {
+      return (flags & FOLLOW_LOCATION) != 0;
+   }
+
+   /**
+    * set "follow location" flag.
+    *
+    * @param followLocation new value for "follow location" flag
+    */
+   public void setFollowLocation(boolean followLocation)
+   {
+      if (followLocation)
+         flags |= FOLLOW_LOCATION;
+      else
+         flags &= ~FOLLOW_LOCATION;
    }
 
    /**
@@ -417,9 +461,9 @@ public class WebServiceDefinition
    public void setParseAsText(boolean useTextParsing)
    {
       if (useTextParsing)
-         flags |= FLAG_PARSE_AS_TEXT;
+         flags |= PARSE_AS_TEXT;
       else
-         flags &= ~FLAG_PARSE_AS_TEXT;        
+         flags &= ~PARSE_AS_TEXT;
    }
 
    /**
@@ -427,6 +471,6 @@ public class WebServiceDefinition
     */
    public boolean isTextParsingUsed()
    {
-      return (flags & FLAG_PARSE_AS_TEXT) > 0;
+      return (flags & PARSE_AS_TEXT) > 0;
    }
 }

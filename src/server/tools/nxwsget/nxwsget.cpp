@@ -42,6 +42,7 @@ static WebServiceAuthType s_authType = WebServiceAuthType::NONE;
 static StringMap s_headers;
 static bool s_verifyCert = true;
 static bool s_verifyHost = true;
+static bool s_followLocation = false;
 static bool s_parseAsPlainText = false;
 static WebServiceRequestType s_requestType = WebServiceRequestType::PARAMETER;
 
@@ -67,7 +68,7 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
          StringMap results;
          rcc = pConn->queryWebServiceParameters(url, s_httpRequestMethod, s_requestData, (pConn->getCommandTimeout() - 500) / 1000,
             s_retentionTime, (s_login[0] == 0) ? nullptr : s_login, (s_password[0] == 0) ? nullptr: s_password, s_authType,
-            s_headers, parameters, s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
+            s_headers, parameters, s_verifyCert, s_verifyHost, s_followLocation, s_parseAsPlainText, &results);
          if (rcc == ERR_SUCCESS)
          {
             results.forEach(PrintParameterResults, nullptr);
@@ -79,7 +80,7 @@ static int QueryWebService(AgentConnection *pConn, const TCHAR *url, const Strin
          StringList results;
          rcc = pConn->queryWebServiceList(url, s_httpRequestMethod, s_requestData, (pConn->getCommandTimeout() - 500) / 1000,
             s_retentionTime, (s_login[0] == 0) ? nullptr: s_login, (s_password[0] == 0) ? nullptr: s_password, s_authType,
-            s_headers, parameters.get(0), s_verifyCert, s_verifyHost, s_parseAsPlainText, &results);
+            s_headers, parameters.get(0), s_verifyCert, s_verifyHost, s_followLocation, s_parseAsPlainText, &results);
          if (rcc == ERR_SUCCESS)
          {
             for (int i = 0; i < results.size(); i++)
@@ -139,6 +140,9 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          break;
       case 'd':   // request data
          s_requestData = MemCopyString(optarg);
+         break;
+      case 'F':   // follow location
+         s_followLocation = true;
          break;
       case 'i':   // Interval
          i = _tcstol(optarg, &eptr, 0);
@@ -261,6 +265,7 @@ int main(int argc, char *argv[])
                        _T("   -c           : Do not verify service certificate.\n")
                        _T("   -C           : Do not verify certificate's name against host.\n")
                        _T("   -d data      : Request data.\n")
+                       _T("   -F           : Follow location header that the server sends as part of a 3xx response.\n")
                        _T("   -H header    : HTTP header (can be used multiple times).\n")
                        _T("   -i seconds   : Query service continuously with given interval.\n")
                        _T("   -l           : Requested parameter is a list.\n")
@@ -269,7 +274,7 @@ int main(int argc, char *argv[])
                        _T("   -P passwod   : Web service password.\n")
                        _T("   -r seconds   : Cache retention time.\n")
                        _T("   -t           : Use text parsing.\n");
-   tool.additionalOptions = "a:cCd:H:i:lm:L:P:r:t";
+   tool.additionalOptions = "a:cCd:FH:i:lm:L:P:r:t";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

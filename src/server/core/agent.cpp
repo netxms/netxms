@@ -627,7 +627,7 @@ uint32_t AgentConnectionEx::uninstallPolicy(uuid guid, const TCHAR *type, bool n
  * Make web service custom request
  */
 WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMethod requestMethod, const TCHAR *url, uint32_t requestTimeout, const TCHAR *login, const TCHAR *password,
-         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, const TCHAR *data)
+         const WebServiceAuthType authType, const StringMap& headers, bool verifyCert, bool verifyHost, bool followLocation, const TCHAR *data)
 {
    WebServiceCallResult *result = new WebServiceCallResult();
    NXCPMessage msg(getProtocolVersion());
@@ -642,6 +642,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
    msg.setField(VID_AUTH_TYPE, static_cast<uint16_t>(authType));
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
+   msg.setField(VID_FOLLOW_LOCATION, followLocation);
    headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
    msg.setField(VID_REQUEST_DATA, data);
 

@@ -126,6 +126,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
 
       char *requestURL = url;
+      int redirectLimit = 10;
 
 retry:
       if (curl_easy_setopt(curl, CURLOPT_URL, requestURL) == CURLE_OK)
@@ -136,16 +137,27 @@ retry:
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
             nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): got reply (%u bytes, response code %03ld)"), url, static_cast<uint32_t>(data.size()), responseCode);
 
-            if ((responseCode >= 300) && (responseCode <= 399) && options->contains(_T("follow-location")))
+            if ((responseCode >= 300) && (responseCode <= 399))
             {
                char *redirectURL = nullptr;
                curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
                if (redirectURL != nullptr)
                {
-                  requestURL = redirectURL;
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): follow redirect to %hs"), url, redirectURL);
-                  data.clear();
-                  goto retry;
+                  if (options->contains(_T("follow-location")))
+                  {
+                     if (redirectLimit-- > 0)
+                     {
+                        nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): follow redirect to %hs"), url, redirectURL);
+                        requestURL = redirectURL;
+                        data.clear();
+                        goto retry;
+                     }
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): HTTP redirect to %hs, do not follow (redirect limit reached)"), url, redirectURL);
+                  }
+                  else
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): HTTP redirect to %hs, do not follow (forbidden)"), url, redirectURL);
+                  }
                }
             }
 

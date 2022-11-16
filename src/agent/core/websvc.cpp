@@ -104,8 +104,9 @@ private:
             delete m_content.xml;
             break;
          default:
-       break;
+            break;
       }
+      m_type = DocumentType::NONE;
    }
 
    void getParamsFromXML(StringList *params, NXCPMessage *response);
@@ -124,7 +125,7 @@ public:
    uint32_t getList(const TCHAR *path, NXCPMessage *response);
    bool isDataExpired(uint32_t retentionTime) { return (time(nullptr) - m_lastRequestTime) >= retentionTime; }
    uint32_t query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
-         WebServiceAuthType authType, struct curl_slist *headers, bool peerVerify, bool hostVerify, bool forcePlainTextParser, uint32_t requestTimeout);
+         WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout);
 
    void lock() { m_mutex.lock(); }
    void unlock() { m_mutex.unlock(); }
@@ -639,7 +640,7 @@ static long CurlAuthType(WebServiceAuthType authType)
  * Query web service
  */
 uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const char *requestData, const char *userName, const char *password,
-      WebServiceAuthType authType, struct curl_slist *headers, bool peerVerify, bool hostVerify, bool forcePlainTextParser, uint32_t requestTimeout)
+      WebServiceAuthType authType, struct curl_slist *headers, bool verifyPeer, bool verifyHost, bool followLocation, bool forcePlainTextParser, uint32_t requestTimeout)
 {
    uint32_t rcc = ERR_SUCCESS;
    CURL *curl = curl_easy_init();
@@ -653,8 +654,8 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
       curl_easy_setopt(curl, CURLOPT_TIMEOUT, static_cast<long>((requestTimeout != 0) ? requestTimeout : 10));
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, peerVerify ? 1 : 0);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, hostVerify ? 2 : 0);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verifyPeer ? 1 : 0);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verifyHost ? 2 : 0);
 
       curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, s_httpRequestMethods[requestMethod]);
       if (requestData != nullptr)
@@ -699,18 +700,22 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
 #else
       char *urlUtf8 = UTF8StringFromMBString(url);
 #endif
+
+      int redirectLimit = 10;
+
+retry:
       if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(): requesting URL %hs"), urlUtf8);
+         nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(%s): requesting URL %hs"), url, urlUtf8);
          if (requestData != nullptr)
-            nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(): request data: %hs"), requestData);
+            nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(%s): request data: %hs"), url, requestData);
 
          if (curl_easy_perform(curl) == CURLE_OK)
          {
             deleteContent();
-            long response_code;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-            if (data.size() > 0 && response_code == 200)
+            long responseCode;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+            if (data.size() > 0 && responseCode == 200)
             {
                data.write('\0');
 
@@ -721,7 +726,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
                   text++;
                   size--;
                }
-               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(): response data: %hs"), text);
+               nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(%s): response data: %hs"), url, text);
 
                if (!forcePlainTextParser && (*text == '<'))
                {
@@ -730,7 +735,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
                   if (!m_content.xml->loadXmlConfigFromMemory(text, static_cast<int>(size), nullptr, "*", false))
                   {
                      rcc = ERR_MALFORMED_RESPONSE;
-                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): Failed to load XML"));
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): Failed to load XML"), url);
                   }
                }
                else if (!forcePlainTextParser && ((*text == '{') || (*text == '[')))
@@ -743,13 +748,13 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
                      rcc = ERR_MALFORMED_RESPONSE;
                      jv error = jv_invalid_get_msg(jv_copy(m_content.jvData));
                      char *msg = MemCopyStringA(jv_string_value(error));
-                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): Failed to parse json. Error: \"%hs\""), RemoveNewLines(msg));
+                     nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): JSON document parsing error (%hs)"), url, RemoveNewLines(msg));
                      MemFree(msg);
 
                   }
 #else
                   rcc = ERR_FUNCTION_NOT_SUPPORTED;
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): libjq missing. Please install libjq to parse JSON."));
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): JSON document parsing error (agent was built without libjq support)"), url);
 #endif
                }
                else
@@ -762,7 +767,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
 #endif
                }
                m_lastRequestTime = time(nullptr);
-               nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(): response data type=%d, length=%u"), static_cast<int>(m_type), static_cast<unsigned int>(data.size()));
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): response data type=%d, length=%u"), url, static_cast<int>(m_type), static_cast<unsigned int>(data.size()));
                if (nxlog_get_debug_level_tag(DEBUG_TAG) >= 8)
                {
 #ifdef UNICODE
@@ -773,29 +778,58 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
                   for(TCHAR *s = responseText; *s != 0; s++)
                      if (*s < ' ')
                         *s = ' ';
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(): response data: %s"), responseText);
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): response data: %s"), url, responseText);
                   MemFree(responseText);
                }
             }
+            else if ((responseCode >= 300) && (responseCode <= 399))
+            {
+               char *redirectURL = nullptr;
+               curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
+               if (redirectURL != nullptr)
+               {
+                  if (followLocation)
+                  {
+                     if (redirectLimit-- > 0)
+                     {
+                        nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): follow redirect to %hs"), url, redirectURL);
+                        MemFree(urlUtf8);
+                        urlUtf8 = MemCopyStringA(redirectURL);
+                        data.clear();
+                        goto retry;
+                     }
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): HTTP redirect to %hs, do not follow (redirect limit reached)"), url, redirectURL);
+                  }
+                  else
+                  {
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("ServiceEntry::query(%s): HTTP redirect to %hs, do not follow (forbidden)"), url, redirectURL);
+                  }
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d but redirect URL not set"), url, static_cast<uint32_t>(responseCode));
+               }
+               rcc = ERR_MALFORMED_RESPONSE;
+            }
             else
             {
-               if (data.size() == 0)
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): request returned empty document"));
-               if (response_code != 200)
-                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): request returned %d return code"), response_code);
+               if (responseCode != 200)
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d"), url, static_cast<uint32_t>(responseCode));
+               else if (data.size() == 0)
+                  nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): empty response"), url);
                m_type = DocumentType::NONE;
                rcc = ERR_MALFORMED_RESPONSE;
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): error making curl request: %hs"), errbuf);
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): error making curl request: %hs"), url, errbuf);
             rcc = ERR_MALFORMED_RESPONSE;
          }
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(): curl_easy_setopt failed for CURLOPT_URL"));
+         nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): curl_easy_setopt failed for CURLOPT_URL"), url);
          rcc = ERR_UNSUPPORTED_METRIC;
       }
       MemFree(urlUtf8);
@@ -803,7 +837,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 1, _T("Get data from service: curl_init failed"));
+      nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): curl_init failed"), url);
       rcc = ERR_INTERNAL_ERROR;
    }
    return rcc;
@@ -864,6 +898,7 @@ void QueryWebService(NXCPMessage* request, shared_ptr<AbstractCommSession> sessi
 
       result = cachedEntry->query(url, requestMethodCode, requestData, login, password, authType, headers,
                request->getFieldAsBoolean(VID_VERIFY_CERT), verifyHost,
+               request->getFieldAsBoolean(VID_FOLLOW_LOCATION),
                request->getFieldAsBoolean(VID_FORCE_PLAIN_TEXT_PARSER),
                request->getFieldAsUInt32(VID_TIMEOUT));
 
@@ -924,6 +959,7 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
    char *requestData = request->getFieldAsUtf8String(VID_REQUEST_DATA);
    bool hostVerify = request->getFieldAsBoolean(VID_VERIFY_HOST);
    bool peerVerify = request->getFieldAsBoolean(VID_VERIFY_CERT);
+   bool followLocation = request->getFieldAsBoolean(VID_FOLLOW_LOCATION);
    WebServiceAuthType authType = WebServiceAuthTypeFromInt(request->getFieldAsInt16(VID_AUTH_TYPE));
    uint32_t requestTimeout = request->getFieldAsUInt32(VID_TIMEOUT);
    const char *requestMethod = s_httpRequestMethods[requestMethodCode];
@@ -1005,6 +1041,10 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
 #else
         char *urlUtf8 = UTF8StringFromMBString(url);
 #endif
+
+        int redirectLimit = 10;
+
+retry:
         if (curl_easy_setopt(curl, CURLOPT_URL, urlUtf8) == CURLE_OK)
         {
            nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): requesting URL %hs"), urlUtf8);
@@ -1013,9 +1053,35 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
 
            if (curl_easy_perform(curl) == CURLE_OK)
            {
-              long response_code;
-              curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-              response.setField(VID_WEBSVC_RESPONSE_CODE, static_cast<uint32_t>(response_code));
+              long responseCode;
+              curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+
+              if ((responseCode >= 300) && (responseCode <= 399))
+              {
+                 char *redirectURL = nullptr;
+                 curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
+                 if (redirectURL != nullptr)
+                 {
+                    if (followLocation)
+                    {
+                       if (redirectLimit-- > 0)
+                       {
+                          nxlog_debug_tag(DEBUG_TAG, 6, _T("WebServiceCustomRequest(): follow redirect to %hs"), redirectURL);
+                          MemFree(urlUtf8);
+                          urlUtf8 = MemCopyStringA(redirectURL);
+                          data.clear();
+                          goto retry;
+                       }
+                       nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): HTTP redirect to %hs, do not follow (redirect limit reached)"), url, redirectURL);
+                    }
+                    else
+                    {
+                       nxlog_debug_tag(DEBUG_TAG, 6, _T("H_CheckService(%hs): HTTP redirect to %hs, do not follow (forbidden)"), url, redirectURL);
+                    }
+                 }
+              }
+
+              response.setField(VID_WEBSVC_RESPONSE_CODE, static_cast<uint32_t>(responseCode));
 
               data.write('\0');
               const char *text = reinterpret_cast<const char*>(data.buffer());

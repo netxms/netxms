@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ public class WebServiceGeneral extends PreferencePage
    private LabeledText url;
    private Button checkVerifyCert;
    private Button checkVerifyHost;
+   private Button checkFollowLocation;
    private Button checkTextParsing;
    private Combo httpMethod;
    private LabeledText requestData;
@@ -214,6 +215,14 @@ public class WebServiceGeneral extends PreferencePage
       gd.grabExcessHorizontalSpace = true;
       checkVerifyHost.setLayoutData(gd);
 
+      checkFollowLocation = new Button(groupOptions, SWT.CHECK);
+      checkFollowLocation.setText("&Follow location header in a 3xx response");
+      checkFollowLocation.setSelection(definition.isFollowLocation());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      checkFollowLocation.setLayoutData(gd);
+
       checkTextParsing = new Button(groupOptions, SWT.CHECK);
       checkTextParsing.setText("Process response as plain &text");
       checkTextParsing.setSelection(definition.isTextParsingUsed());
@@ -264,6 +273,7 @@ public class WebServiceGeneral extends PreferencePage
       definition.setRequestData(requestData.getText().trim());
       definition.setVerifyCertificate(checkVerifyCert.getSelection());
       definition.setVerifyHost(checkVerifyHost.getSelection());
+      definition.setFollowLocation(checkFollowLocation.getSelection());
       definition.setParseAsText(checkTextParsing.getSelection());
       definition.setAuthenticationType(WebServiceAuthType.getByValue(authType.getSelectionIndex()));
       definition.setLogin(login.getText().trim());

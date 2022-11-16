@@ -31,6 +31,7 @@
 #define WSF_VERIFY_CERTIFICATE      0x0001
 #define WSF_VERIFY_HOST             0x0002
 #define WSF_FORCE_PLAIN_TEXT_PARSER 0x0004
+#define WSF_FOLLOW_LOCATION         0x0008
 
 /**
  * Web service definition
@@ -82,6 +83,7 @@ public:
    const StringMap& getHeaders() const { return m_headers; }
    bool isVerifyCertificate() const { return (m_flags & WSF_VERIFY_CERTIFICATE) != 0; }
    bool isVerifyHost() const { return (m_flags & WSF_VERIFY_HOST) != 0; }
+   bool isFollowLocation() const { return (m_flags & WSF_FOLLOW_LOCATION) != 0; }
    bool isForcePlainTextParser() const { return (m_flags & WSF_FORCE_PLAIN_TEXT_PARSER) != 0; }
    uint32_t getFlags() const { return m_flags; }
 };
