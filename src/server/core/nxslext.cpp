@@ -1296,7 +1296,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
 	request.bindVariable(new SNMP_Variable(oid, nameLen));
 
 	SNMP_PDU *response;
-   if (transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (transport->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
       {
@@ -1420,7 +1420,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    if (success)
    {
       success = false;
-      uint32_t snmpResult = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      uint32_t snmpResult = transport->doRequest(&request, &response);
       if (snmpResult == SNMP_ERR_SUCCESS)
       {
          if (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS)

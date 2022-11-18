@@ -38,17 +38,16 @@ static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport
    memcpy(oid, var->getName().value(), var->getName().length() * sizeof(UINT32));
 
    // Get designated bridge and designated port for this port
-   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
    oid[10] = 8;   // dot1dStpPortDesignatedBridge
-   request->bindVariable(new SNMP_Variable(oid, var->getName().length()));
+   request.bindVariable(new SNMP_Variable(oid, var->getName().length()));
 
    oid[10] = 9;   // dot1dStpPortDesignatedPort
-   request->bindVariable(new SNMP_Variable(oid, var->getName().length()));
+   request.bindVariable(new SNMP_Variable(oid, var->getName().length()));
 
 	SNMP_PDU *response = nullptr;
-   uint32_t rcc = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
-	delete request;
+   uint32_t rcc = transport->doRequest(&request, &response);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 2)

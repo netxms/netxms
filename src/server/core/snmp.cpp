@@ -55,7 +55,7 @@ static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTranspo
 
    uint32_t dwResult;
    SNMP_PDU *response;
-   if ((dwResult = snmpTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
+   if ((dwResult = snmpTransport->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
    if (response->getNumVariables() != request.getNumVariables())
@@ -104,7 +104,7 @@ bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool sepa
          SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
          request.bindVariable(new SNMP_Variable(testOids.get(i)));
          SNMP_PDU *response;
-         UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+         uint32_t rc = snmp->doRequest(&request, &response);
          if (rc == SNMP_ERR_SUCCESS)
          {
             success = (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) || (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME);
@@ -118,7 +118,7 @@ bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool sepa
       for(int i = 0; i < testOids.size(); i++)
          request.bindVariable(new SNMP_Variable(testOids.get(i)));
       SNMP_PDU *response;
-      UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      uint32_t rc = snmp->doRequest(&request, &response);
       if (rc == SNMP_ERR_SUCCESS)
       {
          success = (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) || (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME);

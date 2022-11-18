@@ -81,25 +81,24 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
 
    const SNMP_ObjectId& name = var->getName();
    size_t nameLen = name.length();
-   UINT32 oid[MAX_OID_LEN];
+   uint32_t oid[MAX_OID_LEN];
    memcpy(oid, name.value(), nameLen * sizeof(UINT32));
-   UINT32 apIndex = oid[nameLen - 1];
+   uint32_t apIndex = oid[nameLen - 1];
 
-   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    
    oid[nameLen - 2] = 9;   // dot11DesiredSSID
-   request->bindVariable(new SNMP_Variable(oid, nameLen));
+   request.bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMPParseOID(_T(".1.3.6.1.2.1.2.2.1.2"), oid, MAX_OID_LEN); // ifDescr
    oid[10] = apIndex;
-   request->bindVariable(new SNMP_Variable(oid, 11));
+   request.bindVariable(new SNMP_Variable(oid, 11));
 
    oid[9] = 6; // ifPhysAddress
-   request->bindVariable(new SNMP_Variable(oid, 11));
+   request.bindVariable(new SNMP_Variable(oid, 11));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
-	delete request;
+   uint32_t rcc = snmp->doRequest(&request, &response);
    if (rcc == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == 3)

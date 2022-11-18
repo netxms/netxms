@@ -43,7 +43,7 @@ static uint32_t PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transpo
    request.bindVariable(new SNMP_Variable(newOid, oid.length()));
 
 	SNMP_PDU *responsePDU = nullptr;
-   uint32_t rcc = transport->doRequest(&request, &responsePDU, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = transport->doRequest(&request, &responsePDU);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 	   if (responsePDU->getNumVariables() >= 2)

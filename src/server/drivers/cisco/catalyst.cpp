@@ -56,7 +56,7 @@ bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
    SNMP_ObjectId rootOid = SNMP_ObjectId::parse(_T(".1.3.6.1.4.1.9.5.1.4.1.1.11"));
    request.bindVariable(new SNMP_Variable(rootOid));
    SNMP_PDU *response = nullptr;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       bool success = false;
       if (response->getNumVariables() > 0)

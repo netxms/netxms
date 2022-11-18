@@ -45,22 +45,20 @@ static uint32_t CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, Li
 	nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 6, _T("CDP(%s [%d]): remote node is %s [%d]"), node->getName(), node->getId(), remoteNode->getName(), remoteNode->getId());
 
 	// Get additional info for current record
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
    SNMP_ObjectId newOid(oid);
 	newOid.changeElement(13, 7);	// cdpCacheDevicePort
-	pRqPDU->bindVariable(new SNMP_Variable(newOid));
+	request.bindVariable(new SNMP_Variable(newOid));
 
-   SNMP_PDU *pRespPDU = nullptr;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-	delete pRqPDU;
-
+   SNMP_PDU *response = nullptr;
+   uint32_t rcc = transport->doRequest(&request, &response);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		if (pRespPDU->getNumVariables() >= 1)
+		if (response->getNumVariables() >= 1)
 		{
 			TCHAR ifName[MAX_CONNECTOR_NAME] = _T("");
-			pRespPDU->getVariable(0)->getValueAsString(ifName, MAX_CONNECTOR_NAME);
+			response->getVariable(0)->getValueAsString(ifName, MAX_CONNECTOR_NAME);
 			nxlog_debug_tag(DEBUG_TAG_TOPO_CDP, 6, _T("CDP(%s [%d]): remote port is \"%s\""), node->getName(), node->getId(), ifName);
 			shared_ptr<Interface> ifRemote = remoteNode->findInterfaceByName(ifName);
 			if (ifRemote != nullptr)
@@ -79,7 +77,7 @@ static uint32_t CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, Li
 				nbs->addConnection(&info);
 			}
 		}
-      delete pRespPDU;
+      delete response;
 	}
 
 	return rcc;

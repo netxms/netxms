@@ -82,7 +82,7 @@ bool JuniperDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
    // Driver should return false if product name cannot be retrieved to allow server to try ENTITY MIB.
    bool success = false;
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       TCHAR buffer[256];
 

@@ -25,7 +25,7 @@
 /**
  * Read remote slot and port from s5EnMsTopNmmEosTable
  */
-static WORD ReadRemoteSlotAndPort(Node *node, const SNMP_ObjectId& oid, SNMP_Transport *transport)
+static uint16_t ReadRemoteSlotAndPort(Node *node, const SNMP_ObjectId& oid, SNMP_Transport *transport)
 {
 	// Read data from appropriate entry in s5EnMsTopNmmEosTable
 	UINT32 eosEntryOID[64];
@@ -34,42 +34,41 @@ static WORD ReadRemoteSlotAndPort(Node *node, const SNMP_ObjectId& oid, SNMP_Tra
 	eosEntryOID[12] = 1;
 	eosEntryOID[13] = 1;
 
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid.length()));
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
+	request.bindVariable(new SNMP_Variable(eosEntryOID, oid.length()));
 
-	WORD result = 0;
-	SNMP_PDU *pRespPDU = nullptr;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-	delete pRqPDU;
-	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() > 0) && (pRespPDU->getVariable(0)->getType() == ASN_OCTET_STRING))
+	uint16_t result = 0;
+	SNMP_PDU *response = nullptr;
+   uint32_t rcc = transport->doRequest(&request, &response);
+	if ((rcc == SNMP_ERR_SUCCESS) && (response->getNumVariables() > 0) && (response->getVariable(0)->getType() == ASN_OCTET_STRING))
    {
 		BYTE eosEntry[128];
-		pRespPDU->getVariable(0)->getRawValue(eosEntry, 128);
-		result = (((WORD)eosEntry[7]) << 8) | (WORD)eosEntry[8];	// Slot in byte 7 and port in byte 8
+		response->getVariable(0)->getRawValue(eosEntry, 128);
+		result = (((uint16_t)eosEntry[7]) << 8) | (uint16_t)eosEntry[8];	// Slot in byte 7 and port in byte 8
 	}
-	delete pRespPDU;
+	delete response;
 	return result;
 }
 
 /**
  * Topology table walker's callback for NDP topology table
  */
-static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
 	const SNMP_ObjectId& oid = var->getName();
 
 	// Entries indexed by slot, port, IP address, and segment ID
-	UINT32 slot = oid.getElement(14);
-	UINT32 port = oid.getElement(15);
+	uint32_t slot = oid.getElement(14);
+	uint32_t port = oid.getElement(15);
 
 	// Table always contains record with slot=0 and port=0 which
 	// represents local chassis. We should ignore this record.
 	if ((slot == 0) && (port == 0))
 		return SNMP_ERR_SUCCESS;
 
-	UINT32 remoteIp;
-	var->getRawValue((BYTE *)&remoteIp, sizeof(UINT32));
+	uint32_t remoteIp;
+	var->getRawValue((BYTE *)&remoteIp, sizeof(uint32_t));
 	remoteIp = ntohl(remoteIp);
 	TCHAR ipAddrText[32];
 	nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->getName(), node->getId(), slot, port, IpToStr(remoteIp, ipAddrText));
@@ -85,7 +84,7 @@ static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	          remoteNode->getName(), remoteNode->getId(), (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"));
 	if (ifLocal != nullptr)
 	{
-		WORD rport = ReadRemoteSlotAndPort(node, oid, transport);
+		uint16_t rport = ReadRemoteSlotAndPort(node, oid, transport);
 		nxlog_debug_tag(DEBUG_TAG_TOPO_NDP, 6, _T("NDP(%s [%d]): remote slot/port is %04X"), node->getName(), node->getId(), rport);
 		if (rport != 0)
 		{

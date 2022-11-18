@@ -150,7 +150,7 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
-   if (transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (transport->doRequest(request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 5)
       {
@@ -201,7 +201,7 @@ static UINT32 HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, vo
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
-   if (transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (transport->doRequest(request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 2)
       {

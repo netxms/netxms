@@ -236,7 +236,7 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
    }
 
    SNMP_PDU *response;
-   uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = snmp->doRequest(&request, &response);
    if (rc == SNMP_ERR_SUCCESS)
    {
       if ((response->getNumVariables() >= columns.size()) &&

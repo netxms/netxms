@@ -255,7 +255,7 @@ static uint32_t HandlerVlanPorts(SNMP_Variable *var, SNMP_Transport *transport, 
    }
 
    SNMP_PDU *response = nullptr;
-   if (transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (transport->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (var->getValueAsInt() == 3)
       {
