@@ -109,14 +109,10 @@ NXSL_VM NXCORE_EXPORTABLE *SetupServerScriptVM(NXSL_VM *vm, const shared_ptr<Net
  */
 static ScriptVMFailureReason ScriptValidator(NXSL_LibraryScript *script)
 {
-   if (script->isValid())
-   {
+   if (!script->isValid())
       return ScriptVMFailureReason::SCRIPT_VALIDATION_ERROR;
-   }
    if (script->isEmpty())
-   {
       return ScriptVMFailureReason::SCRIPT_IS_EMPTY;
-   }
    return ScriptVMFailureReason::SUCCESS;
 }
 
@@ -127,9 +123,7 @@ ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const TCHAR *name, const s
 {
    ScriptVMHandle vm = s_scriptLibrary.createVM(name, [] { return new NXSL_ServerEnv(); }, ScriptValidator);
    if (vm.isValid())
-   {
-      vm = ScriptVMHandle(SetupServerScriptVM(vm, object, dciInfo));
-   }
+      SetupServerScriptVM(vm, object, dciInfo);
    return vm;
 }
 
