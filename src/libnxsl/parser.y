@@ -53,6 +53,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FALSE
 %token T_FOR
 %token T_FOREACH
+%token T_FSTRING_BEGIN
 %token T_GLOBAL
 %token T_IDIV
 %token T_IF
@@ -80,6 +81,8 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token <valIdentifier> T_COMPOUND_IDENTIFIER
 %token <valIdentifier> T_IDENTIFIER
 %token <valStr> T_STRING
+%token <valStr> T_FSTRING
+%token <valStr> T_FSTRING_END
 %token <valInt32> T_INT32
 %token <valUInt32> T_UINT32
 %token <valInt64> T_INT64
@@ -757,6 +760,7 @@ Operand:
 		   builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1);
    }
 }
+|  FString
 |	Constant
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, $1);
@@ -1316,7 +1320,54 @@ StorageItem:
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue($2.v));
 }
 |	'#' '(' Expression ')'
-;	
+;
+
+FString:
+   T_FSTRING_BEGIN
+{
+   builder->startFString();   
+}
+   FStringElements
+;
+
+FStringElements:
+   T_FSTRING
+{
+   if (*$1 != 0)
+   {
+      builder->incFStringElements();
+#ifdef UNICODE
+	   builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue($1));
+#else
+	   char *mbString = MBStringFromUTF8String($1);
+	   builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue(mbString));
+	   MemFree(mbString);
+#endif
+   }
+	MemFreeAndNull($1);
+}
+   Expression { builder->incFStringElements(); } FStringElements
+|  T_FSTRING_END
+{
+   if (*$1 != 0)
+   {
+      builder->incFStringElements();
+#ifdef UNICODE
+   	builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue($1));
+#else
+   	char *mbString = MBStringFromUTF8String($1);
+	   builder->addInstruction(lexer->getCurrLine(), OPCODE_PUSH_CONSTANT, builder->createValue(mbString));
+	   MemFree(mbString);
+#endif
+   }
+	MemFreeAndNull($1);
+   uint32_t numElements = builder->getFStringElementCount();
+   if (numElements > 1)
+   {
+	   builder->addInstruction(lexer->getCurrLine(), OPCODE_FSTRING, static_cast<int16_t>(numElements));
+   }
+}
+;
 
 Constant:
 	T_STRING

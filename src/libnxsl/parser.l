@@ -4,6 +4,9 @@
 %option never-interactive
 
 %x COMMENT
+%x FEXPR
+%x FSTR
+%x FSTR2
 %x STR
 %x STR2
 %x TXT
@@ -67,56 +70,56 @@ static inline uint32_t StringToUInt32(const char *s)
 
 %%
 
-<INITIAL>"abort"    return T_ABORT;
-<INITIAL>"and"      return T_AND;
-<INITIAL>"array"    return T_ARRAY;
-<INITIAL>"boolean"  return T_TYPE_BOOLEAN;
-<INITIAL>"break"    return T_BREAK;
-<INITIAL>"case"     return T_CASE;
-<INITIAL>"catch"    return T_CATCH;
-<INITIAL>"const"    return T_CONST;
-<INITIAL>"continue" return T_CONTINUE;
-<INITIAL>"default"  return T_DEFAULT;
-<INITIAL>"do"       return T_DO;
-<INITIAL>"else"     return T_ELSE;
-<INITIAL>"exit"     return T_EXIT;
-<INITIAL>"FALSE"    return T_FALSE;
-<INITIAL>"false"    return T_FALSE;
-<INITIAL>"for"      return T_FOR;
-<INITIAL>"foreach"  return T_FOREACH;
-<INITIAL>"global"   return T_GLOBAL;
-<INITIAL>"if"       return T_IF;
-<INITIAL>"ilike"    return T_ILIKE;
-<INITIAL>"imatch"   return T_IMATCH;
-<INITIAL>"in"       return T_IN;
-<INITIAL>"int32"    return T_TYPE_INT32;
-<INITIAL>"int64"    return T_TYPE_INT64;
-<INITIAL>"like"     return T_LIKE;
-<INITIAL>"match"    return T_MATCH;
-<INITIAL>"new"      return T_NEW;
-<INITIAL>"not"      return T_NOT;
-<INITIAL>"NULL"     return T_NULL;
-<INITIAL>"null"     return T_NULL;
-<INITIAL>"or"       return T_OR;
-<INITIAL>"real"     return T_TYPE_REAL;
-<INITIAL>"return"   return T_RETURN;
-<INITIAL>"select"   return T_SELECT;
-<INITIAL>"string"   return T_TYPE_STRING;
-<INITIAL>"sub"      return T_SUB;
-<INITIAL>"switch"   return T_SWITCH;
-<INITIAL>"TRUE"     return T_TRUE;
-<INITIAL>"true"     return T_TRUE;
-<INITIAL>"try"      return T_TRY;
-<INITIAL>"uint32"   return T_TYPE_UINT32;
-<INITIAL>"uint64"   return T_TYPE_UINT64;
-<INITIAL>"use"      return T_USE;
-<INITIAL>"when"     return T_WHEN;
-<INITIAL>"while"    return T_WHILE;
-<INITIAL>"with"     return T_WITH;
+<INITIAL,FEXPR>"abort"    return T_ABORT;
+<INITIAL,FEXPR>"and"      return T_AND;
+<INITIAL,FEXPR>"array"    return T_ARRAY;
+<INITIAL,FEXPR>"boolean"  return T_TYPE_BOOLEAN;
+<INITIAL,FEXPR>"break"    return T_BREAK;
+<INITIAL,FEXPR>"case"     return T_CASE;
+<INITIAL,FEXPR>"catch"    return T_CATCH;
+<INITIAL,FEXPR>"const"    return T_CONST;
+<INITIAL,FEXPR>"continue" return T_CONTINUE;
+<INITIAL,FEXPR>"default"  return T_DEFAULT;
+<INITIAL,FEXPR>"do"       return T_DO;
+<INITIAL,FEXPR>"else"     return T_ELSE;
+<INITIAL,FEXPR>"exit"     return T_EXIT;
+<INITIAL,FEXPR>"FALSE"    return T_FALSE;
+<INITIAL,FEXPR>"false"    return T_FALSE;
+<INITIAL,FEXPR>"for"      return T_FOR;
+<INITIAL,FEXPR>"foreach"  return T_FOREACH;
+<INITIAL,FEXPR>"global"   return T_GLOBAL;
+<INITIAL,FEXPR>"if"       return T_IF;
+<INITIAL,FEXPR>"ilike"    return T_ILIKE;
+<INITIAL,FEXPR>"imatch"   return T_IMATCH;
+<INITIAL,FEXPR>"in"       return T_IN;
+<INITIAL,FEXPR>"int32"    return T_TYPE_INT32;
+<INITIAL,FEXPR>"int64"    return T_TYPE_INT64;
+<INITIAL,FEXPR>"like"     return T_LIKE;
+<INITIAL,FEXPR>"match"    return T_MATCH;
+<INITIAL,FEXPR>"new"      return T_NEW;
+<INITIAL,FEXPR>"not"      return T_NOT;
+<INITIAL,FEXPR>"NULL"     return T_NULL;
+<INITIAL,FEXPR>"null"     return T_NULL;
+<INITIAL,FEXPR>"or"       return T_OR;
+<INITIAL,FEXPR>"real"     return T_TYPE_REAL;
+<INITIAL,FEXPR>"return"   return T_RETURN;
+<INITIAL,FEXPR>"select"   return T_SELECT;
+<INITIAL,FEXPR>"string"   return T_TYPE_STRING;
+<INITIAL,FEXPR>"sub"      return T_SUB;
+<INITIAL,FEXPR>"switch"   return T_SWITCH;
+<INITIAL,FEXPR>"TRUE"     return T_TRUE;
+<INITIAL,FEXPR>"true"     return T_TRUE;
+<INITIAL,FEXPR>"try"      return T_TRY;
+<INITIAL,FEXPR>"uint32"   return T_TYPE_UINT32;
+<INITIAL,FEXPR>"uint64"   return T_TYPE_UINT64;
+<INITIAL,FEXPR>"use"      return T_USE;
+<INITIAL,FEXPR>"when"     return T_WHEN;
+<INITIAL,FEXPR>"while"    return T_WHILE;
+<INITIAL,FEXPR>"with"     return T_WITH;
 
-<INITIAL>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
-<INITIAL>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
-<INITIAL>{integer}	{
+<INITIAL,FEXPR>{identifier}	{ strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_IDENTIFIER; }
+<INITIAL,FEXPR>{compound_ident} { strlcpy(yylval->valIdentifier.v, yytext, MAX_IDENTIFIER_LENGTH); return T_COMPOUND_IDENTIFIER; }
+<INITIAL,FEXPR>{integer}	{
 				int64_t nVal = StringToInt64(yytext);
 				if ((nVal < -2147483647) || (nVal > 2147483647))
 				{
@@ -129,68 +132,73 @@ static inline uint32_t StringToUInt32(const char *s)
 					return T_INT32;
 				}
 			}
-<INITIAL>{uint32} { yylval->valUInt32 = StringToUInt32(yytext); return T_UINT32; }
-<INITIAL>{int64}  { yylval->valInt64 = StringToInt64(yytext); return T_INT64; }
-<INITIAL>{uint64} { yylval->valUInt64 = StringToUInt64(yytext); return T_UINT64; }
-<INITIAL>{real}   { yylval->valReal = strtod(yytext, nullptr); return T_REAL; }
+<INITIAL,FEXPR>{uint32} { yylval->valUInt32 = StringToUInt32(yytext); return T_UINT32; }
+<INITIAL,FEXPR>{int64}  { yylval->valInt64 = StringToInt64(yytext); return T_INT64; }
+<INITIAL,FEXPR>{uint64} { yylval->valUInt64 = StringToUInt64(yytext); return T_UINT64; }
+<INITIAL,FEXPR>{real}   { yylval->valReal = strtod(yytext, nullptr); return T_REAL; }
 
-<INITIAL>"=="	return T_EQ;
-<INITIAL>"!="	return T_NE;
-<INITIAL>"<="	return T_LE;
-<INITIAL>">="	return T_GE;
-<INITIAL>"<<"	return T_LSHIFT;
-<INITIAL>">>"	return T_RSHIFT;
-<INITIAL>"&&"	return T_AND;
-<INITIAL>"||"	return T_OR;
-<INITIAL>"++"	return T_INC;
-<INITIAL>"--"	return T_DEC;
-<INITIAL>"->"	return T_REF;
-<INITIAL>"~="	return T_MATCH;
-<INITIAL>"+="	return T_ASSIGN_ADD;
-<INITIAL>"-="	return T_ASSIGN_SUB;
-<INITIAL>"*="	return T_ASSIGN_MUL;
-<INITIAL>"/="	return T_ASSIGN_DIV;
-<INITIAL>"\\="	return T_ASSIGN_IDIV;
-<INITIAL>"%="	return T_ASSIGN_REM;
-<INITIAL>".="	return T_ASSIGN_CONCAT;
-<INITIAL>"&="	return T_ASSIGN_AND;
-<INITIAL>"|="	return T_ASSIGN_OR;
-<INITIAL>"^="	return T_ASSIGN_XOR;
-<INITIAL>"..."	return T_RANGE;
-<INITIAL>"."	return '.';
-<INITIAL>"{"	return '{';
-<INITIAL>"}"	return '}';
-<INITIAL>"("	return '(';
-<INITIAL>")"	return ')';
-<INITIAL>";"	return ';';
-<INITIAL>":"	return ':';
-<INITIAL>"+"	return '+';
-<INITIAL>"-"	return '-';
-<INITIAL>"*"	return '*';
-<INITIAL>"/"	return '/';
-<INITIAL>"%"	return '%';
-<INITIAL>"="	return '=';
-<INITIAL>"!"	return T_NOT;
-<INITIAL>"&"	return '&';
-<INITIAL>"|"	return '|';
-<INITIAL>"^"	return '^';
-<INITIAL>"~"	return '~';
-<INITIAL>","	return ',';
-<INITIAL>"<"	return '<';
-<INITIAL>">"	return '>';
-<INITIAL>"?"	return '?';
-<INITIAL>"["	return '[';
-<INITIAL>"]"	return ']';
-<INITIAL>"@"	return '@';
-<INITIAL>"#"	return '#';
-<INITIAL>"\\"	return T_IDIV;
+<INITIAL,FEXPR>"=="	return T_EQ;
+<INITIAL,FEXPR>"!="	return T_NE;
+<INITIAL,FEXPR>"<="	return T_LE;
+<INITIAL,FEXPR>">="	return T_GE;
+<INITIAL,FEXPR>"<<"	return T_LSHIFT;
+<INITIAL,FEXPR>">>"	return T_RSHIFT;
+<INITIAL,FEXPR>"&&"	return T_AND;
+<INITIAL,FEXPR>"||"	return T_OR;
+<INITIAL,FEXPR>"++"	return T_INC;
+<INITIAL,FEXPR>"--"	return T_DEC;
+<INITIAL,FEXPR>"->"	return T_REF;
+<INITIAL,FEXPR>"~="	return T_MATCH;
+<INITIAL,FEXPR>"+="	return T_ASSIGN_ADD;
+<INITIAL,FEXPR>"-="	return T_ASSIGN_SUB;
+<INITIAL,FEXPR>"*="	return T_ASSIGN_MUL;
+<INITIAL,FEXPR>"/="	return T_ASSIGN_DIV;
+<INITIAL,FEXPR>"\\="	return T_ASSIGN_IDIV;
+<INITIAL,FEXPR>"%="	return T_ASSIGN_REM;
+<INITIAL,FEXPR>".="	return T_ASSIGN_CONCAT;
+<INITIAL,FEXPR>"&="	return T_ASSIGN_AND;
+<INITIAL,FEXPR>"|="	return T_ASSIGN_OR;
+<INITIAL,FEXPR>"^="	return T_ASSIGN_XOR;
+<INITIAL,FEXPR>"..."	return T_RANGE;
+<INITIAL,FEXPR>"."	return '.';
+<INITIAL,FEXPR>"("	return '(';
+<INITIAL,FEXPR>")"	return ')';
+<INITIAL,FEXPR>";"	return ';';
+<INITIAL,FEXPR>":"	return ':';
+<INITIAL,FEXPR>"+"	return '+';
+<INITIAL,FEXPR>"-"	return '-';
+<INITIAL,FEXPR>"*"	return '*';
+<INITIAL,FEXPR>"/"	return '/';
+<INITIAL,FEXPR>"%"	return '%';
+<INITIAL,FEXPR>"="	return '=';
+<INITIAL,FEXPR>"!"	return T_NOT;
+<INITIAL,FEXPR>"&"	return '&';
+<INITIAL,FEXPR>"|"	return '|';
+<INITIAL,FEXPR>"^"	return '^';
+<INITIAL,FEXPR>"~"	return '~';
+<INITIAL,FEXPR>","	return ',';
+<INITIAL,FEXPR>"<"	return '<';
+<INITIAL,FEXPR>">"	return '>';
+<INITIAL,FEXPR>"?"	return '?';
+<INITIAL,FEXPR>"["	return '[';
+<INITIAL,FEXPR>"]"	return ']';
+<INITIAL,FEXPR>"@"	return '@';
+<INITIAL,FEXPR>"#"	return '#';
+<INITIAL,FEXPR>"\\"	return T_IDIV;
 
-<INITIAL>"/*"     { yyextra->m_commentLevel = 1; BEGIN COMMENT; }
-<INITIAL>"\"\"\"" { yyextra->m_text.clear(); BEGIN TXT; }
-<INITIAL>\"       { yyextra->m_stringSize = 0; BEGIN STR; }
-<INITIAL>\'       { yyextra->m_stringSize = 0; BEGIN STR2; }
+<INITIAL>"{"         return '{';
+<INITIAL>"}"         return '}';
 
-<INITIAL>"//".*	;
+<FEXPR>"}"           { yyextra->m_stringSize = 0; BEGIN FSTR; }
+<FEXPR>\'            { yyextra->m_stringSize = 0; BEGIN FSTR2; }
+
+<INITIAL>"/*"        { yyextra->m_commentLevel = 1; BEGIN COMMENT; }
+<INITIAL>"\"\"\""    { yyextra->m_text.clear(); BEGIN TXT; }
+<INITIAL>[Ff]\"      { yyextra->m_stringSize = 0; BEGIN FSTR; return T_FSTRING_BEGIN; }
+<INITIAL>\"          { yyextra->m_stringSize = 0; BEGIN STR; }
+<INITIAL>\'          { yyextra->m_stringSize = 0; BEGIN STR2; }
+
+<INITIAL>"//".*	   ;
 
 <INITIAL>\n	yyextra->m_currLine++;
 <INITIAL>{whitespace}	;
@@ -205,7 +213,7 @@ static inline uint32_t StringToUInt32(const char *s)
 			return LEXER_ERROR;
 		}
 
-<STR>{escape}	{
+<STR,FSTR>{escape}	{
 			if (yyextra->m_stringSize < MAX_STRING_SIZE)
 			{
 				switch(yytext[1])
@@ -239,7 +247,7 @@ static inline uint32_t StringToUInt32(const char *s)
 				return LEXER_ERROR;
 			}
 		}
-<STR>\\x[0-9A-Fa-f][0-9A-Fa-f]? {
+<STR,FSTR>\\x[0-9A-Fa-f][0-9A-Fa-f]? {
 			char *eptr;
 			int nVal;
 
@@ -268,12 +276,36 @@ static inline uint32_t StringToUInt32(const char *s)
 			yylval->valStr = MemCopyStringA(yyextra->m_string);
 			return T_STRING;
 		}
-<STR>\r		;
-<STR>\n		{
+<FSTR>"\\{"		{
+			if (yyextra->m_stringSize < MAX_STRING_SIZE)
+			{
+				yyextra->m_string[yyextra->m_stringSize++] = '{';
+			}
+			else
+			{
+				LexerError("String constant is too long", yyscanner);
+				return LEXER_ERROR;
+			}
+
+      }
+<FSTR>"{"		{
+			BEGIN FEXPR;
+			yyextra->m_string[yyextra->m_stringSize] = 0;
+			yylval->valStr = MemCopyStringA(yyextra->m_string);
+			return T_FSTRING;
+		}
+<FSTR>\"		{
+			BEGIN INITIAL;
+			yyextra->m_string[yyextra->m_stringSize] = 0;
+			yylval->valStr = MemCopyStringA(yyextra->m_string);
+			return T_FSTRING_END;
+		}
+<STR,FSTR>\r		;
+<STR,FSTR>\n		{
 			LexerError("Newline in string constant", yyscanner);
 			return LEXER_ERROR;
 		}
-<STR>.		{
+<STR,FSTR>.		{
 			if (yyextra->m_stringSize < MAX_STRING_SIZE)
 			{
 				yyextra->m_string[yyextra->m_stringSize++] = *yytext;
@@ -291,12 +323,18 @@ static inline uint32_t StringToUInt32(const char *s)
 			yylval->valStr = MemCopyStringA(yyextra->m_string);
 			return T_STRING;
 		}
-<STR2>\r		;
-<STR2>\n		{
+<FSTR2>\'	{
+			BEGIN FEXPR;
+			yyextra->m_string[yyextra->m_stringSize] = 0;
+			yylval->valStr = MemCopyStringA(yyextra->m_string);
+			return T_STRING;
+		}
+<STR2,FSTR2>\r		;
+<STR2,FSTR2>\n		{
 			LexerError("Newline in string constant", yyscanner);
 			return LEXER_ERROR;
 		}
-<STR2>.		{
+<STR2,FSTR2>.		{
 			if (yyextra->m_stringSize < MAX_STRING_SIZE)
 			{
 				yyextra->m_string[yyextra->m_stringSize++] = *yytext;

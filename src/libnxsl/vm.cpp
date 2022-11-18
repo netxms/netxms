@@ -1751,6 +1751,16 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
+      case OPCODE_FSTRING:
+         if (m_dataStack.getPosition() >= cp->m_stackItems)
+         {
+            buildString(cp->m_stackItems);
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
 		case OPCODE_FOREACH:
 			nRet = NXSL_Iterator::createIterator(this, &m_dataStack);
 			if (nRet != 0)
@@ -2545,6 +2555,23 @@ void NXSL_VM::doUnaryOperation(int nOpCode)
 }
 
 /**
+ * Build string from elements on stack
+ */
+void NXSL_VM::buildString(int numElements)
+{
+   StringBuffer result;
+
+   void **elements = m_dataStack.peekList(numElements);
+   for(int i = 0; i < numElements; i++)
+      result.append(static_cast<NXSL_Value*>(elements[i])->getValueAsCString());
+
+   for(int i = 0; i < numElements; i++)
+      destroyValue(m_dataStack.pop());
+
+   m_dataStack.push(createValue(result));
+}
+
+/**
  * Relocate code block
  */
 void NXSL_VM::relocateCode(uint32_t start, uint32_t len, uint32_t shift)
@@ -3191,22 +3218,4 @@ void NXSL_VM::dump(FILE *fp) const
          _ftprintf(fp, _T("  %04X %hs\n"), f->m_addr, f->m_name.value);
       }
    }
-}
-
-const TCHAR *ScriptVMHandle::failureReasonText() const
-{
-   switch (m_failureReason)
-   {
-      case ScriptVMFailureReason::SUCCESS:
-         return _T("Success");
-      case ScriptVMFailureReason::SCRIPT_NOT_FOUND:
-         return _T("Script not found");
-      case ScriptVMFailureReason::SCRIPT_IS_EMPTY:
-         return _T("Script is empty");
-      case ScriptVMFailureReason::SCRIPT_LOAD_ERROR:
-         return _T("Script load error");
-      case ScriptVMFailureReason::SCRIPT_VALIDATION_ERROR:
-         return _T("Script validation error");
-   }
-   return _T("Unknown");
 }

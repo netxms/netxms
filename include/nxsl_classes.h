@@ -1286,6 +1286,7 @@ protected:
    void pushProperty(const NXSL_Identifier& name);
    void doUnaryOperation(int nOpCode);
    void doBinaryOperation(int nOpCode);
+   void buildString(int numElements);
    void getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value *index);
    bool setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *value);
    void getArrayAttribute(NXSL_Array *a, const NXSL_Identifier& attribute, bool safe);

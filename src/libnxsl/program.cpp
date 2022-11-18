@@ -58,7 +58,8 @@ static const char *s_nxslCommandMnemonic[] =
    "UPDATE", "CLREXPR", "RANGE", "CASELT",
    "CASELT", "CASEGT", "CASEGT", "PUSH",
    "PUSH", "PUSH", "PUSH", "PUSH", "PUSH",
-   "PUSH", "PUSH", "SPREAD", "ARGV", "APPEND"
+   "PUSH", "PUSH", "SPREAD", "ARGV", "APPEND",
+   "FSTR"
 };
 
 /**
@@ -69,6 +70,7 @@ NXSL_ProgramBuilder::NXSL_ProgramBuilder(NXSL_Environment *env) : NXSL_ValueMana
 {
    m_environment = env;
    m_expressionVariables = nullptr;
+   m_numFStringElements = 0;
 }
 
 /**
@@ -375,6 +377,7 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
          else
             _ftprintf(fp, _T("\"%s\"\n"), instruction.m_operand.m_constant->getValueAsCString());
          break;
+      case OPCODE_FSTRING:
       case OPCODE_POP:
       case OPCODE_PUSHCP:
       case OPCODE_STORAGE_READ:

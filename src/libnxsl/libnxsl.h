@@ -153,6 +153,7 @@ typedef void *yyscan_t;
 #define OPCODE_SPREAD         108
 #define OPCODE_ARGV           109
 #define OPCODE_APPEND_ALL     110
+#define OPCODE_FSTRING        111
 
 class NXSL_Compiler;
 
@@ -226,6 +227,7 @@ protected:
    NXSL_Identifier m_currentExpressionVariable;
    StringMap m_metadata;
    NXSL_Environment *m_environment;
+   uint32_t m_numFStringElements;
 
    uint32_t getFinalJumpDestination(uint32_t addr, int srcJump);
    uint32_t getExpressionVariableCodeBlock(const NXSL_Identifier& identifier);
@@ -292,6 +294,10 @@ public:
    StringList *getRequiredModules() const;
    const NXSL_Identifier& getCurrentExpressionVariable() const { return m_currentExpressionVariable; }
    NXSL_Environment *getEnvironment() { return m_environment; }
+
+   void startFString() { m_numFStringElements = 0; }
+   void incFStringElements() { m_numFStringElements++; }
+   uint32_t getFStringElementCount() { return m_numFStringElements; }
 
    virtual uint64_t getMemoryUsage() const override;
 
