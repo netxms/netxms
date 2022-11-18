@@ -84,7 +84,7 @@ bool TeltonikaDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
 
    SNMP_PDU *response;
    uint32_t rc;
-   if ((rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
+   if ((rc = snmp->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("TeltonikaDriver::getHardwareInformation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
       return false;

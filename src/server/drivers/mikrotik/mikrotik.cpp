@@ -119,7 +119,7 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14988.1.1.7.3.0")));  // Serial number
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       TCHAR buffer[256];
 
@@ -259,7 +259,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
    request.bindVariable(new SNMP_Variable(oid, 11));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == 4)
       {

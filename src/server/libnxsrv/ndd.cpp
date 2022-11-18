@@ -286,7 +286,7 @@ static uint32_t HandlerIpAddr(SNMP_Variable *var, SNMP_Transport *transport, Int
    oid.changeElement(9, 2); // ipAdEntIfIndex
    request.bindVariable(new SNMP_Variable(oid));
    SNMP_PDU *response;
-   uint32_t rc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = transport->doRequest(&request, &response);
    if (rc == SNMP_ERR_SUCCESS)
    {
       // check number of varbinds and address type (1 = unicast)
@@ -365,7 +365,7 @@ static uint32_t HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *transp
    oid[9] = 5; // ipAddressPrefix
    request.bindVariable(new SNMP_Variable(oid, oidLen));
    SNMP_PDU *response;
-   if (transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (transport->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       // check number of varbinds and address type (1 = unicast)
       if ((response->getNumVariables() == 2) && (response->getVariable(0)->getValueAsInt() == 1))
@@ -1102,7 +1102,7 @@ static uint32_t HandlerArp(SNMP_Variable *var, SNMP_Transport *transport, ArpCac
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   uint32_t rcc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = transport->doRequest(&request, &response);
    if (rcc != SNMP_ERR_SUCCESS)
       return rcc;
 

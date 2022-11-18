@@ -81,7 +81,7 @@ bool UbiquitiEdgeSwitchDriver::getHardwareInformation(SNMP_Transport *snmp, NObj
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.4413.1.1.1.1.1.4.0")));  // Serial number
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       TCHAR buffer[256];
 

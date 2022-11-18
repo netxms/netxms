@@ -4370,7 +4370,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, get)
       request.bindVariable(new SNMP_Variable(oids[i]));
 
    SNMP_PDU *response;
-   uint32_t rc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = transport->doRequest(&request, &response);
    if (rc == SNMP_ERR_SUCCESS)
    {
       if ((response->getNumVariables() >= varbindCount) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
@@ -4495,7 +4495,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, getValues)
       request.bindVariable(new SNMP_Variable(oids[i]));
 
    SNMP_PDU *response;
-   uint32_t rc = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = transport->doRequest(&request, &response);
    if (rc == SNMP_ERR_SUCCESS)
    {
       if ((response->getNumVariables() >= varbindCount) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
@@ -4575,7 +4575,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
    {
       success = false;
       SNMP_PDU *response = nullptr;
-      uint32_t snmpResult = transport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      uint32_t snmpResult = transport->doRequest(&request, &response);
       if (snmpResult == SNMP_ERR_SUCCESS)
       {
          if (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS)

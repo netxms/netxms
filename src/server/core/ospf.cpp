@@ -76,7 +76,7 @@ static uint32_t HandlerAreaTable(SNMP_Variable *var, SNMP_Transport *snmp, Struc
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 2)
       {
@@ -126,7 +126,7 @@ static void ProcessInterfaceTableEntry(SNMP_Transport *snmp, SNMP_Variable *var,
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 5)
       {
@@ -174,7 +174,7 @@ static void ProcessNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable *var, 
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 1)
          neighbor->state = static_cast<OSPFNeighborState>(response->getVariable(0)->getValueAsUInt());
@@ -206,7 +206,7 @@ static void ProcessVirtualNeighborTableEntry(SNMP_Transport *snmp, SNMP_Variable
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() >= 1)
          neighbor->state = static_cast<OSPFNeighborState>(response->getVariable(0)->getValueAsUInt());

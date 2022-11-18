@@ -78,7 +78,7 @@ bool CambiumCnPilotDriver::getHardwareInformation(SNMP_Transport *snmp, NObject 
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.22.1.1.1.5.0")));  // cambiumAPModel
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) != SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
       return false;
 
    if (response->getNumVariables() != request.getNumVariables())
@@ -143,7 +143,7 @@ static UINT32 HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, v
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   uint32_t rcc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = snmp->doRequest(&request, &response);
    if (rcc != SNMP_ERR_SUCCESS)
       return rcc;
 
@@ -225,7 +225,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   uint32_t rcc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = snmp->doRequest(&request, &response);
    if (rcc != SNMP_ERR_SUCCESS)
       return rcc;
 

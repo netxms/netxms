@@ -312,7 +312,7 @@ static uint32_t FDBHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, Forw
 	request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   uint32_t rcc = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = pTransport->doRequest(&request, &response);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
       SNMP_Variable *varPort = response->getVariable(0);
@@ -357,7 +357,7 @@ static uint32_t Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTranspor
 	request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   uint32_t rcc = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = pTransport->doRequest(&request, &response);
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 		int status = response->getVariable(0)->getValueAsInt();

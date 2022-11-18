@@ -121,7 +121,7 @@ uint32_t HostMibDriverData::updateStorageCacheCallback(SNMP_Variable *v, SNMP_Tr
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   uint32_t rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = snmp->doRequest(&request, &response);
    if (rc != SNMP_ERR_SUCCESS)
       return rc;
 

@@ -97,7 +97,7 @@ static UINT32 HandlerIpAddrList(SNMP_Variable *var, SNMP_Transport *snmp, void *
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == request.getNumVariables())
       {
@@ -152,7 +152,7 @@ static UINT32 HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, void 
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == request.getNumVariables())
       {
@@ -244,7 +244,7 @@ void OptixDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverD
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == request.getNumVariables())
       {

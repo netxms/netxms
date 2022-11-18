@@ -110,6 +110,14 @@ uint32_t SNMP_Transport::doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t
 /**
  * Send a request and wait for response with respect for timeouts and retransmissions
  */
+uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response)
+{
+   return doRequest(request, response, SnmpGetDefaultTimeout(), 3, false);
+}
+
+/**
+ * Send a request and wait for response with respect for timeouts and retransmissions
+ */
 uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, uint32_t timeout, int numRetries, bool engineIdDiscoveryOnly)
 {
    if ((request == nullptr) || (response == nullptr) || (numRetries <= 0))

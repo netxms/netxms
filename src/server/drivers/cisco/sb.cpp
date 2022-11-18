@@ -97,7 +97,7 @@ static UINT32 HandlerPhysicalPorts(SNMP_Variable *var, SNMP_Transport *snmp, voi
    oid[13] = 7;   // rlPhdPortsColumn
    request.bindVariable(new SNMP_Variable(oid, oidLen));
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if ((response->getNumVariables() == 2) &&
           response->getVariable(0)->isInteger() &&

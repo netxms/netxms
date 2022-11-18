@@ -83,7 +83,7 @@ bool WesterstrandDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *n
 
    SNMP_PDU *response;
    uint32_t rc;
-   if ((rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
+   if ((rc = snmp->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
       return false;
@@ -143,7 +143,7 @@ GeoLocation WesterstrandDriver::getGeoLocation(SNMP_Transport *snmp, NObject *no
 
    SNMP_PDU *response;
    uint32_t rc;
-   if ((rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3)) != SNMP_ERR_SUCCESS)
+   if ((rc = snmp->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
       return GeoLocation();

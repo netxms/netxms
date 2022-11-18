@@ -445,7 +445,7 @@ static uint32_t TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, SN
       }
 
       SNMP_PDU *response;
-      result = pTransport->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+      result = pTransport->doRequest(&request, &response);
       if (result == SNMP_ERR_SUCCESS)
       {
          if ((response->getNumVariables() > 0) && (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS))

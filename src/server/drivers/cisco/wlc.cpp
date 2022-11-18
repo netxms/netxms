@@ -90,7 +90,7 @@ bool CiscoWirelessControllerDriver::getHardwareInformation(SNMP_Transport *snmp,
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.14179.1.1.1.12.0"))); // agentInventoryManufacturerName (vendor)
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       TCHAR buffer[256];
 
@@ -228,7 +228,7 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
+   UINT32 rcc = snmp->doRequest(request, &response);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -294,13 +294,11 @@ ObjectArray<AccessPointInfo> *CiscoWirelessControllerDriver::getAccessPoints(SNM
 /**
  * Handler for mobile units enumeration
  */
-static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
 {
-   ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
-
    const SNMP_ObjectId& name = var->getName();
    size_t nameLen = name.length();
-   UINT32 oid[MAX_OID_LEN];
+   uint32_t oid[MAX_OID_LEN];
    memcpy(oid, name.value(), nameLen * sizeof(UINT32));
 
    SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -321,7 +319,7 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rcc = snmp->doRequest(request, &response);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -355,13 +353,13 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
  */
 ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStations(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
-   ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
+   auto wsList = new ObjectArray<WirelessStationInfo>(0, 16, Ownership::True);
 
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.1.4.1.1"), // bsnMobileStationMacAddress
                 HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
-      wsList = NULL;
+      wsList = nullptr;
    }
 
    return wsList;
@@ -382,15 +380,15 @@ ObjectArray<WirelessStationInfo> *CiscoWirelessControllerDriver::getWirelessStat
 AccessPointState CiscoWirelessControllerDriver::getAccessPointState(SNMP_Transport *snmp, NObject *node, DriverData *driverData,
          UINT32 apIndex, const MacAddress& macAddr, const InetAddress& ipAddr, const ObjectArray<RadioInterfaceInfo> *radioInterfaces)
 {
-   if ((radioInterfaces == NULL) || radioInterfaces->isEmpty())
+   if ((radioInterfaces == nullptr) || radioInterfaces->isEmpty())
       return AP_UNKNOWN;
 
    TCHAR oid[256], macAddrText[64];
    _sntprintf(oid, 256, _T(".1.3.6.1.4.1.14179.2.2.1.1.6.%s"),
             MacAddress(radioInterfaces->get(0)->macAddr, MAC_ADDR_LENGTH).toString(macAddrText, MacAddressNotation::DECIMAL_DOT_SEPARATED));
 
-   UINT32 value;
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &value, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+   uint32_t value;
+   if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &value, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
       return AP_UNKNOWN;
 
    switch(value)
