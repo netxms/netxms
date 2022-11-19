@@ -191,6 +191,14 @@ static inline uint32_t StringToUInt32(const char *s)
 
 <FEXPR>"}"           { yyextra->m_stringSize = 0; BEGIN FSTR; }
 <FEXPR>\'            { yyextra->m_stringSize = 0; BEGIN FSTR2; }
+<FEXPR>[Ff]\"        {
+         LexerError("Format strings cannot be nested", yyscanner);
+         return LEXER_ERROR;
+      }
+<FEXPR>\"            {
+         LexerError("Double-quoted strings within format string are forbidden", yyscanner);
+         return LEXER_ERROR;
+      }
 
 <INITIAL>"/*"        { yyextra->m_commentLevel = 1; BEGIN COMMENT; }
 <INITIAL>"\"\"\""    { yyextra->m_text.clear(); BEGIN TXT; }
