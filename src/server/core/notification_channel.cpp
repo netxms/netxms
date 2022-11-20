@@ -353,7 +353,7 @@ void NotificationChannel::workerThread()
       if (m_driver != nullptr)
       {
          int result = -1;
-         int retryCount = ConfigReadInt(_T("NotificationChannels.MaxRetryCount"), 3);
+         int retryCount = ConfigReadInt(_T("NotificationChannels.MaxRetryCount"), 30);
          do
          {
             result = m_driver->send(notification->getRecipient(), notification->getSubject(), notification->getBody());
