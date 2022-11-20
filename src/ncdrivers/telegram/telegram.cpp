@@ -38,8 +38,6 @@
 #define DISABLE_IP_V6 2
 #define LONG_POLLING  4
 
-#define NUMBERS_TEXT _T("1234567890")
-
 /**
  * Chat information
  */
@@ -221,13 +219,13 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 /**
  * Send request to Telegram API
  */
-static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, long ipVersion, const char *method, json_t *data)
+static std::pair<json_t*, bool> SendTelegramRequest(const char *token, const ProxyInfo *proxy, long ipVersion, const char *method, json_t *data)
 {
    CURL *curl = curl_easy_init();
    if (curl == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
-      return nullptr;
+      return std::pair<json_t*, bool>(nullptr, false);
    }
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
@@ -290,15 +288,19 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
 
    json_t *response = nullptr;
+   bool allowRetry = false;
 
    char url[256];
    snprintf(url, 256, "https://api.telegram.org/bot%s/%s", token, method);
    if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
    {
-      if (curl_easy_perform(curl) == CURLE_OK)
+      CURLcode rc = curl_easy_perform(curl);
+      if (rc == CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("Got %d bytes"), static_cast<int>(responseData.size()));
-         if (responseData.size() > 0)
+         long responseCode;
+         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("HTTP response %03d, %d bytes"), static_cast<int>(responseCode), static_cast<int>(responseData.size()));
+         if ((responseCode == 200) && (responseData.size() > 0))
          {
             responseData.write('\0');
             json_error_t error;
@@ -308,10 +310,17 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse API response (%hs)"), error.text);
             }
          }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Telegram API returned HTTP error %03d"), static_cast<int>(responseCode));
+            allowRetry = ((responseCode >= 500) && (responseCode <= 599));
+         }
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
+         allowRetry = (rc == CURLE_COULDNT_RESOLVE_PROXY) || (rc == CURLE_COULDNT_RESOLVE_HOST) || (rc == CURLE_COULDNT_CONNECT) ||
+                  (rc == CURLE_OPERATION_TIMEDOUT) || (rc == CURLE_SSL_CONNECT_ERROR) || (rc == CURLE_SEND_ERROR) || (rc == CURLE_RECV_ERROR);
       }
    }
    else
@@ -321,7 +330,8 @@ static json_t *SendTelegramRequest(const char *token, const ProxyInfo *proxy, lo
    curl_slist_free_all(headers);
    curl_easy_cleanup(curl);
    MemFree(json);
-   return response;
+
+   return std::pair<json_t*, bool>(response, allowRetry);
 }
 
 /**
@@ -429,7 +439,8 @@ TelegramDriver *TelegramDriver::createInstance(Config *config, NCDriverStorageMa
    }
 
    TelegramDriver *driver = nullptr;
-   json_t *info = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(options), "getMe", nullptr);
+   std::pair<json_t*, bool> response = SendTelegramRequest(authToken, &proxy, IPVersionFromOptions(options), "getMe", nullptr);
+   json_t *info = response.first;
 	if (info != nullptr)
 	{
 	   json_t *ok = json_object_get(info, "ok");
@@ -703,7 +714,7 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
    bool useRecipientName = recipient[0] == _T('@');
    if (!useRecipientName)
    {
-      size_t numCount = _tcsspn((recipient[0] != _T('-')) ? recipient : (recipient + 1), NUMBERS_TEXT);
+      size_t numCount = _tcsspn((recipient[0] != _T('-')) ? recipient : (recipient + 1), _T("0123456789"));
       size_t textLen = _tcslen(recipient);
       useRecipientName = (recipient[0] == _T('-')) ? (numCount == (textLen - 1)) : (numCount == textLen);
    }
@@ -726,12 +737,12 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
          json_object_set_new(request, "parse_mode", json_string_t(m_parseMode));
       }
 
-      json_t *response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
+      std::pair<json_t*, bool> response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "sendMessage", request);
       json_decref(request);
 
-      if (json_is_object(response))
+      if (json_is_object(response.first))
       {
-         if (json_is_true(json_object_get(response, "ok")))
+         if (json_is_true(json_object_get(response.first, "ok")))
          {
             nxlog_debug_tag(DEBUG_TAG, 6, _T("Message from bot %s to recipient %s successfully sent"), m_botName, recipient);
             result = 0;
@@ -739,14 +750,14 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
          else
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: API error (%hs)"),
-                     m_botName, recipient, json_object_get_string_utf8(response, "description", "Unknown reason"));
+                     m_botName, recipient, json_object_get_string_utf8(response.first, "description", "Unknown reason"));
 
-            int errorCode = static_cast<int>(json_object_get_integer(response, "error_code", 0));
+            int errorCode = static_cast<int>(json_object_get_integer(response.first, "error_code", 0));
             switch (errorCode)
             {
                case 420: // FLOOD
                case 429: // Too many requests
-                  result = static_cast<int>(json_object_get_integer(json_object_get(response, "parameters"), "retry_after", 10));
+                  result = static_cast<int>(json_object_get_integer(json_object_get(response.first, "parameters"), "retry_after", 10));
                   break;
                default:
                   result = -1;
@@ -757,8 +768,10 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
       else
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send message from bot %s to recipient %s: invalid API response"), m_botName, recipient);
+         if (response.second)
+            result = 60;   // Retry in 60 seconds if allowed by SendTelegramRequest
       }
-      json_decref(response);
+      json_decref(response.first);
    }
    else
    {
@@ -773,15 +786,15 @@ int TelegramDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCH
 bool TelegramDriver::checkHealth()
 {
    bool status = false;
-   json_t *info = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "getMe", nullptr);
-   if (info != nullptr)
+   std::pair<json_t*, bool> response = SendTelegramRequest(m_authToken, m_proxy, m_ipVersion, "getMe", nullptr);
+   if (response.first != nullptr)
    {
-      json_t *ok = json_object_get(info, "ok");
+      json_t *ok = json_object_get(response.first, "ok");
       if (json_is_true(ok))
       {
          status = true;
       }
-      json_decref(info);
+      json_decref(response.first);
    }
    return status;
 }
