@@ -1001,11 +1001,11 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       for(int i = 0; i < count; i++)
       {
          DBGetField(hResult, i, 0, key, MAX_DB_STRING);
-         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_SET)
+         if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_SET)
          {
             m_pstorageSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, nullptr, 0));
          }
-         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_DELETE)
+         if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_DELETE)
          {
             m_pstorageDeleteActions.add(key);
          }
@@ -1018,7 +1018,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    }
 
    // Load custom attributes actions
-   _sntprintf(szQuery, 256, _T("SELECT attribute_name,action,value FROM policy_cutom_attribute_actions WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT attribute_name,action,value FROM policy_cattr_actions WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
@@ -1027,11 +1027,11 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       for(int i = 0; i < count; i++)
       {
          DBGetField(hResult, i, 0, key, MAX_DB_STRING);
-         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_SET)
+         if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_SET)
          {
             m_customAttributeSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, nullptr, 0));
          }
-         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_DELETE)
+         if (DBGetFieldLong(hResult, i, 1) == EPP_ACTION_DELETE)
          {
             m_customAttributeDeleteActions.add(key);
          }
@@ -1178,7 +1178,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
 	// Persistent storage actions
    if (success && !m_pstorageSetActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key,value) VALUES (?,1,?,?)"), m_pstorageSetActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key,value) VALUES (?,'1',?,?)"), m_pstorageSetActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1189,7 +1189,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
 
    if (success && !m_pstorageDeleteActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key) VALUES (?,2,?)"), m_pstorageDeleteActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_pstorage_actions (rule_id,action,ps_key) VALUES (?,'2',?)"), m_pstorageDeleteActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1205,7 +1205,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    // Custom attribute actions
    if (success && !m_customAttributeSetActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cutom_attribute_actions (rule_id,action,attribute_name,value) VALUES (?,1,?,?)"), m_customAttributeSetActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cattr_actions (rule_id,action,attribute_name,value) VALUES (?,'1',?,?)"), m_customAttributeSetActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1216,7 +1216,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
 
    if (success && !m_customAttributeDeleteActions.isEmpty())
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cutom_attribute_actions (rule_id,action,attribute_name) VALUES (?,2,?)"), m_pstorageDeleteActions.size() > 1);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cattr_actions (rule_id,action,attribute_name) VALUES (?,'2',?)"), m_pstorageDeleteActions.size() > 1);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1396,7 +1396,7 @@ bool EventPolicy::saveToDB() const
                 DBQuery(hdb, _T("DELETE FROM policy_event_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_source_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_pstorage_actions")) &&
-                DBQuery(hdb, _T("DELETE FROM policy_cutom_attribute_actions")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_cattr_actions")) &&
                 DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
 
       if (success)

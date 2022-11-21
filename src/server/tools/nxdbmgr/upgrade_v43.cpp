@@ -22,23 +22,52 @@
 
 #include "nxdbmgr.h"
 
+static bool ChangeActionColumnType(const TCHAR *table, const TCHAR *primaryKey)
+{
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, table));
+   CHK_EXEC(SQLQueryFormatted(_T("ALTER TABLE %s ADD action_tmp char(1)"), table));
+   CHK_EXEC(SQLQueryFormatted(_T("UPDATE %s SET action_tmp='1' WHERE action=1"), table));
+   CHK_EXEC(SQLQueryFormatted(_T("UPDATE %s SET action_tmp='2' WHERE action=2"), table));
+   CHK_EXEC(DBDropColumn(g_dbHandle, table, _T("action")));
+   CHK_EXEC(DBRenameColumn(g_dbHandle, table, _T("action_tmp"), _T("action")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, table, _T("action")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, table, primaryKey));
+   return true;
+
+}
+
 /**
- * Upgrade from 43.0 to 43.1
+ * Upgrade from 43.1 to 43.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(DBRenameTable(g_dbHandle, _T("policy_cutom_attribute_actions"), _T("policy_cattr_actions")));
+   CHK_EXEC(ChangeActionColumnType(_T("policy_pstorage_actions"), _T("rule_id,ps_key,action")));
+   CHK_EXEC(ChangeActionColumnType(_T("policy_cattr_actions"), _T("rule_id,attribute_name,action")));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
+
+/**
+ * Upgrade from 43.0 to 43.2
  */
 static bool H_UpgradeFromV0()
 {
    CHK_EXEC(CreateTable(
-            _T("CREATE TABLE policy_cutom_attribute_actions (")
+            _T("CREATE TABLE policy_cattr_actions (")
             _T("rule_id integer not null,")
             _T("attribute_name varchar(127) not null,")
-            _T("action integer not null,")
+            _T("action char(1) not null,")
             _T("value $SQL:TEXT null,")
             _T("PRIMARY KEY(rule_id,attribute_name,action))")));
 
    CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD action_script $SQL:TEXT")));
    CHK_EXEC(DBRenameColumn(g_dbHandle, _T("event_policy"), _T("script"), _T("filter_script")));
 
-   CHK_EXEC(SetMinorSchemaVersion(1));
+   CHK_EXEC(ChangeActionColumnType(_T("policy_pstorage_actions"), _T("rule_id,ps_key,action")));
+
+   CHK_EXEC(SetMinorSchemaVersion(2));
    return true;
 }
 
@@ -52,7 +81,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 0,  43, 1,  H_UpgradeFromV0  },
+   { 1,  43, 2,  H_UpgradeFromV1  },
+   { 0,  43, 2,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };
 

@@ -37,7 +37,7 @@ public class KeyValuePairEditDialog extends Dialog
 	private LabeledText textValue;
 	private String pStorageKey;
 	private String pStorageValue;
-	private String keyName;
+	private String label;
 	private boolean showValue;
    private boolean isNew;
 	
@@ -50,14 +50,14 @@ public class KeyValuePairEditDialog extends Dialog
     * @param showValue true if value should be shown in dialog
     * @param isNew true if new element is being created
     */
-	public KeyValuePairEditDialog(Shell parentShell, String key, String value, boolean showValue, boolean isNew, String keyName)
+	public KeyValuePairEditDialog(Shell parentShell, String key, String value, boolean showValue, boolean isNew, String label)
 	{
 		super(parentShell);
 		pStorageKey = key;
 		pStorageValue = value;
 		this.showValue = showValue;
 		this.isNew = isNew;
-		this.keyName = keyName;
+		this.label = label;
 	}
 
    /**
@@ -75,7 +75,7 @@ public class KeyValuePairEditDialog extends Dialog
       dialogArea.setLayout(layout);
 		
       textName = new LabeledText(dialogArea, SWT.NONE);
-      textName.setLabel(keyName);
+      textName.setLabel(label);
       textName.getTextControl().setTextLimit(256);
       if (pStorageKey != null)
       {

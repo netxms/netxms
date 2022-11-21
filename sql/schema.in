@@ -1441,7 +1441,7 @@ CREATE TABLE policy_pstorage_actions
 (
   rule_id integer not null,
   ps_key varchar(127) not null,
-  action integer not null,
+  action char(1) not null,
   value varchar(2000) null,
   PRIMARY KEY(rule_id,ps_key,action)
 ) TABLE_TYPE;
@@ -1449,11 +1449,11 @@ CREATE TABLE policy_pstorage_actions
 /**
  * Event processing policy custom attribute operations
  */
-CREATE TABLE policy_cutom_attribute_actions
+CREATE TABLE policy_cattr_actions
 (
   rule_id integer not null,
   attribute_name varchar(127) not null,
-  action integer not null,
+  action char(1) not null,
   value varchar(2000) null,
   PRIMARY KEY(rule_id,attribute_name,action)
 ) TABLE_TYPE;

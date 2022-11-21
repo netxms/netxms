@@ -167,43 +167,12 @@ public class EventProcessingPolicyRule
       }
       timerCancellations = msg.getStringListFromFields(NXCPCodes.VID_TIMER_LIST_BASE, NXCPCodes.VID_TIMER_COUNT);
 
-      int numSetVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SET_PSTORAGE);
-      persistentStorageSet = new HashMap<String, String>(numSetVar);
-      fieldId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
-      for(int i = 0; i < numSetVar; i++)
-      {
-         final String key = msg.getFieldAsString(fieldId++);
-         final String value = msg.getFieldAsString(fieldId++);
-         persistentStorageSet.put(key, value);
-      }
+      persistentStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
+      persistentStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
 
-      int numDeleteVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_DELETE_PSTORAGE);
-      persistentStorageDelete = new ArrayList<String>(numDeleteVar);
-      fieldId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
-      for(int i = 0; i < numDeleteVar; i++)
-      {
-         final String key = msg.getFieldAsString(fieldId++);
-         persistentStorageDelete.add(key);
-      }
+      customAttributeStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE);
+      customAttributeStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
 
-      numSetVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE);
-      customAttributeStorageSet = new HashMap<String, String>(numSetVar);
-      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE;
-      for(int i = 0; i < numSetVar; i++)
-      {
-         final String key = msg.getFieldAsString(fieldId++);
-         final String value = msg.getFieldAsString(fieldId++);
-         customAttributeStorageSet.put(key, value);
-      }
-
-      numDeleteVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
-      customAttributeStorageDelete = new ArrayList<String>(numDeleteVar);
-      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE;
-      for(int i = 0; i < numDeleteVar; i++)
-      {
-         final String key = msg.getFieldAsString(fieldId++);
-         customAttributeStorageDelete.add(key);
-      }
       this.ruleNumber = ruleNumber;
    }
 
@@ -243,35 +212,11 @@ public class EventProcessingPolicyRule
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
       msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
 
-      msg.setFieldInt32(NXCPCodes.VID_NUM_SET_PSTORAGE, persistentStorageSet.size());
-      fieldId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
-      for(Entry<String, String> e : persistentStorageSet.entrySet())
-      {
-         msg.setField(fieldId++, e.getKey());
-         msg.setField(fieldId++, e.getValue());
-      }
+      msg.setFieldsFromStringMap(persistentStorageSet, NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
+      msg.setFieldsFromStringCollection(persistentStorageDelete, NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
 
-      msg.setFieldInt32(NXCPCodes.VID_NUM_DELETE_PSTORAGE, persistentStorageDelete.size());
-      fieldId = NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE;
-      for(int i = 0; i < persistentStorageDelete.size(); i++)
-      {
-         msg.setField(fieldId++, persistentStorageDelete.get(i));
-      }
-
-      msg.setFieldInt32(NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE, customAttributeStorageSet.size());
-      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE;
-      for(Entry<String, String> e : customAttributeStorageSet.entrySet())
-      {
-         msg.setField(fieldId++, e.getKey());
-         msg.setField(fieldId++, e.getValue());
-      }
-
-      msg.setFieldInt32(NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE, customAttributeStorageDelete.size());
-      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE;
-      for(int i = 0; i < customAttributeStorageDelete.size(); i++)
-      {
-         msg.setField(fieldId++, customAttributeStorageDelete.get(i));
-      }
+      msg.setFieldsFromStringMap(customAttributeStorageSet, NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE);
+      msg.setFieldsFromStringCollection(customAttributeStorageDelete, NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
    }
 
    /**

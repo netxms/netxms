@@ -53,7 +53,7 @@ public class KeyValueSetEditor extends Composite
    private Button buttonAdd;
    private Button buttonEdit;
    private Button buttonRemove;
-   private String keyName;
+   private String label;
    private Map<String, String> content = new HashMap<String, String>();
 
    /**
@@ -62,10 +62,10 @@ public class KeyValueSetEditor extends Composite
     * @param parent parent composite
     * @param style widget style
     */
-   public KeyValueSetEditor(Composite parent, int style, String keyName)
+   public KeyValueSetEditor(Composite parent, int style, String label)
    {
       super(parent, style);
-      this.keyName = keyName;
+      this.label = label;
 
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.INNER_SPACING;
@@ -73,7 +73,7 @@ public class KeyValueSetEditor extends Composite
       layout.marginHeight = 0;
       this.setLayout(layout);
       
-      final String[] setColumnNames = { keyName, "Value" };
+      final String[] setColumnNames = { label, "Value" };
       final int[] setColumnWidths = { 150, 300 };
       viewer = new SortableTableViewer(this, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -169,7 +169,7 @@ public class KeyValueSetEditor extends Composite
     */
    private void addEntry()
    {
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, true, true, keyName);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, true, true, label);
       if (dlg.open() == Window.OK)
       {
          content.put(dlg.getAtributeName(), dlg.getAttributeValue());
@@ -188,7 +188,7 @@ public class KeyValueSetEditor extends Composite
          return;
 
       Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr.getKey(), attr.getValue(), true, false, keyName);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr.getKey(), attr.getValue(), true, false, label);
       if (dlg.open() == Window.OK)
       {
          content.put(dlg.getAtributeName(), dlg.getAttributeValue());

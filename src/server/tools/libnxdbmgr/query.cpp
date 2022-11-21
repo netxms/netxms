@@ -99,6 +99,20 @@ const TCHAR *g_sqlTypes[8][4] =
    { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("bytea")          }  // TimescaleDB
 };
 
+
+/**
+ * Execute SQL query from formatted string and print error message on screen if query failed
+ */
+bool LIBNXDBMGR_EXPORTABLE SQLQueryFormatted(const TCHAR *query, ...)
+{
+   TCHAR formattedQuery[4096];
+   va_list args;
+   va_start(args, query);
+   _vsntprintf(formattedQuery, 4096, query, args);
+   va_end(args);
+   return SQLQuery(formattedQuery);
+}
+
 /**
  * Execute SQL query and print error message on screen if query failed
  */

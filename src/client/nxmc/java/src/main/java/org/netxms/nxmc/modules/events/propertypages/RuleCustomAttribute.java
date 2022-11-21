@@ -119,7 +119,7 @@ public class RuleCustomAttribute extends RuleBasePropertyPage
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            int size = ((IStructuredSelection)namesToDeleteViewer.getSelection()).size();
+            int size = namesToDeleteViewer.getStructuredSelection().size();
             editDeleteListButton.setEnabled(size == 1);
             removeFromDeleteListButton.setEnabled(size > 0);
          }
