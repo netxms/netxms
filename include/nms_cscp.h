@@ -1507,6 +1507,9 @@ typedef struct
 #define VID_MQTT_PROXY              ((uint32_t)802)
 #define VID_TCP_PROXY               ((uint32_t)803)
 #define VID_FOLLOW_LOCATION         ((uint32_t)804)
+#define VID_ACTION_SCRIPT           ((uint32_t)805)
+#define VID_NUM_SET_CUSTOM_ATTRIBUTE ((uint32_t)806)
+#define VID_NUM_DELETE_CUSTOM_ATTRIBUTE ((uint32_t)807)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1674,6 +1677,9 @@ typedef struct
 // Base values for persistent storage actions in epp
 #define VID_PSTORAGE_SET_LIST_BASE     ((UINT32)0x10000000)
 #define VID_PSTORAGE_DELETE_LIST_BASE  ((UINT32)0x20000000)
+// Base values for persistent storage actions in epp
+#define VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE     ((UINT32)0x30000000)
+#define VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE  ((UINT32)0x40000000)
 
 // Base values for persistent storage lists
 #define VID_PSTORAGE_LIST_BASE     ((UINT32)0x10000000)

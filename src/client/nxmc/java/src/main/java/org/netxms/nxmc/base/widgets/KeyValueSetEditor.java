@@ -57,6 +57,7 @@ public class KeyValueSetEditor extends Composite
    private Button buttonAdd;
    private Button buttonEdit;
    private Button buttonRemove;
+   private String keyName;
    private Map<String, String> content = new HashMap<String, String>();
 
    /**
@@ -65,9 +66,10 @@ public class KeyValueSetEditor extends Composite
     * @param parent parent composite
     * @param style widget style
     */
-   public KeyValueSetEditor(Composite parent, int style)
+   public KeyValueSetEditor(Composite parent, int style, String keyName)
    {
       super(parent, style);
+      this.keyName = keyName;
 
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.INNER_SPACING;
@@ -75,7 +77,7 @@ public class KeyValueSetEditor extends Composite
       layout.marginHeight = 0;
       this.setLayout(layout);
 
-      final String[] setColumnNames = { i18n.tr("Key"), i18n.tr("Value") };
+      final String[] setColumnNames = { keyName, i18n.tr("Value") };
       final int[] setColumnWidths = { 150, 300 };
       viewer = new SortableTableViewer(this, setColumnNames, setColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -171,7 +173,7 @@ public class KeyValueSetEditor extends Composite
     */
    private void addEntry()
    {
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, true, true);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, true, true, keyName);
       if (dlg.open() == Window.OK)
       {
          content.put(dlg.getKey(), dlg.getValue());
@@ -190,7 +192,7 @@ public class KeyValueSetEditor extends Composite
          return;
 
       Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr.getKey(), attr.getValue(), true, false);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr.getKey(), attr.getValue(), true, false, keyName);
       if (dlg.open() == Window.OK)
       {
          content.put(dlg.getKey(), dlg.getValue());

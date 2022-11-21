@@ -67,9 +67,11 @@ import org.netxms.nxmc.base.widgets.Card;
 import org.netxms.nxmc.base.widgets.helpers.DashboardElementButton;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.propertypages.RuleAction;
+import org.netxms.nxmc.modules.events.propertypages.RuleActionScript;
 import org.netxms.nxmc.modules.events.propertypages.RuleAlarm;
 import org.netxms.nxmc.modules.events.propertypages.RuleComments;
 import org.netxms.nxmc.modules.events.propertypages.RuleCondition;
+import org.netxms.nxmc.modules.events.propertypages.RuleCustomAttribute;
 import org.netxms.nxmc.modules.events.propertypages.RuleEvents;
 import org.netxms.nxmc.modules.events.propertypages.RuleFilteringScript;
 import org.netxms.nxmc.modules.events.propertypages.RulePersistentStorage;
@@ -582,7 +584,7 @@ public class RuleEditor extends Composite
       }
 
       /* script */
-      if ((rule.getScript() != null) && !rule.getScript().isEmpty())
+      if ((rule.getFilterScript() != null) && !rule.getFilterScript().isEmpty())
       {
          final MouseListener listener = createMouseListener("FilteringScript");
          addConditionGroupLabel(clientArea, i18n.tr("the following script returns true:"), needAnd, false, listener);
@@ -593,7 +595,7 @@ public class RuleEditor extends Composite
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          scriptEditor.setLayoutData(gd);
-         scriptEditor.setText(rule.getScript());
+         scriptEditor.setText(rule.getFilterScript());
          scriptEditor.getTextWidget().setEditable(false);
          scriptEditor.getTextWidget().addMouseListener(listener);
       }
@@ -776,6 +778,33 @@ public class RuleEditor extends Composite
          }
          
       }
+      
+      /* custom attributes */
+      if (rule.getCustomAttributeStorageSet().size() != 0 || rule.getCustomAttributeStorageDelete().size() != 0)
+      {
+         final MouseListener listener = createMouseListener("CustomAttributes"); //$NON-NLS-1$
+         addActionGroupLabel(clientArea, i18n.tr("Update custom attribute entries"), editor.getImagePersistentStorage(), listener);
+
+         if(rule.getCustomAttributeStorageSet().size() != 0)
+         {
+            createLabel(clientArea, 1, false, i18n.tr("Set custom attribute values"), listener); //$NON-NLS-1$ //$NON-NLS-2$
+            for(Entry<String, String> e : rule.getCustomAttributeStorageSet().entrySet())
+            {
+               createLabel(clientArea, 2, false, e.getKey() + " = \"" + e.getValue() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+         }
+
+         if(rule.getCustomAttributeStorageDelete().size() != 0)
+         {
+            createLabel(clientArea, 1, false, i18n.tr("Delete custom attribute values"), listener);
+            List<String> customAttributeList = rule.getCustomAttributeStorageDelete();
+            for(int i = 0; i < customAttributeList.size(); i++)
+            {
+               createLabel(clientArea, 2, false, customAttributeList.get(i), listener);
+            }
+         }
+         
+      }
 
       /* actions */
       if (!rule.getActions().isEmpty())
@@ -822,6 +851,24 @@ public class RuleEditor extends Composite
                clabel.setText(String.format(i18n.tr("Set snooze timer for %s seconds after execution with key %s"), c.getSnoozeTime(), c.getBlockingTimerKey()));
             }
          }
+      }
+      
+
+      /* script */
+      if ((rule.getActionScript() != null) && !rule.getActionScript().isEmpty())
+      {
+         final MouseListener listener = createMouseListener("ActionScript"); //$NON-NLS-1$
+         addActionGroupLabel(clientArea, i18n.tr("Execute script"), editor.getImageExecute(), listener);
+
+         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, true, false);
+         GridData gd = new GridData();
+         gd.horizontalIndent = INDENT * 2;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         scriptEditor.setLayoutData(gd);
+         scriptEditor.setText(rule.getActionScript());
+         scriptEditor.getTextWidget().setEditable(false);
+         scriptEditor.getTextWidget().addMouseListener(listener);
       }
       
       /* timer cancellations */
@@ -939,7 +986,9 @@ public class RuleEditor extends Composite
       pm.addToRoot(new PreferenceNode("Action", new RuleAction(this)));
       pm.addTo("Action", new PreferenceNode("Alarm", new RuleAlarm(this)));
       pm.addTo("Action", new PreferenceNode("PersistentStorage", new RulePersistentStorage(this)));
+      pm.addTo("Action", new PreferenceNode("CustomAttributes", new RuleCustomAttribute(this)));
       pm.addTo("Action", new PreferenceNode("ServerActions", new RuleServerActions(this)));
+      pm.addTo("Action", new PreferenceNode("ActionScript", new RuleActionScript(this)));
       pm.addTo("Action", new PreferenceNode("TimerCancellations", new RuleTimerCancellations(this)));
       pm.addToRoot(new PreferenceNode("Comments", new RuleComments(this)));
 

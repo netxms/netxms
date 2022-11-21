@@ -55,7 +55,7 @@ public class EventProcessingPolicyRule
    private UUID guid;
    private List<Long> sources;
    private List<Long> events;
-   private String script;
+   private String filterScript;
    private int flags;
    private String alarmKey;
    private String alarmMessage;
@@ -64,10 +64,13 @@ public class EventProcessingPolicyRule
    private long alarmTimeoutEvent;
    private List<Long> alarmCategoryIds;
    private String rcaScriptName;
+   private String actionScript;
    private List<ActionExecutionConfiguration> actions;
    private List<String> timerCancellations;
    private Map<String, String> persistentStorageSet;
    private List<String> persistentStorageDelete;
+   private Map<String, String> customAttributeStorageSet;
+   private List<String> customAttributeStorageDelete;
    private String comments;
    private int ruleNumber;
 
@@ -79,7 +82,7 @@ public class EventProcessingPolicyRule
       guid = UUID.randomUUID();
       sources = new ArrayList<Long>(0);
       events = new ArrayList<Long>(0);
-      script = "";
+      filterScript = "";
       flags = SEVERITY_ANY;
       alarmKey = "";
       alarmMessage = "%m";
@@ -88,10 +91,13 @@ public class EventProcessingPolicyRule
       alarmTimeoutEvent = 43;
       alarmCategoryIds = new ArrayList<Long>(0);
       rcaScriptName = null;
+      actionScript = null;
       actions = new ArrayList<ActionExecutionConfiguration>(0);
       timerCancellations = new ArrayList<String>(0);
       persistentStorageSet = new HashMap<String, String>(0);
       persistentStorageDelete = new ArrayList<String>(0);
+      customAttributeStorageSet = new HashMap<String, String>(0);
+      customAttributeStorageDelete = new ArrayList<String>(0);
       comments = "";
       ruleNumber = 0;
    }
@@ -106,7 +112,7 @@ public class EventProcessingPolicyRule
       guid = UUID.randomUUID();
       sources = new ArrayList<Long>(src.sources);
       events = new ArrayList<Long>(src.events);
-      script = src.script;
+      filterScript = src.filterScript;
       flags = src.flags;
       alarmKey = src.alarmKey;
       alarmMessage = src.alarmMessage;
@@ -115,12 +121,15 @@ public class EventProcessingPolicyRule
       alarmTimeoutEvent = src.alarmTimeoutEvent;
       alarmCategoryIds = src.alarmCategoryIds;
       rcaScriptName = src.rcaScriptName;
+      actionScript = src.actionScript;
       actions = new ArrayList<ActionExecutionConfiguration>(src.actions.size());
       for(ActionExecutionConfiguration d : src.actions)
          actions.add(new ActionExecutionConfiguration(d));
       timerCancellations = new ArrayList<String>(src.timerCancellations);
       persistentStorageSet = new HashMap<String, String>(src.persistentStorageSet);
       persistentStorageDelete = new ArrayList<String>(src.persistentStorageDelete);
+      customAttributeStorageSet = new HashMap<String, String>(src.customAttributeStorageSet);
+      customAttributeStorageDelete = new ArrayList<String>(src.customAttributeStorageDelete);
       comments = src.comments;
       ruleNumber = src.ruleNumber;
    }
@@ -136,7 +145,7 @@ public class EventProcessingPolicyRule
       guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
       sources = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
       events = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
-      script = msg.getFieldAsString(NXCPCodes.VID_SCRIPT);
+      filterScript = msg.getFieldAsString(NXCPCodes.VID_SCRIPT);
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
       alarmKey = msg.getFieldAsString(NXCPCodes.VID_ALARM_KEY);
       alarmMessage = msg.getFieldAsString(NXCPCodes.VID_ALARM_MESSAGE);
@@ -145,6 +154,7 @@ public class EventProcessingPolicyRule
       alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
       alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
       rcaScriptName = msg.getFieldAsString(NXCPCodes.VID_RCA_SCRIPT_NAME);
+      actionScript = msg.getFieldAsString(NXCPCodes.VID_ACTION_SCRIPT);
       comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 
       int actionCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ACTIONS);
@@ -175,6 +185,25 @@ public class EventProcessingPolicyRule
          final String key = msg.getFieldAsString(fieldId++);
          persistentStorageDelete.add(key);
       }
+
+      numSetVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE);
+      customAttributeStorageSet = new HashMap<String, String>(numSetVar);
+      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE;
+      for(int i = 0; i < numSetVar; i++)
+      {
+         final String key = msg.getFieldAsString(fieldId++);
+         final String value = msg.getFieldAsString(fieldId++);
+         customAttributeStorageSet.put(key, value);
+      }
+
+      numDeleteVar = msg.getFieldAsInt32(NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
+      customAttributeStorageDelete = new ArrayList<String>(numDeleteVar);
+      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE;
+      for(int i = 0; i < numDeleteVar; i++)
+      {
+         final String key = msg.getFieldAsString(fieldId++);
+         customAttributeStorageDelete.add(key);
+      }
       this.ruleNumber = ruleNumber;
    }
 
@@ -188,7 +217,7 @@ public class EventProcessingPolicyRule
       msg.setField(NXCPCodes.VID_GUID, guid);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
       msg.setField(NXCPCodes.VID_COMMENTS, comments);
-      msg.setField(NXCPCodes.VID_SCRIPT, script);
+      msg.setField(NXCPCodes.VID_SCRIPT, filterScript);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_ACTIONS, actions.size());
       long fieldId = NXCPCodes.VID_ACTION_LIST_BASE;
@@ -212,6 +241,7 @@ public class EventProcessingPolicyRule
       msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
       msg.setField(NXCPCodes.VID_RCA_SCRIPT_NAME, rcaScriptName);
+      msg.setField(NXCPCodes.VID_ACTION_SCRIPT, actionScript);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_SET_PSTORAGE, persistentStorageSet.size());
       fieldId = NXCPCodes.VID_PSTORAGE_SET_LIST_BASE;
@@ -226,6 +256,21 @@ public class EventProcessingPolicyRule
       for(int i = 0; i < persistentStorageDelete.size(); i++)
       {
          msg.setField(fieldId++, persistentStorageDelete.get(i));
+      }
+
+      msg.setFieldInt32(NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE, customAttributeStorageSet.size());
+      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE;
+      for(Entry<String, String> e : customAttributeStorageSet.entrySet())
+      {
+         msg.setField(fieldId++, e.getKey());
+         msg.setField(fieldId++, e.getValue());
+      }
+
+      msg.setFieldInt32(NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE, customAttributeStorageDelete.size());
+      fieldId = NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE;
+      for(int i = 0; i < customAttributeStorageDelete.size(); i++)
+      {
+         msg.setField(fieldId++, customAttributeStorageDelete.get(i));
       }
    }
 
@@ -252,17 +297,17 @@ public class EventProcessingPolicyRule
    /**
     * @return the script
     */
-   public String getScript()
+   public String getFilterScript()
    {
-      return script;
+      return filterScript;
    }
 
    /**
     * @param script the script to set
     */
-   public void setScript(String script)
+   public void setFilterScript(String script)
    {
-      this.script = script;
+      this.filterScript = script;
    }
 
    /**
@@ -567,5 +612,53 @@ public class EventProcessingPolicyRule
    public void setRuleNumber(int ruleNumber)
    {
       this.ruleNumber = ruleNumber;
+   }
+
+   /**
+    * @return the actionScript
+    */
+   public String getActionScript()
+   {
+      return actionScript;
+   }
+
+   /**
+    * @param actionScript the actionScript to set
+    */
+   public void setActionScript(String actionScript)
+   {
+      this.actionScript = actionScript;
+   }
+
+   /**
+    * @return the customAttributeStorageSet
+    */
+   public Map<String, String> getCustomAttributeStorageSet()
+   {
+      return customAttributeStorageSet;
+   }
+
+   /**
+    * @param customAttributeStorageSet the customAttributeStorageSet to set
+    */
+   public void setCustomAttributeStorageSet(Map<String, String> customAttributeStorageSet)
+   {
+      this.customAttributeStorageSet = customAttributeStorageSet;
+   }
+
+   /**
+    * @return the customAttributeStorageDelete
+    */
+   public List<String> getCustomAttributeStorageDelete()
+   {
+      return customAttributeStorageDelete;
+   }
+
+   /**
+    * @param customAttributeStorageDelete the customAttributeStorageDelete to set
+    */
+   public void setCustomAttributeStorageDelete(List<String> customAttributeStorageDelete)
+   {
+      this.customAttributeStorageDelete = customAttributeStorageDelete;
    }
 }

@@ -249,10 +249,10 @@ public:
 };
 
 /**
- * Defines for type of persistent storage action
+ * Defines for type of persistent storage and custom attribute action
  */
- #define PSTORAGE_SET      1
- #define PSTORAGE_DELETE   2
+ #define EPP_ACTION_SET      1
+ #define EPP_ACTION_DELETE   2
 
 /**
  * Action execution
@@ -297,8 +297,10 @@ private:
    ObjectArray<ActionExecutionConfiguration> m_actions;
    StringList m_timerCancellations;
    TCHAR *m_comments;
-   TCHAR *m_scriptSource;
-   NXSL_Program *m_script;
+   TCHAR *m_filterScriptSource;
+   NXSL_Program *m_filterScript;
+   TCHAR *m_actionScriptSource;
+   NXSL_Program *m_actionScript;
 
    TCHAR *m_alarmMessage;
    TCHAR *m_alarmImpact;
@@ -311,6 +313,8 @@ private:
 
 	StringMap m_pstorageSetActions;
 	StringList m_pstorageDeleteActions;
+   StringMap m_customAttributeSetActions;
+   StringList m_customAttributeDeleteActions;
 
    bool matchSource(uint32_t objectId) const;
    bool matchEvent(uint32_t eventCode) const;
@@ -318,6 +322,7 @@ private:
    bool matchScript(Event *event) const;
 
    uint32_t generateAlarm(Event *event) const;
+   void executeActionScript(Event *event) const;
 
 public:
    EPRule(uint32_t id);

@@ -266,7 +266,7 @@ public class PersistentStorageView extends ViewPart
     */
    private void createValue()
    {
-      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), null, null, true, true);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), null, null, true, true, "Key");
       if (dlg.open() != Window.OK)
          return;
       
@@ -342,7 +342,7 @@ public class PersistentStorageView extends ViewPart
 
       @SuppressWarnings("unchecked")
       final Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
-      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), attr.getKey(), attr.getValue(), true, false);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getSite().getShell(), attr.getKey(), attr.getValue(), true, false, "Key");
       if (dlg.open() != Window.OK)
          return;
 

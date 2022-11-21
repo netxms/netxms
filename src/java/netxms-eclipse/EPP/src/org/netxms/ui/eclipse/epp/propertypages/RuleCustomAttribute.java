@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.events.propertypages;
+package org.netxms.ui.eclipse.epp.propertypages;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,38 +38,28 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.netxms.nxmc.base.dialogs.KeyValuePairEditDialog;
-import org.netxms.nxmc.base.widgets.KeyValueSetEditor;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.events.widgets.RuleEditor;
-import org.netxms.nxmc.tools.ElementLabelComparator;
-import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
+import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.ui.eclipse.console.dialogs.KeyValuePairEditDialog;
+import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.KeyValueSetEditor;
+import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * "Persistent storage" property page for EPP rule
+ * "Custom attribute" property page for EPP rule
  */
-public class RulePersistentStorage extends RuleBasePropertyPage
+public class RuleCustomAttribute extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RulePersistentStorage.class);
-
-   private KeyValueSetEditor keysToSetEditor;
-   private SortableTableViewer keysToDeleteViewer;
+   private RuleEditor editor;
+   private EventProcessingPolicyRule rule;
+   private KeyValueSetEditor namesToSetEditor;
+   private SortableTableViewer namesToDeleteViewer;
    private Button addToDeleteListButton;
    private Button editDeleteListButton;
    private Button removeFromDeleteListButton;
-   private List<String> keysToDelete = new ArrayList<String>(0);
-
-   /**
-    * Create property page.
-    *
-    * @param editor rule editor
-    */
-   public RulePersistentStorage(RuleEditor editor)
-   {
-      super(editor, i18n.tr("Persistent Storage"));
-   }
+   private List<String> namesToDelete = new ArrayList<String>(0);
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -77,7 +67,9 @@ public class RulePersistentStorage extends RuleBasePropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      keysToDelete.addAll(rule.getPStorageDelete());
+      editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
+      rule = editor.getRule();
+      namesToDelete.addAll(rule.getCustomAttributeStorageDelete());
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -88,38 +80,38 @@ public class RulePersistentStorage extends RuleBasePropertyPage
       final int vInd = WidgetHelper.OUTER_SPACING - WidgetHelper.INNER_SPACING;
 
       Label label = new Label(dialogArea, SWT.NONE);
-      label.setText(i18n.tr("Set persistent storage values"));
+      label.setText("Set custom attribute values");
       GridData gd = new GridData();
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
       
-      keysToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Key"));
-      keysToSetEditor.addAll(rule.getPStorageSet());
+      namesToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, "Name");
+      namesToSetEditor.addAll(rule.getCustomAttributeStorageSet());
       gd = new GridData();
       gd.verticalIndent = vInd;
       gd.verticalAlignment = GridData.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
-      keysToSetEditor.setLayoutData(gd);
+      namesToSetEditor.setLayoutData(gd);
 
       label = new Label(dialogArea, SWT.NONE);
-      label.setText("Delete persistent storage entries");
+      label.setText("Delete custom attribute entries");
       gd = new GridData();
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
 
-      final String[] deleteColumnNames = { "Key" };
+      final String[] deleteColumnNames = { "Name" };
       final int[] deleteColumnWidths = { 150 };
-      keysToDeleteViewer = new SortableTableViewer(dialogArea, deleteColumnNames, deleteColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      keysToDeleteViewer.setContentProvider(new ArrayContentProvider());
-      keysToDeleteViewer.setComparator(new ElementLabelComparator((ILabelProvider)keysToDeleteViewer.getLabelProvider()));
-      keysToDeleteViewer.setInput(keysToDelete.toArray());
-      keysToDeleteViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+      namesToDeleteViewer = new SortableTableViewer(dialogArea, deleteColumnNames, deleteColumnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      namesToDeleteViewer.setContentProvider(new ArrayContentProvider());
+      namesToDeleteViewer.setComparator(new ElementLabelComparator((ILabelProvider)namesToDeleteViewer.getLabelProvider()));
+      namesToDeleteViewer.setInput(namesToDelete.toArray());
+      namesToDeleteViewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            int size = ((IStructuredSelection)keysToDeleteViewer.getSelection()).size();
+            int size = ((IStructuredSelection)namesToDeleteViewer.getSelection()).size();
             editDeleteListButton.setEnabled(size == 1);
             removeFromDeleteListButton.setEnabled(size > 0);
          }
@@ -130,7 +122,7 @@ public class RulePersistentStorage extends RuleBasePropertyPage
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
       gd.grabExcessHorizontalSpace = true;
-      keysToDeleteViewer.getControl().setLayoutData(gd);
+      namesToDeleteViewer.getControl().setLayoutData(gd);
 
       Composite buttonsDeleteValue = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -144,12 +136,12 @@ public class RulePersistentStorage extends RuleBasePropertyPage
       buttonsDeleteValue.setLayoutData(gd);
 
       addToDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
-      addToDeleteListButton.setText(i18n.tr("&Add..."));
+      addToDeleteListButton.setText("Add");
       addToDeleteListButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            addPStorageDeleteAction();
+            addCustomAttributeDeleteAction();
          }
       });
       RowData rd = new RowData();
@@ -157,12 +149,12 @@ public class RulePersistentStorage extends RuleBasePropertyPage
       addToDeleteListButton.setLayoutData(rd);
 
       editDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
-      editDeleteListButton.setText(i18n.tr("&Edit..."));
+      editDeleteListButton.setText("Edit");
       editDeleteListButton.addSelectionListener(new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e)
         {
-           editPStorageDeleteAction();
+           editCustomAttributeDeleteAction();
         }
       });
       rd = new RowData();
@@ -171,12 +163,12 @@ public class RulePersistentStorage extends RuleBasePropertyPage
       editDeleteListButton.setEnabled(false);
       
       removeFromDeleteListButton = new Button(buttonsDeleteValue, SWT.PUSH);
-      removeFromDeleteListButton.setText(i18n.tr("&Delete"));
+      removeFromDeleteListButton.setText("Delete");
       removeFromDeleteListButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            deletePStorageDeleteAction();
+            deleteCustomAttributeDeleteAction();
          }
       });
       rd = new RowData();
@@ -190,61 +182,78 @@ public class RulePersistentStorage extends RuleBasePropertyPage
 	/**
 	 * Add new attribute
 	 */
-	private void addPStorageDeleteAction()
+	private void addCustomAttributeDeleteAction()
 	{
-	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false, i18n.tr("Key"));
+	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false, "Name");
 		if (dlg.open() == Window.OK)
 		{
-         keysToDelete.add(dlg.getKey());
-		   keysToDeleteViewer.setInput(keysToDelete.toArray());
+		   namesToDelete.add(dlg.getAtributeName());
+		   namesToDeleteViewer.setInput(namesToDelete.toArray());
 		}
 	}
 
    /**
     * Edit delete value
     */
-   private void editPStorageDeleteAction()
+   private void editCustomAttributeDeleteAction()
    {
-      IStructuredSelection selection = keysToDeleteViewer.getStructuredSelection();
+      IStructuredSelection selection = namesToDeleteViewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 
       String attr = (String)selection.getFirstElement();
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false, i18n.tr("Key"));
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false, "Name");
       if (dlg.open() == Window.OK)
       {         
-         keysToDelete.set(keysToDelete.indexOf(attr), dlg.getKey());
-         keysToDeleteViewer.setInput(keysToDelete.toArray());    
+         namesToDelete.set(namesToDelete.indexOf(attr), dlg.getAtributeName());
+         namesToDeleteViewer.setInput(namesToDelete.toArray());    
       }
    }
 
    /**
     * Delete attribute(s) from list
     */
-   private void deletePStorageDeleteAction()
+   private void deleteCustomAttributeDeleteAction()
    {
-      IStructuredSelection selection = keysToDeleteViewer.getStructuredSelection();
+      IStructuredSelection selection = namesToDeleteViewer.getStructuredSelection();
       Iterator<?> it = selection.iterator();
       if (it.hasNext())
       {
          while(it.hasNext())
          {
             String e = (String)it.next();
-            keysToDelete.remove(e);
+            namesToDelete.remove(e);
          }
-         keysToDeleteViewer.setInput(keysToDelete.toArray());
+         namesToDeleteViewer.setInput(namesToDelete.toArray());
       }
    }
-
-   /**
-    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
-    */
-   @Override
-   protected boolean applyChanges(final boolean isApply)
+	
+	/**
+	 * Update rule object
+	 */
+	private void doApply()
 	{
-      rule.setPStorageSet(keysToSetEditor.getContent());
-      rule.setPStorageDelete(keysToDelete);
+		rule.setCustomAttributeStorageSet(namesToSetEditor.getContent());
+      rule.setCustomAttributeStorageDelete(namesToDelete);
 		editor.setModified(true);
-      return true;
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		doApply();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		doApply();
+		return super.performOk();
 	}
 }

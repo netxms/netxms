@@ -22,6 +22,16 @@
 
 #include "nxdbmgr.h"
 
+
+/**
+ * Upgrade from 42.20 to 43.0
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(SetMajorSchemaVersion(43, 0));
+   return true;
+}
+
 /**
  * Upgrade from 42.19 to 42.20
  */
@@ -388,6 +398,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 20, 43, 0, H_UpgradeFromV20 },
    { 19, 42, 20, H_UpgradeFromV19 },
    { 18, 42, 19, H_UpgradeFromV18 },
    { 17, 42, 18, H_UpgradeFromV17 },
@@ -420,7 +431,7 @@ bool MajorSchemaUpgrade_V42()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 42) && (minor < DB_SCHEMA_VERSION_V42_MINOR))
+   while (major == 42)
    {
       // Find upgrade procedure
       int i;

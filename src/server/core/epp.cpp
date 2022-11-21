@@ -39,8 +39,10 @@ EPRule::EPRule(uint32_t id) : m_actions(0, 16, Ownership::True)
    m_alarmMessage = nullptr;
    m_alarmImpact = nullptr;
    m_rcaScriptName = nullptr;
-   m_scriptSource = nullptr;
-   m_script = nullptr;
+   m_filterScriptSource = nullptr;
+   m_filterScript = nullptr;
+   m_actionScriptSource = nullptr;
+   m_actionScript = nullptr;
 	m_alarmTimeout = 0;
 	m_alarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
 }
@@ -95,6 +97,22 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
       }
    }
 
+   ConfigEntry *customAttributeEntry = config.findEntry(_T("customAttributeActions"));
+   if (customAttributeEntry != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> tmp = customAttributeEntry->getSubEntries(_T("set#*"));
+      for(int i = 0; i < tmp->size(); i++)
+      {
+         m_customAttributeSetActions.set(tmp->get(i)->getAttribute(_T("name")), tmp->get(i)->getValue());
+      }
+
+      tmp = customAttributeEntry->getSubEntries(_T("delete#*"));
+      for(int i = 0; i < tmp->size(); i++)
+      {
+         m_customAttributeDeleteActions.add(tmp->get(i)->getAttribute(_T("name")));
+      }
+   }
+
    ConfigEntry *alarmCategoriesEntry = config.findEntry(_T("alarmCategories"));
    if(alarmCategoriesEntry != nullptr)
    {
@@ -122,20 +140,36 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
       }
    }
 
-   m_scriptSource = _tcsdup(config.getSubEntryValue(_T("script"), 0, _T("")));
-   if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
+   m_filterScriptSource = _tcsdup(config.getSubEntryValue(_T("script"), 0, _T("")));
+   if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
       TCHAR errorText[256];
       NXSL_ServerEnv env;
-      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr, &env);
-      if (m_script == nullptr)
+      m_filterScript = NXSLCompile(m_filterScriptSource, errorText, 256, nullptr, &env);
+      if (m_filterScript == nullptr)
       {
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
       }
    }
    else
    {
-      m_script = nullptr;
+      m_filterScript = nullptr;
+   }
+
+   m_actionScriptSource = _tcsdup(config.getSubEntryValue(_T("actionScript"), 0, _T("")));
+   if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
+   {
+      TCHAR errorText[256];
+      NXSL_ServerEnv env;
+      m_actionScript = NXSLCompile(m_actionScriptSource, errorText, 256, nullptr, &env);
+      if (m_actionScript == nullptr)
+      {
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+      }
+   }
+   else
+   {
+      m_actionScript = nullptr;
    }
 
    ConfigEntry *actionsRoot = config.findEntry(_T("actions"));
@@ -195,25 +229,40 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
    m_alarmMessage = DBGetField(hResult, row, 4, nullptr, 0);
    m_alarmSeverity = DBGetFieldLong(hResult, row, 5);
    m_alarmKey = DBGetField(hResult, row, 6, nullptr, 0);
-   m_scriptSource = DBGetField(hResult, row, 7, nullptr, 0);
-   if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
+   m_filterScriptSource = DBGetField(hResult, row, 7, nullptr, 0);
+   if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
       TCHAR errorText[256];
       NXSL_ServerEnv env;
-      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr, &env);
-      if (m_script == nullptr)
+      m_filterScript = NXSLCompile(m_filterScriptSource, errorText, 256, nullptr, &env);
+      if (m_filterScript == nullptr)
       {
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
       }
    }
    else
    {
-      m_script = nullptr;
+      m_filterScript = nullptr;
    }
 	m_alarmTimeout = DBGetFieldULong(hResult, row, 8);
 	m_alarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
 	m_rcaScriptName = DBGetField(hResult, row, 10, nullptr, 0);
    m_alarmImpact = DBGetField(hResult, row, 11, nullptr, 0);
+   m_actionScriptSource = DBGetField(hResult, row, 12, nullptr, 0);
+   if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
+   {
+      TCHAR errorText[256];
+      NXSL_ServerEnv env;
+      m_actionScript = NXSLCompile(m_actionScriptSource, errorText, 256, nullptr, &env);
+      if (m_actionScript == nullptr)
+      {
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+      }
+   }
+   else
+   {
+      m_actionScript = nullptr;
+   }
 }
 
 /**
@@ -283,20 +332,50 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
       m_pstorageDeleteActions.addPreallocated(msg.getFieldAsString(base));
    }
 
-   m_scriptSource = msg.getFieldAsString(VID_SCRIPT);
-   if ((m_scriptSource != nullptr) && (*m_scriptSource != 0))
+   count = msg.getFieldAsInt32(VID_NUM_SET_CUSTOM_ATTRIBUTE);
+   base = VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE;
+   for(int i = 0; i < count; i++, base+=2)
+   {
+      m_customAttributeSetActions.setPreallocated(msg.getFieldAsString(base), msg.getFieldAsString(base+1));
+   }
+
+   count = msg.getFieldAsInt32(VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
+   base = VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE;
+   for(int i = 0; i < count; i++, base++)
+   {
+      m_customAttributeDeleteActions.addPreallocated(msg.getFieldAsString(base));
+   }
+
+   m_filterScriptSource = msg.getFieldAsString(VID_SCRIPT);
+   if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
    {
       TCHAR errorText[256];
       NXSL_ServerEnv env;
-      m_script = NXSLCompile(m_scriptSource, errorText, 256, nullptr, &env);
-      if (m_script == nullptr)
+      m_filterScript = NXSLCompile(m_filterScriptSource, errorText, 256, nullptr, &env);
+      if (m_filterScript == nullptr)
       {
          nxlog_write(NXLOG_ERROR, _T("Failed to compile evaluation script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
       }
    }
    else
    {
-      m_script = nullptr;
+      m_filterScript = nullptr;
+   }
+
+   m_actionScriptSource = msg.getFieldAsString(VID_ACTION_SCRIPT);
+   if ((m_actionScriptSource != nullptr) && (*m_actionScriptSource != 0))
+   {
+      TCHAR errorText[256];
+      NXSL_ServerEnv env;
+      m_actionScript = NXSLCompile(m_actionScriptSource, errorText, 256, nullptr, &env);
+      if (m_actionScript == nullptr)
+      {
+         nxlog_write(NXLOG_ERROR, _T("Failed to compile action script for event processing policy rule #%u (%s)"), m_id + 1, errorText);
+      }
+   }
+   else
+   {
+      m_actionScript = nullptr;
    }
 }
 
@@ -310,8 +389,10 @@ EPRule::~EPRule()
    MemFree(m_alarmKey);
    MemFree(m_rcaScriptName);
    MemFree(m_comments);
-   MemFree(m_scriptSource);
-   delete m_script;
+   MemFree(m_filterScriptSource);
+   delete m_filterScript;
+   MemFree(m_actionScriptSource);
+   delete m_actionScript;
 }
 
 /**
@@ -352,8 +433,10 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    xml.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
    xml.append(m_alarmTimeoutEvent);
    xml.append(_T("</alarmTimeoutEvent>\n\t\t\t<script>"));
-   xml.append(EscapeStringForXML2(m_scriptSource));
-   xml.append(_T("</script>\n\t\t\t<comments>"));
+   xml.append(EscapeStringForXML2(m_filterScriptSource));
+   xml.append(_T("</script>\n\t\t\t<actionScript>"));
+   xml.append(EscapeStringForXML2(m_actionScriptSource));
+   xml.append(_T("</actionScript>\n\t\t\t<comments>"));
    xml.append(EscapeStringForXML2(m_comments));
    xml.append(_T("</comments>\n\t\t\t<sources>\n"));
 
@@ -424,7 +507,18 @@ void EPRule::createExportRecord(StringBuffer &xml) const
       xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" key=\"%s\"/>\n"), i + 1, m_pstorageDeleteActions.get(i));
    }
 
-   xml.append(_T("\t\t\t</pStorageActions>\n\t\t\t<alarmCategories>\n"));
+   xml.append(_T("\t\t\t</pStorageActions>\n\t\t\t<customAttributeActions>\n"));
+   id = 0;
+   for(KeyValuePair<const TCHAR> *action : m_customAttributeSetActions)
+   {
+      xml.appendFormattedString(_T("\t\t\t\t<set id=\"%d\" name=\"%s\">%s</set>\n"), ++id, action->key, action->value);
+   }
+   for(int i = 0; i < m_customAttributeDeleteActions.size(); i++)
+   {
+      xml.appendFormattedString(_T("\t\t\t\t<delete id=\"%d\" name=\"%s\"/>\n"), i + 1, m_pstorageDeleteActions.get(i));
+   }
+
+   xml.append(_T("\t\t\t</customAttributeActions>\n\t\t\t<alarmCategories>\n"));
    for(int i = 0; i < m_alarmCategoryList.size(); i++)
    {
       AlarmCategory *category = GetAlarmCategory(m_alarmCategoryList.get(i));
@@ -503,14 +597,72 @@ bool EPRule::matchSeverity(uint32_t severity) const
 /**
  * Check if event match to the script
  */
+void EPRule::executeActionScript(Event *event) const
+{
+   if (m_actionScript == nullptr)
+      return;
+
+   shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
+   shared_ptr<DCObjectInfo> dciInfo;
+   if (event->getDciId() != 0 && object->isDataCollectionTarget())
+   {
+      dciInfo = static_pointer_cast<DataCollectionTarget>(object)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+   }
+
+   ScriptVMHandle vm = CreateServerScriptVM(m_actionScript, object, dciInfo);
+   if (!vm.isValid())
+   {
+      if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
+      {
+         ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
+         nxlog_write(NXLOG_ERROR, _T("Cannot create NXSL VM for action script for event processing policy rule #%u"), m_id + 1);
+      }
+      return;
+   }
+
+   vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
+   vm->setGlobalVariable("CUSTOM_MESSAGE", vm->createValue());
+   vm->setGlobalVariable("EVENT_CODE", vm->createValue(event->getCode()));
+   vm->setGlobalVariable("SEVERITY", vm->createValue(event->getSeverity()));
+   vm->setGlobalVariable("SEVERITY_TEXT", vm->createValue(GetStatusAsText(event->getSeverity(), true)));
+   vm->setGlobalVariable("OBJECT_ID", vm->createValue(event->getSourceId()));
+   vm->setGlobalVariable("EVENT_TEXT", vm->createValue(event->getMessage()));
+
+   // Pass event's parameters as arguments and
+   // other information as variables
+   ObjectRefArray<NXSL_Value> args(event->getParametersCount());
+   for(int i = 0; i < event->getParametersCount(); i++)
+      args.add(vm->createValue(event->getParameter(i)));
+
+   // Run script
+   NXSL_VariableSystem *globals = nullptr;
+   if (!vm->run(args, &globals))
+   {
+      ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
+      nxlog_write(NXLOG_ERROR, _T("Failed to execute action script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+   }
+   delete globals;
+   vm.destroy();
+}
+
+/**
+ * Check if event match to the script
+ */
 bool EPRule::matchScript(Event *event) const
 {
    bool bRet = true;
 
-   if (m_script == nullptr)
+   if (m_filterScript == nullptr)
       return true;
 
-   ScriptVMHandle vm = CreateServerScriptVM(m_script, FindObjectById(event->getSourceId()), shared_ptr<DCObjectInfo>());
+
+   shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
+   shared_ptr<DCObjectInfo> dciInfo;
+   if (event->getDciId() != 0 && object->isDataCollectionTarget())
+   {
+      dciInfo = static_pointer_cast<DataCollectionTarget>(object)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+   }
+   ScriptVMHandle vm = CreateServerScriptVM(m_filterScript, FindObjectById(event->getSourceId()), shared_ptr<DCObjectInfo>());
    if (!vm.isValid())
    {
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
@@ -667,6 +819,8 @@ bool EPRule::processEvent(Event *event) const
       delete alarm;
    }
 
+   executeActionScript(event);
+
    // Update persistent storage if needed
    if (m_pstorageSetActions.size() > 0)
       m_pstorageSetActions.forEach(ExecutePstorageSetAction, event);
@@ -675,6 +829,29 @@ bool EPRule::processEvent(Event *event) const
       String key = event->expandText(m_pstorageDeleteActions.get(i));
       if (!key.isEmpty())
          DeletePersistentStorageValue(key);
+   }
+
+   shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
+   if (object != nullptr)
+   {
+      for(KeyValuePair<const TCHAR> *attribute : m_customAttributeSetActions)
+      {
+         String name = event->expandText(attribute->key);
+         if (!name.isEmpty())
+         {
+            String value = event->expandText(attribute->value);
+            object->setCustomAttribute(name, value, StateChange::IGNORE);
+         }
+
+      }
+      for(int i = 0; i < m_customAttributeDeleteActions.size(); i++)
+      {
+         String name = event->expandText(m_customAttributeDeleteActions.get(i));
+         if (!name.isEmpty())
+         {
+            object->deleteCustomAttribute(name);
+         }
+      }
    }
 
    return (m_flags & RF_STOP_PROCESSING) ? true : false;
@@ -824,13 +1001,39 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       for(int i = 0; i < count; i++)
       {
          DBGetField(hResult, i, 0, key, MAX_DB_STRING);
-         if (DBGetFieldULong(hResult, i, 1) == PSTORAGE_SET)
+         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_SET)
          {
             m_pstorageSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, nullptr, 0));
          }
-         if (DBGetFieldULong(hResult, i, 1) == PSTORAGE_DELETE)
+         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_DELETE)
          {
             m_pstorageDeleteActions.add(key);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      bSuccess = false;
+   }
+
+   // Load custom attributes actions
+   _sntprintf(szQuery, 256, _T("SELECT attribute_name,action,value FROM policy_cutom_attribute_actions WHERE rule_id=%d"), m_id);
+   hResult = DBSelect(hdb, szQuery);
+   if (hResult != nullptr)
+   {
+      TCHAR key[MAX_DB_STRING];
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         DBGetField(hResult, i, 0, key, MAX_DB_STRING);
+         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_SET)
+         {
+            m_customAttributeSetActions.setPreallocated(_tcsdup(key), DBGetField(hResult, i, 2, nullptr, 0));
+         }
+         if (DBGetFieldULong(hResult, i, 1) == EPP_ACTION_DELETE)
+         {
+            m_customAttributeDeleteActions.add(key);
          }
       }
       DBFreeResult(hResult);
@@ -863,7 +1066,7 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
 /**
  * Callback for persistent storage set actions
  */
-static EnumerationCallbackResult SavePstorageSetActions(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveEppActions(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC, 127);
@@ -881,8 +1084,8 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
 	TCHAR pszQuery[1024];
    // General attributes
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_impact,")
-                                  _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,rca_script_name) ")
-                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"));
+                                  _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,rca_script_name,action_script) ")
+                                  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       TCHAR guidText[128];
@@ -894,10 +1097,11 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       DBBind(hStmt, 6, DB_CTYPE_STRING, m_alarmImpact, DB_BIND_STATIC, 1000);
       DBBind(hStmt, 7, DB_CTYPE_INT32, m_alarmSeverity);
       DBBind(hStmt, 8, DB_CTYPE_STRING, m_alarmKey, DB_BIND_STATIC, MAX_DB_STRING);
-      DBBind(hStmt, 9, DB_CTYPE_STRING, m_scriptSource, DB_BIND_STATIC);
+      DBBind(hStmt, 9, DB_CTYPE_STRING, m_filterScriptSource, DB_BIND_STATIC);
       DBBind(hStmt, 10, DB_CTYPE_INT32, m_alarmTimeout);
       DBBind(hStmt, 11, DB_CTYPE_INT32, m_alarmTimeoutEvent);
       DBBind(hStmt, 12, DB_CTYPE_STRING, m_rcaScriptName, DB_BIND_STATIC, MAX_DB_STRING);
+      DBBind(hStmt, 13, DB_CTYPE_STRING, m_actionScriptSource, DB_BIND_STATIC);
       success = DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -978,7 +1182,7 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         success = _STOP != m_pstorageSetActions.forEach(SavePstorageSetActions, hStmt);
+         success = _STOP != m_pstorageSetActions.forEach(SaveEppActions, hStmt);
          DBFreeStatement(hStmt);
       }
    }
@@ -992,6 +1196,33 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
          for(int i = 0; i < m_pstorageDeleteActions.size() && success; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_pstorageDeleteActions.get(i), DB_BIND_STATIC, 127);
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   // Custom attribute actions
+   if (success && !m_customAttributeSetActions.isEmpty())
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cutom_attribute_actions (rule_id,action,attribute_name,value) VALUES (?,1,?,?)"), m_customAttributeSetActions.size() > 1);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         success = _STOP != m_customAttributeSetActions.forEach(SaveEppActions, hStmt);
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   if (success && !m_customAttributeDeleteActions.isEmpty())
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_cutom_attribute_actions (rule_id,action,attribute_name) VALUES (?,2,?)"), m_pstorageDeleteActions.size() > 1);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for(int i = 0; i < m_customAttributeDeleteActions.size() && success; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributeDeleteActions.get(i), DB_BIND_STATIC, 127);
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -1051,9 +1282,12 @@ void EPRule::createMessage(NXCPMessage *msg) const
    msg->setFieldFromInt32Array(VID_RULE_EVENTS, &m_events);
    msg->setField(VID_NUM_SOURCES, (UINT32)m_sources.size());
    msg->setFieldFromInt32Array(VID_RULE_SOURCES, &m_sources);
-   msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
+   msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_filterScriptSource));
+   msg->setField(VID_ACTION_SCRIPT, CHECK_NULL_EX(m_actionScriptSource));
    m_pstorageSetActions.fillMessage(msg, VID_NUM_SET_PSTORAGE, VID_PSTORAGE_SET_LIST_BASE);
    m_pstorageDeleteActions.fillMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
+   m_customAttributeSetActions.fillMessage(msg, VID_NUM_SET_CUSTOM_ATTRIBUTE, VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE);
+   m_customAttributeDeleteActions.fillMessage(msg, VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE, VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
 }
 
 /**
@@ -1086,7 +1320,8 @@ json_t *EPRule::toJson() const
    }
    json_object_set_new(root, "timerCancellations", timerCancellations);
    json_object_set_new(root, "comments", json_string_t(m_comments));
-   json_object_set_new(root, "script", json_string_t(m_scriptSource));
+   json_object_set_new(root, "filterScript", json_string_t(m_filterScriptSource));
+   json_object_set_new(root, "actionScript", json_string_t(m_actionScriptSource));
    json_object_set_new(root, "alarmMessage", json_string_t(m_alarmMessage));
    json_object_set_new(root, "alarmImpact", json_string_t(m_alarmImpact));
    json_object_set_new(root, "alarmSeverity", json_integer(m_alarmSeverity));
@@ -1097,6 +1332,8 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "categories", m_alarmCategoryList.toJson());
    json_object_set_new(root, "pstorageSetActions", m_pstorageSetActions.toJson());
    json_object_set_new(root, "pstorageDeleteActions", m_pstorageDeleteActions.toJson());
+   json_object_set_new(root, "customAttributeSetActions", m_customAttributeSetActions.toJson());
+   json_object_set_new(root, "customAttributeDeleteActions", m_customAttributeDeleteActions.toJson());
 
    return root;
 }
@@ -1122,8 +1359,8 @@ bool EventPolicy::loadFromDB()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
-                           _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
-                           _T("rca_script_name,alarm_impact FROM event_policy ORDER BY rule_id"));
+                           _T("alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event,")
+                           _T("rca_script_name,alarm_impact,action_script FROM event_policy ORDER BY rule_id"));
    if (hResult != nullptr)
    {
       success = true;
@@ -1159,6 +1396,7 @@ bool EventPolicy::saveToDB() const
                 DBQuery(hdb, _T("DELETE FROM policy_event_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_source_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_pstorage_actions")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_cutom_attribute_actions")) &&
                 DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
 
       if (success)

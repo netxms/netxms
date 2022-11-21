@@ -85,7 +85,7 @@ public class RulePStorage extends PropertyPage
       gd.verticalIndent = vInd;
       label.setLayoutData(gd);
       
-      keysToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE);
+      keysToSetEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, "Key");
       keysToSetEditor.addAll(rule.getPStorageSet());
       gd = new GridData();
       gd.verticalIndent = vInd;
@@ -184,7 +184,7 @@ public class RulePStorage extends PropertyPage
 	 */
 	private void addPStorageDeleteAction()
 	{
-	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false);
+	   KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), null, null, false, false, "Key");
 		if (dlg.open() == Window.OK)
 		{
 		   keysToDelete.add(dlg.getAtributeName());
@@ -202,7 +202,7 @@ public class RulePStorage extends PropertyPage
          return;
 
       String attr = (String)selection.getFirstElement();
-      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false);
+      KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getShell(), attr, null, false, false, "Key");
       if (dlg.open() == Window.OK)
       {         
          keysToDelete.set(keysToDelete.indexOf(attr), dlg.getAtributeName());

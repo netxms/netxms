@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +28,11 @@ import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Filtering Script" property page
+ * "Action Script" property page
  */
-public class RuleFilteringScript extends RuleBasePropertyPage
+public class RuleActionScript extends RuleBasePropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleFilteringScript.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(RuleActionScript.class);
 
 	private ScriptEditor scriptEditor;
 
@@ -41,9 +41,9 @@ public class RuleFilteringScript extends RuleBasePropertyPage
     *
     * @param editor rule editor
     */
-   public RuleFilteringScript(RuleEditor editor)
+   public RuleActionScript(RuleEditor editor)
    {
-      super(editor, i18n.tr("Filtering Script"));
+      super(editor, i18n.tr("Script"));
    }
 
    /**
@@ -56,8 +56,8 @@ public class RuleFilteringScript extends RuleBasePropertyPage
 		dialogArea.setLayout(new FillLayout());
 
       scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
-            i18n.tr("Global variables:\r\n\t$object\tevent source object\r\n\t$node\tevent source object if it's class is Node\r\n\t$event\tevent being processed\r\n\t$dci\tDCI associated with this event\r\nLocal variables:\r\n\tEVENT_CODE\t\tevent's code\r\n\tSEVERITY\t\tevent's severity as number\r\n\tSEVERITY_TEXT\tevent's severity as text\r\n\tOBJECT_ID\t\tevent source object's ID\r\n\tEVENT_TEXT\t\tevent's message text\r\n\tUSER_TAG\t\tevent's user tag\r\n\r\nReturn value: true to pass event through rule filter"));
-		scriptEditor.setText(rule.getFilterScript());
+            i18n.tr("Global variables:\r\n\t$object\tevent source object\r\n\t$node\tevent source object if it's class is Node\r\n\t$event\tevent being processed\r\n\t$dci\tDCI associated with this event\r\nLocal variables:\r\n\tEVENT_CODE\t\tevent's code\r\n\tSEVERITY\t\tevent's severity as number\r\n\tSEVERITY_TEXT\tevent's severity as text\r\n\tOBJECT_ID\t\tevent source object's ID\r\n\tEVENT_TEXT\t\tevent's message text\r\n\tUSER_TAG\t\tevent's user tag"));
+		scriptEditor.setText(rule.getActionScript());
 
 		return dialogArea;
 	}
@@ -68,7 +68,7 @@ public class RuleFilteringScript extends RuleBasePropertyPage
    @Override
    protected boolean applyChanges(final boolean isApply)
 	{
-		rule.setFilterScript(scriptEditor.getText());
+		rule.setActionScript(scriptEditor.getText());
 		editor.setModified(true);
       return true;
 	}

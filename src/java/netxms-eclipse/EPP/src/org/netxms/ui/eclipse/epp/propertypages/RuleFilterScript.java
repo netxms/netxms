@@ -49,8 +49,8 @@ public class RuleFilterScript extends PropertyPage
 		dialogArea.setLayout(new FillLayout());
 
       scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false, 
-            "Global variables:\r\n\t$object\tevent source object\r\n\t$node\tevent source object if it's class is Node\r\n\t$event\tevent being processed\r\nLocal variables:\r\n\tEVENT_CODE\t\tevent's code\r\n\tSEVERITY\t\tevent's severity as number\r\n\tSEVERITY_TEXT\tevent's severity as text\r\n\tOBJECT_ID\t\tevent source object's ID\r\n\tEVENT_TEXT\t\tevent's message text\r\n\tUSER_TAG\t\tevent's user tag\r\n\r\nReturn value: true to pass event through rule filter");
-		scriptEditor.setText(rule.getScript());
+            "Global variables:\r\n\t$object\tevent source object\r\n\t$node\tevent source object if it's class is Node\r\n\t$event\tevent being processed\r\n\t$dci\tDCI associated with this event\r\nLocal variables:\r\n\tEVENT_CODE\t\tevent's code\r\n\tSEVERITY\t\tevent's severity as number\r\n\tSEVERITY_TEXT\tevent's severity as text\r\n\tOBJECT_ID\t\tevent source object's ID\r\n\tEVENT_TEXT\t\tevent's message text\r\n\tUSER_TAG\t\tevent's user tag\r\n\r\nReturn value: true to pass event through rule filter");
+		scriptEditor.setText(rule.getFilterScript());
 		
 		return dialogArea;
 	}
@@ -62,7 +62,7 @@ public class RuleFilterScript extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		rule.setScript(scriptEditor.getText());
+		rule.setFilterScript(scriptEditor.getText());
 		editor.setModified(true);
 	}
 	

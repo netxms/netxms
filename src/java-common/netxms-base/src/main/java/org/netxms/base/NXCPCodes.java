@@ -1286,6 +1286,10 @@ public class NXCPCodes
    public static final long VID_COMPRESSION_METHOD = 801;
    public static final long VID_MQTT_PROXY = 802;
    public static final long VID_TCP_PROXY = 803;
+   public static final long VID_FOLLOW_LOCATION = 804;
+   public static final long VID_ACTION_SCRIPT = 805;
+   public static final long VID_NUM_SET_CUSTOM_ATTRIBUTE = 806;
+   public static final long VID_NUM_DELETE_CUSTOM_ATTRIBUTE = 807;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1357,6 +1361,8 @@ public class NXCPCodes
 	public static final long VID_STRING_LIST_BASE = 0x10000000L;
    public static final long VID_PSTORAGE_SET_LIST_BASE = 0x10000000L;
    public static final long VID_PSTORAGE_DELETE_LIST_BASE = 0x20000000L;   
+   public static final long VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE = 0x30000000L;
+   public static final long VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE = 0x40000000L;   
 	public static final long VID_PSTORAGE_LIST_BASE = 0x10000000L;	
 	public static final long VID_INSTANCE_LIST_BASE = 0x20000000L;
 	public static final long VID_OBJECT_LINKS_BASE = 0x10000000L;

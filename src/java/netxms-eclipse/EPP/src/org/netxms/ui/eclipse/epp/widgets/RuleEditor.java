@@ -577,7 +577,7 @@ public class RuleEditor extends Composite
       }
 
       /* script */
-      if ((rule.getScript() != null) && !rule.getScript().isEmpty())
+      if ((rule.getFilterScript() != null) && !rule.getFilterScript().isEmpty())
       {
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleFilterScript#30"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, Messages.get().RuleEditor_ScriptIs, needAnd, false, listener);
@@ -588,7 +588,7 @@ public class RuleEditor extends Composite
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          scriptEditor.setLayoutData(gd);
-         scriptEditor.setText(rule.getScript());
+         scriptEditor.setText(rule.getFilterScript());
          scriptEditor.getTextWidget().setEditable(false);
          scriptEditor.getTextWidget().addMouseListener(listener);
       }
@@ -772,6 +772,33 @@ public class RuleEditor extends Composite
          
       }
 
+      /* custom attributes */
+      if (rule.getCustomAttributeStorageSet().size() != 0 || rule.getCustomAttributeStorageDelete().size() != 0)
+      {
+         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleCustomAttribute#21"); //$NON-NLS-1$
+         addActionGroupLabel(clientArea, "Update custom attribute entries", editor.getImageSituation(), listener);
+
+         if(rule.getCustomAttributeStorageSet().size() != 0)
+         {
+            createLabel(clientArea, 1, false, "Set custom attribute values", listener); //$NON-NLS-1$ //$NON-NLS-2$
+            for(Entry<String, String> e : rule.getCustomAttributeStorageSet().entrySet())
+            {
+               createLabel(clientArea, 2, false, e.getKey() + " = \"" + e.getValue() + "\"", listener); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+         }
+
+         if(rule.getCustomAttributeStorageDelete().size() != 0)
+         {
+            createLabel(clientArea, 1, false, "Delete custom attribute values", listener);
+            List<String> customAttributeList = rule.getCustomAttributeStorageDelete();
+            for(int i = 0; i < customAttributeList.size(); i++)
+            {
+               createLabel(clientArea, 2, false, customAttributeList.get(i), listener);
+            }
+         }
+         
+      }
+
       /* actions */
       if (!rule.getActions().isEmpty())
       {
@@ -817,6 +844,23 @@ public class RuleEditor extends Composite
                clabel.setText(String.format("Set snooze timer for %s seconds after execution with key %s", c.getSnoozeTime(), c.getBlockingTimerKey()));                
             }
          }
+      }
+
+      /* script */
+      if ((rule.getActionScript() != null) && !rule.getActionScript().isEmpty())
+      {
+         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleActionScript#31"); //$NON-NLS-1$
+         addActionGroupLabel(clientArea, "Ecevute script", editor.getImageExecute(), listener);
+
+         ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, true, false);
+         GridData gd = new GridData();
+         gd.horizontalIndent = INDENT * 2;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         scriptEditor.setLayoutData(gd);
+         scriptEditor.setText(rule.getActionScript());
+         scriptEditor.getTextWidget().setEditable(false);
+         scriptEditor.getTextWidget().addMouseListener(listener);
       }
       
       /* timer cancellations */

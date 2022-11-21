@@ -246,7 +246,7 @@ public class PersistentStorageView extends ConfigurationView
     */
    private void createValue()
    {
-      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getWindow().getShell(), null, null, true, true);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getWindow().getShell(), null, null, true, true, i18n.tr("Key"));
       if (dlg.open() != Window.OK)
          return;
 
@@ -322,7 +322,7 @@ public class PersistentStorageView extends ConfigurationView
          return;
 
       final Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
-      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getWindow().getShell(), attr.getKey(), attr.getValue(), true, false);
+      final KeyValuePairEditDialog dlg = new KeyValuePairEditDialog(getWindow().getShell(), attr.getKey(), attr.getValue(), true, false, i18n.tr("Key"));
       if (dlg.open() != Window.OK)
          return;
 

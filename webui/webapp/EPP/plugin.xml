@@ -174,6 +174,28 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleCustomAttribute"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleCustomAttribute#21"
+            name="Custom Attribute">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleAction#1"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleActionScript"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleActionScript#31"
+            name="Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">

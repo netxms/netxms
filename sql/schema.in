@@ -1378,7 +1378,7 @@ CREATE TABLE event_policy
   rule_guid varchar(36) not null,
   flags integer not null,
   comments SQL_TEXT null,
-  script SQL_TEXT null,
+  filter_script SQL_TEXT null,
   alarm_message varchar(2000) null,
   alarm_impact varchar(1000) null,
   alarm_severity integer not null,
@@ -1386,6 +1386,7 @@ CREATE TABLE event_policy
   alarm_timeout integer not null, // Timeout before sending event
   alarm_timeout_event integer not null,  // Event to be sent on timeout
   rca_script_name varchar(255) null,
+  action_script SQL_TEXT null,
   PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
@@ -1443,6 +1444,18 @@ CREATE TABLE policy_pstorage_actions
   action integer not null,
   value varchar(2000) null,
   PRIMARY KEY(rule_id,ps_key,action)
+) TABLE_TYPE;
+
+/**
+ * Event processing policy custom attribute operations
+ */
+CREATE TABLE policy_cutom_attribute_actions
+(
+  rule_id integer not null,
+  attribute_name varchar(127) not null,
+  action integer not null,
+  value varchar(2000) null,
+  PRIMARY KEY(rule_id,attribute_name,action)
 ) TABLE_TYPE;
 
 /*
