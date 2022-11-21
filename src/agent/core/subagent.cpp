@@ -66,23 +66,15 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (*SubAgentRegis
 
 					// Add parameters provided by this subagent to common list
 					for(size_t i = 0; i < info->numParameters; i++)
-						AddParameter(info->parameters[i].name,
-										 info->parameters[i].handler,
-										 info->parameters[i].arg,
-										 info->parameters[i].dataType,
-										 info->parameters[i].description);
+					   AddMetric(info->parameters[i].name, info->parameters[i].handler, info->parameters[i].arg, info->parameters[i].dataType, info->parameters[i].description);
 
 					// Add push parameters provided by this subagent to common list
 					for(size_t i = 0; i < info->numPushParameters; i++)
-						AddPushParameter(info->pushParameters[i].name,
-						                 info->pushParameters[i].dataType,
-					                    info->pushParameters[i].description);
+						AddPushMetric(info->pushParameters[i].name, info->pushParameters[i].dataType, info->pushParameters[i].description);
 
 					// Add lists provided by this subagent to common list
 					for(size_t i = 0; i < info->numLists; i++)
-						AddList(info->lists[i].name,
-								  info->lists[i].handler,
-								  info->lists[i].arg);
+						AddList(info->lists[i].name, info->lists[i].handler, info->lists[i].arg);
 
 					// Add tables provided by this subagent to common list
 					for(size_t i = 0; i < info->numTables; i++)
@@ -96,12 +88,7 @@ bool InitSubAgent(HMODULE hModule, const TCHAR *moduleName, bool (*SubAgentRegis
 
 					// Add actions provided by this subagent to common list
 					for(size_t i = 0; i < info->numActions; i++)
-						AddAction(info->actions[i].name,
-									 false,
-									 info->actions[i].arg,
-									 info->actions[i].handler,
-									 info->name,
-									 info->actions[i].description);
+						AddAction(info->actions[i].name, false, info->actions[i].arg, info->actions[i].handler, info->name, info->actions[i].description);
 
 					nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Subagent \"%s\" (%s) loaded successfully (version %s)"), info->name, moduleName, info->version);
 					success = true;

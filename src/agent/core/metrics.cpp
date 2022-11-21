@@ -46,6 +46,7 @@ LONG H_ExternalMetric(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 LONG H_ExternalMetricExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_HostName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IsExtSubagentConnected(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_IsSubagentLoaded(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -439,10 +440,11 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("File.Hash.MD5(*)"), H_MD5Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_MD5 },
    { _T("File.Hash.SHA1(*)"), H_SHA1Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA1 },
    { _T("File.Size(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, DCIDESC_FILE_SIZE },
-   { _T("File.LineCount(*)"), H_LineCount, (TCHAR *)DIRINFO_FILE_LINE_COUNT, DCI_DT_UINT64, _T("File line count {instance}") },
+   { _T("File.LineCount(*)"), H_LineCount, (TCHAR *)DIRINFO_FILE_LINE_COUNT, DCI_DT_UINT64, _T("File {instance} line count") },
    { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
    { _T("File.Time.Change(*)"), H_FileTime, (TCHAR *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
+   { _T("File.Type(*)"), H_FileType, nullptr, DCI_DT_UINT, _T("Type of file {instance}") },
    { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
    { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
@@ -554,9 +556,9 @@ static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, A
 }
 
 /**
- * Add push parameter to list
+ * Add push metric to list
  */
-void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
+void AddPushMetric(const TCHAR *name, int dataType, const TCHAR *description)
 {
    // Search for existing parameter
    NETXMS_SUBAGENT_PUSHPARAM *p = nullptr;
@@ -586,10 +588,9 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
 /**
  * Add metric to list
  */
-void AddParameter(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
-         const TCHAR *arg, int dataType, const TCHAR *description)
+void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*), const TCHAR *arg, int dataType, const TCHAR *description)
 {
-   // Search for existing parameter
+   // Search for existing metric
    NETXMS_SUBAGENT_PARAM *p = nullptr;
    for(int i = 0; i < s_metrics.size(); i++)
       if (!_tcsicmp(s_metrics.get(i)->name, name))
@@ -617,7 +618,7 @@ void AddParameter(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR
    }
    else
    {
-      // Add new parameter
+      // Add new metric
       NETXMS_SUBAGENT_PARAM np;
       _tcslcpy(np.name, name, MAX_PARAM_NAME);
       np.handler = handler;
@@ -631,7 +632,7 @@ void AddParameter(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR
 /**
  * Add list
  */
-void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg)
+void AddList(const TCHAR *name, LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*), const TCHAR *arg)
 {
    // Search for existing enum
    NETXMS_SUBAGENT_LIST *p = nullptr;
@@ -723,11 +724,11 @@ bool AddExternalMetric(TCHAR *config, bool shellExec, bool isList)
    }
    else
    {
-      AddParameter(config, H_ExternalMetric, arg, DCI_DT_STRING, _T(""));
+      AddMetric(config, H_ExternalMetric, arg, DCI_DT_STRING, _T(""));
       TCHAR nameExitCode[MAX_PARAM_NAME];
       _tcslcpy(nameExitCode, config, MAX_PARAM_NAME);
       _tcslcat(nameExitCode, _T(".ExitCode"), MAX_PARAM_NAME);
-      AddParameter(nameExitCode, H_ExternalMetricExitCode, arg, DCI_DT_INT, _T(""));
+      AddMetric(nameExitCode, H_ExternalMetricExitCode, arg, DCI_DT_INT, _T(""));
    }
    return true;
 }

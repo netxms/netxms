@@ -211,10 +211,10 @@
     <ClCompile Include="extagent.cpp" />
     <ClCompile Include="extdp.cpp" />
     <ClCompile Include="filemon.cpp" />
-    <ClCompile Include="getparam.cpp" />
     <ClCompile Include="hddinfo.cpp" />
     <ClCompile Include="localdb.cpp" />
     <ClCompile Include="master.cpp" />
+    <ClCompile Include="metrics.cpp" />
     <ClCompile Include="nproc.cpp" />
     <ClCompile Include="nxagentd.cpp" />
     <ClCompile Include="policy.cpp" />

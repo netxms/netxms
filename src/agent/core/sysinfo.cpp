@@ -477,18 +477,17 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR szFilePath[MAX_PATH], szRealFilePath[MAX_PATH];
-   LONG nRet = SYSINFO_RC_SUCCESS;
-   NX_STAT_STRUCT fileInfo;
-
-   if (!AgentGetParameterArg(cmd, 1, szFilePath, MAX_PATH))
+   TCHAR path[MAX_PATH];
+   if (!AgentGetParameterArg(cmd, 1, path, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
-   if (ExpandFileName(szFilePath, szRealFilePath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
+   TCHAR realPath[MAX_PATH];
+   if (ExpandFileName(path, realPath, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (CALL_STAT(szRealFilePath, &fileInfo) == -1)
+   NX_STAT_STRUCT fileInfo;
+   if (CALL_STAT(realPath, &fileInfo) == -1)
       return (errno == ENOENT) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
 
    switch(CAST_FROM_POINTER(arg, int))
@@ -503,11 +502,46 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
          ret_uint64(value, fileInfo.st_ctime);
          break;
       default:
-         nRet = SYSINFO_RC_UNSUPPORTED;
-         break;
+         return SYSINFO_RC_UNSUPPORTED;
    }
 
-   return nRet;
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for File.Type metric
+ */
+LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR path[MAX_PATH];
+   if (!AgentGetParameterArg(cmd, 1, path, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Expand strftime macros in the path
+   TCHAR realPath[MAX_PATH];
+   if (ExpandFileName(path, realPath, MAX_PATH, session->isMasterServer()) == nullptr)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   NX_STAT_STRUCT fileInfo;
+   if (CALL_STAT(realPath, &fileInfo) == -1)
+   {
+      if (errno != ENOENT)
+         return SYSINFO_RC_ERROR;
+
+      ret_uint(value, 0);
+      return SYSINFO_RC_SUCCESS;
+   }
+
+   if (S_ISDIR(fileInfo.st_mode))
+      ret_uint(value, 1);
+   else if (S_ISCHR(fileInfo.st_mode) || S_ISBLK(fileInfo.st_mode))
+      ret_uint(value, 2);
+   else if (S_ISREG(fileInfo.st_mode))
+      ret_uint(value, 3);
+   else
+      ret_uint(value, 4);
+
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -544,7 +578,7 @@ LONG H_ResolverAddrByNameList(const TCHAR *cmd, const TCHAR *arg, StringList *va
       return SYSINFO_RC_UNSUPPORTED;
 
    InetAddressList *list = InetAddressList::resolveHostName(name);
-   if (list == NULL)
+   if (list == nullptr)
       return SYSINFO_RC_ERROR;
 
    TCHAR buffer[64];
@@ -570,7 +604,7 @@ LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
    if (!addr.isValid())
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (addr.getHostByAddr(value, MAX_RESULT_LENGTH) == NULL)
+   if (addr.getHostByAddr(value, MAX_RESULT_LENGTH) == nullptr)
       addr.toString(value);   // return address itself if cannot be back resolved
    return SYSINFO_RC_SUCCESS;
 }
@@ -671,7 +705,7 @@ LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommS
    int fd, in;
    if ((fd = _topen(fname, O_RDONLY)) != -1)
    {
-      UINT32 lineCount = 0;
+      uint32_t lineCount = 0;
       char buffer[4096];
       bool lastCharIsNL = false;
       while((in = _read(fd, buffer, 4096)) > 0)

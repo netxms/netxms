@@ -55,9 +55,6 @@
     <ClCompile Include="filemon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="getparam.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hddinfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -65,6 +62,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="master.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="metrics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nxagentd.cpp">

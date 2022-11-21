@@ -766,9 +766,9 @@ void BuildFullPath(const TCHAR *pszFileName, TCHAR *pszFullPath);
 
 bool DownloadConfig(const TCHAR *server);
 
-void AddParameter(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
+void AddMetric(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
          const TCHAR *arg, int dataType, const TCHAR *description);
-void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
+void AddPushMetric(const TCHAR *name, int dataType, const TCHAR *description);
 void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
 void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
          const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
