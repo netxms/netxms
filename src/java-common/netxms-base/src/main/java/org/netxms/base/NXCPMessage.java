@@ -977,7 +977,7 @@ public class NXCPMessage
          messageFlags &= ~(MF_COMPRESSED | MF_STREAM);
       }
    }
-   
+
    /**
     * Set fields in message from string collection
     *  
@@ -992,7 +992,7 @@ public class NXCPMessage
       for(String s : strings)
          setField(fieldId++, s);
    }
-   
+
    /**
     * Set fields in message from string map
     * 

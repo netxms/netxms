@@ -83,6 +83,8 @@ public class Startup
    {
       final Display display = new Display();
 
+      ServiceManager.registerClassLoader(display.getClass().getClassLoader());
+
       String homeDir = System.getProperty("user.home");
       File stateDir = new File(homeDir + File.separator + ".nxmc4");
       if (!stateDir.isDirectory())
@@ -108,7 +110,6 @@ public class Startup
       SharedIcons.init();
       BrandingManager.create();
       StatusDisplayInfo.init(display);
-      ServiceManager.registerClassLoader(display.getClass().getClassLoader());
 
       Window.setExceptionHandler(new IExceptionHandler() {
          @Override
