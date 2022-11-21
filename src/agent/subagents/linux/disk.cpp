@@ -32,8 +32,9 @@ static void FindMountpointByDevice(char *dev, size_t size)
 	if (f == nullptr)
 	   return;
 
-	struct mntent *mnt;
-   while ((mnt = getmntent(f)) != nullptr)
+	struct mntent *mnt, mntbuffer;
+	char textbuffer[4096];
+   while ((mnt = getmntent_r(f, &mntbuffer, textbuffer, sizeof(textbuffer))) != nullptr)
    {
       if (!strcmp(mnt->mnt_fsname, dev))
       {
@@ -282,8 +283,9 @@ LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
 	FILE *f = setmntent(_PATH_MOUNTED, "r");
 	if (f != nullptr)
    {
-      struct mntent *mnt;
-		while((mnt = getmntent(f)) != nullptr)
+	   struct mntent *mnt, mntbuffer;
+	   char textbuffer[4096];
+		while((mnt = getmntent_r(f, &mntbuffer, textbuffer, sizeof(textbuffer))) != nullptr)
 		{
 		   if (!strcmp(mnt->mnt_type, "rootfs"))
 		      continue;  // ignore rootfs entries
