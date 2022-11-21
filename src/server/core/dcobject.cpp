@@ -1817,10 +1817,15 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
    {
       m_unitName = static_cast<const DCItem&>(object).m_unitName;
       m_multiplier = static_cast<const DCItem&>(object).m_multiplier;
+      m_dataType = static_cast<const DCItem&>(object).m_dataType;
+   }
+   else
+   {
+      m_multiplier = 0;
+      m_dataType = -1;
    }
    m_instanceData = MemCopyString(object.m_instanceDiscoveryData);
    m_comments = MemCopyString(object.m_comments);
-   m_dataType = (m_type == DCO_TYPE_ITEM) ? static_cast<const DCItem&>(object).m_dataType : -1;
    m_origin = object.m_source;
    m_status = object.m_status;
    m_errorCount = object.m_errorCount;
@@ -1850,10 +1855,15 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
    {
       m_unitName = static_cast<const DCItem*>(object)->m_unitName;
       m_multiplier = static_cast<const DCItem*>(object)->m_multiplier;
+      m_dataType = msg.getFieldAsInt16(VID_DCI_DATA_TYPE);
+   }
+   else
+   {
+      m_multiplier = 0;
+      m_dataType = -1;
    }
    m_instanceData = msg.getFieldAsString(VID_INSTD_DATA);
    m_comments = msg.getFieldAsString(VID_COMMENTS);
-   m_dataType = (m_type == DCO_TYPE_ITEM) ? msg.getFieldAsInt16(VID_DCI_DATA_TYPE) : -1;
    m_origin = msg.getFieldAsInt16(VID_DCI_SOURCE_TYPE);
    m_status = msg.getFieldAsInt16(VID_DCI_STATUS);
    m_pollingInterval = (object != nullptr) ? object->getEffectivePollingInterval() : 0;
@@ -1874,13 +1884,19 @@ DCObjectInfo::~DCObjectInfo()
    MemFree(m_comments);
 }
 
-static const TCHAR *UNITS_WITHOUT_MULTIPLIERS[] = {_T("%"), _T("°C"), _T("°F"), _T("dbm")};
-static const int UNITS_WITHOUT_MULTIPLIERS_SIZE = 4;
+/**
+ * List of units that should be exempt from multiplication
+ */
+static const TCHAR* s_unitsWithoutMultipliers[] = { _T("%"), _T("°C"), _T("°F"), _T("dbm") };
 
+/**
+ * Format DCI value
+ */
 String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameters) const
 {
    if (parameters == nullptr || parameters->isEmpty())
       return String(value);
+
    bool useUnits = parameters->containsIgnoreCase(_T("u")) || parameters->containsIgnoreCase(_T("units"));
    bool useMultiplier = parameters->containsIgnoreCase(_T("m")) || parameters->containsIgnoreCase(_T("multipliers"));
    StringBuffer units = m_unitName;
@@ -1888,44 +1904,33 @@ String DCObjectInfo::formatValue(const TCHAR *value, const StringList *parameter
    units.replace(_T(" (IEC)"), _T(""));
    units.replace(_T(" (Metric)"), _T(""));
 
-   for (int i = 0; useMultiplier && !units.isEmpty() && i < UNITS_WITHOUT_MULTIPLIERS_SIZE; i++)
+   for (size_t i = 0; useMultiplier && !units.isEmpty() && i < sizeof(s_unitsWithoutMultipliers) / sizeof(TCHAR*); i++)
    {
-      if (!_tcscmp(UNITS_WITHOUT_MULTIPLIERS[i], units))
+      if (!_tcscmp(s_unitsWithoutMultipliers[i], units))
       {
          useMultiplier = false;
+         break;
       }
    }
 
    if (useUnits && !_tcsicmp(m_unitName, _T("Uptime")))
    {
       TCHAR *eptr;
-      uint64_t time = _tcstol(value, &eptr, 10);
-      if (*eptr != 0)
-      {
-         return String(value);
-      }
-
-      return SecondsToUptime(time, true);
+      uint64_t time = _tcstoull(value, &eptr, 10);
+      return (*eptr != 0) ? String(value) : SecondsToUptime(time, true);
    }
 
    if (useUnits && !_tcsicmp(m_unitName, _T("Epoch time")))
    {
       TCHAR *eptr;
-      time_t time = static_cast<time_t>(_tcstol(value, &eptr, 10));
-      if (*eptr != 0)
-      {
-         return String(value);
-      }
-      return FormatTimestamp(time);
+      time_t time = static_cast<time_t>(_tcstoll(value, &eptr, 10));
+      return (*eptr != 0) ? String(value) : FormatTimestamp(time);
    }
 
    TCHAR *eptr;
    double inVal = _tcstod(value, &eptr);
-
    if (*eptr != 0)
-   {
       return String(value);
-   }
 
    StringBuffer result;
    TCHAR prefixSymbol[8] = _T("");
