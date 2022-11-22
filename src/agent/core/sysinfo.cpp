@@ -534,8 +534,10 @@ LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 
    if (S_ISDIR(fileInfo.st_mode))
       ret_uint(value, 1);
+#ifndef _WIN32
    else if (S_ISCHR(fileInfo.st_mode) || S_ISBLK(fileInfo.st_mode))
       ret_uint(value, 2);
+#endif
    else if (S_ISREG(fileInfo.st_mode))
       ret_uint(value, 3);
    else

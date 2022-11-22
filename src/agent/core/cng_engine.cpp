@@ -23,6 +23,7 @@
 #include "nxagentd.h"
 #include <nxcrypto.h>
 #include <openssl/engine.h>
+#include <openssl/ssl.h>
 
 #define DEBUG_TAG _T("crypto.cng")
 
@@ -261,9 +262,9 @@ static int InitEngine(ENGINE *e)
    nxlog_debug_tag(DEBUG_TAG, 7, _T("InitEngine called for %p"), e);
    if (!s_initialized)
    {
-      s_idxEngineContext = ENGINE_get_ex_new_index(0, NULL, NULL, NULL, NULL);
-      s_idxCertificateId = SSL_CTX_get_ex_new_index(0, NULL, NULL, NULL, NULL);
-      s_idxKeyHandle = RSA_get_ex_new_index(0, NULL, NULL, NULL, NULL);
+      s_idxEngineContext = ENGINE_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+      s_idxCertificateId = SSL_CTX_get_ex_new_index(0, nullptr, nullptr, nullptr, nullptr);
+      s_idxKeyHandle = RSA_get_ex_new_index(0, NULL, nullptr, nullptr, nullptr);
 
       s_rsaMethod = RSA_meth_dup(RSA_PKCS1_OpenSSL());
       if (s_rsaMethod != nullptr)
