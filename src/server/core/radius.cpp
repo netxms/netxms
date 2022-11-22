@@ -42,7 +42,7 @@ static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
 #else
    EVP_MD_CTX contextBuffer;
    EVP_MD_CTX *context = &contextBuffer;
-   EVP_MD_CTX_Init(context);
+   EVP_MD_CTX_init(context);
 #endif
    EVP_DigestInit_ex(context, EVP_md4(), nullptr);
    EVP_DigestUpdate(context, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
