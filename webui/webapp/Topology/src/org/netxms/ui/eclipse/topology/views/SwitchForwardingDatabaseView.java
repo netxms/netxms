@@ -40,7 +40,6 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -48,6 +47,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.ui.eclipse.actions.CopyTableRowsAction;
@@ -284,15 +284,21 @@ public class SwitchForwardingDatabaseView extends ViewPart
          @Override
          public void run()
          {
-            TableItem[] selection = viewer.getTable().getSelection();
-            StringBuilder macAddress = new StringBuilder();
-            for(TableItem item : selection)
+            @SuppressWarnings("unchecked")
+            final List<FdbEntry> selection = viewer.getStructuredSelection().toList();
+            if (selection.size() > 0)
             {
-               if (macAddress.length() > 0)
-                  macAddress.append('\t');
-               macAddress.append(item.getText(0));
+               final StringBuilder sb = new StringBuilder();
+               for(int i = 0; i < selection.size(); i++)
+               {
+                  if (i > 0)
+                     sb.append('\t');
+                  
+                  MacAddress addr  = selection.get(i).getAddress();
+                  sb.append(addr != null ? addr.toString() : "");
+               }
+               WidgetHelper.copyToClipboard(sb.toString());
             }
-            WidgetHelper.copyToClipboard(macAddress.toString());
          }
       };
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
