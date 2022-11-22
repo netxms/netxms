@@ -2168,7 +2168,7 @@
 			<dataCollection>
 				<dci id="2359">
 					<guid>8814906a-42fb-443b-b0c6-9d3d9401d688</guid>
-					<name>Server.Certificate.ExpirationIn</name>
+					<name>Server.Certificate.ExpiresIn</name>
 					<description>Days until server certificate expiration date</description>
 					<dataType>0</dataType>
 					<samples>0</samples>
@@ -2208,7 +2208,7 @@
 			</dataCollection>
 			<agentPolicies>
 			</agentPolicies>
-			<filter autoBind="1" autoUnbind="0">return $node and $node-&gt;isLocalManagement and $node-&gt;readInternalParameter(&quot;Server.Certificate.ExpirationIn&quot;) != -1;</filter>
+			<filter autoBind="1" autoUnbind="0">return $node and $node-&gt;isLocalManagement and $node-&gt;readInternalParameter(&quot;Server.Certificate.ExpiresIn&quot;) != -1;</filter>
 			<filter2 autoBind="0" autoUnbind="0"></filter2>
 		</template>
 	</templates>
