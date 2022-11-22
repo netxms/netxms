@@ -30,7 +30,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.TableItem;
+import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -119,15 +119,21 @@ public class SwitchForwardingDatabaseView extends ObjectView
          @Override
          public void run()
          {
-            TableItem[] selection = viewer.getTable().getSelection();
-            StringBuilder macAddress = new StringBuilder();
-            for(TableItem item : selection)
-         {
-               if (macAddress.length() > 0)
-                  macAddress.append('\t');
-               macAddress.append(item.getText(0));
+            @SuppressWarnings("unchecked")
+            final List<FdbEntry> selection = viewer.getStructuredSelection().toList();
+            if (selection.size() > 0)
+            {
+               final StringBuilder sb = new StringBuilder();
+               for(int i = 0; i < selection.size(); i++)
+               {
+                  if (i > 0)
+                     sb.append('\t');
+                  
+                  MacAddress addr  = selection.get(i).getAddress();
+                  sb.append(addr != null ? addr.toString() : "");
+               }
+               WidgetHelper.copyToClipboard(sb.toString());
             }
-            WidgetHelper.copyToClipboard(macAddress.toString());
          }
       };
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
