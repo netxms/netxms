@@ -22,6 +22,7 @@
 
 #include "nxagentd.h"
 #include <openssl/engine.h>
+#include <openssl/ssl.h>
 #include <nxstat.h>
 #include <netxms-version.h>
 

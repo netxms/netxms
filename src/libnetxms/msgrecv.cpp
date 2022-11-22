@@ -24,6 +24,10 @@
 #include "libnetxms.h"
 #include <nxcpapi.h>
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/ssl.h>
+#endif
+
 /**
  * Abstract message receiver constructor
  */

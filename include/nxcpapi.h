@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NXCP API
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,16 +26,8 @@
 
 #include <nms_util.h>
 #include <nms_threads.h>
-#include <nxcrypto.h>
 #include <uuid.h>
-
-#ifdef _WIN32
-#include <wincrypt.h>
-#endif
-
-#ifdef _WITH_ENCRYPTION
-#include <openssl/ssl.h>
-#endif
+#include <nxcrypto.h>
 
 #ifdef __cplusplus
 #include <istream>
@@ -631,15 +623,6 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *pMsg,
                                                   NXCPMessage **ppResponse,
                                                   RSA *pPrivateKey, int nNXCPVersion);
 void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *pMsg, RSA *pServerKey, bool useX509Format);
-RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile);
-RSA LIBNETXMS_EXPORTABLE *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate);
-void LIBNETXMS_EXPORTABLE RSAFree(RSA *key);
-RSA LIBNETXMS_EXPORTABLE *RSAGenerateKey(int bits);
-
-#ifdef _WIN32
-BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, UINT32 dwMsgLen, const CERT_CONTEXT *pCert,
-												          BYTE *pBuffer, size_t bufferSize, UINT32 *pdwSigLen);
-#endif   /* _WIN32 */
 
 #endif   /* __cplusplus */
 

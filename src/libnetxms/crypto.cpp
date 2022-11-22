@@ -24,6 +24,7 @@
 #include "libnetxms.h"
 #include "ice.h"
 #include <nxcpapi.h>
+#include <openssl/hmac.h>
 
 #define DEBUG_TAG _T("crypto")
 
@@ -36,7 +37,7 @@
  * Supported ciphers. By default, we support all ciphers compiled
  * into OpenSSL library.
  */
-static UINT32 s_supportedCiphers = 
+static uint32_t s_supportedCiphers =
 #ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
    NXCP_SUPPORT_AES_256 |
@@ -63,7 +64,7 @@ static const TCHAR *s_cipherNames[NETXMS_MAX_CIPHERS] = { _T("AES-256"), _T("Blo
 
 #ifdef _WITH_ENCRYPTION
 
-extern "C" typedef OPENSSL_CONST EVP_CIPHER * (*CIPHER_FUNC)();
+extern "C" typedef const EVP_CIPHER * (*CIPHER_FUNC)();
 static CIPHER_FUNC s_ciphers[NETXMS_MAX_CIPHERS] =
 {
 #ifndef OPENSSL_NO_AES
@@ -138,13 +139,13 @@ static unsigned long CryptoIdCallback()
 RSA LIBNETXMS_EXPORTABLE *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate)
 {
    const BYTE *bp = data;
-   RSA *key = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&bp, (int)size);
+   RSA *key = d2i_RSAPublicKey(nullptr, (const BYTE **)&bp, (int)size);
    if ((key != NULL) && withPrivate)
    {
-      if (d2i_RSAPrivateKey(&key, (OPENSSL_CONST BYTE **)&bp, (int)(size - CAST_FROM_POINTER((bp - data), size_t))) == NULL)
+      if (d2i_RSAPrivateKey(&key, (const BYTE **)&bp, (int)(size - CAST_FROM_POINTER((bp - data), size_t))) == nullptr)
       {
          RSA_free(key);
-         key = NULL;
+         key = nullptr;
       }
    }
    return key;

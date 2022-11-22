@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nxcrypto.h>
 #include "md5.h"
 #include "sha1.h"
 #include "sha2.h"
@@ -29,11 +30,14 @@
 #ifdef _WITH_ENCRYPTION
 #include <openssl/md5.h>
 #include <openssl/sha.h>
+#include <openssl/evp.h>
 #endif
 
 #if defined(_WIN32) && !defined(UNDER_CE)
 # include <io.h>
 #endif
+
+#include <nxcrypto.h>
 
 /**
  * File block size (used for file hash calculation)
@@ -145,7 +149,13 @@ bool LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *fileName, uint32_t *re
 void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state)
 {
 #ifdef _WITH_ENCRYPTION
-   MD5_Init(reinterpret_cast<MD5_CTX*>(state));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   state->context = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(state->context, EVP_md5(), nullptr);
+#else
+   EVP_MD_CTX_Init(&state->context);
+   EVP_DigestInit_ex(&state->context, EVP_md5(), nullptr);
+#endif
 #else
    I_md5_init(reinterpret_cast<md5_state_t*>(state));
 #endif
@@ -157,7 +167,11 @@ void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state)
 void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t size)
 {
 #ifdef _WITH_ENCRYPTION
-   MD5_Update(reinterpret_cast<MD5_CTX*>(state), data, static_cast<unsigned int>(size));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_DigestUpdate(state->context, data, size);
+#else
+   EVP_DigestUpdate(&state->context, data, size);
+#endif
 #else
    I_md5_append(reinterpret_cast<md5_state_t*>(state), static_cast<const md5_byte_t*>(data), static_cast<unsigned int>(size));
 #endif
@@ -169,7 +183,12 @@ void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t s
 void LIBNETXMS_EXPORTABLE MD5Final(MD5_STATE *state, BYTE *hash)
 {
 #ifdef _WITH_ENCRYPTION
-   MD5_Final(hash, reinterpret_cast<MD5_CTX*>(state));
+   EVP_DigestFinal_ex(state->context, hash, nullptr);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX_free(state->context);
+#else
+   EVP_MD_CTX_cleanup(&state->context);
+#endif
 #else
    I_md5_finish(reinterpret_cast<md5_state_t*>(state), reinterpret_cast<md5_byte_t*>(hash));
 #endif
@@ -196,7 +215,13 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t size, BYTE *
 void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA1_Init(reinterpret_cast<SHA_CTX*>(state));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   state->context = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(state->context, EVP_sha1(), nullptr);
+#else
+   EVP_MD_CTX_Init(&state->context);
+   EVP_DigestInit_ex(&state->context, EVP_sha1(), nullptr);
+#endif
 #else
    I_SHA1Init(reinterpret_cast<SHA1_CTX*>(state));
 #endif
@@ -208,7 +233,11 @@ void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state)
 void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA1_Update(reinterpret_cast<SHA_CTX*>(state), data, static_cast<unsigned int>(size));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_DigestUpdate(state->context, data, size);
+#else
+   EVP_DigestUpdate(&state->context, data, size);
+#endif
 #else
    I_SHA1Update(reinterpret_cast<SHA1_CTX*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
 #endif
@@ -220,7 +249,12 @@ void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t
 void LIBNETXMS_EXPORTABLE SHA1Final(SHA1_STATE *state, BYTE *hash)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA1_Final(hash, reinterpret_cast<SHA_CTX*>(state));
+   EVP_DigestFinal_ex(state->context, hash, nullptr);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX_free(state->context);
+#else
+   EVP_MD_CTX_cleanup(&state->context);
+#endif
 #else
    I_SHA1Final(reinterpret_cast<SHA1_CTX*>(state), hash);
 #endif
@@ -247,7 +281,13 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(const void *data, size_t size, BYTE 
 void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA224_Init(reinterpret_cast<SHA256_CTX*>(state));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   state->context = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(state->context, EVP_sha224(), nullptr);
+#else
+   EVP_MD_CTX_Init(&state->context);
+   EVP_DigestInit_ex(&state->context, EVP_sha224(), nullptr);
+#endif
 #else
    I_sha224_init(reinterpret_cast<sha224_ctx*>(state));
 #endif
@@ -259,7 +299,11 @@ void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state)
 void LIBNETXMS_EXPORTABLE SHA224Update(SHA224_STATE *state, const void *data, size_t size)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA224_Update(reinterpret_cast<SHA256_CTX*>(state), data, static_cast<unsigned int>(size));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_DigestUpdate(state->context, data, size);
+#else
+   EVP_DigestUpdate(&state->context, data, size);
+#endif
 #else
    I_sha224_update(reinterpret_cast<sha224_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
 #endif
@@ -271,7 +315,12 @@ void LIBNETXMS_EXPORTABLE SHA224Update(SHA224_STATE *state, const void *data, si
 void LIBNETXMS_EXPORTABLE SHA224Final(SHA224_STATE *state, BYTE *hash)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA224_Final(hash, reinterpret_cast<SHA256_CTX*>(state));
+   EVP_DigestFinal_ex(state->context, hash, nullptr);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX_free(state->context);
+#else
+   EVP_MD_CTX_cleanup(&state->context);
+#endif
 #else
    I_sha224_final(reinterpret_cast<sha224_ctx*>(state), hash);
 #endif
@@ -298,7 +347,13 @@ void LIBNETXMS_EXPORTABLE CalculateSHA224Hash(const void *data, size_t size, BYT
 void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA256_Init(reinterpret_cast<SHA256_CTX*>(state));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   state->context = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(state->context, EVP_sha256(), nullptr);
+#else
+   EVP_MD_CTX_Init(&state->context);
+   EVP_DigestInit_ex(&state->context, EVP_sha256(), nullptr);
+#endif
 #else
    I_sha256_init(reinterpret_cast<sha256_ctx*>(state));
 #endif
@@ -310,7 +365,11 @@ void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state)
 void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, size_t size)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA256_Update(reinterpret_cast<SHA256_CTX*>(state), data, static_cast<unsigned int>(size));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_DigestUpdate(state->context, data, size);
+#else
+   EVP_DigestUpdate(&state->context, data, size);
+#endif
 #else
    I_sha256_update(reinterpret_cast<sha256_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
 #endif
@@ -322,7 +381,12 @@ void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, si
 void LIBNETXMS_EXPORTABLE SHA256Final(SHA256_STATE *state, BYTE *hash)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA256_Final(hash, reinterpret_cast<SHA256_CTX*>(state));
+   EVP_DigestFinal_ex(state->context, hash, nullptr);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX_free(state->context);
+#else
+   EVP_MD_CTX_cleanup(&state->context);
+#endif
 #else
    I_sha256_final(reinterpret_cast<sha256_ctx*>(state), hash);
 #endif
@@ -350,7 +414,13 @@ void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const void *data, size_t size, BYT
 void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA384_Init(reinterpret_cast<SHA512_CTX*>(state));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   state->context = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(state->context, EVP_sha384(), nullptr);
+#else
+   EVP_MD_CTX_Init(&state->context);
+   EVP_DigestInit_ex(&state->context, EVP_sha384(), nullptr);
+#endif
 #else
    I_sha384_init(reinterpret_cast<sha384_ctx*>(state));
 #endif
@@ -362,7 +432,11 @@ void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state)
 void LIBNETXMS_EXPORTABLE SHA384Update(SHA384_STATE *state, const void *data, size_t size)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA384_Update(reinterpret_cast<SHA512_CTX*>(state), data, static_cast<unsigned int>(size));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_DigestUpdate(state->context, data, size);
+#else
+   EVP_DigestUpdate(&state->context, data, size);
+#endif
 #else
    I_sha384_update(reinterpret_cast<sha384_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
 #endif
@@ -374,7 +448,12 @@ void LIBNETXMS_EXPORTABLE SHA384Update(SHA384_STATE *state, const void *data, si
 void LIBNETXMS_EXPORTABLE SHA384Final(SHA384_STATE *state, BYTE *hash)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA384_Final(hash, reinterpret_cast<SHA512_CTX*>(state));
+   EVP_DigestFinal_ex(state->context, hash, nullptr);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX_free(state->context);
+#else
+   EVP_MD_CTX_cleanup(&state->context);
+#endif
 #else
    I_sha384_final(reinterpret_cast<sha384_ctx*>(state), hash);
 #endif
@@ -401,7 +480,13 @@ void LIBNETXMS_EXPORTABLE CalculateSHA384Hash(const void *data, size_t size, BYT
 void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA512_Init(reinterpret_cast<SHA512_CTX*>(state));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   state->context = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(state->context, EVP_sha512(), nullptr);
+#else
+   EVP_MD_CTX_Init(&state->context);
+   EVP_DigestInit_ex(&state->context, EVP_sha512(), nullptr);
+#endif
 #else
    I_sha512_init(reinterpret_cast<sha512_ctx*>(state));
 #endif
@@ -413,7 +498,11 @@ void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state)
 void LIBNETXMS_EXPORTABLE SHA512Update(SHA512_STATE *state, const void *data, size_t size)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA512_Update(reinterpret_cast<SHA512_CTX*>(state), data, static_cast<unsigned int>(size));
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_DigestUpdate(state->context, data, size);
+#else
+   EVP_DigestUpdate(&state->context, data, size);
+#endif
 #else
    I_sha512_update(reinterpret_cast<sha512_ctx*>(state), static_cast<const unsigned char*>(data), static_cast<unsigned int>(size));
 #endif
@@ -425,7 +514,12 @@ void LIBNETXMS_EXPORTABLE SHA512Update(SHA512_STATE *state, const void *data, si
 void LIBNETXMS_EXPORTABLE SHA512Final(SHA512_STATE *state, BYTE *hash)
 {
 #ifdef _WITH_ENCRYPTION
-   SHA512_Final(hash, reinterpret_cast<SHA512_CTX*>(state));
+   EVP_DigestFinal_ex(state->context, hash, nullptr);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX_free(state->context);
+#else
+   EVP_MD_CTX_cleanup(&state->context);
+#endif
 #else
    I_sha512_final(reinterpret_cast<sha512_ctx*>(state), hash);
 #endif

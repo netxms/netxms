@@ -22,6 +22,7 @@
 **/
 
 #include "libnxsnmp.h"
+#include <nxcrypto.h>
 
 #ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_DES

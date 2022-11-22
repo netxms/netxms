@@ -12,6 +12,10 @@
 #include <openssl/opensslv.h>
 #include <openssl/err.h>
 
+#ifdef _WIN32
+#include <wincrypt.h>
+#endif
+
 #ifdef NETXMS_NO_AES
 #ifndef OPENSSL_NO_AES
 #define OPENSSL_NO_AES
@@ -36,15 +40,76 @@
 #endif
 #endif
 
-#if OPENSSL_VERSION_NUMBER >= 0x00907000
-#define OPENSSL_CONST const
-#else
-#define OPENSSL_CONST
-#endif
-
 /**** Crypto helper functions ****/
 
-#ifdef __cplusplus
+#ifdef _WITH_ENCRYPTION
+struct MD_STATE
+{
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX *context;
+#else
+   EVP_MD_CTX context;
+#endif
+};
+
+typedef MD_STATE MD5_STATE;
+#else
+typedef unsigned char MD5_STATE[128];
+#endif
+
+void LIBNETXMS_EXPORTABLE MD5Init(MD5_STATE *state);
+void LIBNETXMS_EXPORTABLE MD5Update(MD5_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE MD5Final(MD5_STATE *state, BYTE *hash);
+
+#ifdef _WITH_ENCRYPTION
+typedef MD_STATE SHA1_STATE;
+#else
+typedef unsigned char SHA1_STATE[128];
+#endif
+
+void LIBNETXMS_EXPORTABLE SHA1Init(SHA1_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA1Update(SHA1_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA1Final(SHA1_STATE *state, BYTE *hash);
+
+#ifdef _WITH_ENCRYPTION
+typedef MD_STATE SHA224_STATE;
+#else
+typedef unsigned char SHA224_STATE[192];
+#endif
+
+void LIBNETXMS_EXPORTABLE SHA224Init(SHA224_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA224Update(SHA224_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA224Final(SHA224_STATE *state, BYTE *hash);
+
+#ifdef _WITH_ENCRYPTION
+typedef MD_STATE SHA256_STATE;
+#else
+typedef unsigned char SHA256_STATE[192];
+#endif
+
+void LIBNETXMS_EXPORTABLE SHA256Init(SHA256_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA256Update(SHA256_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA256Final(SHA256_STATE *state, BYTE *hash);
+
+#ifdef _WITH_ENCRYPTION
+typedef MD_STATE SHA384_STATE;
+#else
+typedef unsigned char SHA384_STATE[192];
+#endif
+
+void LIBNETXMS_EXPORTABLE SHA384Init(SHA384_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA384Update(SHA384_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA384Final(SHA384_STATE *state, BYTE *hash);
+
+#ifdef _WITH_ENCRYPTION
+typedef MD_STATE SHA512_STATE;
+#else
+typedef unsigned char SHA512_STATE[192];
+#endif
+
+void LIBNETXMS_EXPORTABLE SHA512Init(SHA512_STATE *state);
+void LIBNETXMS_EXPORTABLE SHA512Update(SHA512_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE SHA512Final(SHA512_STATE *state, BYTE *hash);
 
 bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(const X509 *cert, int nid, TCHAR *buffer, size_t size);
 bool LIBNETXMS_EXPORTABLE GetCertificateCN(const X509 *cert, TCHAR *buffer, size_t size);
@@ -58,12 +123,14 @@ String LIBNETXMS_EXPORTABLE GetCertificateTemplateId(const X509 *cert);
 String LIBNETXMS_EXPORTABLE GetCertificateCRLDistributionPoint(const X509 *cert);
 X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet& trustedCertificates, bool useSystemStore);
 
-#endif   /* __cplusplus */
+RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile);
+RSA LIBNETXMS_EXPORTABLE *RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate);
+void LIBNETXMS_EXPORTABLE RSAFree(RSA *key);
+RSA LIBNETXMS_EXPORTABLE *RSAGenerateKey(int bits);
 
-#else /* no encryption */
-
-// Prevent compilation errors on function prototypes
-#define RSA void
+#ifdef _WIN32
+BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, uint32_t dwMsgLen, const CERT_CONTEXT *pCert, BYTE *pBuffer, size_t bufferSize, uint32_t *pdwSigLen);
+#endif   /* _WIN32 */
 
 #endif
 

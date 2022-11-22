@@ -28,23 +28,6 @@
 
 #ifdef _WITH_ENCRYPTION
 
-// WARNING! this hack works only for d2i_X509(); be careful when adding new code
-#ifdef OPENSSL_CONST
-# undef OPENSSL_CONST
-#endif
-#if OPENSSL_VERSION_NUMBER >= 0x0090800fL
-# define OPENSSL_CONST const
-#else
-# define OPENSSL_CONST
-#endif
-
-#if OPENSSL_VERSION_NUMBER < 0x10000000L
-static inline int EVP_PKEY_id(EVP_PKEY *key)
-{
-   return key->type;
-}
-#endif
-
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 static inline ASN1_TIME *X509_getm_notBefore(const X509 *x)
 {
@@ -298,7 +281,7 @@ X509 *CertificateFromLoginMessage(const NXCPMessage& msg)
    const BYTE *data = msg.getBinaryFieldPtr(VID_CERTIFICATE, &len);
 	if ((data != nullptr) && (len > 0))
 	{
-      OPENSSL_CONST BYTE *p = (OPENSSL_CONST BYTE *)data;
+      const BYTE *p = data;
 		cert = d2i_X509(nullptr, &p, (long)len);
 	}
 	return cert;
