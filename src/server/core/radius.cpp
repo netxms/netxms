@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2020 Victor Kirhenshtein
+ ** Copyright (C) 2003-2022 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -27,9 +27,7 @@
 
 #ifdef _WITH_ENCRYPTION
 
-#include <openssl/rand.h>
-#include <openssl/md4.h>
-#include <openssl/sha.h>
+#include <nxcrypto.h>
 #include <openssl/des.h>
 
 #define DEBUG_TAG _T("radius")
@@ -39,10 +37,21 @@
  */
 static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
 {
-   MD4_CTX ctx;
-   MD4_Init(&ctx);
-   MD4_Update(&ctx, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
-   MD4_Final(hash, &ctx);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX *context = EVP_MD_CTX_new();
+#else
+   EVP_MD_CTX contextBuffer;
+   EVP_MD_CTX *context = &contextBuffer;
+   EVP_MD_CTX_Init(context);
+#endif
+   EVP_DigestInit_ex(context, EVP_md4(), nullptr);
+   EVP_DigestUpdate(context, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
+   EVP_DigestFinal_ex(context, hash, nullptr);
+#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+   EVP_MD_CTX_free(context);
+#else
+   EVP_MD_CTX_cleanup(context);
+#endif
 }
 
 /**
@@ -71,13 +80,13 @@ static void MsChapChallengeResponse(const BYTE *challenge, const BYTE *passwdHas
  */
 static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChallenge, const char *login, BYTE *challenge)
 {
-   SHA_CTX ctx;
-   SHA1_Init(&ctx);
-   SHA1_Update(&ctx, peerChallenge, 16);
-   SHA1_Update(&ctx, authChallenge, 16);
-   SHA1_Update(&ctx, login, strlen(login));
+   SHA1_STATE ctx;
+   SHA1Init(&ctx);
+   SHA1Update(&ctx, peerChallenge, 16);
+   SHA1Update(&ctx, authChallenge, 16);
+   SHA1Update(&ctx, login, strlen(login));
    BYTE hash[SHA1_DIGEST_SIZE];
-   SHA1_Final(hash, &ctx);
+   SHA1Final(&ctx, hash);
    memcpy(challenge, hash, 8);
 }
 
@@ -92,13 +101,13 @@ static void MsChap2ChallengeHash(const BYTE *peerChallenge, const BYTE *authChal
  */
 static void pairadd(VALUE_PAIR **first, VALUE_PAIR *newPair)
 {
-	VALUE_PAIR *i;
-
-	if (*first == NULL)
+	if (*first == nullptr)
 	{
 		*first = newPair;
 		return;
 	}
+
+   VALUE_PAIR *i;
 	for(i = *first; i->next; i = i->next)
 		;
 	i->next = newPair;
@@ -109,11 +118,9 @@ static void pairadd(VALUE_PAIR **first, VALUE_PAIR *newPair)
  */
 static void pairfree(VALUE_PAIR *pair)
 {
-	VALUE_PAIR *next;
-
-	while(pair != NULL)
+	while(pair != nullptr)
 	{
-		next = pair->next;
+	   VALUE_PAIR *next = pair->next;
 		free(pair);
 		pair = next;
 	}
@@ -126,15 +133,15 @@ static VALUE_PAIR *paircreate(int attr, int type, const char *pszName)
 {
 	VALUE_PAIR *vp;
 
-	if ((vp = (VALUE_PAIR *)malloc(sizeof(VALUE_PAIR))) == NULL)
+	if ((vp = (VALUE_PAIR *)malloc(sizeof(VALUE_PAIR))) == nullptr)
 	{
-		return NULL;
+		return nullptr;
 	}
 	memset(vp, 0, sizeof(VALUE_PAIR));
 	vp->attribute = attr;
 	vp->op = PW_OPERATOR_EQUAL;
 	vp->type = type;
-	if (pszName != NULL)
+	if (pszName != nullptr)
 	{
 		strcpy(vp->name, pszName);
 	}

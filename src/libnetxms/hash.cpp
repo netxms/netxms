@@ -200,7 +200,15 @@ void LIBNETXMS_EXPORTABLE MD5Final(MD5_STATE *state, BYTE *hash)
 void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const void *data, size_t size, BYTE *hash)
 {
 #ifdef _WITH_ENCRYPTION
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+   EVP_MD_CTX *context = EVP_MD_CTX_new();
+   EVP_DigestInit_ex(context, EVP_md5(), nullptr);
+   EVP_DigestUpdate(context, data, size);
+   EVP_DigestFinal_ex(context, hash, nullptr);
+   EVP_MD_CTX_free(context);
+#else
    MD5(static_cast<const unsigned char*>(data), size, hash);
+#endif
 #else
 	md5_state_t state;
 	I_md5_init(&state);
