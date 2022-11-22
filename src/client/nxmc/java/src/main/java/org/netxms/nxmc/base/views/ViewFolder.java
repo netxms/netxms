@@ -197,7 +197,7 @@ public class ViewFolder extends ViewContainer
 
       if (enableViewPinning)
       {
-         ToolItem pinView = new ToolItem(viewControlBar, SWT.PUSH);
+         ToolItem pinView = new ToolItem(viewControlBar, SWT.DROP_DOWN);
          pinView.setImage(SharedIcons.IMG_PIN);
          pinView.setToolTipText(i18n.tr("Add view to pinboard (F7)"));
          pinView.addSelectionListener(new SelectionAdapter() {

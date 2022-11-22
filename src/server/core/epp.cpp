@@ -604,9 +604,13 @@ void EPRule::executeActionScript(Event *event) const
 
    shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
    shared_ptr<DCObjectInfo> dciInfo;
-   if (event->getDciId() != 0 && object->isDataCollectionTarget())
+   if ((event->getDciId() != 0) && (object != nullptr) && object->isDataCollectionTarget())
    {
-      dciInfo = static_pointer_cast<DataCollectionTarget>(object)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+      shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(event->getDciId(), 0);
+      if (dci != nullptr)
+         dciInfo = dci->createDescriptor();
+      else
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Event references DCI [%u] but it cannot be found in event source object"), event->getDciId());
    }
 
    ScriptVMHandle vm = CreateServerScriptVM(m_actionScript, object, dciInfo);
@@ -615,18 +619,12 @@ void EPRule::executeActionScript(Event *event) const
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
          ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
-         nxlog_write(NXLOG_ERROR, _T("Cannot create NXSL VM for action script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create NXSL VM for action script for event processing policy rule #%u"), m_id + 1);
       }
       return;
    }
 
    vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
-   vm->setGlobalVariable("CUSTOM_MESSAGE", vm->createValue());
-   vm->setGlobalVariable("EVENT_CODE", vm->createValue(event->getCode()));
-   vm->setGlobalVariable("SEVERITY", vm->createValue(event->getSeverity()));
-   vm->setGlobalVariable("SEVERITY_TEXT", vm->createValue(GetStatusAsText(event->getSeverity(), true)));
-   vm->setGlobalVariable("OBJECT_ID", vm->createValue(event->getSourceId()));
-   vm->setGlobalVariable("EVENT_TEXT", vm->createValue(event->getMessage()));
 
    // Pass event's parameters as arguments and
    // other information as variables
@@ -639,7 +637,7 @@ void EPRule::executeActionScript(Event *event) const
    if (!vm->run(args, &globals))
    {
       ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, object.get(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
-      nxlog_write(NXLOG_ERROR, _T("Failed to execute action script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to execute action script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
    }
    delete globals;
    vm.destroy();
@@ -650,25 +648,26 @@ void EPRule::executeActionScript(Event *event) const
  */
 bool EPRule::matchScript(Event *event) const
 {
-   bool bRet = true;
-
    if (m_filterScript == nullptr)
       return true;
 
-
    shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
    shared_ptr<DCObjectInfo> dciInfo;
-   if (event->getDciId() != 0 && object->isDataCollectionTarget())
+   if ((event->getDciId() != 0) && (object != nullptr) && object->isDataCollectionTarget())
    {
-      dciInfo = static_pointer_cast<DataCollectionTarget>(object)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+      shared_ptr<DCObject> dci = static_cast<DataCollectionTarget&>(*object).getDCObjectById(event->getDciId(), 0);
+      if (dci != nullptr)
+         dciInfo = dci->createDescriptor();
+      else
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("Event references DCI [%u] but it cannot be found in event source object"), event->getDciId());
    }
-   ScriptVMHandle vm = CreateServerScriptVM(m_filterScript, FindObjectById(event->getSourceId()), shared_ptr<DCObjectInfo>());
+   ScriptVMHandle vm = CreateServerScriptVM(m_filterScript, FindObjectById(event->getSourceId()), dciInfo);
    if (!vm.isValid())
    {
       if (vm.failureReason() != ScriptVMFailureReason::SCRIPT_IS_EMPTY)
       {
          ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, _T("Script load failed"), _T("EPP::%d"), m_id + 1);
-         nxlog_write(NXLOG_ERROR, _T("Cannot create NXSL VM for evaluation script for event processing policy rule #%u"), m_id + 1);
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Cannot create NXSL VM for evaluation script for event processing policy rule #%u"), m_id + 1);
       }
       return true;
    }
@@ -688,12 +687,13 @@ bool EPRule::matchScript(Event *event) const
       args.add(vm->createValue(event->getParameter(i)));
 
    // Run script
+   bool result = true;
    NXSL_VariableSystem *globals = nullptr;
    if (vm->run(args, &globals))
    {
       NXSL_Value *value = vm->getResult();
-      bRet = value->getValueAsBoolean();
-      if (bRet)
+      result = value->getValueAsBoolean();
+      if (result)
       {
          NXSL_Variable *var = globals->find("CUSTOM_MESSAGE");
          if ((var != nullptr) && var->getValue()->isString())
@@ -706,12 +706,12 @@ bool EPRule::matchScript(Event *event) const
    else
    {
       ReportScriptError(SCRIPT_CONTEXT_EVENT_PROC, FindObjectById(event->getSourceId()).get(), 0, vm->getErrorText(), _T("EPP::%d"), m_id + 1);
-      nxlog_write(NXLOG_ERROR, _T("Failed to execute evaluation script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Failed to execute filter script for event processing policy rule #%u (%s)"), m_id + 1, vm->getErrorText());
    }
    delete globals;
    vm.destroy();
 
-   return bRet;
+   return result;
 }
 
 /**
