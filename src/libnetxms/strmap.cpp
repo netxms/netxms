@@ -196,7 +196,7 @@ bool StringMap::getBoolean(const TCHAR *key, bool defaultValue) const
 /**
  * Fill NXCP message with map data
  */
-void StringMap::fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const
+void StringMap::fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32_t sizeFieldId) const
 {
    msg->setField(sizeFieldId, static_cast<uint32_t>(size()));
    uint32_t id = baseFieldId;

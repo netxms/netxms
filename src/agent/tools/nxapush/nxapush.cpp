@@ -161,7 +161,7 @@ static bool Send()
    msg.setField(VID_OBJECT_ID, s_optObjectId);
    msg.setField(VID_LOCAL_CACHE, s_localCache);
    msg.setFieldFromTime(VID_TIMESTAMP, s_timestamp);
-   s_data->fillMessage(&msg, VID_NUM_ITEMS, VID_PUSH_DCI_DATA_BASE);
+   s_data->fillMessage(&msg, VID_PUSH_DCI_DATA_BASE, VID_NUM_ITEMS);
 
 	// Send message to pipe
 	NXCP_MESSAGE *rawMsg = msg.serialize();

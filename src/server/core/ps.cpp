@@ -149,7 +149,7 @@ SharedString GetPersistentStorageValue(const TCHAR *key)
 void GetPersistentStorageList(NXCPMessage *msg)
 {
    s_lockPStorage.lock();
-   s_persistentStorage.fillMessage(msg, VID_NUM_PSTORAGE, VID_PSTORAGE_LIST_BASE);
+   s_persistentStorage.fillMessage(msg, VID_PSTORAGE_LIST_BASE, VID_NUM_PSTORAGE);
    s_lockPStorage.unlock();
 }
 

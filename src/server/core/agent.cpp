@@ -643,7 +643,7 @@ WebServiceCallResult *AgentConnectionEx::webServiceCustomRequest(HttpRequestMeth
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
    msg.setField(VID_FOLLOW_LOCATION, followLocation);
-   headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   headers.fillMessage(&msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    msg.setField(VID_REQUEST_DATA, data);
 
    uint32_t rcc;

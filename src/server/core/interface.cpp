@@ -941,7 +941,7 @@ void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 {
    super::fillMessageInternal(msg, userId);
 
-   m_ipAddressList.fillMessage(msg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
+   m_ipAddressList.fillMessage(msg, VID_IP_ADDRESS_LIST_BASE, VID_IP_ADDRESS_COUNT);
    msg->setField(VID_IF_INDEX, m_index);
    msg->setField(VID_IF_TYPE, m_type);
    msg->setField(VID_MTU, m_mtu);
