@@ -1284,9 +1284,9 @@ void EPRule::createMessage(NXCPMessage *msg) const
    msg->setFieldFromInt32Array(VID_RULE_SOURCES, &m_sources);
    msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_filterScriptSource));
    msg->setField(VID_ACTION_SCRIPT, CHECK_NULL_EX(m_actionScriptSource));
-   m_pstorageSetActions.fillMessage(msg, VID_NUM_SET_PSTORAGE, VID_PSTORAGE_SET_LIST_BASE);
+   m_pstorageSetActions.fillMessage(msg, VID_PSTORAGE_SET_LIST_BASE, VID_NUM_SET_PSTORAGE);
    m_pstorageDeleteActions.fillMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
-   m_customAttributeSetActions.fillMessage(msg, VID_NUM_SET_CUSTOM_ATTRIBUTE, VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE);
+   m_customAttributeSetActions.fillMessage(msg, VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE, VID_NUM_SET_CUSTOM_ATTRIBUTE);
    m_customAttributeDeleteActions.fillMessage(msg, VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE, VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
 }
 

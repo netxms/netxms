@@ -2056,7 +2056,7 @@ public:
       return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
    }
 
-   void fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32_t sizeFieldId) const;
    void loadMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
 
    json_t *toJson() const;
@@ -3994,7 +3994,7 @@ public:
 
    const ObjectArray<InetAddress>& getList() const { return m_list; }
 
-   void fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const;
+   void fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32_t sizeFieldId) const;
 
    json_t *toJson() const { return json_object_array(m_list); }
 

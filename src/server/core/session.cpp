@@ -2870,7 +2870,7 @@ void ClientSession::queryObjectDetails(const NXCPMessage& request)
       {
          ObjectQueryResult *curr = objects->get(i);
          idList[i] = curr->object->getId();
-         curr->values->fillMessage(&response, fieldId, fieldId + 1);
+         curr->values->fillMessage(&response, fieldId + 1, fieldId);
          fieldId += curr->values->size() * 2 + 1;
       }
       response.setFieldFromInt32Array(VID_OBJECT_LIST, objects->size(), idList);
@@ -11016,7 +11016,7 @@ void ClientSession::executeScript(const NXCPMessage& request)
             {
                map.set(_T("1"), result->getValueAsCString());
             }
-            map.fillMessage(&response, VID_NUM_ELEMENTS, VID_ELEMENT_LIST_BASE);
+            map.fillMessage(&response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
             sendMessage(response);
          }
       }
