@@ -1052,7 +1052,7 @@ void EPRule::createMessage(NXCPMessage *msg) const
    msg->setField(VID_NUM_SOURCES, (UINT32)m_sources.size());
    msg->setFieldFromInt32Array(VID_RULE_SOURCES, &m_sources);
    msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
-   m_pstorageSetActions.fillMessage(msg, VID_NUM_SET_PSTORAGE, VID_PSTORAGE_SET_LIST_BASE);
+   m_pstorageSetActions.fillMessage(msg, VID_PSTORAGE_SET_LIST_BASE, VID_NUM_SET_PSTORAGE);
    m_pstorageDeleteActions.fillMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
 }
 

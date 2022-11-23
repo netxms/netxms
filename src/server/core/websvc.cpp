@@ -241,7 +241,7 @@ void WebServiceDefinition::fillMessage(NXCPMessage *msg) const
    msg->setField(VID_PASSWORD, m_password);
    msg->setField(VID_RETENTION_TIME, m_cacheRetentionTime);
    msg->setField(VID_TIMEOUT, m_requestTimeout);
-   m_headers.fillMessage(msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   m_headers.fillMessage(msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    msg->setField(VID_FLAGS, m_flags);
 }
 

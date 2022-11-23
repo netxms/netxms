@@ -761,7 +761,7 @@ bool InetAddressList::isLoopbackOnly() const
 /**
  * Fill NXCP message
  */
-void InetAddressList::fillMessage(NXCPMessage *msg, uint32_t sizeFieldId, uint32_t baseFieldId) const
+void InetAddressList::fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32_t sizeFieldId) const
 {
    msg->setField(sizeFieldId, m_list.size());
    uint32_t fieldId = baseFieldId;

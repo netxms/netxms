@@ -180,7 +180,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
    msg->setField(VID_LDAP_DN, m_ldapDn);
    msg->setField(VID_LDAP_ID, m_ldapId);
    msg->setFieldFromTime(VID_CREATION_TIME, m_created);
-   m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
+   m_attributes.fillMessage(msg, VID_CUSTOM_ATTRIBUTES_BASE, VID_NUM_CUSTOM_ATTRIBUTES);
 }
 
 /**
@@ -1033,7 +1033,7 @@ void User::fill2FAMethodBindingInfo(NXCPMessage *msg) const
       unique_ptr<StringMap> configuration = Extract2FAMethodBindingConfiguration(binding->key, **binding->value);
       if (configuration != nullptr)
       {
-         configuration->fillMessage(msg, fieldId + 9, fieldId + 10);
+         configuration->fillMessage(msg, fieldId + 10, fieldId + 9);
       }
       else
       {

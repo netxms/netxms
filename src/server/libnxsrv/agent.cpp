@@ -1082,7 +1082,7 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
    msg.setField(VID_VERIFY_CERT, verifyCert);
    msg.setField(VID_VERIFY_HOST, verifyHost);
    msg.setField(VID_FORCE_PLAIN_TEXT_PARSER, forcePlainTextParser);
-   headers.fillMessage(&msg, VID_NUM_HEADERS, VID_HEADERS_BASE);
+   headers.fillMessage(&msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    msg.setField(VID_REQUEST_TYPE, static_cast<uint16_t>(requestType));
    pathList.fillMessage(&msg, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
 
