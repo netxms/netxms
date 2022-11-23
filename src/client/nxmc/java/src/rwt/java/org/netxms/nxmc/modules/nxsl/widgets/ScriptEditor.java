@@ -296,7 +296,7 @@ public class ScriptEditor extends CompositeWithMessageArea
 	 */
 	public void setText(String text)
 	{
-      editor.setText(text);
+      editor.setText(text != null ? text : "");
 	}
 
 	/**
