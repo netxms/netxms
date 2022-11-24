@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 public class BarChartElement extends ComparisonChartElement
 {
 	private BarChartConfig elementConfig;
-	
+
    /**
     * @param parent parent composite
     * @param element dashboard element
