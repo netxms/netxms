@@ -60,7 +60,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 	 * @param data
 	 */
    public ScriptedComparisonChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
-	{
+   {
       super(parent, element, view);
       session = Registry.getSession();
 
@@ -106,7 +106,12 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-            final Map<String, String> values = session.queryScript((objectId != 0) ? objectId : getDashboardObjectId(), script, null, null);
+            long contextObjectId = objectId;
+            if (contextObjectId == 0)
+               contextObjectId = getDashboardObjectId();
+            else if (contextObjectId == AbstractObject.CONTEXT)
+               contextObjectId = getContextObjectId();
+            final Map<String, String> values = session.queryScript(contextObjectId, script, null, null);
             runInUIThread(new Runnable() {
                @Override
                public void run()

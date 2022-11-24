@@ -95,12 +95,11 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void resolveDciNames(final Collection<ChartDciConfig> dciList)
 	{
-		new ConsoleJob(Messages.get().DciListLabelProvider_JobTitle, null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().DciListLabelProvider_JobTitle, null, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final Map<Long, String> names = session.dciIdsToNames(dciList);
-
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()

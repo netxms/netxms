@@ -88,7 +88,7 @@ public class DataSources extends PropertyPage
 
 		labelProvider = new DciListLabelProvider(dciList);
 		labelProvider.resolveDciNames(dciList);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -242,7 +242,7 @@ public class DataSources extends PropertyPage
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
 				editButton.setEnabled(selection.size() == 1);
 				deleteButton.setEnabled(selection.size() > 0);
 				upButton.setEnabled(selection.size() == 1);

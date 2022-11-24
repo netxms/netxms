@@ -31,6 +31,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -59,9 +60,9 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 	 * @param parent
 	 * @param data
 	 */
-	public ScriptedComparisonChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
-	{
-		super(parent, element, viewPart);
+   public ScriptedComparisonChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
+   {
+      super(parent, element, viewPart);
       session = ConsoleSharedData.getSession();
 
 		addDisposeListener(new DisposeListener() {
@@ -106,17 +107,22 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-            final Map<String, String> values = session.queryScript((objectId != 0) ? objectId : getDashboardObjectId(), script, null, null);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
+            long contextObjectId = objectId;
+            if (contextObjectId == 0)
+               contextObjectId = getDashboardObjectId();
+            else if (contextObjectId == AbstractObject.CONTEXT)
+               contextObjectId = getContextObjectId();
+            final Map<String, String> values = session.queryScript(contextObjectId, script, null, null);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
                   if (chart.isDisposed())
                      return;
 
                   chart.removeAllParameters();
                   for(Entry<String, String> e : values.entrySet())
-						{
+                  {
                      GraphItem item;
                      double value;
                      if (e.getValue().startsWith("{")) // Assume JSON format if value starts with {
@@ -135,7 +141,7 @@ public abstract class ScriptedComparisonChartElement extends ElementWidget
                      }
                      int index = chart.addParameter(item);
                      chart.updateParameter(index, value, false);
-						}
+                  }
                   chart.rebuild();
                   chart.clearErrors();
 						updateInProgress = false;
