@@ -456,6 +456,26 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicatorScript"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicatorScript#20"
+            name="Script">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicatorElements"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.StatusIndicatorElements#10"
+            name="Elements">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

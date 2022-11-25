@@ -22,14 +22,15 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.StatusIndicatorConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
-import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -40,8 +41,10 @@ public class StatusIndicator extends DashboardElementPropertyPage
    private static final I18n i18n = LocalizationHelper.getI18n(StatusIndicator.class);
 
 	private StatusIndicatorConfig config;
-	private ObjectSelector objectSelector;
    private TitleConfigurator title;
+   private LabeledSpinner numColumns;
+   private Combo shape;
+   private Combo labelType;
 	private Button checkFullColors;
 
    /**
@@ -92,27 +95,38 @@ public class StatusIndicator extends DashboardElementPropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 
 		GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 
       title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
       title.setLayoutData(gd);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
-      objectSelector.setLabel(i18n.tr("Object"));
-		objectSelector.setObjectClass(AbstractObject.class);
-		objectSelector.setObjectId(config.getObjectId());
-      gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		objectSelector.setLayoutData(gd);
+      shape = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Shape"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      shape.add(i18n.tr("Circle"));
+      shape.add(i18n.tr("Rectangle"));
+      shape.add(i18n.tr("Rounded rectangle"));
+      shape.select(config.getShape());
+
+      labelType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Label"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      labelType.add(i18n.tr("None"));
+      labelType.add(i18n.tr("Inside"));
+      labelType.add(i18n.tr("Outside"));
+      labelType.select(config.getLabelType());
+
+      numColumns = new LabeledSpinner(dialogArea, SWT.NONE);
+      numColumns.setLabel("Columns");
+      numColumns.setRange(1, 64);
+      numColumns.setSelection(config.getNumColumns());
 
 		checkFullColors = new Button(dialogArea, SWT.CHECK);
       checkFullColors.setText(i18n.tr("Use &full status color range"));
 		checkFullColors.setSelection(config.isFullColorRange());
-		
+
 		return dialogArea;
 	}
 
@@ -123,7 +137,9 @@ public class StatusIndicator extends DashboardElementPropertyPage
    protected boolean applyChanges(boolean isApply)
 	{
       title.updateConfiguration(config);
-		config.setObjectId(objectSelector.getObjectId());
+      config.setLabelType(labelType.getSelectionIndex());
+      config.setShape(shape.getSelectionIndex());
+      config.setNumColumns(numColumns.getSelection());
 		config.setFullColorRange(checkFullColors.getSelection());
 		return true;
 	}
