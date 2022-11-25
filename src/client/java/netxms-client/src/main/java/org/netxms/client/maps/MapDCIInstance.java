@@ -201,7 +201,7 @@ public class MapDCIInstance
       return false;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#hashCode()
     */
    @Override
@@ -217,7 +217,7 @@ public class MapDCIInstance
       return result;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#equals(java.lang.Object)
     */
    @Override

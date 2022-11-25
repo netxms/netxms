@@ -371,7 +371,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected void setText(final String newText)
 	{
-      text.setText(newText);
+      text.setText((newText != null) ? newText : "");
 	}
 
 	/**
@@ -458,11 +458,11 @@ public class AbstractSelector extends Composite
 			linkClear.setEnabled(enabled);
 		super.setEnabled(enabled);
 	}
-	
-	/**
-	 * If selection button should be enabled 
-	 * @param enabled if selection button should be enabled
-	 */
+   
+   /**
+    * If selection button should be enabled 
+    * @param enabled if selection button should be enabled
+    */
    public void setSelectioEnabled(boolean enabled)
    {
       if (buttonSelect != null)

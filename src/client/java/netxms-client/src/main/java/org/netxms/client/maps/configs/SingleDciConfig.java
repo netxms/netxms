@@ -35,13 +35,13 @@ public class SingleDciConfig implements NodeItemPair
 {	
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
-	
+
 	@Attribute
 	public long nodeId;
-	
+
 	@Attribute
 	public long dciId;
-	
+
 	@Element(required=false)
 	public int type;
 
@@ -50,14 +50,13 @@ public class SingleDciConfig implements NodeItemPair
 
 	@Element(required=false)
 	public String instance;
-	
+
 	@Element(required=false)
 	public String column;
-	
-   @Element(required=false)
-   public String formatString;   
 
-	
+   @Element(required=false)
+   public String formatString;
+
 	/**
 	 * Default constructor
 	 */
@@ -66,10 +65,10 @@ public class SingleDciConfig implements NodeItemPair
 		nodeId = 0;
 		dciId = 0;
 		setType(ITEM);
-		name = ""; //$NON-NLS-1$
-		setInstance(""); //$NON-NLS-1$
-		setColumn(""); //$NON-NLS-1$
-		setFormatString("");//$NON-NLS-1$
+      name = "";
+      setInstance("");
+      setColumn("");
+      setFormatString("");
 	}
 
 	/**
@@ -100,10 +99,27 @@ public class SingleDciConfig implements NodeItemPair
 		setType(dci.getDcObjectType());
 		name = dci.getDescription();
 		formatString = "";
-		setInstance(""); //$NON-NLS-1$
-		setColumn(""); //$NON-NLS-1$
+      setInstance("");
+      setColumn("");
 	}
-	
+
+   /**
+    * Create DCI info for node/DCI ID pair
+    *
+    * @param nodeId node ID
+    * @param dciId DCI ID
+    */
+   public SingleDciConfig(long nodeId, long dciId)
+   {
+      this.nodeId = nodeId;
+      this.dciId = dciId;
+      setType(ITEM);
+      name = "";
+      setInstance("");
+      setColumn("");
+      setFormatString("");
+   }
+
 	/**
 	 * Fill NXCP message with object data
 	 *
