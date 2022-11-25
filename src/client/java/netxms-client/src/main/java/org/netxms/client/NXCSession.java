@@ -5066,7 +5066,6 @@ public class NXCSession
          item.fillMessage(msg, base);
          base += 10;
       }
-
       return doLastValuesRequest(msg);
    }
 
@@ -5088,7 +5087,6 @@ public class NXCSession
          c.fillMessage(msg, base);
          base += 10;
       }
-
       return doLastValuesRequest(msg);
    }
 
@@ -5103,14 +5101,15 @@ public class NXCSession
    private DciValue[] doLastValuesRequest(NXCPMessage msg) throws IOException, NXCException
    {
       sendMessage(msg);
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
 
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       DciValue[] list = new DciValue[count];
-      long base = NXCPCodes.VID_DCI_VALUES_BASE;
-      for(int i = 0; i < count; i++, base += 50)
+      long fieldId = NXCPCodes.VID_DCI_VALUES_BASE;
+      for(int i = 0; i < count; i++, fieldId += 50)
       {
-         list[i] = (DciValue)new SimpleDciValue(response, base);
+         list[i] = (DciValue)new SimpleDciValue(response, fieldId);
       }
 
       return list;
@@ -5566,11 +5565,11 @@ public class NXCSession
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
       final Threshold[] list = new Threshold[count];
 
-      long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
+      long fieldId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
       for(int i = 0; i < count; i++)
       {
-         list[i] = new Threshold(response, varId);
-         varId += 20;
+         list[i] = new Threshold(response, fieldId);
+         fieldId += 20;
       }
 
       return list;
@@ -5587,7 +5586,7 @@ public class NXCSession
     */
    public Map<Long, String> dciIdsToNames(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
    {
-      if (nodeIds.size() == 0)
+      if (nodeIds.isEmpty())
          return new HashMap<Long, String>();
 
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_DCI_NAMES);
@@ -5599,11 +5598,11 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       Map<Long, String> result = new HashMap<Long, String>();
       int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
-      long varId = NXCPCodes.VID_DCI_LIST_BASE;
+      long fieldId = NXCPCodes.VID_DCI_LIST_BASE;
       for(int i = 0; i < size; i++)
       {
-         result.put(response.getFieldAsInt64(varId), response.getFieldAsString(varId+1));
-         varId+=2;
+         result.put(response.getFieldAsInt64(fieldId), response.getFieldAsString(fieldId + 1));
+         fieldId += 2;
       }
       return result;
    }
@@ -5618,6 +5617,9 @@ public class NXCSession
     */
    public Map<Long, String> dciIdsToNames(Collection<? extends NodeItemPair> itemList) throws IOException, NXCException
    {
+      if (itemList.isEmpty())
+         return new HashMap<Long, String>();
+
       List<Long> nodeIds = new ArrayList<Long>();
       List<Long> dciIds = new ArrayList<Long>();
       for(NodeItemPair nodeItem : itemList)

@@ -5298,7 +5298,7 @@ void ClientSession::getLastValuesByDciId(const NXCPMessage& request)
          {
             if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
             {
-               uint32_t dciID = request.getFieldAsUInt32(incomingIndex+1);
+               uint32_t dciID = request.getFieldAsUInt32(incomingIndex + 1);
                shared_ptr<DCObject> dcoObj = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciID, m_dwUserId);
                if (dcoObj == nullptr)
                   continue;

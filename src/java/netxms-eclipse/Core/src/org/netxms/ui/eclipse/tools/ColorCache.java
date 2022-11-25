@@ -94,9 +94,9 @@ public class ColorCache implements DisposeListener
 		cache.clear();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
-	 */
+   /**
+    * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
+    */
 	@Override
 	public void widgetDisposed(DisposeEvent e)
 	{

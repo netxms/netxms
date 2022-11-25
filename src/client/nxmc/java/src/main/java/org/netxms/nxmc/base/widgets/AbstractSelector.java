@@ -371,7 +371,7 @@ public class AbstractSelector extends Composite
 	 */
 	protected void setText(final String newText)
 	{
-      text.setText(newText);
+      text.setText((newText != null) ? newText : "");
 	}
 
 	/**
