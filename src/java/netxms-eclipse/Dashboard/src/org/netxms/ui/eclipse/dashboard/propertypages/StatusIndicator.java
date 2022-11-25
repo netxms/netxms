@@ -22,23 +22,26 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
- * Availability chart element properties
+ * Status indicator element properties
  */
 public class StatusIndicator extends PropertyPage
 {
 	private StatusIndicatorConfig config;
-	private ObjectSelector objectSelector;
    private TitleConfigurator title;
+   private LabeledSpinner numColumns;
+   private Combo shape;
+   private Combo labelType;
 	private Button checkFullColors;
 
    /**
@@ -47,32 +50,43 @@ public class StatusIndicator extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (StatusIndicatorConfig)getElement().getAdapter(StatusIndicatorConfig.class);
+      config = getElement().getAdapter(StatusIndicatorConfig.class);
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 
 		GridLayout layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 
       title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
       title.setLayoutData(gd);
 
-      objectSelector = new ObjectSelector(dialogArea, SWT.NONE, false, true);
-		objectSelector.setLabel(Messages.get().StatusIndicator_Object);
-		objectSelector.setObjectClass(AbstractObject.class);
-		objectSelector.setObjectId(config.getObjectId());
-      gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		objectSelector.setLayoutData(gd);
+      shape = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Shape", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      shape.add("Circle");
+      shape.add("Rectangle");
+      shape.add("Rounded rectangle");
+      shape.select(config.getShape());
+
+      labelType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Label", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      labelType.add("None");
+      labelType.add("Inside");
+      labelType.add("Outside");
+      labelType.select(config.getLabelType());
+
+      numColumns = new LabeledSpinner(dialogArea, SWT.NONE);
+      numColumns.setLabel("Columns");
+      numColumns.setRange(1, 64);
+      numColumns.setSelection(config.getNumColumns());
 
 		checkFullColors = new Button(dialogArea, SWT.CHECK);
 		checkFullColors.setText(Messages.get().StatusIndicator_UseFullColorRange);
 		checkFullColors.setSelection(config.isFullColorRange());
-		
+
 		return dialogArea;
 	}
 
@@ -83,7 +97,9 @@ public class StatusIndicator extends PropertyPage
 	public boolean performOk()
 	{
       title.updateConfiguration(config);
-		config.setObjectId(objectSelector.getObjectId());
+      config.setLabelType(labelType.getSelectionIndex());
+      config.setShape(shape.getSelectionIndex());
+      config.setNumColumns(numColumns.getSelection());
 		config.setFullColorRange(checkFullColors.getSelection());
 		return true;
 	}

@@ -54,6 +54,8 @@ import org.netxms.nxmc.modules.dashboards.propertypages.SeparatorProperties;
 import org.netxms.nxmc.modules.dashboards.propertypages.ServiceComponents;
 import org.netxms.nxmc.modules.dashboards.propertypages.SnmpTrapMonitor;
 import org.netxms.nxmc.modules.dashboards.propertypages.StatusIndicator;
+import org.netxms.nxmc.modules.dashboards.propertypages.StatusIndicatorElements;
+import org.netxms.nxmc.modules.dashboards.propertypages.StatusIndicatorScript;
 import org.netxms.nxmc.modules.dashboards.propertypages.StatusMap;
 import org.netxms.nxmc.modules.dashboards.propertypages.SyslogMonitor;
 import org.netxms.nxmc.modules.dashboards.propertypages.TableComparisonChart;
@@ -98,6 +100,8 @@ public class DashboardElementPropertiesManager
       pageClasses.add(ServiceComponents.class);
       pageClasses.add(SnmpTrapMonitor.class);
       pageClasses.add(StatusIndicator.class);
+      pageClasses.add(StatusIndicatorElements.class);
+      pageClasses.add(StatusIndicatorScript.class);
       pageClasses.add(StatusMap.class);
       pageClasses.add(SyslogMonitor.class);
       pageClasses.add(TableComparisonChart.class);
