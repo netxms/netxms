@@ -27,7 +27,6 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -111,7 +110,7 @@ public class DataSources extends PropertyPage
 			}
 		});
 		*/
-      viewer.setInput(dciList.toArray());
+      viewer.setInput(dciList);
 
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -270,8 +269,7 @@ public class DataSources extends PropertyPage
    			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
             dciList.add(dci);
 			}			
-         viewer.setInput(dciList.toArray());         
-         viewer.setSelection(new StructuredSelection(newSelection));
+         viewer.refresh();
 		}
 	}
 
@@ -285,8 +283,7 @@ public class DataSources extends PropertyPage
       if (dlg.open() == Window.OK)
       {
          dciList.add(dci);
-         viewer.setInput(dciList.toArray());
-         viewer.setSelection(new StructuredSelection(dci));
+         viewer.refresh();
       }
    }
 
@@ -315,7 +312,7 @@ public class DataSources extends PropertyPage
       IStructuredSelection selection = viewer.getStructuredSelection();
 		for(Object o : selection.toList())
 			dciList.remove(o);
-      viewer.setInput(dciList.toArray());
+      viewer.refresh();
 	}
 
 	/**
@@ -331,8 +328,7 @@ public class DataSources extends PropertyPage
 			if (index > 0)
 			{
 				Collections.swap(dciList, index - 1, index);
-		      viewer.setInput(dciList.toArray());
-		      viewer.setSelection(new StructuredSelection(element));
+            viewer.refresh();
 			}
 		}
 	}
@@ -350,8 +346,7 @@ public class DataSources extends PropertyPage
 			if ((index < dciList.size() - 1) && (index >= 0))
 			{
 				Collections.swap(dciList, index + 1, index);
-		      viewer.setInput(dciList.toArray());
-		      viewer.setSelection(new StructuredSelection(element));
+            viewer.refresh();
 			}
 		}
 	}
