@@ -34,8 +34,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowData;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -156,11 +154,9 @@ public class DataSources extends DashboardElementPropertyPage
 
       /* buttons on left side */
       Composite leftButtons = new Composite(dialogArea, SWT.NONE);
-      RowLayout buttonLayout = new RowLayout();
-      buttonLayout.type = SWT.HORIZONTAL;
-      buttonLayout.pack = false;
+      GridLayout buttonLayout = new GridLayout();
+      buttonLayout.numColumns = 2;
       buttonLayout.marginWidth = 0;
-      buttonLayout.marginLeft = 0;
       leftButtons.setLayout(buttonLayout);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.LEFT;
@@ -168,9 +164,10 @@ public class DataSources extends DashboardElementPropertyPage
 
       upButton = new Button(leftButtons, SWT.PUSH);
       upButton.setText(i18n.tr("&Up"));
-      RowData rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      upButton.setLayoutData(rd);
+      GridData gd = new GridData();
+      gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.grabExcessHorizontalSpace = true;
+      upButton.setLayoutData(gd);
       upButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -182,9 +179,10 @@ public class DataSources extends DashboardElementPropertyPage
 
       downButton = new Button(leftButtons, SWT.PUSH);
       downButton.setText(i18n.tr("Do&wn"));
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      downButton.setLayoutData(rd);
+      gd = new GridData();
+      gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.grabExcessHorizontalSpace = true;
+      downButton.setLayoutData(gd);
       downButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -196,9 +194,8 @@ public class DataSources extends DashboardElementPropertyPage
 
       /* buttons on right side */
       Composite rightButtons = new Composite(dialogArea, SWT.NONE);
-      buttonLayout = new RowLayout();
-      buttonLayout.type = SWT.HORIZONTAL;
-      buttonLayout.pack = false;
+      buttonLayout = new GridLayout();
+      buttonLayout.numColumns = 4;
       buttonLayout.marginWidth = 0;
       buttonLayout.marginRight = 0;
       rightButtons.setLayout(buttonLayout);
@@ -208,9 +205,10 @@ public class DataSources extends DashboardElementPropertyPage
 
       addButton = new Button(rightButtons, SWT.PUSH);
       addButton.setText(i18n.tr("&Add..."));
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      addButton.setLayoutData(rd);
+      gd = new GridData();
+      gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.grabExcessHorizontalSpace = true;
+      addButton.setLayoutData(gd);
       addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -218,12 +216,13 @@ public class DataSources extends DashboardElementPropertyPage
 				addItem();
 			}
       });
-		
+
       addTemplateButton = new Button(rightButtons, SWT.PUSH);
       addTemplateButton.setText(i18n.tr("Add &template..."));
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      addTemplateButton.setLayoutData(rd);
+      gd = new GridData();
+      gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.grabExcessHorizontalSpace = true;
+      addTemplateButton.setLayoutData(gd);
       addTemplateButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -234,9 +233,10 @@ public class DataSources extends DashboardElementPropertyPage
 
       editButton = new Button(rightButtons, SWT.PUSH);
       editButton.setText(i18n.tr("&Edit..."));
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      editButton.setLayoutData(rd);
+      gd = new GridData();
+      gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.grabExcessHorizontalSpace = true;
+      editButton.setLayoutData(gd);
       editButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -248,9 +248,10 @@ public class DataSources extends DashboardElementPropertyPage
 
       deleteButton = new Button(rightButtons, SWT.PUSH);
       deleteButton.setText(i18n.tr("&Delete"));
-      rd = new RowData();
-      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      deleteButton.setLayoutData(rd);
+      gd = new GridData();
+      gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.grabExcessHorizontalSpace = true;
+      deleteButton.setLayoutData(gd);
       deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
