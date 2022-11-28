@@ -291,7 +291,7 @@ static void NotificationHousekeeper()
    if (hdb == nullptr)
       return;
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification housekeeper thread started"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification housekeeper started"));
    DB_RESULT result = DBSelect(hdb, _T("SELECT server_id,last_connection_time FROM notification_servers"));
    time_t now = time(nullptr);
    if (result != nullptr)
@@ -348,7 +348,7 @@ static void NotificationHousekeeper()
    }
    g_sessionLock.unlock();
    ThreadPoolScheduleRelative(g_commThreadPool, ONE_DAY * 1000, NotificationHousekeeper);
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification housekeeper thread stopped"));
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Notification housekeeper execution completed"));
 }
 
 /**
