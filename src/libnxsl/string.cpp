@@ -334,12 +334,12 @@ int SM_split(NXSL_Value* thisString, int argc, NXSL_Value **argv, NXSL_Value **r
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   StringList *strings = String(thisString->getValueAsCString()).split(argv[0]->getValueAsCString());
    NXSL_Array *a = new NXSL_Array(vm);
-   for(int i = 0; i < strings->size(); i++)
-      a->append(vm->createValue(strings->get(i)));
-   delete strings;
-
+   String::split(thisString->getValueAsCString(), argv[0]->getValueAsCString(), false,
+      [a, vm] (const String& s)
+      {
+         a->append(vm->createValue(s));
+      });
    *result = vm->createValue(a);
    return NXSL_ERR_SUCCESS;
 }

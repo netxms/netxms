@@ -3745,9 +3745,13 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("tags"))
    {
-      StringList *tags = String(event->getTagsAsList()).split(_T(","));
-      value = vm->createValue(new NXSL_Array(vm, tags));
-      delete tags;
+      NXSL_Array *a = new NXSL_Array(vm);
+      String::split(event->getTagsAsList(), _T(","), false,
+         [a, vm] (const String& s)
+         {
+            a->append(vm->createValue(s));
+         });
+      value = vm->createValue(a);
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("timestamp"))
    {

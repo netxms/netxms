@@ -141,12 +141,13 @@ json_t *EventTemplate::toJson() const
 
    if ((m_tags != nullptr) && (*m_tags != 0))
    {
-      StringList *tags = String(m_tags).split(_T(","));
       json_t *array = json_array();
-      for(int i = 0; i < tags->size(); i++)
-         json_array_append_new(array, json_string_t(tags->get(i)));
+      String::split(m_tags, _T(","), false,
+         [array] (const String& s)
+         {
+            json_array_append_new(array, json_string_t(s));
+         });
       json_object_set_new(root, "tags", array);
-      delete tags;
    }
    else
    {
