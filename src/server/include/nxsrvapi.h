@@ -542,9 +542,9 @@ private:
    std::pair<uint32_t, SharedString> getCustomAttributeFromParent(const TCHAR *name);
    bool setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base);
    void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent);
-   void deletePopulatedCustomAttribute(const TCHAR *name);
+   void deletePopulatedCustomAttribute(const TCHAR *name, uint32_t parentId);
    void populate(const TCHAR *name, SharedString value, uint32_t parentId);
-   void populateRemove(const TCHAR *name);
+   void populateRemove(const TCHAR *name, uint32_t parentId);
    bool checkCustomAttributeInConflict(const TCHAR *name, uint32_t newParent);
 
 protected:
@@ -640,7 +640,7 @@ public:
    void setCustomAttributesFromMessage(const NXCPMessage& msg);
    void setCustomAttributesFromDatabase(DB_RESULT hResult);
    void deleteCustomAttribute(const TCHAR *name);
-   void updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name);
+   void updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uint32_t parentId);
    NXSL_Value *getCustomAttributeForNXSL(NXSL_VM *vm, const TCHAR *name) const;
    NXSL_Value *getCustomAttributesForNXSL(NXSL_VM *vm) const;
    int getCustomAttributeSize() const { return m_customAttributes.size(); }
