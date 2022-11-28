@@ -486,19 +486,37 @@ public class RuleEditor extends Composite
       clientArea.setLayout(layout);
 
       boolean needAnd = false;
-      if (((rule.getSources().size() > 0) && rule.isSourceInverted())
-            || ((rule.getSources().size() == 0) && (rule.getEvents().size() > 0) && rule.isEventsInverted()))
+      if (((rule.getSources().size() > 0 || rule.getSourceExclusions().size() > 0) && rule.isSourceInverted())
+            || ((rule.getSources().size() == 0) && (rule.getSourceExclusions().size() == 0) && (rule.getEvents().size() > 0) && rule.isEventsInverted()))
          createLabel(clientArea, 0, true, Messages.get().RuleEditor_IF_NOT, null);
       else
          createLabel(clientArea, 0, true, Messages.get().RuleEditor_IF, null);
 
       /* source */
-      if (rule.getSources().size() > 0)
+      if (rule.getSources().size() > 0 || rule.getSourceExclusions().size() > 0)
       {
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleSourceObjects#0"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, Messages.get().RuleEditor_SourceIs, needAnd, rule.isSourceInverted(), listener);
 
          List<AbstractObject> sortedObjects = session.findMultipleObjects(rule.getSources(), true);
+         sortedObjects.sort(new Comparator<AbstractObject>() {
+            @Override
+            public int compare(AbstractObject o1, AbstractObject o2)
+            {
+               return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+            }
+         });
+         for(AbstractObject object : sortedObjects)
+         {
+            CLabel clabel = createCLabel(clientArea, 2, false);
+            clabel.addMouseListener(listener);
+            clabel.setText(object.getObjectName());
+            clabel.setImage(editor.getWorkbenchLabelProvider().getImage(object));
+         }
+         
+         if (rule.getSourceExclusions().size() > 0)
+            addConditionGroupLabel(clientArea, "except:", needAnd, rule.isSourceInverted(), listener);
+         sortedObjects = session.findMultipleObjects(rule.getSourceExclusions(), true);
          sortedObjects.sort(new Comparator<AbstractObject>() {
             @Override
             public int compare(AbstractObject o1, AbstractObject o2)

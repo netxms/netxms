@@ -52,6 +52,7 @@ public class EventProcessingPolicyRule
 
    private UUID guid;
    private List<Long> sources;
+   private List<Long> sourceExclusions;
    private List<Long> events;
    private String filterScript;
    private int flags;
@@ -79,6 +80,7 @@ public class EventProcessingPolicyRule
    {
       guid = UUID.randomUUID();
       sources = new ArrayList<Long>(0);
+      sourceExclusions = new ArrayList<Long>(0);
       events = new ArrayList<Long>(0);
       filterScript = "";
       flags = SEVERITY_ANY;
@@ -109,6 +111,7 @@ public class EventProcessingPolicyRule
    {
       guid = UUID.randomUUID();
       sources = new ArrayList<Long>(src.sources);
+      sourceExclusions = new ArrayList<Long>(src.sourceExclusions);
       events = new ArrayList<Long>(src.events);
       filterScript = src.filterScript;
       flags = src.flags;
@@ -142,6 +145,7 @@ public class EventProcessingPolicyRule
    {
       guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
       sources = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
+      sourceExclusions = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCE_EXCLUSIONS));
       events = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
       filterScript = msg.getFieldAsString(NXCPCodes.VID_SCRIPT);
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
@@ -195,11 +199,9 @@ public class EventProcessingPolicyRule
       }
       msg.setFieldsFromStringCollection(timerCancellations, NXCPCodes.VID_TIMER_LIST_BASE, NXCPCodes.VID_TIMER_COUNT);
 
-      msg.setFieldInt32(NXCPCodes.VID_NUM_EVENTS, events.size());
       msg.setField(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
-
-      msg.setFieldInt32(NXCPCodes.VID_NUM_SOURCES, sources.size());
       msg.setField(NXCPCodes.VID_RULE_SOURCES, sources.toArray(new Long[sources.size()]));
+      msg.setField(NXCPCodes.VID_RULE_SOURCE_EXCLUSIONS, sourceExclusions.toArray(new Long[sourceExclusions.size()]));
 
       msg.setField(NXCPCodes.VID_ALARM_KEY, alarmKey);
       msg.setField(NXCPCodes.VID_ALARM_MESSAGE, alarmMessage);
@@ -409,6 +411,22 @@ public class EventProcessingPolicyRule
    public List<Long> getSources()
    {
       return sources;
+   }
+
+   /**
+    * @return the sourceExclusions
+    */
+   public List<Long> getSourceExclusions()
+   {
+      return sourceExclusions;
+   }
+
+   /**
+    * @param sourceExclusions the sourceExclusions to set
+    */
+   public void setSourceExclusions(List<Long> sourceExclusions)
+   {
+      this.sourceExclusions = sourceExclusions;
    }
 
    /**

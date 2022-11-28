@@ -27,6 +27,7 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -38,11 +39,11 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.widgets.RuleEditor;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
@@ -59,10 +60,14 @@ public class RuleSourceObjects extends RuleBasePropertyPage
    private static final I18n i18n = LocalizationHelper.getI18n(RuleSourceObjects.class);
 
 	private NXCSession session;
-	private SortableTableViewer viewer;
+	private TableViewer sourceViewer;
+	private TableViewer excludeViewer;
 	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
-	private Button addButton;
-	private Button deleteButton;
+   private Map<Long, AbstractObject> excludedObjects = new HashMap<Long, AbstractObject>();
+	private Button addButtonSource;
+	private Button deleteButtonSource;
+	private Button addButtonExclusion;
+   private Button deleteButtonExclusion;
 	private Button checkInverted;
 	
    /**
@@ -93,24 +98,24 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       checkInverted.setText(i18n.tr("Inverted rule (match objects NOT in the list below)"));
       checkInverted.setSelection(rule.isSourceInverted());
       
-      final String[] columnNames = { i18n.tr("Objects") };
-      final int[] columnWidths = { 300 };
-      viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
-      viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new BaseObjectLabelProvider());
-      viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
-      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+      /* source */
+      sourceViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      sourceViewer.setContentProvider(new ArrayContentProvider());
+      sourceViewer.setLabelProvider(new BaseObjectLabelProvider());
+      sourceViewer.setComparator(new ElementLabelComparator((ILabelProvider)sourceViewer.getLabelProvider()));
+      sourceViewer.getTable().setSortDirection(SWT.UP);
+      sourceViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-            int size = viewer.getStructuredSelection().size();
-				deleteButton.setEnabled(size > 0);
+            int size = sourceViewer.getStructuredSelection().size();
+            deleteButtonSource.setEnabled(size > 0);
 			}
       });
 
       for(AbstractObject o : session.findMultipleObjects(rule.getSources(), true))
       	objects.put(o.getObjectId(), o);
-      viewer.setInput(objects.values().toArray());
+      sourceViewer.setInput(objects.values().toArray());      
 
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
@@ -118,7 +123,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
-      viewer.getControl().setLayoutData(gridData);
+      sourceViewer.getControl().setLayoutData(gridData);
 
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
@@ -131,9 +136,9 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       gridData.horizontalAlignment = SWT.RIGHT;
       buttons.setLayoutData(gridData);
 
-      addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText(i18n.tr("&Add..."));
-      addButton.addSelectionListener(new SelectionAdapter() {
+      addButtonSource = new Button(buttons, SWT.PUSH);
+      addButtonSource.setText(i18n.tr("&Add..."));
+      addButtonSource.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -142,11 +147,11 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       });
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      addButton.setLayoutData(rd);
+      addButtonSource.setLayoutData(rd);
 		
-      deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText(i18n.tr("&Delete"));
-      deleteButton.addSelectionListener(new SelectionAdapter() {
+      deleteButtonSource = new Button(buttons, SWT.PUSH);
+      deleteButtonSource.setText(i18n.tr("&Delete"));
+      deleteButtonSource.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -155,7 +160,74 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       });
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
-      deleteButton.setLayoutData(rd);
+      deleteButtonSource.setLayoutData(rd);
+
+      Label label = new Label(dialogArea, SWT.NONE);
+      label.setText("Exclusions:");   
+      
+      /* exclude */
+      excludeViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      excludeViewer.setContentProvider(new ArrayContentProvider());
+      excludeViewer.setLabelProvider(new BaseObjectLabelProvider());
+      excludeViewer.setComparator(new ElementLabelComparator((ILabelProvider)excludeViewer.getLabelProvider()));
+      excludeViewer.getTable().setSortDirection(SWT.UP);
+      excludeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            int size = excludeViewer.getStructuredSelection().size();
+            deleteButtonExclusion.setEnabled(size > 0);
+         }
+      });
+
+      for(AbstractObject o : session.findMultipleObjects(rule.getSourceExclusions(), true))
+         excludedObjects.put(o.getObjectId(), o);
+      excludeViewer.setInput(excludedObjects.values().toArray());
+
+      gridData = new GridData();
+      gridData.verticalAlignment = GridData.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.heightHint = 0;
+      excludeViewer.getControl().setLayoutData(gridData);
+
+      buttons = new Composite(dialogArea, SWT.NONE);
+      buttonLayout = new RowLayout();
+      buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.pack = false;
+      buttonLayout.marginLeft = 0;
+      buttonLayout.marginRight = 0;
+      buttons.setLayout(buttonLayout);
+      gridData = new GridData();
+      gridData.horizontalAlignment = SWT.RIGHT;
+      buttons.setLayoutData(gridData);
+
+      addButtonExclusion = new Button(buttons, SWT.PUSH);
+      addButtonExclusion.setText(i18n.tr("&Add..."));
+      addButtonExclusion.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            addExclusionObject();
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      addButtonExclusion.setLayoutData(rd);
+      
+      deleteButtonExclusion = new Button(buttons, SWT.PUSH);
+      deleteButtonExclusion.setText(i18n.tr("&Delete"));
+      deleteButtonExclusion.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            deleteExclusionObject();
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      deleteButtonExclusion.setLayoutData(rd);
 
 		return dialogArea;
 	}
@@ -172,7 +244,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 			for(AbstractObject o : dlg.getSelectedObjects())
 				objects.put(o.getObjectId(), o);
 		}
-      viewer.setInput(objects.values().toArray());
+      sourceViewer.setInput(objects.values().toArray());
 	}
 	
 	/**
@@ -181,7 +253,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 	@SuppressWarnings("unchecked")
 	private void deleteSourceObject()
 	{
-		IStructuredSelection selection = viewer.getStructuredSelection();
+		IStructuredSelection selection = sourceViewer.getStructuredSelection();
 		Iterator<AbstractObject> it = selection.iterator();
 		if (it.hasNext())
 		{
@@ -190,9 +262,46 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 				AbstractObject o = it.next();
 				objects.remove(o.getObjectId());
 			}
-	      viewer.setInput(objects.values().toArray());
+	      sourceViewer.setInput(objects.values().toArray());
 		}
 	}
+
+   /**
+    * Add new source object
+    */
+   private void addExclusionObject()
+   {
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell());
+      dlg.enableMultiSelection(true);
+      if (dlg.open() == Window.OK)
+      {
+         for(AbstractObject o : dlg.getSelectedObjects())
+         { 
+            excludedObjects.put(o.getObjectId(), o);
+         }
+      }
+      excludeViewer.setInput(excludedObjects.values().toArray());
+   }
+   
+   /**
+    * Delete object from list
+    */
+   @SuppressWarnings("unchecked")
+   private void deleteExclusionObject()
+   {
+      IStructuredSelection selection = excludeViewer.getStructuredSelection();
+         
+      Iterator<AbstractObject> it = selection.iterator();
+      if (it.hasNext())
+      {
+         while(it.hasNext())
+         {
+            AbstractObject o = it.next();
+            excludedObjects.remove(o.getObjectId());
+         }
+         excludeViewer.setInput(excludedObjects.values().toArray());
+      }
+   }
 
    /**
     * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
@@ -201,12 +310,13 @@ public class RuleSourceObjects extends RuleBasePropertyPage
    protected boolean applyChanges(final boolean isApply)
 	{
 		int flags = rule.getFlags();
-		if (checkInverted.getSelection() && !objects.isEmpty()) // ignore "negate" flag if object set is empty
+		if (checkInverted.getSelection() && (!objects.isEmpty() || !excludedObjects.isEmpty())) // ignore "negate" flag if object set is empty
 			flags |= EventProcessingPolicyRule.NEGATED_SOURCE;
 		else
 			flags &= ~EventProcessingPolicyRule.NEGATED_SOURCE;
 		rule.setFlags(flags);
 		rule.setSources(new ArrayList<Long>(objects.keySet()));
+      rule.setSourceExclusions(new ArrayList<Long>(excludedObjects.keySet()));
 		editor.setModified(true);
       return true;
 	}

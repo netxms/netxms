@@ -22,6 +22,23 @@
 
 #include "nxdbmgr.h"
 
+/**
+ * Upgrade from 43.2 to 43.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE policy_source_list ADD exclusion char(1)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE policy_source_list SET exclusion='0'")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("policy_source_list"), _T("exclusion")));
+   CHK_EXEC(DBDropPrimaryKey(g_dbHandle, _T("policy_source_list")));
+   CHK_EXEC(DBAddPrimaryKey(g_dbHandle, _T("policy_source_list"), _T("rule_id,object_id,exclusion")));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
+ * Change type of action column for policy_*_actions tables
+ */
 static bool ChangeActionColumnType(const TCHAR *table, const TCHAR *primaryKey)
 {
    CHK_EXEC(DBDropPrimaryKey(g_dbHandle, table));
@@ -81,6 +98,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  43, 3,  H_UpgradeFromV2  },
    { 1,  43, 2,  H_UpgradeFromV1  },
    { 0,  43, 2,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

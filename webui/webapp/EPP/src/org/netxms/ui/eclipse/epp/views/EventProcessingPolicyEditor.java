@@ -1303,6 +1303,12 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          if ((name != null) && name.toLowerCase().contains(filterText))
             return true;
       }
+      for(Long id : rule.getSourceExclusions())
+      {
+         String name = session.getObjectName(id);
+         if ((name != null) && name.toLowerCase().contains(filterText))
+            return true;
+      }
 
       return false;
    }

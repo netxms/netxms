@@ -1397,7 +1397,8 @@ CREATE TABLE policy_source_list
 (
   rule_id integer not null,
   object_id integer not null,
-  PRIMARY KEY(rule_id,object_id)
+  exclusion char(1) not null,
+  PRIMARY KEY(rule_id,object_id,exclusion)
 ) TABLE_TYPE;
 
 /**

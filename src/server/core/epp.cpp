@@ -307,6 +307,7 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
 
    msg.getFieldAsInt32Array(VID_RULE_EVENTS, &m_events);
    msg.getFieldAsInt32Array(VID_RULE_SOURCES, &m_sources);
+   msg.getFieldAsInt32Array(VID_RULE_SOURCE_EXCLUSIONS, &m_sourceExclusions);
 
    m_alarmKey = msg.getFieldAsString(VID_ALARM_KEY);
    m_alarmMessage = msg.getFieldAsString(VID_ALARM_MESSAGE);
@@ -456,8 +457,26 @@ void EPRule::createExportRecord(StringBuffer &xml) const
                                 object->getGuid().toString(guidText), object->getObjectClass());
       }
    }
+   xml.append(_T("</sources>\n\t\t\t<sourceExclusions>\n"));
 
-   xml += _T("\t\t\t</sources>\n\t\t\t<events>\n");
+   for(int i = 0; i < m_sourceExclusions.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
+      if (object != nullptr)
+      {
+         TCHAR guidText[128];
+         xml.appendFormattedString(_T("\t\t\t\t<sourceExclusion id=\"%d\">\n")
+                                _T("\t\t\t\t\t<name>%s</name>\n")
+                                _T("\t\t\t\t\t<guid>%s</guid>\n")
+                                _T("\t\t\t\t\t<class>%d</class>\n")
+                                _T("\t\t\t\t</sourceExclusion>\n"),
+                                object->getId(),
+                                (const TCHAR *)EscapeStringForXML2(object->getName()),
+                                object->getGuid().toString(guidText), object->getObjectClass());
+      }
+   }
+
+   xml += _T("\t\t\t</sourceExclusions>\n\t\t\t<events>\n");
 
    for(int i = 0; i < m_events.size(); i++)
    {
@@ -536,8 +555,36 @@ void EPRule::createExportRecord(StringBuffer &xml) const
  */
 bool EPRule::matchSource(uint32_t objectId) const
 {
-   if (m_sources.isEmpty())
+   if (m_sources.isEmpty() && m_sourceExclusions.isEmpty())
       return (m_flags & RF_NEGATED_SOURCE) ? false : true;
+
+   bool exception = false;
+   for(int i = 0; i < m_sourceExclusions.size(); i++)
+   {
+      if (m_sourceExclusions.get(i) == objectId)
+      {
+         exception = true;
+         break;
+      }
+
+      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
+      if (object != nullptr)
+      {
+         if (object->isChild(objectId))
+         {
+            exception = true;
+            break;
+         }
+      }
+      else
+      {
+         nxlog_write(NXLOG_WARNING, _T("Invalid object identifier %u in event processing policy rule #%u"), m_sourceExclusions.get(i), m_id + 1);
+      }
+   }
+   if (exception)
+   {
+      return (m_flags & RF_NEGATED_SOURCE) ? true : false;
+   }
 
    bool match = false;
    for(int i = 0; i < m_sources.size(); i++)
@@ -923,13 +970,28 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
    bool bSuccess = true;
 
    // Load rule's sources
-   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d"), m_id);
+   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d and exclusion='0'"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != nullptr)
    {
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
          m_sources.add(DBGetFieldULong(hResult, i, 0));
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      bSuccess = false;
+   }
+
+   // Load rule's sources exclusions
+   _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d and exclusion='1'"), m_id);
+   hResult = DBSelect(hdb, szQuery);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         m_sourceExclusions.add(DBGetFieldULong(hResult, i, 0));
       DBFreeResult(hResult);
    }
    else
@@ -1170,7 +1232,17 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
    {
       for(i = 0; i < m_sources.size() && success; i++)
       {
-         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"), m_id, m_sources.get(i));
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'0')"), m_id, m_sources.get(i));
+         success = DBQuery(hdb, pszQuery);
+      }
+   }
+
+   // Source exclusions
+   if (success && !m_sourceExclusions.isEmpty())
+   {
+      for(i = 0; i < m_sourceExclusions.size() && success; i++)
+      {
+         _sntprintf(pszQuery, 1024, _T("INSERT INTO policy_source_list (rule_id,object_id,exclusion) VALUES (%d,%d,'1')"), m_id, m_sourceExclusions.get(i));
          success = DBQuery(hdb, pszQuery);
       }
    }
@@ -1278,10 +1350,9 @@ void EPRule::createMessage(NXCPMessage *msg) const
       fieldId += 5;
    }
    m_timerCancellations.fillMessage(msg, VID_TIMER_LIST_BASE, VID_TIMER_COUNT);
-   msg->setField(VID_NUM_EVENTS, (UINT32)m_events.size());
    msg->setFieldFromInt32Array(VID_RULE_EVENTS, &m_events);
-   msg->setField(VID_NUM_SOURCES, (UINT32)m_sources.size());
    msg->setFieldFromInt32Array(VID_RULE_SOURCES, &m_sources);
+   msg->setFieldFromInt32Array(VID_RULE_SOURCE_EXCLUSIONS, &m_sourceExclusions);
    msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_filterScriptSource));
    msg->setField(VID_ACTION_SCRIPT, CHECK_NULL_EX(m_actionScriptSource));
    m_pstorageSetActions.fillMessage(msg, VID_PSTORAGE_SET_LIST_BASE, VID_NUM_SET_PSTORAGE);
@@ -1299,6 +1370,7 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "guid", m_guid.toJson());
    json_object_set_new(root, "flags", json_integer(m_flags));
    json_object_set_new(root, "sources", m_sources.toJson());
+   json_object_set_new(root, "sourceExclusions", m_sourceExclusions.toJson());
    json_object_set_new(root, "events", m_events.toJson());
    json_t *actions = json_array();
    for(int i = 0; i < m_actions.size(); i++)

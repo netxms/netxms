@@ -293,6 +293,7 @@ private:
    uuid m_guid;
    uint32_t m_flags;
    IntegerArray<uint32_t> m_sources;
+   IntegerArray<uint32_t> m_sourceExclusions;
    IntegerArray<uint32_t> m_events;
    ObjectArray<ActionExecutionConfiguration> m_actions;
    StringList m_timerCancellations;
