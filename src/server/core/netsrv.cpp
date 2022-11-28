@@ -203,18 +203,18 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void NetworkService::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(pMsg, userId);
-   pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
-   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
-   pMsg->setField(VID_IP_PROTO, m_proto);
-   pMsg->setField(VID_IP_PORT, m_port);
-   pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
-   pMsg->setField(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_request));
-   pMsg->setField(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_response));
-	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
-	pMsg->setField(VID_RESPONSE_TIME, m_responseTime);
+   super::fillMessageInternal(msg, userId);
+   msg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
+   msg->setField(VID_IP_ADDRESS, m_ipAddress);
+   msg->setField(VID_IP_PROTO, m_proto);
+   msg->setField(VID_IP_PORT, m_port);
+   msg->setField(VID_POLLER_NODE_ID, m_pollerNode);
+   msg->setField(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_request));
+   msg->setField(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_response));
+	msg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
+	msg->setField(VID_RESPONSE_TIME, m_responseTime);
 }
 
 /**

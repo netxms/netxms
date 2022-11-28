@@ -1208,8 +1208,8 @@ protected:
 
    virtual int getAdditionalMostCriticalStatus();
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId);
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId);
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId);
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId);
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg);
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg);
 
@@ -1322,7 +1322,7 @@ public:
    virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments);
    virtual void leaveMaintenanceMode(uint32_t userId);
 
-   void fillMessage(NXCPMessage *msg, UINT32 userId);
+   void fillMessage(NXCPMessage *msg, uint32_t userId);
    uint32_t modifyFromMessage(const NXCPMessage& msg);
 
    virtual void postModify();
@@ -1700,8 +1700,7 @@ protected:
 
    virtual void prepareForDeletion() override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
 
    virtual void onDataCollectionLoad() { }
    virtual void onDataCollectionChange() { }
@@ -1740,7 +1739,7 @@ public:
    bool addDCObject(DCObject *object, bool alreadyLocked = false, bool notify = true);
    bool updateDCObject(uint32_t dcObjectId, const NXCPMessage& msg, uint32_t *numMaps, uint32_t **mapIndex, uint32_t **mapId, uint32_t userId);
    bool deleteDCObject(uint32_t dcObjectId, bool needLock, uint32_t userId);
-   bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus, bool userChange = false);
+   bool setItemStatus(const IntegerArray<uint32_t>& dciList, int status, bool userChange = false);
    int updateMultipleDCObjects(const NXCPMessage& request, uint32_t userId);
    shared_ptr<DCObject> getDCObjectById(uint32_t itemId, uint32_t userId, bool lock = true) const;
    shared_ptr<DCObject> getDCObjectByGUID(const uuid& guid, uint32_t userId, bool lock = true) const;
@@ -1895,6 +1894,10 @@ public:
    virtual bool isUsingEvent(uint32_t eventCode) const override;
 };
 
+#ifdef _WIN32
+template class NXCORE_EXPORTABLE SharedObjectArray<GenericAgentPolicy>;
+#endif
+
 /**
  * Data collection template class
  */
@@ -1904,13 +1907,13 @@ private:
    typedef DataCollectionOwner super;
 
 protected:
-   SharedObjectArray<GenericAgentPolicy> *m_policyList;
-   SharedObjectArray<GenericAgentPolicy> *m_deletedPolicyList;
+   SharedObjectArray<GenericAgentPolicy> m_policyList;
+   SharedObjectArray<GenericAgentPolicy> m_deletedPolicyList;
 
    virtual void prepareForDeletion() override;
    virtual void onDataCollectionChange() override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -2010,7 +2013,7 @@ protected:
    virtual void onObjectDelete(const NetObj& object) override;
    virtual void prepareForDeletion() override;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    void setExpectedStateInternal(int state);
@@ -2237,7 +2240,7 @@ protected:
 
    virtual void onObjectDelete(const NetObj& object) override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
@@ -2273,7 +2276,7 @@ protected:
    ObjectArray<InetAddress> *m_localNetworks;
    ObjectArray<InetAddress> *m_remoteNetworks;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    shared_ptr<Node> getParentNode() const;
@@ -2361,8 +2364,8 @@ protected:
    uint32_t m_webServiceProxy;
    atomic<double> m_proxyLoadFactor;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
-   virtual void fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionLoad() override;
@@ -2535,7 +2538,7 @@ protected:
    float m_speed;
    int16_t m_direction;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
@@ -2598,7 +2601,7 @@ protected:
    AccessPointState m_apState;
    AccessPointState m_prevState;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -2663,7 +2666,7 @@ protected:
    CLUSTER_RESOURCE *m_pResourceList;
    int32_t m_zoneUIN;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionChange() override;
@@ -2739,7 +2742,7 @@ protected:
    uuid m_rackImageRear;
    RackOrientation m_rackOrientation;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionChange() override;
@@ -2820,7 +2823,7 @@ protected:
    uint32_t m_frequency; //*10 from origin number // 0 when no value
    uint32_t m_proxyNodeId;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -3245,7 +3248,7 @@ protected:
    virtual void prepareForDeletion() override;
    virtual void onObjectDelete(const NetObj& object) override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void onDataCollectionChange() override;
@@ -3658,7 +3661,7 @@ protected:
 
    virtual void prepareForDeletion() override;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
 
 public:
    Subnet();
@@ -3761,7 +3764,6 @@ private:
    UINT32 m_dwChildIdListSize;
 
 protected:
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
@@ -3789,7 +3791,7 @@ class NXCORE_EXPORTABLE Container : public AbstractContainer, public AutoBindTar
 protected:
    typedef AbstractContainer super;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
@@ -3892,7 +3894,7 @@ protected:
    bool m_topBottomNumbering;
    ObjectArray<RackPassiveElement> *m_passiveElements;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void prepareForDeletion() override;
@@ -4130,8 +4132,8 @@ protected:
    time_t m_lastPoll;
    bool m_queuedForPolling;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    void check();
@@ -4238,7 +4240,7 @@ protected:
    ObjectArray<NetworkMapLink> m_links;
    StructArray<NetworkMapObjectLocation> m_deletedObjects;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    void updateObjects(NetworkMapObjectList *objects);
@@ -4338,7 +4340,7 @@ protected:
    int m_displayPriority;
    ObjectArray<DashboardElement> m_elements;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -4516,8 +4518,8 @@ protected:
    uint32_t m_dciStatusThreshhold;
    Mutex m_checkMutex;
 
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
 
    virtual void onCheckModify(const shared_ptr<BusinessServiceCheck>& check);
    virtual void onCheckDelete(uint32_t checkId);
@@ -4564,8 +4566,8 @@ protected:
    TCHAR* m_instanceDiscoveryFilter;
    NXSL_Program *m_compiledInstanceDiscoveryFilter;
 
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg) override;
 
    virtual void instanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -4611,7 +4613,7 @@ protected:
    TCHAR *m_instance;
    Mutex m_stateChangeMutex;
 
-   virtual void fillMessageInternal(NXCPMessage *msg, UINT32 userId) override;
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;

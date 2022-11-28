@@ -4176,18 +4176,13 @@ void ClientSession::changeDCIStatus(const NXCPMessage& request)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-            UINT32 dwNumItems, *pdwItemList;
-            int iStatus;
-
-            iStatus = request.getFieldAsUInt16(VID_DCI_STATUS);
-            dwNumItems = request.getFieldAsUInt32(VID_NUM_ITEMS);
-            pdwItemList = MemAllocArray<UINT32>(dwNumItems);
-            request.getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
-            if (static_cast<DataCollectionOwner&>(*object).setItemStatus(dwNumItems, pdwItemList, iStatus, true))
+            int status = request.getFieldAsInt16(VID_DCI_STATUS);
+            IntegerArray<uint32_t> dciList(request.getFieldAsUInt32(VID_NUM_ITEMS));
+            request.getFieldAsInt32Array(VID_ITEM_LIST, &dciList);
+            if (static_cast<DataCollectionOwner&>(*object).setItemStatus(dciList, status, true))
                response.setField(VID_RCC, RCC_SUCCESS);
             else
                response.setField(VID_RCC, RCC_INVALID_DCI_ID);
-            MemFree(pdwItemList);
          }
          else  // User doesn't have MODIFY rights on object
          {

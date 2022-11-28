@@ -108,7 +108,7 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_GEOLOCATION_CTRL_MODE, static_cast<int16_t>(m_geoLocationControlMode));
@@ -119,7 +119,7 @@ void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Create NXCP message with object's data - stage 2
  */
-void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
+void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternalStage2(msg, userId);
 

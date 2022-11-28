@@ -332,7 +332,7 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Cluster::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void Cluster::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
 	super::fillMessageInternal(msg, userId);
    msg->setField(VID_CLUSTER_TYPE, m_clusterType);

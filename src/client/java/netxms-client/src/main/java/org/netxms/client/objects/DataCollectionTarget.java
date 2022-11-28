@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ public class DataCollectionTarget extends GenericObject
 
    protected List<DciValue> overviewDciData;
    protected List<DciValue> tooltipDciData;
+   protected int numDataCollectionItems;
    protected GeoLocationControlMode geoLocationControlMode;
    protected long[] geoAreas;
    protected long webServiceProxyId;
@@ -54,6 +55,7 @@ public class DataCollectionTarget extends GenericObject
    public DataCollectionTarget(long id, NXCSession session)
    {
       super(id, session);
+      numDataCollectionItems = 0;
       overviewDciData = new ArrayList<DciValue>(0);
       tooltipDciData = new ArrayList<DciValue>(0);
       geoLocationControlMode = GeoLocationControlMode.NO_CONTROL;
@@ -89,6 +91,7 @@ public class DataCollectionTarget extends GenericObject
          fieldId += 50;
       }
 
+      numDataCollectionItems = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       geoLocationControlMode = GeoLocationControlMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_GEOLOCATION_CTRL_MODE));
       geoAreas = msg.getFieldAsUInt32Array(NXCPCodes.VID_GEO_AREAS);
       webServiceProxyId = msg.getFieldAsInt64(NXCPCodes.VID_WEB_SERVICE_PROXY);
@@ -108,6 +111,16 @@ public class DataCollectionTarget extends GenericObject
    public List<DciValue> getTooltipDciData()
    {
       return tooltipDciData;
+   }
+
+   /**
+    * Get number of data collection items configured on this object.
+    *
+    * @return number of data collection items configured on this object
+    */
+   public int getNumDataCollectionItems()
+   {
+      return numDataCollectionItems;
    }
 
    /**

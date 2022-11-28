@@ -179,7 +179,7 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void Dashboard::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
    AutoBindTarget::fillMessage(msg);

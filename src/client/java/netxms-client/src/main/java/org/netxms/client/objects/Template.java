@@ -34,6 +34,8 @@ public class Template extends GenericObject implements PollingTarget
 	private int version;
 	private int autoApplyFlags;
 	private String autoApplyFilter;
+   private int numDataCollectionItems;
+   private int numPolicies;
 
 	/**
 	 * Create from NXCP message.
@@ -48,6 +50,8 @@ public class Template extends GenericObject implements PollingTarget
 		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
 		autoApplyFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 		autoApplyFlags = msg.getFieldAsInt32(NXCPCodes.VID_AUTOBIND_FLAGS);
+      numDataCollectionItems = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
+      numPolicies = msg.getFieldAsInt32(NXCPCodes.VID_POLICY_COUNT);
 	}
 
 	/**
@@ -95,9 +99,29 @@ public class Template extends GenericObject implements PollingTarget
 		return autoApplyFilter;
 	}
 
-	/**
-	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
-	 */
+   /**
+    * Get number of data collection items configured on this object.
+    *
+    * @return number of data collection items configured on this object
+    */
+   public int getNumDataCollectionItems()
+   {
+      return numDataCollectionItems;
+   }
+
+   /**
+    * Get number of agent policies contained in this template.
+    *
+    * @return number of agent policies contained in this template
+    */
+   public int getNumPolicies()
+   {
+      return numPolicies;
+   }
+
+   /**
+    * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
+    */
 	@Override
 	public String getObjectClassName()
 	{

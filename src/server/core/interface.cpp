@@ -937,7 +937,7 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 /**
  * Create NXCP message with object's data
  */
-void Interface::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void Interface::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
 

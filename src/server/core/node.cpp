@@ -7889,7 +7889,7 @@ uint32_t Node::getTableForClient(const TCHAR *name, shared_ptr<Table> *table)
 /**
  * Create NXCP message with object's data
  */
-void Node::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);

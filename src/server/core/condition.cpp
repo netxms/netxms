@@ -211,7 +211,7 @@ bool ConditionObject::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void ConditionObject::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void ConditionObject::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
 
@@ -227,7 +227,7 @@ void ConditionObject::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Fill NXCP message with object's data - stage 2
  */
-void ConditionObject::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
+void ConditionObject::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternalStage2(msg, userId);
 

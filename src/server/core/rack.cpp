@@ -163,16 +163,16 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Rack::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void Rack::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(pMsg, userId);
-   pMsg->setField(VID_HEIGHT, static_cast<uint16_t>(m_height));
-   pMsg->setField(VID_TOP_BOTTOM, m_topBottomNumbering);
-   pMsg->setField(VID_NUM_ELEMENTS, m_passiveElements->size());
+   super::fillMessageInternal(msg, userId);
+   msg->setField(VID_HEIGHT, static_cast<uint16_t>(m_height));
+   msg->setField(VID_TOP_BOTTOM, m_topBottomNumbering);
+   msg->setField(VID_NUM_ELEMENTS, m_passiveElements->size());
    uint32_t fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < m_passiveElements->size(); i++)
    {
-      m_passiveElements->get(i)->fillMessage(pMsg, fieldId);
+      m_passiveElements->get(i)->fillMessage(msg, fieldId);
       fieldId += 10;
    }
 }

@@ -94,14 +94,6 @@ void AbstractContainer::calculateCompoundStatus(bool forcedRecalc)
 }
 
 /**
- * Create NXCP message with object's data
- */
-void AbstractContainer::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
-{
-   super::fillMessageInternal(msg, userId);
-}
-
-/**
  * Modify object from message
  */
 uint32_t AbstractContainer::modifyFromMessageInternal(const NXCPMessage& msg)
@@ -306,7 +298,7 @@ uint32_t Container::modifyFromMessageInternal(const NXCPMessage& msg)
 /**
  * Fill message with object fields
  */
-void Container::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void Container::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
    AutoBindTarget::fillMessage(msg);

@@ -72,8 +72,6 @@ static GenericAgentPolicy *CreatePolicy(const TCHAR *name, const TCHAR *type, UI
  */
 Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
-   m_policyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
-   m_deletedPolicyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
 }
 
 /**
@@ -81,8 +79,6 @@ Template::Template() : super(), AutoBindTarget(this), Pollable(this, Pollable::A
  */
 Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), AutoBindTarget(this), Pollable(this, Pollable::AUTOBIND), VersionableObject(this)
 {
-   m_policyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
-   m_deletedPolicyList = new SharedObjectArray<GenericAgentPolicy>(0, 16);
 }
 
 /**
@@ -90,8 +86,6 @@ Template::Template(const TCHAR *name, const uuid& guid) : super(name, guid), Aut
  */
 Template::~Template()
 {
-   delete m_policyList;
-   delete m_deletedPolicyList;
 }
 
 /**
@@ -157,15 +151,15 @@ bool Template::saveToDatabase(DB_HANDLE hdb)
    {
       lockProperties();
 
-      for(int i = 0; (i < m_deletedPolicyList->size()) && success; i++)
-         success = m_deletedPolicyList->get(i)->deleteFromDatabase(hdb);
+      for(int i = 0; (i < m_deletedPolicyList.size()) && success; i++)
+         success = m_deletedPolicyList.get(i)->deleteFromDatabase(hdb);
 
       if (success)
-         m_deletedPolicyList->clear();
+         m_deletedPolicyList.clear();
 
-      for (int i = 0; i < m_policyList->size() && success; i++)
+      for (int i = 0; i < m_deletedPolicyList.size() && success; i++)
       {
-         GenericAgentPolicy *object = m_policyList->get(i);
+         GenericAgentPolicy *object = m_deletedPolicyList.get(i);
          success = object->saveToDatabase(hdb);
       }
 
@@ -189,9 +183,9 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
       success = AutoBindTarget::deleteFromDatabase(hdb);
    if (success)
       success = VersionableObject::deleteFromDatabase(hdb);
-   for (int i = 0; i < m_policyList->size() && success; i++)
+   for (int i = 0; i < m_deletedPolicyList.size() && success; i++)
    {
-      GenericAgentPolicy *object = m_policyList->get(i);
+      GenericAgentPolicy *object = m_deletedPolicyList.get(i);
       success = object->deleteFromDatabase(hdb);
    }
    return success;
@@ -230,7 +224,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
                DBGetField(hResult, i, 1, type, 32);
                GenericAgentPolicy *curr = CreatePolicy(guid, type, m_id);
                success = curr->loadFromDatabase(hdb);
-               m_policyList->add(curr);
+               m_deletedPolicyList.add(curr);
             }
             DBFreeResult(hResult);
          }
@@ -331,9 +325,9 @@ void Template::createExportRecord(StringBuffer &xml)
    xml.append(_T("\t\t\t</dataCollection>\n\t\t\t<agentPolicies>\n"));
 
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      m_policyList->get(i)->createExportRecord(xml, i + 1);
+      m_deletedPolicyList.get(i)->createExportRecord(xml, i + 1);
    }
    unlockProperties();
 
@@ -351,9 +345,9 @@ HashSet<uint32_t> *Template::getRelatedEventsList() const
    HashSet<uint32_t> *eventList = super::getRelatedEventsList();
 
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      m_policyList->get(i)->getEventList(eventList);
+      m_deletedPolicyList.get(i)->getEventList(eventList);
    }
    unlockProperties();
 
@@ -367,7 +361,7 @@ bool Template::applyToTarget(const shared_ptr<DataCollectionTarget>& target)
 {
    // Print in log that policies will be installed
    nxlog_debug_tag(_T("obj.dc"), 4, _T("Apply %d policy items from template \"%s\" to target \"%s\""),
-            m_policyList->size(), m_name, target->getName());
+            m_deletedPolicyList.size(), m_name, target->getName());
 
    if (target->getObjectClass() == OBJECT_NODE)
       forceDeployPolicies(static_pointer_cast<Node>(target));
@@ -384,9 +378,9 @@ void Template::forceDeployPolicies(const shared_ptr<Node>& target)
    _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), target->getId());
 
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      const shared_ptr<GenericAgentPolicy>& policy = m_policyList->getShared(i);
+      const shared_ptr<GenericAgentPolicy>& policy = m_deletedPolicyList.getShared(i);
       auto data = make_shared<AgentPolicyDeploymentData>(target, target->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), target->getName(), target->getId(), getName(), policy->getName());
@@ -414,11 +408,12 @@ void Template::applyDCIChanges(bool forcedChange)
 /**
  * Create NXCP message with object's data
  */
-void Template::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void Template::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(pMsg, userId);
-   AutoBindTarget::fillMessage(pMsg);
-   VersionableObject::fillMessage(pMsg);
+   super::fillMessageInternal(msg, userId);
+   AutoBindTarget::fillMessage(msg);
+   VersionableObject::fillMessage(msg);
+   msg->setField(VID_POLICY_COUNT, m_deletedPolicyList.size());
 }
 
 /**
@@ -446,7 +441,7 @@ void Template::updateFromImport(ConfigEntry *config)
 
    lockProperties();
 
-   m_policyList->clear();
+   m_deletedPolicyList.clear();
    ConfigEntry *policyRoot = config->findEntry(_T("agentPolicies"));
    if (policyRoot != nullptr)
    {
@@ -457,15 +452,15 @@ void Template::updateFromImport(ConfigEntry *config)
          uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
          GenericAgentPolicy *curr = CreatePolicy(guid, e->getSubEntryValue(_T("type"), 0, _T("Unknown")), m_id);
          curr->updateFromImport(e);
-         for (int i = 0; i < m_policyList->size(); i++)
+         for (int i = 0; i < m_deletedPolicyList.size(); i++)
          {
-            if (m_policyList->get(i)->getGuid().equals(guid))
+            if (m_deletedPolicyList.get(i)->getGuid().equals(guid))
                break;
          }
-         if (i != m_policyList->size())
-            m_policyList->replace(i, curr);
+         if (i != m_deletedPolicyList.size())
+            m_deletedPolicyList.replace(i, curr);
          else
-            m_policyList->add(curr);
+            m_deletedPolicyList.add(curr);
       }
    }
 
@@ -483,9 +478,9 @@ json_t *Template::toJson()
    VersionableObject::toJson(root);
 
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      GenericAgentPolicy *object = m_policyList->get(i);
+      GenericAgentPolicy *object = m_deletedPolicyList.get(i);
       json_object_set_new(root, "agentPolicy", object->toJson());
    }
    unlockProperties();
@@ -529,9 +524,9 @@ void Template::removeAllPolicies(Node *node)
    TCHAR key[64];
    _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), node->getId());
 
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      GenericAgentPolicy *policy = m_policyList->get(i);
+      GenericAgentPolicy *policy = m_deletedPolicyList.get(i);
       auto data = make_shared<AgentPolicyRemovalData>(node->self(), policy->getGuid(), policy->getType(), node->isNewPolicyTypeFormatSupported());
       _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
       ThreadPoolExecuteSerialized(g_mainThreadPool, key, RemoveAgentPolicy, data);
@@ -546,15 +541,15 @@ void Template::getEventReferences(uint32_t eventCode, ObjectArray<EventReference
    DataCollectionOwner::getEventReferences(eventCode, eventReferences);
 
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      if (m_policyList->get(i)->isUsingEvent(eventCode))
+      if (m_deletedPolicyList.get(i)->isUsingEvent(eventCode))
       {
          eventReferences->add(new EventReference(
             EventReferenceType::AGENT_POLICY,
             0,
-            m_policyList->get(i)->getGuid(),
-            m_policyList->get(i)->getName(),
+            m_deletedPolicyList.get(i)->getGuid(),
+            m_deletedPolicyList.get(i)->getName(),
             m_id,
             m_guid,
             m_name));
@@ -570,9 +565,9 @@ bool Template::hasPolicy(const uuid& guid) const
 {
    lockProperties();
    bool hasPolicy = false;
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      if (m_policyList->get(i)->getGuid().equals(guid))
+      if (m_deletedPolicyList.get(i)->getGuid().equals(guid))
       {
          hasPolicy = true;
          break;
@@ -589,11 +584,11 @@ bool Template::fillPolicyDetailsMessage(NXCPMessage *msg, const uuid& guid) cons
 {
    bool hasPolicy = false;
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      if(m_policyList->get(i)->getGuid().equals(guid))
+      if(m_deletedPolicyList.get(i)->getGuid().equals(guid))
       {
-         m_policyList->get(i)->fillMessage(msg, VID_AGENT_POLICY_BASE);
+         m_deletedPolicyList.get(i)->fillMessage(msg, VID_AGENT_POLICY_BASE);
          hasPolicy = true;
          break;
       }
@@ -610,9 +605,9 @@ void Template::fillPolicyListMessage(NXCPMessage *msg) const
    lockProperties();
    uint32_t fieldId = VID_AGENT_POLICY_BASE;
    int count = 0;
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      GenericAgentPolicy *object = m_policyList->get(i);
+      GenericAgentPolicy *object = m_deletedPolicyList.get(i);
       object->fillMessage(msg, fieldId);
       fieldId += 100;
       count++;
@@ -636,11 +631,11 @@ uuid Template::updatePolicyFromMessage(const NXCPMessage& request)
    {
       guid = request.getFieldAsGUID(VID_GUID);
       GenericAgentPolicy *policy = nullptr;
-      for (int i = 0; i < m_policyList->size(); i++)
+      for (int i = 0; i < m_deletedPolicyList.size(); i++)
       {
-         if (m_policyList->get(i)->getGuid().equals(guid))
+         if (m_deletedPolicyList.get(i)->getGuid().equals(guid))
          {
-            policy = m_policyList->get(i);
+            policy = m_deletedPolicyList.get(i);
             break;
          }
       }
@@ -660,7 +655,7 @@ uuid Template::updatePolicyFromMessage(const NXCPMessage& request)
       TCHAR name[MAX_DB_STRING], policyType[32];
       GenericAgentPolicy *curr = CreatePolicy(request.getFieldAsString(VID_NAME, name, MAX_DB_STRING), request.getFieldAsString(VID_POLICY_TYPE, policyType, 32), m_id);
       curr->modifyFromMessage(request);
-      m_policyList->add(curr);
+      m_deletedPolicyList.add(curr);
       curr->fillUpdateMessage(&msg);
       guid = curr->getGuid();
       updated = true;
@@ -691,13 +686,13 @@ bool Template::removePolicy(const uuid& guid)
    shared_ptr<GenericAgentPolicy> policy;
 
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      if (m_policyList->get(i)->getGuid().equals(guid))
+      if (m_deletedPolicyList.get(i)->getGuid().equals(guid))
       {
-         policy = m_policyList->getShared(i);
-         m_deletedPolicyList->add(policy);
-         m_policyList->remove(i);
+         policy = m_deletedPolicyList.getShared(i);
+         m_deletedPolicyList.add(policy);
+         m_deletedPolicyList.remove(i);
          break;
       }
    }
@@ -781,9 +776,9 @@ void Template::forceApplyPolicyChanges()
       for(int i = 0; i < nodes.size(); i++)
       {
          const shared_ptr<Node>& node = nodes.getShared(i);
-         for (int i = 0; i < m_policyList->size(); i++)
+         for (int i = 0; i < m_deletedPolicyList.size(); i++)
          {
-            const shared_ptr<GenericAgentPolicy>& policy = m_policyList->getShared(i);
+            const shared_ptr<GenericAgentPolicy>& policy = m_deletedPolicyList.getShared(i);
             auto data = make_shared<AgentPolicyDeploymentData>(node, node->isNewPolicyTypeFormatSupported());
             data->forceInstall = true;
             _sntprintf(data->debugId, 256, _T("%s [%u] from %s/%s"), node->getName(), node->getId(), getName(), policy->getName());
@@ -809,9 +804,9 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
    _sntprintf(key, 64, _T("AgentPolicyDeployment_%u"), node->getId());
 
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      const shared_ptr<GenericAgentPolicy>& policy = m_policyList->getShared(i);
+      const shared_ptr<GenericAgentPolicy>& policy = m_deletedPolicyList.getShared(i);
       auto data = make_shared<AgentPolicyDeploymentData>(node, node->isNewPolicyTypeFormatSupported());
       data->forceInstall = true;
 
@@ -842,9 +837,9 @@ void Template::checkPolicyDeployment(const shared_ptr<Node>& node, AgentPolicyIn
 void Template::initiatePolicyValidation()
 {
    lockProperties();
-   for (int i = 0; i < m_policyList->size(); i++)
+   for (int i = 0; i < m_deletedPolicyList.size(); i++)
    {
-      ThreadPoolExecute(g_mainThreadPool, m_policyList->getShared(i), &GenericAgentPolicy::validate);
+      ThreadPoolExecute(g_mainThreadPool, m_deletedPolicyList.getShared(i), &GenericAgentPolicy::validate);
    }
    unlockProperties();
 }

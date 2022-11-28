@@ -1210,75 +1210,75 @@ static EnumerationCallbackResult CustomAttributeFillMessage(const TCHAR *key, co
  * Object's properties are locked when this method is called. Method should not do any other locks.
  * Data required other locks should be filled in fillMessageInternalStage2().
  */
-void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
-   pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
-   pMsg->setField(VID_OBJECT_ID, m_id);
-	pMsg->setField(VID_GUID, m_guid);
-   pMsg->setField(VID_OBJECT_NAME, m_name);
-   pMsg->setField(VID_ALIAS, m_alias);
-   pMsg->setField(VID_NAME_ON_MAP, m_nameOnMap);
-   pMsg->setField(VID_OBJECT_STATUS, (WORD)m_status);
-   pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
-   pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
-   pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
-   pMsg->setField(VID_MAINTENANCE_INITIATOR, m_maintenanceInitiator);
-   pMsg->setField(VID_FLAGS, m_flags);
-   pMsg->setField(VID_PRIMARY_ZONE_PROXY_ID, m_primaryZoneProxyId);
-   pMsg->setField(VID_BACKUP_ZONE_PROXY_ID, m_backupZoneProxyId);
-   pMsg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
-   pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_statusCalcAlg);
-   pMsg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_statusPropAlg);
-   pMsg->setField(VID_FIXED_STATUS, (WORD)m_fixedStatus);
-   pMsg->setField(VID_STATUS_SHIFT, (WORD)m_statusShift);
-   pMsg->setField(VID_STATUS_TRANSLATION_1, (WORD)m_statusTranslation[0]);
-   pMsg->setField(VID_STATUS_TRANSLATION_2, (WORD)m_statusTranslation[1]);
-   pMsg->setField(VID_STATUS_TRANSLATION_3, (WORD)m_statusTranslation[2]);
-   pMsg->setField(VID_STATUS_TRANSLATION_4, (WORD)m_statusTranslation[3]);
-   pMsg->setField(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_statusSingleThreshold);
-   pMsg->setField(VID_STATUS_THRESHOLD_1, (WORD)m_statusThresholds[0]);
-   pMsg->setField(VID_STATUS_THRESHOLD_2, (WORD)m_statusThresholds[1]);
-   pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_statusThresholds[2]);
-   pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
-   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
-   pMsg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
-   pMsg->setField(VID_IMAGE, m_mapImage);
-   pMsg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
-   pMsg->setField(VID_CATEGORY_ID, m_categoryId);
-	pMsg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
+   msg->setField(VID_OBJECT_CLASS, static_cast<uint16_t>(getObjectClass()));
+   msg->setField(VID_OBJECT_ID, m_id);
+	msg->setField(VID_GUID, m_guid);
+   msg->setField(VID_OBJECT_NAME, m_name);
+   msg->setField(VID_ALIAS, m_alias);
+   msg->setField(VID_NAME_ON_MAP, m_nameOnMap);
+   msg->setField(VID_OBJECT_STATUS, (WORD)m_status);
+   msg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
+   msg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
+   msg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
+   msg->setField(VID_MAINTENANCE_INITIATOR, m_maintenanceInitiator);
+   msg->setField(VID_FLAGS, m_flags);
+   msg->setField(VID_PRIMARY_ZONE_PROXY_ID, m_primaryZoneProxyId);
+   msg->setField(VID_BACKUP_ZONE_PROXY_ID, m_backupZoneProxyId);
+   msg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
+   msg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_statusCalcAlg);
+   msg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_statusPropAlg);
+   msg->setField(VID_FIXED_STATUS, (WORD)m_fixedStatus);
+   msg->setField(VID_STATUS_SHIFT, (WORD)m_statusShift);
+   msg->setField(VID_STATUS_TRANSLATION_1, (WORD)m_statusTranslation[0]);
+   msg->setField(VID_STATUS_TRANSLATION_2, (WORD)m_statusTranslation[1]);
+   msg->setField(VID_STATUS_TRANSLATION_3, (WORD)m_statusTranslation[2]);
+   msg->setField(VID_STATUS_TRANSLATION_4, (WORD)m_statusTranslation[3]);
+   msg->setField(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_statusSingleThreshold);
+   msg->setField(VID_STATUS_THRESHOLD_1, (WORD)m_statusThresholds[0]);
+   msg->setField(VID_STATUS_THRESHOLD_2, (WORD)m_statusThresholds[1]);
+   msg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_statusThresholds[2]);
+   msg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
+   msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
+   msg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
+   msg->setField(VID_IMAGE, m_mapImage);
+   msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
+   msg->setField(VID_CATEGORY_ID, m_categoryId);
+	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedNodes != nullptr) && !m_trustedNodes->isEmpty())
 	{
-	   pMsg->setField(VID_NUM_TRUSTED_NODES, m_trustedNodes->size());
-		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
+	   msg->setField(VID_NUM_TRUSTED_NODES, m_trustedNodes->size());
+		msg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
 	}
 	else
 	{
-	   pMsg->setField(VID_NUM_TRUSTED_NODES, (UINT32)0);
+	   msg->setField(VID_NUM_TRUSTED_NODES, (UINT32)0);
 	}
-   pMsg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
+   msg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
    uint32_t base = VID_CUSTOM_ATTRIBUTES_BASE;
-   std::pair<NXCPMessage *, UINT32 *> data(pMsg, &base);
+   std::pair<NXCPMessage *, UINT32 *> data(msg, &base);
    forEachCustomAttribute(CustomAttributeFillMessage, &data);
-   pMsg->setField(VID_NUM_CUSTOM_ATTRIBUTES, getCustomAttributeSize());
+   msg->setField(VID_NUM_CUSTOM_ATTRIBUTES, getCustomAttributeSize());
 
-	m_geoLocation.fillMessage(*pMsg);
+	m_geoLocation.fillMessage(*msg);
 
-   pMsg->setField(VID_COUNTRY, m_postalAddress.getCountry());
-   pMsg->setField(VID_REGION, m_postalAddress.getRegion());
-   pMsg->setField(VID_CITY, m_postalAddress.getCity());
-   pMsg->setField(VID_DISTRICT, m_postalAddress.getDistrict());
-   pMsg->setField(VID_STREET_ADDRESS, m_postalAddress.getStreetAddress());
-   pMsg->setField(VID_POSTCODE, m_postalAddress.getPostCode());
+   msg->setField(VID_COUNTRY, m_postalAddress.getCountry());
+   msg->setField(VID_REGION, m_postalAddress.getRegion());
+   msg->setField(VID_CITY, m_postalAddress.getCity());
+   msg->setField(VID_DISTRICT, m_postalAddress.getDistrict());
+   msg->setField(VID_STREET_ADDRESS, m_postalAddress.getStreetAddress());
+   msg->setField(VID_POSTCODE, m_postalAddress.getPostCode());
 
-   pMsg->setField(VID_NUM_URLS, static_cast<uint32_t>(m_urls.size()));
+   msg->setField(VID_NUM_URLS, static_cast<uint32_t>(m_urls.size()));
    uint32_t fieldId = VID_URL_LIST_BASE;
    for(int i = 0; i < m_urls.size(); i++)
    {
       const ObjectUrl *url = m_urls.get(i);
-      pMsg->setField(fieldId++, url->getId());
-      pMsg->setField(fieldId++, url->getUrl());
-      pMsg->setField(fieldId++, url->getDescription());
+      msg->setField(fieldId++, url->getId());
+      msg->setField(fieldId++, url->getUrl());
+      msg->setField(fieldId++, url->getDescription());
       fieldId += 7;
    }
 }
@@ -1289,18 +1289,18 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
  * used only to fill data where properties lock is not enough (like data
  * collection configuration).
  */
-void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId)
+void NetObj::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
 {
    m_moduleDataLock.lock();
    if (m_moduleData != nullptr)
    {
-      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
-      std::pair<uint32_t, NXCPMessage*> context(VID_MODULE_DATA_BASE, pMsg);
+      msg->setField(VID_MODULE_DATA_COUNT, static_cast<uint16_t>(m_moduleData->size()));
+      std::pair<uint32_t, NXCPMessage*> context(VID_MODULE_DATA_BASE, msg);
       m_moduleData->forEach(SendModuleDataCallback, &context);
    }
    else
    {
-      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)0);
+      msg->setField(VID_MODULE_DATA_COUNT, static_cast<uint16_t>(0));
    }
    m_moduleDataLock.unlock();
 }
@@ -1308,7 +1308,7 @@ void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg, UINT32 userId)
 /**
  * Fill NXCP message with object's data
  */
-void NetObj::fillMessage(NXCPMessage *msg, UINT32 userId)
+void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId)
 {
    lockProperties();
    fillMessageInternal(msg, userId);

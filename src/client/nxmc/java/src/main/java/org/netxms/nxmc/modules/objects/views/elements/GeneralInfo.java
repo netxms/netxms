@@ -26,12 +26,14 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.nxmc.Registry;
@@ -292,6 +294,11 @@ public class GeneralInfo extends TableElement
                addPair(i18n.tr("Zone UIN"), getZoneName(subnet.getZoneId()));
             addPair(i18n.tr("IP address"), subnet.getNetworkAddress().toString());
 				break;
+         case AbstractObject.OBJECT_TEMPLATE:
+            Template template = (Template)object;
+            addPair(i18n.tr("Number of DCIs"), Integer.toString(template.getNumDataCollectionItems()));
+            addPair(i18n.tr("Number of policies"), Integer.toString(template.getNumPolicies()));
+            break;
 			case AbstractObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;
             addPair(i18n.tr("Zone UIN"), Long.toString(zone.getUIN()));
@@ -303,6 +310,10 @@ public class GeneralInfo extends TableElement
 			default:
 				break;
 		}
+      if (object instanceof DataCollectionTarget)
+      {
+         addPair(i18n.tr("Number of DCIs"), Integer.toString(((DataCollectionTarget)object).getNumDataCollectionItems()));
+      }
 		if (object.getGeolocation().getType() != GeoLocation.UNSET)
       {
          addPair(i18n.tr("Location"), object.getGeolocation().toString());

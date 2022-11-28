@@ -26,12 +26,14 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
 import org.netxms.client.objects.Zone;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
@@ -298,6 +300,11 @@ public class GeneralInfo extends TableElement
 					addPair(Messages.get().GeneralInfo_ZoneId, getZoneName(subnet.getZoneId()));
             addPair(Messages.get().GeneralInfo_IPAddress, subnet.getNetworkAddress().toString());
 				break;
+         case AbstractObject.OBJECT_TEMPLATE:
+            Template template = (Template)object;
+            addPair("Number of DCIs", Integer.toString(template.getNumDataCollectionItems()));
+            addPair("Number of policies", Integer.toString(template.getNumPolicies()));
+            break;
 			case AbstractObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;
 				addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(zone.getUIN()));
@@ -309,6 +316,10 @@ public class GeneralInfo extends TableElement
 			default:
 				break;
 		}
+      if (object instanceof DataCollectionTarget)
+      {
+         addPair("Number of DCIs", Integer.toString(((DataCollectionTarget)object).getNumDataCollectionItems()));
+      }
 		if (object.getGeolocation().getType() != GeoLocation.UNSET)
       {
          addPair(Messages.get().GeneralInfo_Location, object.getGeolocation().toString());

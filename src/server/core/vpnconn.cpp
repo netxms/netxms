@@ -210,21 +210,21 @@ shared_ptr<Node> VPNConnector::getParentNode() const
 /**
  * Create NXCP message with object's data
  */
-void VPNConnector::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void VPNConnector::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(pMsg, userId);
-   pMsg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
-   pMsg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
-   pMsg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());
+   super::fillMessageInternal(msg, userId);
+   msg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
+   msg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
+   msg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());
 
    uint32_t fieldId;
    int i;
 
    for(i = 0, fieldId = VID_VPN_NETWORK_BASE; i < m_localNetworks->size(); i++)
-      pMsg->setField(fieldId++, *m_localNetworks->get(i));
+      msg->setField(fieldId++, *m_localNetworks->get(i));
 
    for(i = 0; i < m_remoteNetworks->size(); i++)
-      pMsg->setField(fieldId++, *m_remoteNetworks->get(i));
+      msg->setField(fieldId++, *m_remoteNetworks->get(i));
 }
 
 /**

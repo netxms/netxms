@@ -532,19 +532,19 @@ void DataCollectionOwner::updateInstanceDiscoveryItems(DCObject *dci)
 /**
  * Set status for group of DCIs
  */
-bool DataCollectionOwner::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus, bool userChange)
+bool DataCollectionOwner::setItemStatus(const IntegerArray<uint32_t>& dciList, int status, bool userChange)
 {
    bool success = true;
 
    readLockDciAccess();
-   for(UINT32 i = 0; i < dwNumItems; i++)
+   for(int i = 0; i < dciList.size(); i++)
    {
 		int j;
       for(j = 0; j < m_dcObjects.size(); j++)
       {
-         if (m_dcObjects.get(j)->getId() == pdwItemList[i])
+         if (m_dcObjects.get(j)->getId() == dciList.get(i))
          {
-            m_dcObjects.get(j)->setStatus(iStatus, true, userChange);
+            m_dcObjects.get(j)->setStatus(status, true, userChange);
             break;
          }
       }
@@ -827,19 +827,17 @@ NXSL_Value *DataCollectionOwner::getAllDCObjectsForNXSL(NXSL_VM *vm, const TCHAR
 }
 
 /**
- * Create NXCP message with object's data
+ * Fill NXCP message with object's data - stage 2
+ * Object's properties are not locked when this method is called. Should be
+ * used only to fill data where properties lock is not enough (like data
+ * collection configuration).
  */
-void DataCollectionOwner::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void DataCollectionOwner::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(pMsg, userId);
-}
-
-/**
- * Modify object from NXCP message
- */
-uint32_t DataCollectionOwner::modifyFromMessageInternal(const NXCPMessage& msg)
-{
-   return super::modifyFromMessageInternal(msg);
+   super::fillMessageInternalStage2(msg, userId);
+   readLockDciAccess();
+   msg->setField(VID_NUM_ITEMS, m_dcObjects.size());
+   unlockDciAccess();
 }
 
 /**

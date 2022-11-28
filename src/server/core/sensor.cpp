@@ -333,7 +333,7 @@ json_t *Sensor::toJson()
 /**
  * Fill NXCP message
  */
-void Sensor::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void Sensor::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
 	msg->setField(VID_MAC_ADDR, m_macAddress);

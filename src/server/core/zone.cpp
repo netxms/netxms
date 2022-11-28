@@ -227,7 +227,7 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
+void Zone::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_ZONE_UIN, m_uin);
@@ -236,7 +236,7 @@ void Zone::fillMessageInternal(NXCPMessage *msg, UINT32 userId)
 /**
  * Create NXCP message with object's data (stage 2)
  */
-void Zone::fillMessageInternalStage2(NXCPMessage *msg, UINT32 userId)
+void Zone::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
 {
    msg->setFieldFromInt32Array(VID_ZONE_PROXY_LIST, getAllProxyNodes());
 }

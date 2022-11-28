@@ -178,11 +178,11 @@ bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Subnet::fillMessageInternal(NXCPMessage *pMsg, UINT32 userId)
+void Subnet::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
-   super::fillMessageInternal(pMsg, userId);
-   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
-   pMsg->setField(VID_ZONE_UIN, m_zoneUIN);
+   super::fillMessageInternal(msg, userId);
+   msg->setField(VID_IP_ADDRESS, m_ipAddress);
+   msg->setField(VID_ZONE_UIN, m_zoneUIN);
 }
 
 /**
