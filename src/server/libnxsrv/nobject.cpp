@@ -142,13 +142,13 @@ void NObject::deleteParent(uint32_t objectId)
       while(it.hasNext())
       {
          KeyValuePair<CustomAttribute> *pair = it.next();
-         if (pair->value->isConflict() && pair->value->isInherited() && !isParent(pair->value->sourceObject))
+         if (pair->value->isConflict() || (pair->value->isInherited() && (objectId == pair->value->sourceObject)))
             removeList.add(pair->key);
       }
       unlockCustomAttributes();
 
       for(int i = 0; i < removeList.size(); i++)
-         updateOrDeleteCustomAttributeOnParentRemove(removeList.get(i));
+         updateOrDeleteCustomAttributeOnParentRemove(removeList.get(i), objectId);
    }
 }
 
@@ -357,7 +357,6 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
 {
    lockCustomAttributes();
    CustomAttribute *curr = m_customAttributes.get(name);
-   uint32_t source = 0;
    bool remove = false;
 
    if (curr == nullptr)
@@ -378,14 +377,13 @@ void NObject::setCustomAttribute(const TCHAR *name, SharedString value, StateCha
    }
 
    bool inherit = curr->isInheritable();
-   if (inherit)
-      source = (curr->isRedefined() || !curr->isInherited()) ? m_id : curr->sourceObject;
+   uint32_t source = (curr->isRedefined() || !curr->isInherited()) ? m_id : curr->sourceObject;
    unlockCustomAttributes();
 
    if (inherit)
       populate(name, value, source);
    else if (remove)
-      populateRemove(name);
+      populateRemove(name, source);
 }
 
 /**
@@ -500,12 +498,12 @@ void NObject::populate(const TCHAR *name, SharedString value, uint32_t source)
 /**
  * Update inherited custom attribute remove for child node
  */
-void NObject::populateRemove(const TCHAR *name)
+void NObject::populateRemove(const TCHAR *name, uint32_t parentId)
 {
    writeLockChildList();
    for(int i = 0; i < m_childList.size(); i++)
    {
-      m_childList.get(i)->deletePopulatedCustomAttribute(name);
+      m_childList.get(i)->deletePopulatedCustomAttribute(name, parentId);
    }
    unlockChildList();
 }
@@ -598,7 +596,7 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
    unlockCustomAttributes();
 
    for(int i = 0; i < deletionList.size(); i++)
-      populateRemove(deletionList.get(i));
+      populateRemove(deletionList.get(i), m_id);
 
    for(int i = 0; i < updateList.size(); i++)
    {
@@ -613,7 +611,7 @@ void NObject::setCustomAttributesFromMessage(const NXCPMessage& msg)
          if (!value.second.isNull())
             setCustomAttribute(updateList.get(i)->first, value.second, value.first);
          else
-            populateRemove(updateList.get(i)->first); // Attribute no longer exist at parent, delete it from this object
+            populateRemove(updateList.get(i)->first, 0); // Attribute no longer exist at parent, delete it from this object
       }
    }
 }
@@ -651,7 +649,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
    unlockCustomAttributes();
 
    if (populate)
-      populateRemove(name);
+      populateRemove(name, m_id);
    else if (redefined)
    {
       SharedString value = getCustomAttributeFromParent(name, parent);
@@ -665,7 +663,7 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
          if (!value.second.isNull())
             setCustomAttribute(name, value.second, value.first);
          else
-            populateRemove(name); // Attribute no longer exist at parent, delete it from this object
+            populateRemove(name, m_id); // Attribute no longer exist at parent, delete it from this object
       }
    }
 }
@@ -673,63 +671,100 @@ void NObject::deleteCustomAttribute(const TCHAR *name)
 /**
  * Delete custom attribute
  */
-void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name)
+void NObject::updateOrDeleteCustomAttributeOnParentRemove(const TCHAR *name, uint32_t parentId)
 {
+   std::pair<uint32_t, SharedString> pair = NObject::getCustomAttributeFromParent(name);
+
    lockCustomAttributes();
    CustomAttribute *ca = m_customAttributes.get(name);
-   bool populate = false;
+   bool populateDelete = false;
+   bool populateChange = false;
    if (ca != nullptr)
    {
-      populate = ca->isInheritable() && !ca->isRedefined();
-
       if (ca->isRedefined())
       {
-         ca->sourceObject = 0;
-         ca->flags &= ~CAF_REDEFINED;
+         if (pair.first != 0)
+         {
+            ca->sourceObject = pair.first;
+         }
+         else
+         {
+            ca->sourceObject = 0;
+            ca->flags &= ~CAF_REDEFINED;
+         }
+         onCustomAttributeChange();
       }
-      else if (ca->isInheritable())
+      else if (ca->isInheritable() && !ca->isConflict())
       {
          m_customAttributes.remove(name);
+         populateDelete = true;
+         onCustomAttributeChange();
       }
-
-      if (ca->isConflict())
+      else if (ca->isConflict())
       {
+         if (parentId == ca->sourceObject)
+         {
+            ca->sourceObject = pair.first;
+            ca->value = pair.second;
+            populateChange = true;
+         }
+
          if (!checkCustomAttributeInConflict(name, 0))
          {
             ca->flags &= ~CAF_CONFLICT;
-            populate = true;
          }
+         onCustomAttributeChange();
       }
 
-      onCustomAttributeChange();
    }
    unlockCustomAttributes();
 
-   if (populate)
-      populateRemove(name);
+   if (populateDelete)
+      populateRemove(name, parentId);
+   if (populateChange)
+      populate(name, pair.second, pair.first);
 }
 
 /**
  * Delete custom attribute
  */
-void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
+void NObject::deletePopulatedCustomAttribute(const TCHAR *name, uint32_t parentId)
 {
+   std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(name);
    lockCustomAttributes();
    CustomAttribute *ca = m_customAttributes.get(name);
-   bool populate = false;
-   if (ca != nullptr)
+   bool populateChange = false;
+   bool populateDelete = false;
+   if (ca != nullptr && ca->sourceObject == parentId && (value.first != parentId || parentId == 0))
    {
-      if (!ca->isRedefined() && ca->sourceObject != 0) //source check required if node is multiple times under parent container
+      if (!ca->isRedefined() && ca->sourceObject == 0) //source check required if node is multiple times under parent container
       {
-         m_customAttributes.remove(name);
-         populate = true;
+         if (ca->isConflict())
+         {
+            if (parentId == ca->sourceObject)
+            {
+               ca->sourceObject = value.first;
+               ca->value = value.second;
+               populateChange = true;
+            }
+
+            if (!checkCustomAttributeInConflict(name, 0))
+            {
+               ca->flags &= ~CAF_CONFLICT;
+            }
+         }
+         else
+         {
+            m_customAttributes.remove(name);
+            populateDelete = true;
+         }
       }
       else if (ca->isRedefined())
       {
-         std::pair<uint32_t, SharedString> value = getCustomAttributeFromParent(name);
          if (!value.second.isNull()) //Redefine may come from different node
          {
             ca->sourceObject = value.first;
+            ca->value = value.second;
          }
          else
          {
@@ -738,20 +773,13 @@ void NObject::deletePopulatedCustomAttribute(const TCHAR *name)
          }
       }
 
-      if (ca->isConflict())
-      {
-         if (!checkCustomAttributeInConflict(name, 0))
-         {
-            ca->flags &= ~CAF_CONFLICT;
-            populate = true;
-         }
-      }
-
       onCustomAttributeChange();
    }
    unlockCustomAttributes();
-   if (populate)
-      populateRemove(name);
+   if (populateDelete)
+      populateRemove(name, parentId);
+   if (populateChange)
+      populate(name, value.second, value.first);
 }
 
 /**
