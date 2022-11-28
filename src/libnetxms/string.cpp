@@ -354,9 +354,9 @@ StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator, bool t
    if (slen == 0)
    {
       if (trim)
-         result->addPreallocated(Trim(MemCopyString(CHECK_NULL(str))));
+         result->addPreallocated(Trim(MemCopyString(CHECK_NULL_EX(str))));
       else
-         result->add(CHECK_NULL(str));
+         result->add(CHECK_NULL_EX(str));
       return result;
    }
    if (len < slen)
@@ -388,6 +388,46 @@ StringList *String::split(TCHAR *str, size_t len, const TCHAR *separator, bool t
    }
 
    return result;
+}
+
+/**
+ * Split string and call callback for each part
+ */
+void String::split(const TCHAR *str, size_t len, const TCHAR *separator, bool trim, std::function<void (const String&)> callback)
+{
+   size_t slen = _tcslen(separator);
+   if (slen == 0)
+   {
+      StringBuffer s(str, len);
+      if (trim)
+         s.trim();
+      callback(s);
+      return;
+   }
+
+   if (len < slen)
+      return;
+
+   const TCHAR *curr = str;
+   while(true)
+   {
+      const TCHAR *next = _tcsstr(curr, separator);
+      if (next == nullptr)
+      {
+         StringBuffer s(curr);
+         if (trim)
+            s.trim();
+         callback(s);
+         break;
+      }
+
+      StringBuffer s(curr, next - curr);
+      if (trim)
+         s.trim();
+      callback(s);
+
+      curr = next + slen;
+   }
 }
 
 /**
@@ -530,6 +570,15 @@ StringBuffer::StringBuffer(const SharedString& src) : String(src.str())
  * Create string buffer with given initial content
  */
 StringBuffer::StringBuffer(const TCHAR *init) : String(init)
+{
+   m_allocated = isInternalBuffer() ? 0 : m_length + 1;
+   m_allocationStep = 256;
+}
+
+/**
+ * Create string buffer with given initial content
+ */
+StringBuffer::StringBuffer(const TCHAR *init, size_t length) : String(init, length)
 {
    m_allocated = isInternalBuffer() ? 0 : m_length + 1;
    m_allocationStep = 256;

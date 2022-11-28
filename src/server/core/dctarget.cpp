@@ -1633,6 +1633,7 @@ void DataCollectionTarget::getItemDciValuesSummary(SummaryTable *tableDefinition
                      tableData->setStatusAt(row + r, i + offset, static_cast<DCItem*>(object)->getThresholdSeverity());
                      tableData->setCellObjectIdAt(row + r, i + offset, object->getId());
                   }
+                  delete values;
                }
                else
                {

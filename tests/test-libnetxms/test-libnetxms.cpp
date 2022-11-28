@@ -665,6 +665,36 @@ static void TestString()
    delete list;
    EndTest();
 
+   StartTest(_T("String - split with callback"));
+   s = _T("alpha;; beta;gamma ;; delta");
+   int count = 0;
+   s.split(_T(";;"), false, [&count] (const String& s) {
+      if (count == 0)
+         AssertTrue(!_tcscmp(s, _T("alpha")));
+      else if (count == 1)
+         AssertTrue(!_tcscmp(s, _T(" beta;gamma ")));
+      else if (count == 2)
+         AssertTrue(!_tcscmp(s, _T(" delta")));
+      count++;
+   });
+   AssertEquals(count, 3);
+   EndTest();
+
+   StartTest(_T("String - split with callback and trim"));
+   s = _T("alpha;; beta;gamma ;; delta");
+   count = 0;
+   s.split(_T(";;"), true, [&count] (const String& s) {
+      if (count == 0)
+         AssertTrue(!_tcscmp(s, _T("alpha")));
+      else if (count == 1)
+         AssertTrue(!_tcscmp(s, _T("beta;gamma")));
+      else if (count == 2)
+         AssertTrue(!_tcscmp(s, _T("delta")));
+      count++;
+   });
+   AssertEquals(count, 3);
+   EndTest();
+
    StartTest(_T("String - appendAsHexString"));
    s = _T("");
    s.appendAsHexString(reinterpret_cast<const BYTE*>("\x12\x24\x36\x48"), 5);

@@ -1157,7 +1157,16 @@ public:
    String right(size_t len) const { return substring((m_length > len) ? m_length - len : 0, static_cast<ssize_t>(len)); }
 
    StringList *split(const TCHAR *separator) const { return String::split(m_buffer, m_length, separator); }
+   static StringList *split(TCHAR *str, const TCHAR *separator, bool trim = false) { return String::split(str, _tcslen(str), separator, trim); }
    static StringList *split(TCHAR *str, size_t len, const TCHAR *separator, bool trim = false);
+
+   void split(const TCHAR *separator, bool trim, std::function<void (const String&)> callback) const
+   {
+      if (m_length > 0)
+         String::split(m_buffer, m_length, separator, trim, callback);
+   }
+   static void split(const TCHAR *str, const TCHAR *separator, bool trim, std::function<void (const String&)> callback) { String::split(str, _tcslen(str), separator, trim, callback); }
+   static void split(const TCHAR *str, size_t len, const TCHAR *separator, bool trim, std::function<void (const String&)> callback);
 
    static String toString(int32_t v, const TCHAR *format = nullptr);
    static String toString(uint32_t v, const TCHAR *format = nullptr);
@@ -1263,6 +1272,7 @@ protected:
 public:
    StringBuffer();
    StringBuffer(const TCHAR *init);
+   StringBuffer(const TCHAR *init, size_t length);
    StringBuffer(const StringBuffer& src);
    StringBuffer(StringBuffer&& src);
    StringBuffer(const String& src);
