@@ -542,9 +542,9 @@ private:
    std::pair<uint32_t, SharedString> getCustomAttributeFromParent(const TCHAR *name);
    bool setCustomAttributeFromMessage(const NXCPMessage& msg, uint32_t base);
    void setCustomAttribute(const TCHAR *name, SharedString value, uint32_t parent);
-   void deletePopulatedCustomAttribute(const TCHAR *name, uint32_t parentId);
-   void populate(const TCHAR *name, SharedString value, uint32_t parentId);
-   void populateRemove(const TCHAR *name, uint32_t parentId);
+   void deleteInheritedCustomAttribute(const TCHAR *name, uint32_t parentId);
+   void propagateCustomAttributeChange(const TCHAR *name, const SharedString& value, uint32_t parentId);
+   void propagateCustomAttributeRemove(const TCHAR *name, uint32_t parentId);
    bool checkCustomAttributeInConflict(const TCHAR *name, uint32_t newParent);
 
 protected:
@@ -555,8 +555,8 @@ protected:
    RWLock m_rwlockParentList; // Lock for parent list
    RWLock m_rwlockChildList;  // Lock for child list
 
-   const SharedObjectArray<NObject> &getChildList() const { return m_childList; }
-   const SharedObjectArray<NObject> &getParentList() const { return m_parentList; }
+   const SharedObjectArray<NObject>& getChildList() const { return m_childList; }
+   const SharedObjectArray<NObject>& getParentList() const { return m_parentList; }
 
    void clearChildList();
    void clearParentList();
