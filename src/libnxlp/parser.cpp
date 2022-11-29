@@ -306,7 +306,7 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t
 		{
 			bool ruleMatched = hasAttributes ?
 			   rule->matchEx(source, eventId, level, line, variables, recordId, objectId, timestamp, logName, m_cb, m_cbDataPush, m_cbAction, m_userData) :
-				rule->match(line, objectId, m_cb, m_cbDataPush, m_cbAction, m_userData);
+				rule->match(line, objectId, m_cb, m_cbDataPush, m_cbAction, logName, m_userData);
 			if (ruleMatched)
 			{
 				trace(5, _T("rule %d \"%s\" matched"), i + 1, rule->getDescription());
@@ -359,9 +359,9 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, uint32_t
 /**
  * Match simple log line
  */
-bool LogParser::matchLine(const TCHAR *line, uint32_t objectId)
+bool LogParser::matchLine(const TCHAR *line, const TCHAR *logName, uint32_t objectId)
 {
-	return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, nullptr);
+	return matchLogRecord(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, logName, nullptr);
 }
 
 /**

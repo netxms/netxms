@@ -141,9 +141,9 @@ static void SubagentShutdown()
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
          const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
-         time_t timestamp, void *context)
+         time_t timestamp, const TCHAR *fileName, void *context)
 {
-   int count = cgs->size() + ((eventTag != nullptr) ? 1 : 0) + 1 + ((variables != nullptr) ? variables->size() : 0);
+   int count = cgs->size() + ((eventTag != nullptr) ? 1 : 0) + 1 + ((variables != nullptr) ? variables->size() : 0) + 1;
    TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];
    _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
    if (source != nullptr)
@@ -175,6 +175,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
       for(int j = 0; j < variables->size(); j++)
          list[i++] = variables->get(j);
    }
+   list[i++] = CHECK_NULL_EX(fileName);
 
    AgentPostEvent2(eventCode, eventName, timestamp, count, list);
    MemFree(list);
