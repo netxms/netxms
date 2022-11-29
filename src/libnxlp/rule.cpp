@@ -213,7 +213,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			{
             StringList captureGroups;
 				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, userData);
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, logName, userData);
 			}
          if ((cbAction != nullptr) && (m_agentAction != nullptr))
             cbAction(m_agentAction, *m_agentActionArgs, userData);
@@ -248,7 +248,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
 				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, userData);
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, logName, userData);
             m_parser->trace(8, _T("  callback completed"));
 			}
 

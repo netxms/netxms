@@ -68,7 +68,7 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
 static void ParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
          const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
-         time_t timestamp, void *context)
+         time_t timestamp, const TCHAR *fileName, void *context)
 {
    nxlog_debug_tag(_T("parser"), 3, _T("Parser match (eventCode=%u eventName=%s eventTag=%s) \"%s\""), eventCode, eventName, eventTag);
 }

@@ -143,7 +143,7 @@ static char *FindEOL(char *start, int length, int encoding)
 /**
  * Parse new log records
  */
-off_t LogParser::processNewRecords(int fh)
+off_t LogParser::processNewRecords(int fh, const TCHAR *fileName)
 {
    int charSize;
    switch (m_fileEncoding)
@@ -382,7 +382,7 @@ off_t LogParser::processNewRecords(int fh)
                   break;
             }
 #endif
-            matchLine(m_textBuffer);
+            matchLine(m_textBuffer, fileName);
          }
       }
       else
@@ -611,7 +611,7 @@ bool LogParser::monitorFile(off_t startOffset)
 		if (readFromStart)
 		{
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\""), fname);
-			off_t resetPos = processNewRecords(fh);
+			off_t resetPos = processNewRecords(fh, fname);
          _lseek(fh, resetPos, SEEK_SET);
          readFromStart = m_rescan;
          startOffset = -1;
@@ -620,7 +620,7 @@ bool LogParser::monitorFile(off_t startOffset)
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("Parsing existing records in file \"%s\" starting at offset ") INT64_FMT, fname, static_cast<int64_t>(startOffset));
          _lseek(fh, startOffset, SEEK_SET);
-         off_t resetPos = processNewRecords(fh);
+         off_t resetPos = processNewRecords(fh, fname);
          _lseek(fh, resetPos, SEEK_SET);
          startOffset = -1;
       }
@@ -695,7 +695,7 @@ bool LogParser::monitorFile(off_t startOffset)
 				size = (size_t)st.st_size;
 				mtime = st.st_mtime;
 				nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
-				off_t resetPos = processNewRecords(fh);
+				off_t resetPos = processNewRecords(fh, fname);
 				_lseek(fh, resetPos, SEEK_SET);
 			}
 			else if (m_preallocatedFile)
@@ -706,7 +706,7 @@ bool LogParser::monitorFile(off_t startOffset)
 				{
                _lseek(fh, -4, SEEK_CUR);
 	            nxlog_debug_tag(DEBUG_TAG, 6, _T("New data available in file \"%s\""), fname);
-	            off_t resetPos = processNewRecords(fh);
+	            off_t resetPos = processNewRecords(fh, fname);
 	            _lseek(fh, resetPos, SEEK_SET);
 				}
 				else
@@ -721,7 +721,7 @@ bool LogParser::monitorFile(off_t startOffset)
                   {
                      nxlog_debug_tag(DEBUG_TAG, 6, _T("Detected reset of preallocated file \"%s\""), fname);
                      _lseek(fh, 0, SEEK_SET);
-                     off_t resetPos = processNewRecords(fh);
+                     off_t resetPos = processNewRecords(fh, fname);
                      _lseek(fh, resetPos, SEEK_SET);
                   }
                }
@@ -912,7 +912,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       }
       readFromStart = false;
 
-      lastPos = processNewRecords(fh);
+      lastPos = processNewRecords(fh, fname);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
@@ -928,7 +928,7 @@ bool LogParser::monitorFile2(off_t startOffset)
 /**
  * Scan file for changes without monitoring loop
  */
-off_t LogParser::scanFile(int fh, off_t startOffset)
+off_t LogParser::scanFile(int fh, off_t startOffset, const TCHAR *fileName)
 {
    if (m_fileEncoding == LP_FCP_AUTO)
    {
@@ -961,7 +961,7 @@ off_t LogParser::scanFile(int fh, off_t startOffset)
       }
    }
 
-   return processNewRecords(fh);
+   return processNewRecords(fh, fileName);
 }
 
 #ifdef _WIN32

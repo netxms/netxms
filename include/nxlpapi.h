@@ -86,7 +86,7 @@ enum LogParserFileEncoding
  */
 typedef void (*LogParserCallback)(UINT32, const TCHAR*, const TCHAR*, const TCHAR*,
          const TCHAR*, UINT32, UINT32, const StringList*, const StringList*, UINT64, UINT32,
-         int, time_t, void*);
+         int, time_t, const TCHAR*,  void*);
 
 /**
  * Log parser action callback
@@ -194,9 +194,10 @@ public:
 	bool isValid() const { return m_preg != nullptr; }
 	uint32_t getEventCode() const { return m_eventCode; }
 
-   bool match(const TCHAR *line, uint32_t objectId, LogParserCallback cb, LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData)
+   bool match(const TCHAR *line, uint32_t objectId, LogParserCallback cb, LogParserDataPushCallback cbDataPush,
+         LogParserActionCallback cbAction, const TCHAR *fileName, void *userData)
    {
-      return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, nullptr, cb, cbDataPush, cbAction, userData);
+      return matchInternal(false, nullptr, 0, 0, line, nullptr, 0, objectId, 0, fileName, cb, cbDataPush, cbAction, userData);
    }
    bool matchEx(const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line, StringList *variables,
          uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *fileName, LogParserCallback cb,
@@ -316,7 +317,7 @@ private:
 
    void setStatus(LogParserStatus status) { m_status = status; }
 
-   off_t processNewRecords(int fh);
+   off_t processNewRecords(int fh, const TCHAR *fileName);
    bool monitorFile2(off_t startOffset);
 
 #ifdef _WIN32
@@ -384,14 +385,14 @@ public:
 	void addMacro(const TCHAR *name, const TCHAR *value);
 	const TCHAR *getMacro(const TCHAR *name);
 
-	bool matchLine(const TCHAR *line, uint32_t objectId = 0);
+	bool matchLine(const TCHAR *line, const TCHAR *logName, uint32_t objectId = 0);
 	bool matchEvent(const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line, StringList *variables,
 	         uint64_t recordId, uint32_t objectId = 0, time_t timestamp = 0, const TCHAR *logName = nullptr, bool *saveToDatabase = nullptr);
 
 	int getProcessedRecordsCount() const { return m_recordsProcessed; }
 	int getMatchedRecordsCount() const { return m_recordsMatched; }
 
-   off_t scanFile(int fh, off_t startOffset);
+   off_t scanFile(int fh, off_t startOffset, const TCHAR *fileName);
 	bool monitorFile(off_t startOffset);
 #ifdef _WIN32
    bool monitorEventLog(const TCHAR *markerPrefix);
