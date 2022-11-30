@@ -868,7 +868,7 @@ public class RuleEditor extends Composite
       if ((rule.getActionScript() != null) && !rule.getActionScript().isEmpty())
       {
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleActionScript#31"); //$NON-NLS-1$
-         addActionGroupLabel(clientArea, "Ecevute script", editor.getImageExecute(), listener);
+         addActionGroupLabel(clientArea, "Execute script", editor.getImageExecute(), listener);
 
          ScriptEditor scriptEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.NONE, true, false);
          GridData gd = new GridData();
