@@ -1895,6 +1895,8 @@ public:
 };
 
 #ifdef _WIN32
+template class NXCORE_EXPORTABLE shared_ptr<GenericAgentPolicy>;
+template class NXCORE_EXPORTABLE ObjectMemoryPool<shared_ptr<GenericAgentPolicy>>;
 template class NXCORE_EXPORTABLE SharedObjectArray<GenericAgentPolicy>;
 #endif
 

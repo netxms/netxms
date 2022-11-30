@@ -1093,7 +1093,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       }
       readFromStart = false;
 
-      lastPos = processNewRecords(fh);
+      lastPos = processNewRecords(fh, fname);
       _close(fh);
       size = static_cast<size_t>(st.st_size);
       mtime = st.st_mtime;
