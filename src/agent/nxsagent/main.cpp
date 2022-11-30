@@ -1,6 +1,6 @@
 /*
 ** NetXMS Session Agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ static MUTEX s_socketLock = MutexCreate();
 /**
  * "Hide console" flag
  */
-static bool s_hideConsole = false;
+static bool s_hideConsole = true;
 
 /**
  * Connect to master agent
@@ -408,13 +408,16 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true);
 
    int ch;
-   while((ch = getopt(argc, argv, "c:Hv")) != -1)
+   while((ch = getopt(argc, argv, "c:fHv")) != -1)
    {
 		switch(ch)
 		{
          case 'c':   // config
             break;
-         case 'H':   // hide console
+         case 'f':   // run in foreground
+            s_hideConsole = false;
+            break;
+         case 'H':   // hide console (for compatibility)
             s_hideConsole = true;
             break;
 		   case 'v':   // version
