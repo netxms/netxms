@@ -418,7 +418,7 @@ void Template::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    super::fillMessageInternal(msg, userId);
    AutoBindTarget::fillMessage(msg);
    VersionableObject::fillMessage(msg);
-   msg->setField(VID_POLICY_COUNT, m_deletedPolicyList.size());
+   msg->setField(VID_POLICY_COUNT, m_policyList.size());
 }
 
 /**
