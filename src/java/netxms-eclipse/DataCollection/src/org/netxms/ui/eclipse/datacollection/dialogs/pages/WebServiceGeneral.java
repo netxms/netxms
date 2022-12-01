@@ -34,6 +34,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.ui.eclipse.widgets.PasswordInputField;
 
 /**
  * "General" property page for web service definition configuration
@@ -51,7 +52,7 @@ public class WebServiceGeneral extends PreferencePage
    private LabeledText requestData;
    private Combo authType;
    private LabeledText login;
-   private LabeledText password;
+   private PasswordInputField password;
    private LabeledSpinner retentionTime;
    private LabeledSpinner timeout;
    private LabeledText description;
@@ -161,7 +162,7 @@ public class WebServiceGeneral extends PreferencePage
       gd.grabExcessHorizontalSpace = true;
       login.setLayoutData(gd);
 
-      password = new LabeledText(groupAuth, SWT.NONE);
+      password = new PasswordInputField(groupAuth, SWT.NONE);
       password.setLabel("Password");
       password.setText(definition.getPassword());
       gd = new GridData();

@@ -32,6 +32,7 @@ import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.PasswordInputField;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -55,7 +56,7 @@ public class WebServiceGeneral extends PropertyPage
    private LabeledText requestData;
    private Combo authType;
    private LabeledText login;
-   private LabeledText password;
+   private PasswordInputField password;
    private LabeledSpinner retentionTime;
    private LabeledSpinner timeout;
    private LabeledText description;
@@ -165,7 +166,7 @@ public class WebServiceGeneral extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       login.setLayoutData(gd);
 
-      password = new LabeledText(groupAuth, SWT.NONE);
+      password = new PasswordInputField(groupAuth, SWT.NONE);
       password.setLabel(i18n.tr("Password"));
       password.setText(definition.getPassword());
       gd = new GridData();
