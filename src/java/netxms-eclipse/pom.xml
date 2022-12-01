@@ -70,7 +70,7 @@
             <layout>p2</layout>
         </repository>
         <repository>
-            <id>eclipse-2022-09-update</id>
+            <id>eclipse-2022-09-updates</id>
             <url>http://download.eclipse.org/eclipse/updates/4.25</url>
             <layout>p2</layout>
         </repository>
