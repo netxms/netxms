@@ -4,7 +4,7 @@
 ** 
 ** SMSEagle API documentation - https://www.smseagle.eu/api/
 **
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2022 Raden Solutions
 ** Copyright (C) 2016 TEMPEST a.s.
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -42,11 +42,9 @@
 class SMSEagleDriver : public NCDriver
 {
 private:
-   char m_hostname[128];
-   int m_port;
+   char m_baseURL[256];
    char m_login[128];
    char m_password[128];
-   bool m_useHttps;
 
 public:
    SMSEagleDriver(Config *config);
@@ -58,39 +56,58 @@ public:
  */
 SMSEagleDriver::SMSEagleDriver(Config *config)
 {
-   strcpy(m_hostname, "127.0.0.1");
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new SMSEagle driver instance"));
+
+   m_baseURL[0] = 0;
    strcpy(m_login, "user");
    strcpy(m_password, "password");
-   m_port = 80;
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Driver loaded"));
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL version: %hs"), curl_version());
-#if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
-   curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
-   char protocols[1024] = {0};
-   const char * const *p = version->protocols;
-   while (*p != NULL)
-   {
-      strncat(protocols, *p, strlen(protocols) - 1);
-      strncat(protocols, " ", strlen(protocols) - 1);
-      p++;
-   }
-   nxlog_debug_tag(DEBUG_TAG, 3, _T("cURL supported protocols: %hs"), protocols);
-#endif
-
-   int flag;
+   char hostname[128] = "127.0.0.1";
+   uint32_t port = 0, https = 1;
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("host"), CT_MB_STRING, 0, 0, sizeof(m_hostname), 0, m_hostname },	
-		{ _T("port"), CT_LONG, 0, 0, 0, 0, &m_port },	
-		{ _T("login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },	
-		{ _T("password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },	
-		{ _T("https"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flag },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+      { _T("BaseURL"), CT_MB_STRING, 0, 0, sizeof(m_baseURL), 0, m_baseURL },
+		{ _T("Host"), CT_MB_STRING, 0, 0, sizeof(hostname), 0, hostname },
+		{ _T("Login"), CT_MB_STRING, 0, 0, sizeof(m_login), 0, m_login },
+		{ _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
+      { _T("Port"), CT_LONG, 0, 0, 0, 0, &port },
+      { _T("UseEncryption"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &https },
+      { _T("HTTPS"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &https },   // For compatibility
+		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
-
 	config->parseTemplate(_T("SMSEagle"), configTemplate);
-   m_useHttps = (flag == 1);
+
+	if (m_baseURL[0] == 0)
+	{
+	   // Construct base URL from individual elements
+	   snprintf(m_baseURL, sizeof(m_baseURL), "%s://%s:%d/index.php/http_api", https ? "https" : "http", hostname, (port != 0) ? port : (https ? 443 : 80));
+	}
+	else
+	{
+	   // Make sure base URL does not end in /
+	   size_t index = strlen(m_baseURL) - 1;
+	   if (m_baseURL[index] == '/')
+	      m_baseURL[index] = 0;
+	}
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("Base URL set to \"%hs\""), m_baseURL);
+
+   CURL *curl = curl_easy_init();
+   if (curl != nullptr)
+   {
+      char *s = curl_easy_escape(curl, m_login, 0);
+      strlcpy(m_login, s, sizeof(m_login));
+      curl_free(s);
+
+      s = curl_easy_escape(curl, m_password, 0);
+      strlcpy(m_password, s, sizeof(m_password));
+      curl_free(s);
+
+      curl_easy_cleanup(curl);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+   }
 }
 
 /**
@@ -108,75 +125,73 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
  */
 int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body)
 {
-   int result = -1;
-
    nxlog_debug_tag(DEBUG_TAG, 4, _T("phone/group=\"%s\", body=\"%s\""), recipient, body);
 
    CURL *curl = curl_easy_init();
-   if (curl != NULL)
+   if (curl == nullptr)
    {
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+      return -1;
+   }
+
 #if HAVE_DECL_CURLOPT_NOSIGNAL
-      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
+   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
 #endif
 
-      curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-      curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
+   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
 
-      ByteStream responseData(32768);
-      responseData.setAllocationStep(32768);
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
+   ByteStream responseData(32768);
+   responseData.setAllocationStep(32768);
+   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-      bool intlPrefix = (recipient[0] == _T('+')); // this will be used to decide whether it is number or group name
+   bool intlPrefix = (recipient[0] == _T('+')); // this will be used to decide whether it is number or group name
 #ifdef UNICODE
-      char *mbphone = MBStringFromWideString(recipient);
-      char *mbmsg = MBStringFromWideString(body);
-      char *phone = curl_easy_escape(curl, mbphone, 0);
-      char *msg = curl_easy_escape(curl, mbmsg, 0);
-      free(mbphone);
-      free(mbmsg);
+   char *mbphone = MBStringFromWideString(recipient);
+   char *mbmsg = MBStringFromWideString(body);
+   char *phone = curl_easy_escape(curl, mbphone, 0);
+   char *msg = curl_easy_escape(curl, mbmsg, 0);
+   free(mbphone);
+   free(mbmsg);
 #else
-      char *phone = curl_easy_escape(curl, recipient, 0);
-      char *msg = curl_easy_escape(curl, body, 0);
+   char *phone = curl_easy_escape(curl, recipient, 0);
+   char *msg = curl_easy_escape(curl, body, 0);
 #endif
 
-      char url[4096];
-      snprintf(url, 4096,
-               intlPrefix ? "%s://%s:%d/index.php/http_api/send_sms?login=%s&pass=%s&to=%s&message=%s" : "%s://%s:%d/index.php/http_api/send_togroup?login=%s&pass=%s&groupname=%s&message=%s",
-               m_useHttps ? "https" : "http", m_hostname, m_port, m_login, m_password, phone, msg);
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("URL set to \"%hs\""), url);
+   char url[4096];
+   snprintf(url, 4096,
+            intlPrefix ? "%s/send_sms?login=%s&pass=%s&to=%s&message=%s" : "%s/send_togroup?login=%s&pass=%s&groupname=%s&message=%s",
+            m_baseURL, m_login, m_password, phone, msg);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("URL set to \"%hs\""), url);
 
-      curl_free(phone);
-      curl_free(msg);
+   curl_free(phone);
+   curl_free(msg);
 
-      if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+   int result = -1;
+   if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
+   {
+      if (curl_easy_perform(curl) == CURLE_OK)
       {
-         if (curl_easy_perform(curl) == CURLE_OK)
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
+         long response = 500;
+         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Response code %03d"), (int)response);
+         if (response == 200)
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
-            long response = 500;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Response code %03d"), (int)response);
-            if (response == 200)
-            {
-               result = 0;
-            }
-         }
-         else
-         {
-         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
+            result = 0;
          }
       }
       else
       {
-      	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed"));
       }
-      curl_easy_cleanup(curl);
    }
    else
    {
-   	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_setopt(CURLOPT_URL) failed"));
    }
+   curl_easy_cleanup(curl);
 
    return result;
 }
@@ -184,12 +199,12 @@ int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(SMSEagle, NULL)
+DECLARE_NCD_ENTRY_POINT(SMSEagle, nullptr)
 {
    if (!InitializeLibCURL())
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
-      return NULL;
+      return nullptr;
    }
    return new SMSEagleDriver(config);
 }
