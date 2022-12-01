@@ -78,7 +78,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
  */
 MicrosoftTeamsDriver *MicrosoftTeamsDriver::createInstance(Config *config)
 {
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new driver instance"));
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("Creating new MS Teams driver instance"));
 
    uint32_t flags = 0;
    TCHAR themeColor[8] = _T("FF6A00");
