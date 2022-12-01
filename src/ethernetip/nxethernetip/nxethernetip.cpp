@@ -1,6 +1,6 @@
 /* 
 ** nxethernetip - command line tool for Ethernet/IP
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -442,26 +442,30 @@ static void ParseTCPIPObject(EIP_Message *msg, size_t startOffset, size_t size)
  */
 static bool GetTCPIPObject(const char *instance)
 {
+   bool discoverInstance = false;
    uint32_t instanceNumber;
    if (instance != nullptr)
    {
-      char *eptr;
-      instanceNumber = strtol(instance, &eptr, 0);
-      if ((instanceNumber == 0) || (*eptr != 0))
+      if (!strcmp(instance, "?"))
       {
-         _tprintf(_T("Invalid instance\n"));
-         return false;
+         instanceNumber = 1;
+         discoverInstance = true;
+      }
+      else
+      {
+         char *eptr;
+         instanceNumber = strtol(instance, &eptr, 0);
+         if ((instanceNumber == 0) || (*eptr != 0))
+         {
+            _tprintf(_T("Invalid instance\n"));
+            return false;
+         }
       }
    }
    else
    {
       instanceNumber = 1;
    }
-
-   CIP_EPATH path;
-   CIP_EncodeAttributePath(0xF5, instanceNumber, &path);
-   TCHAR pathText[256];
-   _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
 
    EIP_Status status;
    EIP_Session *session = EIP_Session::connect(s_socket, s_timeout, &status);
@@ -471,6 +475,12 @@ static bool GetTCPIPObject(const char *instance)
       return false;
    }
    _tprintf(_T("Session registered (handle = %08X)\n"), session->getHandle());
+
+retry:
+   CIP_EPATH path;
+   CIP_EncodeAttributePath(0xF5, instanceNumber, &path);
+   TCHAR pathText[256];
+   _tprintf(_T("Encoded EPATH: %s\n"), BinToStrEx(path.value, path.size, pathText, _T(' '), 0));
 
    EIP_Message request(EIP_SEND_RR_DATA, 1024, session->getHandle());
    request.advanceWritePosition(6); // Interface ID and timeout left as 0
@@ -508,6 +518,12 @@ static bool GetTCPIPObject(const char *instance)
       {
          uint16_t additionalStatusSize = response->readDataAsUInt8(item.offset + 3) * 2;
          ParseTCPIPObject(response, item.offset + additionalStatusSize + 4, item.length - additionalStatusSize - 4);
+      }
+      else if (discoverInstance && (instanceNumber < 16))
+      {
+         delete response;
+         instanceNumber--;
+         goto retry;
       }
    }
    else
@@ -625,7 +641,7 @@ int main(int argc, char *argv[])
                      _T("   FindClassInstances <class>  : find all instances of given class\n")
                      _T("   GetAllAttributes <path>     : read all object attributes (path is class.instance)\n")
                      _T("   GetAttribute <path>         : read value of specific attribute (path is class.instance.attribute)\n")
-                     _T("   GetTCPIPObject [<instance>] : read TCP/IP object from device\n")
+                     _T("   GetTCPIPObject [<instance>] : read TCP/IP object from device (use ? as instance for discovery)\n")
                      _T("   ListIdentity                : read device identity\n")
                      _T("   ListInterfaces              : read list of supported interfaces\n")
                      _T("   ListServices                : read list of supported services\n")
