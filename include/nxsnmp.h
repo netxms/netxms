@@ -530,25 +530,36 @@ class LIBNXSNMP_EXPORTABLE SNMP_Engine
 private:
 	BYTE m_id[SNMP_MAX_ENGINEID_LEN];
 	size_t m_idLen;
-	int m_engineBoots;
-	int m_engineTime;
+	uint32_t m_engineBoots;
+	uint32_t m_engineTime;
+	time_t m_engineTimeDiff;   // Difference between engine time and epoch time
 
 public:
 	SNMP_Engine();
 	SNMP_Engine(const BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0);
 	SNMP_Engine(const SNMP_Engine *src);
    SNMP_Engine(const SNMP_Engine& src);
-	~SNMP_Engine();
 
 	const BYTE *getId() const { return m_id; }
 	size_t getIdLen() const { return m_idLen; }
-	int getBoots() const { return m_engineBoots; }
-	int getTime() const { return m_engineTime; }
+	uint32_t getBoots() const { return m_engineBoots; }
+	uint32_t getTime() const { return m_engineTime; }
+	uint32_t getAdjustedTime() const { return (m_engineTime == 0) ? 0 : static_cast<uint32_t>(time(nullptr) - m_engineTimeDiff); }
 
 	bool equals(const SNMP_Engine& e) const { return (m_idLen == e.m_idLen) && !memcmp(m_id, e.m_id, m_idLen); }
 
-	void setBoots(int boots) { m_engineBoots = boots; }
-	void setTime(int engineTime) { m_engineTime = engineTime; }
+	void setBoots(uint32_t boots) { m_engineBoots = boots; }
+	void setTime(uint32_t engineTime)
+	{
+	   m_engineTime = engineTime;
+	   m_engineTimeDiff = time(nullptr) - engineTime;
+	}
+   void setBootsAndTime(const SNMP_Engine& src)
+   {
+      m_engineBoots = src.m_engineBoots;
+      m_engineTime = src.m_engineTime;
+      m_engineTimeDiff = src.m_engineTimeDiff;
+   }
 
 	String toString() const;
 };
@@ -788,7 +799,7 @@ public:
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
 	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }
-	const char *getCommunityString() { return (m_securityContext != NULL) ? m_securityContext->getCommunity() : ""; }
+	const char *getCommunityString() { return (m_securityContext != nullptr) ? m_securityContext->getCommunity() : ""; }
    const SNMP_Engine *getAuthoritativeEngine() { return m_authoritativeEngine; }
 
 	void enableEngineIdAutoupdate(bool enabled) { m_enableEngineIdAutoupdate = enabled; }
