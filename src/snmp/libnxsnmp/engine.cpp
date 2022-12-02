@@ -31,6 +31,7 @@ SNMP_Engine::SNMP_Engine()
 	m_idLen = 0;
 	m_engineBoots = 0;
 	m_engineTime = 0;
+	m_engineTimeDiff = 0;
 }
 
 /**
@@ -42,6 +43,7 @@ SNMP_Engine::SNMP_Engine(const BYTE *id, size_t idLen, int engineBoots, int engi
 	memcpy(m_id, id, m_idLen);
 	m_engineBoots = engineBoots;
 	m_engineTime = engineTime;
+   m_engineTimeDiff = time(nullptr) - engineTime;
 }
 
 /**
@@ -53,6 +55,7 @@ SNMP_Engine::SNMP_Engine(const SNMP_Engine *src)
 	memcpy(m_id, src->m_id, m_idLen);
 	m_engineBoots = src->m_engineBoots;
 	m_engineTime = src->m_engineTime;
+   m_engineTimeDiff = src->m_engineTimeDiff;
 }
 
 /**
@@ -64,13 +67,7 @@ SNMP_Engine::SNMP_Engine(const SNMP_Engine& src)
    memcpy(m_id, src.m_id, m_idLen);
    m_engineBoots = src.m_engineBoots;
    m_engineTime = src.m_engineTime;
-}
-
-/**
- * Destructor
- */
-SNMP_Engine::~SNMP_Engine()
-{
+   m_engineTimeDiff = src.m_engineTimeDiff;
 }
 
 /**

@@ -622,7 +622,7 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true);
 
    _tprintf(_T("NetXMS EtherNet/IP Diagnostic Tool Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2020 Raden Solutions\n\n"));
+            _T("Copyright (c) 2020-2022 Raden Solutions\n\n"));
 
    // Parse command line
    opterr = 1;

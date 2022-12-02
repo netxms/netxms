@@ -721,20 +721,20 @@ bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData,
 		AES_set_encrypt_key(securityContext->getPrivKey(), 128, &key);
 
 		BYTE iv[16];
-		uint32_t boots, engTime;
+		uint32_t boots, engineTime;
 		// Use auth. engine from current PDU if possible
 		if (m_authoritativeEngine.getIdLen() > 0)
 		{
 			boots = htonl(m_authoritativeEngine.getBoots());
-			engTime = htonl(m_authoritativeEngine.getTime());
+			engineTime = htonl(m_authoritativeEngine.getTime());
 		}
 		else
 		{
-			boots = htonl((UINT32)securityContext->getAuthoritativeEngine().getBoots());
-			engTime = htonl((UINT32)securityContext->getAuthoritativeEngine().getTime());
+			boots = htonl(securityContext->getAuthoritativeEngine().getBoots());
+			engineTime = htonl(securityContext->getAuthoritativeEngine().getAdjustedTime());
 		}
 		memcpy(iv, &boots, 4);
-		memcpy(&iv[4], &engTime, 4);
+		memcpy(&iv[4], &engineTime, 4);
 		memcpy(&iv[8], m_salt, 8);
 
 		int num = 0;
@@ -1053,10 +1053,10 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 					AES_set_encrypt_key(securityContext->getPrivKey(), 128, &key);
 
 					BYTE iv[16];
-					UINT32 boots = htonl((UINT32)securityContext->getAuthoritativeEngine().getBoots());
-					UINT32 engTime = htonl((UINT32)securityContext->getAuthoritativeEngine().getTime());
+					uint32_t boots = htonl(securityContext->getAuthoritativeEngine().getBoots());
+					uint32_t engineTime = htonl(securityContext->getAuthoritativeEngine().getAdjustedTime());
 					memcpy(iv, &boots, 4);
-					memcpy(&iv[4], &engTime, 4);
+					memcpy(&iv[4], &engineTime, 4);
 					memcpy(&iv[8], m_salt, 8);
 
 					BYTE *encryptedPdu = static_cast<BYTE*>(SNMP_MemAlloc(dwBytes));
@@ -1155,7 +1155,7 @@ size_t SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, size_t bufferSize, SNM
    	BYTE securityParameters[1024], sequence[1040];
 
    	uint32_t engineBoots = securityContext->getAuthoritativeEngine().getBoots();
-   	uint32_t engineTime = securityContext->getAuthoritativeEngine().getTime();
+   	uint32_t engineTime = securityContext->getAuthoritativeEngine().getAdjustedTime();
 
 		bytes = BER_Encode(ASN_OCTET_STRING, securityContext->getAuthoritativeEngine().getId(),
 		         securityContext->getAuthoritativeEngine().getIdLen(), securityParameters, 1024);

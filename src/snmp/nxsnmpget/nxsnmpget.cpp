@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpget - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,11 +29,9 @@
 
 NETXMS_EXECUTABLE_HEADER(nxsnmpget)
 
-
 //
 // Static data
 //
-
 static char m_community[256] = "public";
 static char m_user[256] = "";
 static char m_authPassword[256] = "";
@@ -48,13 +46,8 @@ static const char *s_codepage = nullptr;
 /**
  * Get data
  */
-int GetData(int argc, TCHAR *argv[])
+static int GetData(int argc, TCHAR *argv[], int interval)
 {
-   SNMP_UDPTransport *pTransport;
-   SNMP_PDU *request, *response;
-   DWORD dwResult;
-   int i, iExit = 0;
-
    // Initialize WinSock
 #ifdef _WIN32
    WSADATA wsaData;
@@ -62,92 +55,85 @@ int GetData(int argc, TCHAR *argv[])
 #endif
 
    // Create SNMP transport
-   pTransport = new SNMP_UDPTransport;
-   dwResult = pTransport->createUDPTransport(argv[0], m_port);
-   if (dwResult != SNMP_ERR_SUCCESS)
+   SNMP_UDPTransport transport;
+   uint32_t rc = transport.createUDPTransport(argv[0], m_port);
+   if (rc != SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));
-      iExit = 2;
+      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(rc));
+      return 2;
+   }
+
+   transport.setSnmpVersion(m_snmpVersion);
+   if (m_snmpVersion == SNMP_VERSION_3)
+   {
+      transport.setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
    }
    else
    {
-      pTransport->setSnmpVersion(m_snmpVersion);
-		if (m_snmpVersion == SNMP_VERSION_3)
-		{
-			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
-		}
-		else
-		{
-			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
-		}
-
-		// Create request
-		request = new SNMP_PDU(SNMP_GET_REQUEST, GetCurrentProcessId(), m_snmpVersion);
-      for(i = 1; i < argc; i++)
-      {
-         if (SNMPIsCorrectOID(argv[i]))
-         {
-            request->bindVariable(new SNMP_Variable(argv[i]));
-         }
-         else
-         {
-            _tprintf(_T("Invalid OID: %s\n"), argv[i]);
-            iExit = 4;
-         }
-      }
-
-      // Send request and process response
-      if (iExit == 0)
-      {
-         if ((dwResult = pTransport->doRequest(request, &response, m_timeout, 3)) == SNMP_ERR_SUCCESS)
-         {
-            SNMP_Variable *var;
-            TCHAR szBuffer[1024];
-
-            for(i = 0; i < (int)response->getNumVariables(); i++)
-            {
-               var = response->getVariable(i);
-               if (var->getType() == ASN_NO_SUCH_OBJECT)
-               {
-                  _tprintf(_T("No such object: %s\n"), (const TCHAR *)var->getName().toString());
-               }
-               else if (var->getType() == ASN_NO_SUCH_INSTANCE)
-               {
-                  _tprintf(_T("No such instance: %s\n"), (const TCHAR *)var->getName().toString());
-               }
-               else if (var->getType() == ASN_OPAQUE)
-               {
-                  SNMP_Variable *subvar = var->decodeOpaque();
-                  bool convert = true;
-                  TCHAR typeName[256];
-                  subvar->getValueAsPrintableString(szBuffer, 1024, &convert, s_codepage);
-                  _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-                        convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), szBuffer);
-                  delete subvar;
-               }
-               else
-               {
-						bool convert = true;
-						TCHAR typeName[256];
-						var->getValueAsPrintableString(szBuffer, 1024, &convert, s_codepage);
-						_tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-						      convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), szBuffer);
-               }
-            }
-            delete response;
-         }
-         else
-         {
-            _tprintf(_T("%s\n"), SNMPGetErrorText(dwResult));
-            iExit = 3;
-         }
-      }
-
-      delete request;
+      transport.setSecurityContext(new SNMP_SecurityContext(m_community));
    }
 
-   delete pTransport;
-   return iExit;
+   // Create request
+   SNMP_PDU request(SNMP_GET_REQUEST, GetCurrentProcessId(), m_snmpVersion);
+   for(int i = 1; i < argc; i++)
+   {
+      if (!SNMPIsCorrectOID(argv[i]))
+      {
+         _tprintf(_T("Invalid OID: %s\n"), argv[i]);
+         return 4;
+      }
+      request.bindVariable(new SNMP_Variable(argv[i]));
+   }
+
+   // Send request and process response
+   int exitCode = 0;
+   do
+   {
+      SNMP_PDU *response;
+      if ((rc = transport.doRequest(&request, &response, m_timeout, 3)) == SNMP_ERR_SUCCESS)
+      {
+         TCHAR buffer[1024];
+         for(int i = 0; i < response->getNumVariables(); i++)
+         {
+            SNMP_Variable *var = response->getVariable(i);
+            if (var->getType() == ASN_NO_SUCH_OBJECT)
+            {
+               _tprintf(_T("No such object: %s\n"), (const TCHAR *)var->getName().toString());
+            }
+            else if (var->getType() == ASN_NO_SUCH_INSTANCE)
+            {
+               _tprintf(_T("No such instance: %s\n"), (const TCHAR *)var->getName().toString());
+            }
+            else if (var->getType() == ASN_OPAQUE)
+            {
+               SNMP_Variable *subvar = var->decodeOpaque();
+               bool convert = true;
+               TCHAR typeName[256];
+               subvar->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
+               _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
+                     convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), buffer);
+               delete subvar;
+            }
+            else
+            {
+               bool convert = true;
+               TCHAR typeName[256];
+               var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
+               _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
+                     convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), buffer);
+            }
+         }
+         delete response;
+         ThreadSleep(interval);
+      }
+      else
+      {
+         _tprintf(_T("%s\n"), SNMPGetErrorText(rc));
+         exitCode = 3;
+      }
+   } while((interval > 0) && (exitCode == 0));
+
+   return exitCode;
 }
 
 /**
@@ -155,16 +141,15 @@ int GetData(int argc, TCHAR *argv[])
  */
 int main(int argc, char *argv[])
 {
-   int ch, iExit = 1;
-   uint32_t value;
-   char *eptr;
-   BOOL bStart = TRUE;
-
    InitNetXMSProcess(true);
 
    // Parse command line
+   int exitCode = 1, ch, interval = 0;
+   bool start = true;
+   uint32_t value;
+   char *eptr;
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hp:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hi:p:u:v:w:")) != -1)
    {
       switch(ch)
       {
@@ -178,13 +163,14 @@ int main(int argc, char *argv[])
 						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
                      _T("   -E <passwd>  : User's encryption password for SNMP v3 USM\n")
                      _T("   -h           : Display help and exit\n")
+                     _T("   -i <seconds> : Repeat request with given interval in seconds\n")
                      _T("   -p <port>    : Agent's port number. Default is 161\n")
                      _T("   -u <user>    : User name for SNMP v3 USM\n")
                      _T("   -v <version> : SNMP version to use (valid values is 1, 2c, and 3)\n")
                      _T("   -w <seconds> : Request timeout (default is 3 seconds)\n")
                      _T("\n"));
-            iExit = 0;
-            bStart = FALSE;
+            exitCode = 0;
+            start = false;
             break;
          case 'c':   // Community
             strlcpy(m_community, optarg, 256);
@@ -227,7 +213,7 @@ int main(int argc, char *argv[])
 				else
 				{
                _tprintf(_T("Invalid authentication method %hs\n"), optarg);
-					bStart = FALSE;
+					start = false;
 				}
 				break;
          case 'A':   // authentication password
@@ -235,7 +221,7 @@ int main(int argc, char *argv[])
 				if (strlen(m_authPassword) < 8)
 				{
                _tprintf(_T("Authentication password should be at least 8 characters long\n"));
-					bStart = FALSE;
+					start = false;
 				}
             break;
 			case 'e':   // encryption method
@@ -254,23 +240,35 @@ int main(int argc, char *argv[])
 				else
 				{
                _tprintf(_T("Invalid encryption method %hs\n"), optarg);
-					bStart = FALSE;
+					start = false;
 				}
 				break;
-         case 'E':   // encription password
+         case 'E':   // encryption password
             strlcpy(m_encryptionPassword, optarg, 256);
 				if (strlen(m_encryptionPassword) < 8)
 				{
                _tprintf(_T("Encryption password should be at least 8 characters long\n"));
-					bStart = FALSE;
+					start = false;
 				}
+            break;
+         case 'i':   // interval
+            value = strtoul(optarg, &eptr, 0);
+            if ((*eptr != 0) || (value > 86400) || (value == 0))
+            {
+               _tprintf(_T("Invalid interval %hs\n"), optarg);
+               start = false;
+            }
+            else
+            {
+               interval = static_cast<int>(value);
+            }
             break;
          case 'p':   // Port number
             value = strtoul(optarg, &eptr, 0);
             if ((*eptr != 0) || (value > 65535) || (value == 0))
             {
                _tprintf(_T("Invalid port number %hs\n"), optarg);
-               bStart = FALSE;
+               start = false;
             }
             else
             {
@@ -293,7 +291,7 @@ int main(int argc, char *argv[])
             else
             {
                _tprintf(_T("Invalid SNMP version %hs\n"), optarg);
-               bStart = FALSE;
+               start = false;
             }
             break;
          case 'w':   // Timeout
@@ -301,7 +299,7 @@ int main(int argc, char *argv[])
             if ((*eptr != 0) || (value > 60) || (value == 0))
             {
                _tprintf(_T("Invalid timeout value %hs\n"), optarg);
-               bStart = FALSE;
+               start = false;
             }
             else
             {
@@ -309,14 +307,14 @@ int main(int argc, char *argv[])
             }
             break;
          case '?':
-            bStart = FALSE;
+            start = false;
             break;
          default:
             break;
       }
    }
 
-   if (bStart)
+   if (start)
    {
       if (argc - optind < 2)
       {
@@ -328,14 +326,14 @@ int main(int argc, char *argv[])
 			WCHAR *wargv[256];
 			for(int i = optind; i < argc; i++)
 				wargv[i - optind] = WideStringFromMBStringSysLocale(argv[i]);
-         iExit = GetData(argc - optind, wargv);
+         exitCode = GetData(argc - optind, wargv, interval);
 			for(int i = 0; i < argc - optind; i++)
 				MemFree(wargv[i]);
 #else
-         iExit = GetData(argc - optind, &argv[optind]);
+         exitCode = GetData(argc - optind, &argv[optind], interval);
 #endif
       }
    }
 
-   return iExit;
+   return exitCode;
 }

@@ -43,7 +43,7 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 /**
  * Create copy of given security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src)
+SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src) : m_authoritativeEngine(src->m_authoritativeEngine)
 {
 	m_securityModel = src->m_securityModel;
 	m_authName = MemCopyStringA(src->m_authName);
@@ -55,7 +55,6 @@ SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src)
 	memcpy(m_authKey, src->m_authKey, sizeof(m_authKey));
 	memcpy(m_privKey, src->m_privKey, sizeof(m_privKey));
 	m_validKeys = src->m_validKeys;
-	m_authoritativeEngine = src->m_authoritativeEngine;
 }
 
 /**
@@ -95,8 +94,7 @@ SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPas
 /**
  * Create authPriv V3 security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword,
-         SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod)
+SNMP_SecurityContext::SNMP_SecurityContext(const char *user, const char *authPassword, const char *encryptionPassword, SNMP_AuthMethod authMethod, SNMP_EncryptionMethod encryptionMethod)
 {
 	m_securityModel = SNMP_SECURITY_MODEL_USM;
 	m_authName = MemCopyStringA(CHECK_NULL_EX_A(user));
@@ -205,8 +203,7 @@ void SNMP_SecurityContext::setAuthoritativeEngine(const SNMP_Engine &engine)
    if (m_authoritativeEngine.equals(engine))
    {
       // Do not invalidate keys if engine ID was not changed and only update boot count and time
-      m_authoritativeEngine.setBoots(engine.getBoots());
-      m_authoritativeEngine.setTime(engine.getTime());
+      m_authoritativeEngine.setBootsAndTime(engine);
    }
    else
    {
