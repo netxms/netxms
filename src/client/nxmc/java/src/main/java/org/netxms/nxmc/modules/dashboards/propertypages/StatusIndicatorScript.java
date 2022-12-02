@@ -94,18 +94,19 @@ public class StatusIndicatorScript extends DashboardElementPropertyPage
       dialogArea.setLayout(layout);
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
-      objectSelector.setLabel("Context object");
+      objectSelector.setLabel(i18n.tr("Context object"));
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(config.getScriptContextObjectId());
-      objectSelector.setEmptySelectionName("<dashboard>");
+      objectSelector.setEmptySelectionName(i18n.tr("<dashboard>"));
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       objectSelector.setLayoutData(gd);
 
-      new Label(dialogArea, SWT.NONE).setText("Script");
+      new Label(dialogArea, SWT.NONE).setText(i18n.tr("Script"));
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true,
+            i18n.tr("Variables:\r\n\t$object\tcontext object\r\n\t$node\tcontext object if it is a node, otherwise null\r\n\r\nReturn value: map with keys referring to element tags and values containing status codes"));
       scriptEditor.setText(config.getScript());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

@@ -64,7 +64,8 @@ public class StatusIndicatorScript extends PropertyPage
 
       new Label(dialogArea, SWT.NONE).setText("Script");
 
-      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+      scriptEditor = new ScriptEditor(dialogArea, SWT.BORDER, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL, true,
+            "Variables:\r\n\t$object\tcontext object\r\n\t$node\tcontext object if it is a node, otherwise null\r\n\r\nReturn value: map with keys referring to element tags and values containing status codes");
       scriptEditor.setText(config.getScript());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
