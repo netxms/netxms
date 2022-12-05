@@ -1368,7 +1368,7 @@ bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin 
  * @param parameters Named event parameters
  */
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp,
-         uint32_t sourceId, const TCHAR *tag, StringMap *parameters)
+         uint32_t sourceId, const TCHAR *tag, const StringMap *parameters)
 {
    return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, tag, nullptr, parameters, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
 }

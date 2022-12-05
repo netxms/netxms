@@ -374,6 +374,13 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
 			for(int i = 0; i < event->getParametersCount(); i++)
 				msg.setField(VID_EVENT_ARG_BASE + i, event->getParameter(i));
 
+			const StringList *list = event->getParameterNames();
+			if (list != nullptr && !list->isEmpty())
+			{
+	         for(int i = 0; i < list->size(); i++)
+	            msg.setField(VID_EVENT_ARG_BASE + i, list->get(i));
+			}
+
 			if (isc->sendMessage(&msg))
 			{
 				rcc = isc->waitForRCC(1, 10000);

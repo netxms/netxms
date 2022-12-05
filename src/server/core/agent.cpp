@@ -136,8 +136,24 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 			   }
 			   debugPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
-			   StringList parameters(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
-			   PostEvent(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), parameters);
+			   if (pMsg->isFieldExist(VID_EVENT_NAMES_BASE))
+			   {
+	            StringMap pmap;
+	            int count = pMsg->getFieldAsInt32(VID_NUM_ARGS);
+	            uint64_t paramBase = VID_EVENT_ARG_BASE;
+	            uint64_t namesBase = VID_EVENT_NAMES_BASE;
+	            for(int i = 0; i < count; i++)
+	            {
+	               pmap.setPreallocated(pMsg->getFieldAsString(namesBase++), pMsg->getFieldAsString(paramBase++));
+	            }
+               PostEventWithNames(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), &pmap);
+
+			   }
+			   else
+			   {
+	            StringList parameters(*pMsg, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
+	            PostEvent(dwEventCode, EventOrigin::AGENT, pMsg->getFieldAsTime(VID_TIMESTAMP), node->getId(), parameters);
+			   }
 		   }
       }
       else

@@ -68,6 +68,55 @@ void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, int
 }
 
 /**
+ * Send event - variant 3
+ * Arguments:
+ * eventCode   - Event code
+ * eventName   - event name; to send event by name, eventCode must be set to 0
+ * timestamp   - event timestamp
+ * parameters  - event parameters
+ */
+void PostEventWithNames(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &parameters)
+{
+   if (nxlog_get_debug_level() >= 5)
+   {
+      StringBuffer argsText;
+      int i = 0;
+      for(KeyValuePair<const TCHAR> *pair : parameters)
+      {
+         argsText.append(_T(", arg["));
+         argsText.append(i++);
+         argsText.append(_T("]=\""));
+         argsText.append(CHECK_NULL(pair->key));
+         argsText.append(_T(":"));
+         argsText.append(CHECK_NULL(pair->value));
+         argsText.append(_T('"'));
+      }
+      nxlog_debug(5, _T("PostEvent(): event_code=%d, event_name=%s, timestamp=") INT64_FMT _T(", num_args=%d%s"),
+                  eventCode, CHECK_NULL(eventName), static_cast<INT64>(timestamp), parameters.size(), (const TCHAR *)argsText);
+   }
+
+   NXCPMessage *msg = new NXCPMessage(CMD_TRAP, 0, 4); // Use version 4
+   msg->setField(VID_TRAP_ID, s_eventIdBase | static_cast<uint64_t>(InterlockedIncrement(&s_eventIdCounter)));
+   msg->setField(VID_EVENT_CODE, eventCode);
+   if (eventName != nullptr)
+      msg->setField(VID_EVENT_NAME, eventName);
+   msg->setFieldFromTime(VID_TIMESTAMP, (timestamp != 0) ? timestamp : time(nullptr));
+   msg->setField(VID_NUM_ARGS, static_cast<uint16_t>(parameters.size()));
+   uint64_t paramBase = VID_EVENT_ARG_BASE;
+   uint64_t nameBase = VID_EVENT_NAMES_BASE;
+   for(KeyValuePair<const TCHAR> *pair : parameters)
+   {
+      msg->setField(nameBase++, pair->key);
+      msg->setField(paramBase++, pair->value);
+   }
+
+   s_generatedEventsCount++;
+   s_lastEventTimestamp = time(nullptr);
+
+   g_notificationProcessorQueue.put(msg);
+}
+
+/**
  * Send event - variant 2
  * Arguments:
  * eventCode - Event code
@@ -154,7 +203,7 @@ void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, con
 {
    va_list args;
    va_start(args, format);
-   PostEvent(eventCode, eventName, timestamp, format, args);
+   PostEvent(eventCode, eventName, timestamp, format, args, nullptr);
    va_end(args);
 }
 

@@ -42,9 +42,8 @@ void EF_CloseSession(ISCSession *)
  */
 BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *response)
 {
-	int i, numArgs;
 	UINT32 code, id;
-	TCHAR *argList[32], *name;
+	TCHAR *name;
    char format[] = "ssssssssssssssssssssssssssssssss";
 
 	if (request->getCode() == CMD_FORWARD_EVENT)
@@ -83,34 +82,42 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 				code = request->getFieldAsUInt32(VID_EVENT_CODE);
 				DbgPrintf(5, _T("Event specified by code (%d)"), code);
 			}
-			numArgs = request->getFieldAsUInt16(VID_NUM_ARGS);
-			if (numArgs > 32)
-				numArgs = 32;
-			for(i = 0; i < numArgs; i++)
-				argList[i] = request->getFieldAsString(VID_EVENT_ARG_BASE + i);
 
-			format[numArgs] = 0;
-			if (PostEventWithTag(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS),
-			                     (numArgs > 0) ? format : nullptr,
-			                     argList[0], argList[1], argList[2], argList[3],
-										argList[4], argList[5], argList[6], argList[7],
-										argList[8], argList[9], argList[10], argList[11],
-										argList[12], argList[13], argList[14], argList[15],
-										argList[16], argList[17], argList[18], argList[19],
-										argList[20], argList[21], argList[22], argList[23],
-										argList[24], argList[25], argList[26], argList[27],
-										argList[28], argList[29], argList[30], argList[31]))
-			{
-				response->setField(VID_RCC, ISC_ERR_SUCCESS);
-			}
-			else
-			{
-				response->setField(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
-			}
-      
-			// Cleanup
-			for(i = 0; i < numArgs; i++)
-				MemFree(argList[i]);
+			if (request->isFieldExist(VID_EVENT_NAMES_BASE))
+           {
+              StringMap pmap;
+              int numArgs = request->getFieldAsInt32(VID_NUM_ARGS);
+              uint64_t paramBase = VID_EVENT_ARG_BASE;
+              uint64_t namesBase = VID_EVENT_NAMES_BASE;
+              for(int i = 0; i < numArgs; i++)
+              {
+                 pmap.setPreallocated(request->getFieldAsString(namesBase++), request->getFieldAsString(paramBase++));
+              }
+
+              if (PostEventWithTagAndNames(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS), &pmap))
+              {
+                 response->setField(VID_RCC, ISC_ERR_SUCCESS);
+              }
+              else
+              {
+                 response->setField(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
+              }
+
+           }
+           else
+           {
+              int numArgs = request->getFieldAsInt32(VID_NUM_ARGS);
+              StringList parameters(*request, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
+              if (PostEventWithTag(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS),
+                                   (numArgs > 0) ? format : nullptr, request))
+              {
+                 response->setField(VID_RCC, ISC_ERR_SUCCESS);
+              }
+              else
+              {
+                 response->setField(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
+              }
+           }
 		}
 		else
 		{

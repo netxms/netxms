@@ -523,7 +523,7 @@ bool NXCORE_EXPORTABLE PostSystemEventWithNames(uint32_t eventCode, uint32_t sou
 bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, const char *format, const TCHAR **names, ...);
 bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, StringMap *parameters);
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const char *format, const TCHAR **names, ...);
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, StringMap *parameters);
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const StringMap *parameters);
 bool NXCORE_EXPORTABLE PostEventWithTagsAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const StringSet *tags, const StringMap *parameters);
 bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const char *format, ...);
 bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const StringList& parameters);

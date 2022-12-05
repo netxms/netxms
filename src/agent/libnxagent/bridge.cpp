@@ -28,6 +28,7 @@
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = nullptr;
 static void (* s_fpPostEvent1)(uint32_t, const TCHAR *, time_t, const char *, va_list) = nullptr;
 static void (* s_fpPostEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **) = nullptr;
+static void (* s_fpPostEvent3)(uint32_t, const TCHAR *, time_t, const StringMap &) = nullptr;
 static shared_ptr<AbstractCommSession> (* s_fpFindServerSession)(uint64_t) = nullptr;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = nullptr;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = nullptr;
@@ -44,6 +45,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*writeLog)(int, int, const TCHAR *),
       void (*postEvent1)(uint32_t, const TCHAR *, time_t, const char *, va_list),
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
+      void (*postEvent3)(uint32_t, const TCHAR *, time_t, const StringMap &),
       bool (*enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
@@ -56,6 +58,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
    s_fpWriteLog = writeLog;
 	s_fpPostEvent1 = postEvent1;
 	s_fpPostEvent2 = postEvent2;
+   s_fpPostEvent3 = postEvent3;
 	s_fpEnumerateSessions = enumerateSessions;
    s_fpFindServerSession = findServerSession;
 	s_fpPushData = pushData;
@@ -153,6 +156,15 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent2(uint32_t eventCode, const TCHAR *even
 {
    if (s_fpPostEvent2 != nullptr)
       s_fpPostEvent2(eventCode, eventName, timestamp, count, args);
+}
+
+/**
+ * Send event from agent to server
+ */
+void LIBNXAGENT_EXPORTABLE AgentPostEvent3(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args)
+{
+   if (s_fpPostEvent3 != nullptr)
+      s_fpPostEvent3(eventCode, eventName, timestamp, args);
 }
 
 /**

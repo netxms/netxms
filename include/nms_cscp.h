@@ -1510,7 +1510,7 @@ typedef struct
 #define VID_ACTION_SCRIPT           ((uint32_t)805)
 #define VID_NUM_SET_CUSTOM_ATTRIBUTE ((uint32_t)806)
 #define VID_NUM_DELETE_CUSTOM_ATTRIBUTE ((uint32_t)807)
-#define VID_RULE_SOURCE_EXCLUSIONS  ((UINT32)808)
+#define VID_RULE_SOURCE_EXCLUSIONS  ((uint32_t)808)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1543,6 +1543,7 @@ typedef struct
 // Variable range for event argument list
 #define VID_EVENT_ARG_BASE          ((UINT32)0x00008000)
 #define VID_EVENT_ARG_LAST          ((UINT32)0x00008FFF)
+#define VID_EVENT_NAMES_BASE        ((UINT32)0x10000000)
 
 // Variable range for trap parameter list
 #define VID_TRAP_PBASE              ((UINT32)0x00009000)

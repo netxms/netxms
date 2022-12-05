@@ -136,6 +136,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       void (*writeLog)(int, int, const TCHAR *),
       void (*postEvent1)(uint32_t, const TCHAR *, time_t, const char *, va_list),
       void (*postEvent2)(uint32_t, const TCHAR *, time_t, int, const TCHAR **),
+      void (*postEvent3)(uint32_t, const TCHAR *, time_t, const StringMap &),
       bool (*enumerateSessions)(EnumerationCallbackResult(*)(AbstractCommSession *, void *), void*),
       shared_ptr<AbstractCommSession> (*findServerSession)(uint64_t),
       bool (*pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
@@ -1093,7 +1094,7 @@ BOOL Initialize()
 #endif
 
    // Initialize API for subagents
-   InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, EnumerateSessions, FindServerSessionByServerId,
+   InitSubAgentAPI(WriteSubAgentMsg, PostEvent, PostEvent, PostEventWithNames, EnumerateSessions, FindServerSessionByServerId,
          PushData, GetLocalDatabaseHandle, g_szDataDirectory, ExecuteAction,
          GetScreenInfoForUserSession, QueueNotificationMessage);
    nxlog_debug(1, _T("Subagent API initialized"));
