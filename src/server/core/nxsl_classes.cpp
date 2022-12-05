@@ -1371,11 +1371,11 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
    if (conn != nullptr)
    {
       StringList list;
-      for(int i = 2; (i < argc) && (i < 128); i++)
+      for(int i = 1; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
-      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list);
+      uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list);
       *result = vm->createValue(rcc == ERR_SUCCESS);
-      nxlog_debug(5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug(5, _T("NXSL: Node::executeAgentCommand: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
@@ -1401,15 +1401,15 @@ NXSL_METHOD_DEFINITION(Node, executeAgentCommandWithOutput)
    if (conn != nullptr)
    {
       StringList list;
-      for(int i = 2; (i < argc) && (i < 128); i++)
+      for(int i = 1; (i < argc) && (i < 128); i++)
          list.add(argv[i]->getValueAsCString());
       StringBuffer output;
-      uint32_t rcc = conn->executeCommand(argv[1]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
+      uint32_t rcc = conn->executeCommand(argv[0]->getValueAsCString(), list, true, [](ActionCallbackEvent event, const TCHAR *text, void *context) {
          if (event == ACE_DATA)
             static_cast<StringBuffer*>(context)->append(text);
       }, &output);
       *result = (rcc == ERR_SUCCESS) ? vm->createValue(output) : vm->createValue();
-      nxlog_debug(5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[1]->getValueAsCString(), node->getName(), node->getId(), rcc);
+      nxlog_debug(5, _T("NXSL: Node::executeAgentCommandWithOutput: command \"%s\" on node %s [%u]: RCC=%u"), argv[0]->getValueAsCString(), node->getName(), node->getId(), rcc);
    }
    else
    {
