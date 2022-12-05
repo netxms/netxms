@@ -2870,7 +2870,7 @@ bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
             int rc = object->getClass()->callMethod(name, object, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result, this);
             if (rc == NXSL_ERR_SUCCESS)
             {
-               for(int i = 0; i < stackItems + 1; i++)
+               for(int i = 0; i <= stackItems; i++)
                   destroyValue(m_dataStack.pop());
                m_dataStack.push(result);
             }
@@ -2898,7 +2898,7 @@ bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
          int rc = array->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
          if (rc == NXSL_ERR_SUCCESS)
          {
-            for(int i = 0; i < stackItems + 1; i++)
+            for(int i = 0; i <= stackItems; i++)
                destroyValue(m_dataStack.pop());
             m_dataStack.push(result);
          }
@@ -2916,7 +2916,7 @@ bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
          int rc = hashMap->callMethod(name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
          if (rc == NXSL_ERR_SUCCESS)
          {
-            for(int i = 0; i < stackItems + 1; i++)
+            for(int i = 0; i <= stackItems; i++)
                destroyValue(m_dataStack.pop());
             m_dataStack.push(result);
          }
@@ -2932,7 +2932,7 @@ bool NXSL_VM::callMethod(const NXSL_Identifier& name, int stackItems)
          int rc = callStringMethod(pValue, name, stackItems, (NXSL_Value **)m_dataStack.peekList(stackItems), &result);
          if (rc == NXSL_ERR_SUCCESS)
          {
-            for(int i = 0; i < stackItems + 1; i++)
+            for(int i = 0; i <= stackItems; i++)
                destroyValue(m_dataStack.pop());
             m_dataStack.push(result);
          }
