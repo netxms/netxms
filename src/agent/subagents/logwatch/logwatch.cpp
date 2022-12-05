@@ -139,46 +139,43 @@ static void SubagentShutdown()
  * Callback for matched log records
  */
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
-         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
+         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringMap &cgs,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
          time_t timestamp, const TCHAR *fileName, void *context)
 {
-   int count = cgs->size() + ((eventTag != nullptr) ? 1 : 0) + 1 + ((variables != nullptr) ? variables->size() : 0) + 1;
-   TCHAR eventIdText[16], severityText[16], repeatCountText[16], recordIdText[32];
-   _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
-   if (source != nullptr)
-   {
-      _sntprintf(eventIdText, 16, _T("%u"), eventId);
-      _sntprintf(severityText, 16, _T("%u"), severity);
-      _sntprintf(recordIdText, 32, UINT64_FMT, recordId);
-      count += 4;
-   }
+   TCHAR buffer[32];
 
-   const TCHAR **list = MemAllocArray<const TCHAR*>(count);
-   int i;
-   for(i = 0; i < cgs->size(); i++)
-      list[i] = cgs->get(i);
+   StringMap parameters;
+   parameters.addAll(cgs);
    if (eventTag != nullptr)
-      list[i++] = eventTag;
+   {
+      parameters.set(_T("eventTag"), eventTag);
+   }
 
    if (source != nullptr)
    {
-      list[i++] = source;
-      list[i++] = eventIdText;
-      list[i++] = severityText;
-      list[i++] = recordIdText;
+      parameters.set(_T("source"), source);
+      _sntprintf(buffer, 32, _T("%u"), eventId);
+      parameters.set(_T("eventIdText"), buffer);
+      _sntprintf(buffer, 32, _T("%u"), severity);
+      parameters.set(_T("severityText"), buffer);
+      _sntprintf(buffer, 32, UINT64_FMT, recordId);
+      parameters.set(_T("recordIdText"), buffer);
    }
-   list[i++] = repeatCountText;
+   _sntprintf(buffer, 32, _T("%d"), repeatCount);
+   parameters.set(_T("repeatCount"), buffer);
 
    if (variables != nullptr)
    {
       for(int j = 0; j < variables->size(); j++)
-         list[i++] = variables->get(j);
+      {
+         _sntprintf(buffer, 32, _T("varibale%d"), j);
+         parameters.set(buffer, variables->get(j));
+      }
    }
-   list[i++] = CHECK_NULL_EX(fileName);
+   parameters.set(_T("fileName"), fileName);
 
-   AgentPostEvent2(eventCode, eventName, timestamp, count, list);
-   MemFree(list);
+   AgentPostEvent3(eventCode, eventName, timestamp, parameters);
 }
 
 /**

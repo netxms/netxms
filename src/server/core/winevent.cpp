@@ -267,22 +267,17 @@ uint64_t GetNextWinEventId()
  * Callback for Windows event parser
  */
 static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
-         const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity, const StringList *captureGroups,
+         const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity, const StringMap &captureGroups,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, time_t timestamp,
          const TCHAR *fileName, void *context)
 {
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), captureGroups->size(), repeatCount);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), captureGroups.size(), repeatCount);
 
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
    if ((node != nullptr) && ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
    {
       StringMap pmap;
-      for(int i = 0; i < captureGroups->size(); i++)
-      {
-         TCHAR name[32];
-         _sntprintf(name, 32, _T("cg%d"), i + 1);
-         pmap.set(name, captureGroups->get(i));
-      }
+      pmap.addAll(captureGroups);
 
       if (eventTag != nullptr)
          pmap.set(_T("eventTag"), eventTag);

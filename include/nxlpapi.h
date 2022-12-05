@@ -85,7 +85,7 @@ enum LogParserFileEncoding
  *    log record timestamp, user data
  */
 typedef void (*LogParserCallback)(UINT32, const TCHAR*, const TCHAR*, const TCHAR*,
-         const TCHAR*, UINT32, UINT32, const StringList*, const StringList*, UINT64, UINT32,
+         const TCHAR*, UINT32, UINT32, const StringMap&, const StringList*, UINT64, UINT32,
          int, time_t, const TCHAR*,  void*);
 
 /**
@@ -173,6 +173,7 @@ private:
 	TCHAR *m_logName;
 	StringList *m_agentActionArgs;
 	HashMap<uint32_t, ObjectRuleStats> *m_objectCounters;
+   HashMap<uint32_t, String> m_groupName;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
 	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName,
@@ -181,6 +182,7 @@ private:
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(uint32_t objectId);
    void incMatchCount(uint32_t objectId);
+   void updateGroupNames();
 
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,

@@ -30,7 +30,7 @@
  */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, bool ignoreCase,
       UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
-      bool resetRepeat, const TCHAR *pushParam, int pushGroup)
+      bool resetRepeat, const TCHAR *pushParam, int pushGroup) : m_groupName(Ownership::True)
 {
 	StringBuffer expandedRegexp;
 
@@ -75,12 +75,16 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);
    }
+   else
+   {
+      updateGroupNames();
+   }
 }
 
 /**
  * Copy constructor
  */
-LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
+LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_groupName(Ownership::True)
 {
 	m_parser = parser;
 	m_name = MemCopyString(src->m_name);
@@ -128,6 +132,10 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    {
       nxlog_debug_tag(DEBUG_TAG, 3, _T("Regexp \"%s\" compilation error: %hs at offset %d"), m_regexp, eptr, eoffset);
    }
+   else
+   {
+      updateGroupNames();
+   }
 }
 
 /**
@@ -152,6 +160,40 @@ LogParserRule::~LogParserRule()
 	delete m_agentActionArgs;
 	delete m_matchArray;
 	delete m_objectCounters;
+}
+
+/**
+ * Update group name to group index map
+ */
+void LogParserRule::updateGroupNames()
+{
+   int nameCount;
+   _pcre_fullinfo_t(m_preg, nullptr, PCRE_INFO_NAMECOUNT, &nameCount);
+   if (nameCount > 0)
+   {
+      unsigned char *namesTable;
+      int nameEntrySize;
+      _pcre_fullinfo_t(m_preg, nullptr, PCRE_INFO_NAMETABLE, &namesTable);
+      _pcre_fullinfo_t(m_preg, nullptr, PCRE_INFO_NAMEENTRYSIZE, &nameEntrySize);
+
+      unsigned char *entryStart = namesTable;
+      for (int i = 0; i < nameCount; i++)
+      {
+         int numSize = 1;
+#ifdef UNICODE
+#ifdef UNICODE_UCS2
+         uint32_t n = *((uint16_t *)entryStart);
+#else /* UNICODE_UCS2 */
+         uint32_t n = *((uint32_t *)entryStart);
+#endif /* UNICODE_UCS2 */
+#else /* UNICODE */
+        uint32_t n = (entryStart[0] << 8) | entryStart[1];
+        numSize = 2;
+#endif /* UNICODE */
+         m_groupName.set(n, new String((const TCHAR *)entryStart + numSize));
+         entryStart += nameEntrySize * sizeof(TCHAR);
+      }
+   }
 }
 
 /**
@@ -211,8 +253,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			m_parser->trace(7, _T("  matched"));
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
-            StringList captureGroups;
-				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
+            StringMap captureGroups;
+				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, captureGroups, variables, recordId, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, logName, userData);
 			}
          if ((cbAction != nullptr) && (m_agentAction != nullptr))
@@ -225,14 +267,15 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	{
 		m_parser->trace(7, _T("  matching against regexp %s"), m_regexp);
 		int cgcount = _pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
-      m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
+
+		m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
 		if ((cgcount >= 0) && matchRepeatCount())
 		{
 			m_parser->trace(7, _T("  matched"));
 
 			if (cgcount == 0)
 			      cgcount = MAX_PARAM_COUNT;
-            StringList captureGroups;
+            StringMap captureGroups;
 				for(int i = 1; i < cgcount; i++)
 				{
                if (m_pmatch[i * 2] == -1)
@@ -242,12 +285,21 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 					TCHAR *s = MemAllocString(len + 1);
 					memcpy(s, &line[m_pmatch[i * 2]], len * sizeof(TCHAR));
 					s[len] = 0;
-               captureGroups.addPreallocated(s);
+					if (m_groupName.contains(i))
+					{
+					   captureGroups.setPreallocated(MemCopyString(m_groupName.get(i)->cstr()), s);
+					}
+					else
+					{
+					   TCHAR buffer[32];
+				      _sntprintf(buffer, 32, _T("group%d"), i);
+                  captureGroups.setPreallocated(MemCopyString(buffer), s);
+					}
 				}
 
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
-				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, &captureGroups, variables, recordId, objectId,
+				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, captureGroups, variables, recordId, objectId,
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, logName, userData);
             m_parser->trace(8, _T("  callback completed"));
 			}
@@ -256,8 +308,10 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			{
 				if((0 < m_pushGroup) && (captureGroups.size() >= m_pushGroup))
 				{
-					const TCHAR *value = captureGroups.get(m_pushGroup - 1);
+				   StructArray<KeyValuePair<const TCHAR>> *array = captureGroups.toArray();
+					const TCHAR *value = array->get(m_pushGroup - 1)->value;
 					cbDataPush(m_pushParam, value);
+					delete array;
 				}
 			}
 			if ((cbAction != nullptr) && (m_agentAction != nullptr))

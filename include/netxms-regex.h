@@ -35,6 +35,7 @@
 #define PCRE_UNICODE_FLAGS      PCRE_UTF16
 #define _pcre_compile_w         pcre16_compile
 #define _pcre_exec_w            pcre16_exec
+#define _pcre_fullinfo_w        pcre16_fullinfo
 #define _pcre_free_w            pcre16_free
 #else
 #define PCRE_WCHAR              PCRE_UCHAR32
@@ -42,6 +43,7 @@
 #define PCRE_UNICODE_FLAGS      PCRE_UTF32
 #define _pcre_compile_w         pcre32_compile
 #define _pcre_exec_w            pcre32_exec
+#define _pcre_fullinfo_w        pcre32_fullinfo
 #define _pcre_free_w            pcre32_free
 #endif
 
@@ -50,12 +52,14 @@
 #define PCRE                    PCREW
 #define _pcre_compile_t         _pcre_compile_w
 #define _pcre_exec_t            _pcre_exec_w
+#define _pcre_fullinfo_t        _pcre_fullinfo_w
 #define _pcre_free_t            _pcre_free_w
 #else   /* UNICODE */
 #define PCRE_TCHAR              char
 #define PCRE                    pcre
 #define _pcre_compile_t         pcre_compile
 #define _pcre_exec_t            pcre_exec
+#define _pcre_fullinfo_t        pcre_fullinfo
 #define _pcre_free_t            pcre_free
 #endif
 

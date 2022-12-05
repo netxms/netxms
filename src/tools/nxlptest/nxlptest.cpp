@@ -66,7 +66,7 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
  * Parser callback
  */
 static void ParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
-         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringList *cgs,
+         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringMap &cgs,
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
          time_t timestamp, const TCHAR *fileName, void *context)
 {
