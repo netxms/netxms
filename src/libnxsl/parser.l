@@ -91,6 +91,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"if"       return T_IF;
 <INITIAL,FEXPR>"ilike"    return T_ILIKE;
 <INITIAL,FEXPR>"imatch"   return T_IMATCH;
+<INITIAL,FEXPR>"import"   return T_IMPORT;
 <INITIAL,FEXPR>"in"       return T_IN;
 <INITIAL,FEXPR>"int32"    return T_TYPE_INT32;
 <INITIAL,FEXPR>"int64"    return T_TYPE_INT64;
@@ -112,7 +113,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"try"      return T_TRY;
 <INITIAL,FEXPR>"uint32"   return T_TYPE_UINT32;
 <INITIAL,FEXPR>"uint64"   return T_TYPE_UINT64;
-<INITIAL,FEXPR>"use"      return T_USE;
+<INITIAL,FEXPR>"use"      return T_IMPORT;
 <INITIAL,FEXPR>"when"     return T_WHEN;
 <INITIAL,FEXPR>"while"    return T_WHILE;
 <INITIAL,FEXPR>"with"     return T_WITH;

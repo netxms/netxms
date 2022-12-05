@@ -57,6 +57,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_GLOBAL
 %token T_IDIV
 %token T_IF
+%token T_IMPORT
 %token T_NEW
 %token T_NULL
 %token T_RANGE
@@ -73,7 +74,6 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_TYPE_STRING
 %token T_TYPE_UINT32
 %token T_TYPE_UINT64
-%token T_USE
 %token T_WHEN
 %token T_WHILE
 %token T_WITH
@@ -178,7 +178,7 @@ ModuleComponent:
 	ConstStatement
 |	Function
 |	StatementOrBlock
-|	UseStatement
+|	ImportStatement
 ;
 
 ConstStatement:
@@ -204,8 +204,8 @@ ConstDefinition:
 }
 ;
 
-UseStatement:
-	T_USE AnyIdentifier ';'
+ImportStatement:
+	T_IMPORT AnyIdentifier ';'
 {
 	builder->addRequiredModule($2.v, lexer->getCurrLine(), false);
 }
