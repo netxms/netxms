@@ -136,12 +136,12 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 			   }
 			   debugPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
-			   if (pMsg->isFieldExist(VID_EVENT_NAMES_BASE))
+			   if (pMsg->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
 			   {
 	            StringMap pmap;
 	            int count = pMsg->getFieldAsInt32(VID_NUM_ARGS);
-	            uint64_t paramBase = VID_EVENT_ARG_BASE;
-	            uint64_t namesBase = VID_EVENT_NAMES_BASE;
+	            uint32_t paramBase = VID_EVENT_ARG_BASE;
+	            uint32_t namesBase = VID_EVENT_ARG_NAMES_BASE;
 	            for(int i = 0; i < count; i++)
 	            {
 	               pmap.setPreallocated(pMsg->getFieldAsString(namesBase++), pMsg->getFieldAsString(paramBase++));

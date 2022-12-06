@@ -375,10 +375,10 @@ static bool ForwardEvent(const TCHAR *server, const Event *event)
 				msg.setField(VID_EVENT_ARG_BASE + i, event->getParameter(i));
 
 			const StringList *list = event->getParameterNames();
-			if (list != nullptr && !list->isEmpty())
+			if (!list->isEmpty())
 			{
 	         for(int i = 0; i < list->size(); i++)
-	            msg.setField(VID_EVENT_ARG_BASE + i, list->get(i));
+	            msg.setField(VID_EVENT_ARG_NAMES_BASE + i, list->get(i));
 			}
 
 			if (isc->sendMessage(&msg))

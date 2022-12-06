@@ -102,8 +102,8 @@ void PostEventWithNames(uint32_t eventCode, const TCHAR *eventName, time_t times
       msg->setField(VID_EVENT_NAME, eventName);
    msg->setFieldFromTime(VID_TIMESTAMP, (timestamp != 0) ? timestamp : time(nullptr));
    msg->setField(VID_NUM_ARGS, static_cast<uint16_t>(parameters.size()));
-   uint64_t paramBase = VID_EVENT_ARG_BASE;
-   uint64_t nameBase = VID_EVENT_NAMES_BASE;
+   uint32_t paramBase = VID_EVENT_ARG_BASE;
+   uint32_t nameBase = VID_EVENT_ARG_NAMES_BASE;
    for(KeyValuePair<const TCHAR> *pair : parameters)
    {
       msg->setField(nameBase++, pair->key);

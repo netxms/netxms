@@ -44,7 +44,6 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 {
 	UINT32 code, id;
 	TCHAR *name;
-   char format[] = "ssssssssssssssssssssssssssssssss";
 
 	if (request->getCode() == CMD_FORWARD_EVENT)
 	{
@@ -83,12 +82,12 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 				DbgPrintf(5, _T("Event specified by code (%d)"), code);
 			}
 
-			if (request->isFieldExist(VID_EVENT_NAMES_BASE))
+			if (request->isFieldExist(VID_EVENT_ARG_NAMES_BASE))
            {
               StringMap pmap;
               int numArgs = request->getFieldAsInt32(VID_NUM_ARGS);
-              uint64_t paramBase = VID_EVENT_ARG_BASE;
-              uint64_t namesBase = VID_EVENT_NAMES_BASE;
+              uint32_t paramBase = VID_EVENT_ARG_BASE;
+              uint32_t namesBase = VID_EVENT_ARG_NAMES_BASE;
               for(int i = 0; i < numArgs; i++)
               {
                  pmap.setPreallocated(request->getFieldAsString(namesBase++), request->getFieldAsString(paramBase++));
@@ -106,10 +105,9 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
            }
            else
            {
-              int numArgs = request->getFieldAsInt32(VID_NUM_ARGS);
               StringList parameters(*request, VID_EVENT_ARG_BASE, VID_NUM_ARGS);
               if (PostEventWithTag(code, EventOrigin::REMOTE_SERVER, 0, object->getId(), request->getFieldAsString(VID_TAGS),
-                                   (numArgs > 0) ? format : nullptr, request))
+                                   parameters))
               {
                  response->setField(VID_RCC, ISC_ERR_SUCCESS);
               }

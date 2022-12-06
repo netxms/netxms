@@ -1543,7 +1543,7 @@ typedef struct
 // Variable range for event argument list
 #define VID_EVENT_ARG_BASE          ((UINT32)0x00008000)
 #define VID_EVENT_ARG_LAST          ((UINT32)0x00008FFF)
-#define VID_EVENT_NAMES_BASE        ((UINT32)0x10000000)
+#define VID_EVENT_ARG_NAMES_BASE    ((UINT32)0x10000000)
 
 // Variable range for trap parameter list
 #define VID_TRAP_PBASE              ((UINT32)0x00009000)

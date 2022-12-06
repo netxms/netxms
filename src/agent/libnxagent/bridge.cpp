@@ -161,7 +161,7 @@ void LIBNXAGENT_EXPORTABLE AgentPostEvent2(uint32_t eventCode, const TCHAR *even
 /**
  * Send event from agent to server
  */
-void LIBNXAGENT_EXPORTABLE AgentPostEvent3(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args)
+void LIBNXAGENT_EXPORTABLE AgentPostEventWithNames(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, const StringMap &args)
 {
    if (s_fpPostEvent3 != nullptr)
       s_fpPostEvent3(eventCode, eventName, timestamp, args);

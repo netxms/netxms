@@ -175,7 +175,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
    }
    parameters.set(_T("fileName"), fileName);
 
-   AgentPostEvent3(eventCode, eventName, timestamp, parameters);
+   AgentPostEventWithNames(eventCode, eventName, timestamp, parameters);
 }
 
 /**
