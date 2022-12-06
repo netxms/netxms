@@ -6459,7 +6459,7 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
                   IntegerToString(static_cast<int32_t>(ntohl(*reinterpret_cast<uint32_t*>(rawValue))), buffer);
                   break;
                case SNMP_RAWTYPE_UINT32:
-                  IntegerToString(ntohl(*reinterpret_cast<uint32_t*>(rawValue)), buffer);
+                  IntegerToString(static_cast<uint32_t>(ntohl(*reinterpret_cast<uint32_t*>(rawValue))), buffer);
                   break;
                case SNMP_RAWTYPE_INT64:
                   IntegerToString(static_cast<int64_t>(ntohq(*reinterpret_cast<uint64_t*>(rawValue))), buffer);
