@@ -143,7 +143,6 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
          const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
          time_t timestamp, const TCHAR *fileName, void *context)
 {
-   TCHAR buffer[32];
 
    StringMap parameters;
    parameters.addAll(cgs);
@@ -155,21 +154,18 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
    if (source != nullptr)
    {
       parameters.set(_T("source"), source);
-      _sntprintf(buffer, 32, _T("%u"), eventId);
-      parameters.set(_T("eventIdText"), buffer);
-      _sntprintf(buffer, 32, _T("%u"), severity);
-      parameters.set(_T("severityText"), buffer);
-      _sntprintf(buffer, 32, UINT64_FMT, recordId);
-      parameters.set(_T("recordIdText"), buffer);
+      parameters.set(_T("eventId"), eventId);
+      parameters.set(_T("severity"), severity);
+      parameters.set(_T("recordId"), recordId);
    }
-   _sntprintf(buffer, 32, _T("%d"), repeatCount);
-   parameters.set(_T("repeatCount"), buffer);
+   parameters.set(_T("repeatCount"), repeatCount);
 
    if (variables != nullptr)
    {
       for(int j = 0; j < variables->size(); j++)
       {
-         _sntprintf(buffer, 32, _T("varibale%d"), j);
+         TCHAR buffer[32];
+         _sntprintf(buffer, 32, _T("variable%d"), j + 1);
          parameters.set(buffer, variables->get(j));
       }
    }
