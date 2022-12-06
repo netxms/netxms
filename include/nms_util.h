@@ -2017,10 +2017,10 @@ public:
 
 	void set(const TCHAR *key, const TCHAR *value) { if (key != nullptr) setObject((TCHAR *)key, MemCopyString(value), false); }
 	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
-   void set(const TCHAR *key, INT32 value);
-	void set(const TCHAR *key, UINT32 value);
-   void set(const TCHAR *key, INT64 value);
-   void set(const TCHAR *key, UINT64 value);
+   void set(const TCHAR *key, int32_t value);
+	void set(const TCHAR *key, uint32_t value);
+   void set(const TCHAR *key, int64_t value);
+   void set(const TCHAR *key, uint64_t value);
    TCHAR *unlink(const TCHAR *key) { return (TCHAR *)StringMapBase::unlink(key); }
 
    void addAll(const StringMap *src, bool (*filter)(const TCHAR *, const TCHAR *, void *) = nullptr, void *context = nullptr);
@@ -2039,12 +2039,14 @@ public:
       addAll(&src, reinterpret_cast<bool (*)(const TCHAR *, const TCHAR *, void *)>(filter), context);
    }
 
+   void addAllFromMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
+
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
    const TCHAR *get(const TCHAR *key, size_t len) const { return (const TCHAR *)getObject(key, len); }
-   INT32 getInt32(const TCHAR *key, INT32 defaultValue) const;
-	UINT32 getUInt32(const TCHAR *key, UINT32 defaultValue) const;
-   INT64 getInt64(const TCHAR *key, INT64 defaultValue) const;
-   UINT64 getUInt64(const TCHAR *key, UINT64 defaultValue) const;
+   int32_t getInt32(const TCHAR *key, int32_t defaultValue) const;
+	uint32_t getUInt32(const TCHAR *key, uint32_t defaultValue) const;
+   int64_t getInt64(const TCHAR *key, int64_t defaultValue) const;
+   uint64_t getUInt64(const TCHAR *key, uint64_t defaultValue) const;
    double getDouble(const TCHAR *key, double defaultValue) const;
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
@@ -2067,7 +2069,6 @@ public:
    }
 
    void fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32_t sizeFieldId) const;
-   void loadMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId);
 
    json_t *toJson() const;
 
@@ -2264,10 +2265,10 @@ public:
 
 	void add(const TCHAR *value);
 	void addPreallocated(TCHAR *value);
-	void add(INT32 value);
-	void add(UINT32 value);
-	void add(INT64 value);
-	void add(UINT64 value);
+	void add(int32_t value);
+	void add(uint32_t value);
+	void add(int64_t value);
+	void add(uint64_t value);
 	void add(double value);
 	void replace(int index, const TCHAR *value);
 	void addOrReplace(int index, const TCHAR *value);
@@ -2290,6 +2291,8 @@ public:
    void insertAll(int pos, const StringList *src);
    void insertAll(int pos, const StringList& src) { insertAll(pos, &src); }
 
+   void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
+
    void merge(const StringList *src, bool matchCase);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
 
@@ -2300,15 +2303,14 @@ public:
 
 	int size() const { return m_count; }
 	bool isEmpty() const { return m_count == 0; }
-	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
+	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : nullptr; }
 	int indexOf(const TCHAR *value) const;
 	bool contains(const TCHAR *value) const { return indexOf(value) != -1; }
 	int indexOfIgnoreCase(const TCHAR *value) const;
    bool containsIgnoreCase(const TCHAR *value) const { return indexOfIgnoreCase(value) != -1; }
    TCHAR *join(const TCHAR *separator) const;
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
-   void loadMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const;
    json_t *toJson() const;
 };
 

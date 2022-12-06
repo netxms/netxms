@@ -1097,11 +1097,11 @@ uint32_t AgentConnection::queryWebService(WebServiceRequestType requestType, con
          {
             if ((requestType == WebServiceRequestType::PARAMETER) && response->isFieldExist(VID_NUM_PARAMETERS))
             {
-               static_cast<StringMap*>(results)->loadMessage(*response, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
+               static_cast<StringMap*>(results)->addAllFromMessage(*response, VID_PARAM_LIST_BASE, VID_NUM_PARAMETERS);
             }
             else if ((requestType == WebServiceRequestType::LIST) && response->isFieldExist(VID_NUM_ELEMENTS))
             {
-               static_cast<StringList*>(results)->loadMessage(response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
+               static_cast<StringList*>(results)->addAllFromMessage(*response, VID_ELEMENT_LIST_BASE, VID_NUM_ELEMENTS);
             }
             else
             {

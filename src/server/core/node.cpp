@@ -6420,9 +6420,9 @@ inline DataCollectionError DCErrorFromSNMPError(UINT32 snmpError)
 }
 
 /**
- * Get DCI value via SNMP
+ * Get DCI value via SNMP. Buffer size should be at least 64 characters.
  */
-DataCollectionError Node::getMetricFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue)
+DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue)
 {
    if ((((m_state & NSF_SNMP_UNREACHABLE) || !(m_capabilities & NC_IS_SNMP)) && (port == 0)) ||
        (m_state & DCSF_UNREACHABLE) ||
@@ -6430,6 +6430,12 @@ DataCollectionError Node::getMetricFromSNMP(UINT16 port, SNMP_Version version, c
    {
       DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%d"), m_name, name, SNMP_ERR_COMM);
       return DCErrorFromSNMPError(SNMP_ERR_COMM);
+   }
+
+   if (size < 64)
+   {
+      DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): result buffer is too small"), m_name, name);
+      return DCE_COLLECTION_ERROR;
    }
 
    uint32_t snmpResult;
@@ -6450,19 +6456,19 @@ DataCollectionError Node::getMetricFromSNMP(UINT16 port, SNMP_Version version, c
             switch(interpretRawValue)
             {
                case SNMP_RAWTYPE_INT32:
-                  _sntprintf(buffer, size, _T("%d"), ntohl(*((LONG *)rawValue)));
+                  IntegerToString(static_cast<int32_t>(ntohl(*reinterpret_cast<uint32_t*>(rawValue))), buffer);
                   break;
                case SNMP_RAWTYPE_UINT32:
-                  _sntprintf(buffer, size, _T("%u"), ntohl(*((UINT32 *)rawValue)));
+                  IntegerToString(ntohl(*reinterpret_cast<uint32_t*>(rawValue)), buffer);
                   break;
                case SNMP_RAWTYPE_INT64:
-                  _sntprintf(buffer, size, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
+                  IntegerToString(static_cast<int64_t>(ntohq(*reinterpret_cast<uint64_t*>(rawValue))), buffer);
                   break;
                case SNMP_RAWTYPE_UINT64:
-                  _sntprintf(buffer, size, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
+                  IntegerToString(ntohq(*reinterpret_cast<uint64_t*>(rawValue)), buffer);
                   break;
                case SNMP_RAWTYPE_DOUBLE:
-                  _sntprintf(buffer, size, _T("%f"), ntohd(*((double *)rawValue)));
+                  _sntprintf(buffer, size, _T("%f"), ntohd(*reinterpret_cast<double*>(rawValue)));
                   break;
                case SNMP_RAWTYPE_IP_ADDR:
                   IpToStr(ntohl(*reinterpret_cast<uint32_t*>(rawValue)), buffer);
@@ -6562,7 +6568,7 @@ static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp,
 /**
  * Get table from SNMP
  */
-DataCollectionError Node::getTableFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table)
+DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table)
 {
    SNMP_Transport *snmp = createSnmpTransport(port, version);
    if (snmp == nullptr)
@@ -6609,7 +6615,7 @@ static uint32_t SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp
 /**
  * Get list of values from SNMP
  */
-DataCollectionError Node::getListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringList **list)
+DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list)
 {
    *list = nullptr;
    SNMP_Transport *snmp = createSnmpTransport(port, version);
@@ -6660,7 +6666,7 @@ static uint32_t SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport
 /**
  * Get list of OID suffixes from SNMP
  */
-DataCollectionError Node::getOIDSuffixListFromSNMP(UINT16 port, SNMP_Version version, const TCHAR *oid, StringMap **values)
+DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values)
 {
    *values = nullptr;
    SNMP_Transport *snmp = createSnmpTransport(port, version);
@@ -7352,7 +7358,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
          if (destAddr.isValidUnicast())
          {
             bool isVpn;
-            UINT32 ifIndex;
+            uint32_t ifIndex;
             InetAddress nextHop;
             InetAddress route;
             TCHAR name[MAX_OBJECT_NAME];
@@ -7380,7 +7386,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       shared_ptr<NetObj> object = objectFromParameter(name);
       if ((object != nullptr) && (object->getObjectClass() == OBJECT_NETWORKSERVICE))
       {
-         _sntprintf(buffer, size, _T("%u"), static_cast<NetworkService*>(object.get())->getResponseTime());
+         IntegerToString(static_cast<NetworkService*>(object.get())->getResponseTime(), buffer);
       }
       else
       {
@@ -7390,13 +7396,13 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    else if (!_tcsicmp(name, _T("ReceivedSNMPTraps")))
    {
       lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_snmpTrapCount);
+      IntegerToString(m_snmpTrapCount, buffer);
       unlockProperties();
    }
    else if (!_tcsicmp(name, _T("ReceivedSyslogMessages")))
    {
       lockProperties();
-      _sntprintf(buffer, size, INT64_FMT, m_syslogMessageCount);
+      IntegerToString(m_syslogMessageCount, buffer);
       unlockProperties();
    }
    else if (!_tcsicmp(name, _T("ZoneProxy.Assignments")))
@@ -7404,7 +7410,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       shared_ptr<Zone> zone = FindZoneByProxyId(m_id);
       if (zone != nullptr)
       {
-         _sntprintf(buffer, size, _T("%u"), zone->getProxyNodeAssignments(m_id));
+         IntegerToString(zone->getProxyNodeAssignments(m_id), buffer);
       }
       else
       {
@@ -7416,7 +7422,8 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       shared_ptr<Zone> zone = FindZoneByProxyId(m_id);
       if (zone != nullptr)
       {
-         _sntprintf(buffer, size, _T("%d"), zone->isProxyNodeAvailable(m_id) ? 1 : 0);
+         buffer[0] = zone->isProxyNodeAvailable(m_id) ? _T('1') : _T('0');
+         buffer[1] = 0;
       }
       else
       {
@@ -7428,7 +7435,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       shared_ptr<Zone> zone = FindZoneByProxyId(m_id);
       if (zone != nullptr)
       {
-         _sntprintf(buffer, size, _T("%u"), zone->getUIN());
+         IntegerToString(zone->getUIN(), buffer);
       }
       else
       {
@@ -7439,7 +7446,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         _sntprintf(buffer, size, _T("%d"), m_adoptedApCount);
+         IntegerToString(m_adoptedApCount, buffer);
       }
       else
       {
@@ -7450,7 +7457,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         _sntprintf(buffer, size, _T("%d"), m_totalApCount);
+         IntegerToString(m_totalApCount, buffer);
       }
       else
       {
@@ -7461,7 +7468,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
    {
       if (m_capabilities & NC_IS_WIFI_CONTROLLER)
       {
-         _sntprintf(buffer, size, _T("%d"), m_totalApCount - m_adoptedApCount);
+         IntegerToString(m_totalApCount - m_adoptedApCount, buffer);
       }
       else
       {
@@ -7526,41 +7533,41 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          TCHAR loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, -1, loginName));
+         IntegerToString(GetSessionCount(true, false, -1, loginName), buffer);
       }
       else if (!_tcsicmp(name, _T("Server.ClientSessions.Desktop")))
       {
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_DESKTOP, nullptr));
+         IntegerToString(GetSessionCount(true, true, CLIENT_TYPE_DESKTOP, nullptr), buffer);
       }
       else if (MatchString(_T("Server.ClientSessions.Desktop(*)"), name, false))
       {
          TCHAR loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName));
+         IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_DESKTOP, loginName), buffer);
       }
       else if (!_tcsicmp(name, _T("Server.ClientSessions.Mobile")))
       {
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_MOBILE, nullptr));
+         IntegerToString(GetSessionCount(true, true, CLIENT_TYPE_MOBILE, nullptr), buffer);
       }
       else if (MatchString(_T("Server.ClientSessions.Mobile(*)"), name, false))
       {
          TCHAR loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName));
+         IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_MOBILE, loginName), buffer);
       }
       else if (!_tcsicmp(name, _T("Server.ClientSessions.Total")))
       {
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, -1, nullptr));
+         IntegerToString(GetSessionCount(true, true, -1, nullptr), buffer);
       }
       else if (!_tcsicmp(name, _T("Server.ClientSessions.Web")))
       {
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, true, CLIENT_TYPE_WEB, nullptr));
+         IntegerToString(GetSessionCount(true, true, CLIENT_TYPE_WEB, nullptr), buffer);
       }
       else if (MatchString(_T("Server.ClientSessions.Web(*)"), name, false))
       {
          TCHAR loginName[256];
          AgentGetParameterArg(name, 1, loginName, 256);
-         _sntprintf(buffer, size, _T("%d"), GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName));
+         IntegerToString(GetSessionCount(true, false, CLIENT_TYPE_WEB, loginName), buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DataCollectionItems")))
       {
@@ -7575,43 +7582,43 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, size, UINT64_FMT, counters.failedQueries);
+         IntegerToString(counters.failedQueries, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DB.Queries.LongRunning")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, size, UINT64_FMT, counters.longRunningQueries);
+         IntegerToString(counters.longRunningQueries, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DB.Queries.NonSelect")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, size, UINT64_FMT, counters.nonSelectQueries);
+         IntegerToString(counters.nonSelectQueries, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DB.Queries.Select")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, size, UINT64_FMT, counters.selectQueries);
+         IntegerToString(counters.selectQueries, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DB.Queries.Total")))
       {
          LIBNXDB_PERF_COUNTERS counters;
          DBGetPerfCounters(&counters);
-         _sntprintf(buffer, size, UINT64_FMT, counters.totalQueries);
+         IntegerToString(counters.totalQueries, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.IData")))
       {
-         _sntprintf(buffer, size, UINT64_FMT, g_idataWriteRequests);
+         IntegerToString(g_idataWriteRequests, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.Other")))
       {
-         _sntprintf(buffer, size, UINT64_FMT, g_otherWriteRequests);
+         IntegerToString(g_otherWriteRequests, buffer);
       }
       else if (!_tcsicmp(name, _T("Server.DBWriter.Requests.RawData")))
       {
-         _sntprintf(buffer, size, UINT64_FMT, g_rawDataWriteRequests);
+         IntegerToString(g_rawDataWriteRequests, buffer);
       }
       else if (MatchString(_T("Server.EventProcessor.AverageWaitTime(*)"), name, false))
       {
@@ -7633,7 +7640,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          int64_t bytes = GetActiveHeapMemory();
          if (bytes != -1)
-            _sntprintf(buffer, size, UINT64_FMT, bytes);
+            IntegerToString(bytes, buffer);
          else
             rc = DCE_NOT_SUPPORTED;
       }
@@ -7641,7 +7648,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          int64_t bytes = GetAllocatedHeapMemory();
          if (bytes != -1)
-            _sntprintf(buffer, size, UINT64_FMT, bytes);
+            IntegerToString(bytes, buffer);
          else
             rc = DCE_NOT_SUPPORTED;
       }
@@ -7649,7 +7656,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       {
          int64_t bytes = GetMappedHeapMemory();
          if (bytes != -1)
-            _sntprintf(buffer, size, UINT64_FMT, bytes);
+            IntegerToString(bytes, buffer);
          else
             rc = DCE_NOT_SUPPORTED;
       }
@@ -7730,15 +7737,15 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (!_tcsicmp(name, _T("Server.ReceivedSNMPTraps")))
       {
-         _sntprintf(buffer, size, UINT64_FMT, g_snmpTrapsReceived);
+         ret_uint64(buffer, g_snmpTrapsReceived);
       }
       else if (!_tcsicmp(name, _T("Server.ReceivedSyslogMessages")))
       {
-         _sntprintf(buffer, size, UINT64_FMT, g_syslogMessagesReceived);
+         ret_uint64(buffer, g_syslogMessagesReceived);
       }
       else if (!_tcsicmp(name, _T("Server.ReceivedWindowsEvents")))
       {
-         _sntprintf(buffer, size, UINT64_FMT, g_windowsEventsReceived);
+         ret_uint64(buffer, g_windowsEventsReceived);
       }
       else if (!_tcsicmp(_T("Server.SyncerRunTime.Average"), name))
       {
@@ -7802,11 +7809,11 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       }
       else if (!_tcsicmp(name, _T("Server.TotalEventsProcessed")))
       {
-         _sntprintf(buffer, size, UINT64_FMT, g_totalEventsProcessed);
+         ret_uint64(buffer, g_totalEventsProcessed);
       }
       else if (!_tcsicmp(name, _T("Server.Uptime")))
       {
-         _sntprintf(buffer, size, INT64_FMT, static_cast<int64_t>(time(nullptr) - g_serverStartTime));
+         ret_int64(buffer, static_cast<int64_t>(time(nullptr) - g_serverStartTime));
       }
       else
       {
@@ -7824,7 +7831,7 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
 /**
  * Translate DCI error code into RCC
  */
-inline UINT32 RCCFromDCIError(DataCollectionError error)
+static inline uint32_t RCCFromDCIError(DataCollectionError error)
 {
    switch(error)
    {
@@ -9647,8 +9654,8 @@ bool Node::resolveName(bool useOnlyDNS)
       if (!(resolved || useOnlyDNS))
       {
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u] via SNMP"), m_name, m_id);
-         TCHAR buffer[256];
-         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), buffer, 256, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+         TCHAR buffer[MAX_RESULT_LENGTH];
+         if (getMetricFromSNMP(0, SNMP_VERSION_DEFAULT, _T(".1.3.6.1.2.1.1.5.0"), buffer, MAX_RESULT_LENGTH, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
          {
             Trim(buffer);
             if (buffer[0] != 0)

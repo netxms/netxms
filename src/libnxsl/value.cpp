@@ -529,22 +529,22 @@ void NXSL_Value::updateString()
             _tcscpy(buffer, m_value.int32 ? _T("true") : _T("false"));
             break;
          case NXSL_DT_INT32:
-            _sntprintf(buffer, 64, _T("%d"), m_value.int32);
+            IntegerToString(m_value.int32, buffer);
             break;
          case NXSL_DT_UINT32:
-            _sntprintf(buffer, 64, _T("%u"), m_value.uint32);
+            IntegerToString(m_value.uint32, buffer);
             break;
          case NXSL_DT_INT64:
-            _sntprintf(buffer, 64, INT64_FMT, m_value.int64);
+            IntegerToString(m_value.int64, buffer);
             break;
          case NXSL_DT_UINT64:
-            _sntprintf(buffer, 64, UINT64_FMT, m_value.uint64);
+            IntegerToString(m_value.uint64, buffer);
             break;
          case NXSL_DT_REAL:
             _sntprintf(buffer, 64, _T("%f"), m_value.real);
             break;
          case NXSL_DT_NULL:
-            _tcscpy(buffer, _T(""));
+            buffer[0] = 0;
             break;
          case NXSL_DT_HASHMAP:
             _sntprintf(buffer, 64, _T("[M@%p]"), m_value.hashMapHandle->getObject());

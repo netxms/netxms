@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -86,11 +86,11 @@ StringList::StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId
    m_count = msg.getFieldAsInt32(countId);
    m_allocated = m_count;
    m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
-   UINT32 fieldId = baseId;
+   uint32_t fieldId = baseId;
    for(int i = 0; i < m_count; i++)
    {
       m_values[i] = msg.getFieldAsString(fieldId++, &m_pool);
-      if (m_values[i] == NULL)
+      if (m_values[i] == nullptr)
          m_values[i] = m_pool.copyString(_T(""));
    }
 }
@@ -162,41 +162,37 @@ void StringList::addMBString(const char *value)
 /**
  * Add signed 32-bit integer as string
  */
-void StringList::add(INT32 value)
+void StringList::add(int32_t value)
 {
 	TCHAR buffer[32];
-	_sntprintf(buffer, 32, _T("%d"), (int)value);
-	add(buffer);
+	add(IntegerToString(value, buffer));
 }
 
 /**
  * Add unsigned 32-bit integer as string
  */
-void StringList::add(UINT32 value)
+void StringList::add(uint32_t value)
 {
 	TCHAR buffer[32];
-	_sntprintf(buffer, 32, _T("%u"), (unsigned int)value);
-	add(buffer);
+   add(IntegerToString(value, buffer));
 }
 
 /**
  * Add signed 64-bit integer as string
  */
-void StringList::add(INT64 value)
+void StringList::add(int64_t value)
 {
 	TCHAR buffer[32];
-	_sntprintf(buffer, 32, INT64_FMT, value);
-	add(buffer);
+   add(IntegerToString(value, buffer));
 }
 
 /**
  * Add unsigned 64-bit integer as string
  */
-void StringList::add(UINT64 value)
+void StringList::add(uint64_t value)
 {
 	TCHAR buffer[32];
-	_sntprintf(buffer, 32, UINT64_FMT, value);
-	add(buffer);
+   add(IntegerToString(value, buffer));
 }
 
 /**
@@ -237,7 +233,7 @@ void StringList::addOrReplace(int index, const TCHAR *value)
       for(int i = m_count; i < index; i++)
       {
          CHECK_ALLOCATION;
-         m_values[m_count++] = NULL;
+         m_values[m_count++] = nullptr;
       }
       add(value);
    }
@@ -399,10 +395,10 @@ void StringList::splitAndAdd(const TCHAR *src, const TCHAR *separator)
    }
 
    const TCHAR *curr = src;
-   while(curr != NULL)
+   while(curr != nullptr)
    {
       const TCHAR *next = _tcsstr(curr, separator);
-      if (next != NULL)
+      if (next != nullptr)
       {
          int len = (int)(next - curr);
          TCHAR *value = m_pool.allocateArray<TCHAR>(len + 1);
@@ -467,10 +463,10 @@ void StringList::sort(bool ascending, bool caseSensitive)
 /**
  * Fill NXCP message with list data
  */
-void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const
+void StringList::fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const
 {
-   msg->setField(countId, (UINT32)m_count);
-   UINT32 fieldId = baseId;
+   msg->setField(countId, static_cast<uint32_t>(m_count));
+   uint32_t fieldId = baseId;
    for(int i = 0; i < m_count; i++)
    {
       msg->setField(fieldId++, CHECK_NULL_EX(m_values[i]));
@@ -480,13 +476,13 @@ void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) co
 /**
  * Load data from NXCP message
  */
-void StringList::loadMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId)
+void StringList::addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId)
 {
-   int count = msg->getFieldAsInt32(countId);
-   UINT32 id = baseId;
+   int count = msg.getFieldAsInt32(countId);
+   uint32_t id = baseId;
    for(int i = 0; i < count; i++)
    {
-      addPreallocated(msg->getFieldAsString(id++));
+      addPreallocated(msg.getFieldAsString(id++));
    }
 }
 

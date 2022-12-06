@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ void ItemValue::set(int32_t value, const TCHAR *stringValue)
    if (stringValue != nullptr)
       _tcslcpy(m_string, stringValue, MAX_DB_STRING);
    else
-      _sntprintf(m_string, MAX_DB_STRING, _T("%d"), value);
+      IntegerToString(value, m_string);
    m_double = value;
    m_uint64 = value;
 }
@@ -106,7 +106,7 @@ void ItemValue::set(int64_t value, const TCHAR *stringValue)
    if (stringValue != nullptr)
       _tcslcpy(m_string, stringValue, MAX_DB_STRING);
    else
-      _sntprintf(m_string, MAX_DB_STRING, INT64_FMT, m_int64);
+      IntegerToString(value, m_string);
    m_double = static_cast<double>(m_int64);
    m_uint64 = static_cast<uint64_t>(m_int64);
 }
@@ -117,7 +117,7 @@ void ItemValue::set(uint32_t value, const TCHAR *stringValue)
    if (stringValue != nullptr)
       _tcslcpy(m_string, stringValue, MAX_DB_STRING);
    else
-      _sntprintf(m_string, MAX_DB_STRING, _T("%u"), value);
+      IntegerToString(value, m_string);
    m_double = value;
    m_int64 = value;
 }
@@ -128,7 +128,7 @@ void ItemValue::set(uint64_t value, const TCHAR *stringValue)
    if (stringValue != nullptr)
       _tcslcpy(m_string, stringValue, MAX_DB_STRING);
    else
-      _sntprintf(m_string, MAX_DB_STRING, UINT64_FMT, m_uint64);
+      IntegerToString(value, m_string);
    m_double = static_cast<double>(static_cast<int64_t>(m_uint64));
    m_int64 = static_cast<int64_t>(m_uint64);
 }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -46,7 +46,7 @@ StringMap::StringMap(const StringMap &src) : StringMapBase(Ownership::True)
  */
 StringMap::StringMap(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId) : StringMapBase(Ownership::True)
 {
-   loadMessage(msg, baseFieldId, sizeFieldId);
+   addAllFromMessage(msg, baseFieldId, sizeFieldId);
 }
 
 /**
@@ -86,85 +86,81 @@ void StringMap::addAll(const StringMap *src, bool (*filter)(const TCHAR *, const
 /**
  * Set value from INT32
  */
-void StringMap::set(const TCHAR *key, INT32 value)
+void StringMap::set(const TCHAR *key, int32_t value)
 {
    TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%d"), (int)value);
-   set(key, buffer);
+   set(key, IntegerToString(value, buffer));
 }
 
 /**
  * Set value from UINT32
  */
-void StringMap::set(const TCHAR *key, UINT32 value)
+void StringMap::set(const TCHAR *key, uint32_t value)
 {
 	TCHAR buffer[32];
-	_sntprintf(buffer, 32, _T("%u"), (unsigned int)value);
-	set(key, buffer);
+   set(key, IntegerToString(value, buffer));
 }
 
 /**
  * Set value from INT64
  */
-void StringMap::set(const TCHAR *key, INT64 value)
+void StringMap::set(const TCHAR *key, int64_t value)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, INT64_FMT, value);
-   set(key, buffer);
+   set(key, IntegerToString(value, buffer));
 }
 
 /**
  * Set value from UINT64
  */
-void StringMap::set(const TCHAR *key, UINT64 value)
+void StringMap::set(const TCHAR *key, uint64_t value)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, UINT64_FMT, value);
-   set(key, buffer);
+   set(key, IntegerToString(value, buffer));
 }
 
 /**
  * Get value by key as INT32
  */
-INT32 StringMap::getInt32(const TCHAR *key, INT32 defaultValue) const
+int32_t StringMap::getInt32(const TCHAR *key, int32_t defaultValue) const
 {
 	const TCHAR *value = get(key);
-	if (value == NULL)
+	if (value == nullptr)
 		return defaultValue;
-	return _tcstol(value, NULL, 0);
+	return _tcstol(value, nullptr, 0);
 }
 
 /**
  * Get value by key as UINT32
  */
-UINT32 StringMap::getUInt32(const TCHAR *key, UINT32 defaultValue) const
+uint32_t StringMap::getUInt32(const TCHAR *key, uint32_t defaultValue) const
 {
    const TCHAR *value = get(key);
-   if (value == NULL)
+   if (value == nullptr)
       return defaultValue;
-   return _tcstoul(value, NULL, 0);
+   return _tcstoul(value, nullptr, 0);
 }
 
 /**
  * Get value by key as INT64
  */
-INT64 StringMap::getInt64(const TCHAR *key, INT64 defaultValue) const
+int64_t StringMap::getInt64(const TCHAR *key, int64_t defaultValue) const
 {
    const TCHAR *value = get(key);
-   if (value == NULL)
+   if (value == nullptr)
       return defaultValue;
-   return _tcstoll(value, NULL, 0);
+   return _tcstoll(value, nullptr, 0);
 }
 
 /**
  * Get value by key as UINT64
  */
-UINT64 StringMap::getUInt64(const TCHAR *key, UINT64 defaultValue) const
+uint64_t StringMap::getUInt64(const TCHAR *key, uint64_t defaultValue) const
 {
    const TCHAR *value = get(key);
-   if (value == NULL)
+   if (value == nullptr)
       return defaultValue;
-   return _tcstoull(value, NULL, 0);
+   return _tcstoull(value, nullptr, 0);
 }
 
 /**
@@ -211,7 +207,7 @@ void StringMap::fillMessage(NXCPMessage *msg, uint32_t baseFieldId, uint32_t siz
 /**
  * Load data from NXCP message
  */
-void StringMap::loadMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId)
+void StringMap::addAllFromMessage(const NXCPMessage& msg, uint32_t baseFieldId, uint32_t sizeFieldId)
 {
    int count = msg.getFieldAsInt32(sizeFieldId);
    uint32_t id = baseFieldId;

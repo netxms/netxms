@@ -8320,7 +8320,7 @@ void ClientSession::executeAction(const NXCPMessage& request)
                Alarm *alarm = nullptr;
                if (expandString)
                {
-                  inputFields.loadMessage(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
+                  inputFields.addAllFromMessage(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
                   alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
                   if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                   {
@@ -10720,7 +10720,7 @@ void ClientSession::getAgentFile(const NXCPMessage& request)
             if (request.getFieldAsBoolean(VID_EXPAND_STRING))
             {
                StringMap inputFields;
-               inputFields.loadMessage(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
+               inputFields.addAllFromMessage(request, VID_INPUT_FIELD_BASE, VID_INPUT_FIELD_COUNT);
                Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
                if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                {

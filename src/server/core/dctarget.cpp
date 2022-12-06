@@ -1000,6 +1000,9 @@ DataCollectionError DataCollectionTarget::getInternalTable(const TCHAR *name, sh
  */
 DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size)
 {
+   if (size < 64)
+      return DCE_COLLECTION_ERROR;  // Result buffer is too small
+
    if (isPollable())
    {
       DataCollectionError rc = getAsPollable()->getInternalMetric(name, buffer, size);
@@ -1010,7 +1013,7 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
    DataCollectionError error = DCE_SUCCESS;
    if (!_tcsicmp(name, _T("Status")))
    {
-      _sntprintf(buffer, size, _T("%d"), m_status);
+      IntegerToString(m_status, buffer);
    }
    else if (!_tcsicmp(name, _T("Dummy")) || MatchString(_T("Dummy(*)"), name, FALSE))
    {
@@ -1021,7 +1024,7 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
       shared_ptr<NetObj> object = objectFromParameter(name);
       if (object != nullptr)
       {
-         _sntprintf(buffer, size, _T("%d"), object->getStatus());
+         IntegerToString(object->getStatus(), buffer);
       }
       else
       {
@@ -1031,27 +1034,27 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
    else if (MatchString(_T("ConditionStatus(*)"), name, FALSE))
    {
       TCHAR *pEnd, szArg[256];
-      shared_ptr<NetObj> pObject;
+      shared_ptr<NetObj> object;
 
       AgentGetParameterArg(name, 1, szArg, 256);
       uint32_t dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{
-			pObject = FindObjectById(dwId);
-         if ((pObject != nullptr) && (pObject->getObjectClass() != OBJECT_CONDITION))
-            pObject.reset();
+			object = FindObjectById(dwId);
+         if ((object != nullptr) && (object->getObjectClass() != OBJECT_CONDITION))
+            object.reset();
 		}
 		else
       {
          // Argument is object's name
-			pObject = FindObjectByName(szArg, OBJECT_CONDITION);
+			object = FindObjectByName(szArg, OBJECT_CONDITION);
       }
 
-      if (pObject != nullptr)
+      if (object != nullptr)
       {
-			if (pObject->isTrustedNode(m_id))
+			if (object->isTrustedNode(m_id))
 			{
-				_sntprintf(buffer, size, _T("%d"), pObject->getStatus());
+	         IntegerToString(object->getStatus(), buffer);
 			}
 			else
 			{

@@ -480,8 +480,7 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *variable, const TCHAR *valu
 bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *variable, int32_t value)
 {
    TCHAR buffer[32];
-   _sntprintf(buffer, 32, _T("%d"), value);
-   return MetaDataWriteStr(variable, buffer);
+   return MetaDataWriteStr(variable, IntegerToString(value, buffer));
 }
 
 /**
@@ -1071,8 +1070,7 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *variable, const TCHAR *value,
 bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int32_t value, bool create, bool isVisible, bool needRestart)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, _T("%d"), value);
-   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
+   return ConfigWriteStr(variable, IntegerToString(value, buffer), create, isVisible, needRestart);
 }
 
 /**
@@ -1081,8 +1079,7 @@ bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *variable, int32_t value, bool
 bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, uint32_t value, bool create, bool isVisible, bool needRestart)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, _T("%u"), value);
-   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
+   return ConfigWriteStr(variable, IntegerToString(value, buffer), create, isVisible, needRestart);
 }
 
 /**
@@ -1091,8 +1088,7 @@ bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *variable, uint32_t value, b
 bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bool create, bool isVisible, bool needRestart)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, INT64_FMT, value);
-   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
+   return ConfigWriteStr(variable, IntegerToString(value, buffer), create, isVisible, needRestart);
 }
 
 /**
@@ -1101,8 +1097,7 @@ bool NXCORE_EXPORTABLE ConfigWriteInt64(const TCHAR *variable, int64_t value, bo
 bool NXCORE_EXPORTABLE ConfigWriteUInt64(const TCHAR *variable, uint64_t value, bool create, bool isVisible, bool needRestart)
 {
    TCHAR buffer[64];
-   _sntprintf(buffer, 64, UINT64_FMT, value);
-   return ConfigWriteStr(variable, buffer, create, isVisible, needRestart);
+   return ConfigWriteStr(variable, IntegerToString(value, buffer), create, isVisible, needRestart);
 }
 
 /**

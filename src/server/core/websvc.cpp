@@ -28,7 +28,7 @@
 /**
  * Create web service definition from NXCP message
  */
-WebServiceDefinition::WebServiceDefinition(const NXCPMessage& msg)
+WebServiceDefinition::WebServiceDefinition(const NXCPMessage& msg) : m_headers(msg, VID_HEADERS_BASE, VID_NUM_HEADERS)
 {
    m_id = msg.getFieldAsUInt32(VID_WEBSVC_ID);
    if (m_id == 0)
@@ -46,7 +46,6 @@ WebServiceDefinition::WebServiceDefinition(const NXCPMessage& msg)
    m_password = msg.getFieldAsString(VID_PASSWORD);
    m_cacheRetentionTime = msg.getFieldAsUInt32(VID_RETENTION_TIME);
    m_requestTimeout = msg.getFieldAsUInt32(VID_TIMEOUT);
-   m_headers.loadMessage(msg, VID_HEADERS_BASE, VID_NUM_HEADERS);
    m_flags = msg.getFieldAsUInt32(VID_FLAGS);
 }
 
