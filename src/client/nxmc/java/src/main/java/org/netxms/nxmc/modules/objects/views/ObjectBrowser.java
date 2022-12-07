@@ -114,6 +114,7 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_NETWORKMAPROOT);
             break;
          case NETWORK:
+            classFilter.add(AbstractObject.OBJECT_CLUSTER);
             classFilter.add(AbstractObject.OBJECT_NETWORK);
             classFilter.add(AbstractObject.OBJECT_ZONE);
             classFilter.add(AbstractObject.OBJECT_SUBNET);

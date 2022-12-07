@@ -499,6 +499,50 @@ void Cluster::configurationPoll(PollerInfo *poller, ClientSession *pSession, uin
    if (ConfigReadBoolean(_T("Objects.Clusters.ContainerAutoBind"), false))
       updateContainerMembership();
 
+   sendPollerMsg(_T("Bind cluster to subnets\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): Bind cluster to subnets"), m_name);
+   readLockChildList();
+   HashSet<uint32_t> parentIds;
+   SharedObjectArray<NetObj> addList;
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      shared_ptr<NetObj> child = getChildList().getShared(i);
+      unique_ptr<SharedObjectArray<NetObj>> parents = child->getParents(OBJECT_SUBNET);
+      for (shared_ptr<NetObj> parent : *parents)
+      {
+         parentIds.put(parent->getId());
+         if (!isParent(parent->getId()))
+         {
+            addList.add(parent);
+         }
+      }
+   }
+   unlockChildList();
+   for (auto parent : addList)
+   {
+      parent->addChild(self());
+      addParent(parent);
+      parent->calculateCompoundStatus();
+      sendPollerMsg(_T("   Bind to subnet %s\r\n"), parent->getName());
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ClusterConfPoll(%s): bind cluster %d \"%s\" to subnet %d \"%s\""),
+            m_name, m_id, m_name, parent->getId(), parent->getName());
+   }
+
+   unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_SUBNET);
+   for(int i = 0; i < parents->size(); i++)
+   {
+      shared_ptr<NetObj> parent = parents->getShared(i);
+      if (!parentIds.contains(parent->getId()))
+      {
+         parent->deleteChild(*this);
+         deleteParent(*parent.get());
+         parent->calculateCompoundStatus();
+         sendPollerMsg(_T("   Unbind from subnet %s\r\n"), parent->getName());
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ClusterConfPoll(%s): unbind cluster %d \"%s\" from subnet %d \"%s\""),
+               m_name, m_id, m_name, parent->getId(), parent->getName());
+      }
+   }
+
    sendPollerMsg(_T("Configuration poll finished\r\n"));
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ClusterConfPoll(%s): finished"), m_name);
 

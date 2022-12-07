@@ -162,10 +162,6 @@ public class NodesTab extends ObjectTab
 		{
 		   if (getObject() instanceof Subnet)
 		   {
-	         viewer.setInput(getObject().getChildrenAsArray());		      
-		   }
-		   else
-		   {
 		      List<AbstractObject> list = new ArrayList<AbstractObject>();
 		      for(AbstractObject o : getObject().getChildrenAsArray())
 		      {
