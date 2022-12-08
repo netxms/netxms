@@ -1,7 +1,7 @@
 SUBAGENT = netsvc
 
 pkglib_LTLIBRARIES = netsvc.la
-netsvc_la_SOURCES = main.cpp
+netsvc_la_SOURCES = main.cpp smtp.cpp http.cpp telnet.cpp ssh.cpp default.cpp netutil.cpp tls.cpp
 netsvc_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/build
 netsvc_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 netsvc_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
