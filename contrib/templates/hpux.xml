@@ -15,7 +15,7 @@
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Process %6 is not running</message>
+			<message>Process %&lt;instance&gt; is not running</message>
 			<tags></tags>
 		</event>
 	</events>

@@ -23,6 +23,68 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 43.3 to 43.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+         _T("message='Threshold reached for data collection item \"%<dciDescription>\" (Parameter: %<dciName>; Threshold value: %<{multipliers, units}thresholdValue>; Actual value: %<{multipliers, units}currentValue>)'")
+         _T("WHERE message='Threshold reached for data collection item \"%2\" (Parameter: %1; Threshold value: %3; Actual value: %4)'")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+         _T("description='Generated when threshold value reached for specific data collection item.\r\n")
+         _T("Parameters are accessible via %<…> and can have \"m\" or  \"multipliers\" and \"u\" or \"units\" modification options for value formatting like %<{m,u}…>.\r\n\r\n")
+         _T("Parameters:\r\n")
+         _T("   dciName - Parameter name\r\n")
+         _T("   dciDescription - Item description\r\n")
+         _T("   thresholdValue - Threshold value\r\n")
+         _T("   currentValue - Actual value which is compared to threshold value\r\n")
+         _T("   dciId - Data collection item ID\r\n")
+         _T("   instance - Instance\r\n")
+         _T("   isRepeatedEvent - Repeat flag\r\n")
+         _T("   dciValue - Last collected DCI value'")
+         _T("WHERE description='Generated when threshold value reached for specific data collection item.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) Parameter name\r\n")
+         _T("   2) Item description\r\n")
+         _T("   3) Threshold value\r\n")
+         _T("   4) Actual value\r\n")
+         _T("   5) Data collection item ID\r\n")
+         _T("   6) Instance\r\n")
+         _T("   7) Repeat flag\r\n")
+         _T("   8) Current DCI value'")));
+
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+         _T("message='Threshold rearmed for data collection item %<dciDescription> (Parameter: %<dciName>)'")
+         _T("WHERE message='Threshold rearmed for data collection item %2 (Parameter: %1)'")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+         _T("description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+         _T("Parameters are accessible via %<…> and can have \"m\" or  \"multipliers\" and \"u\" or \"units\" modification options for value formatting like %<{m,u}…>.\r\n\r\n")
+         _T("Parameters:\r\n")
+         _T("   dciName - Parameter name\r\n")
+         _T("   dciDescription - Item description\r\n")
+         _T("   dciId - Data collection item ID\r\n")
+         _T("   instance - Instance\r\n")
+         _T("   thresholdValue - Threshold value\r\n")
+         _T("   currentValue - Actual value which is compared to threshold value\r\n")
+         _T("   dciValue -  Last collected DCI value'")
+         _T("WHERE description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+         _T("Parameters:\r\n")
+         _T("   1) Parameter name\r\n")
+         _T("   2) Item description\r\n")
+         _T("   3) Data collection item ID\r\n")
+         _T("   4) Instance\r\n")
+         _T("   5) Threshold value\r\n")
+         _T("   6) Actual value\r\n")
+         _T("   7) Current DCI value'")));
+
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 43.2 to 43.3
  */
 static bool H_UpgradeFromV2()
@@ -98,6 +160,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  43, 4,  H_UpgradeFromV3  },
    { 2,  43, 3,  H_UpgradeFromV2  },
    { 1,  43, 2,  H_UpgradeFromV1  },
    { 0,  43, 2,  H_UpgradeFromV0  },

@@ -15,7 +15,7 @@
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>High swap space usage (%4%%)</message>
+			<message>High swap space usage (%&lt;{multipliers, units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
 		<event id="100025">
@@ -25,7 +25,7 @@
 			<description></description>
 			<severity>4</severity>
 			<flags>1</flags>
-			<message>No free space left on file system %6</message>
+			<message>No free space left on file system %&lt;instance&gt;</message>
 			<tags></tags>
 		</event>
 		<event id="100027">
@@ -35,7 +35,7 @@
 			<description></description>
 			<severity>2</severity>
 			<flags>1</flags>
-			<message>High CPU utilization (%4%%)</message>
+			<message>High CPU utilization (%&lt;{multipliers, units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
 		<event id="100026">
@@ -45,7 +45,7 @@
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Low free space on file system %6 (%4%% remaining)</message>
+			<message>Low free space on file system %&lt;instance&gt; (%&lt;{multipliers, units}currentValue&gt; remaining)</message>
 			<tags></tags>
 		</event>
 	</events>

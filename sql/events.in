@@ -4,17 +4,6 @@
 ** ex: syntax=sql
 */
 
-#define THRESHOLD_EVENT_PARAMS \
-	'   1) Parameter name' CONCAT CRLF CONCAT \
-	'   2) Item description' CONCAT CRLF CONCAT \
-	'   3) Threshold value' CONCAT CRLF CONCAT \
-	'   4) Actual value' CONCAT CRLF CONCAT \
-	'   5) Data collection item ID' CONCAT CRLF CONCAT \
-	'   6) Instance' CONCAT CRLF CONCAT \
-	'   7) Repeat flag' CONCAT CRLF CONCAT \
-	'   8) Current DCI value'
-
-
 /*
 ** System events
 */
@@ -270,25 +259,34 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	(
 		EVENT_THRESHOLD_REACHED, 'SYS_THRESHOLD_REACHED', '05161c3d-7ceb-406f-af0a-af5c77f324a5',
 		EVENT_SEVERITY_WARNING, 1,
-		'Threshold reached for data collection item "%2" (Parameter: %1; Threshold value: %3; Actual value: %4)',
+		'Threshold reached for data collection item "%<dciDescription>" (Parameter: %<dciName>; Threshold value: %<{multipliers, units}thresholdValue>; Actual value: %<{multipliers, units}currentValue>)',
 		'Generated when threshold value reached for specific data collection item.' CONCAT CRLF CONCAT
+		'Parameters are accessible via %<…> and can have "m" or  "multipliers" and "u" or "units" modification options for value formatting like %<{m,u}…>.' CONCAT CRLF CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
+		'   dciName - Parameter name' CONCAT CRLF CONCAT \
+		'   dciDescription - Item description' CONCAT CRLF CONCAT \
+		'   thresholdValue - Threshold value' CONCAT CRLF CONCAT \
+		'   currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT \
+		'   dciId - Data collection item ID' CONCAT CRLF CONCAT \
+		'   instance - Instance' CONCAT CRLF CONCAT \
+		'   isRepeatedEvent - Repeat flag' CONCAT CRLF CONCAT \
+		'   dciValue - Last collected DCI value'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_THRESHOLD_REARMED, 'SYS_THRESHOLD_REARMED', '25eef3a7-6158-4c5e-b4e3-8a7aa7ade73c',
 		EVENT_SEVERITY_NORMAL, 1,
-		'Threshold rearmed for data collection item %2 (Parameter: %1)',
+		'Threshold rearmed for data collection item %<dciDescription> (Parameter: %<dciName>)',
 		'Generated when threshold check is rearmed for specific data collection item.' CONCAT CRLF CONCAT
+		'Parameters are accessible via %<…> and can have "m" or  "multipliers" and "u" or "units" modification options for value formatting like %<{m,u}…>.' CONCAT CRLF CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Parameter name' CONCAT CRLF CONCAT
-		'   2) Item description' CONCAT CRLF CONCAT
-		'   3) Data collection item ID' CONCAT CRLF CONCAT
-		'   4) Instance' CONCAT CRLF CONCAT
-		'   5) Threshold value' CONCAT CRLF CONCAT
-		'   6) Actual value' CONCAT CRLF CONCAT
-		'   7) Current DCI value'
+		'   dciName - Parameter name' CONCAT CRLF CONCAT
+		'   dciDescription - Item description' CONCAT CRLF CONCAT
+		'   dciId - Data collection item ID' CONCAT CRLF CONCAT
+		'   instance - Instance' CONCAT CRLF CONCAT
+		'   thresholdValue - Threshold value' CONCAT CRLF CONCAT
+		'   currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT
+		'   dciValue - Last collected DCI value'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1647,117 +1645,4 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Default event for discarded SNMP traps.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) SNMP trap OID'
-	);
-
-/*
-** Following is a set of predefined events for thresholds
-** These events can occupy ID space 4000 ... 4999
-*/
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4000, 'DC_HIGH_CPU_UTIL', 'a1063661-6992-4536-bb11-38e40d72537f',
-		EVENT_SEVERITY_MINOR, 1,
-		'CPU utilization exceeds allowed maximum of %3 (Current: %4)',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4001, 'DC_HIGH_PROCLOAD', '6b438fb0-0bfa-4832-b020-8432a2a417d3',
-		EVENT_SEVERITY_MINOR, 1,
-		'Processor load average exceeds allowed maximum of %3 (Current: %4)',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4002, 'DC_HOST_RESTARTED', 'e0d27cf7-017d-4a73-ba53-bb6a4adcb9ee',
-		EVENT_SEVERITY_NORMAL, 1,
-		'Host was restarted within last 5 minutes',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4003, 'DC_AGENT_RESTARTED', '191fc8fb-d10f-46c4-b100-1167074622e8',
-		EVENT_SEVERITY_NORMAL, 1,
-		'NetXMS agent was restarted within last 5 minutes',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4004, 'DC_SERVICE_NOT_RUNNING', '69f9fb0b-c7cf-47dd-b1df-bfc2c5639678',
-		EVENT_SEVERITY_MAJOR, 1,
-		'Service "%6" is not running',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4005, 'DC_MAILBOX_TOO_LARGE', '4d448490-88af-450a-a138-b127b89a0f06',
-		EVENT_SEVERITY_WARNING, 1,
-		'Mailbox "%6" exceeds size limit (allowed size: %3; actual size: %4)',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4006, 'DC_AGENT_VERSION_CHANGE', 'e3c5d5e0-37c7-4b84-842e-22ad64a18692',
-		EVENT_SEVERITY_NORMAL, 1,
-		'NetXMS agent version was changed from %3 to %4',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4007, 'DC_HOSTNAME_CHANGE', 'd9f6d75c-5924-4e91-94e1-e43e6adc72c7',
-		EVENT_SEVERITY_WARNING, 1,
-		'Host name was changed from %3 to %4',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4008, 'DC_FILE_CHANGE', '9da39f09-b5d1-4b04-9b46-e4fb7e5751da',
-		EVENT_SEVERITY_WARNING, 1,
-		'File "%6" was changed',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4009, 'DC_HDD_TEMP_WARNING', 'fe37a161-9411-4869-8b3c-81041694609a',
-		EVENT_SEVERITY_WARNING, 1,
-		'Temperature of hard disk %6 is above warning level of %3 (current: %4)',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4010, 'DC_HDD_TEMP_MAJOR', '8af75da6-69f6-4723-902f-d43b44d5fced',
-		EVENT_SEVERITY_MAJOR, 1,
-		'Temperature of hard disk %6 is above %3 (current: %4)',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
-	);
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-		4011, 'DC_HDD_TEMP_CRITICAL', 'ed2a5b3c-02a0-4d81-94c9-7dc6396d6256',
-		EVENT_SEVERITY_CRITICAL, 1,
-		'Temperature of hard disk %6 is above critical level of %3 (current: %4)',
-		'Custom data collection threshold event.' CONCAT CRLF CONCAT
-		'Parameters:' CONCAT CRLF CONCAT
-		THRESHOLD_EVENT_PARAMS
 	);

@@ -12,7 +12,7 @@
 			<guid>6f5dbf00-e7ef-c545-9cfe-4493c43192fe</guid>
 			<name>DC_DELL_HW_STORAGE_GLOBAL_OK</name>
 			<code>100001</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;    dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
 			<message>Global health of Storage Management subsystem OK</message>
@@ -22,7 +22,7 @@
 			<guid>16bad8ab-8d05-0e4d-ab63-20eec24cd7a5</guid>
 			<name>DC_DELL_HW_STORAGE_GLOBAL</name>
 			<code>100000</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
 			<message>Global health of Storage Management subsystem NOT OK</message>
@@ -32,67 +32,67 @@
 			<guid>ef968f7b-30fc-1645-8511-c19b90d3ecca</guid>
 			<name>DC_DELL_HW_STORAGE_VDISK_OK</name>
 			<code>100003</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
-			<message>Condition of virtual disk %4 OK</message>
+			<message>Condition of virtual disk %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
 		<event id="100002">
 			<guid>8e5f2742-ecd1-b14b-b4dd-68f44ac17748</guid>
 			<name>DC_DELL_HW_STORAGE_VDISK</name>
 			<code>100002</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Condition of virtual disk %6 NOT OK</message>
+			<message>Condition of virtual disk %&lt;instance&gt; NOT OK</message>
 			<tags></tags>
 		</event>
 		<event id="100005">
 			<guid>fc063c01-e4c0-9c4d-861d-fea4a16d8e4a</guid>
 			<name>DC_DELL_HW_THERMAL_OK</name>
 			<code>100005</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
-			<message>Reading of temperature probe %4 OK</message>
+			<message>Reading of temperature probe %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
 		<event id="100004">
 			<guid>5fe4b245-5441-7644-b391-8df5e93b279e</guid>
 			<name>DC_DELL_HW_THERMAL</name>
 			<code>100004</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Reading for a temperature probe %6 current: %4 treshold: %3</message>
+			<message>Reading for a temperature probe %&lt;instance&gt; current: %&lt;{multipliers, units}currentValue&gt; treshold: %&lt;{multipliers, units}thresholdValue&gt;</message>
 			<tags></tags>
 		</event>
 		<event id="100007">
 			<guid>61f1b7ae-d27b-9046-a2f8-4adaf703692d</guid>
 			<name>DC_DELL_HW_VOLTAGE_OK</name>
 			<code>100007</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
-			<message>Status of the voltage probe %4 OK</message>
+			<message>Status of the voltage probe %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
 		<event id="100006">
 			<guid>9f57ca18-3b94-bc49-92b0-61895263b21d</guid>
 			<name>DC_DELL_HW_VOLTAGE</name>
 			<code>100006</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Status of the voltage probe %6 NOT OK</message>
+			<message>Status of the voltage probe %&lt;instance&gt; NOT OK</message>
 			<tags></tags>
 		</event>
 		<event id="100009">
 			<guid>38b10a76-ee80-e743-b289-16abaaf0eb76</guid>
 			<name>DC_DELL_HW_COOLING_OK</name>
 			<code>100009</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
 			<message>Status of the cooling unit OK</message>
@@ -102,7 +102,7 @@
 			<guid>896c65bb-8672-3340-b066-9a4ad28477c4</guid>
 			<name>DC_DELL_HW_COOLING</name>
 			<code>100008</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
 			<message>Status of the cooling unit NOT OK</message>
@@ -112,27 +112,27 @@
 			<guid>db319cd4-1af5-ff49-8b69-b04472ad5902</guid>
 			<name>DC_DELL_HW_CPU_OK</name>
 			<code>100011</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
-			<message>Status of processor %4 OK</message>
+			<message>Status of processor %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
 		<event id="100010">
 			<guid>30cc70a6-6b27-7541-bb53-373eacac0c30</guid>
 			<name>DC_DELL_HW_CPU</name>
 			<code>100010</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;  dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Status of processor %6 NOT OK</message>
+			<message>Status of processor %&lt;instance&gt; NOT OK</message>
 			<tags></tags>
 		</event>
 		<event id="100013">
 			<guid>b118f8f2-2b43-e647-b688-75c9c6ec245e</guid>
 			<name>DC_DELL_HW_MEMMORY_OK</name>
 			<code>100013</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
 			<message>Status of the physical memory array OK</message>
@@ -142,7 +142,7 @@
 			<guid>da555df0-e72d-fa4c-a859-079371d5b56d</guid>
 			<name>DC_DELL_HW_MEMMORY</name>
 			<code>100012</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
 			<message>Status of the physical memory array NOT OK</message>
@@ -152,60 +152,60 @@
 			<guid>8ceceb3c-8c2f-3541-9f8a-ac8391771211</guid>
 			<name>DC_DELL_HW_PSU_STATUS_OK</name>
 			<code>100015</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
-			<message>Status of the power supply %4 OK</message>
+			<message>Status of the power supply %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
 		<event id="100014">
 			<guid>68e72103-941c-d64f-8d8e-575204357e82</guid>
 			<name>DC_DELL_HW_PSU_STATUS</name>
 			<code>100014</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Status of the power supply %6 NOT OK</message>
+			<message>Status of the power supply %&lt;instance&gt; NOT OK</message>
 			<tags></tags>
 		</event>
 		<event id="100017">
 			<guid>b953155f-fce2-8744-997e-0db8ee2fd85f</guid>
 			<name>DC_DELL_HW_STORAGE_BATTERY_OK</name>
 			<code>100017</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
-			<message>Status of the battery %4 OK</message>
+			<message>Status of the battery %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
 		<event id="100016">
 			<guid>7ed86154-618d-9949-95f8-e3755adf6202</guid>
 			<name>DC_DELL_HW_STORAGE_BATTERY</name>
 			<code>100016</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>2</severity>
 			<flags>1</flags>
-			<message>Status of the battery %6 NOT OK</message>
+			<message>Status of the battery %&lt;instance&gt; NOT OK</message>
 			<tags></tags>
 		</event>
 		<event id="100019">
 			<guid>f5d47f1b-4d50-7b4c-9f66-14d79228a53b</guid>
 			<name>DC_DELL_HW_STORAGE_DISK_OK</name>
 			<code>100019</code>
-			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Data collection item ID&#x0D;&#x0A;   4) Instance&#x0D;&#x0A;   5) Threshold value&#x0D;&#x0A;   6) Actual value</description>
+			<description>Generated when threshold check is rearmed for specific data collection item.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>0</severity>
 			<flags>1</flags>
-			<message>Condition of array disk %4 OK</message>
+			<message>Condition of array disk %&lt;instance&gt; OK</message>
 			<tags></tags>
 		</event>
 		<event id="100018">
 			<guid>8b002b5d-4f23-f24b-bd31-ab4f6c86a3ac</guid>
 			<name>DC_DELL_HW_STORAGE_DISK</name>
 			<code>100018</code>
-			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   1) Parameter name&#x0D;&#x0A;   2) Item description&#x0D;&#x0A;   3) Threshold value&#x0D;&#x0A;   4) Actual value&#x0D;&#x0A;   5) Data collection item ID&#x0D;&#x0A;   6) Instance</description>
+			<description>Custom data collection threshold event.&#x0D;&#x0A;Parameters:&#x0D;&#x0A;   dciName - Parameter name&#x0D;&#x0A;   dciDescription - Item description&#x0D;&#x0A;   thresholdValue - Threshold value&#x0D;&#x0A;   currentValue - Actual value&#x0D;&#x0A;   dciId - Data collection item ID&#x0D;&#x0A;   instance - Instance&#x0D;&#x0A;   isRepeatedEvent - Repeat flag&#x0D;&#x0A;   dciValue - Current DCI value</description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Condition of array disk %6 NOT OK</message>
+			<message>Condition of array disk %&lt;instance&gt; NOT OK</message>
 			<tags></tags>
 		</event>
 	</events>

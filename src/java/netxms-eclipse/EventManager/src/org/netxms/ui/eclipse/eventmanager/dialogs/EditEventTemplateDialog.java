@@ -145,7 +145,7 @@ public class EditEventTemplateDialog extends Dialog
       gd.horizontalSpan = 3;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.widthHint = 450;
+      gd.widthHint = 900;
       message.setLayoutData(gd);
 
       tags = new LabeledText(dialogArea, SWT.NONE);
@@ -165,7 +165,7 @@ public class EditEventTemplateDialog extends Dialog
       gd.horizontalSpan = 3;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      gd.heightHint = 200;
+      gd.heightHint = 300;
       gd.widthHint = 450;
       gd.verticalAlignment = SWT.FILL;
       description.setLayoutData(gd);
