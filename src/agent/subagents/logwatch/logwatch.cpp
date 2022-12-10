@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2021 Victor Kirhenshtein
+** Copyright (C) 2008-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,40 +138,36 @@ static void SubagentShutdown()
 /**
  * Callback for matched log records
  */
-static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
-         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringMap &cgs,
-         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
-         time_t timestamp, const TCHAR *fileName, void *context)
+static void LogParserMatch(const LogParserCallbackData& data)
 {
-
    StringMap parameters;
-   parameters.addAll(cgs);
-   if (eventTag != nullptr)
+   data.captureGroups->addAllToMap(&parameters);
+   if (data.eventTag != nullptr)
    {
-      parameters.set(_T("eventTag"), eventTag);
+      parameters.set(_T("eventTag"), data.eventTag);
    }
 
-   if (source != nullptr)
+   if (data.source != nullptr)
    {
-      parameters.set(_T("source"), source);
-      parameters.set(_T("eventId"), eventId);
-      parameters.set(_T("severity"), severity);
-      parameters.set(_T("recordId"), recordId);
+      parameters.set(_T("source"), data.source);
+      parameters.set(_T("eventId"), data.windowsEventId);
+      parameters.set(_T("severity"), data.severity);
+      parameters.set(_T("recordId"), data.recordId);
    }
-   parameters.set(_T("repeatCount"), repeatCount);
+   parameters.set(_T("repeatCount"), data.repeatCount);
 
-   if (variables != nullptr)
+   if (data.variables != nullptr)
    {
-      for(int j = 0; j < variables->size(); j++)
+      for(int j = 0; j < data.variables->size(); j++)
       {
          TCHAR buffer[32];
          _sntprintf(buffer, 32, _T("variable%d"), j + 1);
-         parameters.set(buffer, variables->get(j));
+         parameters.set(buffer, data.variables->get(j));
       }
    }
-   parameters.set(_T("fileName"), fileName);
+   parameters.set(_T("fileName"), data.logName);
 
-   AgentPostEventWithNames(eventCode, eventName, timestamp, parameters);
+   AgentPostEventWithNames(data.eventCode, data.eventName, data.logRecordTimestamp, parameters);
 }
 
 /**
@@ -352,10 +348,10 @@ static void AddLogwatchPolicyFiles()
    nxlog_debug_tag(DEBUG_TAG, 1, _T("AddLogwatchPolicyFiles(): Log parser policy directory: %s"), policyFolder);
 
    _TDIR *dir = _topendir(policyFolder);
-   if (dir != NULL)
+   if (dir != nullptr)
    {
       struct _tdirent *d;
-      while((d = _treaddir(dir)) != NULL)
+      while((d = _treaddir(dir)) != nullptr)
       {
          if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
          {
@@ -404,7 +400,7 @@ static bool SubagentInit(Config *config)
    s_processOfflineEvents = config->getValueAsBoolean(_T("/LogWatch/ProcessOfflineEvents"), false);
 
 	ConfigEntry *parsers = config->getEntry(_T("/LogWatch/Parser"));
-	if (parsers != NULL)
+	if (parsers != nullptr)
 	{
 		for(int i = 0; i < parsers->getValueCount(); i++)
 			AddParserFromConfig(parsers->getValue(i), uuid::NULL_UUID);
@@ -531,7 +527,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("LogWatch.ParserList"), H_ParserList, NULL }
+	{ _T("LogWatch.ParserList"), H_ParserList, nullptr }
 };
 
 /**
@@ -541,14 +537,14 @@ static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("LOGWATCH"), NETXMS_VERSION_STRING,
-	SubagentInit, SubagentShutdown, NULL, OnAgentNotify,
+	SubagentInit, SubagentShutdown, nullptr, OnAgentNotify,
 	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
 	s_lists,
-	0, NULL,		// tables
-	0, NULL,		// actions
-	0, NULL		// push parameters
+	0, nullptr,		// tables
+	0, nullptr,		// actions
+	0, nullptr		// push parameters
 };
 
 /**

@@ -266,43 +266,40 @@ uint64_t GetNextWinEventId()
 /**
  * Callback for Windows event parser
  */
-static void WindwsEventParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
-         const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity, const StringMap &captureGroups,
-         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, time_t timestamp,
-         const TCHAR *fileName, void *context)
+static void WindwsEventParserCallback(const LogParserCallbackData& data)
 {
-   nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), captureGroups.size(), repeatCount);
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Windows event message matched, capture group count = %d, repeat count = %d"), data.captureGroups->size(), data.repeatCount);
 
-   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(data.objectId, OBJECT_NODE));
    if ((node != nullptr) && ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
    {
       StringMap pmap;
-      pmap.addAll(captureGroups);
+      data.captureGroups->addAllToMap(&pmap);
 
-      if (eventTag != nullptr)
-         pmap.set(_T("eventTag"), eventTag);
+      if (data.eventTag != nullptr)
+         pmap.set(_T("eventTag"), data.eventTag);
 
-      if (source != nullptr)
+      if (data.source != nullptr)
       {
-         pmap.set(_T("wevtSource"), source);
-         pmap.set(_T("wevtId"), facility);
-         pmap.set(_T("wevtLevel"), severity);
-         pmap.set(_T("wevtRecordId"), recordId);
+         pmap.set(_T("wevtSource"), data.source);
+         pmap.set(_T("wevtId"), data.windowsEventId);
+         pmap.set(_T("wevtLevel"), data.severity);
+         pmap.set(_T("wevtRecordId"), data.recordId);
       }
 
-      pmap.set(_T("repeatCount"), repeatCount);
+      pmap.set(_T("repeatCount"), data.repeatCount);
 
-      if (variables != nullptr)
+      if (data.variables != nullptr)
       {
          TCHAR name[32];
-         for (int j = 0; j < variables->size(); j++)
+         for (int j = 0; j < data.variables->size(); j++)
          {
             _sntprintf(name, 32, _T("wevtVariable%d"), j + 1);
-            pmap.set(name, variables->get(j));
+            pmap.set(name, data.variables->get(j));
          }
       }
 
-      PostEventWithTagAndNames(eventCode, EventOrigin::WINDOWS_EVENT, timestamp, objectId, eventTag, &pmap);
+      PostEventWithTagAndNames(data.eventCode, EventOrigin::WINDOWS_EVENT, data.logRecordTimestamp, data.objectId, data.eventTag, &pmap);
    }
 }
 

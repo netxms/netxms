@@ -527,20 +527,17 @@ void QueueProxiedSyslogMessage(const InetAddress &addr, int32_t zoneUIN, uint32_
 /**
  * Callback for syslog parser
  */
-static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
-         const TCHAR *line, const TCHAR *source, UINT32 facility, UINT32 severity, const StringMap &captureGroups,
-         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount, time_t timestamp,
-         const TCHAR *fileName, void *context)
+static void SyslogParserCallback(const LogParserCallbackData& data)
 {
-	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), captureGroups.size(), repeatCount);
+	nxlog_debug_tag(DEBUG_TAG, 7, _T("Syslog message matched, capture group count = %d, repeat count = %d"), data.captureGroups->size(), data.repeatCount);
 
-   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
+   shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(data.objectId, OBJECT_NODE));
    if ((node != nullptr) && ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
    {
       StringMap pmap;
-      pmap.addAll(captureGroups);
-      pmap.set(_T("repeatCount"), repeatCount);
-      PostEventWithTagAndNames(eventCode, EventOrigin::SYSLOG, timestamp, objectId, eventTag, &pmap);
+      data.captureGroups->addAllToMap(&pmap);
+      pmap.set(_T("repeatCount"), data.repeatCount);
+      PostEventWithTagAndNames(data.eventCode, EventOrigin::SYSLOG, data.logRecordTimestamp, data.objectId, data.eventTag, &pmap);
    }
 }
 

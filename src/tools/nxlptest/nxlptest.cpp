@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Log Parser Testing Utility
-** Copyright (C) 2009-2021 Victor Kirhenshtein
+** Copyright (C) 2009-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ NETXMS_EXECUTABLE_HEADER(nxlptest)
  */
 static TCHAR m_helpText[] =
    _T("NetXMS Log Parsing Tester  Version ") NETXMS_VERSION_STRING _T("\n")
-   _T("Copyright (c) 2009-2020 Victor Kirhenshtein\n\n")
+   _T("Copyright (c) 2009-2022 Victor Kirhenshtein\n\n")
    _T("Usage:\n")
    _T("   nxlptest [options] parser\n\n")
    _T("Where valid options are:\n")
@@ -60,17 +60,6 @@ static void DebugWriter(const TCHAR *tag, const TCHAR *format, va_list args)
       _tprintf(_T("[%s] "), tag);
    _vtprintf(format, args);
    _fputtc(_T('\n'), stdout);
-}
-
-/**
- * Parser callback
- */
-static void ParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag,
-         const TCHAR *text, const TCHAR *source, UINT32 eventId, UINT32 severity, const StringMap &cgs,
-         const StringList *variables, UINT64 recordId, UINT32 objectId, int repeatCount,
-         time_t timestamp, const TCHAR *fileName, void *context)
-{
-   nxlog_debug_tag(_T("parser"), 3, _T("Parser match (eventCode=%u eventName=%s eventTag=%s) \"%s\""), eventCode, eventName, eventTag);
 }
 
 /**
@@ -170,7 +159,13 @@ int main(int argc, char *argv[])
          LogParser *parser = parsers->get(0);
          for(int i = 1; i < parsers->size(); i++)
             delete parsers->get(i);
-			parser->setCallback(ParserCallback);
+
+			parser->setCallback(
+			   [] (const LogParserCallbackData& data) -> void
+			   {
+               nxlog_debug_tag(_T("parser"), 3, _T("Parser match (eventCode=%u eventName=%s eventTag=%s) \"%s\""), data.eventCode, data.eventName, data.eventTag);
+			   });
+
 			if (inputFile != nullptr)
 				parser->setFileName(inputFile);
 #ifdef _WIN32

@@ -76,6 +76,60 @@ enum LogParserFileEncoding
    LP_FCP_UCS4_BE = 7
 };
 
+#define LOGWATCH_MAX_NUM_CAPTURE_GROUPS 127
+
+/**
+ * Capture groups store
+ */
+class CaptureGroupsStore
+{
+private:
+   MemoryPool m_pool;
+   size_t m_numGroups;
+   TCHAR *m_values[LOGWATCH_MAX_NUM_CAPTURE_GROUPS];
+   StringObjectMap<TCHAR> m_nameIndex;
+
+public:
+   CaptureGroupsStore();
+   CaptureGroupsStore(const TCHAR *line, int *offsets, int cgcount, const HashMap<uint32_t, String>& groupNames);
+
+   const size_t size() const { return m_numGroups; }
+   const TCHAR *getByPosition(size_t position) const { return (position < m_numGroups) ? m_values[position] : nullptr; }
+   const TCHAR *getByName(const TCHAR *name) const { return m_nameIndex.get(name); }
+
+   void addAllToMap(StringMap *target) const
+   {
+      for(KeyValuePair<TCHAR> *e : m_nameIndex)
+         target->set(e->key, e->value);
+   }
+};
+
+/**
+ * Data for log parser callback
+ */
+struct LogParserCallbackData
+{
+   uint32_t eventCode;
+   const TCHAR *eventName;
+   const TCHAR *eventTag;
+   const TCHAR *originalText;
+   const TCHAR *source;
+   union
+   {
+      uint32_t facility;
+      uint32_t windowsEventId;
+   };
+   uint32_t severity;
+   uint64_t recordId;
+   time_t logRecordTimestamp;
+   const StringList *variables;
+   const TCHAR *logName;
+   const CaptureGroupsStore *captureGroups;
+   uint32_t repeatCount;
+   uint32_t objectId;
+   void *userData;
+};
+
 /**
  * Log parser callback
  * Parameters:
@@ -84,23 +138,21 @@ enum LogParserFileEncoding
  *    capture groups, variables, record id, object id, repeat count,
  *    log record timestamp, user data
  */
-typedef void (*LogParserCallback)(UINT32, const TCHAR*, const TCHAR*, const TCHAR*,
-         const TCHAR*, UINT32, UINT32, const StringMap&, const StringList*, UINT64, UINT32,
-         int, time_t, const TCHAR*,  void*);
+typedef std::function<void (const LogParserCallbackData& data)> LogParserCallback;
 
 /**
  * Log parser action callback
  * Parameters:
  *    NetXMS agent action, agent action arguments, user data
  */
-typedef void (*LogParserActionCallback)(const TCHAR*, const StringList&, void*);
+typedef std::function<void (const TCHAR*, const StringList&, void*)> LogParserActionCallback;
 
 /**
  * Log parser data push callback
  * Parameters:
  *    NetXMS agent data push parameter name, parameter value
  */
-typedef bool (*LogParserDataPushCallback)(const TCHAR* parameter, const TCHAR *value);
+typedef std::function<bool (const TCHAR* parameter, const TCHAR *value)> LogParserDataPushCallback;
 
 /**
  * Log parser copy callback
@@ -142,12 +194,12 @@ class LIBNXLP_EXPORTABLE LogParserRule
 
 private:
 	LogParser *m_parser;
-	TCHAR *m_name;
+	String m_name;
 	PCRE *m_preg;
 	uint32_t m_eventCode;
 	TCHAR *m_eventName;
 	TCHAR *m_eventTag;
-	int *m_pmatch;
+	int m_pmatch[LOGWATCH_MAX_NUM_CAPTURE_GROUPS * 3];
 	TCHAR *m_regexp;
 	TCHAR *m_source;
    uint32_t m_level;
@@ -172,11 +224,11 @@ private:
    int m_pushGroup;
 	TCHAR *m_logName;
 	StringList *m_agentActionArgs;
-	HashMap<uint32_t, ObjectRuleStats> *m_objectCounters;
+	HashMap<uint32_t, ObjectRuleStats> m_objectCounters;
    HashMap<uint32_t, String> m_groupName;
 
-	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
-	         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName,
+	bool matchInternal(bool extMode, const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line,
+	         StringList *variables, uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *logName,
 	         LogParserCallback cb, LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData);
 	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
@@ -186,13 +238,13 @@ private:
 
 public:
 	LogParserRule(LogParser *parser, const TCHAR *name,
-	              const TCHAR *regexp, bool ignoreCase, UINT32 eventCode, const TCHAR *eventName,
+	              const TCHAR *regexp, bool ignoreCase, uint32_t eventCode, const TCHAR *eventName,
 					  const TCHAR *eventTag, int repeatInterval, int repeatCount,
 					  bool resetRepeat, const TCHAR *push, int pushGroup);
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
 
-	const TCHAR *getName() const { return m_name; }
+	const TCHAR *getName() const { return m_name.cstr(); }
 	bool isValid() const { return m_preg != nullptr; }
 	uint32_t getEventCode() const { return m_eventCode; }
 
@@ -260,7 +312,7 @@ public:
    int getCheckCount(uint32_t objectId = 0) const;
    int getMatchCount(uint32_t objectId = 0) const;
 
-   void restoreCounters(const LogParserRule *rule);
+   void restoreCounters(const LogParserRule& rule);
 };
 
 #ifdef _WIN32

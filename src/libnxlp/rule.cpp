@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,25 +23,62 @@
 
 #include "libnxlp.h"
 
-#define MAX_PARAM_COUNT 127
+/**
+ * Create empty capture group store
+ */
+CaptureGroupsStore::CaptureGroupsStore() : m_nameIndex(Ownership::False)
+{
+   m_numGroups = 0;
+}
+
+/**
+ * Create capture group store
+ */
+CaptureGroupsStore::CaptureGroupsStore(const TCHAR *line, int *offsets, int cgcount, const HashMap<uint32_t, String>& groupNames) : m_nameIndex(Ownership::False)
+{
+   m_numGroups = cgcount - 1;
+   for(int i = 1; i < cgcount; i++)
+   {
+      if (offsets[i * 2] == -1)
+         continue;
+
+      int len = offsets[i * 2 + 1] - offsets[i * 2];
+      TCHAR *s = m_pool.allocateString(len + 1);
+      memcpy(s, &line[offsets[i * 2]], len * sizeof(TCHAR));
+      s[len] = 0;
+
+      m_values[i - 1] = s;
+
+      const String *name = groupNames.get(i);
+      if (name != nullptr)
+      {
+         m_nameIndex.set(*name, s);
+      }
+      else
+      {
+         TCHAR buffer[32];
+         _sntprintf(buffer, 32, _T("group-%d"), i);
+         m_nameIndex.set(buffer, s);
+      }
+   }
+}
 
 /**
  * Constructor
  */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, bool ignoreCase,
-      UINT32 eventCode, const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
-      bool resetRepeat, const TCHAR *pushParam, int pushGroup) : m_groupName(Ownership::True)
+      uint32_t eventCode, const TCHAR *eventName, const TCHAR *eventTag, int repeatInterval, int repeatCount,
+      bool resetRepeat, const TCHAR *pushParam, int pushGroup) : m_name(name), m_objectCounters(Ownership::True), m_groupName(Ownership::True)
 {
 	StringBuffer expandedRegexp;
 
 	m_parser = parser;
-	m_name = MemCopyString(CHECK_NULL_EX(name));
 	expandMacros(regexp, expandedRegexp);
 	m_regexp = MemCopyString(expandedRegexp);
 	m_eventCode = eventCode;
 	m_eventName = MemCopyString(eventName);
    m_eventTag = MemCopyString(eventTag);
-	m_pmatch = MemAllocArray<int>(MAX_PARAM_COUNT * 3);
+	memset(m_pmatch, 0, sizeof(m_pmatch));
 	m_source = nullptr;
 	m_level = 0xFFFFFFFF;
 	m_idStart = 0;
@@ -65,7 +102,6 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 	m_pushGroup = pushGroup;
 	m_logName = nullptr;
 	m_agentActionArgs = new StringList();
-   m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
 
    const char *eptr;
    int eoffset;
@@ -84,15 +120,14 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *
 /**
  * Copy constructor
  */
-LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_groupName(Ownership::True)
+LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_name(src->m_name), m_objectCounters(Ownership::True), m_groupName(Ownership::True)
 {
 	m_parser = parser;
-	m_name = MemCopyString(src->m_name);
 	m_regexp = MemCopyString(src->m_regexp);
    m_eventCode = src->m_eventCode;
 	m_eventName = MemCopyString(src->m_eventName);
    m_eventTag = MemCopyString(src->m_eventTag);
-   m_pmatch = MemAllocArray<int>(MAX_PARAM_COUNT * 3);
+   memset(m_pmatch, 0, sizeof(m_pmatch));
    m_source = MemCopyString(src->m_source);
 	m_level = src->m_level;
 	m_idStart = src->m_idStart;
@@ -121,8 +156,7 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_groupNam
    m_pushParam = MemCopyString(src->m_pushParam);
    m_logName = MemCopyString(src->m_logName);
    m_agentActionArgs = new StringList(src->m_agentActionArgs);
-   m_objectCounters = new HashMap<uint32_t, ObjectRuleStats>(Ownership::True);
-   restoreCounters(src);
+   restoreCounters(*src);
 
    const char *eptr;
    int eoffset;
@@ -143,10 +177,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser) : m_groupNam
  */
 LogParserRule::~LogParserRule()
 {
-   MemFree(m_name);
 	if (m_preg != nullptr)
 		_pcre_free_t(m_preg);
-	MemFree(m_pmatch);
 	MemFree(m_description);
 	MemFree(m_source);
 	MemFree(m_regexp);
@@ -159,7 +191,6 @@ LogParserRule::~LogParserRule()
 	MemFree(m_logName);
 	delete m_agentActionArgs;
 	delete m_matchArray;
-	delete m_objectCounters;
 }
 
 /**
@@ -199,8 +230,8 @@ void LogParserRule::updateGroupNames()
 /**
  * Match line
  */
-bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line,
-         StringList *variables, UINT64 recordId, UINT32 objectId, time_t timestamp, const TCHAR *logName, LogParserCallback cb,
+bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line,
+         StringList *variables, uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *logName, LogParserCallback cb,
          LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData)
 {
    incCheckCount(objectId);
@@ -248,25 +279,42 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	if (m_isInverted)
 	{
 		m_parser->trace(7, _T("  negated matching against regexp %s"), m_regexp);
-		if ((_pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3) < 0) && matchRepeatCount())
+		if ((_pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, LOGWATCH_MAX_NUM_CAPTURE_GROUPS * 3) < 0) && matchRepeatCount())
 		{
 			m_parser->trace(7, _T("  matched"));
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
-            StringMap captureGroups;
-				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, logName, userData);
+			   CaptureGroupsStore captureGroups;
+            LogParserCallbackData data;
+            data.captureGroups = &captureGroups;
+            data.eventCode = m_eventCode;
+            data.eventName = m_eventName;
+            data.eventTag = m_eventTag;
+            data.facility = eventId;
+            data.logName = logName;
+            data.logRecordTimestamp = timestamp;
+            data.objectId = objectId;
+            data.originalText = line;
+            data.recordId = recordId;
+            data.repeatCount = ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1;
+            data.severity = level;
+            data.source = source;
+            data.userData = userData;
+            data.variables = variables;
+            cb(data);
 			}
+
          if ((cbAction != nullptr) && (m_agentAction != nullptr))
             cbAction(m_agentAction, *m_agentActionArgs, userData);
-			incMatchCount(objectId);
+
+         incMatchCount(objectId);
 			return true;
 		}
 	}
 	else
 	{
 		m_parser->trace(7, _T("  matching against regexp %s"), m_regexp);
-		int cgcount = _pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, MAX_PARAM_COUNT * 3);
+		int cgcount = _pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, LOGWATCH_MAX_NUM_CAPTURE_GROUPS * 3);
 
 		m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
 		if ((cgcount >= 0) && matchRepeatCount())
@@ -274,49 +322,39 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			m_parser->trace(7, _T("  matched"));
 
 			if (cgcount == 0)
-			      cgcount = MAX_PARAM_COUNT;
-            StringMap captureGroups;
-				for(int i = 1; i < cgcount; i++)
-				{
-               if (m_pmatch[i * 2] == -1)
-                  continue;
+			      cgcount = LOGWATCH_MAX_NUM_CAPTURE_GROUPS;
 
-					int len = m_pmatch[i * 2 + 1] - m_pmatch[i * 2];
-					TCHAR *s = MemAllocString(len + 1);
-					memcpy(s, &line[m_pmatch[i * 2]], len * sizeof(TCHAR));
-					s[len] = 0;
-					if (m_groupName.contains(i))
-					{
-					   captureGroups.setPreallocated(MemCopyString(m_groupName.get(i)->cstr()), s);
-					}
-					else
-					{
-					   TCHAR buffer[32];
-				      _sntprintf(buffer, 32, _T("group%d"), i);
-                  captureGroups.setPreallocated(MemCopyString(buffer), s);
-					}
-				}
+			CaptureGroupsStore captureGroups(line, m_pmatch, cgcount, m_groupName);
 
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
 			{
-				cb(m_eventCode, m_eventName, m_eventTag, line, source, eventId, level, captureGroups, variables, recordId, objectId,
-               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, timestamp, logName, userData);
+			   LogParserCallbackData data;
+			   data.captureGroups = &captureGroups;
+			   data.eventCode = m_eventCode;
+			   data.eventName = m_eventName;
+			   data.eventTag = m_eventTag;
+			   data.facility = eventId;
+			   data.logName = logName;
+			   data.logRecordTimestamp = timestamp;
+            data.objectId = objectId;
+			   data.originalText = line;
+			   data.recordId = recordId;
+			   data.repeatCount = ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1;
+			   data.severity = level;
+			   data.source = source;
+			   data.userData = userData;
+			   data.variables = variables;
+				cb(data);
             m_parser->trace(8, _T("  callback completed"));
 			}
 
-			if((cbDataPush != nullptr))
-			{
-				if((0 < m_pushGroup) && (captureGroups.size() >= m_pushGroup))
-				{
-				   StructArray<KeyValuePair<const TCHAR>> *array = captureGroups.toArray();
-					const TCHAR *value = array->get(m_pushGroup - 1)->value;
-					cbDataPush(m_pushParam, value);
-					delete array;
-				}
-			}
+			if ((cbDataPush != nullptr) && (m_pushGroup > 0) && (captureGroups.size() >= m_pushGroup))
+            cbDataPush(m_pushParam, captureGroups.getByPosition(m_pushGroup - 1));
+
 			if ((cbAction != nullptr) && (m_agentAction != nullptr))
 			   cbAction(m_agentAction, *m_agentActionArgs, userData);
-         incMatchCount(objectId);
+
+			incMatchCount(objectId);
 			return true;
 		}
 	}
@@ -401,11 +439,11 @@ void LogParserRule::incCheckCount(uint32_t objectId)
    m_checkCount++;
    if (objectId == 0)
       return;
-   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   ObjectRuleStats *s = m_objectCounters.get(objectId);
    if (s == nullptr)
    {
       s = new ObjectRuleStats();
-      m_objectCounters->set(objectId, s);
+      m_objectCounters.set(objectId, s);
    }
    s->checkCount++;
 }
@@ -418,11 +456,11 @@ void LogParserRule::incMatchCount(uint32_t objectId)
    m_matchCount++;
    if (objectId == 0)
       return;
-   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   ObjectRuleStats *s = m_objectCounters.get(objectId);
    if (s == nullptr)
    {
       s = new ObjectRuleStats();
-      m_objectCounters->set(objectId, s);
+      m_objectCounters.set(objectId, s);
    }
    s->matchCount++;
 }
@@ -434,7 +472,7 @@ int LogParserRule::getCheckCount(uint32_t objectId) const
 {
    if (objectId == 0)
       return m_checkCount;
-   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   ObjectRuleStats *s = m_objectCounters.get(objectId);
    return (s != nullptr) ? s->checkCount : 0;
 }
 
@@ -445,7 +483,7 @@ int LogParserRule::getMatchCount(uint32_t objectId) const
 {
    if (objectId == 0)
       return m_matchCount;
-   ObjectRuleStats *s = m_objectCounters->get(objectId);
+   ObjectRuleStats *s = m_objectCounters.get(objectId);
    return (s != nullptr) ? s->matchCount : 0;
 }
 
@@ -464,9 +502,9 @@ static EnumerationCallbackResult RestoreCountersCallback(const uint32_t& key, Ob
 /**
  * Restore counters from previous rule version
  */
-void LogParserRule::restoreCounters(const LogParserRule *rule)
+void LogParserRule::restoreCounters(const LogParserRule& rule)
 {
-   m_checkCount = rule->m_checkCount;
-   m_matchCount = rule->m_matchCount;
-   rule->m_objectCounters->forEach(RestoreCountersCallback, m_objectCounters);
+   m_checkCount = rule.m_checkCount;
+   m_matchCount = rule.m_matchCount;
+   rule.m_objectCounters.forEach(RestoreCountersCallback, &m_objectCounters);
 }

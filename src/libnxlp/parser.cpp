@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -711,9 +711,9 @@ static void EndElement(void *userData, const char *name)
 	{
       ps->event.trim();
 
-		const TCHAR *eventName = NULL;
+		const TCHAR *eventName = nullptr;
 		TCHAR *eptr;
-		UINT32 eventCode = _tcstoul(ps->event, &eptr, 0);
+		uint32_t eventCode = _tcstoul(ps->event, &eptr, 0);
 		if (*eptr != 0)
 		{
 			eventCode = ps->parser->resolveEventName(ps->event, 0);
@@ -994,7 +994,7 @@ void LogParser::restoreCounters(const LogParser *parser)
       const LogParserRule *rule = parser->findRuleByName(m_rules.get(i)->getName());
       if (rule != nullptr)
       {
-         m_rules.get(i)->restoreCounters(rule);
+         m_rules.get(i)->restoreCounters(*rule);
       }
    }
 }
