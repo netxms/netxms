@@ -48,17 +48,17 @@ assert(f1() == 1);
 assert(f2() == -1);
 assert(f3() == null);
 
-sub f1()
+function f1()
 {
 	return 1;
 }
 
-sub f2()
+function f2()
 {
 	return -1;
 }
 
-sub f3()
+function f3()
 {
 }
 
@@ -74,12 +74,12 @@ p = !s1() && !s2();
 assert(!p);
 assert(!flag);
 
-sub s1()
+function s1()
 {
 	return true;
 }
 
-sub s2()
+function s2()
 {
 	flag = true;
 	return flag;

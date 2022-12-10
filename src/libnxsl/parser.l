@@ -87,6 +87,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"false"    return T_FALSE;
 <INITIAL,FEXPR>"for"      return T_FOR;
 <INITIAL,FEXPR>"foreach"  return T_FOREACH;
+<INITIAL,FEXPR>"function" return T_FUNCTION;
 <INITIAL,FEXPR>"global"   return T_GLOBAL;
 <INITIAL,FEXPR>"if"       return T_IF;
 <INITIAL,FEXPR>"ilike"    return T_ILIKE;
@@ -106,7 +107,7 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"return"   return T_RETURN;
 <INITIAL,FEXPR>"select"   return T_SELECT;
 <INITIAL,FEXPR>"string"   return T_TYPE_STRING;
-<INITIAL,FEXPR>"sub"      return T_SUB;
+<INITIAL,FEXPR>"sub"      return T_FUNCTION;
 <INITIAL,FEXPR>"switch"   return T_SWITCH;
 <INITIAL,FEXPR>"TRUE"     return T_TRUE;
 <INITIAL,FEXPR>"true"     return T_TRUE;

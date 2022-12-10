@@ -50,7 +50,7 @@ catch
 }
 assert(marker == 5);
 
-sub level1()
+function level1()
 {
 	try
 	{
@@ -64,7 +64,7 @@ sub level1()
 	marker++;
 }
 
-sub level2()
+function level2()
 {
 	marker++;
 	x = Y * z;

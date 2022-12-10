@@ -13,7 +13,7 @@ assert(y == 2);
 global z = 123;
 assert(z == 123);
 
-sub test()
+function test()
 {
 	assert(x == 1);
 	assert(y == null);

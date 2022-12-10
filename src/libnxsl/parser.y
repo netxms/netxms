@@ -54,6 +54,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_FOR
 %token T_FOREACH
 %token T_FSTRING_BEGIN
+%token T_FUNCTION
 %token T_GLOBAL
 %token T_IDIV
 %token T_IF
@@ -63,7 +64,6 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_RANGE
 %token T_RETURN
 %token T_SELECT
-%token T_SUB
 %token T_SWITCH
 %token T_TRUE
 %token T_TRY
@@ -217,7 +217,7 @@ AnyIdentifier:
 ;
 
 Function:
-	T_SUB FunctionName 
+	T_FUNCTION FunctionName 
 	{
 		char szErrorText[256];
 

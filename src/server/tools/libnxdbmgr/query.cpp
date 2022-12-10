@@ -99,7 +99,6 @@ const TCHAR *g_sqlTypes[8][4] =
    { _T("text"),         _T("varchar(4000)"),  _T("bigint"),     _T("bytea")          }  // TimescaleDB
 };
 
-
 /**
  * Execute SQL query from formatted string and print error message on screen if query failed
  */
