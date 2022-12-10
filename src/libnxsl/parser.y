@@ -111,6 +111,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <constant> Constant
 %type <valIdentifier> AnyIdentifier
 %type <valIdentifier> FunctionName
+%type <valIdentifier> GlobalVariableDeclarationStart
 %type <valInt32> BuiltinType
 %type <valInt32> ParameterList
 %type <valInt32> SelectList
@@ -321,32 +322,32 @@ WithAssignment:
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
 	builder->registerExpressionVariable($1);
 }
-	WithMetadata '=' WithCalculationBlock
+	Metadata '=' WithCalculationBlock
 {
 	builder->resolveLastJump(OPCODE_JMP);
 }	
 ;
 
-WithMetadata:
-	'(' WithMetadataValues ')'
+Metadata:
+	'(' MetadataValues ')'
 |
 ;
 
-WithMetadataValues:
-	WithMetadataValue ',' WithMetadataValue
-|	WithMetadataValue
+MetadataValues:
+	MetadataValue ',' MetadataValue
+|	MetadataValue
 ;
 
-WithMetadataValue:
+MetadataValue:
 	T_IDENTIFIER '=' Constant
 {
    TCHAR key[1024];
 #ifdef UNICODE
-   size_t l = utf8_to_wchar(builder->getCurrentExpressionVariable().value, -1, key, 1024);
+   size_t l = utf8_to_wchar(builder->getCurrentMetadataPrefix().value, -1, key, 1024);
 	key[l - 1] = L'.';
    utf8_to_wchar($1.v, -1, &key[l], 1024 - l);
 #else
-	strlcpy(key, builder->getCurrentExpressionVariable().value, 1024);
+	strlcpy(key, builder->getCurrentMetadataPrefix().value, 1024);
 	strlcat(key, ".", 1024);
 	strlcat(key, $1.v, 1024);
 #endif
@@ -1243,13 +1244,20 @@ GlobalVariableList:
 ;
 
 GlobalVariableDeclaration:
-	T_IDENTIFIER
+	GlobalVariableDeclarationStart
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_GLOBAL, $1, 0);
 }
-|	T_IDENTIFIER '=' Expression
+|	GlobalVariableDeclarationStart '=' Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_GLOBAL, $1, 1);
+}
+;
+
+GlobalVariableDeclarationStart:
+	T_IDENTIFIER { builder->setCurrentMetadataPrefix($1); } Metadata
+{
+	$$ = $1;
 }
 ;
 

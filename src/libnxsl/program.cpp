@@ -144,7 +144,7 @@ void NXSL_ProgramBuilder::registerExpressionVariable(const NXSL_Identifier& iden
 {
    if (m_expressionVariables != nullptr)
       m_expressionVariables->add(NXSL_IdentifierLocation(identifier, m_instructionSet.size()));
-   m_currentExpressionVariable = identifier;
+   m_currentMetadataPrefix = identifier;
 }
 
 /**
