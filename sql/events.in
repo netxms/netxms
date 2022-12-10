@@ -261,7 +261,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		EVENT_SEVERITY_WARNING, 1,
 		'Threshold reached for data collection item "%<dciDescription>" (Parameter: %<dciName>; Threshold value: %<{multipliers, units}thresholdValue>; Actual value: %<{multipliers, units}currentValue>)',
 		'Generated when threshold value reached for specific data collection item.' CONCAT CRLF CONCAT
-		'Parameters are accessible via %<…> and can have "m" or  "multipliers" and "u" or "units" modification options for value formatting like %<{m,u}…>.' CONCAT CRLF CONCAT CRLF CONCAT
+		'Parameters are accessible via %<...> and can have "m" or "multipliers" and "u" or "units" format modifiers for value formatting (for example %<{m,u}currentValue>).' CONCAT CRLF CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   dciName - Parameter name' CONCAT CRLF CONCAT \
 		'   dciDescription - Item description' CONCAT CRLF CONCAT \
@@ -278,7 +278,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		EVENT_SEVERITY_NORMAL, 1,
 		'Threshold rearmed for data collection item %<dciDescription> (Parameter: %<dciName>)',
 		'Generated when threshold check is rearmed for specific data collection item.' CONCAT CRLF CONCAT
-		'Parameters are accessible via %<…> and can have "m" or  "multipliers" and "u" or "units" modification options for value formatting like %<{m,u}…>.' CONCAT CRLF CONCAT CRLF CONCAT
+		'Parameters are accessible via %<...> and can have "m" or "multipliers" and "u" or "units" format modifiers for value formatting (for example %<{m,u}currentValue>).' CONCAT CRLF CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   dciName - Parameter name' CONCAT CRLF CONCAT
 		'   dciDescription - Item description' CONCAT CRLF CONCAT
