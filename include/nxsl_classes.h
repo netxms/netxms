@@ -1029,6 +1029,7 @@ public:
    {
       forEach(reinterpret_cast<void (*)(const NXSL_Identifier&, NXSL_Value*, void*)>(callback), (void*)context);
    }
+   void forEach(std::function<void (const NXSL_Identifier&, NXSL_Value*)> callback) const;
 
    void dump(FILE *fp) const;
 };

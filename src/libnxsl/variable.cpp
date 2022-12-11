@@ -242,6 +242,18 @@ void NXSL_VariableSystem::forEach(void (*callback)(const NXSL_Identifier&, NXSL_
 }
 
 /**
+ * Enumerate all variables
+ */
+void NXSL_VariableSystem::forEach(std::function<void (const NXSL_Identifier&, NXSL_Value*)> callback) const
+{
+   NXSL_VariablePtr *var, *tmp;
+   HASH_ITER(hh, m_variables, var, tmp)
+   {
+      callback(var->v.getName(), var->v.getValue());
+   }
+}
+
+/**
  * Dump all variables
  */
 void NXSL_VariableSystem::dump(FILE *fp) const
