@@ -22,6 +22,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -43,9 +44,14 @@ public class ObjectSearchResultComparator extends ViewerComparator
    @Override
    public int compare(Viewer viewer, Object e1, Object e2)
    {
+      TableColumn sortColumn = ((SortableTableViewer)viewer).getTable().getSortColumn();
+      if (sortColumn == null)
+         return 0;
+
+      final int column = (Integer)sortColumn.getData("ID"); //$NON-NLS-1$
+
       final AbstractObject object1 = (e1 instanceof ObjectQueryResult) ? ((ObjectQueryResult)e1).getObject() : (AbstractObject)e1;
       final AbstractObject object2 = (e2 instanceof ObjectQueryResult) ? ((ObjectQueryResult)e2).getObject() : (AbstractObject)e2;
-      final int column = (Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID"); //$NON-NLS-1$
 
       int result;
       switch(column)
@@ -61,15 +67,10 @@ public class ObjectSearchResultComparator extends ViewerComparator
          case ObjectFinder.COL_NAME:
             result = object1.getObjectName().compareToIgnoreCase(object2.getObjectName());
             break;
-         case ObjectFinder.COL_CLASS:
-         case ObjectFinder.COL_PARENT:
-         case ObjectFinder.COL_ZONE:
+         default:
             String t1 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object1, column);
             String t2 = ((ITableLabelProvider)((SortableTableViewer)viewer).getLabelProvider()).getColumnText(object2, column);
             result = t1.compareToIgnoreCase(t2);
-            break;
-         default:
-            result = 0;
             break;
       }
 

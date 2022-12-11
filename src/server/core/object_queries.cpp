@@ -393,30 +393,19 @@ static int ObjectQueryComparator(StringList *orderBy, const ObjectQueryResult **
 }
 
 /**
- * Set object data from NXSL variable
+ * Get metadata entry for given variable
  */
-static void SetDataFromVariable(const NXSL_Identifier& name, NXSL_Value *value, std::pair<StringMap*, NXSL_VM*> *context)
+static inline const TCHAR *GetVariableMetadata(NXSL_VM *vm, const NXSL_Identifier& varName, const TCHAR *suffix)
 {
-   if (name.value[0] == '$')  // Ignore global variables set by system
-      return;
-
    TCHAR key[256];
 #ifdef UNICODE
-   size_t l = utf8_to_wchar(name.value, -1, key, 256);
-   wcslcpy(&key[l - 1], L".visible", 256 - l);
+   size_t l = utf8_to_wchar(varName.value, -1, key, 256);
+   wcslcpy(&key[l - 1], suffix, 256 - l);
 #else
-   strlcpy(key, name.value, 256);
-   strlcat(key, ".visible", 256);
+   strlcpy(key, varName.value, 256);
+   strlcat(key, suffix, 256);
 #endif
-   const TCHAR *visible = context->second->getMetadataEntry(key);
-   if ((visible != nullptr) && (!_tcsicmp(visible, _T("false")) || !_tcsicmp(visible, _T("0"))))
-      return;  // Visibility attribute set to FALSE
-
-#ifdef UNICODE
-   context->first->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
-#else
-   context->first->set(name.value, value->getValueAsCString());
-#endif
+   return vm->getMetadataEntry(key);
 }
 
 /**
@@ -463,6 +452,8 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
 
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects(FilterAccessibleObjects);
    auto resultSet = new ObjectArray<ObjectQueryResult>(64, 64, Ownership::True);
+   StringMap displayNameMapping;
+   bool firstResult = true;
    for(int i = 0; i < objects->size(); i++)
    {
       shared_ptr<NetObj> curr = objects->getShared(i);
@@ -522,8 +513,44 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
 
             if (readAllComputedFields)
             {
-               std::pair<StringMap*, NXSL_VM*> context(objectData, vm);
-               globals->forEach(SetDataFromVariable, &context);
+               globals->forEach(
+                  [vm, objectData, firstResult, &displayNameMapping] (const NXSL_Identifier& name, NXSL_Value *value) -> void
+                  {
+                     if (name.value[0] == '$')  // Ignore global variables set by system
+                        return;
+
+                     const TCHAR *visible = GetVariableMetadata(vm, name, _T(".visible"));
+                     bool hidden = (visible != nullptr) && (!_tcsicmp(visible, _T("false")) || !_tcscmp(visible, _T("0")));
+                     if (hidden)
+                     {
+                        if (GetVariableMetadata(vm, name, _T(".order")) == nullptr)
+                           return;  // Visibility attribute set to FALSE and not used for ordering
+                     }
+
+                     const TCHAR *displayName = hidden ? nullptr : GetVariableMetadata(vm, name, _T(".name"));
+                     if (displayName != nullptr)
+                     {
+                        objectData->set(displayName, value->getValueAsCString());
+                        if (firstResult)
+                        {
+#ifdef UNICODE
+                           WCHAR wname[MAX_IDENTIFIER_LENGTH];
+                           utf8_to_wchar(name.value, -1, wname, MAX_IDENTIFIER_LENGTH);
+                           displayNameMapping.set(displayName, wname);
+#else
+                           displayNameMapping.set(displayName, name.value);
+#endif
+                        }
+                     }
+                     else
+                     {
+#ifdef UNICODE
+                        objectData->setPreallocated(WideStringFromUTF8String(name.value), MemCopyString(value->getValueAsCString()));
+#else
+                        objectData->set(name.value, value->getValueAsCString());
+#endif
+                     }
+                  });
             }
          }
          else
@@ -532,11 +559,12 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
          }
 
          resultSet->add(new ObjectQueryResult(curr, objectData));
+         firstResult = false;
       }
       delete globals;
    }
 
-   // Sort result set and apply limit
+   // Sort result set, apply limit, remove hidden columns
    if ((resultSet != nullptr) && !resultSet->isEmpty())
    {
       StringList realOrderBy;
@@ -546,25 +574,27 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
       StringList *columns = resultSet->get(0)->values->keys();
       for(int i = 0; i < columns->size(); i++)
       {
+         const TCHAR *columnName = columns->get(i);
+         const TCHAR *originalName = displayNameMapping.get(columnName);
          TCHAR key[256];
-         _sntprintf(key, 256, _T("%s.order"), columns->get(i));
+         _sntprintf(key, 256, _T("%s.order"), (originalName != nullptr) ? originalName : columnName);
          const TCHAR *order = vm->getMetadataEntry(key);
+nxlog_debug(1, _T(">>> name='%s' orig='%s' order='%s'"), columnName, originalName, order);
          if (order != nullptr)
          {
             if (!_tcsicmp(order, _T("asc")) || !_tcsicmp(order, _T("ascending")))
             {
-               realOrderBy.add(columns->get(i));
+               realOrderBy.add(columnName);
             }
             else if (!_tcsicmp(order, _T("desc")) || !_tcsicmp(order, _T("descending")))
             {
                TCHAR c[256];
                c[0] = _T('-');
-               _tcscpy(&c[1], columns->get(i));
+               _tcscpy(&c[1], columnName);
                realOrderBy.add(c);
             }
          }
       }
-      delete columns;
 
       if (!realOrderBy.isEmpty())
       {
@@ -574,6 +604,21 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
       {
          resultSet->shrinkTo((int)limit);
       }
+
+      for(int i = 0; i < columns->size(); i++)
+      {
+         TCHAR key[256];
+         _sntprintf(key, 256, _T("%s.visible"), columns->get(i));
+         const TCHAR *visible = vm->getMetadataEntry(key);
+         if ((visible != nullptr) && (!_tcscmp(visible, _T("false")) || !_tcscmp(visible, _T("0"))))
+         {
+            for(int j = 0; j < resultSet->size(); j++)
+               resultSet->get(j)->values->remove(columns->get(i));
+            continue;
+         }
+      }
+
+      delete columns;
    }
 
    delete vm;
