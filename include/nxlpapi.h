@@ -139,6 +139,9 @@ struct LogParserCallbackData
  *    log record timestamp, user data
  */
 typedef std::function<void (const LogParserCallbackData& data)> LogParserCallback;
+#ifdef _WIN32
+template class LIBNXLP_EXPORTABLE std::function<void(const LogParserCallbackData& data)>;
+#endif
 
 /**
  * Log parser action callback
@@ -146,6 +149,9 @@ typedef std::function<void (const LogParserCallbackData& data)> LogParserCallbac
  *    NetXMS agent action, agent action arguments, user data
  */
 typedef std::function<void (const TCHAR*, const StringList&, void*)> LogParserActionCallback;
+#ifdef _WIN32
+template class LIBNXLP_EXPORTABLE std::function<void(const TCHAR*, const StringList&, void*)>;
+#endif
 
 /**
  * Log parser data push callback
@@ -153,13 +159,19 @@ typedef std::function<void (const TCHAR*, const StringList&, void*)> LogParserAc
  *    NetXMS agent data push parameter name, parameter value
  */
 typedef std::function<bool (const TCHAR* parameter, const TCHAR *value)> LogParserDataPushCallback;
+#ifdef _WIN32
+template class LIBNXLP_EXPORTABLE std::function<bool(const TCHAR* parameter, const TCHAR *value)>;
+#endif
 
 /**
  * Log parser copy callback
  * Parameters:
  *    record text, source, event ID (facility), severity, user data
  */
-typedef void (*LogParserCopyCallback)(const TCHAR*, const TCHAR*, uint32_t, uint32_t, void*);
+typedef std::function<void (const TCHAR*, const TCHAR*, uint32_t, uint32_t, void*)> LogParserCopyCallback;
+#ifdef _WIN32
+template class LIBNXLP_EXPORTABLE std::function<void(const TCHAR*, const TCHAR*, uint32_t, uint32_t, void*)>;
+#endif
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -184,6 +196,11 @@ struct ObjectRuleStats
    int checkCount;
    int matchCount;
 };
+
+#ifdef _WIN32
+template class LIBNXLP_EXPORTABLE HashMap<uint32_t, ObjectRuleStats>;
+template class LIBNXLP_EXPORTABLE HashMap<uint32_t, String>;
+#endif
 
 /**
  * Log parser rule
