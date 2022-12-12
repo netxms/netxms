@@ -702,7 +702,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 /**
  * Add external metric or list
  */
-bool AddExternalMetric(TCHAR *config, bool shellExec, bool isList)
+bool AddExternalMetric(TCHAR *config, bool isList)
 {
    TCHAR *cmdLine = _tcschr(config, _T(':'));
    if (cmdLine == nullptr)
@@ -715,9 +715,7 @@ bool AddExternalMetric(TCHAR *config, bool shellExec, bool isList)
    if ((*config == 0) || (*cmdLine == 0))
       return false;
 
-	TCHAR *arg = MemAllocString(_tcslen(cmdLine) + 2);
-	arg[0] = shellExec ? _T('S') : _T('E');
-	_tcscpy(&arg[1], cmdLine);
+	TCHAR *arg = MemCopyString(cmdLine);
    if (isList)
    {
       AddList(config, H_ExternalList, arg);
@@ -788,9 +786,7 @@ bool AddExternalTable(TCHAR *config)
 
    ExternalTableDefinition *td = new ExternalTableDefinition();
    td->separator = separator[0];
-   td->cmdLine = MemAllocString(_tcslen(cmdLine) + 2);
-   td->cmdLine[0] = ExtractNamedOptionValueAsBool(options, _T("shellExec"), true) ? _T('S') : _T('E');
-   _tcscpy(&td->cmdLine[1], cmdLine);
+   td->cmdLine = MemCopyString(cmdLine);
    td->instanceColumns = SplitString(instanceColumns, _T(','), &td->instanceColumnCount);
    if (ExtractNamedOptionValueAsBool(options, _T("backgroundPolling"), false))
    {
@@ -835,11 +831,7 @@ bool AddExternalTable(ConfigEntry *config)
    td->separator = separator[0];
    MemFree(separator);
 
-   TCHAR fullCmd[MAX_CMD_LEN + 1];
-   fullCmd[0] = config->getSubEntryValueAsBoolean(_T("ShellExec"), 0, false) ? _T('E') : _T('S');
-   _tcslcpy(&fullCmd[1], config->getSubEntryValue(_T("Command"), 0, _T("echo no command specified")), MAX_CMD_LEN);
-   td->cmdLine = MemCopyString(fullCmd);
-
+   td->cmdLine = MemCopyString(config->getSubEntryValue(_T("Command"), 0, _T("echo no command specified")));
    td->instanceColumns = SplitString(config->getSubEntryValue(_T("InstanceColumns"), 0, _T("")), _T(','), &td->instanceColumnCount);
    unique_ptr<ObjectArray<ConfigEntry>> columnTypes = config->getSubEntries(_T("ColumnType"));
    if (columnTypes != NULL && columnTypes->size() > 0)

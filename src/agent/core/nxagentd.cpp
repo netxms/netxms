@@ -267,7 +267,6 @@ static TCHAR *m_pszControlServerList = nullptr;
 static TCHAR *m_pszMasterServerList = nullptr;
 static TCHAR *m_pszSubagentList = nullptr;
 static TCHAR *s_externalMetrics = nullptr;
-static TCHAR *s_externalMetricsShellExec = nullptr;
 static TCHAR *s_externalMetricProviders = nullptr;
 static TCHAR *s_externalListsConfig = nullptr;
 static TCHAR *s_externalTablesConfig = nullptr;
@@ -357,7 +356,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExternalMetric"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
    { _T("ExternalMetricProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricProviders, nullptr },
    { _T("ExternalMetricProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricProviderTimeout, nullptr },
-   { _T("ExternalMetricShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricsShellExec, nullptr },
    { _T("ExternalMetricTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricTimeout, nullptr },
    { _T("ExternalSubagent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
    { _T("ExternalTable"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
@@ -400,8 +398,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
    /* Parameters below are deprecated and left for compatibility with older versions */
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
+   { _T("ExternalMetricShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
    { _T("ExternalParameter"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
-   { _T("ExternalParameterShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricsShellExec, nullptr },
+   { _T("ExternalParameterShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
    { _T("ExternalParameterProvider"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetricProviders, nullptr },
    { _T("ExternalParameterProviderTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricProviderTimeout, nullptr },
    { _T("ExternalParameterTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalMetricTimeout, nullptr },
@@ -1310,33 +1309,10 @@ BOOL Initialize()
          if (next != nullptr)
             *next = 0;
          Trim(curr);
-
-	 // Historically on UNIX all external parameters were run as shell command
-	 // Keep this behavior for compatibility
-#ifdef _WIN32
-         if (!AddExternalMetric(curr, false, false))
-#else
-         if (!AddExternalMetric(curr, true, false))
-#endif
-         {
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), curr);
-         }
+         if (!AddExternalMetric(curr, false))
+            nxlog_write(NXLOG_WARNING, _T("Unable to add external metric \"%s\""), curr);
       }
       MemFree(s_externalMetrics);
-   }
-   if (s_externalMetricsShellExec != nullptr)
-   {
-      TCHAR *curr, *next;
-      for(curr = next = s_externalMetricsShellExec; next != nullptr && *curr != 0; curr = next + 1)
-      {
-         next = _tcschr(curr, _T('\n'));
-         if (next != NULL)
-            *next = 0;
-         Trim(curr);
-         if (!AddExternalMetric(curr, true, false))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameter \"%s\""), curr);
-      }
-      MemFree(s_externalMetricsShellExec);
    }
 
    // Parse external lists
@@ -1349,7 +1325,7 @@ BOOL Initialize()
          if (next != nullptr)
             *next = 0;
          Trim(curr);
-         if (!AddExternalMetric(curr, true, true))
+         if (!AddExternalMetric(curr, true))
             nxlog_write(NXLOG_WARNING, _T("Unable to add external list \"%s\""), curr);
       }
       MemFree(s_externalListsConfig);

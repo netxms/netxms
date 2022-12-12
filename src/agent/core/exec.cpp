@@ -41,7 +41,7 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value,
    StringBuffer cmdLine;
    cmdLine.setAllocationStep(1024);
 
-   for (const TCHAR *sptr = &arg[1]; *sptr != 0; sptr++)
+   for (const TCHAR *sptr = arg; *sptr != 0; sptr++)
    {
       if (*sptr == _T('$'))
       {
@@ -68,7 +68,7 @@ static LONG RunExternal(const TCHAR *param, const TCHAR *arg, StringList *value,
    }
    nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal: command line is \"%s\""), cmdLine.cstr());
 
-   LineOutputProcessExecutor executor(cmdLine, *arg == _T('S'));
+   LineOutputProcessExecutor executor(cmdLine);
    if (!executor.execute())
    {
       nxlog_debug_tag(EXEC_DEBUG_TAG, 4, _T("RunExternal: cannot start process (command line \"%s\")"), cmdLine.cstr());

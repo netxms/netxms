@@ -772,7 +772,7 @@ void AddPushMetric(const TCHAR *name, int dataType, const TCHAR *description);
 void AddList(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
 void AddTable(const TCHAR *name, LONG (*handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
          const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
-bool AddExternalMetric(TCHAR *config, bool shellExec, bool isList);
+bool AddExternalMetric(TCHAR *config, bool isList);
 bool AddExternalTable(TCHAR *config);
 bool AddExternalTable(ConfigEntry *config);
 uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *session);

@@ -107,7 +107,8 @@ ProcessExecutor::ProcessExecutor(const TCHAR *cmd, bool shellExec, bool selfDest
    m_pipe[1] = -1;
 #endif
    m_cmd = MemCopyString(cmd);
-   m_shellExec = shellExec;
+   Trim(m_cmd);
+   m_shellExec = shellExec && (m_cmd[0] != '[');
    m_sendOutput = false;
    m_replaceNullCharacters = false;
    m_selfDestruct = selfDestruct;
@@ -310,16 +311,16 @@ bool ProcessExecutor::execute()
          dup2(m_pipe[1], STDOUT_FILENO);
          dup2(m_pipe[1], STDERR_FILENO);
          close(m_pipe[1]);
-	 fd = open("/dev/null", O_RDONLY);
-	 if (fd != -1)
-	 {
+         fd = open("/dev/null", O_RDONLY);
+         if (fd != -1)
+         {
             dup2(fd, STDIN_FILENO);
-	    close(fd);
-	 }
-	 else
-	 {
+            close(fd);
+         }
+         else
+         {
             close(STDIN_FILENO);
-	 }
+         }
          if (m_shellExec)
          {
 #ifdef UNICODE
@@ -335,52 +336,112 @@ bool ProcessExecutor::execute()
 #else
             char *tmp = m_cmd;
 #endif
-
             char *argv[256];
-            argv[0] = tmp;
-
-            int index = 1;
-            bool squotes = false, dquotes = false;
-            for(char *p = tmp; *p != 0;)
+            if (tmp[0] == '[')
             {
-               if ((*p == ' ') && !squotes && !dquotes)
+               int index = 0;
+               bool squotes = false, dquotes = false;
+               char *start = nullptr;
+               for(char *p = tmp + 1; *p != 0; p++)
                {
-                  *p = 0;
-                  p++;
-                  while(*p == ' ')
-                     p++;
-                  argv[index++] = p;
-               }
-               else if ((*p == '\'') && !dquotes)
-               {
-                  squotes = !squotes;
-                  memmove(p, p + 1, strlen(p));
-               }
-               else if ((*p == '"') && !squotes)
-               {
-                  dquotes = !dquotes;
-                  memmove(p, p + 1, strlen(p));
-               }
-               else if ((*p == '\\') && !squotes)
-               {
-                  // Follow shell convention for backslash:
-                  // A backslash preserves the literal meaning of the following character, with the exception of ⟨newline⟩.
-                  // Enclosing characters within double quotes preserves the literal meaning of all characters except dollarsign ($), backquote (`), and backslash (\).
-                  // The backslash inside double quotes is historically weird, and serves to quote only the following characters:
-                  //          $ ` " \ <newline>.
-                  // Otherwise it remains literal.
-                  if (!dquotes || ((*(p + 1) == '"') || (*(p + 1) == '\\') || (*(p + 1) == '`') || (*(p + 1) == '$')))
+                  if (!squotes && !dquotes)
                   {
+                     if (*p == ']')
+                     {
+                        argv[index++] = start;
+                        break;
+                     }
+                     if (*p == ',')
+                     {
+                        argv[index++] = start;
+                        start = nullptr;
+                     }
+                     else if (*p == '\'')
+                     {
+                        squotes = true;
+                        start = p + 1;
+                     }
+                     else if (*p == '"')
+                     {
+                        dquotes = true;
+                        start = p + 1;
+                     }
+                     continue;
+                  }
+                  else if (squotes && (*p == '\''))
+                  {
+                     if (*(p + 1) != '\'')
+                     {
+                        *p = 0;
+                        squotes = false;
+                     }
+                     else
+                     {
+                        memmove(p, p + 1, strlen(p));
+                     }
+                  }
+                  else if (dquotes && (*p == '"'))
+                  {
+                     if (*(p + 1) != '"')
+                     {
+                        *p = 0;
+                        dquotes = false;
+                     }
+                     else
+                     {
+                        memmove(p, p + 1, strlen(p));
+                     }
+                  }
+               }
+               argv[index] = nullptr;
+            }
+            else
+            {
+               argv[0] = tmp;
+
+               int index = 1;
+               bool squotes = false, dquotes = false;
+               for(char *p = tmp; *p != 0;)
+               {
+                  if ((*p == ' ') && !squotes && !dquotes)
+                  {
+                     *p = 0;
+                     p++;
+                     while(*p == ' ')
+                        p++;
+                     argv[index++] = p;
+                  }
+                  else if ((*p == '\'') && !dquotes)
+                  {
+                     squotes = !squotes;
                      memmove(p, p + 1, strlen(p));
+                  }
+                  else if ((*p == '"') && !squotes)
+                  {
+                     dquotes = !dquotes;
+                     memmove(p, p + 1, strlen(p));
+                  }
+                  else if ((*p == '\\') && !squotes)
+                  {
+                     // Follow shell convention for backslash:
+                     // A backslash preserves the literal meaning of the following character, with the exception of ⟨newline⟩.
+                     // Enclosing characters within double quotes preserves the literal meaning of all characters except dollarsign ($), backquote (`), and backslash (\).
+                     // The backslash inside double quotes is historically weird, and serves to quote only the following characters:
+                     //          $ ` " \ <newline>.
+                     // Otherwise it remains literal.
+                     if (!dquotes || ((*(p + 1) == '"') || (*(p + 1) == '\\') || (*(p + 1) == '`') || (*(p + 1) == '$')))
+                     {
+                        memmove(p, p + 1, strlen(p));
+                        p++;
+                     }
+                  }
+                  else
+                  {
                      p++;
                   }
                }
-               else
-               {
-                  p++;
-               }
+               argv[index] = nullptr;
             }
-            argv[index] = nullptr;
             execv(argv[0], argv);
          }
 
