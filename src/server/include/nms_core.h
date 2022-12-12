@@ -387,18 +387,24 @@ public:
 class ServerDownloadFileInfo : public DownloadFileInfo
 {
 protected:
-   uint32_t m_uploadCommand;
+   std::function<void (const TCHAR*, uint32_t, bool)> m_completionCallback;
    uint32_t m_uploadData;
-   uuid m_uploadImageGuid;
 
 public:
-   ServerDownloadFileInfo(const TCHAR *name, uint32_t uploadCommand, time_t fileModificationTime = 0);
+   ServerDownloadFileInfo(const TCHAR *name, time_t fileModificationTime = 0) : DownloadFileInfo(name, fileModificationTime)
+   {
+      m_uploadData = 0;
+   }
+   ServerDownloadFileInfo(const TCHAR *name, std::function<void (const TCHAR*, uint32_t, bool)> completionCallback, time_t fileModificationTime = 0) :
+         DownloadFileInfo(name, fileModificationTime), m_completionCallback(completionCallback)
+   {
+      m_uploadData = 0;
+   }
    virtual ~ServerDownloadFileInfo();
 
    virtual void close(bool success);
 
    void setUploadData(uint32_t data) { m_uploadData = data; }
-   void setImageGuid(const uuid& guid) { m_uploadImageGuid = guid; }
    void updatePackageDBInfo(const TCHAR *description, const TCHAR *pkgName, const TCHAR *pkgVersion, const TCHAR *pkgType, const TCHAR *platform, const TCHAR *cleanFileName, const TCHAR *command);
 };
 
@@ -735,6 +741,7 @@ private:
    void getPerfTabDCIList(const NXCPMessage& request);
    void exportConfiguration(const NXCPMessage& request);
    void importConfiguration(const NXCPMessage& request);
+   void importConfigurationFromFile(const NXCPMessage& request);
    void getGraph(const NXCPMessage& request);
 	void getGraphList(const NXCPMessage& request);
 	void saveGraph(const NXCPMessage& request);
@@ -898,6 +905,7 @@ private:
    void sendObjectUpdates();
 
    void finalizeFileTransferToAgent(shared_ptr<AgentConnection> conn, uint32_t requestId);
+   void finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response);
    uint32_t resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *name);
 
 public:

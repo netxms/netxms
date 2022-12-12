@@ -23,15 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Constructor for DownloadFileInfo class only stores given data
- */
-ServerDownloadFileInfo::ServerDownloadFileInfo(const TCHAR *name, uint32_t uploadCommand, time_t fileModificationTime) : DownloadFileInfo(name, fileModificationTime)
-{
-   m_uploadCommand = uploadCommand;
-   m_uploadData = 0;
-}
-
-/**
  * Destructor
  */
 ServerDownloadFileInfo::~ServerDownloadFileInfo()
@@ -62,37 +53,11 @@ void ServerDownloadFileInfo::updatePackageDBInfo(const TCHAR *description, const
 }
 
 /**
- * Callback for sending image library update notifications
- */
-static void ImageLibraryUpdateCallback(ClientSession *pSession, void *pArg)
-{
-	pSession->onLibraryImageChange(*((const uuid *)pArg), false);
-}
-
-/**
  * Closes file and changes it's date if required
  */
 void ServerDownloadFileInfo::close(bool success)
 {
    DownloadFileInfo::close(success);
-
-   switch(m_uploadCommand)
-   {
-      case CMD_INSTALL_PACKAGE:
-         if (!success)
-         {
-            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-            TCHAR szQuery[256];
-            _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_uploadData);
-            DBQuery(hdb, szQuery);
-            DBConnectionPoolReleaseConnection(hdb);
-         }
-         break;
-      case CMD_MODIFY_IMAGE:
-         if (success)
-            EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&m_uploadImageGuid);
-         break;
-      default:
-         break;
-   }
+   if (m_completionCallback != nullptr)
+      m_completionCallback(m_fileName, m_uploadData, success);
 }

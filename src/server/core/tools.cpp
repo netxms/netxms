@@ -239,7 +239,7 @@ void EscapeString(StringBuffer &str)
 /**
  * Prepare and execute SQL query with single binding - object ID.
  */
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query)
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt == nullptr)

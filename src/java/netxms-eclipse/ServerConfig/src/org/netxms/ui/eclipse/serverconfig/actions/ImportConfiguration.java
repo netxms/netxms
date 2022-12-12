@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package org.netxms.ui.eclipse.serverconfig.actions;
 
-import java.io.FileInputStream;
+import java.io.File;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -41,33 +41,33 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 {
 	private Shell shell;
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
+    */
 	@Override
 	public void dispose()
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
-	 */
+   /**
+    * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
+    */
 	@Override
 	public void init(IWorkbenchWindow window)
 	{
 		shell = window.getShell();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
 		final ConfigurationImportDialog dlg = new ConfigurationImportDialog(shell);
 		if (dlg.open() == Window.OK)
 		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         final NXCSession session = ConsoleSharedData.getSession();
 			ConsoleJob job = new ConsoleJob(Messages.get().ImportConfiguration_JobName, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
@@ -78,14 +78,7 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					FileInputStream file = new FileInputStream(dlg.getFileName());
-					byte[] data = new byte[(int)file.getChannel().size()];
-					file.read(data);
-					file.close();
-					
-					String content = new String(data, "UTF-8"); //$NON-NLS-1$
-					session.importConfiguration(content, dlg.getFlags());
-					
+               session.importConfiguration(new File(dlg.getFileName()), dlg.getFlags());
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
@@ -100,9 +93,9 @@ public class ImportConfiguration implements IWorkbenchWindowActionDelegate
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

@@ -8905,11 +8905,11 @@ public class NXCSession
    }
 
    /**
-    * Import server configuration (events, traps, thresholds) from XML
+    * Import server configuration (events, traps, thresholds) from XML document.
     *
     * @param config Configuration in XML format
-    * @param flags  Import flags
-    * @throws IOException  if socket I/O error occurs
+    * @param flags Import flags
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void importConfiguration(String config, int flags) throws IOException, NXCException
@@ -8922,17 +8922,34 @@ public class NXCSession
    }
 
    /**
-    * Get server stats. Returns set of named properties. The following
-    * properties could be found in result set: String: VERSION Integer: UPTIME,
-    * SESSION_COUNT, DCI_COUNT, OBJECT_COUNT, NODE_COUNT, PHYSICAL_MEMORY_USED,
-    * VIRTUAL_MEMORY_USED, QSIZE_CONDITION_POLLER, QSIZE_CONF_POLLER,
-    * QSIZE_DCI_POLLER, QSIZE_DBWRITER, QSIZE_EVENT, QSIZE_DISCOVERY,
-    * QSIZE_NODE_POLLER, QSIZE_ROUTE_POLLER, QSIZE_STATUS_POLLER,
-    * QSIZE_DCI_CACHE_LOADER, ALARM_COUNT
-    * long[]: ALARMS_BY_SEVERITY
+    * Import server configuration (events, traps, thresholds) from XML file.
+    *
+    * @param configFile Configuration file in XML format
+    * @param flags Import flags
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void importConfiguration(File configFile, int flags) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_IMPORT_CONFIGURATION_FILE);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId()); // wait for initial confirmation
+
+      sendFile(msg.getMessageId(), configFile, null, true, 0);
+      waitForRCC(msg.getMessageId()); // wait for file transfer completion
+
+      waitForRCC(msg.getMessageId()); // wait for import completion
+   }
+
+   /**
+    * Get server stats. Returns set of named properties. The following properties could be found in result set: String: VERSION
+    * Integer: UPTIME, SESSION_COUNT, DCI_COUNT, OBJECT_COUNT, NODE_COUNT, PHYSICAL_MEMORY_USED, VIRTUAL_MEMORY_USED,
+    * QSIZE_CONDITION_POLLER, QSIZE_CONF_POLLER, QSIZE_DCI_POLLER, QSIZE_DBWRITER, QSIZE_EVENT, QSIZE_DISCOVERY, QSIZE_NODE_POLLER,
+    * QSIZE_ROUTE_POLLER, QSIZE_STATUS_POLLER, QSIZE_DCI_CACHE_LOADER, ALARM_COUNT long[]: ALARMS_BY_SEVERITY
     *
     * @return Server stats as set of named properties.
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public Map<String, Object> getServerStats() throws IOException, NXCException

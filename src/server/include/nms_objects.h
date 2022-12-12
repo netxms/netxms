@@ -60,7 +60,7 @@ extern int16_t g_defaultAgentCacheMode;
 /**
  * Utility functions used by inline methods
  */
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query);
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query);
 
 /**
  * Constants

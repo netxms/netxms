@@ -149,15 +149,6 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *context)
 }
 
 /**
- * Callback for cancelling pending file transfer
- */
-static EnumerationCallbackResult CancelFileTransfer(const uint32_t& key, ServerDownloadFileInfo *file)
-{
-   file->close(false);
-   return _CONTINUE;
-}
-
-/**
  * Socket poller callback
  */
 void ClientSession::socketPollerCallback(BackgroundSocketPollResult pollResult, SOCKET hSocket, ClientSession *session)
@@ -257,7 +248,11 @@ ClientSession::~ClientSession()
 
    m_soundFileTypes.clear();
 
-   m_downloadFileMap.forEach(CancelFileTransfer);
+   m_downloadFileMap.forEach([] (const uint32_t& key, ServerDownloadFileInfo *file) -> EnumerationCallbackResult
+      {
+         file->close(false);
+         return _CONTINUE;
+      });
 
    delete m_tcpProxyConnections;
    delete m_pendingObjectNotifications;
@@ -1413,6 +1408,9 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_IMPORT_CONFIGURATION:
          importConfiguration(*request);
+         break;
+      case CMD_IMPORT_CONFIGURATION_FILE:
+         importConfigurationFromFile(*request);
          break;
       case CMD_GET_GRAPH_LIST:
          getGraphList(*request);
@@ -7336,14 +7334,23 @@ void ClientSession::installPackage(const NXCPMessage& request)
                _tcscat(fullFileName, FS_PATH_SEPARATOR);
                _tcscat(fullFileName, cleanFileName);
 
-               ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName, CMD_INSTALL_PACKAGE);
+               ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullFileName,
+                  [] (const TCHAR *fileName, uint32_t uploadData, bool success) -> void
+                  {
+                     if (!success)
+                     {
+                        DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+                        ExecuteQueryOnObject(hdb, uploadData, _T("DELETE FROM agent_pkg WHERE pkg_id=?"));
+                        DBConnectionPoolReleaseConnection(hdb);
+                     }
+                  });
                if (fInfo->open())
                {
-                  uint32_t uploadData = CreateUniqueId(IDG_PACKAGE);
-                  fInfo->setUploadData(uploadData);
+                  uint32_t packageId = CreateUniqueId(IDG_PACKAGE);
+                  fInfo->setUploadData(packageId);
                   m_downloadFileMap.set(request.getId(), fInfo);
                   response.setField(VID_RCC, RCC_SUCCESS);
-                  response.setField(VID_PACKAGE_ID, uploadData);
+                  response.setField(VID_PACKAGE_ID, packageId);
 
                   // Create record in database
                   fInfo->updatePackageDBInfo(description, packageName, packageVersion, packageType, platform, cleanFileName, command);
@@ -10075,12 +10082,7 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
  */
 void ClientSession::importConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   TCHAR szLockInfo[MAX_SESSION_NAME], szError[1024];
-   UINT32 dwFlags;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (checkSysAccessRights(SYSTEM_ACCESS_IMPORT_CONFIGURATION))
    {
@@ -10090,50 +10092,112 @@ void ClientSession::importConfiguration(const NXCPMessage& request)
          Config config(false);
          if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration"))
          {
-            // Lock all required components
-            if (LockEPP(m_id, m_sessionName, nullptr, szLockInfo))
-            {
-               InterlockedOr(&m_flags, CSF_EPP_LOCKED);
-
-               // Validate and import configuration
-               dwFlags = request.getFieldAsUInt32(VID_FLAGS);
-               if (ValidateConfig(config, dwFlags, szError, 1024))
-               {
-                  msg.setField(VID_RCC, ImportConfig(config, dwFlags));
-               }
-               else
-               {
-                  msg.setField(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
-                  msg.setField(VID_ERROR_TEXT, szError);
-               }
-
-					UnlockEPP();
-					InterlockedAnd(&m_flags, ~CSF_EPP_LOCKED);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
-               msg.setField(VID_COMPONENT, (WORD)NXMP_LC_EPP);
-               msg.setField(VID_LOCKED_BY, szLockInfo);
-            }
+            finalizeConfigurationImport(config, request.getFieldAsUInt32(VID_FLAGS), &response);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
+            response.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
          }
          MemFree(content);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+         response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
+}
+
+/**
+ * Import server configuration (events, templates, etc.)
+ */
+void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
+{
+   uint32_t requestId = request.getId();
+   NXCPMessage response(CMD_REQUEST_COMPLETED, requestId);
+
+   if (checkSysAccessRights(SYSTEM_ACCESS_IMPORT_CONFIGURATION))
+   {
+      TCHAR fileName[MAX_PATH];
+      _sntprintf(fileName, MAX_PATH, _T("%s") FS_PATH_SEPARATOR _T("import-%s"), g_netxmsdDataDir, uuid::generate().toString().cstr());
+      debugPrintf(5, _T("importConfigurationFromFile: fileName=%s"), fileName);
+
+      ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(fileName,
+         [this, requestId] (const TCHAR *fileName, uint32_t uploadData, bool success) -> void
+         {
+            if (!success)
+               return;
+
+            NXCPMessage response2(CMD_REQUEST_COMPLETED, requestId);
+
+            Config config(false);
+            if (config.loadXmlConfig(fileName, "configuration"))
+            {
+               finalizeConfigurationImport(config, uploadData, &response2);
+            }
+            else
+            {
+               response2.setField(VID_RCC, RCC_CONFIG_PARSE_ERROR);
+            }
+
+            sendMessage(response2);
+
+            _tremove(fileName);
+         });
+      if (dInfo->open())
+      {
+         dInfo->setUploadData(request.getFieldAsUInt32(VID_FLAGS));
+         m_downloadFileMap.set(request.getId(), dInfo);
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_IO_ERROR);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Finalize configuration import after successful transfer
+ */
+void ClientSession::finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response)
+{
+   // Lock all required components
+   TCHAR lockInfo[MAX_SESSION_NAME], errorMessage[1024];
+   if (LockEPP(m_id, m_sessionName, nullptr, lockInfo))
+   {
+      InterlockedOr(&m_flags, CSF_EPP_LOCKED);
+
+      // Validate and import configuration
+      if (ValidateConfig(config, flags, errorMessage, 1024))
+      {
+         response->setField(VID_RCC, ImportConfig(config, flags));
+      }
+      else
+      {
+         response->setField(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
+         response->setField(VID_ERROR_TEXT, errorMessage);
+      }
+
+      UnlockEPP();
+      InterlockedAnd(&m_flags, ~CSF_EPP_LOCKED);
+   }
+   else
+   {
+      response->setField(VID_RCC, RCC_COMPONENT_LOCKED);
+      response->setField(VID_COMPONENT, static_cast<uint16_t>(NXMP_LC_EPP));
+      response->setField(VID_LOCKED_BY, lockInfo);
+   }
 }
 
 /**
@@ -11825,10 +11889,14 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
             _sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
             debugPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
-            ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(absFileName, CMD_MODIFY_IMAGE);
+            ServerDownloadFileInfo *dInfo = new ServerDownloadFileInfo(absFileName,
+               [guid] (const TCHAR *fileName, uint32_t uploadData, bool success) -> void
+               {
+                  if (success)
+                     EnumerateClientSessions([] (ClientSession *pSession, void *arg) { pSession->onLibraryImageChange(*((const uuid *)arg), false); }, (void *)&guid);
+               });
             if (dInfo->open())
             {
-               dInfo->setImageGuid(guid);
                m_downloadFileMap.set(request.getId(), dInfo);
             }
             else
@@ -12396,8 +12464,7 @@ void ClientSession::receiveFile(const NXCPMessage& request)
       _tcscat(fullPath, FS_PATH_SEPARATOR);
       _tcscat(fullPath, cleanFileName);
 
-      ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath, CMD_UPLOAD_FILE, request.getFieldAsTime(VID_MODIFICATION_TIME));
-
+      ServerDownloadFileInfo *fInfo = new ServerDownloadFileInfo(fullPath, request.getFieldAsTime(VID_MODIFICATION_TIME));
       if (fInfo->open())
       {
          m_downloadFileMap.set(request.getId(), fInfo);
