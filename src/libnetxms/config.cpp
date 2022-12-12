@@ -807,7 +807,7 @@ static uint64_t ParseSize(const TCHAR *s, uint64_t multiplier)
 bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 {
    TCHAR name[MAX_PATH], *curr, *eptr;
-   int i, j, pos, initialErrorCount = m_errorCount;
+   int i, pos, initialErrorCount = m_errorCount;
    ConfigEntry *entry;
 
    name[0] = _T('/');
@@ -903,8 +903,17 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 #endif
                break;
             case CT_STRING_CONCAT:
-               *((TCHAR **)cfgTemplate[i].buffer) = MemAllocString(entry->getConcatenatedValuesLength() + 1);
-               for(j = 0, curr = *((TCHAR **) cfgTemplate[i].buffer); j < entry->getValueCount(); j++)
+               if (*static_cast<TCHAR**>(cfgTemplate[i].buffer) != nullptr)
+               {
+                  *static_cast<TCHAR**>(cfgTemplate[i].buffer) = MemRealloc(*static_cast<TCHAR**>(cfgTemplate[i].buffer), (_tcslen(*static_cast<TCHAR**>(cfgTemplate[i].buffer)) + entry->getConcatenatedValuesLength() + 1) * sizeof(TCHAR));
+                  curr = *static_cast<TCHAR**>(cfgTemplate[i].buffer) + _tcslen(*static_cast<TCHAR**>(cfgTemplate[i].buffer));
+               }
+               else
+               {
+                  *static_cast<TCHAR**>(cfgTemplate[i].buffer) = MemAllocString(entry->getConcatenatedValuesLength() + 1);
+                  curr = *static_cast<TCHAR**>(cfgTemplate[i].buffer);
+               }
+               for(int j = 0; j < entry->getValueCount(); j++)
                {
                   _tcscpy(curr, entry->getValue(j));
                   curr += _tcslen(curr);
@@ -914,11 +923,11 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *curr = 0;
                break;
             case CT_STRING_SET:
-               for (j = 0; j < entry->getValueCount(); j++)
+               for (int j = 0; j < entry->getValueCount(); j++)
                   static_cast<StringSet*>(cfgTemplate[i].buffer)->add(entry->getValue(j));
                break;
             case CT_STRING_LIST:
-               for (j = 0; j < entry->getValueCount(); j++)
+               for (int j = 0; j < entry->getValueCount(); j++)
                   static_cast<StringList*>(cfgTemplate[i].buffer)->add(entry->getValue(j));
                break;
             case CT_SIZE_BYTES:
