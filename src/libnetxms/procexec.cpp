@@ -203,11 +203,85 @@ bool ProcessExecutor::executeWithOutput()
 
    bool success = false;
 
-   StringBuffer cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
-   cmdLine.append(m_cmd);
-   if (CreateProcess(nullptr, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr, &si.StartupInfo, &pi))
+   const TCHAR *appName;
+   StringBuffer appNameBuffer;
+   StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
+   if (m_cmd[0] == _T('['))
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.cstr());
+      bool squotes = false, dquotes = false, firstElement = true;
+      for (const TCHAR *p = m_cmd + 1; *p != 0; p++)
+      {
+         if (!squotes && !dquotes)
+         {
+            if (*p == ']')
+            {
+               if (firstElement)
+                  appNameBuffer = cmdLine;
+               break;
+            }
+
+            if (*p == ',')
+            {
+               if (firstElement)
+               {
+                  appNameBuffer = cmdLine;
+                  firstElement = false;
+               }
+               cmdLine.append(_T(' '));
+            }
+            else if (*p == '\'')
+            {
+               squotes = true;
+            }
+            else if (*p == '"')
+            {
+               dquotes = true;
+            }
+            continue;
+         }
+
+         if (squotes && (*p == _T('\'')))
+         {
+            if (*(p + 1) == _T('\''))
+            {
+               cmdLine.append(_T('\''));
+               p++;
+            }
+            else
+            {
+               squotes = false;
+            }
+         }
+         else if (dquotes && (*p == _T('"')))
+         {
+            if (*(p + 1) == _T('"'))
+            {
+               cmdLine.append(_T('"'));
+               p++;
+            }
+            else
+            {
+               squotes = false;
+            }
+         }
+         else
+         {
+            cmdLine.append(*p);
+         }
+      }
+      appName = appNameBuffer.cstr();
+   }
+   else
+   {
+      cmdLine.append(m_cmd);
+      appName = nullptr;
+   }
+   if (CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr, &si.StartupInfo, &pi))
+   {
+      if (appName != nullptr)
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process [exec=\"%s\" cmdline=\"%s\"] started"), appName, cmdLine.cstr());
+      else
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("ProcessExecutor::execute(): process \"%s\" started"), cmdLine.cstr());
 
       m_phandle = pi.hProcess;
       CloseHandle(pi.hThread);
@@ -219,8 +293,12 @@ bool ProcessExecutor::executeWithOutput()
    else
    {
       TCHAR buffer[1024];
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): cannot create process \"%s\" (Error 0x%08x: %s)"),
-         cmdLine.getBuffer(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
+      if (appName != nullptr)
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): cannot create process [exec=\"%s\" cmdline=\"%s\"] (Error 0x%08x: %s)"),
+            appName, cmdLine.cstr(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
+      else
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("ProcessExecutor::execute(): cannot create process \"%s\" (Error 0x%08x: %s)"),
+            cmdLine.cstr(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
 
       CloseHandle(stdoutRead);
       CloseHandle(stdoutWrite);
@@ -368,7 +446,8 @@ bool ProcessExecutor::execute()
                      }
                      continue;
                   }
-                  else if (squotes && (*p == '\''))
+ 
+                  if (squotes && (*p == '\''))
                   {
                      if (*(p + 1) != '\'')
                      {
