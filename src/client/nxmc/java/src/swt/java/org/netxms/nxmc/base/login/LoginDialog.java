@@ -50,7 +50,6 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Startup;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -80,10 +79,7 @@ public class LoginDialog extends Dialog
    {
       super(parentShell);
 
-      loginImage = BrandingManager.getInstance().getLoginTitleImage();
-      if (loginImage == null)
-         loginImage = ResourceManager.getImageDescriptor("icons/login.png");
-
+      loginImage = BrandingManager.getInstance().getLoginImage();
       this.certMgr = certMgr;
    }
 
@@ -94,8 +90,7 @@ public class LoginDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      String customTitle = BrandingManager.getInstance().getLoginTitle();
-      newShell.setText((customTitle != null) ? customTitle : i18n.tr("NetXMS - Connect to Server")); //$NON-NLS-1$
+      newShell.setText(String.format(i18n.tr("%s - Connect to Server"), BrandingManager.getInstance().getProductName()));
       newShell.setImages(Startup.windowIcons);
 
       // Center dialog on screen

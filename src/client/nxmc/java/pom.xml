@@ -536,17 +536,6 @@
             </plugins>
          </build>
       </profile>
-      <profile>
-         <id>enterprise</id>
-         <dependencies>
-            <dependency>
-               <groupId>com.radensolutions</groupId>
-               <artifactId>nxmc-addon-cortex</artifactId>
-	       <version>${project.version}</version>
-               <scope>${lib.scope}</scope>
-            </dependency>
-         </dependencies>
-       </profile>
    </profiles>
    <dependencies>
       <dependency>

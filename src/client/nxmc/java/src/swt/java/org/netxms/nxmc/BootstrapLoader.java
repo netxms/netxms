@@ -80,12 +80,15 @@ public class BootstrapLoader
 
          // Add core module
          String version = manifestAttributes.getValue("Package-Version");
-         if (manifestAttributes != null)
+         if (version != null)
          {
-            InputStream in = bootClassLoader.getResourceAsStream("BOOT-INF/core/nxmc-" + version + ".jar");
+            String bootstrapPackage = manifestAttributes.getValue("Bootstrap-Package");
+            if (bootstrapPackage == null)
+               bootstrapPackage = "nxmc";
+            InputStream in = bootClassLoader.getResourceAsStream("BOOT-INF/core/" + bootstrapPackage + "-" + version + ".jar");
             if (in != null)
             {
-               File jarFile = extractLibrary(in, "nxmc-");
+               File jarFile = extractLibrary(in, bootstrapPackage + "-");
                classPath.add(jarFile.toURI().toURL());
             }
          }

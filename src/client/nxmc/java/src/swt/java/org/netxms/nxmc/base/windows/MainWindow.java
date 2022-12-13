@@ -58,10 +58,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.Startup;
-import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
@@ -125,7 +125,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       super.configureShell(shell);
 
       NXCSession session = Registry.getSession();
-      shell.setText(String.format(i18n.tr("NetXMS Management Client - %s"), session.getUserName() + "@" + session.getServerAddress()));
+      shell.setText(String.format(i18n.tr("%s - %s"), BrandingManager.getInstance().getClientProductName(), session.getUserName() + "@" + session.getServerAddress()));
 
       PreferenceStore ps = PreferenceStore.getInstance();
       shell.setSize(ps.getAsPoint("MainWindow.Size", 600, 400));
@@ -298,7 +298,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          @Override
          public void run()
          {
-            new AboutDialog(getShell()).open();
+            BrandingManager.getInstance().createAboutDialog(getShell()).open();
          }
       });
 

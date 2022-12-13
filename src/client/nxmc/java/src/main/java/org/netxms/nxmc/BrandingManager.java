@@ -18,23 +18,29 @@
  */
 package org.netxms.nxmc;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Branding manager. There should be only one instance of branding manager,
  * created early during application startup.
  */
-public class BrandingManager
+public final class BrandingManager
 {
+   private static final Logger logger = LoggerFactory.getLogger(BrandingManager.class);
+
 	private static BrandingManager instance = null;
-	
+
 	/**
 	 * Get branding manager instance.
 	 * 
@@ -44,7 +50,7 @@ public class BrandingManager
 	{
 		return instance;
 	}
-	
+
 	/**
 	 * Create branding manager instance
 	 */
@@ -55,14 +61,20 @@ public class BrandingManager
 	}
 
    private I18n i18n = LocalizationHelper.getI18n(BrandingManager.class);
-	private Map<Integer, BrandingProvider> providers = new TreeMap<Integer, BrandingProvider>();
+   private List<BrandingProvider> providers = new ArrayList<BrandingProvider>(0);
 
 	/**
 	 * Constructor
 	 */
 	private BrandingManager()
 	{
-      // TODO: implement branding provider registration
+      ServiceLoader<BrandingProvider> loader = ServiceLoader.load(BrandingProvider.class, getClass().getClassLoader());
+      for(BrandingProvider p : loader)
+      {
+         logger.info("Registered branding provider \"" + p.getDescription() + "\" (" + p.getClass().getName() + ")");
+         providers.add(p);
+      }
+      logger.info("Branding manager initialized " + (providers.isEmpty() ? "without" : "with") + " custom providers");
 	}
 
 	/**
@@ -72,7 +84,7 @@ public class BrandingManager
 	 */
 	public String getProductName()
 	{
-		for(BrandingProvider p : providers.values())
+      for(BrandingProvider p : providers)
 		{
 			String name = p.getProductName();
 			if (name != null)
@@ -82,21 +94,37 @@ public class BrandingManager
 	}
 
    /**
-    * Get product name for management console.
+    * Get product name for management client.
     * 
     * @return product name or default product name if no branding provider defines one.
     */
-   public String getConsoleProductName()
+   public String getClientProductName()
    {
-      for(BrandingProvider p : providers.values())
+      for(BrandingProvider p : providers)
       {
-         String name = p.getConsoleProductName();
+         String name = p.getClientProductName();
          if (name != null)
             return name;
       }
-      return i18n.tr("NetXMS Management Console");
+      return i18n.tr("NetXMS Management Client");
 	}
-	
+
+   /**
+    * Get login image.
+    *
+    * @return login image
+    */
+   public ImageDescriptor getLoginImage()
+   {
+      for(BrandingProvider p : providers)
+      {
+         ImageDescriptor image = p.getLoginImage();
+         if (image != null)
+            return image;
+      }
+      return ResourceManager.getImageDescriptor("icons/login.png");
+   }
+
 	/**
 	 * Get default perspective ID. 
 	 * 
@@ -104,7 +132,7 @@ public class BrandingManager
 	 */
 	public String getDefaultPerspective()
 	{
-		for(BrandingProvider p : providers.values())
+      for(BrandingProvider p : providers)
 		{
 			String pid = p.getDefaultPerspective();
 			if (pid != null)
@@ -114,83 +142,19 @@ public class BrandingManager
 	}
 
 	/**
-	 * Get image descriptor for login dialog title image.
-	 * 
-	 * @return image descriptor for login dialog title image or null if no branding provider defines one.
-	 */
-	public ImageDescriptor getLoginTitleImage()
+    * Create "About" dialog.
+    * 
+    * @param parentShell parent shell for dialog
+    * @return custom "About" dialog or default one if no branding provider defines one.
+    */
+	public Dialog createAboutDialog(Shell parentShell)
 	{
-		for(BrandingProvider p : providers.values())
+      for(BrandingProvider p : providers)
 		{
-			ImageDescriptor d = p.getLoginTitleImage();
+         Dialog d = p.createAboutDialog(parentShell);
 			if (d != null)
 				return d;
 		}
-		return null;
-	}
-
-	/**
-	 * Get filler color for login dialog title image.
-	 * 
-	 * @return image descriptor for login dialog title image or null if no branding provider defines one.
-	 */
-	public RGB getLoginTitleColor()
-	{
-		for(BrandingProvider p : providers.values())
-		{
-			RGB rgb = p.getLoginTitleColor();
-			if (rgb != null)
-				return rgb;
-		}
-		return null;
-	}
-
-	/**
-	 * Get default perspective ID. 
-	 * 
-	 * @return default perspective ID or null if no branding provider defines one.
-	 */
-	public String getLoginTitle()
-	{
-		for(BrandingProvider p : providers.values())
-		{
-			String t = p.getLoginTitle();
-			if (t != null)
-				return t;
-		}
-		return null;
-	}
-
-	/**
-	 * Get custom "About" dialog.
-	 * 
-	 * @param parentShell parent shell for dialog
-	 * @return custom "About" dialog or null if no branding provider defines one.
-	 */
-	public Dialog getAboutDialog(Shell parentShell)
-	{
-		for(BrandingProvider p : providers.values())
-		{
-			Dialog d = p.getAboutDialog(parentShell);
-			if (d != null)
-				return d;
-		}
-		return null;
-	}
-
-	/**
-	 * Get redirection URL for web console.
-	 * 
-	 * @return redirection URL for web console
-	 */
-	public String getRedirectionURL()
-	{
-		for(BrandingProvider p : providers.values())
-		{
-			String t = p.getRedirectionURL();
-			if (t != null)
-				return t;
-		}
-      return "nxmc";
+      return new AboutDialog(parentShell);
 	}
 }
