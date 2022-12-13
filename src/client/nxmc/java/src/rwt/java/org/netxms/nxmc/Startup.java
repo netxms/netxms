@@ -102,7 +102,6 @@ public class Startup implements EntryPoint, StartupParameters
 
       PreferenceStore.open(stateDir.getAbsolutePath());
       SharedIcons.init();
-      BrandingManager.create();
       StatusDisplayInfo.init(display);
 
       Shell shell = new Shell(display, SWT.NO_TRIM);

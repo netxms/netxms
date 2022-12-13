@@ -108,7 +108,6 @@ public class Startup
 
       PreferenceStore.open(stateDir.getAbsolutePath());
       SharedIcons.init();
-      BrandingManager.create();
       StatusDisplayInfo.init(display);
 
       Window.setExceptionHandler(new IExceptionHandler() {

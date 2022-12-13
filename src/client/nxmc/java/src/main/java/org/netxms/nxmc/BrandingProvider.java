@@ -20,6 +20,7 @@ package org.netxms.nxmc;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -54,6 +55,13 @@ public interface BrandingProvider
     * @return custom image for login dialog or null to use default
     */
    public ImageDescriptor getLoginImage();
+
+   /**
+    * Get background color for login image (only for web UI).
+    *
+    * @return background color for login image or null to use default
+    */
+   public RGB getLoginImageBackground();
 
 	/**
 	 * Get default perspective. Should return null to use default (or defined by another branding manager)

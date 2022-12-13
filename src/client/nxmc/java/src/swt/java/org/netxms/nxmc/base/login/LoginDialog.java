@@ -78,8 +78,7 @@ public class LoginDialog extends Dialog
    public LoginDialog(Shell parentShell, CertificateManager certMgr)
    {
       super(parentShell);
-
-      loginImage = BrandingManager.getInstance().getLoginImage();
+      loginImage = BrandingManager.getLoginImage();
       this.certMgr = certMgr;
    }
 
@@ -90,7 +89,7 @@ public class LoginDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(String.format(i18n.tr("%s - Connect to Server"), BrandingManager.getInstance().getProductName()));
+      newShell.setText(String.format(i18n.tr("%s - Connect to Server"), BrandingManager.getProductName()));
       newShell.setImages(Startup.windowIcons);
 
       // Center dialog on screen

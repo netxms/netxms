@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -38,51 +39,25 @@ import org.xnap.commons.i18n.I18n;
 public final class BrandingManager
 {
    private static final Logger logger = LoggerFactory.getLogger(BrandingManager.class);
+   private static final List<BrandingProvider> providers = new ArrayList<BrandingProvider>(0);
 
-	private static BrandingManager instance = null;
-
-	/**
-	 * Get branding manager instance.
-	 * 
-	 * @return
-	 */
-	public static BrandingManager getInstance()
-	{
-		return instance;
-	}
-
-	/**
-	 * Create branding manager instance
-	 */
-	protected static void create()
-	{
-		if (instance == null)
-			instance = new BrandingManager();
-	}
-
-   private I18n i18n = LocalizationHelper.getI18n(BrandingManager.class);
-   private List<BrandingProvider> providers = new ArrayList<BrandingProvider>(0);
-
-	/**
-	 * Constructor
-	 */
-	private BrandingManager()
-	{
-      ServiceLoader<BrandingProvider> loader = ServiceLoader.load(BrandingProvider.class, getClass().getClassLoader());
+   static
+   {
+      ServiceLoader<BrandingProvider> loader = ServiceLoader.load(BrandingProvider.class, BrandingManager.class.getClassLoader());
       for(BrandingProvider p : loader)
       {
          logger.info("Registered branding provider \"" + p.getDescription() + "\" (" + p.getClass().getName() + ")");
          providers.add(p);
       }
       logger.info("Branding manager initialized " + (providers.isEmpty() ? "without" : "with") + " custom providers");
-	}
+   }
 
 	/**
 	 * Get product name.
 	 * 
 	 * @return product name or default product name if no branding provider defines one.
 	 */
-	public String getProductName()
+   public static String getProductName()
 	{
       for(BrandingProvider p : providers)
 		{
@@ -90,7 +65,7 @@ public final class BrandingManager
 			if (name != null)
 				return name;
 		}
-      return i18n.tr("NetXMS");
+      return "NetXMS";
 	}
 
    /**
@@ -98,7 +73,7 @@ public final class BrandingManager
     * 
     * @return product name or default product name if no branding provider defines one.
     */
-   public String getClientProductName()
+   public static String getClientProductName()
    {
       for(BrandingProvider p : providers)
       {
@@ -106,6 +81,7 @@ public final class BrandingManager
          if (name != null)
             return name;
       }
+      final I18n i18n = LocalizationHelper.getI18n(BrandingManager.class);
       return i18n.tr("NetXMS Management Client");
 	}
 
@@ -114,7 +90,7 @@ public final class BrandingManager
     *
     * @return login image
     */
-   public ImageDescriptor getLoginImage()
+   public static ImageDescriptor getLoginImage()
    {
       for(BrandingProvider p : providers)
       {
@@ -125,12 +101,28 @@ public final class BrandingManager
       return ResourceManager.getImageDescriptor("icons/login.png");
    }
 
+   /**
+    * Get login image background.
+    *
+    * @return login image background
+    */
+   public static RGB getLoginImageBackground()
+   {
+      for(BrandingProvider p : providers)
+      {
+         RGB color = p.getLoginImageBackground();
+         if (color != null)
+            return color;
+      }
+      return new RGB(14, 50, 78);
+   }
+
 	/**
 	 * Get default perspective ID. 
 	 * 
 	 * @return default perspective ID or null if no branding provider defines one.
 	 */
-	public String getDefaultPerspective()
+   public static String getDefaultPerspective()
 	{
       for(BrandingProvider p : providers)
 		{
@@ -147,7 +139,7 @@ public final class BrandingManager
     * @param parentShell parent shell for dialog
     * @return custom "About" dialog or default one if no branding provider defines one.
     */
-	public Dialog createAboutDialog(Shell parentShell)
+   public static Dialog createAboutDialog(Shell parentShell)
 	{
       for(BrandingProvider p : providers)
 		{

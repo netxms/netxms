@@ -31,8 +31,10 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -47,7 +49,7 @@ import org.netxms.nxmc.AppPropertiesLoader;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.ColorConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -60,7 +62,10 @@ public class LoginDialog extends Dialog
    private static final Logger logger = LoggerFactory.getLogger(LoginDialog.class);
 
    private I18n i18n = LocalizationHelper.getI18n(LoginDialog.class);
+   private String loginMessage;
    private ImageDescriptor loginImage;
+   private RGB loginImageBackground;
+   private int loginImageMargins;
    private Text textLogin;
    private Text textPassword;
    private String password;
@@ -72,12 +77,14 @@ public class LoginDialog extends Dialog
    public LoginDialog(Shell parentShell, AppPropertiesLoader appProperties)
    {
       super(parentShell);
-
+      loginMessage = appProperties.getProperty("loginFormMessage");
       loginImage = loadUserImage(appProperties);
       if (loginImage == null)
-         loginImage = BrandingManager.getInstance().getLoginTitleImage();
-      if (loginImage == null)
-         loginImage = ResourceManager.getImageDescriptor("icons/app_logo.png");
+         loginImage = BrandingManager.getLoginImage();
+      loginImageBackground = ColorConverter.parseColorDefinition(appProperties.getProperty("loginFormImageBackground"));
+      if (loginImageBackground == null)
+         loginImageBackground = BrandingManager.getLoginImageBackground();
+      loginImageMargins = appProperties.getPropertyAsInteger("loginFormImageMargins", 10);
    }
 
    /**
@@ -87,9 +94,7 @@ public class LoginDialog extends Dialog
    protected void configureShell(Shell shell)
    {
       super.configureShell(shell);
-      String customTitle = BrandingManager.getInstance().getLoginTitle();
-      shell.setText((customTitle != null) ? customTitle : i18n.tr("NetXMS - Connect to Server"));
-
+      shell.setText(String.format(i18n.tr("%s - Connect to Server"), BrandingManager.getProductName()));
       shell.setMaximized(true);
       shell.setFullScreen(true);
    }
@@ -108,24 +113,8 @@ public class LoginDialog extends Dialog
 
       Composite header = new Composite(outerArea, SWT.NONE);
       GridLayout headerLayout = new GridLayout();
-      headerLayout.numColumns = 2;
       header.setLayout(headerLayout);
       header.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-
-      Label appIcon = new Label(header, SWT.CENTER);
-      appIcon.setImage(loginImage.createImage());
-      appIcon.addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent event)
-         {
-            ((Label)event.widget).getImage().dispose();
-         }
-      });
-
-      Label title = new Label(header, SWT.NONE);
-      title.setText("NETXMS");
-      title.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
-      title.setData(RWT.CUSTOM_VARIANT, "LoginTitle");
 
       Composite innerArea = new Composite(outerArea, SWT.NONE);
       GridLayout layout = new GridLayout();
@@ -174,29 +163,69 @@ public class LoginDialog extends Dialog
    {
       PreferenceStore settings = PreferenceStore.getInstance();
 
-      Composite dialogArea = new Composite(parent, SWT.NONE);
+      Composite dialogArea = new Composite(parent, SWT.BORDER);
       applyDialogFont(dialogArea);
 
       GridLayout dialogLayout = new GridLayout();
-      dialogLayout.numColumns = 1;
+      dialogLayout.numColumns = 2;
       dialogLayout.marginWidth = 0;
       dialogLayout.marginHeight = 0;
-      dialogLayout.verticalSpacing = 30;
+      dialogLayout.horizontalSpacing = 0;
       dialogArea.setLayout(dialogLayout);
 
+      Color imageBackgroundColor = new Color(parent.getDisplay(), loginImageBackground);
+
+      Composite imageArea = new Composite(dialogArea, SWT.NONE);
+      imageArea.setBackground(imageBackgroundColor);
+      imageArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true, 1, 3));
+      GridLayout imageAreaLayout = new GridLayout();
+      imageAreaLayout.marginWidth = loginImageMargins;
+      imageAreaLayout.marginHeight = loginImageMargins;
+      imageArea.setLayout(imageAreaLayout);
+
       // Login image
-      Label label = new Label(dialogArea, SWT.CENTER);
-      // label.setImage(loginImage.createImage());
+      Label appIcon = new Label(imageArea, SWT.TOP);
+      appIcon.setBackground(imageArea.getBackground());
+      appIcon.setImage(loginImage.createImage());
+      appIcon.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent event)
+         {
+            ((Label)event.widget).getImage().dispose();
+            imageBackgroundColor.dispose();
+         }
+      });
+      appIcon.setLayoutData(new GridData(SWT.CENTER, SWT.TOP, false, true));
+
+      Composite formArea = new Composite(dialogArea, SWT.NONE);
+      GridLayout formLayout = new GridLayout();
+      formLayout.marginWidth = 20;
+      formLayout.marginHeight = 20;
+      formLayout.verticalSpacing = 30;
+      formArea.setLayout(formLayout);
+
+      // Login label
+      Label label = new Label(formArea, SWT.CENTER);
       label.setText("Log in");
       label.setData(RWT.CUSTOM_VARIANT, "LoginHeader");
-      // label.setFont(JFaceResources.getBannerFont());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
       gd.verticalAlignment = SWT.CENTER;
       gd.grabExcessHorizontalSpace = true;
       label.setLayoutData(gd);
 
-      final Composite fields = new Composite(dialogArea, SWT.NONE);
+      if ((loginMessage != null) && !loginMessage.isEmpty())
+      {
+         label = new Label(formArea, SWT.CENTER);
+         label.setText(loginMessage);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.CENTER;
+         gd.verticalAlignment = SWT.CENTER;
+         gd.grabExcessHorizontalSpace = true;
+         label.setLayoutData(gd);
+      }
+
+      final Composite fields = new Composite(formArea, SWT.NONE);
       GridLayout fieldsLayout = new GridLayout();
       fieldsLayout.verticalSpacing = 20;
       fieldsLayout.marginHeight = 0;
@@ -216,7 +245,7 @@ public class LoginDialog extends Dialog
       if (text != null)
          textLogin.setText(text);
 
-      Button button = new Button(dialogArea, SWT.PUSH);
+      Button button = new Button(formArea, SWT.PUSH);
       button.setText(i18n.tr("Log in"));
       button.setFont(JFaceResources.getDialogFont());
       button.setData(Integer.valueOf(IDialogConstants.OK_ID));
@@ -323,10 +352,13 @@ public class LoginDialog extends Dialog
     */
    private ImageDescriptor loadUserImage(AppPropertiesLoader appProperties)
    {
+      String name = appProperties.getProperty("loginFormImage");
+      if (name == null)
+         return null;
+
       InputStream in = null;
       try
       {
-         String name = appProperties.getProperty("loginFormImage");
          in = getClass().getResourceAsStream(name);
          if (in == null)
          {

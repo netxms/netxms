@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,8 +40,7 @@ public class RedirectServlet extends HttpServlet
 		final String path = request.getRequestURI().substring(request.getContextPath().length());
       if ((path == null) || path.isEmpty() || "/".equals(path))
 		{
-			BrandingManager.create();
-         response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/" + BrandingManager.getInstance().getRedirectionURL() + "-light.app"));
+         response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/nxmc-light.app"));
 		}
 	}
 }
