@@ -37,8 +37,8 @@ public class RegionalSettings
 	public static final int DATETIME_FORMAT_SERVER = 0;
 	public static final int DATETIME_FORMAT_JVM = 1;
 	public static final int DATETIME_FORMAT_CUSTOM = 2;
+
 	public static final TimeFormatter TIME_FORMATTER = new TimeFormatter() {
-      
       @Override
       public String formatUptime(long seconds)
       {
@@ -51,12 +51,12 @@ public class RegionalSettings
          return getDateTimeFormat().format(new Date(timestamp * 1000));
       }
    };
-	
+
 	private static int dateTimeFormat = DATETIME_FORMAT_SERVER;
 	private static String dateFormatString;
 	private static String timeFormatString;
 	private static String shortTimeFormatString;
-	
+
 	/**
 	 * Update from preferences
 	 */

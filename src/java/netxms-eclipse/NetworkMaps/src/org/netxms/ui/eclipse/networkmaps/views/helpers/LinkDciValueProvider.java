@@ -59,7 +59,7 @@ public class LinkDciValueProvider
 	   }	   
       return instance;
 	}
-	
+
 	  /**
     * Constructor
     */
@@ -237,55 +237,56 @@ public class LinkDciValueProvider
    {
       if (!link.hasDciData())
          return ""; //$NON-NLS-1$
-      String result = ""; //$NON-NLS-1$
+
       SingleDciConfig[] dciList =  link.getDciList();
+      StringBuilder sb = new StringBuilder();
       for(int i = 0; i < dciList.length;)
       {
          DciValue v = getDciLastValue(dciList[i].dciId);
          if (v != null)
-         {
-            result += v.format(dciList[i].getFormatString(), RegionalSettings.TIME_FORMATTER); //$NON-NLS-1$  
-         }
-         if(++i != dciList.length)
-            result += "\n"; //$NON-NLS-1$
+            sb.append(v.format(dciList[i].getFormatString(), RegionalSettings.TIME_FORMATTER));
+         if (++i != dciList.length)
+            sb.append('\n');
       }
-      return result;
+      return sb.toString();
    }
-   
+
    /**
-    * @param DCIList
+    * @param dciList
     * @return
     */
-   public String getDciDataAsString(List<SingleDciConfig> DCIList)
+   public String getDciDataAsString(List<SingleDciConfig> dciList)
    {
-      String result = ""; //$NON-NLS-1$
-      for(int i = 0; i < DCIList.size();)
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < dciList.size();)
       {
-         DciValue v = getDciLastValue(DCIList.get(i).dciId); 
+         DciValue v = getDciLastValue(dciList.get(i).dciId); 
          if (v != null)
-         {
-            result += v.format(DCIList.get(i).getFormatString(), RegionalSettings.TIME_FORMATTER); //$NON-NLS-1$
-         }
-         if(++i != DCIList.size())
-            result += "\n"; //$NON-NLS-1$
+            sb.append(v.format(dciList.get(i).getFormatString(), RegionalSettings.TIME_FORMATTER));
+         if (++i != dciList.size())
+            sb.append('\n');
       }
-      return result;
+      return sb.toString();
    }
-   
+
    /**
-    * @param DCIList
+    * @param dciList
     * @return
     */
-   public List<DciValue> getDciData(List<SingleDciConfig> DCIList)
+   public List<DciValue> getDciData(List<SingleDciConfig> dciList)
    {
       List<DciValue> result = new ArrayList<DciValue>();
-      for(int i = 0; i < DCIList.size();i++)
+      for(int i = 0; i < dciList.size();i++)
       {
-         result.add(getDciLastValue(DCIList.get(i).dciId)); 
+         result.add(getDciLastValue(dciList.get(i).dciId)); 
       }
       return result;
    }
    
+   /**
+    * @param dci
+    * @return
+    */
    public DciValue getLastDciData(SingleDciConfig dci)
    {
       return getDciLastValue(dci.dciId); 

@@ -140,7 +140,7 @@ public class MainWindow extends Window implements MessageAreaHolder
             ps.set("MainWindow.Maximized", getShell().getMaximized());
             ps.set("MainWindow.Size", getShell().getSize());
             ps.set("MainWindow.Location", getShell().getLocation());
-            ps.set("MainWindow.CurrentPerspective", (currentPerspective != null) ? currentPerspective.getId() : "(none)");
+            ps.set(PreferenceStore.serverProperty("MainWindow.CurrentPerspective"), (currentPerspective != null) ? currentPerspective.getId() : "(none)");
          }
       });
 
@@ -380,7 +380,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       });
 
       switchToPerspective("Pinboard");
-      switchToPerspective(PreferenceStore.getInstance().getAsString("MainWindow.CurrentPerspective"));
+      switchToPerspective(PreferenceStore.getInstance().getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
 
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())

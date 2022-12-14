@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import java.util.Set;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.client.maps.MapDCIInstance;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
@@ -232,56 +233,59 @@ public class LinkDciValueProvider
    public String getDciDataAsString(NetworkMapLink link)
    {
       if (!link.hasDciData())
-         return ""; //$NON-NLS-1$
-      String result = ""; //$NON-NLS-1$
+         return "";
+
       SingleDciConfig[] dciList =  link.getDciList();
+      TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
+      StringBuilder sb = new StringBuilder();
       for(int i = 0; i < dciList.length;)
       {
          DciValue v = getDciLastValue(dciList[i].dciId);
          if (v != null)
-         {
-            result += v.format(dciList[i].getFormatString(), DateFormatFactory.TIME_FORMATTER); 
-         }
-         if(++i != dciList.length)
-            result += "\n"; //$NON-NLS-1$
+            sb.append(v.format(dciList[i].getFormatString(), timeFormatter));
+         if (++i != dciList.length)
+            sb.append("\n");
       }
-      return result;
+      return sb.toString();
    }
 
    /**
-    * @param DCIList
+    * @param dciList
     * @return
     */
-   public String getDciDataAsString(List<SingleDciConfig> DCIList)
+   public String getDciDataAsString(List<SingleDciConfig> dciList)
    {
-      String result = ""; //$NON-NLS-1$
-      for(int i = 0; i < DCIList.size();)
+      TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
+      StringBuilder sb = new StringBuilder();
+      for(int i = 0; i < dciList.size();)
       {
-         DciValue v = getDciLastValue(DCIList.get(i).dciId); 
+         DciValue v = getDciLastValue(dciList.get(i).dciId); 
          if (v != null)
-         {
-            result += v.format(DCIList.get(i).getFormatString(), DateFormatFactory.TIME_FORMATTER);
-         }
-         if(++i != DCIList.size())
-            result += "\n"; //$NON-NLS-1$
+            sb.append(v.format(dciList.get(i).getFormatString(), timeFormatter));
+         if (++i != dciList.size())
+            sb.append("\n");
       }
-      return result;
+      return sb.toString();
    }
 
    /**
-    * @param DCIList
+    * @param dciList
     * @return
     */
-   public List<DciValue> getDciData(List<SingleDciConfig> DCIList)
+   public List<DciValue> getDciData(List<SingleDciConfig> dciList)
    {
       List<DciValue> result = new ArrayList<DciValue>();
-      for(int i = 0; i < DCIList.size();i++)
+      for(int i = 0; i < dciList.size();i++)
       {
-         result.add(getDciLastValue(DCIList.get(i).dciId)); 
+         result.add(getDciLastValue(dciList.get(i).dciId)); 
       }
       return result;
    }
 
+   /**
+    * @param dci
+    * @return
+    */
    public DciValue getLastDciData(SingleDciConfig dci)
    {
       return getDciLastValue(dci.dciId); 

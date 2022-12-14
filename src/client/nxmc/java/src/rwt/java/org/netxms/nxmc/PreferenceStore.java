@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,10 +29,17 @@ import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.UUID;
+import javax.servlet.http.Cookie;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.internal.service.ContextProvider;
+import org.eclipse.rap.rwt.service.UISession;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Display;
+import org.netxms.client.NXCSession;
 import org.netxms.nxmc.services.PreferenceInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +51,15 @@ public class PreferenceStore
 {
    private static final Logger logger = LoggerFactory.getLogger(PreferenceStore.class);
    private static final RGB DEFAULT_COLOR = new RGB(0, 0, 0);
-   private static PreferenceStore instance = null;
+   private static final String COOKIE_NAME = "nxmcStoreId";
+   private static final int COOKIE_MAX_AGE_SEC = 3600 * 24 * 90; // 3 months
 
    /**
     * Open local store
     */
    protected static void open(String stateDir)
    {
-      instance = new PreferenceStore(new File(stateDir + File.separator + "nxmc.preferences"));
+      PreferenceStore instance = new PreferenceStore(new File(stateDir + File.separator + "nxmc.preferences." + getStoreId()));
       ServiceLoader<PreferenceInitializer> loader = ServiceLoader.load(PreferenceInitializer.class, PreferenceStore.class.getClassLoader());
       for(PreferenceInitializer pi : loader)
       {
@@ -65,6 +73,67 @@ public class PreferenceStore
             logger.error("Exception in preference initializer", e);
          }
       }
+      RWT.getUISession().setAttribute("netxms.preferenceStore", instance);
+   }
+
+   /**
+    * Get store ID from session or cookie
+    *
+    * @return store ID from session or cookie
+    */
+   private static String getStoreId()
+   {
+      UISession uiSession = ContextProvider.getUISession();
+      String result = (String)uiSession.getAttribute(COOKIE_NAME);
+      if (result == null)
+      {
+         result = getStoreIdFromCookie();
+         if (result == null)
+         {
+            result = UUID.randomUUID().toString();
+         }
+         Cookie cookie = new Cookie(COOKIE_NAME, result);
+         cookie.setSecure(ContextProvider.getRequest().isSecure());
+         cookie.setMaxAge(COOKIE_MAX_AGE_SEC);
+         cookie.setHttpOnly(true);
+         ContextProvider.getResponse().addCookie(cookie);
+         uiSession.setAttribute(COOKIE_NAME, result);
+      }
+      return result;
+   }
+
+   /**
+    * Get store ID from cookie
+    *
+    * @return store ID or null
+    */
+   private static String getStoreIdFromCookie()
+   {
+      String result = null;
+      Cookie[] cookies = ContextProvider.getRequest().getCookies();
+      if (cookies != null)
+      {
+         for(int i = 0; result == null && i < cookies.length; i++)
+         {
+            Cookie cookie = cookies[i];
+            if (COOKIE_NAME.equals(cookie.getName()))
+            {
+               String value = cookie.getValue();
+               // Validate cookies to prevent cookie manipulation and related attacks
+               // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=275380
+               try
+               {
+                  UUID.fromString(value);
+                  result = value;
+               }
+               catch(IllegalArgumentException e)
+               {
+                  logger.warn("Invalid store ID \"" + value + "\" received from client");
+               }
+            }
+         }
+      }
+      return result;
    }
 
    /**
@@ -74,7 +143,41 @@ public class PreferenceStore
     */
    public static PreferenceStore getInstance()
    {
-      return instance;
+      return (PreferenceStore)RWT.getUISession().getAttribute("netxms.preferenceStore");
+   }
+
+   /**
+    * Get instance of preference store
+    * 
+    * @param display display to return store for
+    * @return instance of preference store
+    */
+   public static PreferenceStore getInstance(Display display)
+   {
+      return (PreferenceStore)RWT.getUISession(display).getAttribute("netxms.preferenceStore");
+   }
+
+   /**
+    * Build full property name for server-specific properties
+    *
+    * @param baseName base property name
+    * @param session communication session
+    * @return full property name
+    */
+   public static String serverProperty(String baseName, NXCSession session)
+   {
+      return baseName + "$" + Long.toString(session.getServerId());
+   }
+
+   /**
+    * Build full property name for server-specific properties
+    *
+    * @param baseName base property name
+    * @return full property name
+    */
+   public static String serverProperty(String baseName)
+   {
+      return serverProperty(baseName, Registry.getSession());
    }
 
    private File storeFile;

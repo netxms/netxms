@@ -32,8 +32,8 @@ public class NodeLastValuesFigure extends Figure
 			Label descr = new Label(v.getDescription());
 			descr.setForegroundColor(color);
 			add(descr);
-			
-			Label value = new Label(v.getFormattedValue(true, DateFormatFactory.TIME_FORMATTER));
+
+         Label value = new Label(v.getFormattedValue(true, DateFormatFactory.getTimeFormatter()));
 			value.setForegroundColor(color);
 			add(value);
 		}

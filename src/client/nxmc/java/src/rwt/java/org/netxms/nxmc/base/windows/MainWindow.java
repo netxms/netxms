@@ -54,9 +54,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
@@ -128,7 +128,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          public void widgetDisposed(DisposeEvent e)
          {
             PreferenceStore ps = PreferenceStore.getInstance();
-            ps.set("MainWindow.CurrentPerspective", (currentPerspective != null) ? currentPerspective.getId() : "(none)");
+            ps.set(PreferenceStore.serverProperty("MainWindow.CurrentPerspective"), (currentPerspective != null) ? currentPerspective.getId() : "(none)");
          }
       });
    }
@@ -273,7 +273,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          @Override
          public void run()
          {
-            new AboutDialog(getShell()).open();
+            BrandingManager.createAboutDialog(getShell()).open();
          }
       });
 
@@ -355,7 +355,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       });
 
       switchToPerspective("Pinboard");
-      switchToPerspective(PreferenceStore.getInstance().getAsString("MainWindow.CurrentPerspective"));
+      switchToPerspective(PreferenceStore.getInstance().getAsString(PreferenceStore.serverProperty("MainWindow.CurrentPerspective", session)));
 
       String motd = session.getMessageOfTheDay();
       if ((motd != null) && !motd.isEmpty())

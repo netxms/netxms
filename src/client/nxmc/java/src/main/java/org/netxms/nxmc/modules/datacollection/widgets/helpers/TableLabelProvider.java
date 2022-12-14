@@ -51,9 +51,9 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		keyColumnFont = new Font(Display.getCurrent(), fd);
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -69,18 +69,18 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		this.columns = columns;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -88,12 +88,12 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 
       if (columnIndex >= row.size())
          return null;
-      return new DataFormatter(useMultipliers ? "%{m,u}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getMeasurementUnit()).format(row.get(columnIndex).getValue(), DateFormatFactory.TIME_FORMATTER);
+      return new DataFormatter(useMultipliers ? "%{m,u}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getMeasurementUnit()).format(row.get(columnIndex).getValue(), DateFormatFactory.getTimeFormatter());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableFontProvider#getFont(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableFontProvider#getFont(java.lang.Object, int)
+    */
 	@Override
 	public Font getFont(Object element, int columnIndex)
 	{

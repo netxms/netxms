@@ -115,7 +115,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
                return i18n.tr("<< ERROR >>");
 				if (dciValue.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
                return i18n.tr("<< TABLE >>");
-				return dciValue.getFormattedValue(useMultipliers, DateFormatFactory.TIME_FORMATTER);				   
+            return dciValue.getFormattedValue(useMultipliers, DateFormatFactory.getTimeFormatter());
 			case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
 				if (dciValue.getTimestamp().getTime() <= 1000)
 					return null;

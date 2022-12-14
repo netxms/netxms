@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.console.resources.ThemeEngine;
  */
 public class OverviewDciLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override

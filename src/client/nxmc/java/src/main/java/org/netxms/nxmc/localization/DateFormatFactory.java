@@ -33,22 +33,20 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DateFormatFactory
 {
-	public static final int DATETIME_FORMAT_SERVER = 0;
-	public static final int DATETIME_FORMAT_JVM = 1;
-	public static final int DATETIME_FORMAT_CUSTOM = 2;
+   public static final int DATETIME_FORMAT_SERVER = 0;
+   public static final int DATETIME_FORMAT_JVM = 1;
+   public static final int DATETIME_FORMAT_CUSTOM = 2;
 
-   private static I18n i18n = LocalizationHelper.getI18n(DateFormatFactory.class);
-	private static int dateTimeFormat = DATETIME_FORMAT_SERVER;
-	private static String dateFormatString;
-	private static String timeFormatString;
-	private static String shortTimeFormatString;
-	public static final TimeFormatter TIME_FORMATTER = new TimeFormatter() {	         
+   /**
+    * Internal implementation of TimeFormatter interface
+    */
+   private static final TimeFormatter TIME_FORMATTER = new TimeFormatter() {
       @Override
       public String formatUptime(long seconds)
       {
          return formatTimeDifference(seconds, true);
       }
-      
+
       @Override
       public String formatDateAndTime(long timestamp)
       {
@@ -56,11 +54,17 @@ public class DateFormatFactory
       }
    };
 
-	/**
-	 * Update from preferences
-	 */
-	public static void updateFromPreferences()
-	{
+   private static I18n i18n = LocalizationHelper.getI18n(DateFormatFactory.class);
+   private static int dateTimeFormat = DATETIME_FORMAT_SERVER;
+   private static String dateFormatString;
+   private static String timeFormatString;
+   private static String shortTimeFormatString;
+
+   /**
+    * Update from preferences
+    */
+   public static void updateFromPreferences()
+   {
       PreferenceStore ps = PreferenceStore.getInstance();
       dateTimeFormat = ps.getAsInteger("DateFormatFactory.Format.DateTime", DATETIME_FORMAT_SERVER); //$NON-NLS-1$
       dateFormatString = ps.getAsString("DateFormatFactory.Format.Date"); //$NON-NLS-1$
@@ -70,75 +74,85 @@ public class DateFormatFactory
          Registry.getInstance().setServerTimeZone();
       else
          Registry.getInstance().resetTimeZone();
-	}
-	
-	/**
-	 * Get formatter for date and time
-	 * 
-	 * @return
-	 */
-	public static DateFormat getDateTimeFormat()
-	{
-	   DateFormat df;
-		switch(dateTimeFormat)
-		{
-			case DATETIME_FORMAT_SERVER:
-            NXCSession session = Registry.getSession();
-				df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
-				break;
-			case DATETIME_FORMAT_CUSTOM:
-				try
-				{
-					df = new SimpleDateFormat(dateFormatString + " " + timeFormatString); //$NON-NLS-1$
-				}
-				catch(IllegalArgumentException e)
-				{
-					df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
-				}
-				break;
-			default:
-				df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
-				break;
-		}
-      TimeZone tz = Registry.getTimeZone();
-		if (tz != null)
-		   df.setTimeZone(tz);
-		return df;
-	}
+   }
 
-	/**
-	 * Get formatter for date only
-	 * 
-	 * @return
-	 */
-	public static DateFormat getDateFormat()
-	{
+   /**
+    * Get time formatter
+    *
+    * @return time formatter instance
+    */
+   public static TimeFormatter getTimeFormatter()
+   {
+      return TIME_FORMATTER;
+   }
+
+   /**
+    * Get formatter for date and time
+    * 
+    * @return
+    */
+   public static DateFormat getDateTimeFormat()
+   {
       DateFormat df;
-		switch(dateTimeFormat)
-		{
-			case DATETIME_FORMAT_SERVER:
+      switch(dateTimeFormat)
+      {
+         case DATETIME_FORMAT_SERVER:
             NXCSession session = Registry.getSession();
-				df = new SimpleDateFormat(session.getDateFormat());
-				break;
-			case DATETIME_FORMAT_CUSTOM:
-				try
-				{
-				   df = new SimpleDateFormat(dateFormatString);
-				}
-				catch(IllegalArgumentException e)
-				{
-				   df = DateFormat.getDateInstance(DateFormat.SHORT);
-				}
+            df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
             break;
-			default:
-			   df = DateFormat.getDateInstance(DateFormat.SHORT);
+         case DATETIME_FORMAT_CUSTOM:
+            try
+            {
+               df = new SimpleDateFormat(dateFormatString + " " + timeFormatString); //$NON-NLS-1$
+            }
+            catch(IllegalArgumentException e)
+            {
+               df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
+            }
             break;
-		}
+         default:
+            df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
+            break;
+      }
       TimeZone tz = Registry.getTimeZone();
       if (tz != null)
          df.setTimeZone(tz);
       return df;
-	}
+   }
+
+   /**
+    * Get formatter for date only
+    * 
+    * @return
+    */
+   public static DateFormat getDateFormat()
+   {
+      DateFormat df;
+      switch(dateTimeFormat)
+      {
+         case DATETIME_FORMAT_SERVER:
+            NXCSession session = Registry.getSession();
+            df = new SimpleDateFormat(session.getDateFormat());
+            break;
+         case DATETIME_FORMAT_CUSTOM:
+            try
+            {
+               df = new SimpleDateFormat(dateFormatString);
+            }
+            catch(IllegalArgumentException e)
+            {
+               df = DateFormat.getDateInstance(DateFormat.SHORT);
+            }
+            break;
+         default:
+            df = DateFormat.getDateInstance(DateFormat.SHORT);
+            break;
+      }
+      TimeZone tz = Registry.getTimeZone();
+      if (tz != null)
+         df.setTimeZone(tz);
+      return df;
+   }
 
    /**
     * Get formatter for time only
@@ -209,12 +223,11 @@ public class DateFormatFactory
    }
 
    /**
-    * Format provided time difference as
-    * [n days, ]hh:mm[:ss]
+    * Format provided time difference as [n days, ]hh:mm[:ss]
     * 
     * @param seconds number of seconds
     * @param showSeconds true to show seconds
-    * @return formatted time 
+    * @return formatted time
     */
    public static String formatTimeDifference(long seconds, boolean showSeconds)
    {
@@ -225,19 +238,19 @@ public class DateFormatFactory
          sb.append(i18n.trn("{0} day", "{0} days", days));
          seconds -= days * 86400;
       }
-      
+
       long hours = seconds / 3600;
       if (hours < 10)
          sb.append('0');
       sb.append(hours);
       seconds -= hours * 3600;
-      
+
       sb.append(':');
       long minutes = seconds / 60;
       if (minutes < 10)
          sb.append('0');
       sb.append(minutes);
-      
+
       if (showSeconds)
       {
          sb.append(':');
@@ -246,13 +259,12 @@ public class DateFormatFactory
             sb.append('0');
          sb.append(seconds);
       }
-      
+
       return sb.toString();
    }
-   
+
    /**
-    * Format time difference between current and give time as
-    * [n days, ]hh:mm[:ss]
+    * Format time difference between current and give time as [n days, ]hh:mm[:ss]
     * 
     * @param start period start time
     * @param showSeconds true to show seconds
@@ -263,5 +275,4 @@ public class DateFormatFactory
       long seconds = ((System.currentTimeMillis() - start.getTime()) / 1000);
       return formatTimeDifference(seconds, showSeconds);
    }
-   
 }

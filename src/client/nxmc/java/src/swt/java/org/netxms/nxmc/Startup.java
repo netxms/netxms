@@ -53,6 +53,7 @@ import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.windows.MainWindow;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
@@ -107,6 +108,7 @@ public class Startup
       windowIcons[6] = ResourceManager.getImage("icons/window/16x16.png");
 
       PreferenceStore.open(stateDir.getAbsolutePath());
+      DateFormatFactory.updateFromPreferences();
       SharedIcons.init();
       StatusDisplayInfo.init(display);
 

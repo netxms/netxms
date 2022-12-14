@@ -43,6 +43,7 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.TimeFormatter;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.api.DataSeries;
@@ -310,12 +311,13 @@ public class ChartLegend extends Composite
          String format = (item.getDisplayFormat() == null || item.getDisplayFormat().isEmpty()) ? 
                ((useMultipliers) ? "%{m,u}.3f" : "%{u}.3f") :  item.getDisplayFormat();
          DataFormatter formatter = new DataFormatter(format, DataType.FLOAT, item.getMeasurementUnit());
-         dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), DateFormatFactory.TIME_FORMATTER));
+         TimeFormatter timeFormatter = DateFormatFactory.getTimeFormatter();
+         dataLabels[row][0].setText(formatter.format(s.getCurrentValueAsString(), timeFormatter));
          if (chart.getType() == ChartType.LINE)
          {
-            dataLabels[row][1].setText(formatter.format(Double.toString(s.getMinValue()), DateFormatFactory.TIME_FORMATTER));
-            dataLabels[row][2].setText(formatter.format(Double.toString(s.getMaxValue()), DateFormatFactory.TIME_FORMATTER));
-            dataLabels[row][3].setText(formatter.format(Double.toString(s.getAverageValue()), DateFormatFactory.TIME_FORMATTER));
+            dataLabels[row][1].setText(formatter.format(Double.toString(s.getMinValue()), timeFormatter));
+            dataLabels[row][2].setText(formatter.format(Double.toString(s.getMaxValue()), timeFormatter));
+            dataLabels[row][3].setText(formatter.format(Double.toString(s.getAverageValue()), timeFormatter));
          }
          else
          {
