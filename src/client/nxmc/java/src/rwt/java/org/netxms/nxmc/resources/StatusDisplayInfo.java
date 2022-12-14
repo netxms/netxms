@@ -19,9 +19,9 @@
 package org.netxms.nxmc.resources;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.nxmc.PreferenceStore;
@@ -34,59 +34,73 @@ import org.xnap.commons.i18n.I18n;
  */
 public final class StatusDisplayInfo
 {
-   private static I18n i18n = LocalizationHelper.getI18n(StatusDisplayInfo.class);
-	private static String[] statusText = new String[9];
-	private static ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[9];
-	private static Image[] statusImages = new Image[9];
-   private static ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[9];
-	private static ColorCache colorCache;
-	private static Color statusColor[] = new Color[9]; 
-	
+   private I18n i18n = LocalizationHelper.getI18n(StatusDisplayInfo.class);
+   private String[] statusText = new String[9];
+   private ImageDescriptor[] statusImageDescriptors = new ImageDescriptor[9];
+   private Image[] statusImages = new Image[9];
+   private ImageDescriptor[] overlayImageDescriptors = new ImageDescriptor[9];
+   private ColorCache colorCache;
+   private Color statusColor[] = new Color[9];
+
 	/**
 	 * Initialize static members. Intended to be called once by library activator.
 	 */
-	public static void init(Display display)
+   public static void init()
 	{
-      statusText[ObjectStatus.NORMAL.getValue()] = i18n.tr("Normal");
-      statusText[ObjectStatus.WARNING.getValue()] = i18n.tr("Warning");
-      statusText[ObjectStatus.MINOR.getValue()] = i18n.tr("Minor");
-      statusText[ObjectStatus.MAJOR.getValue()] = i18n.tr("Major");
-      statusText[ObjectStatus.CRITICAL.getValue()] = i18n.tr("Critical");
-      statusText[ObjectStatus.UNKNOWN.getValue()] = i18n.tr("Unknown");
-      statusText[ObjectStatus.UNMANAGED.getValue()] = i18n.tr("Unmanaged");
-      statusText[ObjectStatus.DISABLED.getValue()] = i18n.tr("Disabled");
-      statusText[ObjectStatus.TESTING.getValue()] = i18n.tr("Testing");
+      StatusDisplayInfo instance = new StatusDisplayInfo();
 
-      statusImageDescriptors[ObjectStatus.NORMAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/normal.png");
-      statusImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/warning.png");
-      statusImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/minor.png");
-      statusImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/major.png");
-      statusImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/critical.png");
-      statusImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/unknown.png");
-      statusImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/unmanaged.png");
-      statusImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/disabled.png");
-      statusImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/testing.png");
+      instance.statusText[ObjectStatus.NORMAL.getValue()] = instance.i18n.tr("Normal");
+      instance.statusText[ObjectStatus.WARNING.getValue()] = instance.i18n.tr("Warning");
+      instance.statusText[ObjectStatus.MINOR.getValue()] = instance.i18n.tr("Minor");
+      instance.statusText[ObjectStatus.MAJOR.getValue()] = instance.i18n.tr("Major");
+      instance.statusText[ObjectStatus.CRITICAL.getValue()] = instance.i18n.tr("Critical");
+      instance.statusText[ObjectStatus.UNKNOWN.getValue()] = instance.i18n.tr("Unknown");
+      instance.statusText[ObjectStatus.UNMANAGED.getValue()] = instance.i18n.tr("Unmanaged");
+      instance.statusText[ObjectStatus.DISABLED.getValue()] = instance.i18n.tr("Disabled");
+      instance.statusText[ObjectStatus.TESTING.getValue()] = instance.i18n.tr("Testing");
 
-		for(int i = 0; i < statusImageDescriptors.length; i++)
-			statusImages[i] = statusImageDescriptors[i].createImage();
+      instance.statusImageDescriptors[ObjectStatus.NORMAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/normal.png");
+      instance.statusImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/warning.png");
+      instance.statusImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/minor.png");
+      instance.statusImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/major.png");
+      instance.statusImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/critical.png");
+      instance.statusImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/unknown.png");
+      instance.statusImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/unmanaged.png");
+      instance.statusImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/disabled.png");
+      instance.statusImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/testing.png");
 
-		overlayImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/warning.png");
-		overlayImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/minor.png");
-		overlayImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/major.png");
-		overlayImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/critical.png");
-		overlayImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unknown.gif");
-		overlayImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unmanaged.gif");
-		overlayImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/disabled.gif");
-		overlayImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/testing.png");
-		
-		colorCache = new ColorCache();
-		updateStatusColors();
+      for(int i = 0; i < instance.statusImageDescriptors.length; i++)
+         instance.statusImages[i] = instance.statusImageDescriptors[i].createImage();
+
+      instance.overlayImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/warning.png");
+      instance.overlayImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/minor.png");
+      instance.overlayImageDescriptors[ObjectStatus.MAJOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/major.png");
+      instance.overlayImageDescriptors[ObjectStatus.CRITICAL.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/critical.png");
+      instance.overlayImageDescriptors[ObjectStatus.UNKNOWN.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unknown.gif");
+      instance.overlayImageDescriptors[ObjectStatus.UNMANAGED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/unmanaged.gif");
+      instance.overlayImageDescriptors[ObjectStatus.DISABLED.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/disabled.gif");
+      instance.overlayImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/testing.png");
+
+      instance.colorCache = new ColorCache();
+      instance.updateStatusColors();
+
+      RWT.getUISession().setAttribute("netxms.statusDisplayInfo", instance);
 	}
+
+   /**
+    * Get instance for current session
+    *
+    * @return instance
+    */
+   private static StatusDisplayInfo getInstance()
+   {
+      return (StatusDisplayInfo)RWT.getUISession().getAttribute("netxms.statusDisplayInfo");
+   }
 
 	/**
 	 * Update status colors
 	 */
-	public static void updateStatusColors()
+   private void updateStatusColors()
 	{
       PreferenceStore ps = PreferenceStore.getInstance();
       statusColor[0] = colorCache.create(ps.getAsColor("Status.Colors.Normal", ThemeEngine.getForegroundColorDefinition("Status.Normal")));
@@ -108,7 +122,7 @@ public final class StatusDisplayInfo
     */
 	public static String getStatusText(ObjectStatus status)
 	{
-		return statusText[status.getValue()];
+      return getInstance().statusText[status.getValue()];
 	}
 
    /**
@@ -119,7 +133,7 @@ public final class StatusDisplayInfo
     */
    public static String getStatusText(Severity severity)
    {
-      return statusText[severity.getValue()];
+      return getInstance().statusText[severity.getValue()];
    }
 
    /**
@@ -141,7 +155,7 @@ public final class StatusDisplayInfo
 	 */
 	public static ImageDescriptor getStatusImageDescriptor(ObjectStatus status)
 	{
-		return statusImageDescriptors[status.getValue()];
+      return getInstance().statusImageDescriptors[status.getValue()];
 	}
 
    /**
@@ -152,7 +166,7 @@ public final class StatusDisplayInfo
     */
    public static ImageDescriptor getStatusImageDescriptor(Severity severity)
    {
-      return statusImageDescriptors[severity.getValue()];
+      return getInstance().statusImageDescriptors[severity.getValue()];
    }
 
    /**
@@ -175,7 +189,7 @@ public final class StatusDisplayInfo
 	 */
 	public static Image getStatusImage(ObjectStatus status)
 	{
-		return statusImages[status.getValue()];
+      return getInstance().statusImages[status.getValue()];
 	}
 	
    /**
@@ -199,7 +213,7 @@ public final class StatusDisplayInfo
     */
    public static Image getStatusImage(Severity severity)
    {
-      return statusImages[severity.getValue()];
+      return getInstance().statusImages[severity.getValue()];
    }
 
    /**
@@ -210,7 +224,7 @@ public final class StatusDisplayInfo
     */
    public static ImageDescriptor getStatusOverlayImageDescriptor(ObjectStatus status)
    {
-      return overlayImageDescriptors[status.getValue()];
+      return getInstance().overlayImageDescriptors[status.getValue()];
    }
 
    /**
@@ -221,7 +235,7 @@ public final class StatusDisplayInfo
     */
    public static ImageDescriptor getStatusOverlayImageDescriptor(Severity severity)
    {
-      return overlayImageDescriptors[severity.getValue()];
+      return getInstance().overlayImageDescriptors[severity.getValue()];
    }
    
    /**
@@ -243,7 +257,7 @@ public final class StatusDisplayInfo
 	 */
 	public static Color getStatusColor(ObjectStatus status)
 	{
-		return statusColor[status.getValue()];
+      return getInstance().statusColor[status.getValue()];
 	}
 
    /**
@@ -254,7 +268,7 @@ public final class StatusDisplayInfo
     */
    public static Color getStatusColor(Severity severity)
    {
-      return statusColor[severity.getValue()];
+      return getInstance().statusColor[severity.getValue()];
    }
 
    /**

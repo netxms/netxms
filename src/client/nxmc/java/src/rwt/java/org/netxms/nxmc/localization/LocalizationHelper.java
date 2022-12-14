@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,23 +16,32 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.alarms;
+package org.netxms.nxmc.localization;
 
-import org.eclipse.swt.widgets.Display;
-import org.netxms.client.NXCSession;
-import org.netxms.nxmc.services.LoginListener;
+import org.eclipse.rap.rwt.RWT;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
- * Login listener for alarms module
+ * Helper class for localization tasks
  */
-public class AlarmsModuleLoginListener implements LoginListener
+public final class LocalizationHelper
 {
    /**
-    * @see org.netxms.nxmc.services.LoginListener#afterLogin(org.netxms.client.NXCSession, org.eclipse.swt.widgets.Display)
+    * Prevent construction
     */
-   @Override
-   public void afterLogin(NXCSession session, Display display)
+   private LocalizationHelper()
    {
-      AlarmNotifier.init(session, display);
+   }
+
+   /**
+    * Get I18n object for given class
+    *
+    * @param c Java class
+    * @return I18n object for translation
+    */
+   public static I18n getI18n(Class<?> c)
+   {
+      return I18nFactory.getI18n(c, RWT.getLocale(), I18nFactory.FALLBACK);
    }
 }

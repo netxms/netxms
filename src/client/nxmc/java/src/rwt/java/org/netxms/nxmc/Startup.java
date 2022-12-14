@@ -46,7 +46,9 @@ import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.windows.MainWindow;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.objects.ObjectToolsCache;
@@ -101,8 +103,9 @@ public class Startup implements EntryPoint, StartupParameters
       logger.info("Registered themes: " + sb.toString());
 
       PreferenceStore.open(stateDir.getAbsolutePath());
+      DateFormatFactory.createInstance();
       SharedIcons.init();
-      StatusDisplayInfo.init(display);
+      StatusDisplayInfo.init();
 
       Shell shell = new Shell(display, SWT.NO_TRIM);
       shell.setMaximized(true);
@@ -131,6 +134,7 @@ public class Startup implements EntryPoint, StartupParameters
       w.open();
 
       logger.info("Application instance exit");
+      AlarmNotifier.stop();
       display.dispose();
 
       return 0;

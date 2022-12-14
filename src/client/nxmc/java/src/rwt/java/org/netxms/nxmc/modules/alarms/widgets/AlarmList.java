@@ -854,7 +854,7 @@ public class AlarmList extends CompositeWithMessageArea
       updatedAlarms.addAll(updateList);
       updateList.clear();
 
-      alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
+      getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
          {
@@ -923,7 +923,7 @@ public class AlarmList extends CompositeWithMessageArea
 
       synchronized(newAlarmList)
       {
-         if (!AlarmNotifier.isGlobalSoundEnabled() && (view != null) && view.isVisible() && isLocalNotificationsEnabled)
+         if (!AlarmNotifier.isGlobalSoundEnabled(getDisplay()) && (view != null) && view.isVisible() && isLocalNotificationsEnabled)
          {
             for(Alarm a : newAlarmList)
             {

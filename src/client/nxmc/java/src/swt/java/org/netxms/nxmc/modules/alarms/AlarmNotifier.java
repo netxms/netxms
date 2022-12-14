@@ -77,7 +77,7 @@ public class AlarmNotifier
    /**
     * Initialize alarm notifier
     */
-   public static void init(NXCSession session)
+   public static void init(NXCSession session, Display display)
    {
       AlarmNotifier.session = session;
       ps = PreferenceStore.getInstance();
@@ -159,10 +159,8 @@ public class AlarmNotifier
                {
                }
 
-               PreferenceStore ps = PreferenceStore.getInstance();
                long currTime = System.currentTimeMillis();
-               if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) &&
-                     (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
+               if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) && (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
                {
                   Display.getDefault().syncExec(new Runnable() {
                      @Override
@@ -329,7 +327,7 @@ public class AlarmNotifier
       if ((session != null) && (listener != null))
          session.removeListener(listener);
    }
-   
+
    /**
     * Check if global sound is enabled
     * 
@@ -347,14 +345,7 @@ public class AlarmNotifier
     */
    public static void playSounOnAlarm(final Alarm alarm)
    {
-      try
-      {
-         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
-      } 
-      catch(ArrayIndexOutOfBoundsException e)
-      {
-         logger.error("Invalid alarm severity", e); //$NON-NLS-1$
-      }      
+      soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
    }
 
    /**

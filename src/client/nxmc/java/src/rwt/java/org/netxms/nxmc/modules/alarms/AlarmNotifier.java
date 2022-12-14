@@ -29,6 +29,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -49,25 +50,56 @@ import org.xnap.commons.i18n.I18n;
  */
 public class AlarmNotifier
 {
-   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+   private static final Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
+   private static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" };
 
-   private static I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
-   private static Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
-   private static SessionListener listener = null;
-   private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
-   private static int outstandingAlarms = 0;
-   private static long lastReminderTime = 0;
-   private static NXCSession session;
-   private static PreferenceStore ps;
-   private static File soundFilesDirectory;
-   private static LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
+   /**
+    * Get instance for current session
+    *
+    * @return instance
+    */
+   private static AlarmNotifier getInstance()
+   {
+      return (AlarmNotifier)RWT.getUISession().getAttribute("netxms.alarmNotifier");
+   }
+
+   /**
+    * Get instance for current session
+    *
+    * @param display current display
+    * @return instance
+    */
+   private static AlarmNotifier getInstance(Display display)
+   {
+      return (AlarmNotifier)RWT.getUISession(display).getAttribute("netxms.alarmNotifier");
+   }
+
+   private I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
+   private SessionListener listener = null;
+   private Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
+   private int outstandingAlarms = 0;
+   private long lastReminderTime = 0;
+   private NXCSession session;
+   private PreferenceStore ps;
+   private LinkedBlockingQueue<String> soundQueue = new LinkedBlockingQueue<String>(4);
+   private File soundFilesDirectory;
 
    /**
     * Initialize alarm notifier
     */
-   public static void init(NXCSession session)
+   public static void init(NXCSession session, Display display)
    {
-      AlarmNotifier.session = session;
+      RWT.getUISession(display).setAttribute("netxms.alarmNotifier", new AlarmNotifier(session));
+   }
+
+   /**
+    * Create new alarm notifier for given session
+    * 
+    * @param session communication session
+    */
+   private AlarmNotifier(NXCSession session)
+   {
+      this.session = session;
       ps = PreferenceStore.getInstance();
       soundFilesDirectory = new File(Registry.getStateDir(), "sounds");
       if (!soundFilesDirectory.isDirectory())
@@ -147,10 +179,8 @@ public class AlarmNotifier
                {
                }
 
-               PreferenceStore ps = PreferenceStore.getInstance();
                long currTime = System.currentTimeMillis();
-               if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) &&
-                     (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
+               if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) && (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
                {
                   Display.getDefault().syncExec(new Runnable() {
                      @Override
@@ -168,7 +198,7 @@ public class AlarmNotifier
       }, "AlarmReminderThread"); //$NON-NLS-1$
       reminderThread.setDaemon(true);
       reminderThread.start();
-      
+
       Thread playerThread = new Thread(new Runnable() {
          @Override
          public void run()
@@ -221,24 +251,24 @@ public class AlarmNotifier
    /**
     * Check if required sounds exist locally and download them from server if required.
     */
-   private static void checkSounds()
+   private void checkSounds()
    {
       for(String s : SEVERITY_TEXT)
       {
          getSoundAndDownloadIfRequired(s);
       }
    }
-   
+
    /**
     * @param severity
     * @return
     */
-   private static String getSoundAndDownloadIfRequired(String severity)
+   private String getSoundAndDownloadIfRequired(String severity)
    {
-      String soundName = ps.getAsString("AlarmNotifier.Sound." + severity);//$NON-NLS-1$
+      String soundName = ps.getAsString("AlarmNotifier.Sound." + severity);
       if ((soundName == null) || soundName.isEmpty())
          return null;
-      
+
       if (!isSoundFileExist(soundName))
       {
          try
@@ -300,7 +330,7 @@ public class AlarmNotifier
     * @param name
     * @return
     */
-   private static boolean isSoundFileExist(String name)
+   private boolean isSoundFileExist(String name)
    {
       if (name.isEmpty())
          return true;
@@ -314,18 +344,19 @@ public class AlarmNotifier
    public static void stop()
    {
       NXCSession session = Registry.getSession();
-      if ((session != null) && (listener != null))
-         session.removeListener(listener);
+      AlarmNotifier instance = getInstance();
+      if ((session != null) && (instance != null) && (instance.listener != null))
+         session.removeListener(instance.listener);
    }
-   
+
    /**
     * Check if global sound is enabled
     * 
     * @return true if enabled
     */
-   public static boolean isGlobalSoundEnabled()
+   public static boolean isGlobalSoundEnabled(Display display)
    {
-      return !ps.getAsBoolean("AlarmNotifier.LocalSound", false);
+      return !getInstance(display).ps.getAsBoolean("AlarmNotifier.LocalSound", false);
    }
 
    /**
@@ -335,20 +366,13 @@ public class AlarmNotifier
     */
    public static void playSounOnAlarm(final Alarm alarm)
    {
-      try
-      {
-         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
-      } 
-      catch(ArrayIndexOutOfBoundsException e)
-      {
-         logger.error("Invalid alarm severity", e); //$NON-NLS-1$
-      }      
+      getInstance().soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
    }
 
    /**
     * Process new alarm
     */
-   private static void processNewAlarm(final Alarm alarm)
+   private void processNewAlarm(final Alarm alarm)
    {
       Integer state = alarmStates.get(alarm.getId());
       if (state != null)
@@ -365,7 +389,7 @@ public class AlarmNotifier
 
       if (!ps.getAsBoolean("AlarmNotifier.LocalSound", false))
       {
-         playSounOnAlarm(alarm);
+         soundQueue.offer(SEVERITY_TEXT[alarm.getCurrentSeverity().getValue()]);
       }
 
       if (outstandingAlarms == 0)
