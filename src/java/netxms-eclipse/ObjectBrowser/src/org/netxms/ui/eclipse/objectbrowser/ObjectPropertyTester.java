@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import org.netxms.client.objects.Node;
  */
 public class ObjectPropertyTester extends PropertyTester
 {
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.core.expressions.IPropertyTester#test(java.lang.Object, java.lang.String, java.lang.Object[], java.lang.Object)
     */
    @Override
@@ -35,16 +35,16 @@ public class ObjectPropertyTester extends PropertyTester
    {
       if (!(receiver instanceof AbstractObject))
          return false;
-      
+
       if (property.equals("isAlarmsVisible")) //$NON-NLS-1$
          return ((AbstractObject)receiver).isAlarmsVisible();
-      
+
       if (property.equals("isCustomAttributePresented") && (args.length > 0)) //$NON-NLS-1$
-         return ((AbstractObject)receiver).getCustomAttributes().containsKey(args[0]);
+         return ((AbstractObject)receiver).hasCustomAttribute(args[0].toString());
 
       if (property.equals("isWindows")) //$NON-NLS-1$
          return (receiver instanceof Node) && ((Node)receiver).getPlatformName().contains("windows");
-      
+
       return false;
    }
 }

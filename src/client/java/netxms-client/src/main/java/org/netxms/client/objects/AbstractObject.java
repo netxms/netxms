@@ -971,6 +971,40 @@ public abstract class AbstractObject
       return (a != null) ? a.getValue() : null;
    }
 
+   /**
+    * Get object's custom attribute's value as boolean (will interpret string value as boolean value)
+    * 
+    * @param name attribute's name
+    * @return custom attribute's value as boolean (false if custom attribute does not exist)
+    */
+   public boolean getCustomAttributeValueAsBoolean(String name)
+   {
+      CustomAttribute a = customAttributes.get(name);
+      if (a == null)
+         return false;
+
+      try
+      {
+         return Integer.parseInt(a.getValue()) != 0;
+      }
+      catch(NumberFormatException e)
+      {
+      }
+
+      return Boolean.parseBoolean(a.getValue());
+   }
+
+   /**
+    * Check if object has custom attribute with given name.
+    *
+    * @param name attribute name
+    * @return true if object has custom attribute with given name.
+    */
+   public boolean hasCustomAttribute(String name)
+   {
+      return customAttributes.containsKey(name);
+   }
+
 	/**
 	 * @return the geolocation
 	 */
