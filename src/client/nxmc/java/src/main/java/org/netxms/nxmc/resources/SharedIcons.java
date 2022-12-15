@@ -77,6 +77,7 @@ public class SharedIcons
    public static ImageDescriptor URL;
    public static ImageDescriptor USER;
    public static ImageDescriptor VIEW_MENU;
+   public static ImageDescriptor WAITING;
 	public static ImageDescriptor XML;
 	public static ImageDescriptor ZOOM_IN;
 	public static ImageDescriptor ZOOM_OUT;
@@ -132,6 +133,7 @@ public class SharedIcons
    public static Image IMG_URL;
    public static Image IMG_USER;
    public static Image IMG_VIEW_MENU;
+   public static Image IMG_WAITING;
 	public static Image IMG_XML;
 	public static Image IMG_ZOOM_IN;
 	public static Image IMG_ZOOM_OUT;
@@ -192,6 +194,7 @@ public class SharedIcons
       URL = ResourceManager.getImageDescriptor("icons/url.png");
       USER = ResourceManager.getImageDescriptor("icons/user.png");
       VIEW_MENU = ResourceManager.getImageDescriptor("icons/view_menu.png");
+      WAITING = ResourceManager.getImageDescriptor("icons/waiting.png");
       XML = ResourceManager.getImageDescriptor("icons/xml.gif");
       ZOOM_IN = ResourceManager.getImageDescriptor("icons/zoom-in.png");
       ZOOM_OUT = ResourceManager.getImageDescriptor("icons/zoom-out.png");
@@ -247,6 +250,7 @@ public class SharedIcons
       IMG_URL = URL.createImage();
       IMG_USER = USER.createImage();
       IMG_VIEW_MENU = VIEW_MENU.createImage();
+      IMG_WAITING = WAITING.createImage();
 		IMG_XML = XML.createImage();
 		IMG_ZOOM_IN = ZOOM_IN.createImage();
 		IMG_ZOOM_OUT = ZOOM_OUT.createImage();

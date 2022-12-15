@@ -49,10 +49,10 @@ public class DeploymentStatusLabelProvider extends LabelProvider implements ITab
 	public DeploymentStatusLabelProvider()
 	{
 	   objectLabelProvider = new BaseObjectLabelProvider();
-		imageActive = ResourceManager.getImageDescriptor("icons/deployStatus/active.gif").createImage(); //$NON-NLS-1$
-		imagePending = ResourceManager.getImageDescriptor("icons/deployStatus/pending.gif").createImage(); //$NON-NLS-1$
-		imageCompleted = ResourceManager.getImageDescriptor("icons/deployStatus/complete.png").createImage(); //$NON-NLS-1$
-		imageFailed = ResourceManager.getImageDescriptor("icons/deployStatus/failed.png").createImage(); //$NON-NLS-1$
+		imageActive = ResourceManager.getImageDescriptor("icons/deployStatus/active.png").createImage();
+		imagePending = ResourceManager.getImageDescriptor("icons/deployStatus/pending.png").createImage();
+		imageCompleted = ResourceManager.getImageDescriptor("icons/deployStatus/complete.png").createImage();
+		imageFailed = ResourceManager.getImageDescriptor("icons/deployStatus/failed.png").createImage();
 	}
 	
 	/* (non-Javadoc)

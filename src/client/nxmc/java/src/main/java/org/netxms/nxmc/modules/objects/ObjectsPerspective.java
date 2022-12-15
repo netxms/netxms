@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -86,6 +89,7 @@ import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.services.ObjectPerspectiveElement;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
@@ -95,7 +99,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class ObjectsPerspective extends Perspective
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectsPerspective.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ObjectsPerspective.class);
 
    private SubtreeType subtreeType;
    private Composite headerArea;
@@ -104,6 +108,7 @@ public abstract class ObjectsPerspective extends Perspective
    private ToolBar objectMenuBar;
    private Image imageEditConfig;
    private Image imageExecuteScript;
+   private List<ObjectPerspectiveElement> additionalElements = new ArrayList<>();
 
    /**
     * Create new object perspective
@@ -119,6 +124,10 @@ public abstract class ObjectsPerspective extends Perspective
       this.subtreeType = subtreeType;
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
+
+      ServiceLoader<ObjectPerspectiveElement> loader = ServiceLoader.load(ObjectPerspectiveElement.class, getClass().getClassLoader());
+      for(ObjectPerspectiveElement e : loader)
+         additionalElements.add(e);
    }
 
    /**
@@ -171,6 +180,14 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new StatusMapView());
       addMainView(new SummaryDataCollectionView());
       addMainView(new SwitchForwardingDatabaseView());
+
+      NXCSession session = Registry.getSession();
+      for(ObjectPerspectiveElement e : additionalElements)
+      {
+         String componentId = e.getRequiredComponentId();
+         if ((componentId == null) || session.isServerComponentRegistered(componentId))
+            addMainView(e.createView());
+      }
    }
 
    /**

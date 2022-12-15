@@ -67,7 +67,7 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
 
       statusImages = new Image[3];
       statusImages[EXECUTED] = ResourceManager.getImageDescriptor("icons/active.gif").createImage();
-      statusImages[PENDING] = ResourceManager.getImageDescriptor("icons/pending.gif").createImage();
+      statusImages[PENDING] = ResourceManager.getImageDescriptor("icons/pending.png").createImage();
       statusImages[DISABLED] = ResourceManager.getImageDescriptor("icons/inactive.gif").createImage();
    }
 
