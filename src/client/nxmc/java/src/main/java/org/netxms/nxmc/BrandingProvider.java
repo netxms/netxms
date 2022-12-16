@@ -63,6 +63,20 @@ public interface BrandingProvider
     */
    public RGB getLoginImageBackground();
 
+   /**
+    * Get image for application header.
+    *
+    * @return custom image for application header or null to use default
+    */
+   public ImageDescriptor getAppHeaderImage();
+
+   /**
+    * Get background color for application header.
+    *
+    * @return background color for application header or null to use default
+    */
+   public RGB getAppHeaderBackground();
+
 	/**
 	 * Get default perspective. Should return null to use default (or defined by another branding manager)
 	 * 

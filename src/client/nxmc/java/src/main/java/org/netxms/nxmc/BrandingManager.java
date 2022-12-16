@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.dialogs.AboutDialog;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -115,6 +116,38 @@ public final class BrandingManager
             return color;
       }
       return new RGB(14, 50, 78);
+   }
+   
+   /**
+    * Get application header image.
+    *
+    * @return application header image
+    */
+   public static ImageDescriptor getAppHeaderImage()
+   {
+      for(BrandingProvider p : providers)
+      {
+         ImageDescriptor image = p.getAppHeaderImage();
+         if (image != null)
+            return image;
+      }
+      return ResourceManager.getImageDescriptor("icons/app_logo.png");
+   }
+
+   /**
+    * Get application header background.
+    *
+    * @return application header background
+    */
+   public static RGB getAppHeaderBackground()
+   {
+      for(BrandingProvider p : providers)
+      {
+         RGB color = p.getAppHeaderBackground();
+         if (color != null)
+            return color;
+      }
+      return ThemeEngine.getBackgroundColorDefinition("Window.Header");
    }
 
 	/**

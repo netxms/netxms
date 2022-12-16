@@ -118,7 +118,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       super.configureShell(shell);
 
       NXCSession session = Registry.getSession();
-      shell.setText(String.format(i18n.tr("NetXMS Management Client - %s"), session.getUserName() + "@" + session.getServerAddress()));
+      shell.setText(String.format(i18n.tr("%s - %s"), BrandingManager.getClientProductName(), session.getUserName() + "@" + session.getServerAddress()));
 
       shell.setMaximized(true);
       shell.setFullScreen(true);
@@ -162,7 +162,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       windowContent.setLayout(layout);
 
       // Header
-      Color headerBackgroundColor = ThemeEngine.getBackgroundColor("Window.Header");
+      Color headerBackgroundColor = new Color(parent.getDisplay(), BrandingManager.getAppHeaderBackground());
       Color headerForegroundColor = ThemeEngine.getForegroundColor("Window.Header");
 
       headerArea = new Composite(windowContent, SWT.NONE);
@@ -180,7 +180,7 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       Label appLogo = new Label(headerArea, SWT.CENTER);
       appLogo.setBackground(headerBackgroundColor);
-      appLogo.setImage(ResourceManager.getImage("icons/app_logo.png"));
+      appLogo.setImage(BrandingManager.getAppHeaderImage().createImage());
       gd = new GridData(SWT.LEFT, SWT.CENTER, false, false);
       gd.horizontalIndent = 8;
       appLogo.setLayoutData(gd);
@@ -189,7 +189,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       title.setBackground(headerBackgroundColor);
       title.setForeground(headerForegroundColor);
       title.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderBold");
-      title.setText("NETXMS");
+      title.setText(BrandingManager.getProductName());
 
       Label filler = new Label(headerArea, SWT.CENTER);
       filler.setBackground(headerBackgroundColor);
@@ -603,7 +603,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       {
          super(parent, SWT.NONE);
          this.width = width;
-         setBackground(ThemeEngine.getBackgroundColor("Window.Header"));
+         setBackground(parent.getBackground());
          setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, true));
       }
 
@@ -637,7 +637,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          super(parent, SWT.NONE);
 
          setLayout(new FillLayout());
-         setBackground(ThemeEngine.getBackgroundColor("Window.Header"));
+         setBackground(parent.getBackground());
 
          image = ResourceManager.getImage(imagePath);
          addDisposeListener(new DisposeListener() {
