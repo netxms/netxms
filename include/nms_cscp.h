@@ -1511,6 +1511,8 @@ typedef struct
 #define VID_NUM_SET_CUSTOM_ATTRIBUTE ((uint32_t)806)
 #define VID_NUM_DELETE_CUSTOM_ATTRIBUTE ((uint32_t)807)
 #define VID_RULE_SOURCE_EXCLUSIONS  ((uint32_t)808)
+#define VID_NETWORK_SERVICE_COUNT   ((uint32_t)809)
+#define VID_VPN_CONNECTOR_COUNT     ((uint32_t)810)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

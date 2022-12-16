@@ -196,6 +196,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected String syslogCodepage;
    protected String snmpCodepage;
    protected InetAddress ospfRouterId;
+   protected int networkServiceCount;
+   protected int vpnConnectorCount;
 
 	/**
 	 * Create new node object.
@@ -301,6 +303,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       syslogCodepage = msg.getFieldAsString(NXCPCodes.VID_SYSLOG_CODEPAGE);
       snmpCodepage = msg.getFieldAsString(NXCPCodes.VID_SNMP_CODEPAGE);
       ospfRouterId = msg.getFieldAsInetAddress(NXCPCodes.VID_OSPF_ROUTER_ID);
+      networkServiceCount = msg.getFieldAsInt32(NXCPCodes.VID_NETWORK_SERVICE_COUNT);
+      vpnConnectorCount = msg.getFieldAsInt32(NXCPCodes.VID_VPN_CONNECTOR_COUNT);
 
       chassisPlacement = null;
       String config = msg.getFieldAsString(NXCPCodes.VID_CHASSIS_PLACEMENT_CONFIG);
@@ -1336,5 +1340,25 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public InetAddress getOSPFRouterId()
    {
       return ospfRouterId;
+   }
+   
+   /**
+    * Check if node has network services
+    * 
+    * @return true if node has at least one network service
+    */
+   public boolean hasNetworkServices()
+   {
+      return networkServiceCount > 0;
+   }
+   
+   /**
+    * Check if node has VPN children
+    * 
+    * @return true if node has at least one VPN child
+    */
+   public boolean hasVpnConnectors()
+   {
+      return vpnConnectorCount > 0;
    }
 }

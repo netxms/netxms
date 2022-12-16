@@ -8012,6 +8012,21 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setFieldFromUtf8String(VID_SYSLOG_CODEPAGE, m_syslogCodepage);
    msg->setFieldFromUtf8String(VID_SNMP_CODEPAGE, m_snmpCodepage);
    msg->setField(VID_OSPF_ROUTER_ID, InetAddress(m_ospfRouterId));
+
+   int networkServiceCount = 0;
+   int vpnCount = 0;
+   readLockChildList();
+   for (int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *iface = getChildList().get(i);
+      if (iface->getObjectClass() == OBJECT_NETWORKSERVICE)
+         networkServiceCount++;
+      if (iface->getObjectClass() == OBJECT_VPNCONNECTOR)
+         vpnCount++;
+   }
+   unlockChildList();
+   msg->setField(VID_NETWORK_SERVICE_COUNT, networkServiceCount);
+   msg->setField(VID_VPN_CONNECTOR_COUNT, vpnCount);
 }
 
 /**

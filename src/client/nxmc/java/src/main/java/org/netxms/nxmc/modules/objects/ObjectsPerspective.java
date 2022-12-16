@@ -65,6 +65,7 @@ import org.netxms.nxmc.modules.dashboards.views.DashboardView;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
+import org.netxms.nxmc.modules.datacollection.views.ThresholdSummary;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
@@ -74,6 +75,8 @@ import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.HardwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
+import org.netxms.nxmc.modules.objects.views.NetworkServiceView;
+import org.netxms.nxmc.modules.objects.views.NodesView;
 import org.netxms.nxmc.modules.objects.views.OSPFView;
 import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.views.ObjectOverviewView;
@@ -85,6 +88,7 @@ import org.netxms.nxmc.modules.objects.views.ServicesView;
 import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.StatusMapView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
+import org.netxms.nxmc.modules.objects.views.VpnView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -166,6 +170,8 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new InterfacesView());
       addMainView(new MaintenanceJournalView());
       addMainView(new MibExplorer());
+      addMainView(new NetworkServiceView());
+      addMainView(new NodesView());
       addMainView(new ObjectGeoLocationView());
       addMainView(new ObjectOverviewView());
       addMainView(new OSPFView());
@@ -180,6 +186,8 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new StatusMapView());
       addMainView(new SummaryDataCollectionView());
       addMainView(new SwitchForwardingDatabaseView());
+      addMainView(new ThresholdSummary());
+      addMainView(new VpnView());
 
       NXCSession session = Registry.getSession();
       for(ObjectPerspectiveElement e : additionalElements)

@@ -94,7 +94,7 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
       super(i18n.tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, false);
       this.objectId = objectId;
       session = Registry.getSession();
-   }
+   }   
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)

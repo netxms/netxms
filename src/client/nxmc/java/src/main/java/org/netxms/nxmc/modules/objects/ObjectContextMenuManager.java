@@ -34,10 +34,13 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
@@ -58,9 +61,9 @@ import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigEditorView;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
-import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -93,6 +96,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionUnbindFrom;
    private Action actionApply;
    private Action actionRemove;
+   private Action actionAddNode;
+   private Action actionRemoveNode;
    
 
    /**
@@ -255,6 +260,22 @@ public class ObjectContextMenuManager extends MenuManager
             unbindObjects();
          }
       };
+
+      actionAddNode = new Action(i18n.tr("&Add node...")) {
+         @Override
+         public void run()
+         {
+            addNodeToCluster();
+         }
+      };
+
+      actionRemoveNode = new Action(i18n.tr("&Remove node...")) {
+         @Override
+         public void run()
+         {
+            removeNodeFromCluster();
+         }
+      };
    }
 
    /**
@@ -287,6 +308,12 @@ public class ObjectContextMenuManager extends MenuManager
          {
             add(actionApply);
             add(actionRemove);
+            add(new Separator());
+         }
+         if (object instanceof Cluster)
+         {
+            add(actionAddNode);
+            add(actionRemoveNode);
             add(new Separator());
          }
       }
@@ -850,6 +877,84 @@ public class ObjectContextMenuManager extends MenuManager
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot unbind objects");
+         }
+      }.start();
+   }
+
+   /**
+    * Add node(s) to cluster
+    */
+   private void addNodeToCluster()
+   {
+      final long clusterId = getObjectIdFromSelection();
+      if (clusterId == 0)
+         return;
+
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();      
+      new Job(i18n.tr("Add node to cluster"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(AbstractObject o : objects)
+            {
+               try 
+               {
+                  session.addClusterNode(clusterId, o.getObjectId());                     
+               }
+               catch (NXCException exception)
+               {
+                  if(exception.getErrorCode() != RCC.CLUSTER_MEMBER_ALREADY)
+                  {
+                     throw(exception);
+                  }
+               }              
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot add node to cluster");
+         }
+      }.start();
+      
+      
+      
+   }
+
+   /**
+    * Remove node(s) from cluster
+    */
+   private void removeNodeFromCluster()
+   {
+      final long clusterId = getObjectIdFromSelection();
+      if (clusterId == 0)
+         return;
+
+      final RelatedObjectSelectionDialog dlg = new RelatedObjectSelectionDialog(view.getWindow().getShell(), clusterId, RelatedObjectSelectionDialog.RelationType.DIRECT_SUBORDINATES,
+            RelatedObjectSelectionDialog.createClassFilter(AbstractObject.OBJECT_NODE));
+      if (dlg.open() != Window.OK)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Remove cluster node"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            List<AbstractObject> objects = dlg.getSelectedObjects();
+            for(int i = 0; i < objects.size(); i++)
+               session.removeClusterNode(clusterId, objects.get(i).getObjectId());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot remove node from cluster");
          }
       }.start();
    }
