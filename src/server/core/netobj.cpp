@@ -2897,7 +2897,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      Trim(buffer);
 
                      shared_ptr<DCObjectInfo> tmpDci = dci;
-                     if (tmpDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
+                     if (tmpDci == nullptr && event != nullptr && event->getDciId() != 0 && isDataCollectionTarget())
                      {
                         tmpDci = ((DataCollectionTarget *)this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
                      }
