@@ -2896,12 +2896,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      }
                      Trim(buffer);
 
-                     shared_ptr<DCObjectInfo> tmpDci = dci;
-                     if (tmpDci == nullptr && event != nullptr && event->getDciId() != 0 && isDataCollectionTarget())
-                     {
-                        tmpDci = ((DataCollectionTarget *)this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
-                     }
-                     NXSL_VM *vm = CreateServerScriptVM(buffer, self(), tmpDci);
+                     NXSL_VM *vm = CreateServerScriptVM(buffer, self(),
+                        ((dci == nullptr) && (event != nullptr) && (event->getDciId() != 0) && isDataCollectionTarget()) ?
+                              static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor() : dci);
                      if (vm != nullptr)
                      {
                         if (event != nullptr)
@@ -3020,33 +3017,32 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                         {
                            *modifierEnd = 0;
                            list = String::split(buffer + 1, _tcslen(buffer + 1), _T(","), true);
-
                            memmove(buffer, modifierEnd + 1, sizeof(TCHAR) * (_tcslen(modifierEnd + 1) + 1));
                         }
-                        const StringList *names = event->getParameterNames();
                         const TCHAR *defaultValue = _T("");
                         TCHAR *tmp = _tcschr(buffer, _T(':'));
                         if (tmp != nullptr)
                         {
-                           tmp = 0;
+                           *tmp = 0;
                            defaultValue = tmp + 1;
                         }
-
-                        shared_ptr<DCObjectInfo> tmpDci = dci;
-                        if (tmpDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
-                        {
-                           tmpDci = ((DataCollectionTarget *)this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
-                        }
-
                         Trim(buffer);
-                        if (tmpDci != nullptr && list != nullptr)
+
+                        const StringList *names = event->getParameterNames();
+                        shared_ptr<DCObjectInfo> formatDci = dci; // DCI used for formatting value
+                        if (formatDci == nullptr && event->getDciId() != 0 && isDataCollectionTarget())
                         {
-                           output.append(tmpDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
+                           formatDci = static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor();
+                        }
+                        if (formatDci != nullptr && list != nullptr)
+                        {
+                           output.append(formatDci->formatValue(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue), list));
                         }
                         else
                         {
                            output.append(event->getParameter(names->indexOfIgnoreCase(buffer), defaultValue));
                         }
+
                         delete list;
                      }
                   }
