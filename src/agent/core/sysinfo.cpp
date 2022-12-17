@@ -269,14 +269,14 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 
    if (!AgentGetParameterArg(cmd, 4, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
-   INT64 sizeFilter = _tcstoll(szBuffer, NULL, 0);
+   INT64 sizeFilter = _tcstoll(szBuffer, nullptr, 0);
 
    if (!AgentGetParameterArg(cmd, 5, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
-   int ageFilter = _tcstoul(szBuffer, NULL, 0);
+   int ageFilter = _tcstoul(szBuffer, nullptr, 0);
 
    // Recursion flag
-   bRecursive = ((_tcstol(szRecursive, NULL, 0) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
+   bRecursive = ((_tcstol(szRecursive, nullptr, 0) != 0) || !_tcsicmp(szRecursive, _T("TRUE")));
 
    // If pattern is omited use asterisk
    if (szPattern[0] == 0)
@@ -289,8 +289,8 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    }
 
    // Expand strftime macros in the path and in the pattern
-   if ((ExpandFileName(szPath, szRealPath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL) ||
-       (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL))
+   if ((ExpandFileName(szPath, szRealPath, MAX_PATH, session == nullptr ? false : session->isMasterServer()) == nullptr) ||
+       (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == nullptr ? false : session->isMasterServer()) == nullptr))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Remove trailing backslash on Windows
@@ -697,33 +697,80 @@ LONG H_HostName(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Handler for File.LineCount parameter
  */
-LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_FileLineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR fname[MAX_PATH];
    if (!AgentGetParameterArg(cmd, 1, fname, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
-   LONG nRet = SYSINFO_RC_ERROR;
-   int fd, in;
-   if ((fd = _topen(fname, O_RDONLY)) != -1)
-   {
-      uint32_t lineCount = 0;
-      char buffer[4096];
-      bool lastCharIsNL = false;
-      while((in = _read(fd, buffer, 4096)) > 0)
-      {
-         for(int i = 0; i < in; i++)
-            if (buffer[i] == '\n')
-               lineCount++;
-         lastCharIsNL = (buffer[in - 1] == '\n');      
-      }
-      _close(fd);
-      
-      if (!lastCharIsNL)
-         lineCount++; // Last line without '\n' char
+   int fd = _topen(fname, O_RDONLY);
+   if (fd == -1)
+      return SYSINFO_RC_ERROR;
 
-      ret_uint(value, lineCount);
-      nRet = SYSINFO_RC_SUCCESS;
+   uint32_t lineCount = 0;
+   char buffer[8192];
+   bool lastCharIsNL = false;
+   int bytes;
+   while((bytes = _read(fd, buffer, sizeof(buffer))) > 0)
+   {
+      for(int i = 0; i < bytes; i++)
+         if (buffer[i] == '\n')
+            lineCount++;
+      lastCharIsNL = (buffer[bytes - 1] == '\n');
    }
-   return nRet;
+   _close(fd);
+
+   if (!lastCharIsNL)
+      lineCount++; // Last line without '\n' char
+
+   ret_uint(value, lineCount);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for File.Content parameter
+ */
+LONG H_FileContent(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   if (!session->isMasterServer())
+      return SYSINFO_RC_ACCESS_DENIED;
+
+   char fname[MAX_PATH];
+   if (!AgentGetParameterArgA(cmd, 1, fname, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   TCHAR temp[32];
+   AgentGetParameterArg(cmd, 2, temp, 32);
+   int offset = (temp[0] == 0) ? 1 : _tcstol(temp, nullptr, 0);
+   if (offset < 1)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   FILE *fp = fopen(fname, "r");
+   if (fp == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   char line[4096];
+   while(!feof(fp) && (offset > 0))
+   {
+      if (fgets(line, sizeof(line), fp) == nullptr)
+         break;
+
+      offset--;
+      if (offset == 0)
+      {
+         char *nl = strchr(line, '\n');
+         if (nl != nullptr)
+            *nl = 0;
+#ifdef UNICODE
+         char codepage[64] = "";
+         AgentGetParameterArgA(cmd, 3, codepage, 64);
+         mbcp_to_wchar(line, -1, value, MAX_RESULT_LENGTH, (codepage[0] != 0) ? codepage : nullptr);
+#else
+         ret_string(value, line);
+#endif
+      }
+   }
+
+   fclose(fp);
+   return SYSINFO_RC_SUCCESS;
 }

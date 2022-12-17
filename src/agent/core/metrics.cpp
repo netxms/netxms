@@ -45,6 +45,8 @@ LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
 LONG H_ExternalMetric(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalMetricExitCode(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ExternalTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_FileContent(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_FileLineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_HostName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -73,7 +75,6 @@ LONG H_TCPAddressRangeScan(const TCHAR *cmd, const TCHAR *arg, StringList *value
 LONG H_TFTPGet(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadPoolList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
-LONG H_LineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
@@ -434,13 +435,14 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Agent.UserAgentCount"), H_SessionAgentCount, _T("U"), DCI_DT_UINT, DCIDESC_AGENT_USER_AGENTS_COUNT },
    { _T("Agent.Version"), H_StringConstant, NETXMS_VERSION_STRING, DCI_DT_STRING, DCIDESC_AGENT_VERSION },
    { _T("Agent.WebServiceProxy.IsEnabled"), H_FlagValue, CAST_TO_POINTER(AF_ENABLE_WEBSVC_PROXY, TCHAR *), DCI_DT_UINT, DCIDESC_AGENT_WEBSVCPROXY_ISENABLED },
+   { _T("File.Content(*)"), H_FileContent, nullptr, DCI_DT_STRING, _T("Content of file {instance}") },
    { _T("File.Count(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_COUNT, DCI_DT_UINT, DCIDESC_FILE_COUNT },
    { _T("File.FolderCount(*)"), H_DirInfo, (TCHAR *)DIRINFO_FOLDER_COUNT, DCI_DT_UINT, DCIDESC_FILE_FOLDERCOUNT },
    { _T("File.Hash.CRC32(*)"), H_CRC32, nullptr, DCI_DT_UINT, DCIDESC_FILE_HASH_CRC32 },
    { _T("File.Hash.MD5(*)"), H_MD5Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_MD5 },
    { _T("File.Hash.SHA1(*)"), H_SHA1Hash, nullptr, DCI_DT_STRING, DCIDESC_FILE_HASH_SHA1 },
    { _T("File.Size(*)"), H_DirInfo, (TCHAR *)DIRINFO_FILE_SIZE, DCI_DT_UINT64, DCIDESC_FILE_SIZE },
-   { _T("File.LineCount(*)"), H_LineCount, (TCHAR *)DIRINFO_FILE_LINE_COUNT, DCI_DT_UINT64, _T("File {instance} line count") },
+   { _T("File.LineCount(*)"), H_FileLineCount, (TCHAR *)DIRINFO_FILE_LINE_COUNT, DCI_DT_UINT64, _T("File {instance} line count") },
    { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
    { _T("File.Time.Change(*)"), H_FileTime, (TCHAR *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
@@ -907,6 +909,10 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
                errorCode = ERR_SUCCESS;
                InterlockedIncrement(&s_processedRequests);
                break;
+            case SYSINFO_RC_ACCESS_DENIED:
+               errorCode = ERR_ACCESS_DENIED;
+               InterlockedIncrement(&s_failedRequests);
+               break;
             case SYSINFO_RC_ERROR:
                errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
@@ -940,6 +946,10 @@ uint32_t GetMetricValue(const TCHAR *param, TCHAR *value, AbstractCommSession *s
          case SYSINFO_RC_SUCCESS:
             errorCode = ERR_SUCCESS;
             InterlockedIncrement(&s_processedRequests);
+            break;
+         case SYSINFO_RC_ACCESS_DENIED:
+            errorCode = ERR_ACCESS_DENIED;
+            InterlockedIncrement(&s_failedRequests);
             break;
          case SYSINFO_RC_ERROR:
             errorCode = ERR_INTERNAL_ERROR;
@@ -1016,6 +1026,10 @@ uint32_t GetListValue(const TCHAR *param, StringList *value, AbstractCommSession
                errorCode = ERR_SUCCESS;
                InterlockedIncrement(&s_processedRequests);
                break;
+            case SYSINFO_RC_ACCESS_DENIED:
+               errorCode = ERR_ACCESS_DENIED;
+               InterlockedIncrement(&s_failedRequests);
+               break;
             case SYSINFO_RC_ERROR:
                errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
@@ -1088,6 +1102,10 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
                errorCode = ERR_SUCCESS;
                InterlockedIncrement(&s_processedRequests);
                break;
+            case SYSINFO_RC_ACCESS_DENIED:
+               errorCode = ERR_ACCESS_DENIED;
+               InterlockedIncrement(&s_failedRequests);
+               break;
             case SYSINFO_RC_ERROR:
                errorCode = ERR_INTERNAL_ERROR;
                InterlockedIncrement(&s_failedRequests);
@@ -1119,6 +1137,10 @@ uint32_t GetTableValue(const TCHAR *param, Table *value, AbstractCommSession *se
          case SYSINFO_RC_SUCCESS:
             errorCode = ERR_SUCCESS;
             InterlockedIncrement(&s_processedRequests);
+            break;
+         case SYSINFO_RC_ACCESS_DENIED:
+            errorCode = ERR_ACCESS_DENIED;
+            InterlockedIncrement(&s_failedRequests);
             break;
          case SYSINFO_RC_ERROR:
             errorCode = ERR_INTERNAL_ERROR;

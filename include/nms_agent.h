@@ -149,6 +149,7 @@
 #define SYSINFO_RC_ERROR               2
 #define SYSINFO_RC_NO_SUCH_INSTANCE    3
 #define SYSINFO_RC_UNKNOWN             4
+#define SYSINFO_RC_ACCESS_DENIED       5
 
 /**
  * WinPerf features
