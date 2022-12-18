@@ -36,6 +36,7 @@ import org.netxms.nxmc.base.views.ToolsPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.modules.alarms.AlarmsPerspective;
 import org.netxms.nxmc.modules.businessservice.BusinessServicesPerspective;
+import org.netxms.nxmc.modules.logviewer.views.LogViewerPerspective;
 import org.netxms.nxmc.modules.objects.DashboardsPerspective;
 import org.netxms.nxmc.modules.objects.InfrastructurePerspective;
 import org.netxms.nxmc.modules.objects.MapsPerspective;
@@ -151,6 +152,7 @@ public final class Registry
       perspectives.add(new ConfigurationPerspective());
       perspectives.add(new DashboardsPerspective());
       perspectives.add(new InfrastructurePerspective());
+      perspectives.add(new LogViewerPerspective());
       perspectives.add(new MapsPerspective());
       perspectives.add(new MonitorPerspective());
       perspectives.add(new NetworkPerspective());

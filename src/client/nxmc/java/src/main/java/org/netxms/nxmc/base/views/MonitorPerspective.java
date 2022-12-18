@@ -21,9 +21,13 @@ package org.netxms.nxmc.base.views;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+import org.netxms.client.NXCSession;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.MonitorPerspectiveElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -31,6 +35,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class MonitorPerspective extends Perspective
 {
+   private static final Logger logger = LoggerFactory.getLogger(MonitorPerspective.class);
    private static final I18n i18n = LocalizationHelper.getI18n(MonitorPerspective.class);
 
    private List<MonitorPerspectiveElement> elements = new ArrayList<MonitorPerspectiveElement>();
@@ -44,9 +49,7 @@ public class MonitorPerspective extends Perspective
 
       ServiceLoader<MonitorPerspectiveElement> loader = ServiceLoader.load(MonitorPerspectiveElement.class, getClass().getClassLoader());
       for(MonitorPerspectiveElement e : loader)
-      {
          elements.add(e);
-      }
    }
 
    /**
@@ -68,7 +71,16 @@ public class MonitorPerspective extends Perspective
    @Override
    protected void configureViews()
    {
+      NXCSession session = Registry.getSession();
       for(MonitorPerspectiveElement e : elements)
-         addMainView(e.createView());
+      {
+         String componentId = e.getRequiredComponentId();
+         if ((componentId == null) || session.isServerComponentRegistered(componentId))
+         {
+            AbstractTraceView view = e.createView();
+            addMainView(view);
+            logger.debug("Added monitor perspective view \"" + view.getName() + "\"");
+         }
+      }
    }
 }

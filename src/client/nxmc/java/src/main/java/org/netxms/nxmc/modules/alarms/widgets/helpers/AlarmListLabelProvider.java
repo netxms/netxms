@@ -71,11 +71,11 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
       session = Registry.getSession();
       objectLabelProvider = new BaseObjectLabelProvider();
 
-      stateImages[0] = ResourceManager.getImageDescriptor("icons/alarms/outstanding.png").createImage();
-      stateImages[1] = ResourceManager.getImageDescriptor("icons/alarms/acknowledged.png").createImage();
-      stateImages[2] = ResourceManager.getImageDescriptor("icons/alarms/resolved.png").createImage();
-      stateImages[3] = ResourceManager.getImageDescriptor("icons/alarms/terminated.png").createImage();
-      stateImages[4] = ResourceManager.getImageDescriptor("icons/alarms/acknowledged_sticky.png").createImage();
+      stateImages[0] = ResourceManager.getImage("icons/alarms/outstanding.png");
+      stateImages[1] = ResourceManager.getImage("icons/alarms/acknowledged.png");
+      stateImages[2] = ResourceManager.getImage("icons/alarms/resolved.png");
+      stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
+      stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
 	}
 
    /**

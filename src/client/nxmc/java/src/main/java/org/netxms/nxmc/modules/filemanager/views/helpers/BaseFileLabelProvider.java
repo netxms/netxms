@@ -35,7 +35,7 @@ public class BaseFileLabelProvider extends LabelProvider
    static
    {
       images = new HashMap<String, Image>();
-      images.put("folder", ResourceManager.getImageDescriptor("icons/folder.gif").createImage());
+      images.put("folder", ResourceManager.getImageDescriptor("icons/folder.png").createImage());
       images.put("unknown", ResourceManager.getImageDescriptor("icons/types/unknown.png").createImage());
       images.put("exe", ResourceManager.getImageDescriptor("icons/types/exec.png").createImage());
       images.put("pdf", ResourceManager.getImageDescriptor("icons/types/pdf.png").createImage());

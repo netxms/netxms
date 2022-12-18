@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2009 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ import org.netxms.client.log.OrderingColumn;
 public class OrderingColumnEditingSupport extends EditingSupport
 {
 	private CellEditor editor;
-	
+
 	/**
 	 * @param viewer
 	 */
@@ -42,18 +42,18 @@ public class OrderingColumnEditingSupport extends EditingSupport
 		editor = new CheckboxCellEditor(null, SWT.CHECK | SWT.READ_ONLY);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.EditingSupport#canEdit(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.EditingSupport#canEdit(java.lang.Object)
+    */
 	@Override
 	protected boolean canEdit(Object element)
 	{
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.EditingSupport#getCellEditor(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.EditingSupport#getCellEditor(java.lang.Object)
+    */
 	@Override
 	protected CellEditor getCellEditor(Object element)
 	{

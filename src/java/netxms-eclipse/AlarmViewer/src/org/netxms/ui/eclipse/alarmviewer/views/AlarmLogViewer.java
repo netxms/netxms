@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ public class AlarmLogViewer extends LogViewer
    private Action actionCreateIssue;
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.ui.eclipse.logviewer.views.LogViewer#createActions()
     */
    @Override
@@ -58,7 +58,7 @@ public class AlarmLogViewer extends LogViewer
             createIssue();
          }
       };
-      
+
       actionShowIssue = new Action("Show helpdesk ticket in &web browser", SharedIcons.BROWSER) {
          @Override
          public void run()
@@ -66,7 +66,7 @@ public class AlarmLogViewer extends LogViewer
             showIssue();
          }
       };
-      
+
       actionUnlinkIssue = new Action("Unlink from helpdesk ticket") {
          @Override
          public void run()
@@ -75,22 +75,24 @@ public class AlarmLogViewer extends LogViewer
          }
       };
    }
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.netxms.ui.eclipse.logviewer.views.LogViewer#fillContextMenu(org.eclipse.jface.action.IMenuManager)
     */
    @Override
    protected void fillContextMenu(final IMenuManager mgr)
    {
       super.fillContextMenu(mgr);
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.size() == 0 && session.isHelpdeskLinkActive())
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if ((selection.size() == 1) && session.isHelpdeskLinkActive())
       {
          try
          {
             Alarm alarm = session.getAlarm(Long.parseLong(((TableRow)selection.getFirstElement()).get(0).getValue()));
             if (alarm.getHelpdeskState() == Alarm.HELPDESK_STATE_IGNORED)
+            {
                mgr.add(actionCreateIssue);
+            }
             else
             {
                mgr.add(actionShowIssue);
@@ -104,13 +106,13 @@ public class AlarmLogViewer extends LogViewer
          }
       }
    }
-   
+
    /**
     * Create helpdesk ticket (issue) from selected alarms
     */
    private void createIssue()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
@@ -129,13 +131,13 @@ public class AlarmLogViewer extends LogViewer
          }
       }.start();
    }
-   
+
    /**
     * Show in web browser helpdesk ticket (issue) linked to selected alarm
     */
    private void showIssue()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
       
@@ -167,7 +169,7 @@ public class AlarmLogViewer extends LogViewer
     */
    private void unlinkIssue()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
 

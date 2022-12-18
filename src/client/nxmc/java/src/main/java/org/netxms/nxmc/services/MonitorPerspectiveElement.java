@@ -31,4 +31,11 @@ public interface MonitorPerspectiveElement
     * @return view
     */
    public AbstractTraceView createView();
+
+   /**
+    * Get ID of server component that is required for this view.
+    *
+    * @return ID of required component or null if there are no restrictions
+    */
+   public String getRequiredComponentId();
 }

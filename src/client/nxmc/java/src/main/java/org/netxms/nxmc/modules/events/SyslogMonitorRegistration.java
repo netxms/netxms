@@ -35,4 +35,13 @@ public class SyslogMonitorRegistration implements MonitorPerspectiveElement
    {
       return new SyslogMonitor();
    }
+
+   /**
+    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#getRequiredComponentId()
+    */
+   @Override
+   public String getRequiredComponentId()
+   {
+      return null;
+   }
 }

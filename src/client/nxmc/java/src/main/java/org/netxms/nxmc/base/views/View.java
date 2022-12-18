@@ -432,6 +432,21 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
+    * Set image for this view. Current image will be disposed.
+    *
+    * @param imageDescriptor descriptor for new image
+    */
+   public void setImage(ImageDescriptor imageDescriptor)
+   {
+      this.imageDescriptor = imageDescriptor;
+      if (image != null)
+         image.dispose();
+      image = (imageDescriptor != null) ? imageDescriptor.createImage() : null;
+      if ((viewContainer != null) && (viewContainer.getPerspective() != null))
+         viewContainer.getPerspective().updateViewTrim(this);
+   }
+
+   /**
     * Get view priority in stack. Views with lower priority value placed to the left of views with higher priority values. Default
     * implementation always returns 65535.
     * 

@@ -206,6 +206,7 @@ public final class Registry
       perspectives.add(new ConfigurationPerspective());
       perspectives.add(new DashboardsPerspective());
       perspectives.add(new InfrastructurePerspective());
+      perspectives.add(new LogViewerPerspective());
       perspectives.add(new MapsPerspective());
       perspectives.add(new MonitorPerspective());
       perspectives.add(new NetworkPerspective());

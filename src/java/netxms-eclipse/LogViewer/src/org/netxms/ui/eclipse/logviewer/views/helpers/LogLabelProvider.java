@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.logviewer.views.helpers;
 
 import java.util.Collection;
 import java.util.Date;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -29,7 +29,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.TableRow;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.events.Alarm;
-import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
 import org.netxms.client.objects.AbstractObject;
@@ -45,18 +44,18 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Label provider for log viewer
  */
-public class LogLabelProvider implements ITableLabelProvider
+public class LogLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	public static final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
 	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
    public static final String[] EVENT_ORIGIN_TEXTS = { "System", "Agent", "Client", "Syslog", "SNMP", "Script", "Remote Server", "Windows Event" };
-	
+
 	private LogColumn[] columns;
 	private NXCSession session;
 	private Image[] alarmStateImages;
 	private WorkbenchLabelProvider wbLabelProvider;
    private TableViewer viewer;
-	
+
 	/**
 	 * @param logHandle
 	 */
@@ -66,16 +65,16 @@ public class LogLabelProvider implements ITableLabelProvider
 		Collection<LogColumn> c = logHandle.getColumns();
 		columns = c.toArray(new LogColumn[c.size()]);
 		session = ConsoleSharedData.getSession();
-		
+
 		alarmStateImages = new Image[4];
 		alarmStateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
 		alarmStateImages[Alarm.STATE_ACKNOWLEDGED] = Activator.getImageDescriptor("icons/acknowledged.png").createImage(); //$NON-NLS-1$
 		alarmStateImages[Alarm.STATE_RESOLVED] = Activator.getImageDescriptor("icons/resolved.png").createImage(); //$NON-NLS-1$
 		alarmStateImages[Alarm.STATE_TERMINATED] = Activator.getImageDescriptor("icons/terminated.png").createImage(); //$NON-NLS-1$
-		
+
 		wbLabelProvider = new WorkbenchLabelProvider();
 	}
-	
+
 	/**
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
@@ -174,9 +173,7 @@ public class LogLabelProvider implements ITableLabelProvider
          case LogColumn.LC_EVENT_CODE:
             try
             {
-               long code = Long.parseLong(value);
-               EventTemplate evt = session.findEventTemplateByCode(code);
-               return (evt != null) ? evt.getName() : ("[" + code + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+               return session.getEventName(Long.parseLong(value));
             }
             catch(NumberFormatException e)
             {
@@ -198,8 +195,7 @@ public class LogLabelProvider implements ITableLabelProvider
 					long id = Long.parseLong(value);
 					if (id == 0)
 						return ""; //$NON-NLS-1$
-					AbstractObject object = session.findObjectById(id);
-					return (object != null) ? object.getObjectName() : ("[" + id + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+               return session.getObjectName(id);
 				}
 				catch(NumberFormatException e)
 				{
@@ -264,15 +260,7 @@ public class LogLabelProvider implements ITableLabelProvider
 	}
 
    /**
-    * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-    */
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-	}
-
-   /**
-    * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
     */
 	@Override
 	public void dispose()
@@ -280,22 +268,6 @@ public class LogLabelProvider implements ITableLabelProvider
 		for(int i = 0; i < alarmStateImages.length; i++)
 			if (alarmStateImages[i] != null)
 				alarmStateImages[i].dispose();
-	}
-
-   /**
-    * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-    */
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		return false;
-	}
-
-   /**
-    * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-    */
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
+      wbLabelProvider.dispose();
 	}
 }
