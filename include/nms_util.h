@@ -5340,4 +5340,19 @@ struct LIBNETXMS_EXPORTABLE Color
    static Color parseCSS(const TCHAR *css);
 };
 
+/**
+ * String list class
+ */
+class LIBNETXMS_EXPORTABLE OptionList
+{
+private:
+    StringMap optionmap;
+
+public:
+    OptionList(const TCHAR *parameters, int offset = 0);
+
+    bool exists(const TCHAR *key) const;
+    const TCHAR* get(const TCHAR *key) const;
+};
+
 #endif   /* _nms_util_h_ */
