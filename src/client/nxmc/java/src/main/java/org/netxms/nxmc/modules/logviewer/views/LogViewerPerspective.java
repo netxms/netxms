@@ -27,7 +27,7 @@ import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.services.ServerLog;
+import org.netxms.nxmc.services.ServerLogDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -40,7 +40,7 @@ public class LogViewerPerspective extends Perspective
    private static final Logger logger = LoggerFactory.getLogger(LogViewerPerspective.class);
    private static final I18n i18n = LocalizationHelper.getI18n(LogViewerPerspective.class);
 
-   private List<ServerLog> logs = new ArrayList<ServerLog>();
+   private List<ServerLogDescriptor> logs = new ArrayList<ServerLogDescriptor>();
 
    /**
     * The constructor.
@@ -60,11 +60,11 @@ public class LogViewerPerspective extends Perspective
       registerStandardLogViewer(i18n.tr("Windows Events"), "WindowsEventLog");
 
       // Register additional logs
-      ServiceLoader<ServerLog> loader = ServiceLoader.load(ServerLog.class, getClass().getClassLoader());
-      for(ServerLog e : loader)
+      ServiceLoader<ServerLogDescriptor> loader = ServiceLoader.load(ServerLogDescriptor.class, getClass().getClassLoader());
+      for(ServerLogDescriptor e : loader)
          logs.add(e);
 
-      logs.sort((ServerLog l1, ServerLog l2) -> l1.getDisplayName().compareToIgnoreCase(l2.getDisplayName()));
+      logs.sort((ServerLogDescriptor l1, ServerLogDescriptor l2) -> l1.getDisplayName().compareToIgnoreCase(l2.getDisplayName()));
    }
 
    /**
@@ -75,7 +75,7 @@ public class LogViewerPerspective extends Perspective
     */
    private void registerStandardLogViewer(final String displayName, final String logName)
    {
-      logs.add(new ServerLog() {
+      logs.add(new ServerLogDescriptor() {
          @Override
          public LogViewer createView()
          {
@@ -116,7 +116,7 @@ public class LogViewerPerspective extends Perspective
    protected void configureViews()
    {
       NXCSession session = Registry.getSession();
-      for(ServerLog log : logs)
+      for(ServerLogDescriptor log : logs)
       {
          String componentId = log.getRequiredComponentId();
          if ((componentId == null) || session.isServerComponentRegistered(componentId))
@@ -124,7 +124,10 @@ public class LogViewerPerspective extends Perspective
             LogViewer view = log.createView();
             addMainView(view);
             logger.debug("Added logs perspective view \"" + view.getName() + "\"");
-
+         }
+         else
+         {
+            logger.debug("Logs perspective view \"" + log.getDisplayName() + "\" blocked by component filter");
          }
       }
    }

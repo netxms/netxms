@@ -25,7 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.services.MonitorPerspectiveElement;
+import org.netxms.nxmc.services.MonitorDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -38,7 +38,7 @@ public class MonitorPerspective extends Perspective
    private static final Logger logger = LoggerFactory.getLogger(MonitorPerspective.class);
    private static final I18n i18n = LocalizationHelper.getI18n(MonitorPerspective.class);
 
-   private List<MonitorPerspectiveElement> elements = new ArrayList<MonitorPerspectiveElement>();
+   private List<MonitorDescriptor> monitors = new ArrayList<MonitorDescriptor>();
 
    /**
     * The constructor.
@@ -47,9 +47,11 @@ public class MonitorPerspective extends Perspective
    {
       super("Monitor", i18n.tr("Monitor"), ResourceManager.getImage("icons/perspective-monitor.png"));
 
-      ServiceLoader<MonitorPerspectiveElement> loader = ServiceLoader.load(MonitorPerspectiveElement.class, getClass().getClassLoader());
-      for(MonitorPerspectiveElement e : loader)
-         elements.add(e);
+      ServiceLoader<MonitorDescriptor> loader = ServiceLoader.load(MonitorDescriptor.class, getClass().getClassLoader());
+      for(MonitorDescriptor e : loader)
+         monitors.add(e);
+
+      monitors.sort((MonitorDescriptor m1, MonitorDescriptor m2) -> m1.getDisplayName().compareToIgnoreCase(m2.getDisplayName()));
    }
 
    /**
@@ -72,7 +74,7 @@ public class MonitorPerspective extends Perspective
    protected void configureViews()
    {
       NXCSession session = Registry.getSession();
-      for(MonitorPerspectiveElement e : elements)
+      for(MonitorDescriptor e : monitors)
       {
          String componentId = e.getRequiredComponentId();
          if ((componentId == null) || session.isServerComponentRegistered(componentId))
@@ -80,6 +82,10 @@ public class MonitorPerspective extends Perspective
             AbstractTraceView view = e.createView();
             addMainView(view);
             logger.debug("Added monitor perspective view \"" + view.getName() + "\"");
+         }
+         else
+         {
+            logger.debug("Monitor perspective view \"" + e.getDisplayName() + "\" blocked by component filter");
          }
       }
    }

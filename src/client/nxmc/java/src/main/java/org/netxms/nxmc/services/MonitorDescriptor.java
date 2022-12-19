@@ -23,7 +23,7 @@ import org.netxms.nxmc.base.views.AbstractTraceView;
 /**
  * Element for monitor perspective
  */
-public interface MonitorPerspectiveElement
+public interface MonitorDescriptor
 {
    /**
     * Create view for this element
@@ -31,6 +31,13 @@ public interface MonitorPerspectiveElement
     * @return view
     */
    public AbstractTraceView createView();
+
+   /**
+    * Get display name for this monitor.
+    *
+    * @return display name for this monitor
+    */
+   public String getDisplayName();
 
    /**
     * Get ID of server component that is required for this view.

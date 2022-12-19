@@ -1,0 +1,3 @@
+org.netxms.nxmc.modules.events.EventMonitorDescriptor
+org.netxms.nxmc.modules.events.SyslogMonitorDescriptor
+org.netxms.nxmc.modules.snmp.SnmpTrapMonitorDescriptor

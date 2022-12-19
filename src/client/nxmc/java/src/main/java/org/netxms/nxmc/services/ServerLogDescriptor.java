@@ -18,32 +18,31 @@
  */
 package org.netxms.nxmc.services;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.modules.logviewer.views.LogViewer;
 
 /**
- * Element for tools perspective
+ * Server log descriptor (element for log viewer perspective)
  */
-public interface ToolsPerspectiveElement
+public interface ServerLogDescriptor
 {
-   /**
-    * Get element name.
-    *
-    * @return element name
-    */
-   public String getName();
-
-   /**
-    * Get image for this element.
-    *
-    * @return image for this element
-    */
-   public ImageDescriptor getImage();
-
    /**
     * Create view for this element
     *
     * @return view
     */
-   public View createView();
+   public LogViewer createView();
+
+   /**
+    * Get display name for this log.
+    *
+    * @return display name for this log
+    */
+   public String getDisplayName();
+
+   /**
+    * Get ID of server component that is required for this view.
+    *
+    * @return ID of required component or null if there are no restrictions
+    */
+   public String getRequiredComponentId();
 }

@@ -18,24 +18,32 @@
  */
 package org.netxms.nxmc.services;
 
-import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.netxms.nxmc.base.views.View;
 
 /**
- * Element for object perspectives
+ * Element for tools perspective
  */
-public interface ObjectPerspectiveElement
+public interface ToolDescriptor
 {
+   /**
+    * Get element name.
+    *
+    * @return element name
+    */
+   public String getName();
+
+   /**
+    * Get image for this element.
+    *
+    * @return image for this element
+    */
+   public ImageDescriptor getImage();
+
    /**
     * Create view for this element
     *
     * @return view
     */
-   public ObjectView createView();
-
-   /**
-    * Get ID of server component that is required for this view.
-    *
-    * @return ID of required component or null if there are no restrictions
-    */
-   public String getRequiredComponentId();
+   public View createView();
 }

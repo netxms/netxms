@@ -19,16 +19,20 @@
 package org.netxms.nxmc.modules.snmp;
 
 import org.netxms.nxmc.base.views.AbstractTraceView;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.snmp.views.SnmpTrapMonitor;
-import org.netxms.nxmc.services.MonitorPerspectiveElement;
+import org.netxms.nxmc.services.MonitorDescriptor;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Registration for SNMP trap monitor view
  */
-public class SnmpTrapMonitorRegistration implements MonitorPerspectiveElement
+public class SnmpTrapMonitorDescriptor implements MonitorDescriptor
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SnmpTrapMonitorDescriptor.class);
+
    /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#createView()
+    * @see org.netxms.nxmc.services.MonitorDescriptor#createView()
     */
    @Override
    public AbstractTraceView createView()
@@ -37,7 +41,16 @@ public class SnmpTrapMonitorRegistration implements MonitorPerspectiveElement
    }
 
    /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#getRequiredComponentId()
+    * @see org.netxms.nxmc.services.MonitorDescriptor#getDisplayName()
+    */
+   @Override
+   public String getDisplayName()
+   {
+      return i18n.tr("SNMP Traps");
+   }
+
+   /**
+    * @see org.netxms.nxmc.services.MonitorDescriptor#getRequiredComponentId()
     */
    @Override
    public String getRequiredComponentId()

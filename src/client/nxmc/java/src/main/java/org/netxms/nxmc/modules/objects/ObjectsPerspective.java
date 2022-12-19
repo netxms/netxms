@@ -93,7 +93,7 @@ import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.services.ObjectPerspectiveElement;
+import org.netxms.nxmc.services.ObjectViewDescriptor;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
@@ -112,7 +112,7 @@ public abstract class ObjectsPerspective extends Perspective
    private ToolBar objectMenuBar;
    private Image imageEditConfig;
    private Image imageExecuteScript;
-   private List<ObjectPerspectiveElement> additionalElements = new ArrayList<>();
+   private List<ObjectViewDescriptor> additionalElements = new ArrayList<>();
 
    /**
     * Create new object perspective
@@ -129,8 +129,8 @@ public abstract class ObjectsPerspective extends Perspective
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
 
-      ServiceLoader<ObjectPerspectiveElement> loader = ServiceLoader.load(ObjectPerspectiveElement.class, getClass().getClassLoader());
-      for(ObjectPerspectiveElement e : loader)
+      ServiceLoader<ObjectViewDescriptor> loader = ServiceLoader.load(ObjectViewDescriptor.class, getClass().getClassLoader());
+      for(ObjectViewDescriptor e : loader)
          additionalElements.add(e);
    }
 
@@ -190,7 +190,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new VpnView());
 
       NXCSession session = Registry.getSession();
-      for(ObjectPerspectiveElement e : additionalElements)
+      for(ObjectViewDescriptor e : additionalElements)
       {
          String componentId = e.getRequiredComponentId();
          if ((componentId == null) || session.isServerComponentRegistered(componentId))

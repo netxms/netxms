@@ -35,7 +35,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.services.ToolsPerspectiveElement;
+import org.netxms.nxmc.services.ToolDescriptor;
 import org.netxms.nxmc.tools.ImageCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +49,8 @@ public class ToolsPerspective extends Perspective
    private static final Logger logger = LoggerFactory.getLogger(ToolsPerspective.class);
    private static final I18n i18n = LocalizationHelper.getI18n(ToolsPerspective.class);
 
-   private List<ToolsPerspectiveElement> elements = new ArrayList<ToolsPerspectiveElement>();
-   private ToolsPerspectiveElement previousSelectedElement = null;
+   private List<ToolDescriptor> elements = new ArrayList<ToolDescriptor>();
+   private ToolDescriptor previousSelectedElement = null;
    private NavigationView navigationView;
 
    /**
@@ -60,15 +60,15 @@ public class ToolsPerspective extends Perspective
    {
       super("Tools", i18n.tr("Tools"), ResourceManager.getImage("icons/perspective-tools.png"));
 
-      ServiceLoader<ToolsPerspectiveElement> loader = ServiceLoader.load(ToolsPerspectiveElement.class, getClass().getClassLoader());
-      for(ToolsPerspectiveElement e : loader)
+      ServiceLoader<ToolDescriptor> loader = ServiceLoader.load(ToolDescriptor.class, getClass().getClassLoader());
+      for(ToolDescriptor e : loader)
       {
          logger.debug("Adding tools element " + e.getName());
          elements.add(e);
       }
-      elements.sort(new Comparator<ToolsPerspectiveElement>() {
+      elements.sort(new Comparator<ToolDescriptor>() {
          @Override
-         public int compare(ToolsPerspectiveElement e1, ToolsPerspectiveElement e2)
+         public int compare(ToolDescriptor e1, ToolDescriptor e2)
          {
             return e1.getName().compareToIgnoreCase(e2.getName());
          }
@@ -110,13 +110,13 @@ public class ToolsPerspective extends Perspective
                @Override
                public Image getImage(Object element)
                {
-                  return imageCache.create(((ToolsPerspectiveElement)element).getImage());
+                  return imageCache.create(((ToolDescriptor)element).getImage());
                }
 
                @Override
                public String getText(Object element)
                {
-                  return ((ToolsPerspectiveElement)element).getName();
+                  return ((ToolDescriptor)element).getName();
                }
             });
             viewer.addFilter(new ViewerFilter() {
@@ -124,7 +124,7 @@ public class ToolsPerspective extends Perspective
                public boolean select(Viewer viewer, Object parentElement, Object element)
                {
                   String filter = getFilterText();
-                  return (filter == null) || filter.isEmpty() || ((ToolsPerspectiveElement)element).getName().toLowerCase().contains(filter.toLowerCase());
+                  return (filter == null) || filter.isEmpty() || ((ToolDescriptor)element).getName().toLowerCase().contains(filter.toLowerCase());
                }
             });
             viewer.setInput(elements);
@@ -173,7 +173,7 @@ public class ToolsPerspective extends Perspective
    @Override
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
-      ToolsPerspectiveElement currentElement = (ToolsPerspectiveElement)selection.getFirstElement();
+      ToolDescriptor currentElement = (ToolDescriptor)selection.getFirstElement();
       
       if (previousSelectedElement == currentElement)
          return; //do nothing for reselection

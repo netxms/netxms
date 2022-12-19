@@ -1,3 +1,0 @@
-org.netxms.nxmc.modules.events.EventMonitorRegistration
-org.netxms.nxmc.modules.events.SyslogMonitorRegistration
-org.netxms.nxmc.modules.snmp.SnmpTrapMonitorRegistration
