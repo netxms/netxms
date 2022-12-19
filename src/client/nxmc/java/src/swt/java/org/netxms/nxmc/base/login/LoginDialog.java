@@ -281,12 +281,12 @@ public class LoginDialog extends Dialog
       items.addAll(Arrays.asList(comboServer.getItems()));
       items.add(comboServer.getText());
 
-      settings.set("Connect.Server", comboServer.getText()); //$NON-NLS-1$
-      settings.set("Connect.ServerHistory", items); //$NON-NLS-1$
-      settings.set("Connect.Login", textLogin.getText()); //$NON-NLS-1$
-      settings.set("Connect.AuthMethod", authMethod.getValue()); //$NON-NLS-1$
+      settings.set("Connect.Server", comboServer.getText());
+      settings.set("Connect.ServerHistory", items);
+      settings.set("Connect.Login", textLogin.getText());
+      settings.set("Connect.AuthMethod", authMethod.getValue());
       if (certificate != null)
-         settings.set("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString()); //$NON-NLS-1$
+         settings.set("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString());
 
       password = textPassword.getText();
       super.okPressed();
