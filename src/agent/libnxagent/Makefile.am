@@ -1,4 +1,4 @@
-SOURCES = bridge.cpp crl.cpp dfile_info.cpp hwid.cpp lora_device_data.cpp main.cpp \
+SOURCES = bridge.cpp crl.cpp dfile_info.cpp hwid.cpp lora_device_data.cpp main.cpp optionlist.cpp \
           procexec.cpp registry.cpp smbios.cpp tcpscan.cpp tftp.cpp tools.cpp \
 	  ua_notification.cpp
 
