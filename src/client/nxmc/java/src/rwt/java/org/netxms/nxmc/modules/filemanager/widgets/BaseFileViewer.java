@@ -119,7 +119,7 @@ public class BaseFileViewer extends Composite
             */
          }
       });
-      
+
       /*** Search bar ***/
       searchBar = new Composite(this, SWT.NONE);
       GridLayout layout = new GridLayout();
@@ -187,7 +187,7 @@ public class BaseFileViewer extends Composite
             doSearch(false);
          }
       });
-      
+
       searchBarTextContainer.setBackground(searchBarText.getBackground());
 
       ToolBar searchButtons = new ToolBar(searchBarTextContainer, SWT.FLAT);
@@ -215,7 +215,7 @@ public class BaseFileViewer extends Composite
             doSearch(false);
          }
       });
-      
+
       searchCloseButton = new Label(searchBar, SWT.NONE);
       searchCloseButton.setBackground(searchBar.getBackground());
       searchCloseButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -256,8 +256,17 @@ public class BaseFileViewer extends Composite
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       searchBar.setLayoutData(fd);
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (lineStyler != null)
+               lineStyler.dispose();
+         }
+      });
    }
-   
+
    /**
     * Show local file in viewer
     *
@@ -424,7 +433,7 @@ public class BaseFileViewer extends Composite
    {
       return (lineStyler != null) ? lineStyler.styleLine(line) : null;
    }
-   
+
    /**
     * @return the lineStyler
     */
@@ -438,6 +447,12 @@ public class BaseFileViewer extends Composite
     */
    public void setLineStyler(LineStyler lineStyler)
    {
+      if (this.lineStyler == lineStyler)
+         return;
+
+      if (this.lineStyler != null)
+         this.lineStyler.dispose();
+
       this.lineStyler = lineStyler;
    }
 

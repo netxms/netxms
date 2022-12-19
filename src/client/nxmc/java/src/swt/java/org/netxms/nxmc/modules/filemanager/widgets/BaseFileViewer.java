@@ -29,6 +29,8 @@ import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -121,7 +123,7 @@ public class BaseFileViewer extends Composite
             }
          }
       });
-      
+
       /*** Search bar ***/
       searchBar = new Composite(this, SWT.NONE);
       GridLayout layout = new GridLayout();
@@ -189,7 +191,7 @@ public class BaseFileViewer extends Composite
             doSearch(false);
          }
       });
-      
+
       searchBarTextContainer.setBackground(searchBarText.getBackground());
 
       ToolBar searchButtons = new ToolBar(searchBarTextContainer, SWT.FLAT);
@@ -217,7 +219,7 @@ public class BaseFileViewer extends Composite
             doSearch(false);
          }
       });
-      
+
       searchCloseButton = new Label(searchBar, SWT.NONE);
       searchCloseButton.setBackground(searchBar.getBackground());
       searchCloseButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -258,8 +260,17 @@ public class BaseFileViewer extends Composite
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       searchBar.setLayoutData(fd);
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (lineStyler != null)
+               lineStyler.dispose();
+         }
+      });
    }
-   
+
    /**
     * Show local file in viewer
     *
@@ -429,7 +440,7 @@ public class BaseFileViewer extends Composite
    {
       return (lineStyler != null) ? lineStyler.styleLine(line) : null;
    }
-   
+
    /**
     * @return the lineStyler
     */
@@ -443,6 +454,12 @@ public class BaseFileViewer extends Composite
     */
    public void setLineStyler(LineStyler lineStyler)
    {
+      if (this.lineStyler == lineStyler)
+         return;
+
+      if (this.lineStyler != null)
+         this.lineStyler.dispose();
+
       this.lineStyler = lineStyler;
    }
 
@@ -598,14 +615,6 @@ public class BaseFileViewer extends Composite
    }
 
    /**
-    * Line styler interface
-    */
-   public interface LineStyler
-   {
-      public StyleRange[] styleLine(String line);
-   }
-   
-   /**
     * Set test top index (compatibility layer for RAP)
     */
    protected void setTextTopIndex()
@@ -618,5 +627,24 @@ public class BaseFileViewer extends Composite
     */
    protected void setScrollOnAppend(boolean scrollLock)
    {
+   }
+
+   /**
+    * Line styler interface
+    */
+   public interface LineStyler
+   {
+      /**
+       * Style given line.
+       *
+       * @param line text line
+       * @return styling for the line
+       */
+      public StyleRange[] styleLine(String line);
+
+      /**
+       * Called by file viewer when line styler is no longer needed. Implementing classes can use this method to dispose resources.
+       */
+      public void dispose();
    }
 }
