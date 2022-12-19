@@ -33,6 +33,13 @@ public interface ServerLog
    public LogViewer createView();
 
    /**
+    * Get display name for this log.
+    *
+    * @return display name for this log
+    */
+   public String getDisplayName();
+
+   /**
     * Get ID of server component that is required for this view.
     *
     * @return ID of required component or null if there are no restrictions

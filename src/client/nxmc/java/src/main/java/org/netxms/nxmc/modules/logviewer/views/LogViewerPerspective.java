@@ -63,6 +63,8 @@ public class LogViewerPerspective extends Perspective
       ServiceLoader<ServerLog> loader = ServiceLoader.load(ServerLog.class, getClass().getClassLoader());
       for(ServerLog e : loader)
          logs.add(e);
+
+      logs.sort((ServerLog l1, ServerLog l2) -> l1.getDisplayName().compareToIgnoreCase(l2.getDisplayName()));
    }
 
    /**
@@ -75,15 +77,21 @@ public class LogViewerPerspective extends Perspective
    {
       logs.add(new ServerLog() {
          @Override
-         public String getRequiredComponentId()
-         {
-            return null;
-         }
-
-         @Override
          public LogViewer createView()
          {
             return new LogViewer(displayName, logName);
+         }
+
+         @Override
+         public String getDisplayName()
+         {
+            return displayName;
+         }
+
+         @Override
+         public String getRequiredComponentId()
+         {
+            return null;
          }
       });
    }
