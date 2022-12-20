@@ -129,6 +129,5 @@ public class FileMonitorElement extends ElementWidget
       job.setUser(false);
       job.setSystem(true);
       job.start();
-      super.dispose();
    }
 }
