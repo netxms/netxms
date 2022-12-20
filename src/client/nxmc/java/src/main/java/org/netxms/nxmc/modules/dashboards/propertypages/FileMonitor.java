@@ -137,11 +137,11 @@ public class FileMonitor extends DashboardElementPropertyPage
       filter.setLayoutData(gd);
 
       historyLimit = new LabeledSpinner(dialogArea, SWT.NONE);
-      historyLimit.setLabel("History limit");
+      historyLimit.setLabel(i18n.tr("History limit"));
       historyLimit.setRange(0, 99999999);
       historyLimit.setSelection(config.getHistoryLimit());
 
-      syntaxHighlighter = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Highlighter", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      syntaxHighlighter = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Highlighter"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       syntaxHighlighter.add(i18n.tr("None"));
       int index = syntaxHighlighter.indexOf(config.getSyntaxHighlighter());
       syntaxHighlighter.select((index >= 0) ? index : 0);
