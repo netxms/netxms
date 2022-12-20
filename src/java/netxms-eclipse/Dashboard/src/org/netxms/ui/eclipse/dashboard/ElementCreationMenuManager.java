@@ -85,9 +85,10 @@ public class ElementCreationMenuManager extends MenuManager
 
       /* monitors */
       MenuManager monitorsMenu = new MenuManager("M&onitors");
-      addTypeToSelectionMenu(monitorsMenu, "Event monitor", DashboardElement.EVENT_MONITOR);
-      addTypeToSelectionMenu(monitorsMenu, "SNMP trap monitor", DashboardElement.SNMP_TRAP_MONITOR);
-      addTypeToSelectionMenu(monitorsMenu, "Syslog monitor", DashboardElement.SYSLOG_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, "&Event monitor", DashboardElement.EVENT_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, "&File monitor", DashboardElement.EVENT_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, "SNMP &trap monitor", DashboardElement.SNMP_TRAP_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, "&Syslog monitor", DashboardElement.SYSLOG_MONITOR);
       add(monitorsMenu);
 
       /* others */
@@ -156,6 +157,7 @@ public class ElementCreationMenuManager extends MenuManager
             return DashboardControl.DEFAULT_LABEL_CONFIG;
          case DashboardElement.ALARM_VIEWER:
          case DashboardElement.EVENT_MONITOR:
+         case DashboardElement.FILE_MONITOR:
          case DashboardElement.SYSLOG_MONITOR:
          case DashboardElement.SNMP_TRAP_MONITOR:
          case DashboardElement.STATUS_INDICATOR:

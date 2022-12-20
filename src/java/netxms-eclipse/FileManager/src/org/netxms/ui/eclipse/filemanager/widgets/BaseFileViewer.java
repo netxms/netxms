@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ public class BaseFileViewer extends Composite
    public static final int ERROR = 2;
 
    public static final long MAX_FILE_SIZE = 67108864; // 64MB
-   
+
    protected IViewPart viewPart;
    protected StyledText text;
    protected Composite messageBar;
@@ -79,6 +79,7 @@ public class BaseFileViewer extends Composite
    protected Text searchBarText;
    protected Label searchCloseButton;
    protected boolean scrollLock = false;
+   private int lineCountLimit = 0;
    protected StringBuilder content = new StringBuilder();
    protected LineStyler lineStyler = null;
 
@@ -92,7 +93,7 @@ public class BaseFileViewer extends Composite
    {
       super(parent, style);
       this.viewPart = viewPart;
-      
+
       setLayout(new FormLayout());
       
       /*** Message bar ***/
@@ -191,7 +192,7 @@ public class BaseFileViewer extends Composite
             }
          }
       });
-      
+
       /*** Search bar ***/
       searchBar = new Composite(this, SWT.NONE);
       layout = new GridLayout();
@@ -209,7 +210,7 @@ public class BaseFileViewer extends Composite
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
       separator.setLayoutData(gd);
-      
+
       Label searchBarLabel = new Label(searchBar, SWT.LEFT);
       searchBarLabel.setText(Messages.get().BaseFileViewer_Find);
       searchBarLabel.setBackground(searchBar.getBackground());
@@ -219,7 +220,7 @@ public class BaseFileViewer extends Composite
       gd.verticalAlignment = SWT.CENTER;
       gd.horizontalIndent = 5;
       searchBarLabel.setLayoutData(gd);
-      
+
       Composite searchBarTextContainer = new Composite(searchBar, SWT.BORDER);
       layout = new GridLayout();
       layout.marginHeight = 0;
@@ -232,7 +233,7 @@ public class BaseFileViewer extends Composite
       gd.horizontalAlignment = SWT.LEFT;
       gd.widthHint = 400;
       searchBarTextContainer.setLayoutData(gd);
-      
+
       searchBarText = new Text(searchBarTextContainer, SWT.NONE);
       searchBarText.setMessage(Messages.get().BaseFileViewer_FindInFile);
       gd = new GridData();
@@ -259,7 +260,7 @@ public class BaseFileViewer extends Composite
             doSearch(false);
          }
       });
-      
+
       searchBarTextContainer.setBackground(searchBarText.getBackground());
 
       ToolBar searchButtons = new ToolBar(searchBarTextContainer, SWT.FLAT);
@@ -267,7 +268,7 @@ public class BaseFileViewer extends Composite
       gd.verticalAlignment = SWT.FILL;
       gd.horizontalAlignment = SWT.LEFT;
       searchButtons.setLayoutData(gd);
-      
+
       ToolItem item = new ToolItem(searchButtons, SWT.PUSH);
       item.setImage(SharedIcons.IMG_UP);
       item.addSelectionListener(new SelectionAdapter() {
@@ -287,7 +288,7 @@ public class BaseFileViewer extends Composite
             doSearch(false);
          }
       });
-      
+
       searchCloseButton = new Label(searchBar, SWT.NONE);
       searchCloseButton.setBackground(searchBar.getBackground());
       searchCloseButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -300,7 +301,7 @@ public class BaseFileViewer extends Composite
       searchCloseButton.setLayoutData(gd);
       searchCloseButton.addMouseListener(new MouseListener() {
          private boolean doAction = false;
-         
+
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -322,7 +323,7 @@ public class BaseFileViewer extends Composite
                hideSearchBar();
          }
       });
-      
+
       fd = new FormData();
       fd.bottom = new FormAttachment(100, 0);
       fd.left = new FormAttachment(0, 0);
@@ -411,7 +412,7 @@ public class BaseFileViewer extends Composite
       layout(true, true);
       searchBarText.setFocus();
    }
-   
+
    /**
     * Hide message bar
     */
@@ -421,7 +422,7 @@ public class BaseFileViewer extends Composite
       ((FormData)text.getLayoutData()).bottom = new FormAttachment(100, 0);
       layout(true, true);
    }
-   
+
    /**
     * Clear viewer
     */
@@ -439,7 +440,7 @@ public class BaseFileViewer extends Composite
       text.selectAll();
       text.notifyListeners(SWT.Selection, new Event());
    }
-   
+
    /**
     * Copy selection to clipboard
     */
@@ -447,7 +448,7 @@ public class BaseFileViewer extends Composite
    {
       text.copy();
    }
-   
+
    /**
     * Check if copy can be performed
     * 
@@ -473,7 +474,27 @@ public class BaseFileViewer extends Composite
    {
       this.scrollLock = scrollLock;
    }
-   
+
+   /**
+    * Get limit on number of lines to keep in viewer.
+    *
+    * @return limit on number of lines to keep in viewer (0 means "unlimited")
+    */
+   public int getLineCountLimit()
+   {
+      return lineCountLimit;
+   }
+
+   /**
+    * Set limit on number of lines to keep in viewer (0 for unlimited).
+    *
+    * @param lineCountLimit new limit
+    */
+   public void setLineCountLimit(int lineCountLimit)
+   {
+      this.lineCountLimit = lineCountLimit;
+   }
+
    /**
     * @return
     */
@@ -481,7 +502,7 @@ public class BaseFileViewer extends Composite
    {
       return text;
    }
-   
+
    /**
     * Add text selection listener
     * 
@@ -491,7 +512,7 @@ public class BaseFileViewer extends Composite
    {
       text.addSelectionListener(listener);
    }
-   
+
    /**
     * Remove selection listener
     * 
@@ -501,7 +522,7 @@ public class BaseFileViewer extends Composite
    {
       text.removeSelectionListener(listener);
    }
-   
+
    /**
     * @param s
     */
@@ -511,6 +532,16 @@ public class BaseFileViewer extends Composite
       text.setText(ps);
       content = new StringBuilder();
       content.append(ps.toLowerCase());
+      if (lineCountLimit > 0)
+      {
+         int lineCount = text.getLineCount();
+         if ((lineCountLimit > 0) && (lineCount > lineCountLimit))
+         {
+            int length = text.getOffsetAtLine(lineCount - lineCountLimit);
+            text.replaceTextRange(0, length, "");
+            content.replace(0, length, "");
+         }
+      }
    }
 
    /**
@@ -521,10 +552,24 @@ public class BaseFileViewer extends Composite
       String ps = removeEscapeSequences(s);
       content.append(ps.toLowerCase());
       text.append(ps);
+
+      if (lineCountLimit > 0)
+      {
+         int lineCount = text.getLineCount();
+         if ((lineCountLimit > 0) && (lineCount > lineCountLimit))
+         {
+            int length = text.getOffsetAtLine(lineCount - lineCountLimit);
+            text.replaceTextRange(0, length, "");
+            content.replace(0, length, "");
+         }
+      }
+
       if (!scrollLock)
+      {
          text.setTopIndex(text.getLineCount() - 1);
+      }
    }
-   
+
    /**
     * Style line. Default implementation calls registered line styler if any.
     * 
@@ -535,7 +580,7 @@ public class BaseFileViewer extends Composite
    {
       return (lineStyler != null) ? lineStyler.styleLine(line) : null;
    }
-   
+
    /**
     * @return the lineStyler
     */
@@ -549,6 +594,12 @@ public class BaseFileViewer extends Composite
     */
    public void setLineStyler(LineStyler lineStyler)
    {
+      if (this.lineStyler == lineStyler)
+         return;
+
+      if (this.lineStyler != null)
+         this.lineStyler.dispose();
+
       this.lineStyler = lineStyler;
    }
 
@@ -708,6 +759,17 @@ public class BaseFileViewer extends Composite
     */
    public interface LineStyler
    {
+      /**
+       * Style given line.
+       *
+       * @param line text line
+       * @return styling for the line
+       */
       public StyleRange[] styleLine(String line);
+
+      /**
+       * Called by file viewer when line styler is no longer needed. Implementing classes can use this method to dispose resources.
+       */
+      public void dispose();
    }
 }
