@@ -44,15 +44,14 @@ public class DynamicFileViewer extends BaseFileViewer
 {
    private static final I18n i18n = LocalizationHelper.getI18n(DynamicFileViewer.class);
    private static Logger logger = LoggerFactory.getLogger(DynamicFileViewer.class);
-   
+
    protected Job monitoringJob = null;
    protected Job restartJob = null;
    protected String fileId = null;
    protected long nodeId = 0;
    protected String remoteFileName;
    protected NXCSession session = Registry.getSession();
-   protected View view;
-   
+
    /**
     * @param parent
     * @param style
@@ -113,7 +112,7 @@ public class DynamicFileViewer extends BaseFileViewer
       this.remoteFileName = remoteFileName;
 
       setTextTopIndex();
-      monitoringJob = new Job(i18n.tr("Track file changes"), viewPart) {
+      monitoringJob = new Job(i18n.tr("Track file changes"), view) {
          private boolean tracking = true;
 
          @Override
@@ -206,9 +205,8 @@ public class DynamicFileViewer extends BaseFileViewer
                   i18n.tr("Connection with the agent has been lost. Attempting to reconnect...") +
                   "\n----------------------------------------------------------------------\n"); //$NON-NLS-1$
       view.addMessage(MessageArea.ERROR, i18n.tr("Connection with the agent has been lost. Attempting to reconnect..."));
-      
-      
-      restartJob = new JobCallingServerJob(i18n.tr("Restart file tracking"), viewPart) {
+
+      restartJob = new JobCallingServerJob(i18n.tr("Restart file tracking"), view) {
          private boolean running = true;
 
          @Override

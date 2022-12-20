@@ -25,7 +25,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
@@ -38,7 +37,9 @@ import org.netxms.base.DiffMatchPatch;
 import org.netxms.base.DiffMatchPatch.Diff;
 import org.netxms.client.log.LogRecordDetails;
 import org.netxms.nxmc.base.widgets.DiffViewer;
+import org.netxms.nxmc.base.widgets.StyledText;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Dialog for displaying audit log record details
@@ -103,7 +104,7 @@ public class AuditLogRecordDetailsDialog extends Dialog
 
       tabFolder = new CTabFolder(dialogArea, SWT.BORDER);
       tabFolder.setTabHeight(24);
-      tabFolder.setSelectionBarThickness(0);
+      WidgetHelper.disableTabFolderSelectionBar(tabFolder);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;

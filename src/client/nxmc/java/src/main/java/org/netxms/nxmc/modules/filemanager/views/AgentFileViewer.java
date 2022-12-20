@@ -259,7 +259,7 @@ public class AgentFileViewer extends AdHocObjectView
 	      if (followChanges)
 	      {
             final NXCSession session = Registry.getSession();
-   	      final Job job = new Job(i18n.tr("Stop file monitor"), null) {
+            final Job job = new Job(i18n.tr("Stopping file monitor"), null) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -278,7 +278,6 @@ public class AgentFileViewer extends AdHocObjectView
          }
          return false;
       }
-	   
 
       Perspective p = view.getPerspective();   
       AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges);

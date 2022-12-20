@@ -56,6 +56,8 @@ public class DashboardElementConfigFactory
                return GaugeConfig.createFromXml(element.getData());
             case DashboardElement.EVENT_MONITOR:
                return EventMonitorConfig.createFromXml(element.getData());
+            case DashboardElement.FILE_MONITOR:
+               return FileMonitorConfig.createFromXml(element.getData());
             case DashboardElement.GEO_MAP:
                return GeoMapConfig.createFromXml(element.getData());
             case DashboardElement.LABEL:

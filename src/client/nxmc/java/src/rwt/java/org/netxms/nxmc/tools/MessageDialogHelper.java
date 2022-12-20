@@ -30,12 +30,16 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper class for displaying message dialogs
  */
 public class MessageDialogHelper
 {
+   private static final Logger logger = LoggerFactory.getLogger(MessageDialogHelper.class);
+
    /**
     * Status code returned by <code>openQuestionWithCancel</code> if the user pressed the <b>Yes</b> button.
     */
@@ -115,6 +119,7 @@ public class MessageDialogHelper
 	public static void openError(Shell parent, String title, String message)
 	{
 		open(MessageDialog.ERROR, parent, title, message);
+      logger.info("Error dialog shown to user (title=\"" + title + "\", message=\"" + message + "\"");
 	}
 
 	/**
@@ -169,6 +174,7 @@ public class MessageDialogHelper
 	public static void openWarning(Shell parent, String title, String message)
 	{
 		open(MessageDialog.WARNING, parent, title, message);
+      logger.info("Warning dialog shown to user (title=\"" + title + "\", message=\"" + message + "\"");
 	}
 
    /**

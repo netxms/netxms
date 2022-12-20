@@ -25,6 +25,8 @@ import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -51,6 +53,8 @@ import org.netxms.nxmc.base.widgets.helpers.LineStyleListener;
 import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -58,20 +62,22 @@ import org.xnap.commons.i18n.I18n;
  */
 public class BaseFileViewer extends Composite
 {
+   private static final Logger logger = LoggerFactory.getLogger(BaseFileViewer.class);
    private static final I18n i18n = LocalizationHelper.getI18n(BaseFileViewer.class);
-   
+
    public static final int INFORMATION = 0;
    public static final int WARNING = 1;
    public static final int ERROR = 2;
 
    public static final long MAX_FILE_SIZE = 67108864; // 64MB
-   
-   protected View viewPart;
+
+   protected View view;
    protected StyledText text;
    protected Composite searchBar;
    protected Text searchBarText;
    protected Label searchCloseButton;
    protected boolean scrollLock = false;
+   private int lineCountLimit = 0;
    protected StringBuilder content = new StringBuilder();
    protected LineStyler lineStyler = null;
 
@@ -81,11 +87,11 @@ public class BaseFileViewer extends Composite
     * @param parent
     * @param style
     */
-   public BaseFileViewer(Composite parent, int style, View viewPart)
+   public BaseFileViewer(Composite parent, int style, View view)
    {
       super(parent, style);
-      this.viewPart = viewPart;
-      
+      this.view = view;
+
       setLayout(new FormLayout());
 
       /*** Text area ***/
@@ -102,7 +108,6 @@ public class BaseFileViewer extends Composite
          @Override
          public void lineGetStyle(LineStyleEvent event)
          {
-            /* TODO:
             try
             {
                event.styles = styleLine(event.lineText);
@@ -114,9 +119,8 @@ public class BaseFileViewer extends Composite
             }
             catch(Exception e)
             {
-               // TODO: log
+               logger.error("Exception in line style listener", e);
             }
-            */
          }
       });
 
@@ -130,14 +134,14 @@ public class BaseFileViewer extends Composite
       layout.numColumns = 3;
       searchBar.setLayout(layout);
       searchBar.setVisible(false);
-      
+
       Label separator = new Label(searchBar, SWT.SEPARATOR | SWT.HORIZONTAL);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = 3;
       separator.setLayoutData(gd);
-      
+
       Label searchBarLabel = new Label(searchBar, SWT.LEFT);
       searchBarLabel.setText(i18n.tr("Find:"));
       searchBarLabel.setBackground(searchBar.getBackground());
@@ -147,7 +151,7 @@ public class BaseFileViewer extends Composite
       gd.verticalAlignment = SWT.CENTER;
       gd.horizontalIndent = 5;
       searchBarLabel.setLayoutData(gd);
-      
+
       Composite searchBarTextContainer = new Composite(searchBar, SWT.BORDER);
       layout = new GridLayout();
       layout.marginHeight = 0;
@@ -160,7 +164,7 @@ public class BaseFileViewer extends Composite
       gd.horizontalAlignment = SWT.LEFT;
       gd.widthHint = 400;
       searchBarTextContainer.setLayoutData(gd);
-      
+
       searchBarText = new Text(searchBarTextContainer, SWT.NONE);
       searchBarText.setMessage(i18n.tr("Find in file"));
       gd = new GridData();
@@ -195,7 +199,7 @@ public class BaseFileViewer extends Composite
       gd.verticalAlignment = SWT.FILL;
       gd.horizontalAlignment = SWT.LEFT;
       searchButtons.setLayoutData(gd);
-      
+
       ToolItem item = new ToolItem(searchButtons, SWT.PUSH);
       item.setImage(SharedIcons.IMG_UP);
       item.addSelectionListener(new SelectionAdapter() {
@@ -228,7 +232,7 @@ public class BaseFileViewer extends Composite
       searchCloseButton.setLayoutData(gd);
       searchCloseButton.addMouseListener(new MouseListener() {
          private boolean doAction = false;
-         
+
          @Override
          public void mouseDoubleClick(MouseEvent e)
          {
@@ -250,7 +254,7 @@ public class BaseFileViewer extends Composite
                hideSearchBar();
          }
       });
-      
+
       fd = new FormData();
       fd.bottom = new FormAttachment(100, 0);
       fd.left = new FormAttachment(0, 0);
@@ -275,7 +279,7 @@ public class BaseFileViewer extends Composite
     */
    public void showFile(final File file, final boolean scrollToEnd)
    {
-      Job job = new Job(i18n.tr("Load file into viewer"), viewPart) {
+      Job job = new Job(i18n.tr("Load file into viewer"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -315,7 +319,7 @@ public class BaseFileViewer extends Composite
       layout(true, true);
       searchBarText.setFocus();
    }
-   
+
    /**
     * Hide message bar
     */
@@ -325,7 +329,7 @@ public class BaseFileViewer extends Composite
       ((FormData)text.getLayoutData()).bottom = new FormAttachment(100, 0);
       layout(true, true);
    }
-   
+
    /**
     * Clear viewer
     */
@@ -341,14 +345,14 @@ public class BaseFileViewer extends Composite
    public void selectAll()
    {
    }
-   
+
    /**
     * Copy selection to clipboard
     */
    public void copy()
    {
    }
-   
+
    /**
     * Check if copy can be performed
     * 
@@ -375,7 +379,27 @@ public class BaseFileViewer extends Composite
       this.scrollLock = scrollLock;
       text.setScrollOnAppend(!scrollLock);
    }
-   
+
+   /**
+    * Get limit on number of lines to keep in viewer.
+    *
+    * @return limit on number of lines to keep in viewer (0 means "unlimited")
+    */
+   public int getLineCountLimit()
+   {
+      return lineCountLimit;
+   }
+
+   /**
+    * Set limit on number of lines to keep in viewer (0 for unlimited).
+    *
+    * @param lineCountLimit new limit
+    */
+   public void setLineCountLimit(int lineCountLimit)
+   {
+      this.lineCountLimit = lineCountLimit;
+   }
+
    /**
     * @return
     */
@@ -383,7 +407,7 @@ public class BaseFileViewer extends Composite
    {
       return text;
    }
-   
+
    /**
     * Add text selection listener
     * 
@@ -392,7 +416,7 @@ public class BaseFileViewer extends Composite
    public void addSelectionListener(SelectionListener listener)
    {
    }
-   
+
    /**
     * Remove selection listener
     * 
@@ -401,7 +425,7 @@ public class BaseFileViewer extends Composite
    public void removeSelectionListener(SelectionListener listener)
    {
    }
-   
+
    /**
     * @param s
     */
@@ -411,6 +435,16 @@ public class BaseFileViewer extends Composite
       text.setText(ps);
       content = new StringBuilder();
       content.append(ps.toLowerCase());
+      if (lineCountLimit > 0)
+      {
+         int lineCount = text.getLineCount();
+         if ((lineCountLimit > 0) && (lineCount > lineCountLimit))
+         {
+            int length = text.getOffsetAtLine(lineCount - lineCountLimit);
+            text.replaceTextRange(0, length, "");
+            content.replace(0, length, "");
+         }
+      }
    }
 
    /**
@@ -421,8 +455,19 @@ public class BaseFileViewer extends Composite
       String ps = removeEscapeSequences(s);
       content.append(ps.toLowerCase());
       text.append(ps);
+
+      if (lineCountLimit > 0)
+      {
+         int lineCount = text.getLineCount();
+         if ((lineCountLimit > 0) && (lineCount > lineCountLimit))
+         {
+            int length = text.getOffsetAtLine(lineCount - lineCountLimit);
+            text.replaceTextRange(0, length, "");
+            content.replace(0, length, "");
+         }
+      }
    }
-   
+
    /**
     * Style line. Default implementation calls registered line styler if any.
     * 
@@ -563,14 +608,6 @@ public class BaseFileViewer extends Composite
    }
 
    /**
-    * Line styler interface
-    */
-   public interface LineStyler
-   {
-      public StyleRange[] styleLine(String line);
-   }
-   
-   /**
     * Set test top index (compatibility layer for RAP)
     */
    protected void setTextTopIndex()
@@ -583,5 +620,24 @@ public class BaseFileViewer extends Composite
    protected void setScrollOnAppend(boolean scrollLock)
    {
       text.setScrollOnAppend(!scrollLock);
+   }
+
+   /**
+    * Line styler interface
+    */
+   public interface LineStyler
+   {
+      /**
+       * Style given line.
+       *
+       * @param line text line
+       * @return styling for the line
+       */
+      public StyleRange[] styleLine(String line);
+
+      /**
+       * Called by file viewer when line styler is no longer needed. Implementing classes can use this method to dispose resources.
+       */
+      public void dispose();
    }
 }

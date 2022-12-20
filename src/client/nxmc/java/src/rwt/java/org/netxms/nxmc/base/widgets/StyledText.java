@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.base.widgets;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -46,12 +48,14 @@ public class StyledText extends Composite
    private final Browser textArea;
    private final RefreshTimer refreshTimer;
    private StringBuilder content = new StringBuilder();
+   private List<Integer> lineOffsets = new ArrayList<>();
    private Map<Integer, StyleRange> styleRanges = new TreeMap<Integer, StyleRange>(); 
    private int writePosition = 0;
    private boolean refreshContent = false;
    private boolean refreshInProgress = false;
    private Set<LineStyleListener> lineStyleListeners = new HashSet<LineStyleListener>(0);
    private boolean scrollOnAppend = false;
+   private boolean forceScroll = false;
 
    /**
     * @param parent
@@ -60,9 +64,9 @@ public class StyledText extends Composite
    public StyledText(Composite parent, int style)
    {
       super(parent, style);
-      
+
       setLayout(new FillLayout());
-      
+
       textArea = new Browser(this, SWT.NONE);
       textArea.setText("<pre id=\"textArea\"></pre>");
 
@@ -84,6 +88,7 @@ public class StyledText extends Composite
    {
       checkWidget();
       styleRanges.clear();
+      lineOffsets.clear();
       content = new StringBuilder(text);
       writePosition = 0;
       refreshContent = true;
@@ -101,6 +106,30 @@ public class StyledText extends Composite
       int pos = content.length();
       content.append(text);
       fireLineStyleListeners(pos);
+      refreshTimer.execute();
+   }
+
+   /**
+    * Replace given text range with new content.
+    * 
+    * @param start start offset
+    * @param length length of text to be replaced
+    * @param text new content
+    */
+   public void replaceTextRange(int start, int length, String text)
+   {
+      if (start >= content.length())
+         return;
+
+      if (start + length > content.length())
+         length = content.length() - start;
+
+      content.replace(start, start + length, text);
+      styleRanges.clear();
+      lineOffsets.clear();
+      writePosition = 0;
+      refreshContent = true;
+      fireLineStyleListeners(0);
       refreshTimer.execute();
    }
 
@@ -177,7 +206,7 @@ public class StyledText extends Composite
    {
       if (range.hidden)
          return "";
-      
+
       StringBuilder sb = new StringBuilder();
       sb.append("<span style=\"");
       if (range.foreground != null)
@@ -217,7 +246,7 @@ public class StyledText extends Composite
       sb.append("</span>");
       return sb.toString();
    }
-   
+
    /**
     * Apply style ranges starting at given position
     * 
@@ -272,7 +301,7 @@ public class StyledText extends Composite
             js.append(applyStyleRanges(writePosition));
          }
          js.append("';");
-         if (scrollOnAppend)
+         if (scrollOnAppend || forceScroll)
             js.append("window.scrollTo(0, document.body.scrollHeight);");
          int contentLength = content.length();  // content can be updated by calls to append() while script is executing
          success = textArea.execute(js.toString());
@@ -280,6 +309,7 @@ public class StyledText extends Composite
          {
             writePosition = contentLength;
             refreshContent = false;
+            forceScroll = false;
          }
       }
       catch (Exception e)
@@ -291,6 +321,43 @@ public class StyledText extends Composite
 
       if (!success)
          refreshTimer.execute();
+   }
+
+   /**
+    * Scroll content to bottom
+    */
+   public void scrollToBottom()
+   {
+      // Call to textArea.execute may call readAndDispatch() on Display
+      // potentially causing recursive call of this method. In this case reschedule
+      // refresh and return immediately.
+      if (refreshInProgress)
+      {
+         forceScroll = true;
+         refreshTimer.execute();
+         return;
+      }
+
+      refreshInProgress = true;
+      boolean success;
+      try
+      {
+         textArea.execute("window.scrollTo(0, document.body.scrollHeight);");
+         success = true;
+         forceScroll = false;
+      }
+      catch(Exception e)
+      {
+         logger.error("Exception during StyledText forced scroll", e);
+         success = false;
+      }
+      refreshInProgress = false;
+
+      if (!success)
+      {
+         forceScroll = true;
+         refreshTimer.execute();
+      }
    }
 
    /**
@@ -330,12 +397,40 @@ public class StyledText extends Composite
    }
 
    /**
+    * Update line offsets starting at given position in text
+    *
+    * @param startPos start position
+    */
+   protected void updateLineOffsets(int startPos)
+   {
+      if ((startPos == 0) || (content.charAt(startPos - 1) == '\n'))
+         lineOffsets.add(startPos);
+
+      int lineStartPos = startPos;
+      char[] text = content.substring(startPos).toCharArray();
+      for(int i = 0; i < text.length; i++)
+      {
+         if (text[i] == '\n')
+         {
+            lineStartPos = startPos + i + 1;
+            lineOffsets.add(lineStartPos);
+         }
+      }
+   }
+
+   /**
     * Call all registered line style listeners
     */
    protected void fireLineStyleListeners(int startPos)
    {
       if (lineStyleListeners.isEmpty())
+      {
+         updateLineOffsets(startPos);
          return;
+      }
+
+      if ((startPos == 0) || (content.charAt(startPos - 1) == '\n'))
+         lineOffsets.add(startPos);
 
       StringBuilder line = new StringBuilder();
       int lineStartPos = startPos;
@@ -346,6 +441,7 @@ public class StyledText extends Composite
          {
             styleLine(line.toString(), lineStartPos);
             lineStartPos = startPos + i + 1;
+            lineOffsets.add(lineStartPos);
             line = new StringBuilder();
          }
          else if (text[i] != '\r')
@@ -368,5 +464,35 @@ public class StyledText extends Composite
    public String getText()
    {
       return content.toString();
+   }
+
+   /**
+    * Get number of lines
+    *
+    * @return number of lines
+    */
+   public int getLineCount()
+   {
+      return lineOffsets.size();
+   }
+
+   /**
+    * Get offset of given line
+    *
+    * @param line
+    * @return
+    */
+   public int getOffsetAtLine(int line)
+   {
+      return ((line >= 0) && (line < lineOffsets.size())) ? lineOffsets.get(line) : -1;
+   }
+
+   /**
+    * Compatibility method, does nothing
+    *
+    * @param editable
+    */
+   public void setEditable(boolean editable)
+   {
    }
 }

@@ -21,25 +21,33 @@ package org.netxms.nxmc.modules.dashboards.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
+import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
-import org.netxms.nxmc.modules.dashboards.config.EventMonitorConfig;
+import org.netxms.nxmc.modules.dashboards.config.FileMonitorConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Event monitor element properties
+ * File monitor element properties
  */
-public class EventMonitor extends DashboardElementPropertyPage
+public class FileMonitor extends DashboardElementPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EventMonitor.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(FileMonitor.class);
 
-   private EventMonitorConfig config;
+   private FileMonitorConfig config;
    private ObjectSelector objectSelector;
+   private LabeledText fileName;
+   private LabeledText filter;
+   private LabeledSpinner historyLimit;
+   private Combo syntaxHighlighter;
    private TitleConfigurator title;
 
    /**
@@ -47,9 +55,9 @@ public class EventMonitor extends DashboardElementPropertyPage
     *
     * @param elementConfig element configuration
     */
-   public EventMonitor(DashboardElementConfig elementConfig)
+   public FileMonitor(DashboardElementConfig elementConfig)
    {
-      super(i18n.tr("Event Monitor"), elementConfig);
+      super(i18n.tr("File Monitor"), elementConfig);
    }
 
    /**
@@ -58,7 +66,7 @@ public class EventMonitor extends DashboardElementPropertyPage
    @Override
    public String getId()
    {
-      return "event-monitor";
+      return "file-monitor";
    }
 
    /**
@@ -67,7 +75,7 @@ public class EventMonitor extends DashboardElementPropertyPage
    @Override
    public boolean isVisible()
    {
-      return elementConfig instanceof EventMonitorConfig;
+      return elementConfig instanceof FileMonitorConfig;
    }
 
    /**
@@ -85,27 +93,58 @@ public class EventMonitor extends DashboardElementPropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      config = (EventMonitorConfig)elementConfig;
+      config = (FileMonitorConfig)elementConfig;
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
       GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
       title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       title.setLayoutData(gd);
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
-      objectSelector.setLabel(i18n.tr("Root object"));
-      objectSelector.setObjectClass(AbstractObject.class);
+      objectSelector.setLabel(i18n.tr("Node"));
+      objectSelector.setObjectClass(Node.class);
       objectSelector.setObjectId(config.getObjectId());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
+
+      fileName = new LabeledText(dialogArea, SWT.NONE);
+      fileName.setLabel(i18n.tr("File name"));
+      fileName.setText(config.getFileName());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      fileName.setLayoutData(gd);
+      
+      filter = new LabeledText(dialogArea, SWT.NONE);
+      filter.setLabel(i18n.tr("Line filter (regular expression)"));
+      filter.setText(config.getFilter());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      filter.setLayoutData(gd);
+
+      historyLimit = new LabeledSpinner(dialogArea, SWT.NONE);
+      historyLimit.setLabel("History limit");
+      historyLimit.setRange(0, 99999999);
+      historyLimit.setSelection(config.getHistoryLimit());
+
+      syntaxHighlighter = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Highlighter", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      syntaxHighlighter.add(i18n.tr("None"));
+      int index = syntaxHighlighter.indexOf(config.getSyntaxHighlighter());
+      syntaxHighlighter.select((index >= 0) ? index : 0);
 
       return dialogArea;
    }
@@ -118,6 +157,10 @@ public class EventMonitor extends DashboardElementPropertyPage
    {
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
+      config.setFileName(fileName.getText().trim());
+      config.setFilter(filter.getText());
+      config.setHistoryLimit(historyLimit.getSelection());
+      config.setSyntaxHighlighter(syntaxHighlighter.getText());
       return true;
    }
 }
