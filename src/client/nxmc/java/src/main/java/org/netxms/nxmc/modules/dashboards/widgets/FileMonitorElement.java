@@ -76,6 +76,7 @@ public class FileMonitorElement extends ElementWidget
       session = Registry.getSession();
       viewer = new DynamicFileViewer(getContentArea(), SWT.NONE, view);
       viewer.setLineCountLimit(config.getHistoryLimit());
+      viewer.setAppendFilter(config.getFilter());
 
       new JobCallingServerJob(String.format(i18n.tr("Starting monitor for file \"%s\""), config.getFileName()), view, this) {
          @Override

@@ -62,7 +62,7 @@ public class DynamicFileViewer extends BaseFileViewer
       super(parent, style, view);
 
       setScrollOnAppend(!scrollLock);
-      
+
       final SessionListener sessionListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)

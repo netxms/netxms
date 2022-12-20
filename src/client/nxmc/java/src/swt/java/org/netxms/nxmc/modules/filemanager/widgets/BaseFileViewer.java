@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
@@ -83,6 +85,8 @@ public class BaseFileViewer extends Composite
    private int lineCountLimit = 0;
    protected StringBuilder content = new StringBuilder();
    protected LineStyler lineStyler = null;
+   protected Pattern appendFilter = null;
+   protected String lineRemainder = null;
 
    /**
     * Create file viewer
@@ -107,7 +111,7 @@ public class BaseFileViewer extends Composite
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       text.setLayoutData(fd);
-      
+
       text.addLineStyleListener(new LineStyleListener() {
          @Override
          public void lineGetStyle(LineStyleEvent event)
@@ -404,6 +408,31 @@ public class BaseFileViewer extends Composite
    }
 
    /**
+    * Set append filter.
+    *
+    * @param regex regular expression that define matching lines
+    */
+   public void setAppendFilter(String regex)
+   {
+      if ((regex != null) && !regex.isEmpty())
+      {
+         try
+         {
+            appendFilter = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+         }
+         catch(PatternSyntaxException e)
+         {
+            logger.warn("Syntax error in file viewer append filter (regex=\"" + regex + "\")", e);
+            appendFilter = null;
+         }
+      }
+      else
+      {
+         appendFilter = null;
+      }
+   }
+
+   /**
     * @return
     */
    public Control getTextControl()
@@ -436,7 +465,8 @@ public class BaseFileViewer extends Composite
     */
    protected void setContent(String s)
    {
-      String ps = removeEscapeSequences(s);
+      lineRemainder = null;
+      String ps = filterText(removeEscapeSequences(s));
       text.setText(ps);
       content = new StringBuilder();
       content.append(ps.toLowerCase());
@@ -457,7 +487,7 @@ public class BaseFileViewer extends Composite
     */
    protected void append(String s)
    {
-      String ps = removeEscapeSequences(s);
+      String ps = filterText(removeEscapeSequences(s));
       content.append(ps.toLowerCase());
       text.append(ps);
 
@@ -476,6 +506,47 @@ public class BaseFileViewer extends Composite
       {
          text.setTopIndex(text.getLineCount() - 1);
       }
+   }
+
+   /**
+    * Filter text using append filter
+    * 
+    * @param text text to filter
+    * @return filtered text
+    */
+   private String filterText(String text)
+   {
+      logger.debug("NEW TEXT: '" + text + "'");
+      if (appendFilter == null)
+         return text;
+
+      StringBuilder sb = new StringBuilder();
+      if (lineRemainder != null)
+      {
+         sb.append(lineRemainder);
+         lineRemainder = null;
+      }
+      sb.append(text);
+
+      StringBuilder output = new StringBuilder();
+      int offset = 0;
+      while(offset < sb.length())
+      {
+         int nextOffset = sb.indexOf("\n", offset);
+         if (nextOffset == -1)
+         {
+            lineRemainder = sb.substring(offset);
+            break;
+         }
+         String line = sb.substring(offset, nextOffset + 1);
+         logger.debug("matching line '" + line + "'");
+         if (appendFilter.matcher(line).find())
+            output.append(line);
+         else
+            logger.debug("NO MATCH " + appendFilter.pattern());
+         offset = nextOffset + 1;
+      }
+      return output.toString();
    }
 
    /**
