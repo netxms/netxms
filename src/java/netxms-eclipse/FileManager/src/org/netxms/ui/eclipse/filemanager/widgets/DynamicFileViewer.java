@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,14 +42,14 @@ import org.slf4j.LoggerFactory;
 public class DynamicFileViewer extends BaseFileViewer
 {
    private static Logger logger = LoggerFactory.getLogger(DynamicFileViewer.class);
-   
+
    protected ConsoleJob monitoringJob = null;
    protected ConsoleJob restartJob = null;
    protected String fileId = null;
    protected long nodeId = 0;
    protected String remoteFileName;
    protected NXCSession session = ConsoleSharedData.getSession();
-   
+
    /**
     * @param parent
     * @param style
@@ -200,8 +200,8 @@ public class DynamicFileViewer extends BaseFileViewer
                   Messages.get().FileViewer_NotifyFollowConnectionLost +
                   "\n----------------------------------------------------------------------\n"); //$NON-NLS-1$
       showMessage(ERROR, Messages.get().FileViewer_NotifyFollowConnectionLost);
-      
-      restartJob = new ConsoleJobCallingServerJob(Messages.get().DynamicFileViewer_RestartFileTracking, null, Activator.PLUGIN_ID, null) {
+
+      restartJob = new ConsoleJobCallingServerJob(Messages.get().DynamicFileViewer_RestartFileTracking, null, Activator.PLUGIN_ID) {
          private boolean running = true;
 
          @Override
