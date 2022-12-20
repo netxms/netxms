@@ -516,7 +516,6 @@ public class BaseFileViewer extends Composite
     */
    private String filterText(String text)
    {
-      logger.debug("NEW TEXT: '" + text + "'");
       if (appendFilter == null)
          return text;
 
@@ -539,11 +538,8 @@ public class BaseFileViewer extends Composite
             break;
          }
          String line = sb.substring(offset, nextOffset + 1);
-         logger.debug("matching line '" + line + "'");
          if (appendFilter.matcher(line).find())
             output.append(line);
-         else
-            logger.debug("NO MATCH " + appendFilter.pattern());
          offset = nextOffset + 1;
       }
       return output.toString();

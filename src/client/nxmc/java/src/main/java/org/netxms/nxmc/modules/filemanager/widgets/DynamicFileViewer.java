@@ -88,7 +88,6 @@ public class DynamicFileViewer extends BaseFileViewer
             stopTracking();
          }
       });
-      this.view = view;
    }
 
    /**
