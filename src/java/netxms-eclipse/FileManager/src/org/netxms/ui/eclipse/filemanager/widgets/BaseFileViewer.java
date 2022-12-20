@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
@@ -30,6 +32,8 @@ import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -82,6 +86,8 @@ public class BaseFileViewer extends Composite
    private int lineCountLimit = 0;
    protected StringBuilder content = new StringBuilder();
    protected LineStyler lineStyler = null;
+   protected Pattern appendFilter = null;
+   protected String lineRemainder = null;
 
    /**
     * Create file viewer
@@ -172,7 +178,7 @@ public class BaseFileViewer extends Composite
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       text.setLayoutData(fd);
-      
+
       text.addLineStyleListener(new LineStyleListener() {
          @Override
          public void lineGetStyle(LineStyleEvent event)
@@ -188,7 +194,7 @@ public class BaseFileViewer extends Composite
             }
             catch(Exception e)
             {
-               // TODO: log
+               Activator.logError("Exception in line style listener", e);
             }
          }
       });
@@ -203,7 +209,7 @@ public class BaseFileViewer extends Composite
       layout.numColumns = 3;
       searchBar.setLayout(layout);
       searchBar.setVisible(false);
-      
+
       separator = new Label(searchBar, SWT.SEPARATOR | SWT.HORIZONTAL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -329,8 +335,17 @@ public class BaseFileViewer extends Composite
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       searchBar.setLayoutData(fd);
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (lineStyler != null)
+               lineStyler.dispose();
+         }
+      });
    }
-   
+
    /**
     * Show local file in viewer
     *
@@ -496,6 +511,31 @@ public class BaseFileViewer extends Composite
    }
 
    /**
+    * Set append filter.
+    *
+    * @param regex regular expression that define matching lines
+    */
+   public void setAppendFilter(String regex)
+   {
+      if ((regex != null) && !regex.isEmpty())
+      {
+         try
+         {
+            appendFilter = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+         }
+         catch(PatternSyntaxException e)
+         {
+            Activator.logError("Syntax error in file viewer append filter (regex=\"" + regex + "\")", e);
+            appendFilter = null;
+         }
+      }
+      else
+      {
+         appendFilter = null;
+      }
+   }
+
+   /**
     * @return
     */
    public Control getTextControl()
@@ -528,7 +568,8 @@ public class BaseFileViewer extends Composite
     */
    protected void setContent(String s)
    {
-      String ps = removeEscapeSequences(s);
+      lineRemainder = null;
+      String ps = filterText(removeEscapeSequences(s));
       text.setText(ps);
       content = new StringBuilder();
       content.append(ps.toLowerCase());
@@ -549,7 +590,7 @@ public class BaseFileViewer extends Composite
     */
    protected void append(String s)
    {
-      String ps = removeEscapeSequences(s);
+      String ps = filterText(removeEscapeSequences(s));
       content.append(ps.toLowerCase());
       text.append(ps);
 
@@ -568,6 +609,43 @@ public class BaseFileViewer extends Composite
       {
          text.setTopIndex(text.getLineCount() - 1);
       }
+   }
+
+   /**
+    * Filter text using append filter
+    * 
+    * @param text text to filter
+    * @return filtered text
+    */
+   private String filterText(String text)
+   {
+      if (appendFilter == null)
+         return text;
+
+      StringBuilder sb = new StringBuilder();
+      if (lineRemainder != null)
+      {
+         sb.append(lineRemainder);
+         lineRemainder = null;
+      }
+      sb.append(text);
+
+      StringBuilder output = new StringBuilder();
+      int offset = 0;
+      while(offset < sb.length())
+      {
+         int nextOffset = sb.indexOf("\n", offset);
+         if (nextOffset == -1)
+         {
+            lineRemainder = sb.substring(offset);
+            break;
+         }
+         String line = sb.substring(offset, nextOffset + 1);
+         if (appendFilter.matcher(line).find())
+            output.append(line);
+         offset = nextOffset + 1;
+      }
+      return output.toString();
    }
 
    /**
