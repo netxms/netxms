@@ -24,8 +24,9 @@
  * Host connection constructor
  */
 HostConnections::HostConnections(const TCHAR *name, const char *url, const char *login, const char *password) :
-      m_vmInfo(Ownership::True), m_vmXMLs(Ownership::True), m_networkXMLs(Ownership::True), m_storageInfo(Ownership::True),
-      m_domains(false), m_iface(false), m_networks(false), m_storages(false)
+      m_domains(false), m_iface(false), m_networks(false), m_storages(false), m_vmInfo(Ownership::True),
+      m_vmXMLs(Ownership::True), m_networkXMLs(Ownership::True), m_storageInfo(Ownership::True)
+
 {
    m_connection = nullptr;
    m_name = MemCopyString(name);

@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.views;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -73,6 +74,8 @@ public abstract class View implements MessageAreaHolder
    private ISelectionProvider viewer;
    private Set<ViewStateListener> stateListeners = new HashSet<ViewStateListener>();
    private KeyBindingManager keyBindingManager = new KeyBindingManager();
+   private View originalView;
+
 
    /**
     * Create new view with specific base ID. Actual view ID will be derived from base ID, possibly by classes derived from base view
@@ -142,7 +145,9 @@ public abstract class View implements MessageAreaHolder
    {
       try
       {
-         View view = getClass().getDeclaredConstructor().newInstance();
+         Constructor<? extends View> constructor = getClass().getDeclaredConstructor();
+         constructor.setAccessible(true);
+         View view = constructor.newInstance();
          view.baseId = baseId;
          view.name = name;
          view.imageDescriptor = imageDescriptor;
@@ -150,6 +155,7 @@ public abstract class View implements MessageAreaHolder
          view.showFilterTooltip = showFilterTooltip;
          view.showFilterLabel = showFilterLabel;
          view.filterEnabled = filterEnabled;
+         view.originalView = this;
          return view;
       }
       catch(Exception e)
@@ -157,6 +163,13 @@ public abstract class View implements MessageAreaHolder
          logger.error("Cannot clone view", e);
          return null;
       }
+   }
+
+   /**
+    * Default post clone option
+    */
+   protected void postClone(View view)
+   {      
    }
 
    /**
@@ -193,7 +206,16 @@ public abstract class View implements MessageAreaHolder
       clientArea = new Composite(viewArea, SWT.NONE);
       clientArea.setLayout(new FillLayout());
       createContent(clientArea);
-      postContentCreate();
+      
+      if (originalView != null)
+      {
+         postClone(originalView);
+         originalView = null;
+      }
+      else
+      {
+         postContentCreate();
+      }
 
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);

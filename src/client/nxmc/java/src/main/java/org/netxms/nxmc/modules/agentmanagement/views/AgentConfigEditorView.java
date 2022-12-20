@@ -31,6 +31,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SaveConfigDialog;
@@ -65,6 +66,39 @@ public class AgentConfigEditorView extends AdHocObjectView
       super(i18n.tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfig", node.getObjectId(), false);
       session = Registry.getSession();
       nodeId = node.getObjectId();
+   }
+
+   /**
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
+    */
+   protected AgentConfigEditorView()
+   {
+      super(null, null, null, 0, false); 
+      session = Registry.getSession(); 
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      AgentConfigEditorView view = (AgentConfigEditorView)super.cloneView();
+      view.nodeId = nodeId;
+      return view;
+   }   
+
+   /**
+    * Post clone action
+    */
+   protected void postClone(View origin)
+   {      
+      AgentConfigEditorView view = (AgentConfigEditorView)origin;
+      editor.setText(view.editor.getText());
+      modified = view.modified;
+      actionSave.setEnabled(view.actionSave.isEnabled());
    }
 
    /**

@@ -54,6 +54,7 @@ import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -97,6 +98,41 @@ public class ScreenshotView extends AdHocObjectView
       this.userSession = userSession;
       this.userName = userName;
       session = Registry.getSession();
+   }
+
+   /**
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
+    */
+   protected ScreenshotView()
+   {
+      super(null, null, null, 0, false);
+      session = Registry.getSession();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ScreenshotView view = (ScreenshotView)super.cloneView();
+      userSession = view.userSession;
+      userName = view.userName;
+      image = view.image;
+      errorMessage = view.errorMessage;
+      imageInfo = view.imageInfo;
+      lastRequestTime = view.lastRequestTime;
+      return view;
+   }   
+
+   /**
+    * Post clone action
+    */
+   protected void postClone(View origin)
+   {      
+      canvas.redraw();
    }
 
    /**

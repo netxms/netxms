@@ -34,6 +34,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.StyledText;
 import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 import org.netxms.nxmc.localization.DateFormatFactory;
@@ -90,6 +91,42 @@ public class ObjectPollerView extends AdHocObjectView
 
       target = (PollingTarget)object;
       pollType = type;
+   }
+   
+   /**
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
+    */
+   protected ObjectPollerView()
+   {
+      super(null, null, null, 0, false);
+      session = Registry.getSession();
+      display = Display.getCurrent();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ObjectPollerView view = (ObjectPollerView)super.cloneView();
+      view.target = target;
+      view.pollType = pollType;
+      return view;
+   }   
+
+   /**
+    * Post clone action
+    */
+   protected void postClone(View origin)
+   {      
+      ObjectPollerView view = (ObjectPollerView)origin;
+      textArea.setText(view.textArea.getText());
+      textArea.setStyleRanges(view.textArea.getStyleRanges());
+      textArea.setCaretOffset(view.textArea.getCaretOffset());
+      textArea.setTopIndex(view.textArea.getTopIndex());
    }
 
    /**
