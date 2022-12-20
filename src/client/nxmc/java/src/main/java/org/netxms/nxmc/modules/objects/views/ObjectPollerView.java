@@ -94,9 +94,7 @@ public class ObjectPollerView extends AdHocObjectView
    }
    
    /**
-    * Create agent configuration editor for given node.
-    *
-    * @param node node object
+    * Default constructor
     */
    protected ObjectPollerView()
    {
@@ -118,15 +116,13 @@ public class ObjectPollerView extends AdHocObjectView
    }   
 
    /**
-    * Post clone action
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
+   @Override
    protected void postClone(View origin)
-   {      
-      ObjectPollerView view = (ObjectPollerView)origin;
-      textArea.setText(view.textArea.getText());
-      textArea.setStyleRanges(view.textArea.getStyleRanges());
-      textArea.setCaretOffset(view.textArea.getCaretOffset());
-      textArea.setTopIndex(view.textArea.getTopIndex());
+   {
+      super.postClone(origin);
+      textArea.replaceContent(((ObjectPollerView)origin).textArea);
    }
 
    /**

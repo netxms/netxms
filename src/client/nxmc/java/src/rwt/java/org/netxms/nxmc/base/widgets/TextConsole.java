@@ -456,4 +456,24 @@ public class TextConsole extends Composite implements LineStyleListener
          }
       }
    }
+
+   /**
+    * Get text in console
+    * 
+    * @return console text
+    */
+   public String getText()
+   {
+      return console.getText();
+   }
+
+   /**
+    * Set text in console
+    * 
+    * @param text test to set
+    */
+   public void setText(String text)
+   {
+      console.setText(text);
+   }
 }

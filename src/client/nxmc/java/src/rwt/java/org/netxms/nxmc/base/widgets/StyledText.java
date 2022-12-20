@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2022 RadenSolutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.widgets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -118,6 +119,8 @@ public class StyledText extends Composite
     */
    public void replaceTextRange(int start, int length, String text)
    {
+      checkWidget();
+
       if (start >= content.length())
          return;
 
@@ -321,6 +324,21 @@ public class StyledText extends Composite
 
       if (!success)
          refreshTimer.execute();
+   }
+
+   /**
+    * Replace content (including all styling) with one from given source styled text control
+    * 
+    * @param src source styled text control
+    */
+   public void replaceContent(StyledText src)
+   {
+      styleRanges = new HashMap<>(src.styleRanges);
+      lineOffsets = new ArrayList<>(src.lineOffsets);
+      content = new StringBuilder(src.content);
+      writePosition = src.writePosition;
+      refreshContent = true;
+      refreshTimer.execute();
    }
 
    /**

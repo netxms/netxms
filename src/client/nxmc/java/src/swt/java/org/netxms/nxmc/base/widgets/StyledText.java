@@ -33,6 +33,19 @@ public class StyledText extends org.eclipse.swt.custom.StyledText
    }
 
    /**
+    * Replace content (including all styling) with one from given source styled text control
+    * 
+    * @param src source styled text control
+    */
+   public void replaceContent(StyledText src)
+   {
+      setText(src.getText());
+      setStyleRanges(src.getStyleRanges());
+      setCaretOffset(src.getCaretOffset());
+      setTopIndex(src.getTopIndex());
+   }
+
+   /**
     * Scroll content to bottom
     */
    public void scrollToBottom()

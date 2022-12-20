@@ -120,15 +120,18 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
    }    
 
    /**
-    * Post clone action
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
+   @Override
    protected void postClone(View origin)
-   {      
+   {
+      super.postClone(origin);
+
       ScriptExecutorView view = (ScriptExecutorView)origin;
       scriptName.setText(view.scriptName.getText());      
       parametersField.setText(view.parametersField.getText());
       output.setText(view.output.getText());
-      
+
       Runnable run = new Runnable() {
          @Override
          public void run()
