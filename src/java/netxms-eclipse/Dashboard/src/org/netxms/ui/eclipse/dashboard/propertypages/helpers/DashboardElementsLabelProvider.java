@@ -64,7 +64,8 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
       "Object query",
       "Port view",
       "Scripted bar chart",
-      "Scripted pie chart"
+      "Scripted pie chart",
+      "File monitor"
 	};
 
    /**

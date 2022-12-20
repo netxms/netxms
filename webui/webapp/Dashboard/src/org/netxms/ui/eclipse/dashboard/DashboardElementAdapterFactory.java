@@ -27,6 +27,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EventMonitorConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.FileMonitorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LabelConfig;
@@ -93,6 +94,8 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 				      return SnmpTrapMonitorConfig.createFromXml(element.getData());
 				   case DashboardElement.EVENT_MONITOR:
 				      return EventMonitorConfig.createFromXml(element.getData());
+               case DashboardElement.FILE_MONITOR:
+                  return FileMonitorConfig.createFromXml(element.getData());
 					case DashboardElement.ALARM_VIEWER:
 						return AlarmViewerConfig.createFromXml(element.getData());
 					case DashboardElement.BAR_CHART:

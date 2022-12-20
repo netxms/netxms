@@ -178,6 +178,9 @@ public class DashboardControl extends Composite
          case DashboardElement.EVENT_MONITOR:
             w = new EventMonitorElement(this, e, viewPart);
             break;
+         case DashboardElement.FILE_MONITOR:
+            w = new FileMonitorElement(this, e, viewPart);
+            break;
          case DashboardElement.GEO_MAP:
          	w = new GeoMapElement(this, e, viewPart);
          	break;
