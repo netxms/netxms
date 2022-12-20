@@ -57,6 +57,7 @@ public class DashboardElement
    public static final int PORT_VIEW = 29;
    public static final int SCRIPTED_BAR_CHART = 30;
    public static final int SCRIPTED_PIE_CHART = 31;
+   public static final int FILE_MONITOR = 32;
 
 	public static final int FILL = 0;
 	public static final int CENTER = 1;
