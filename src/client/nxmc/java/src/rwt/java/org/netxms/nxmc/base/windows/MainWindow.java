@@ -19,6 +19,7 @@
 package org.netxms.nxmc.base.windows;
 
 import java.util.List;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
@@ -57,6 +58,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.menus.HelpMenuManager;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
@@ -96,6 +98,8 @@ public class MainWindow extends Window implements MessageAreaHolder
    private ServerClock serverClock;
    private HeaderButton userMenuButton;
    private UserMenuManager userMenuManager;
+   private HeaderButton helpMenuButton;
+   private HelpMenuManager helpMenuManager;
 
    /**
     * @param parentShell
@@ -107,6 +111,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       verticalLayout = ps.getAsBoolean("Appearance.VerticalLayout", true);
       showServerClock = ps.getAsBoolean("Appearance.ShowServerClock", false);
       userMenuManager = new UserMenuManager();
+      helpMenuManager = new HelpMenuManager();
    }
 
    /**
@@ -240,7 +245,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          public void run()
          {
             Rectangle bounds = userMenuButton.getBounds();
-            showUserMenu(headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
+            showMenu(userMenuManager, headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
          }
       });
 
@@ -261,11 +266,20 @@ public class MainWindow extends Window implements MessageAreaHolder
          }
       });
 
-      new HeaderButton(headerArea, "icons/main-window/help.png", i18n.tr("Open user manual"), new Runnable() {
+      helpMenuButton = new HeaderButton(headerArea, "icons/main-window/help.png", 
+            BrandingManager.isExtendedHelpMenuEnabled() ? i18n.tr("Help") : i18n.tr("Open user manual"), new Runnable() {
          @Override
          public void run()
          {
-            ExternalWebBrowser.open("https://netxms.org/documentation/adminguide/");
+            if (BrandingManager.isExtendedHelpMenuEnabled())
+            {
+               Rectangle bounds = helpMenuButton.getBounds();
+               showMenu(helpMenuManager, headerArea.toDisplay(new Point(bounds.x, bounds.y + bounds.height + 2)));
+            }
+            else
+            {
+               ExternalWebBrowser.open(BrandingManager.getAdministratorGuideURL());
+            }
          }
       });
 
@@ -545,13 +559,13 @@ public class MainWindow extends Window implements MessageAreaHolder
    }
 
    /**
-    * Show user menu at given location.
+    * Show menu at given location.
     *
     * @param location location to show menu at
     */
-   private void showUserMenu(Point location)
+   private void showMenu(MenuManager menuManager, Point location)
    {
-      Menu menu = userMenuManager.createContextMenu(getShell());
+      Menu menu = menuManager.createContextMenu(getShell());
       menu.setLocation(location);
       menu.setVisible(true);
    }

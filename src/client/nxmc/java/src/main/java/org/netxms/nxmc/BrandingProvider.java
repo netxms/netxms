@@ -91,4 +91,18 @@ public interface BrandingProvider
     * @return custom "About" dialog or null to use default
     */
    public Dialog createAboutDialog(Shell parentShell);
+
+   /**
+    * Get URL of administrator guide.
+    *
+    * @return URL of administrator guide or null to use default
+    */
+   public String getAdministratorGuideURL();
+
+   /**
+    * Control if extended help menu (with support options, etc.) is enabled.
+    *
+    * @return true if extended help menu is enabled, false if disabled, or null to leave decision to other providers
+    */
+   public Boolean isExtendedHelpMenuEnabled();
 }

@@ -42,7 +42,8 @@ public class UserMenuManager extends MenuManager
 {
    private static final Logger logger = LoggerFactory.getLogger(UserMenuManager.class);
 
-   private I18n i18n = LocalizationHelper.getI18n(UserMenuManager.class);
+   private final I18n i18n = LocalizationHelper.getI18n(UserMenuManager.class);
+
    private Action actionChangePassword;
    private Action actionLogout;
 
