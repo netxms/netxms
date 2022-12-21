@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
@@ -29,7 +27,6 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.FileMonitorConfig;
 import org.netxms.ui.eclipse.filemanager.widgets.DynamicFileViewer;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.jobs.ConsoleJobCallingServerJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.slf4j.Logger;
@@ -75,17 +72,18 @@ public class FileMonitorElement extends ElementWidget
       viewer.setLineCountLimit(config.getHistoryLimit());
       viewer.setAppendFilter(config.getFilter());
 
-      new ConsoleJobCallingServerJob(String.format("Starting monitor for file \"%s\"", config.getFileName()), viewPart, Activator.PLUGIN_ID) {
+      final long nodeId = getEffectiveObjectId(config.getObjectId());
+      new ConsoleJobCallingServerJob(String.format("Starting monitor for file \"%s\" on node \"%s\"", config.getFileName(), session.getObjectName(nodeId)), viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            file = session.downloadFileFromAgent(config.getObjectId(), config.getFileName(), 1024, true, null, this);
+            file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null, this);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
                   viewer.showFile(file.getFile(), true);
-                  viewer.startTracking(config.getObjectId(), file.getId(), file.getRemoteName());
+                  viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
                }
             });
          }
@@ -93,39 +91,8 @@ public class FileMonitorElement extends ElementWidget
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Error downloading file %s from node %s", config.getFileName(), session.getObjectName(config.getObjectId()));
+            return String.format("Error downloading file %s from node %s", config.getFileName(), session.getObjectName(nodeId));
          }
       }.start();
-
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            stop();
-         }
-      });
-   }
-
-   /**
-    * Stop file monitoring
-    */
-   private void stop()
-   {
-      final ConsoleJob job = new ConsoleJob("Stopping file monitor", null, Activator.PLUGIN_ID) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            session.cancelFileMonitoring(config.getObjectId(), file.getId());
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot stop file monitor";
-         }
-      };
-      job.setUser(false);
-      job.setSystem(true);
-      job.start();
    }
 }

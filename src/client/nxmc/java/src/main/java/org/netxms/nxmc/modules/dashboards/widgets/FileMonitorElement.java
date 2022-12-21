@@ -20,13 +20,10 @@ package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.FileMonitorConfig;
@@ -78,17 +75,18 @@ public class FileMonitorElement extends ElementWidget
       viewer.setLineCountLimit(config.getHistoryLimit());
       viewer.setAppendFilter(config.getFilter());
 
-      new JobCallingServerJob(String.format(i18n.tr("Starting monitor for file \"%s\""), config.getFileName()), view, this) {
+      final long nodeId = getEffectiveObjectId(config.getObjectId());
+      new JobCallingServerJob(i18n.tr("Starting monitor for file \"{0}\" on node \"{1}\"", config.getFileName(), session.getObjectName(nodeId)), view, this) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
-            file = session.downloadFileFromAgent(config.getObjectId(), config.getFileName(), 1024, true, null, this);
+            file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null, this);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
                   viewer.showFile(file.getFile(), true);
-                  viewer.startTracking(config.getObjectId(), file.getId(), file.getRemoteName());
+                  viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
                }
             });
          }
@@ -96,39 +94,8 @@ public class FileMonitorElement extends ElementWidget
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Error downloading file %s from node %s"), config.getFileName(), session.getObjectName(config.getObjectId()));
+            return i18n.tr("Error downloading file \"{0}\" from node \"{1}\"", config.getFileName(), session.getObjectName(nodeId));
          }
       }.start();
-
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            stop();
-         }
-      });
-   }
-
-   /**
-    * Stop file monitoring
-    */
-   private void stop()
-   {
-      final Job job = new Job(i18n.tr("Stopping file monitor"), null) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            session.cancelFileMonitoring(config.getObjectId(), file.getId());
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot stop file monitor");
-         }
-      };
-      job.setUser(false);
-      job.setSystem(true);
-      job.start();
    }
 }
