@@ -111,7 +111,7 @@ public class DynamicFileViewer extends BaseFileViewer
       this.remoteFileName = remoteFileName;
 
       setTextTopIndex();
-      monitoringJob = new Job(i18n.tr("Track file changes"), view) {
+      monitoringJob = new Job(i18n.tr("Monitoring changes in file {0} on node {1}", remoteFileName, session.getObjectName(nodeId)), view) {
          private boolean tracking = true;
 
          @Override
@@ -123,6 +123,7 @@ public class DynamicFileViewer extends BaseFileViewer
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
+            logger.debug(String.format("Starting monitor for file %s (id=%s) on node %s", remoteFileName, fileId, session.getObjectName(nodeId)));
             while(tracking)
             {
                final String s = session.waitForFileTail(fileId, 3000);
@@ -144,20 +145,22 @@ public class DynamicFileViewer extends BaseFileViewer
                   });
                }
             }
+
+            logger.debug(String.format("Stopping monitor for file %s (id=%s) on node %s", remoteFileName, fileId, session.getObjectName(nodeId)));
             try
             {
                session.cancelFileMonitoring(nodeId, fileId);
             }
             catch(Exception e)
             {
-               logger.warn(String.format("Cannot cancel file monitoring node id: %d, file id: %s", nodeId, fileId), e);
+               logger.warn(String.format("Cannot cancel monitoring of file %s (id=%s) on node %s", remoteFileName, fileId, session.getObjectName(nodeId)), e);
             }
          }
 
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("File tracking failed");
+            return i18n.tr("Cannot start monitor for file {0} on node {1}", remoteFileName, session.getObjectName(nodeId));
          }
       };
       monitoringJob.setUser(false);
@@ -175,7 +178,7 @@ public class DynamicFileViewer extends BaseFileViewer
          restartJob.cancel();
          restartJob = null;
       }
-      
+
       if (monitoringJob != null)
       {
          monitoringJob.cancel();
@@ -184,7 +187,7 @@ public class DynamicFileViewer extends BaseFileViewer
          nodeId = 0;
       }
    }
-   
+
    /**
     * Restart tracking after failure
     */
@@ -195,7 +198,7 @@ public class DynamicFileViewer extends BaseFileViewer
          monitoringJob.cancel();
          monitoringJob = null;
       }
-      
+
       if (restartJob != null)
          restartJob.cancel();
 
