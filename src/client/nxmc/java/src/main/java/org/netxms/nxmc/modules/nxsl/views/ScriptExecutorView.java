@@ -47,6 +47,7 @@ import org.netxms.client.Script;
 import org.netxms.client.TextOutputListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -94,7 +95,54 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
       super(i18n.tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, false);
       this.objectId = objectId;
       session = Registry.getSession();
-   }   
+   }  
+
+   /**
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
+    */
+   protected ScriptExecutorView()
+   {
+      super(null, null, null, 0, false);  
+      session = Registry.getSession();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ScriptExecutorView view = (ScriptExecutorView)super.cloneView();
+      view.objectId = objectId;
+      return view;
+   }    
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View origin)
+   {
+      super.postClone(origin);
+
+      ScriptExecutorView view = (ScriptExecutorView)origin;
+      scriptName.setText(view.scriptName.getText());      
+      parametersField.setText(view.parametersField.getText());
+      output.setText(view.output.getText());
+
+      Runnable run = new Runnable() {
+         @Override
+         public void run()
+         {
+            scriptCombo.select(view.scriptCombo.getSelectionIndex());
+            scriptEditor.setText(view.scriptEditor.getText());
+            actionSave.setEnabled(view.actionSave.isEnabled());        
+         }
+      };
+      updateScriptList(run);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -114,7 +162,6 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
 
       /**** Script list dropdown ****/
       scriptCombo = WidgetHelper.createLabeledCombo(formContainer, SWT.READ_ONLY, i18n.tr("Script from library"), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      updateScriptList(null); 
       scriptCombo.addSelectionListener( new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -203,6 +250,16 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
       createActions();
 
       actionSave.setEnabled(false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();   
+      updateScriptList(null);
    }
 
    /**

@@ -182,4 +182,36 @@ public final class BrandingManager
 		}
       return new AboutDialog(parentShell);
 	}
+
+   /**
+    * Get URL of administrator guide.
+    *
+    * @return URL of administrator guide
+    */
+   public static String getAdministratorGuideURL()
+   {
+      for(BrandingProvider p : providers)
+      {
+         String url = p.getAdministratorGuideURL();
+         if (url != null)
+            return url;
+      }
+      return "https://netxms.org/documentation/adminguide/";
+   }
+
+   /**
+    * Control if extended help menu (with support options, etc.) is enabled.
+    *
+    * @return true if extended help menu is enabled
+    */
+   public static boolean isExtendedHelpMenuEnabled()
+   {
+      for(BrandingProvider p : providers)
+      {
+         Boolean enabled = p.isExtendedHelpMenuEnabled();
+         if (enabled != null)
+            return enabled;
+      }
+      return true;
+   }
 }

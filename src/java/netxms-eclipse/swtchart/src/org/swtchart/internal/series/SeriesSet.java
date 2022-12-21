@@ -464,7 +464,7 @@ public class SeriesSet implements ISeriesSet
          {
             if (!series.isStackEnabled())
                continue;
-            
+
             double[] ySeries = new double[combinedTimeSeries.size()];
             int combinedIndex = 0;
             double lastValue = 0;
@@ -494,15 +494,15 @@ public class SeriesSet implements ISeriesSet
             }
             while(combinedIndex < ySeries.length)
                ySeries[combinedIndex++] = lastValue;
-            
+
             series.setXDateSeries(combinedTimeSeries.toArray(new Date[combinedTimeSeries.size()]));
             series.setYSeries(ySeries);
          }            
-         
+
          stackLineSeries = new double[combinedTimeSeries.size()];
          invertedStackLineSeries = new double[combinedTimeSeries.size()];
       }
-         
+
       for(ISeries series : getSeries())
       {
          if (series.getXAxisId() != xAxis.getId() || series.getYAxisId() != yAxis.getId() || !series.isVisible())

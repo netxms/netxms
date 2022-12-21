@@ -21,14 +21,13 @@ package org.netxms.nxmc.base.widgets;
 import java.util.LinkedList;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.DiffMatchPatch.Diff;
+import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 
 /**
  * Generic diff viewer

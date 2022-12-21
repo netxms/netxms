@@ -298,9 +298,10 @@ public class LogViewer extends View
 	}
 
    /**
-    * @param manager
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
     */
-   protected void fillLocalToolbar(IToolBarManager manager)
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
 	{
       manager.add(actionExecute);
       manager.add(actionGetMoreData);

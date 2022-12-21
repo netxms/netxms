@@ -64,6 +64,8 @@ import org.netxms.nxmc.modules.dashboards.dialogs.EditElementXmlDlg;
 import org.netxms.nxmc.modules.objects.propertypages.helpers.DashboardElementsLabelProvider;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -71,7 +73,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DashboardElements extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(DashboardElements.class);
+   private static final Logger logger = LoggerFactory.getLogger(DashboardElements.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(DashboardElements.class);
 
 	public static final int COLUMN_TYPE = 0;
 	public static final int COLUMN_SPAN = 1;
@@ -397,6 +400,7 @@ public class DashboardElements extends ObjectPropertyPage
 			catch(Exception e)
 			{
             MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Internal error (%s)"), e.getLocalizedMessage()));
+            logger.error("Internal error while opening dashboard element configuration editor", e);
 			}
 		}
 		else

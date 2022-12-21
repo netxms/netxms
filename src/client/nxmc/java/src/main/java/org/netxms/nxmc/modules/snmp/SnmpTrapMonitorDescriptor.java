@@ -16,28 +16,41 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.events;
+package org.netxms.nxmc.modules.snmp;
 
 import org.netxms.nxmc.base.views.AbstractTraceView;
-import org.netxms.nxmc.modules.events.views.SyslogMonitor;
-import org.netxms.nxmc.services.MonitorPerspectiveElement;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.snmp.views.SnmpTrapMonitor;
+import org.netxms.nxmc.services.MonitorDescriptor;
+import org.xnap.commons.i18n.I18n;
 
 /**
- * Registration for syslog monitor view
+ * Registration for SNMP trap monitor view
  */
-public class SyslogMonitorRegistration implements MonitorPerspectiveElement
+public class SnmpTrapMonitorDescriptor implements MonitorDescriptor
 {
+   private final I18n i18n = LocalizationHelper.getI18n(SnmpTrapMonitorDescriptor.class);
+
    /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#createView()
+    * @see org.netxms.nxmc.services.MonitorDescriptor#createView()
     */
    @Override
    public AbstractTraceView createView()
    {
-      return new SyslogMonitor();
+      return new SnmpTrapMonitor();
    }
 
    /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#getRequiredComponentId()
+    * @see org.netxms.nxmc.services.MonitorDescriptor#getDisplayName()
+    */
+   @Override
+   public String getDisplayName()
+   {
+      return i18n.tr("SNMP Traps");
+   }
+
+   /**
+    * @see org.netxms.nxmc.services.MonitorDescriptor#getRequiredComponentId()
     */
    @Override
    public String getRequiredComponentId()

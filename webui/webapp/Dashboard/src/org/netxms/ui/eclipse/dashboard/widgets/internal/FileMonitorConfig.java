@@ -16,36 +16,48 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.dashboards.config;
+package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
-import org.netxms.nxmc.modules.dashboards.dialogs.helpers.ObjectIdMatchingData;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Configuration for event monitor
+ * Configuration for file monitor
  */
-public class EventMonitorConfig extends DashboardElementConfig
+public class FileMonitorConfig extends DashboardElementConfig
 {
    @Element(required = true)
    private long objectId = 0;
 
+   @Element(required = false)
+   private String fileName = "";
+
+   @Element(required = false)
+   private int historyLimit = 1000;
+
+   @Element(required = false)
+   private String filter = null;
+
+   @Element(required = false)
+   private String syntaxHighlighter = null;
+
    /**
-    * Create event monitor configuration object from XML document
+    * Create file monitor configuration object from XML document
     * 
     * @param xml XML document
     * @return deserialized object
     * @throws Exception if the object cannot be fully deserialized
     */
-   public static EventMonitorConfig createFromXml(final String xml) throws Exception
+   public static FileMonitorConfig createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(EventMonitorConfig.class, xml);
+      return serializer.read(FileMonitorConfig.class, xml);
    }
 
    /**
@@ -97,5 +109,69 @@ public class EventMonitorConfig extends DashboardElementConfig
    public void setObjectId(long objectId)
    {
       this.objectId = objectId;
+   }
+
+   /**
+    * @return the fileName
+    */
+   public String getFileName()
+   {
+      return fileName;
+   }
+
+   /**
+    * @param fileName the fileName to set
+    */
+   public void setFileName(String fileName)
+   {
+      this.fileName = fileName;
+   }
+
+   /**
+    * @return the historyLimit
+    */
+   public int getHistoryLimit()
+   {
+      return historyLimit;
+   }
+
+   /**
+    * @param historyLimit the historyLimit to set
+    */
+   public void setHistoryLimit(int historyLimit)
+   {
+      this.historyLimit = historyLimit;
+   }
+
+   /**
+    * @return the filter
+    */
+   public String getFilter()
+   {
+      return (filter != null) ? filter : "";
+   }
+
+   /**
+    * @param filter the filter to set
+    */
+   public void setFilter(String filter)
+   {
+      this.filter = ((filter == null) || filter.isBlank()) ? null : filter;
+   }
+
+   /**
+    * @return the syntaxHighlighter
+    */
+   public String getSyntaxHighlighter()
+   {
+      return (syntaxHighlighter != null) ? syntaxHighlighter : "";
+   }
+
+   /**
+    * @param syntaxHighlighter the syntaxHighlighter to set
+    */
+   public void setSyntaxHighlighter(String syntaxHighlighter)
+   {
+      this.syntaxHighlighter = ((syntaxHighlighter == null) || syntaxHighlighter.isBlank()) ? null : syntaxHighlighter;
    }
 }

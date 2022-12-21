@@ -33,19 +33,21 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.TableRow;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogRecordDetails;
 import org.netxms.nxmc.localization.DateFormatFactory;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for displaying windows event log record details
@@ -53,7 +55,9 @@ import org.slf4j.LoggerFactory;
 public class WindowsEventLogRecordDetailsDialog extends Dialog
 {
    private static final Logger logger = LoggerFactory.getLogger(WindowsEventLogRecordDetailsDialog.class);
-   
+
+   private final I18n i18n = LocalizationHelper.getI18n(WindowsEventLogRecordDetailsDialog.class);
+
    private LogRecordDetails data;
    private CTabFolder tabFolder;
    private TableRow record;
@@ -82,7 +86,7 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Windows Event Log Record Details");
+      newShell.setText(i18n.tr("Windows Event Log Record Details"));
    }
 
    /**
@@ -100,7 +104,7 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
    @Override
    protected void createButtonsForButtonBar(Composite parent)
    {
-      createButton(parent, IDialogConstants.OK_ID, "Close", true);
+      createButton(parent, IDialogConstants.OK_ID, i18n.tr("Close"), true);
    }
    
    /**
@@ -118,7 +122,7 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
 
       tabFolder = new CTabFolder(dialogArea, SWT.BORDER);
       tabFolder.setTabHeight(24);
-      tabFolder.setSelectionBarThickness(0);
+      WidgetHelper.disableTabFolderSelectionBar(tabFolder);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -128,45 +132,50 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
       gd.heightHint = 500;
       tabFolder.setLayoutData(gd);
       
-      createInformationTab("General");      
-      String rawData = data.getValue("raw_data");
-      createTextValueTab("Details", formatXML(rawData));      
+      createInformationTab();
+      createDetailsTab(data.getValue("raw_data"));
       tabFolder.setSelection(0);
 
       return dialogArea;
    }
    
-   private String formatXML(String text)
+   /**
+    * Format XML document for display.
+    *
+    * @param xmlDocument original XML document
+    * @return formatted XML document
+    */
+   private static String formatXML(String xmlDocument)
    {
-      String result = "";
-      try {
+      String result;
+      try
+      {
          StringWriter stringWriter = new StringWriter();
          StreamResult xmlOutput = new StreamResult(stringWriter);
          TransformerFactory transformerFactory = TransformerFactory.newInstance();
          transformerFactory.setAttribute("indent-number", 3);
-         Transformer transformer = transformerFactory.newTransformer(); 
+         Transformer transformer = transformerFactory.newTransformer();
          transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-         transformer.transform(new StreamSource(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))), xmlOutput);
+         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+         transformer.transform(new StreamSource(new ByteArrayInputStream(xmlDocument.getBytes(StandardCharsets.UTF_8))), xmlOutput);
          result = xmlOutput.getWriter().toString();
-     } catch (Exception e) {
-        logger.warn("Cannot format XML", e);
-        logger.debug("Source XML: " + text);
-        result = text;
-     }
-     return result;
+      }
+      catch(Exception e)
+      {
+         logger.warn("Cannot format XML", e);
+         logger.debug("Source XML: " + xmlDocument);
+         result = xmlDocument;
+      }
+      return result;
    }
 
    /**
-    * Create tab with main informaiton
-    * 
-    * @param string
-    * @param data2
+    * Create tab with main information
     */
-   private void createInformationTab(String name)
+   private void createInformationTab()
    {
-      CTabItem tab = createTab(name);
-      
+      CTabItem tab = createTab(i18n.tr("General"));
+
       Composite dialogArea = new Composite(tabFolder, SWT.NONE);
 
       GridLayout layout = new GridLayout();
@@ -177,7 +186,7 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
       
-      StyledText textControl = new StyledText(dialogArea, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.WRAP);
+      Text textControl = new Text(dialogArea, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.WRAP);
       textControl.setFont(JFaceResources.getTextFont());
       textControl.setText(record.get(logHandle.getColumnIndex("message")).getValue());
       GridData gd = new GridData();
@@ -215,19 +224,16 @@ public class WindowsEventLogRecordDetailsDialog extends Dialog
    }
 
    /**
-    * Create text value tab
+    * Create details tab
     * 
-    * @param name
-    * @param imageName
-    * @param text
+    * @param xmlDocument event's XML
     */
-   private void createTextValueTab(String name, String text)
+   private void createDetailsTab(String xmlDocument)
    {
-      CTabItem tab = createTab(name);
-      // Use StyledText instead of Text for uniform look with "Diff" tab
-      StyledText textControl = new StyledText(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.WRAP);
+      CTabItem tab = createTab(i18n.tr("Details"));
+      Text textControl = new Text(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.READ_ONLY | SWT.WRAP);
       textControl.setFont(JFaceResources.getTextFont());
-      textControl.setText(text);
+      textControl.setText(formatXML(xmlDocument));
       tab.setControl(textControl);
    }
 

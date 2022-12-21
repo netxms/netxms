@@ -89,9 +89,10 @@ public class ElementCreationMenuManager extends MenuManager
 
       /* monitors */
       MenuManager monitorsMenu = new MenuManager(i18n.tr("M&onitors"));
-      addTypeToSelectionMenu(monitorsMenu, i18n.tr("Event monitor"), DashboardElement.EVENT_MONITOR);
-      addTypeToSelectionMenu(monitorsMenu, i18n.tr("SNMP trap monitor"), DashboardElement.SNMP_TRAP_MONITOR);
-      addTypeToSelectionMenu(monitorsMenu, i18n.tr("Syslog monitor"), DashboardElement.SYSLOG_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, i18n.tr("&Event monitor"), DashboardElement.EVENT_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, i18n.tr("&File monitor"), DashboardElement.FILE_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, i18n.tr("SNMP &trap monitor"), DashboardElement.SNMP_TRAP_MONITOR);
+      addTypeToSelectionMenu(monitorsMenu, i18n.tr("&Syslog monitor"), DashboardElement.SYSLOG_MONITOR);
       add(monitorsMenu);
 
       /* others */
@@ -105,11 +106,11 @@ public class ElementCreationMenuManager extends MenuManager
 
       /* other top level items */
       add(new Separator());
-      addTypeToSelectionMenu(this, i18n.tr("Dashboard"), DashboardElement.DASHBOARD);
-      addTypeToSelectionMenu(this, i18n.tr("Web page"), DashboardElement.WEB_PAGE);
+      addTypeToSelectionMenu(this, i18n.tr("&Dashboard"), DashboardElement.DASHBOARD);
+      addTypeToSelectionMenu(this, i18n.tr("&Web page"), DashboardElement.WEB_PAGE);
       add(new Separator());
-      addTypeToSelectionMenu(this, i18n.tr("Label"), DashboardElement.LABEL);
-      addTypeToSelectionMenu(this, i18n.tr("Separator"), DashboardElement.SEPARATOR);
+      addTypeToSelectionMenu(this, i18n.tr("&Label"), DashboardElement.LABEL);
+      addTypeToSelectionMenu(this, i18n.tr("&Separator"), DashboardElement.SEPARATOR);
    }
 
    /**
@@ -160,6 +161,7 @@ public class ElementCreationMenuManager extends MenuManager
             return DashboardControl.DEFAULT_LABEL_CONFIG;
          case DashboardElement.ALARM_VIEWER:
          case DashboardElement.EVENT_MONITOR:
+         case DashboardElement.FILE_MONITOR:
          case DashboardElement.SYSLOG_MONITOR:
          case DashboardElement.SNMP_TRAP_MONITOR:
          case DashboardElement.STATUS_INDICATOR:

@@ -16,32 +16,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.snmp;
+package org.netxms.nxmc.base.widgets.helpers;
 
-import org.netxms.nxmc.base.views.AbstractTraceView;
-import org.netxms.nxmc.modules.snmp.views.SnmpTrapMonitor;
-import org.netxms.nxmc.services.MonitorPerspectiveElement;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.TextStyle;
 
 /**
- * Registration for SNMP trap monitor view
+ * Compatibility wrapper for org.eclipse.swt.custom.StyleRange (so that web and desktop code can use same class)
  */
-public class SnmpTrapMonitorRegistration implements MonitorPerspectiveElement
+public class StyleRange extends org.eclipse.swt.custom.StyleRange
 {
-   /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#createView()
-    */
-   @Override
-   public AbstractTraceView createView()
+   public StyleRange()
    {
-      return new SnmpTrapMonitor();
+      super();
    }
 
-   /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#getRequiredComponentId()
-    */
-   @Override
-   public String getRequiredComponentId()
+   public StyleRange(int start, int length, Color foreground, Color background, int fontStyle)
    {
-      return null;
+      super(start, length, foreground, background, fontStyle);
+   }
+
+   public StyleRange(int start, int length, Color foreground, Color background)
+   {
+      super(start, length, foreground, background);
+   }
+
+   public StyleRange(TextStyle style)
+   {
+      super(style);
    }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ public class TextConsole extends Composite
    {
       viewer.addSelectionChangedListener(listener);
    }
-   
+
    /**
     * Check if copy operation is allowed
     * 
@@ -70,7 +70,7 @@ public class TextConsole extends Composite
    {
       return viewer.canDoOperation(TextConsoleViewer.COPY);
    }
-   
+
    /**
     * Copy selection to clipboard
     */
@@ -79,7 +79,7 @@ public class TextConsole extends Composite
       if (viewer.canDoOperation(TextConsoleViewer.COPY))
          viewer.doOperation(TextConsoleViewer.COPY);
    }
-   
+
    /**
     * Clear console
     */
@@ -87,7 +87,7 @@ public class TextConsole extends Composite
    {
       console.clearConsole();
    }
-   
+
    /**
     * Select all
     */
@@ -96,7 +96,7 @@ public class TextConsole extends Composite
       if (viewer.canDoOperation(TextConsoleViewer.SELECT_ALL))
          viewer.doOperation(TextConsoleViewer.SELECT_ALL);
    }
-   
+
    /**
     * @param autoScroll
     */
@@ -104,7 +104,7 @@ public class TextConsole extends Composite
    {
       viewer.setAutoScroll(autoScroll);
    }
-   
+
    /**
     * Create new output stream attached to underlying console.
     * 

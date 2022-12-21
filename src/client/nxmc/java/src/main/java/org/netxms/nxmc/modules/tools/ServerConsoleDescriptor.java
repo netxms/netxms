@@ -23,18 +23,18 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.tools.views.ServerConsole;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.services.ToolsPerspectiveElement;
+import org.netxms.nxmc.services.ToolDescriptor;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Tools perspective element for server debug console
  */
-public class ServerConsoleElement implements ToolsPerspectiveElement
+public class ServerConsoleDescriptor implements ToolDescriptor
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServerConsoleElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ServerConsoleDescriptor.class);
 
    /**
-    * @see org.netxms.nxmc.services.ToolsPerspectiveElement#getName()
+    * @see org.netxms.nxmc.services.ToolDescriptor#getName()
     */
    @Override
    public String getName()
@@ -43,7 +43,7 @@ public class ServerConsoleElement implements ToolsPerspectiveElement
    }
 
    /**
-    * @see org.netxms.nxmc.services.ToolsPerspectiveElement#getImage()
+    * @see org.netxms.nxmc.services.ToolDescriptor#getImage()
     */
    @Override
    public ImageDescriptor getImage()
@@ -52,7 +52,7 @@ public class ServerConsoleElement implements ToolsPerspectiveElement
    }
 
    /**
-    * @see org.netxms.nxmc.services.ToolsPerspectiveElement#createView()
+    * @see org.netxms.nxmc.services.ToolDescriptor#createView()
     */
    @Override
    public View createView()

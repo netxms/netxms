@@ -225,8 +225,8 @@ public class AgentFileViewer extends AdHocObjectView
       manager.add(actionSelectAll);
       manager.add(actionCopy);
    }
-   
-	/* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -242,15 +242,14 @@ public class AgentFileViewer extends AdHocObjectView
     */
    public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges) 
    {
-      return createView(view, nodeId, file, followChanges, null);
+      return createView(view, nodeId, file, followChanges, false, null);
    }
    
 	/**
     * Create new file viewer view with custom line styler. Checks that file does not exceed allowed size.
 	 * In case if file is too large asks if it should be opened partly. 
-	 * @throws PartInitException 
 	 */
-	public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges, BaseFileViewer.LineStyler lineStyler)
+   public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, BaseFileViewer.LineStyler lineStyler)
 	{
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
 	   if (exceedSize && 
@@ -260,7 +259,7 @@ public class AgentFileViewer extends AdHocObjectView
 	      if (followChanges)
 	      {
             final NXCSession session = Registry.getSession();
-   	      final Job job = new Job(i18n.tr("Stop file monitor"), null) {
+            final Job job = new Job(i18n.tr("Stopping file monitor"), null) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -279,20 +278,19 @@ public class AgentFileViewer extends AdHocObjectView
          }
          return false;
       }
-	   
 
       Perspective p = view.getPerspective();   
       AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges);
       if (p != null)
       {
-         p.addMainView(fileView, true, false);
+         p.addMainView(fileView, true, ignoreContext);
       }
       else
       {
          PopOutViewWindow window = new PopOutViewWindow(fileView);
          window.open();
       }
-	   
+
       fileView.viewer.setLineStyler(lineStyler);
       fileView.viewer.showFile(file.getFile(), followChanges);
 	   if (followChanges)

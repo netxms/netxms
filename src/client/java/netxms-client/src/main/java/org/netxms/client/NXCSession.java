@@ -10419,16 +10419,17 @@ public class NXCSession
    }
 
    /**
-    * Download file from remote host via agent.
+    * Download file from remote host via agent. If <code>maxFileSize</code> is set to non-zero value then last
+    * <code>maxFileSize</code> bytes will be retrieved.
     *
-    * @param nodeId            node object ID
-    * @param remoteFileName    fully qualified file name on remote system
-    * @param maxFileSize       maximum download size, 0 == UNLIMITED
-    * @param follow            if set to true, server will send file updates as they appear (like for tail -f command)
-    * @param listener          The ProgressListener to set
+    * @param nodeId node object ID
+    * @param remoteFileName fully qualified file name on remote system
+    * @param maxFileSize maximum download size, 0 == UNLIMITED
+    * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
+    * @param listener The ProgressListener to set
     * @param updateServerJobId callback for updating server job ID
     * @return agent file handle which contains server assigned ID and handle for local file
-    * @throws IOException  if socket or file I/O error occurs
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow,
@@ -10438,19 +10439,20 @@ public class NXCSession
    }
 
    /**
-    * Download file from remote host via agent.
+    * Download file from remote host via agent. If <code>maxFileSize</code> is set to non-zero value then last
+    * <code>maxFileSize</code> bytes will be retrieved.
     *
-    * @param nodeId            node object ID
-    * @param remoteFileName    fully qualified file name on remote system
-    * @param expandMacros      if true, macros in remote file name will be expanded on server side
-    * @param alarmId           alarm ID used for macro expansion
-    * @param inputValues       input field values for macro expansion (can be null if none provided)
-    * @param maxFileSize       maximum download size, 0 == UNLIMITED
-    * @param follow            if set to true, server will send file updates as they appear (like for tail -f command)
-    * @param listener          The ProgressListener to set
+    * @param nodeId node object ID
+    * @param remoteFileName fully qualified file name on remote system
+    * @param expandMacros if true, macros in remote file name will be expanded on server side
+    * @param alarmId alarm ID used for macro expansion
+    * @param inputValues input field values for macro expansion (can be null if none provided)
+    * @param maxFileSize maximum download size, 0 == UNLIMITED
+    * @param follow if set to true, server will send file updates as they appear (like for tail -f command)
+    * @param listener The ProgressListener to set
     * @param updateServerJobId callback for updating server job ID
     * @return agent file handle which contains server assigned ID and handle for local file
-    * @throws IOException  if socket or file I/O error occurs
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, boolean expandMacros, long alarmId,

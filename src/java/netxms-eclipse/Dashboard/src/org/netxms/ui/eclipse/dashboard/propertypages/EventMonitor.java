@@ -41,7 +41,7 @@ public class EventMonitor extends PropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      config = (EventMonitorConfig)getElement().getAdapter(EventMonitorConfig.class);
+      config = getElement().getAdapter(EventMonitorConfig.class);
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
 

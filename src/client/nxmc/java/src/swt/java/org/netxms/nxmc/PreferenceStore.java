@@ -521,7 +521,7 @@ public class PreferenceStore
       properties.setProperty(name + ".Count", Integer.toString(value.size()));
       int index = 0;
       for(String s : value)
-         properties.setProperty(name + "." + Integer.toString(index), s);
+         properties.setProperty(name + "." + Integer.toString(index++), s);
       save();
       firePropertyChangeListeners(name, null, null);
    }

@@ -18,19 +18,19 @@
  */
 package org.netxms.nxmc.services;
 
-import org.netxms.nxmc.base.views.AbstractTraceView;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 
 /**
- * Element for monitor perspective
+ * Descriptor for object view (element for object perspectives)
  */
-public interface MonitorPerspectiveElement
+public interface ObjectViewDescriptor
 {
    /**
     * Create view for this element
     *
     * @return view
     */
-   public AbstractTraceView createView();
+   public ObjectView createView();
 
    /**
     * Get ID of server component that is required for this view.

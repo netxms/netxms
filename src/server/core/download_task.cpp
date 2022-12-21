@@ -91,7 +91,7 @@ void FileDownloadTask::run()
 		if (response != nullptr)
 		{
 			NXCPMessage notify;
-			m_fileSize = (INT64)response->getFieldAsUInt64(VID_FILE_SIZE);
+			m_fileSize = response->getFieldAsUInt64(VID_FILE_SIZE);
 			notify.setCode(CMD_REQUEST_COMPLETED);
 			notify.setId(m_requestId);
 			notify.setField(VID_FILE_SIZE, m_fileSize);
@@ -110,9 +110,9 @@ void FileDownloadTask::run()
 				msg.setField(VID_ALLOW_PATH_EXPANSION, m_allowExpansion);
 
             // default - get parameters
-            if (m_maxFileSize > 0)
+            if (m_maxFileSize < m_fileSize)
             {
-               msg.setField(VID_FILE_OFFSET, (UINT32)(-((int)m_maxFileSize)));
+               msg.setField(VID_FILE_OFFSET, static_cast<int32_t>(-m_maxFileSize));
             }
             else
             {

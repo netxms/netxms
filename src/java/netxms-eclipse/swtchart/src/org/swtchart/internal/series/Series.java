@@ -737,18 +737,13 @@ abstract public class Series implements ISeries
 	 */
 	public void draw(GC gc, int width, int height)
 	{
-
 		if (!visible || width < 0 || height < 0 || xSeries == null || xSeries.length == 0 || ySeries == null || ySeries.length == 0)
-		{
 			return;
-		}
 
 		Axis xAxis = (Axis)chart.getAxisSet().getXAxis(getXAxisId());
 		Axis yAxis = (Axis)chart.getAxisSet().getYAxis(getYAxisId());
 		if (xAxis == null || yAxis == null)
-		{
 			return;
-		}
 
 		draw(gc, width, height, xAxis, yAxis);
 	}

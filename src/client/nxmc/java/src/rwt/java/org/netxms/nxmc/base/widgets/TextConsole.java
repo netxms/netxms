@@ -48,6 +48,7 @@ public class TextConsole extends Composite implements LineStyleListener
 
    private StyledText console;
    private boolean autoScroll = true;
+   private int historyLimit = 0;
    private AnsiConsoleAttributes lastAttributes = new AnsiConsoleAttributes(this);
    private AnsiConsoleAttributes currentAttributes = new AnsiConsoleAttributes(this);
    private int lastRangeEnd = 0;
@@ -67,9 +68,42 @@ public class TextConsole extends Composite implements LineStyleListener
    }
 
    /**
+    * Enable/disable interpretation of ANSI text attributes.
+    *
+    * @param enable true to enable
+    */
+   public void enableAnsiTextAttributes(boolean enable)
+   {
+      if (enable)
+         console.addLineStyleListener(this);
+      else
+         console.removeLineStyleListener(this);
+   }
+
+   /**
+    * Get limit on number of lines to keep in console.
+    *
+    * @return limit on number of lines to keep in console (0 means "unlimited")
+    */
+   public int getHistoryLimit()
+   {
+      return historyLimit;
+   }
+
+   /**
+    * Set limit on number of lines to keep in console (0 for unlimited).
+    *
+    * @param historyLimit new limit
+    */
+   public void setHistoryLimit(int historyLimit)
+   {
+      this.historyLimit = historyLimit;
+   }
+
+   /**
     * Add listener for console selection change
     * 
-    * @param listener
+    * @param listener listener to add
     */
    public void addSelectionChangedListener(ISelectionChangedListener listener) 
    {
@@ -335,7 +369,7 @@ public class TextConsole extends Composite implements LineStyleListener
     */
    private static int tryParseInteger(String text)
    {
-      if ("".equals(text)) //$NON-NLS-1$
+      if ("".equals(text))
          return -1;
 
       try
@@ -396,6 +430,12 @@ public class TextConsole extends Composite implements LineStyleListener
                   return;
 
                console.append(s);
+
+               int lineCount = console.getLineCount();
+               if ((historyLimit > 0) && (lineCount > historyLimit))
+               {
+                  console.replaceTextRange(0, console.getOffsetAtLine(lineCount - historyLimit), "");
+               }
             }
          });
       }
@@ -415,5 +455,25 @@ public class TextConsole extends Composite implements LineStyleListener
          {
          }
       }
+   }
+
+   /**
+    * Get text in console
+    * 
+    * @return console text
+    */
+   public String getText()
+   {
+      return console.getText();
+   }
+
+   /**
+    * Set text in console
+    * 
+    * @param text test to set
+    */
+   public void setText(String text)
+   {
+      console.setText(text);
    }
 }

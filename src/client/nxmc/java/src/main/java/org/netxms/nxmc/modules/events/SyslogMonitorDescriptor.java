@@ -19,25 +19,38 @@
 package org.netxms.nxmc.modules.events;
 
 import org.netxms.nxmc.base.views.AbstractTraceView;
-import org.netxms.nxmc.modules.events.views.EventMonitor;
-import org.netxms.nxmc.services.MonitorPerspectiveElement;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.events.views.SyslogMonitor;
+import org.netxms.nxmc.services.MonitorDescriptor;
+import org.xnap.commons.i18n.I18n;
 
 /**
- * Registration for event monitor view
+ * Registration for syslog monitor view
  */
-public class EventMonitorRegistration implements MonitorPerspectiveElement
+public class SyslogMonitorDescriptor implements MonitorDescriptor
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(SyslogMonitorDescriptor.class);
+
    /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#createView()
+    * @see org.netxms.nxmc.services.MonitorDescriptor#createView()
     */
    @Override
    public AbstractTraceView createView()
    {
-      return new EventMonitor();
+      return new SyslogMonitor();
    }
 
    /**
-    * @see org.netxms.nxmc.services.MonitorPerspectiveElement#getRequiredComponentId()
+    * @see org.netxms.nxmc.services.MonitorDescriptor#getDisplayName()
+    */
+   @Override
+   public String getDisplayName()
+   {
+      return i18n.tr("Syslog");
+   }
+
+   /**
+    * @see org.netxms.nxmc.services.MonitorDescriptor#getRequiredComponentId()
     */
    @Override
    public String getRequiredComponentId()

@@ -245,7 +245,6 @@ LONG H_GetVMInfoAsParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
    if(conn == nullptr)
       return SYSINFO_RC_NO_SUCH_INSTANCE;
 
-   char *resultValue = nullptr;
    LONG result = SYSINFO_RC_SUCCESS;
    const virDomainInfo *info = conn->getDomainInfoAndLock(vm);
    if(info != nullptr)

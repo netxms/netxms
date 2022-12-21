@@ -21,9 +21,9 @@ package org.netxms.nxmc.services;
 import org.netxms.nxmc.modules.logviewer.views.LogViewer;
 
 /**
- * Server log registration (element for log viewer perspective)
+ * Server log descriptor (element for log viewer perspective)
  */
-public interface ServerLog
+public interface ServerLogDescriptor
 {
    /**
     * Create view for this element
@@ -31,6 +31,13 @@ public interface ServerLog
     * @return view
     */
    public LogViewer createView();
+
+   /**
+    * Get display name for this log.
+    *
+    * @return display name for this log
+    */
+   public String getDisplayName();
 
    /**
     * Get ID of server component that is required for this view.

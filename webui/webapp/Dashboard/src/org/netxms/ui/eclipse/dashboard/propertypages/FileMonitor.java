@@ -21,18 +21,29 @@ package org.netxms.ui.eclipse.dashboard.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.dashboard.widgets.TitleConfigurator;
-import org.netxms.ui.eclipse.dashboard.widgets.internal.EventMonitorConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.FileMonitorConfig;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
-public class EventMonitor extends PropertyPage
+/**
+ * File monitor element properties
+ */
+public class FileMonitor extends PropertyPage
 {
-   private EventMonitorConfig config;
+   private FileMonitorConfig config;
    private ObjectSelector objectSelector;
+   private LabeledText fileName;
+   private LabeledText filter;
+   private LabeledSpinner historyLimit;
+   private Combo syntaxHighlighter;
    private TitleConfigurator title;
 
    /**
@@ -41,27 +52,58 @@ public class EventMonitor extends PropertyPage
    @Override
    protected Control createContents(Composite parent)
    {
-      config = getElement().getAdapter(EventMonitorConfig.class);
+      config = getElement().getAdapter(FileMonitorConfig.class);
 
       Composite dialogArea = new Composite(parent, SWT.NONE);
 
       GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
       title = new TitleConfigurator(dialogArea, config);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       title.setLayoutData(gd);
 
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true, true);
-      objectSelector.setLabel("Root object");
-      objectSelector.setObjectClass(AbstractObject.class);
+      objectSelector.setLabel("Node");
+      objectSelector.setObjectClass(Node.class);
       objectSelector.setObjectId(config.getObjectId());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       objectSelector.setLayoutData(gd);
+
+      fileName = new LabeledText(dialogArea, SWT.NONE);
+      fileName.setLabel("File name");
+      fileName.setText(config.getFileName());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      fileName.setLayoutData(gd);
+
+      filter = new LabeledText(dialogArea, SWT.NONE);
+      filter.setLabel("Line filter (regular expression)");
+      filter.setText(config.getFilter());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      filter.setLayoutData(gd);
+
+      historyLimit = new LabeledSpinner(dialogArea, SWT.NONE);
+      historyLimit.setLabel("History limit");
+      historyLimit.setRange(0, 99999999);
+      historyLimit.setSelection(config.getHistoryLimit());
+
+      syntaxHighlighter = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, "Highlighter", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      syntaxHighlighter.add("None");
+      int index = syntaxHighlighter.indexOf(config.getSyntaxHighlighter());
+      syntaxHighlighter.select((index >= 0) ? index : 0);
 
       return dialogArea;
    }
@@ -74,6 +116,10 @@ public class EventMonitor extends PropertyPage
    {
       title.updateConfiguration(config);
       config.setObjectId(objectSelector.getObjectId());
+      config.setFileName(fileName.getText().trim());
+      config.setFilter(filter.getText());
+      config.setHistoryLimit(historyLimit.getSelection());
+      config.setSyntaxHighlighter(syntaxHighlighter.getText());
       return true;
    }
 }

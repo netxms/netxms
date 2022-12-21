@@ -38,6 +38,7 @@ import org.netxms.nxmc.modules.dashboards.propertypages.DataSources;
 import org.netxms.nxmc.modules.dashboards.propertypages.DciSummaryTable;
 import org.netxms.nxmc.modules.dashboards.propertypages.EmbeddedDashboard;
 import org.netxms.nxmc.modules.dashboards.propertypages.EventMonitor;
+import org.netxms.nxmc.modules.dashboards.propertypages.FileMonitor;
 import org.netxms.nxmc.modules.dashboards.propertypages.Gauge;
 import org.netxms.nxmc.modules.dashboards.propertypages.GeoMap;
 import org.netxms.nxmc.modules.dashboards.propertypages.LabelProperties;
@@ -84,6 +85,7 @@ public class DashboardElementPropertiesManager
       pageClasses.add(DciSummaryTable.class);
       pageClasses.add(EmbeddedDashboard.class);
       pageClasses.add(EventMonitor.class);
+      pageClasses.add(FileMonitor.class);
       pageClasses.add(Gauge.class);
       pageClasses.add(GeoMap.class);
       pageClasses.add(LabelProperties.class);

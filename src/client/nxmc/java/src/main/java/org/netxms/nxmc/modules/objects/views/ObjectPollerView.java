@@ -24,8 +24,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -36,6 +34,9 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.StyledText;
+import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -91,6 +92,38 @@ public class ObjectPollerView extends AdHocObjectView
       target = (PollingTarget)object;
       pollType = type;
    }
+   
+   /**
+    * Default constructor
+    */
+   protected ObjectPollerView()
+   {
+      super(null, null, null, 0, false);
+      session = Registry.getSession();
+      display = Display.getCurrent();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ObjectPollerView view = (ObjectPollerView)super.cloneView();
+      view.target = target;
+      view.pollType = pollType;
+      return view;
+   }   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View origin)
+   {
+      super.postClone(origin);
+      textArea.replaceContent(((ObjectPollerView)origin).textArea);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -100,6 +133,7 @@ public class ObjectPollerView extends AdHocObjectView
    {
       textArea = new StyledText(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       textArea.setEditable(false);
+      textArea.setScrollOnAppend(true);
       textArea.setFont(JFaceResources.getTextFont());
 
       createActions();
@@ -169,9 +203,6 @@ public class ObjectPollerView extends AdHocObjectView
       {
          textArea.append(message);
       }
-
-      textArea.setCaretOffset(textArea.getCharCount());
-      textArea.setTopIndex(textArea.getLineCount() - 1);
    }
 
    /**
