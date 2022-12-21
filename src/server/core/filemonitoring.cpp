@@ -22,7 +22,7 @@
 
 #include "nms_core.h"
 
-#define DEBUG_TAG _T("filemonitor")
+#define DEBUG_TAG _T("file.monitor")
 
 /**
  * Global instance of file monitoring list
@@ -46,7 +46,7 @@ void FileMonitoringList::addFile(MONITORED_FILE *file, Node *node, const shared_
    file->session->incRefCount();
    m_monitoredFiles.add(file);
    node->setFileUpdateConnection(conn);
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("File tracker registered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("File monitor registered: node=%s [%u], file=\"%s\""), node->getName(), node->getId(), file->fileName);
    unlock();
 }
 

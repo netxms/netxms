@@ -9032,7 +9032,7 @@ bool Node::setFileUpdateConnection(const shared_ptr<AgentConnection>& connection
    if (changed)
    {
       connection->enableFileUpdates();
-      nxlog_debug(6, _T("Set file tracking connection for node %s [%d]"), m_name, m_id);
+      nxlog_debug_tag(_T("file.monitor"), 6, _T("Set file tracking connection for node %s [%d]"), m_name, m_id);
    }
    return changed;
 }
@@ -9045,7 +9045,7 @@ void Node::clearFileUpdateConnection()
    lockProperties();
    m_fileUpdateConnection.reset();
    unlockProperties();
-   nxlog_debug(6, _T("Cleared file tracking connection for node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(_T("file.monitor"), 6, _T("Cleared file tracking connection for node %s [%d]"), m_name, m_id);
 }
 
 /**

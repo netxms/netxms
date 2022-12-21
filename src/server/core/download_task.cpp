@@ -79,7 +79,7 @@ void FileDownloadTask::run()
    m_agentConnection = m_node->createAgentConnection();
 	if (m_agentConnection != nullptr)
 	{
-		NXCPMessage msg(m_agentConnection->getProtocolVersion()), *response;
+		NXCPMessage msg(m_agentConnection->getProtocolVersion());
 
 		m_agentConnection->setDeleteFileOnDownloadFailure(false);
 
@@ -87,17 +87,16 @@ void FileDownloadTask::run()
 		msg.setCode(CMD_GET_FILE_DETAILS);
 		msg.setId(m_agentConnection->generateRequestId());
 		msg.setField(VID_FILE_NAME, m_remoteFile);
-		response = m_agentConnection->customRequest(&msg);
+		NXCPMessage *response = m_agentConnection->customRequest(&msg);
 		if (response != nullptr)
 		{
-			NXCPMessage notify;
-			m_fileSize = response->getFieldAsUInt64(VID_FILE_SIZE);
-			notify.setCode(CMD_REQUEST_COMPLETED);
-			notify.setId(m_requestId);
+         m_fileSize = response->getFieldAsUInt64(VID_FILE_SIZE);
+
+			NXCPMessage notify(CMD_REQUEST_COMPLETED, m_requestId);
 			notify.setField(VID_FILE_SIZE, m_fileSize);
 			notify.setField(VID_NAME, m_localFile);
 			notify.setField(VID_FILE_NAME, m_remoteFile);
-			m_session->sendMessage(&notify);
+			m_session->sendMessage(notify);
 
 			rcc = response->getFieldAsUInt32(VID_RCC);
 			nxlog_debug_tag(DEBUG_TAG, 5, _T("Stat request for file %s@%s RCC=%u (%s)"), m_remoteFile, m_node->getName(), rcc, AgentErrorCodeToText(rcc));
@@ -150,9 +149,7 @@ void FileDownloadTask::run()
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Agent connection not available for file %s@%s"), m_remoteFile, m_node->getName());
 	}
 
-	NXCPMessage response;
-	response.setCode(CMD_REQUEST_COMPLETED);
-	response.setId(m_requestId);
+	NXCPMessage response(CMD_REQUEST_COMPLETED, m_requestId);
 	if (success)
 	{
 	   response.setField(VID_RCC, RCC_SUCCESS);
@@ -168,16 +165,14 @@ void FileDownloadTask::run()
 	else
 	{
 	   // Send "abort file transfer" command to client
-	   NXCPMessage abortCmd;
-	   abortCmd.setCode(CMD_ABORT_FILE_TRANSFER);
-	   abortCmd.setId(m_requestId);
+	   NXCPMessage abortCmd(CMD_ABORT_FILE_TRANSFER, m_requestId);
 	   abortCmd.setField(VID_JOB_CANCELLED, false);
-	   m_session->sendMessage(&abortCmd);
+	   m_session->sendMessage(abortCmd);
 
       response.setField(VID_RCC, AgentErrorToRCC(rcc));
       delete fileDescriptor;
 	}
-   m_session->sendMessage(&response);
+   m_session->sendMessage(response);
 }
 
 /**

@@ -10766,7 +10766,7 @@ void ClientSession::getServerFile(const NXCPMessage& request)
  */
 void ClientSession::getAgentFile(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	bool success = false;
 
@@ -10788,7 +10788,7 @@ void ClientSession::getAgentFile(const NXCPMessage& request)
                Alarm *alarm = FindAlarmById(request.getFieldAsUInt32(VID_ALARM_ID));
                if ((alarm != nullptr) && !object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && !alarm->checkCategoryAccess(this))
                {
-                  msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+                  response.setField(VID_RCC, RCC_ACCESS_DENIED);
                }
                else
                {
@@ -10814,22 +10814,22 @@ void ClientSession::getAgentFile(const NXCPMessage& request)
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
 		   writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on download file from node %s"), object->getName());
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
 	if (!success) // In case of success download task will send response message with all required information
-	   sendMessage(&msg);
+	   sendMessage(response);
 }
 
 /**
