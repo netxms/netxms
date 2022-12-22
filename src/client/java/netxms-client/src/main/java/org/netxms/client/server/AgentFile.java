@@ -255,7 +255,8 @@ public class AgentFile implements RemoteFile
       {
          return name;
       }
-      return parent.getFullName() + "/" + name;
+      String parentName = parent.getFullName();
+      return (parentName.endsWith("/") || parentName.endsWith("\\")) ? parentName + name : parentName + "/" + name;
    }
 
    /**
