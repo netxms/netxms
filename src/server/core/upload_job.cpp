@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -174,7 +174,11 @@ ServerJobResult FileUploadJob::run()
 	if (conn != nullptr)
 	{
 		m_fileSize = FileSize(m_localFileFullPath);
-		uint32_t rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, false, uploadCallback, this, NXCP_STREAM_COMPRESSION_DEFLATE);
+		uint32_t rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, false,
+		   [this] (size_t size)
+		   {
+		      markProgress((m_fileSize > 0) ? static_cast<int>((size * _LL(100) / m_fileSize)) : 100);
+		   }, NXCP_STREAM_COMPRESSION_DEFLATE);
 		if (rcc == ERR_SUCCESS)
 		{
 			result = JOB_RESULT_SUCCESS;
@@ -202,17 +206,6 @@ ServerJobResult FileUploadJob::run()
    }
 
 	return result;
-}
-
-/**
- * Upload progress callback
- */
-void FileUploadJob::uploadCallback(size_t size, void *arg)
-{
-	if (static_cast<FileUploadJob*>(arg)->m_fileSize > 0)
-	   static_cast<FileUploadJob*>(arg)->markProgress(static_cast<int>((size * _LL(100) / static_cast<FileUploadJob*>(arg)->m_fileSize)));
-	else
-	   static_cast<FileUploadJob*>(arg)->markProgress(100);
 }
 
 /**

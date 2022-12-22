@@ -1293,6 +1293,7 @@ public class NXCPCodes
    public static final long VID_RULE_SOURCE_EXCLUSIONS = 808;
    public static final long VID_NETWORK_SERVICE_COUNT = 809;
    public static final long VID_VPN_CONNECTOR_COUNT = 810;
+   public static final long VID_MONITOR_ID = 811;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

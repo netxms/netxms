@@ -1,6 +1,6 @@
 /* 
 ** nxdownload - command line tool used to download files from NetXMS agent
-** Copyright (C) 2021 Raden Solutions
+** Copyright (C) 2021-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
 /**
  * Download progress callback
  */
-static void ProgressCallback(size_t bytesTransferred, void *cbArg)
+static void ProgressCallback(size_t bytesTransferred)
 {
 	_tprintf(_T("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b") UINT64_FMT_ARGS(_T("-16")), bytesTransferred);
 }
@@ -154,7 +154,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
    int64_t elapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("<Download>:                 "));
-   uint32_t rcc = conn->downloadFile(argv[optind + 1], localFile, false, s_verbose ? ProgressCallback : nullptr, nullptr, s_compression);
+   uint32_t rcc = conn->downloadFile(argv[optind + 1], localFile, false, s_verbose ? ProgressCallback : nullptr, s_compression);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
    elapsedTime = GetCurrentTimeMs() - elapsedTime;

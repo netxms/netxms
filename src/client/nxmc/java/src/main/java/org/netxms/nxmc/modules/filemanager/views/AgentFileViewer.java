@@ -53,7 +53,7 @@ public class AgentFileViewer extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(AgentFileViewer.class);
 	public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileViewer"; //$NON-NLS-1$
-	
+
    private DynamicFileViewer viewer;
    private String remoteFileName;
    private boolean followChanges;
@@ -114,7 +114,7 @@ public class AgentFileViewer extends AdHocObjectView
       createActions();
       createPopupMenu();
 	}
-	
+
    /**
     * Create actions
     */
@@ -244,7 +244,7 @@ public class AgentFileViewer extends AdHocObjectView
    {
       return createView(view, nodeId, file, followChanges, false, null);
    }
-   
+
 	/**
     * Create new file viewer view with custom line styler. Checks that file does not exceed allowed size.
 	 * In case if file is too large asks if it should be opened partly. 
@@ -263,7 +263,7 @@ public class AgentFileViewer extends AdHocObjectView
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
-                  session.cancelFileMonitoring(nodeId, file.getId());
+                  session.cancelFileMonitoring(file.getMonitorId());
                }
                
                @Override
@@ -295,7 +295,7 @@ public class AgentFileViewer extends AdHocObjectView
       fileView.viewer.showFile(file.getFile(), followChanges);
 	   if (followChanges)
 	   {
-	      fileView.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
+         fileView.viewer.startTracking(file.getMonitorId(), nodeId, file.getRemoteName());
 	   }
 	   fileView.setName(file.getRemoteName()); 
 	   return true;

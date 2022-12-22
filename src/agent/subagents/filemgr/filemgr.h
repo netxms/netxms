@@ -31,11 +31,10 @@
 /**
  * File monitoring
  */
-
 struct MONITORED_FILE
 {
    TCHAR fileName[MAX_PATH];
-   int monitoringCount;
+   int monitorCount;
 };
 
 /**

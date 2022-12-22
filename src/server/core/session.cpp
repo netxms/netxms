@@ -1477,7 +1477,7 @@ void ClientSession::processRequest(NXCPMessage *request)
          getAgentFile(*request);
          break;
       case CMD_CANCEL_FILE_MONITORING:
-         cancelFileMonitoring(request);
+         cancelFileMonitoring(*request);
          break;
       case CMD_TEST_DCI_TRANSFORMATION:
          testDCITransformation(*request);
@@ -10835,63 +10835,26 @@ void ClientSession::getAgentFile(const NXCPMessage& request)
 /**
  * Cancel file monitoring
  */
-void ClientSession::cancelFileMonitoring(NXCPMessage *request)
+void ClientSession::cancelFileMonitoring(const NXCPMessage& request)
 {
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-
-	shared_ptr<NetObj> object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
-	if (object != nullptr)
-	{
-      if (object->getObjectClass() == OBJECT_NODE)
-      {
-         MONITORED_FILE file;
-         request->getFieldAsString(VID_FILE_NAME, file.fileName, MAX_PATH);
-         file.nodeID = object->getId();
-         file.session = this;
-         g_monitoringList.removeFile(&file);
-
-         shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*object).createAgentConnection();
-         debugPrintf(6, _T("Cancel file monitoring for %s"), file.fileName);
-         if (conn != nullptr)
-         {
-            request->setProtocolVersion(conn->getProtocolVersion());
-            request->setId(conn->generateRequestId());
-            NXCPMessage *agentResponse = conn->customRequest(request);
-            if (agentResponse != nullptr)
-            {
-               uint32_t rcc = agentResponse->getFieldAsUInt32(VID_RCC);
-               if (rcc == ERR_SUCCESS)
-               {
-                  response.setField(VID_RCC, RCC_SUCCESS);
-                  debugPrintf(6, _T("cancelFileMonitoring(%s): success"), file.fileName);
-               }
-               else
-               {
-                  response.setField(VID_RCC, AgentErrorToRCC(rcc));
-                  debugPrintf(6, _T("cancelFileMonitoring(%s): agent error %d (%s)"), file.fileName, rcc, AgentErrorCodeToText(rcc));
-               }
-               delete agentResponse;
-            }
-            else
-            {
-               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
-            }
-         }
-         else
-         {
-            response.setField(VID_RCC, RCC_INTERNAL_ERROR);
-            debugPrintf(6, _T("cancelFileMonitoring(%s): connection with node have been lost"), file.fileName);
-         }
-      }
-      else
-      {
-         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-      }
-	}
-	else
-	{
-		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
-	}
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   bool success;
+   if (request.isFieldExist(VID_MONITOR_ID))
+   {
+      uuid clientId = request.getFieldAsGUID(VID_MONITOR_ID);
+      success = RemoveFileMonitorByClientId(clientId, m_id);
+      TCHAR buffer[64];
+      debugPrintf(5, _T("Requested cancellation for file monitor with client ID %s (result=%s)"), clientId.toString(buffer), success ? _T("success") : _T("failure"));
+   }
+   else
+   {
+      // For compatibility with older clients that do cancel using agent file ID
+      TCHAR agentFileId[64];
+      request.getFieldAsString(VID_FILE_NAME, agentFileId, 64);
+      success = RemoveFileMonitorsByAgentId(agentFileId, m_id);
+      debugPrintf(5, _T("Requested cancellation for file monitor with agent file ID %s (result=%s)"), agentFileId, success ? _T("success") : _T("failure"));
+   }
+   response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_ARGUMENT);
    sendMessage(response);
 }
 

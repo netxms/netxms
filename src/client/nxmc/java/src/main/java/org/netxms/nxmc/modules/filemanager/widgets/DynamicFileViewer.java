@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.filemanager.widgets;
 
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -47,7 +48,6 @@ public class DynamicFileViewer extends BaseFileViewer
 
    protected Job monitoringJob = null;
    protected Job restartJob = null;
-   protected String fileId = null;
    protected long nodeId = 0;
    protected String remoteFileName;
    protected NXCSession session = Registry.getSession();
@@ -96,75 +96,27 @@ public class DynamicFileViewer extends BaseFileViewer
     * @param nodeId
     * @param fileId
     */
-   public void startTracking(final long nodeId, final String fileId, final String remoteFileName)
+   public void startTracking(final UUID monitorId, final long nodeId, final String remoteFileName)
    {
       if (restartJob != null)
+      {
          restartJob.cancel();
+         restartJob = null;
+      }
 
       if (monitoringJob != null)
+      {
          monitoringJob.cancel();
+         monitoringJob = null;
+      }
 
       view.clearMessages();
 
-      this.fileId = fileId;
       this.nodeId = nodeId;
       this.remoteFileName = remoteFileName;
 
       setTextTopIndex();
-      monitoringJob = new Job(i18n.tr("Monitoring changes in file {0} on node {1}", remoteFileName, session.getObjectName(nodeId)), view) {
-         private boolean tracking = true;
-
-         @Override
-         protected void canceling()
-         {
-            tracking = false;
-         }
-
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            logger.debug(String.format("Starting monitor for file %s (id=%s) on node %s", remoteFileName, fileId, session.getObjectName(nodeId)));
-            while(tracking)
-            {
-               final String s = session.waitForFileTail(fileId, 3000);
-               if (s != null)
-               {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if (!text.isDisposed())
-                        {
-                           append(s);
-                        }
-                        else
-                        {
-                           tracking = false;
-                        }
-                     }
-                  });
-               }
-            }
-
-            logger.debug(String.format("Stopping monitor for file %s (id=%s) on node %s", remoteFileName, fileId, session.getObjectName(nodeId)));
-            try
-            {
-               session.cancelFileMonitoring(nodeId, fileId);
-            }
-            catch(Exception e)
-            {
-               logger.warn(String.format("Cannot cancel monitoring of file %s (id=%s) on node %s", remoteFileName, fileId, session.getObjectName(nodeId)), e);
-            }
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot start monitor for file {0} on node {1}", remoteFileName, session.getObjectName(nodeId));
-         }
-      };
-      monitoringJob.setUser(false);
-      monitoringJob.setSystem(true);
+      monitoringJob = new MonitoringJob(monitorId);
       monitoringJob.start();
    }
 
@@ -183,7 +135,6 @@ public class DynamicFileViewer extends BaseFileViewer
       {
          monitoringJob.cancel();
          monitoringJob = null;
-         fileId = null;
          nodeId = 0;
       }
    }
@@ -255,7 +206,7 @@ public class DynamicFileViewer extends BaseFileViewer
                                     i18n.tr("Connection with the agent restored.") +
                                     "\n-------------------------------------------------------------------------------\n\n"); //$NON-NLS-1$
                         append(loadFile(file.getFile()));
-                        startTracking(nodeId, fileId, remoteFileName);
+                        startTracking(file.getMonitorId(), nodeId, remoteFileName);
                      }
                   });
                   break;
@@ -277,5 +228,78 @@ public class DynamicFileViewer extends BaseFileViewer
       restartJob.setUser(false);
       restartJob.setSystem(true);
       restartJob.start();
+   }
+
+   /**
+    * File monitoring job
+    */
+   private class MonitoringJob extends Job
+   {
+      private boolean tracking = true;
+      private UUID monitorId;
+
+      public MonitoringJob(UUID monitorId)
+      {
+         super(i18n.tr("Monitoring changes in file {0} on node {1}", remoteFileName, session.getObjectName(nodeId)), view);
+         this.monitorId = monitorId;
+         setUser(false);
+         setSystem(true);
+      }
+
+      /**
+       * @see org.netxms.nxmc.base.jobs.Job#canceling()
+       */
+      @Override
+      protected void canceling()
+      {
+         tracking = false;
+      }
+
+      /**
+       * @see org.netxms.nxmc.base.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
+       */
+      @Override
+      protected void run(IProgressMonitor monitor) throws Exception
+      {
+         while(tracking)
+         {
+            final String s = session.waitForFileUpdate(monitorId, 3000);
+            if (s != null)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (!text.isDisposed())
+                     {
+                        append(s);
+                     }
+                     else
+                     {
+                        tracking = false;
+                     }
+                  }
+               });
+            }
+         }
+
+         try
+         {
+            session.cancelFileMonitoring(monitorId);
+         }
+         catch(Exception e)
+         {
+            logger.warn(String.format("Cannot cancel file monitor with ID %s for node %s", monitorId.toString(), session.getObjectName(nodeId)), e);
+         }
+      }
+
+      /**
+       * @see org.netxms.nxmc.base.jobs.Job#getErrorMessage()
+       */
+      @Override
+      protected String getErrorMessage()
+      {
+         return i18n.tr("Cannot start monitor for file {0} on node {1}", remoteFileName, session.getObjectName(nodeId));
+      }
    }
 }
