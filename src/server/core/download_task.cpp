@@ -70,18 +70,18 @@ void FileDownloadTask::run()
    bool success = false;
    uuid monitorId;
 
-   m_agentConnection = m_node->createAgentConnection();
-	if (m_agentConnection != nullptr)
+   shared_ptr<AgentConnectionEx> agentConnection = m_node->createAgentConnection();
+	if (agentConnection != nullptr)
 	{
-		NXCPMessage msg(m_agentConnection->getProtocolVersion());
+		NXCPMessage msg(agentConnection->getProtocolVersion());
 
-		m_agentConnection->setDeleteFileOnDownloadFailure(false);
+		agentConnection->setDeleteFileOnDownloadFailure(false);
 
 		nxlog_debug_tag(DEBUG_TAG, 5, _T("Sending file stat request for file %s@%s"), m_remoteFile, m_node->getName());
 		msg.setCode(CMD_GET_FILE_DETAILS);
-		msg.setId(m_agentConnection->generateRequestId());
+		msg.setId(agentConnection->generateRequestId());
 		msg.setField(VID_FILE_NAME, m_remoteFile);
-		NXCPMessage *response = m_agentConnection->customRequest(&msg);
+		NXCPMessage *response = agentConnection->customRequest(&msg);
 		if (response != nullptr)
 		{
          m_fileSize = response->getFieldAsUInt64(VID_FILE_SIZE);
@@ -104,7 +104,7 @@ void FileDownloadTask::run()
 			{
 				nxlog_debug_tag(DEBUG_TAG, 5, _T("Sending download request for file %s@%s"), m_remoteFile, m_node->getName());
 				msg.setCode(CMD_GET_AGENT_FILE);
-				msg.setId(m_agentConnection->generateRequestId());
+				msg.setId(agentConnection->generateRequestId());
 				msg.setField(VID_FILE_NAME, m_remoteFile);
 				msg.setField(VID_ALLOW_PATH_EXPANSION, m_allowExpansion);
 
@@ -122,7 +122,7 @@ void FileDownloadTask::run()
             msg.setField(VID_ENABLE_COMPRESSION, (m_session == nullptr) || m_session->isCompressionEnabled());
 
             delete response;
-				response = m_agentConnection->customRequest(&msg, m_localFile, false, nullptr,
+				response = agentConnection->customRequest(&msg, m_localFile, false, nullptr,
 				   [this] (NXCPMessage *agentMsg)
 				   {
 				      agentMsg->setId(m_requestId);
@@ -160,7 +160,7 @@ void FileDownloadTask::run()
 	   response.setField(VID_RCC, RCC_SUCCESS);
 		if (m_monitor)
 		{
-		   AddFileMonitor(m_node.get(), m_agentConnection, m_session, m_localFile, monitorId);
+		   AddFileMonitor(m_node.get(), agentConnection, m_session, m_localFile, monitorId);
 		}
 	}
 	else
@@ -173,13 +173,4 @@ void FileDownloadTask::run()
       response.setField(VID_RCC, AgentErrorToRCC(rcc));
 	}
    m_session->sendMessage(response);
-}
-
-/**
- * Send message callback
- */
-void FileDownloadTask::fileResendCallback(NXCPMessage *msg, void *arg)
-{
-   msg->setId(static_cast<FileDownloadTask*>(arg)->m_requestId);
-   static_cast<FileDownloadTask*>(arg)->m_session->sendMessage(msg);
 }

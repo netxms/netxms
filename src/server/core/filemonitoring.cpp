@@ -160,6 +160,25 @@ bool RemoveFileMonitorsByAgentId(const TCHAR *agentId, session_id_t sessionId)
 }
 
 /**
+ * Remove all file monitors for disconnected client session.
+ */
+void RemoveFileMonitorsBySessionId(session_id_t sessionId)
+{
+   StructArray<uuid> monitors(0, 16);
+   s_monitorLock.lock();
+   for(int i = 0; i < s_monitors.size(); i++)
+   {
+      FileMonitor *curr = s_monitors.get(i);
+      if (sessionId == curr->session->getId())
+         monitors.add(curr->clientId);
+   }
+   s_monitorLock.unlock();
+
+   for(int i = 0; i < monitors.size(); i++)
+      RemoveFileMonitorByClientId(*monitors.get(i), sessionId);
+}
+
+/**
  * Remove file monitor with given client side ID. If session ID is valid (not set to -1) only monitor with matching session ID will be removed.
  */
 bool RemoveFileMonitorByClientId(const uuid& clientId, session_id_t sessionId)

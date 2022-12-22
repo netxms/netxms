@@ -1107,7 +1107,6 @@ class FileDownloadTask
 private:
    shared_ptr<Node> m_node;
    ClientSession *m_session;
-   shared_ptr<AgentConnection> m_agentConnection;
    uint32_t m_requestId;
    TCHAR m_localFile[60];
    TCHAR *m_remoteFile;
@@ -1116,8 +1115,6 @@ private:
    uint64_t m_maxFileSize;
    bool m_monitor;
    bool m_allowExpansion;
-
-   static void fileResendCallback(NXCPMessage *msg, void *arg);
 
 public:
    FileDownloadTask(const shared_ptr<Node>& node, ClientSession *session, uint32_t requestId, const TCHAR *remoteName, bool allowExpansion, uint64_t maxFileSize, bool monitor);
@@ -1506,6 +1503,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
 void AddFileMonitor(Node *node, const shared_ptr<AgentConnection>& conn, ClientSession *session, const TCHAR *agentId, const uuid& clientId);
 bool RemoveFileMonitorsByAgentId(const TCHAR *agentId, session_id_t sessionId = -1);
 bool RemoveFileMonitorByClientId(const uuid& clientId, session_id_t sessionId = -1);
+void RemoveFileMonitorsBySessionId(session_id_t sessionId);
 void RemoveFileMonitorsByNodeId(uint32_t nodeId);
 unique_ptr<StructArray<std::pair<ClientSession*, uuid>>> FindFileMonitoringSessions(const TCHAR *agentId);
 
