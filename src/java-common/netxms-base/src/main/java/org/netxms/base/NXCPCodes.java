@@ -1286,6 +1286,14 @@ public class NXCPCodes
    public static final long VID_COMPRESSION_METHOD = 801;
    public static final long VID_MQTT_PROXY = 802;
    public static final long VID_TCP_PROXY = 803;
+   public static final long VID_FOLLOW_LOCATION = 804;
+   public static final long VID_ACTION_SCRIPT = 805;
+   public static final long VID_NUM_SET_CUSTOM_ATTRIBUTE = 806;
+   public static final long VID_NUM_DELETE_CUSTOM_ATTRIBUTE = 807;
+   public static final long VID_RULE_SOURCE_EXCLUSIONS = 808;
+   public static final long VID_NETWORK_SERVICE_COUNT = 809;
+   public static final long VID_VPN_CONNECTOR_COUNT = 810;
+   public static final long VID_MONITOR_ID = 811;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

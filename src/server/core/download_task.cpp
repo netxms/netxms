@@ -36,13 +36,17 @@ FileDownloadTask::FileDownloadTask(const shared_ptr<Node>& node, ClientSession *
 	m_requestId = requestId;
 	m_remoteFile = MemCopyString(remoteFile);
 
-	TCHAR buffer[MAX_PATH];
-	buildServerFileName(node->getId(), m_remoteFile, buffer, MAX_PATH);
-	m_localFile = MemCopyString(buffer);
+   BYTE hash[MD5_DIGEST_SIZE];
+   CalculateMD5Hash(reinterpret_cast<const BYTE*>(remoteFile), _tcslen(remoteFile) * sizeof(TCHAR), hash);
+   _tcscpy(m_localFile, _T("agent-file-"));
+   BinToStr(hash, MD5_DIGEST_SIZE, &m_localFile[11]);
+   m_localFile[43] = _T('-');
+   IntegerToString(node->getId(), &m_localFile[44]);
 
 	m_maxFileSize = maxFileSize;
 	m_monitor = monitor;
 	m_currentSize = 0;
+	m_fileSize = 0;
 	m_allowExpansion = allowExpansion;
 
    nxlog_debug_tag(DEBUG_TAG, 5, _T("Download task created for file %s at node %s, monitor = %s"), remoteFile, node->getName(), monitor ? _T("true") : _T("false"));
@@ -54,7 +58,6 @@ FileDownloadTask::FileDownloadTask(const shared_ptr<Node>& node, ClientSession *
 FileDownloadTask::~FileDownloadTask()
 {
 	m_session->decRefCount();
-	MemFree(m_localFile);
 	MemFree(m_remoteFile);
 }
 
@@ -63,19 +66,10 @@ FileDownloadTask::~FileDownloadTask()
  */
 void FileDownloadTask::run()
 {
-   MONITORED_FILE *fileDescriptor = new MONITORED_FILE();
-   _tcscpy(fileDescriptor->fileName, m_localFile);
-   fileDescriptor->nodeID = m_node->getId();
-   fileDescriptor->session = m_session;
-
-   if (m_monitor && g_monitoringList.isDuplicate(fileDescriptor))
-   {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("Monitor flag removed by checkDuplicate()"));
-      m_monitor = false;
-   }
-
    uint32_t rcc = ERR_CONNECT_FAILED;
    bool success = false;
+   uuid monitorId;
+
    m_agentConnection = m_node->createAgentConnection();
 	if (m_agentConnection != nullptr)
 	{
@@ -92,10 +86,16 @@ void FileDownloadTask::run()
 		{
          m_fileSize = response->getFieldAsUInt64(VID_FILE_SIZE);
 
+         // Send first confirmation to the client
 			NXCPMessage notify(CMD_REQUEST_COMPLETED, m_requestId);
 			notify.setField(VID_FILE_SIZE, m_fileSize);
 			notify.setField(VID_NAME, m_localFile);
 			notify.setField(VID_FILE_NAME, m_remoteFile);
+         if (m_monitor)
+         {
+            monitorId = uuid::generate();
+            notify.setField(VID_MONITOR_ID, monitorId);
+         }
 			m_session->sendMessage(notify);
 
 			rcc = response->getFieldAsUInt32(VID_RCC);
@@ -122,7 +122,12 @@ void FileDownloadTask::run()
             msg.setField(VID_ENABLE_COMPRESSION, (m_session == nullptr) || m_session->isCompressionEnabled());
 
             delete response;
-				response = m_agentConnection->customRequest(&msg, m_localFile, false, nullptr, fileResendCallback, this);
+				response = m_agentConnection->customRequest(&msg, m_localFile, false, nullptr,
+				   [this] (NXCPMessage *agentMsg)
+				   {
+				      agentMsg->setId(m_requestId);
+				      m_session->sendMessage(agentMsg);
+				   });
 				if (response != nullptr)
 				{
 					rcc = response->getFieldAsUInt32(VID_RCC);
@@ -155,11 +160,7 @@ void FileDownloadTask::run()
 	   response.setField(VID_RCC, RCC_SUCCESS);
 		if (m_monitor)
 		{
-         g_monitoringList.addFile(fileDescriptor, m_node.get(), m_agentConnection);
-		}
-		else
-		{
-         delete fileDescriptor;
+		   AddFileMonitor(m_node.get(), m_agentConnection, m_session, m_localFile, monitorId);
 		}
 	}
 	else
@@ -170,21 +171,8 @@ void FileDownloadTask::run()
 	   m_session->sendMessage(abortCmd);
 
       response.setField(VID_RCC, AgentErrorToRCC(rcc));
-      delete fileDescriptor;
 	}
    m_session->sendMessage(response);
-}
-
-/**
- * Build file ID
- */
-TCHAR *FileDownloadTask::buildServerFileName(uint32_t nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize)
-{
-	BYTE hash[MD5_DIGEST_SIZE];
-   CalculateMD5Hash((BYTE *)remoteFile, _tcslen(remoteFile) * sizeof(TCHAR), hash);
-	TCHAR hashStr[128];
-	_sntprintf(buffer, bufferSize, _T("agent_file_%u_%s"), nodeId, BinToStr(hash, MD5_DIGEST_SIZE, hashStr));
-	return buffer;
 }
 
 /**

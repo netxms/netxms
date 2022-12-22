@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.filemanager.widgets;
 
+import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -45,7 +46,6 @@ public class DynamicFileViewer extends BaseFileViewer
 
    protected ConsoleJob monitoringJob = null;
    protected ConsoleJob restartJob = null;
-   protected String fileId = null;
    protected long nodeId = 0;
    protected String remoteFileName;
    protected NXCSession session = ConsoleSharedData.getSession();
@@ -94,72 +94,27 @@ public class DynamicFileViewer extends BaseFileViewer
     * @param nodeId
     * @param fileId
     */
-   public void startTracking(final long nodeId, final String fileId, final String remoteFileName)
+   public void startTracking(final UUID monitorId, final long nodeId, final String remoteFileName)
    {
       if (restartJob != null)
+      {
          restartJob.cancel();
+         restartJob = null;
+      }
 
       if (monitoringJob != null)
+      {
          monitoringJob.cancel();
+         monitoringJob = null;
+      }
 
       hideMessage();
 
-      this.fileId = fileId;
       this.nodeId = nodeId;
       this.remoteFileName = remoteFileName;
 
-      //text.setTopIndex(text.getLineCount() - 1);
-      monitoringJob = new ConsoleJob(Messages.get().DynamicFileViewer_TrackFileChanges, null, Activator.PLUGIN_ID, null) {
-         private boolean tracking = true;
-
-         @Override
-         protected void canceling()
-         {
-            tracking = false;
-         }
-
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            while(tracking)
-            {
-               final String s = session.waitForFileTail(fileId, 3000);
-               if (s != null)
-               {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if (!text.isDisposed())
-                        {
-                           append(s);
-                        }
-                        else
-                        {
-                           tracking = false;
-                        }
-                     }
-                  });
-               }
-            }
-            try
-            {
-               session.cancelFileMonitoring(nodeId, fileId);
-            }
-            catch(Exception e)
-            {
-               logger.warn(String.format("Cannot cancel file monitoring node id: %d, file id: %s", nodeId, fileId), e);
-            }
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().DynamicFileViewer_FileTrackingFailed;
-         }
-      };
-      monitoringJob.setUser(false);
-      monitoringJob.setSystem(true);
+      text.setTopIndex(text.getLineCount() - 1);
+      monitoringJob = new MonitoringJob(monitorId);
       monitoringJob.start();
    }
 
@@ -173,16 +128,15 @@ public class DynamicFileViewer extends BaseFileViewer
          restartJob.cancel();
          restartJob = null;
       }
-      
+
       if (monitoringJob != null)
       {
          monitoringJob.cancel();
          monitoringJob = null;
-         fileId = null;
          nodeId = 0;
       }
    }
-   
+
    /**
     * Restart tracking after failure
     */
@@ -193,7 +147,7 @@ public class DynamicFileViewer extends BaseFileViewer
          monitoringJob.cancel();
          monitoringJob = null;
       }
-      
+
       if (restartJob != null)
          restartJob.cancel();
 
@@ -250,7 +204,7 @@ public class DynamicFileViewer extends BaseFileViewer
                                     Messages.get().FileViewer_NotifyFollowConnectionEnabed +
                                     "\n-------------------------------------------------------------------------------\n\n"); //$NON-NLS-1$
                         append(loadFile(file.getFile()));
-                        startTracking(nodeId, fileId, remoteFileName);
+                        startTracking(file.getMonitorId(), nodeId, remoteFileName);
                      }
                   });
                   break;
@@ -272,5 +226,78 @@ public class DynamicFileViewer extends BaseFileViewer
       restartJob.setUser(false);
       restartJob.setSystem(true);
       restartJob.start();
+   }
+
+   /**
+    * File monitoring job
+    */
+   private class MonitoringJob extends ConsoleJob
+   {
+      private boolean tracking = true;
+      private UUID monitorId;
+
+      public MonitoringJob(UUID monitorId)
+      {
+         super(Messages.get().DynamicFileViewer_TrackFileChanges, null, Activator.PLUGIN_ID);
+         this.monitorId = monitorId;
+         setUser(false);
+         setSystem(true);
+      }
+
+      /**
+       * @see org.eclipse.core.runtime.jobs.Job#canceling()
+       */
+      @Override
+      protected void canceling()
+      {
+         tracking = false;
+      }
+
+      /**
+       * @see org.netxms.ui.eclipse.jobs.ConsoleJob#runInternal(org.eclipse.core.runtime.IProgressMonitor)
+       */
+      @Override
+      protected void runInternal(IProgressMonitor monitor) throws Exception
+      {
+         while(tracking)
+         {
+            final String s = session.waitForFileUpdate(monitorId, 3000);
+            if (s != null)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (!text.isDisposed())
+                     {
+                        append(s);
+                     }
+                     else
+                     {
+                        tracking = false;
+                     }
+                  }
+               });
+            }
+         }
+
+         try
+         {
+            session.cancelFileMonitoring(monitorId);
+         }
+         catch(Exception e)
+         {
+            logger.warn(String.format("Cannot cancel file monitor with ID %s for node %s", monitorId.toString(), session.getObjectName(nodeId)), e);
+         }
+      }
+
+      /**
+       * @see org.netxms.ui.eclipse.jobs.ConsoleJob#getErrorMessage()
+       */
+      @Override
+      protected String getErrorMessage()
+      {
+         return Messages.get().DynamicFileViewer_FileTrackingFailed;
+      }
    }
 }

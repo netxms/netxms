@@ -43,7 +43,8 @@ void MonitoredFileList::add(const TCHAR *fileName)
       if (!_tcscmp(file->fileName, fileName))
       {
          alreadyMonitored = true;
-         file->monitoringCount++;
+         file->monitorCount++;
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("MonitoredFileList::add: new reference count for file monitor %s is %d"), fileName, file->monitorCount);
          break;
       }
    }
@@ -52,8 +53,9 @@ void MonitoredFileList::add(const TCHAR *fileName)
    {
       MONITORED_FILE *file = new MONITORED_FILE();
       _tcscpy(file->fileName, fileName);
-      file->monitoringCount = 1;
+      file->monitorCount = 1;
       m_files.add(file);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("MonitoredFileList::add: added new file monitor %s"), fileName);
    }
 
    unlock();
@@ -92,17 +94,22 @@ bool MonitoredFileList::remove(const TCHAR *fileName)
       if (!_tcscmp(file->fileName, fileName))
       {
          found = true;
-         file->monitoringCount--;
-         if (file->monitoringCount == 0)
+         file->monitorCount--;
+         if (file->monitorCount == 0)
          {
             m_files.remove(i);
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("MonitoredFileList::remove: file monitor %s removed"), fileName);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("MonitoredFileList::remove: new reference count for file monitor %s is %d"), fileName, file->monitorCount);
          }
          break;
       }
    }
 
    if (!found)
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("MonitoredFileList::removeMonitoringFile: attempt to delete non-existing file %s"), fileName);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("MonitoredFileList::removeMonitoringFile: attempt to remove non-existing file monitor %s"), fileName);
 
    unlock();
    return found;
@@ -139,7 +146,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    int hFile = _topen(flData->getFile(), O_RDONLY | O_BINARY);
    if (hFile == -1)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s (ID=%s)."), flData->getFile(), flData->getFileId());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SendFileUpdatesOverNXCP: File \"%s\" does not exists or cannot be opened (monitor-id=%s)"), flData->getFile(), flData->getFileId());
       g_monitorFileList.remove(flData->getFileId());
       return THREAD_OK;
    }
@@ -181,7 +188,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
                if (content[j] == 0)
                   content[j] = ' ';
             content[readSize] = 0;
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("SendFileUpdatesOverNXCP: %u bytes will be sent."), static_cast<unsigned int>(readSize));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("SendFileUpdatesOverNXCP: %u bytes will be sent"), static_cast<unsigned int>(readSize));
             msg.setFieldFromMBString(VID_FILE_DATA, content);
             flData->setOffset(newOffset);
 
@@ -192,7 +199,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             bool sent = AgentEnumerateSessions(SendFileUpdateCallback, &data);
             if (!sent)
             {
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("SendFileUpdatesOverNXCP: Removing %s file (ID=%s) that is not possible to send."), flData->getFile(), flData->getFileId());
+               nxlog_debug_tag(DEBUG_TAG, 4, _T("SendFileUpdatesOverNXCP: Removing file monitor %s for file \"%s\" because of update sending failure"), flData->getFileId(), flData->getFile());
                g_monitorFileList.remove(flData->getFileId());
                break;
             }

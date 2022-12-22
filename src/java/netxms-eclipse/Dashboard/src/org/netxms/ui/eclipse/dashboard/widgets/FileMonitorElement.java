@@ -83,7 +83,7 @@ public class FileMonitorElement extends ElementWidget
                public void run()
                {
                   viewer.showFile(file.getFile(), true);
-                  viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
+                  viewer.startTracking(file.getMonitorId(), nodeId, file.getRemoteName());
                }
             });
          }

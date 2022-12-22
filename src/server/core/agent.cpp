@@ -328,25 +328,6 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 }
 
 /**
- * Cancel unknown file monitoring
- */
-static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
-{
-   nxlog_debug(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled"));
-   shared_ptr<AgentConnection> conn = object->createAgentConnection();
-   if (conn != nullptr)
-   {
-      NXCPMessage request(conn->getProtocolVersion());
-      request.setId(conn->generateRequestId());
-      request.setCode(CMD_CANCEL_FILE_MONITORING);
-      request.setField(VID_FILE_NAME, remoteFile);
-      request.setField(VID_OBJECT_ID, object->getId());
-      NXCPMessage* response = conn->customRequest(&request);
-      delete response;
-   }
-}
-
-/**
  * Receive file monitoring information and resend to all required user sessions
  */
 void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
@@ -354,39 +335,29 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
    if (IsShutdownInProgress())
       return;
 
-	shared_ptr<Node> object;
+	shared_ptr<Node> node;
 	if (m_nodeId != 0)
-		object = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
-	if (object != nullptr)
+		node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
+	if (node != nullptr)
 	{
-	   TCHAR remoteFile[MAX_PATH];
-      pMsg->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
-      unique_ptr<ObjectArray<ClientSession>> result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
-      debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%u]"), result->size(), remoteFile, object->getName(), object->getId());
-      int validSessionCount = result->size();
-      for(int i = 0; i < result->size(); i++)
+	   TCHAR agentFileId[MAX_PATH];
+      pMsg->getFieldAsString(VID_FILE_NAME, agentFileId, MAX_PATH);
+      unique_ptr<StructArray<std::pair<ClientSession*, uuid>>> sessions = FindFileMonitoringSessions(agentFileId);
+      debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for file monitors with agent ID %s on node %s [%u]"),
+            sessions->size(), agentFileId, node->getName(), node->getId());
+      for(int i = 0; i < sessions->size(); i++)
       {
-         if (!result->get(i)->sendMessage(pMsg))
+         std::pair<ClientSession*, uuid> *s = sessions->get(i);
+         pMsg->setField(VID_MONITOR_ID, s->second);
+         if (!s->first->sendMessage(pMsg))
          {
-            MONITORED_FILE file;
-            _tcslcpy(file.fileName, remoteFile, MAX_PATH);
-            file.nodeID = m_nodeId;
-            file.session = result->get(i);
-            g_monitoringList.removeFile(&file);
-            validSessionCount--;
-
-            if (validSessionCount == 0)
-               CancelUnknownFileMonitoring(object.get(), remoteFile);
+            RemoveFileMonitorByClientId(s->second);
          }
-      }
-      if (result->isEmpty())
-      {
-         CancelUnknownFileMonitoring(object.get(), remoteFile);
       }
 	}
 	else
 	{
-		g_monitoringList.removeDisconnectedNode(m_nodeId);
+	   RemoveFileMonitorsByNodeId(m_nodeId);
 		debugPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: node object not found"));
 	}
 }
@@ -994,7 +965,7 @@ void AgentConnectionEx::onDisconnect()
 {
    // Cancel file monitoring locally
    if (isFileUpdateConnection())
-      g_monitoringList.removeDisconnectedNode(m_nodeId);
+      RemoveFileMonitorsByNodeId(m_nodeId);
 
    if (m_tcpProxySession != nullptr)
       m_tcpProxySession->processTcpProxyAgentDisconnect(this);

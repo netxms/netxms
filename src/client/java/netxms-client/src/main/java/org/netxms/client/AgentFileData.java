@@ -19,6 +19,7 @@
 package org.netxms.client;
 
 import java.io.File;
+import java.util.UUID;
 
 /**
  * Information about file received from agent
@@ -28,6 +29,7 @@ public class AgentFileData
    private String id;
    private File file;
    private String remoteName;
+   private UUID monitorId;
 
    /**
     * Create new agent file object
@@ -36,11 +38,12 @@ public class AgentFileData
     * @param remoteName name of remote file
     * @param file local file
     */
-   public AgentFileData(String id, String remoteName, File file)
+   public AgentFileData(String id, String remoteName, File file, UUID monitorId)
    {
       this.id = id;
       this.remoteName = remoteName;
       this.file = file;
+      this.monitorId = monitorId;
    }
 
    /**
@@ -69,12 +72,20 @@ public class AgentFileData
       return file;
    }
 
-   /* (non-Javadoc)
+   /**
+    * @return the monitorId
+    */
+   public UUID getMonitorId()
+   {
+      return monitorId;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "AgentFileData [id=" + id + ", file=" + file + ", remoteName=" + remoteName + "]";
+      return "AgentFileData [id=" + id + ", file=" + file + ", remoteName=" + remoteName + ", monitorId=" + monitorId + "]";
    }
 }

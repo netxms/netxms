@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,10 +73,10 @@ public class AgentFileViewer extends ViewPart
    private Action actionSelectAll;
    private Action actionFind;
    private AbstractObject object;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -104,9 +104,9 @@ public class AgentFileViewer extends ViewPart
 		setPartName(object.getObjectName() + ": " + remoteFileName); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{	   
@@ -288,8 +288,8 @@ public class AgentFileViewer extends ViewPart
       manager.add(actionSelectAll);
       manager.add(actionCopy);
    }
-   
-	/* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
@@ -328,7 +328,7 @@ public class AgentFileViewer extends ViewPart
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
                {
-                  session.cancelFileMonitoring(nodeId, file.getId());
+                  session.cancelFileMonitoring(file.getMonitorId());
                }
                
                @Override
@@ -360,7 +360,7 @@ public class AgentFileViewer extends ViewPart
          view.viewer.showFile(file.getFile(), followChanges);
    	   if (followChanges)
    	   {
-   	      view.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
+            view.viewer.startTracking(file.getMonitorId(), nodeId, file.getRemoteName());
    	   }
    	   view.updatePartName(file.getRemoteName()); //$NON-NLS-1$
 	   }

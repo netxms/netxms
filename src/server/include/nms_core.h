@@ -595,7 +595,6 @@ private:
    void saveEventProcessingPolicy(NXCPMessage *request);
    void processEventProcessingPolicyRecord(NXCPMessage *request);
    void forwardToReportingServer(NXCPMessage *request);
-   void cancelFileMonitoring(NXCPMessage *request);
    void fileManagerControl(NXCPMessage *request);
    void uploadUserFileToAgent(NXCPMessage *request);
 
@@ -752,6 +751,7 @@ private:
 	void registerAgent(const NXCPMessage& request);
 	void getServerFile(const NXCPMessage& request);
 	void getAgentFile(const NXCPMessage& request);
+   void cancelFileMonitoring(const NXCPMessage& request);
 	void testDCITransformation(const NXCPMessage& request);
 	void sendJobList(const NXCPMessage& request);
 	void cancelJob(const NXCPMessage& request);
@@ -1109,7 +1109,7 @@ private:
    ClientSession *m_session;
    shared_ptr<AgentConnection> m_agentConnection;
    uint32_t m_requestId;
-   TCHAR *m_localFile;
+   TCHAR m_localFile[60];
    TCHAR *m_remoteFile;
    uint64_t m_fileSize;
    uint64_t m_currentSize;
@@ -1118,7 +1118,6 @@ private:
    bool m_allowExpansion;
 
    static void fileResendCallback(NXCPMessage *msg, void *arg);
-   static TCHAR *buildServerFileName(uint32_t nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
 
 public:
    FileDownloadTask(const shared_ptr<Node>& node, ClientSession *session, uint32_t requestId, const TCHAR *remoteName, bool allowExpansion, uint64_t maxFileSize, bool monitor);
@@ -1502,36 +1501,13 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
 DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const TCHAR *id, const TCHAR * const *columns);
 
 /**
- * Monitored file
+ * Managing file monitors
  */
-struct MONITORED_FILE
-{
-   TCHAR fileName[MAX_PATH];
-   ClientSession *session;
-   uint32_t nodeID;
-};
-
-/**
- * List of monitored files
- */
-class FileMonitoringList
-{
-private:
-   Mutex m_mutex;
-   ObjectArray<MONITORED_FILE> m_monitoredFiles;
-
-   void lock() { m_mutex.lock(); }
-   void unlock() { m_mutex.unlock(); }
-
-public:
-   FileMonitoringList();
-
-   void addFile(MONITORED_FILE *file, Node *node, const shared_ptr<AgentConnection>& conn);
-   bool isDuplicate(MONITORED_FILE *file);
-   bool removeFile(MONITORED_FILE *file);
-   void removeDisconnectedNode(uint32_t nodeId);
-   unique_ptr<ObjectArray<ClientSession>> findClientByFNameAndNodeID(const TCHAR *fileName, uint32_t nodeID);
-};
+void AddFileMonitor(Node *node, const shared_ptr<AgentConnection>& conn, ClientSession *session, const TCHAR *agentId, const uuid& clientId);
+bool RemoveFileMonitorsByAgentId(const TCHAR *agentId, session_id_t sessionId = -1);
+bool RemoveFileMonitorByClientId(const uuid& clientId, session_id_t sessionId = -1);
+void RemoveFileMonitorsByNodeId(uint32_t nodeId);
+unique_ptr<StructArray<std::pair<ClientSession*, uuid>>> FindFileMonitoringSessions(const TCHAR *agentId);
 
 /**
  * License problem
@@ -1641,7 +1617,6 @@ struct DELAYED_SQL_REQUEST;
 extern ObjectQueue<DELAYED_SQL_REQUEST> g_dbWriterQueue;
 
 extern NXCORE_EXPORTABLE_VAR(int g_dbSyntax);
-extern FileMonitoringList g_monitoringList;
 
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_mainThreadPool);
 extern NXCORE_EXPORTABLE_VAR(ThreadPool *g_clientThreadPool);

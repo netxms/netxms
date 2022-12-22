@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -198,8 +198,6 @@ private:
 	int64_t m_fileSize;
 
    void setLocalFileFullPath();
-
-   static void uploadCallback(size_t size, void *arg);
 
 protected:
 	virtual ServerJobResult run() override;

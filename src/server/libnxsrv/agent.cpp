@@ -186,6 +186,17 @@ bool AgentConnectionReceiver::readChannel()
 }
 
 /**
+ * Create key for callback processing in thread pool
+ */
+static inline void CreateCallbackKey(TCHAR prefix, AgentConnectionReceiver *receiver, TCHAR *key)
+{
+   key[0] = 'C';
+   key[1] = prefix;
+   key[2] = '-';
+   IntegerToString(CAST_FROM_POINTER(receiver, uint64_t), &key[3]);
+}
+
+/**
  * Read single message from channel
  */
 MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead)
@@ -307,7 +318,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             if (g_agentConnectionThreadPool != nullptr)
             {
                TCHAR key[64];
-               _sntprintf(key, 64, _T("EventProc_%p"), this);
+               CreateCallbackKey('E', this, key);
                ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onTrapCallback, msg);
             }
             else
@@ -319,7 +330,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             if (g_agentConnectionThreadPool != nullptr)
             {
                TCHAR key[64];
-               _sntprintf(key, 64, _T("Syslog_%p"), this);
+               CreateCallbackKey('Y', this, key);
                ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSyslogMessageCallback, msg);
             }
             else
@@ -331,7 +342,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             if (g_agentConnectionThreadPool != nullptr)
             {
                TCHAR key[64];
-               _sntprintf(key, 64, _T("WinEvent_%p"), this);
+               CreateCallbackKey('W', this, key);
                ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onWindowsEventCallback, msg);
             }
             else
@@ -376,14 +387,22 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             }
             break;
          case CMD_FILE_MONITORING:
-            connection->onFileMonitoringData(msg);
-            delete msg;
+            if (g_agentConnectionThreadPool != nullptr)
+            {
+               TCHAR key[64];
+               CreateCallbackKey('F', this, key);
+               ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onFileMonitoringDataCallback, msg);
+            }
+            else
+            {
+               delete msg;
+            }
             break;
          case CMD_SNMP_TRAP:
             if (g_agentConnectionThreadPool != nullptr)
             {
                TCHAR key[64];
-               _sntprintf(key, 64, _T("SNMPTrap_%p"), this);
+               CreateCallbackKey('T', this, key);
                ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onSnmpTrapCallback, msg);
             }
             else
@@ -399,7 +418,7 @@ MessageReceiverResult AgentConnectionReceiver::readMessage(bool allowChannelRead
             if (g_agentConnectionThreadPool != nullptr)
             {
                TCHAR key[64];
-               _sntprintf(key, 64, _T("Notify_%p"), this);
+               CreateCallbackKey('N', this, key);
                ThreadPoolExecuteSerialized(g_agentConnectionThreadPool, key, connection, &AgentConnection::onNotifyCallback, msg);
             }
             else
@@ -506,11 +525,8 @@ AgentConnection::AgentConnection(const InetAddress& addr, uint16_t port, const T
    m_fileDownloadSucceeded = false;
 	m_fileUploadInProgress = false;
    m_fileUpdateConnection = false;
-   m_sendToClientMessageCallback = nullptr;
    m_downloadRequestId = 0;
    m_downloadActivityTimestamp = 0;
-   m_downloadProgressCallback = nullptr;
-   m_downloadProgressCallbackArg = nullptr;
    m_bulkDataProcessing = 0;
    m_controlServer = false;
    m_masterServer = false;
@@ -1482,6 +1498,15 @@ void AgentConnection::onDataPush(NXCPMessage *pMsg)
 }
 
 /**
+ * Callback for processing file monitoring data on separate thread
+ */
+void AgentConnection::onFileMonitoringDataCallback(NXCPMessage *msg)
+{
+   onFileMonitoringData(msg);
+   delete msg;
+}
+
+/**
  * Monitoring data handler. Should be overriden in derived classes to implement
  * actual monitoring data processing. Default implementation do nothing.
  */
@@ -1702,8 +1727,7 @@ uint32_t AgentConnection::executeCommand(const TCHAR *command, const StringList 
 struct FileUploadContext
 {
    AgentConnection *connection;
-   void (* userCallback)(size_t, void *);
-   void *userContext;
+   std::function<void (size_t)> userCallback;
    time_t lastProbeTime;
    uint32_t messageCount;
 };
@@ -1728,14 +1752,14 @@ static void FileUploadProgressCalback(size_t bytesTransferred, void *_context)
    }
 
    if (context->userCallback != nullptr)
-      context->userCallback(bytesTransferred, context->userContext);
+      context->userCallback(bytesTransferred);
 }
 
 /**
  * Upload file to agent
  */
 uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+      std::function<void (size_t)> progressCallback, NXCPStreamCompressionMethod compMethod)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1829,7 +1853,6 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
          FileUploadContext context;
          context.connection = this;
          context.userCallback = progressCallback;
-         context.userContext = cbArg;
          context.lastProbeTime = time(nullptr);
          context.messageCount = 0;
 
@@ -1913,7 +1936,7 @@ uint32_t AgentConnection::changeFilePermissions(const TCHAR *file, uint32_t perm
  * Download file from agent
  */
 uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *destinationFile, bool allowPathExpansion,
-         void (* progressCallback)(size_t, void *), void *cbArg, NXCPStreamCompressionMethod compMethod)
+      std::function<void (size_t)> progressCallback, NXCPStreamCompressionMethod compMethod)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1929,7 +1952,7 @@ uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *des
    msg.setField(VID_ENABLE_COMPRESSION, compMethod != NXCP_STREAM_COMPRESSION_NONE);
    msg.setField(VID_COMPRESSION_METHOD, static_cast<uint16_t>(compMethod));
 
-   NXCPMessage *response = customRequest(&msg, destinationFile, false, progressCallback, nullptr, nullptr);
+   NXCPMessage *response = customRequest(&msg, destinationFile, false, progressCallback, nullptr);
    uint32_t rcc;
    if (response != nullptr)
    {
@@ -1941,6 +1964,37 @@ uint32_t AgentConnection::downloadFile(const TCHAR *sourceFile, const TCHAR *des
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("Download request for file %s timeout"), sourceFile);
       rcc = ERR_REQUEST_TIMEOUT;
+   }
+   return rcc;
+}
+
+/**
+ * Cancel file monitoring
+ */
+uint32_t AgentConnection::cancelFileMonitoring(const TCHAR *agentFileId)
+{
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   NXCPMessage request(CMD_CANCEL_FILE_MONITORING, generateRequestId(), m_nProtocolVersion);
+   request.setField(VID_FILE_NAME, agentFileId);
+   uint32_t rcc;
+   if (sendMessage(&request))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, request.getId(), m_commandTimeout);
+      if (response != nullptr)
+      {
+         rcc = response->getFieldAsUInt32(VID_RCC);
+         delete response;
+      }
+      else
+      {
+         rcc = ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      rcc = ERR_CONNECTION_BROKEN;
    }
    return rcc;
 }
@@ -2530,8 +2584,7 @@ TCHAR *AgentConnection::getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, 
 /**
  * Send custom request to agent
  */
-NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *recvFile, bool append,
-         void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg)
+NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *recvFile, bool append, std::function<void (size_t)> downloadProgressCallback, std::function<void (NXCPMessage*)> fileResendCallback)
 {
 	NXCPMessage *msg = nullptr;
 
@@ -2539,7 +2592,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *request, const TCHAR *r
    request->setId(requestId);
 	if (recvFile != nullptr)
 	{
-	   uint32_t rcc = prepareFileDownload(recvFile, requestId, append, downloadProgressCallback, fileResendCallback, cbArg);
+	   uint32_t rcc = prepareFileDownload(recvFile, requestId, append, downloadProgressCallback, fileResendCallback);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
@@ -2624,8 +2677,7 @@ uint32_t AgentConnection::cancelFileDownload()
 /**
  * Prepare for file download
  */
-uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append,
-         void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg)
+uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append, std::function<void (size_t)> downloadProgressCallback, std::function<void (NXCPMessage*)> fileResendCallback)
 {
    if (fileResendCallback == nullptr)
    {
@@ -2649,7 +2701,6 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
       m_downloadRequestId = rqId;
       m_downloadActivityTimestamp = time(nullptr);
       m_downloadProgressCallback = downloadProgressCallback;
-      m_downloadProgressCallbackArg = cbArg;
 
       m_sendToClientMessageCallback = nullptr;
 
@@ -2662,7 +2713,6 @@ uint32_t AgentConnection::prepareFileDownload(const TCHAR *fileName, uint32_t rq
       m_downloadRequestId = rqId;
       m_downloadActivityTimestamp = time(nullptr);
       m_downloadProgressCallback = downloadProgressCallback;
-      m_downloadProgressCallbackArg = cbArg;
 
       m_sendToClientMessageCallback = fileResendCallback;
 
@@ -2678,7 +2728,7 @@ void AgentConnection::processFileData(NXCPMessage *msg)
    m_downloadActivityTimestamp = time(nullptr);
    if (m_sendToClientMessageCallback != nullptr)
    {
-      m_sendToClientMessageCallback(msg, m_downloadProgressCallbackArg);
+      m_sendToClientMessageCallback(msg);
       if (msg->isEndOfFile())
       {
          m_sendToClientMessageCallback = nullptr;
@@ -2688,7 +2738,7 @@ void AgentConnection::processFileData(NXCPMessage *msg)
       {
          if (m_downloadProgressCallback != nullptr)
          {
-            m_downloadProgressCallback(msg->getBinaryDataSize(), m_downloadProgressCallbackArg);
+            m_downloadProgressCallback(msg->getBinaryDataSize());
          }
       }
    }
@@ -2706,7 +2756,7 @@ void AgentConnection::processFileData(NXCPMessage *msg)
             }
             else if (m_downloadProgressCallback != nullptr)
             {
-               m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
+               m_downloadProgressCallback(_tell(m_hCurrFile));
             }
          }
       }
@@ -2728,7 +2778,7 @@ void AgentConnection::processFileTransferAbort(NXCPMessage *msg)
 {
    if (m_sendToClientMessageCallback != nullptr)
    {
-      m_sendToClientMessageCallback(msg, m_downloadProgressCallbackArg);
+      m_sendToClientMessageCallback(msg);
       m_sendToClientMessageCallback = nullptr;
    }
    else

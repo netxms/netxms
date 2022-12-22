@@ -900,10 +900,9 @@ private:
 	time_t m_downloadActivityTimestamp;
 	Condition m_condFileDownload;
 	bool m_fileDownloadSucceeded;
-	void (*m_downloadProgressCallback)(size_t, void*);
-	void *m_downloadProgressCallbackArg;
+	std::function<void (size_t)> m_downloadProgressCallback;
 	bool m_deleteFileOnDownloadFailure;
-	void (*m_sendToClientMessageCallback)(NXCPMessage*, void*);
+   std::function<void (NXCPMessage*)> m_sendToClientMessageCallback;
 	bool m_fileUploadInProgress;
 	bool m_fileUpdateConnection;
 	bool m_allowCompression;
@@ -912,13 +911,13 @@ private:
    uint32_t setupEncryption(RSA *pServerKey);
    uint32_t authenticate(BOOL bProxyData);
    uint32_t setupProxyConnection();
-   uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append,
-         void (*downloadProgressCallback)(size_t, void*), void (*fileResendCallback)(NXCPMessage*, void*), void *cbArg);
+   uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append, std::function<void (size_t)> downloadProgressCallback, std::function<void (NXCPMessage*)> fileResendCallback);
    void processFileData(NXCPMessage *msg);
    void processFileTransferAbort(NXCPMessage *msg);
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
+   void onFileMonitoringDataCallback(NXCPMessage *msg);
    void onSnmpTrapCallback(NXCPMessage *msg);
    void onTrapCallback(NXCPMessage *msg);
    void onSyslogMessageCallback(NXCPMessage *msg);
@@ -998,16 +997,15 @@ public:
    uint32_t setServerId(uint64_t serverId);
    uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
          void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
-   uint32_t uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
-            void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
-            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
-   uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
-            void (* progressCallback)(size_t, void *) = nullptr, void *cbArg = nullptr,
-            NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
-   uint32_t getFileFingerprint(const TCHAR *file, RemoteFileFingerprint *fp);
    uint32_t changeFileOwner(const TCHAR *file, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t changeFilePermissions(const TCHAR *file, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
+   uint32_t getFileFingerprint(const TCHAR *file, RemoteFileFingerprint *fp);
+   uint32_t uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
+            std::function<void (size_t)> progressCallback = nullptr, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+   uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
+            std::function<void (size_t)> progressCallback = nullptr, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+   uint32_t cancelFileMonitoring(const TCHAR *agentFileId);
    uint32_t startUpgrade(const TCHAR *pkgName);
    uint32_t installPackage(const TCHAR *pkgName, const TCHAR *pkgType, const TCHAR *command);
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
@@ -1026,8 +1024,8 @@ public:
 
    uint32_t generateRequestId() { return (uint32_t)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *request, const TCHAR *recvFile = nullptr, bool append = false,
-	         void (*downloadProgressCallback)(size_t, void*) = nullptr,
-	         void (*fileResendCallback)(NXCPMessage*, void*) = nullptr, void *cbArg = nullptr);
+	         std::function<void (size_t)> downloadProgressCallback = nullptr,
+	         std::function<void (NXCPMessage*)> fileResendCallback = nullptr);
 
    void setConnectionTimeout(uint32_t timeout) { m_connectionTimeout = MAX(timeout, 1000); }
 	uint32_t getConnectionTimeout() const { return m_connectionTimeout; }

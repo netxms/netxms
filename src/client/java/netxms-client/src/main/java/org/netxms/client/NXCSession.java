@@ -331,7 +331,7 @@ public class NXCSession
    private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
 
    // Received file updates(for file monitoring)
-   private Map<String, String> receivedFileUpdates = new HashMap<String, String>();
+   private Map<UUID, String> receivedFileUpdates = new HashMap<UUID, String>();
 
    // Server information
    private ProtocolVersion protocolVersion;
@@ -597,7 +597,7 @@ public class NXCSession
                      processFileData(msg);
                      break;
                   case NXCPCodes.CMD_FILE_MONITORING:
-                     processFileTail(msg);
+                     processFileUpdate(msg);
                      break;
                   case NXCPCodes.CMD_ABORT_FILE_TRANSFER:
                      processFileTransferError(msg);
@@ -903,14 +903,14 @@ public class NXCSession
        *
        * @param msg NXCP message
        */
-      private void processFileTail(final NXCPMessage msg)
+      private void processFileUpdate(final NXCPMessage msg)
       {
-         String fileName = msg.getFieldAsString(NXCPCodes.VID_FILE_NAME);
-         String fileContent = msg.getFieldAsString(NXCPCodes.VID_FILE_DATA);
-
+         UUID monitorId = msg.getFieldAsUUID(NXCPCodes.VID_MONITOR_ID);
+         String newData = msg.getFieldAsString(NXCPCodes.VID_FILE_DATA);
          synchronized(receivedFileUpdates)
          {
-            receivedFileUpdates.put(fileName, fileContent);
+            String existingData = receivedFileUpdates.get(monitorId);
+            receivedFileUpdates.put(monitorId, (existingData != null) ? existingData + newData : newData);
             receivedFileUpdates.notifyAll();
          }
       }
@@ -2043,25 +2043,25 @@ public class NXCSession
    }
 
    /**
-    * Wait for specific file tail to arrive
+    * Wait for update from specific file monitor.
     *
-    * @param fileName Waiting file name
-    * @param timeout  Wait timeout in milliseconds
+    * @param monitorId file monitor ID (previously returned by <code>downloadFileFromAgent</code>
+    * @param timeout Wait timeout in milliseconds
     * @return Received tail string or null in case of failure
     */
-   public String waitForFileTail(String fileName, final int timeout)
+   public String waitForFileUpdate(UUID monitorId, final int timeout)
    {
       int timeRemaining = timeout;
-      String tail = null;
+      String data = null;
 
       while(timeRemaining > 0)
       {
          synchronized(receivedFileUpdates)
          {
-            tail = receivedFileUpdates.get(fileName);
-            if (tail != null)
+            data = receivedFileUpdates.get(monitorId);
+            if (data != null)
             {
-               receivedFileUpdates.remove(fileName);
+               receivedFileUpdates.remove(monitorId);
                break;
             }
 
@@ -2076,7 +2076,7 @@ public class NXCSession
             timeRemaining -= System.currentTimeMillis() - startTime;
          }
       }
-      return tail;
+      return data;
    }
 
    /**
@@ -10462,8 +10462,6 @@ public class NXCSession
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
-      final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
-      remoteFileName = response.getFieldAsString(NXCPCodes.VID_FILE_NAME);
       if (updateServerJobId != null)
          updateServerJobId.setJobIdCallback(response.getFieldAsInt32(NXCPCodes.VID_REQUEST_ID));
       if (listener != null)
@@ -10476,10 +10474,9 @@ public class NXCSession
          }
       }
 
-      ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 120000); // 120 seconds timeout for next file part
+      ReceivedFile remoteFile = waitForFile(msg.getMessageId(), 120000); // 120 seconds timeout for file content
       if (remoteFile.isFailed())
          throw new NXCException(RCC.AGENT_FILE_DOWNLOAD_ERROR);
-      AgentFileData file = new AgentFileData(id, remoteFileName, remoteFile.getFile());
 
       try
       {
@@ -10489,7 +10486,9 @@ public class NXCSession
       {
          removeProgressListener(msg.getMessageId());
       }
-      return file;
+
+      return new AgentFileData(response.getFieldAsString(NXCPCodes.VID_NAME), response.getFieldAsString(NXCPCodes.VID_FILE_NAME), remoteFile.getFile(),
+            response.getFieldAsUUID(NXCPCodes.VID_MONITOR_ID));
    }
 
    /**
@@ -10512,16 +10511,14 @@ public class NXCSession
    /**
     * Cancel file monitoring
     *
-    * @param nodeId         node object ID
-    * @param remoteFileName fully qualified file name on remote system
-    * @throws IOException  if socket or file I/O error occurs
+    * @param monitorId file monitor ID (previously returned by <code>downloadFileFromAgent</code>
+    * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void cancelFileMonitoring(long nodeId, String remoteFileName) throws IOException, NXCException
+   public void cancelFileMonitoring(UUID monitorId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CANCEL_FILE_MONITORING);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-      msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
+      msg.setField(NXCPCodes.VID_MONITOR_ID, monitorId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

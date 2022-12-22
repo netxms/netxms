@@ -126,7 +126,7 @@ static int InstallPackage(AgentConnection *conn, const TCHAR *pszPkgName)
 /**
  * Upload progress callback
  */
-static void ProgressCallback(size_t bytesTransferred, void *cbArg)
+static void ProgressCallback(size_t bytesTransferred)
 {
 	_tprintf(_T("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b") UINT64_FMT_ARGS(_T("-16")), static_cast<uint64_t>(bytesTransferred));
 }
@@ -186,7 +186,7 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
    int64_t elapsedTime = GetCurrentTimeMs();
    if (s_verbose)
       _tprintf(_T("Upload:                 "));
-   uint32_t rcc = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : nullptr, false, s_verbose ? ProgressCallback : nullptr, nullptr, s_compression);
+   uint32_t rcc = conn->uploadFile(argv[optind + 1], s_destinationFile[0] != 0 ? s_destinationFile : nullptr, false, s_verbose ? ProgressCallback : nullptr, s_compression);
    if (s_verbose)
       _tprintf(_T("\r                        \r"));
    elapsedTime = GetCurrentTimeMs() - elapsedTime;

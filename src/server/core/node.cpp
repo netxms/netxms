@@ -3018,7 +3018,7 @@ restart_status_poll:
                PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
             }
 
-            g_monitoringList.removeDisconnectedNode(m_id);
+            RemoveFileMonitorsByNodeId(m_id);
             sendPollerMsg(POLLER_ERROR _T("Node is unreachable\r\n"));
             resyncDataCollectionConfiguration = true; // Will cause removal of all remotely collected DCIs from proxy
          }
@@ -3097,14 +3097,14 @@ restart_status_poll:
          m_agentUpTime = _tcstol(buffer, nullptr, 0);
          if (oldAgentuptime > m_agentUpTime)
          {
-            //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconnectedNode(m_id);
+            // agent was restarted, cancel existing file monitors (on agent side they should have been cancelled by restart)
+            RemoveFileMonitorsByNodeId(m_id);
          }
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_name, m_id);
-         g_monitoringList.removeDisconnectedNode(m_id);
+         RemoveFileMonitorsByNodeId(m_id);
          m_agentUpTime = 0;
       }
    }
@@ -9010,7 +9010,7 @@ bool Node::setFileUpdateConnection(const shared_ptr<AgentConnection>& connection
    if (changed)
    {
       connection->enableFileUpdates();
-      nxlog_debug_tag(_T("file.monitor"), 6, _T("Set file tracking connection for node %s [%d]"), m_name, m_id);
+      nxlog_debug_tag(_T("file.monitor"), 6, _T("Set file monitor connection for node %s [%u]"), m_name, m_id);
    }
    return changed;
 }
@@ -9023,7 +9023,7 @@ void Node::clearFileUpdateConnection()
    lockProperties();
    m_fileUpdateConnection.reset();
    unlockProperties();
-   nxlog_debug_tag(_T("file.monitor"), 6, _T("Cleared file tracking connection for node %s [%d]"), m_name, m_id);
+   nxlog_debug_tag(_T("file.monitor"), 6, _T("Cleared file monitor connection for node %s [%d]"), m_name, m_id);
 }
 
 /**
