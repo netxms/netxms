@@ -544,9 +544,8 @@ void ClientSession::finalize()
    // Mark as terminated (sendMessage calls will not work after that point)
    InterlockedOr(&m_flags, CSF_TERMINATED);
 
-   // remove all pending file transfers from reporting server
    RemovePendingFileTransferRequests(this);
-
+   RemoveFileMonitorsBySessionId(m_id);
    RemoveAllSessionLocks(m_id);
    m_openDataCollectionConfigurations.forEach(CloseDataCollectionConfiguration, nullptr);
 
