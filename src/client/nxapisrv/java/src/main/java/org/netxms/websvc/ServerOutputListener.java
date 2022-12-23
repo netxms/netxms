@@ -131,4 +131,9 @@ public class ServerOutputListener implements TextOutputListener
    {
       return lastUpdateTime;
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }
