@@ -41,4 +41,9 @@ public interface TextOutputListener
     * Called when error occurs
     */
    public void onError();
+
+   /**
+    * Called when all text output provided
+    */
+   public void onFinish();
 }

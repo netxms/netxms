@@ -103,4 +103,9 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

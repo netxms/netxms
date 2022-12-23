@@ -200,4 +200,9 @@ public class ServerScriptResults extends AbstractCommandResultView implements Te
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

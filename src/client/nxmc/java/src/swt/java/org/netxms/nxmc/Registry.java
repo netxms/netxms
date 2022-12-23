@@ -21,6 +21,7 @@ package org.netxms.nxmc;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,9 @@ import java.util.TimeZone;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TextOutputListener;
+import org.netxms.client.constants.ObjectPollType;
+import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
 import org.netxms.nxmc.base.views.Perspective;
@@ -42,6 +46,7 @@ import org.netxms.nxmc.modules.objects.InfrastructurePerspective;
 import org.netxms.nxmc.modules.objects.MapsPerspective;
 import org.netxms.nxmc.modules.objects.NetworkPerspective;
 import org.netxms.nxmc.modules.objects.TemplatesPerspective;
+import org.netxms.nxmc.modules.objects.views.helpers.PollerProxy;
 import org.netxms.nxmc.modules.worldmap.WorldMapPerspective;
 
 /**
@@ -141,6 +146,7 @@ public final class Registry
    private File stateDir = null;
    private MainWindow mainWindow = null;
    private TrayItem trayIcon = null;
+   private HashMap<String, PollerProxy> pollersMap = new HashMap<String, PollerProxy>();
 
    /**
     * Default constructor
@@ -250,5 +256,72 @@ public final class Registry
    public void setTrayIcon(TrayItem trayIcon)
    {
       this.trayIcon = trayIcon;
+   }
+   
+   /**
+    * Start new poll or connect to existing 
+    * 
+    * @param target polling target
+    * @param pollType poll type
+    * @param listener new listener
+    */
+   public void startNewPoll(PollingTarget target, ObjectPollType pollType, TextOutputListener listener)
+   {
+      synchronized(pollersMap)
+      {
+         String key = String.format("%d_%d", target.getObjectId(), pollType.getValue());
+         PollerProxy proxy = pollersMap.get(key);
+         if (proxy != null)
+         {
+            proxy.addListener(listener, true);
+            proxy.startPoll();
+         }
+         else
+         {
+            pollersMap.put(key, new PollerProxy(target, pollType, listener)); 
+         }
+      }    
+   }
+   
+   /**
+    * Follow current poll by another listener if poll exists
+    * 
+    * @param target polling target
+    * @param pollType poll type
+    * @param listener new listener
+    */
+   public void followPoll(PollingTarget target, ObjectPollType pollType, TextOutputListener listener)
+   {
+      synchronized(pollersMap)
+      {
+         String key = String.format("%d_%d", target.getObjectId(), pollType.getValue());
+         PollerProxy proxy = pollersMap.get(key);
+         if (proxy != null)
+         {
+            proxy.addListener(listener, false);
+         }
+      }
+   }
+   
+   
+   /**
+    * Remove polling listener 
+    * 
+    * @param target polling target
+    * @param pollType poll type
+    * @param listener listener to remove
+    */
+   public void removePollListener(PollingTarget target, ObjectPollType pollType, TextOutputListener listener)
+   {
+      synchronized(pollersMap)
+      {
+         String key = String.format("%d_%d", target.getObjectId(), pollType.getValue());
+         PollerProxy proxy = pollersMap.get(key);
+         if (proxy != null)
+         {
+            if(proxy.removeListenerAndCheck(listener))
+               pollersMap.remove(key);
+         }
+      }      
    }
 }

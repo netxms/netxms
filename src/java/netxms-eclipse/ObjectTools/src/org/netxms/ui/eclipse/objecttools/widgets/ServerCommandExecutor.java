@@ -154,4 +154,9 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

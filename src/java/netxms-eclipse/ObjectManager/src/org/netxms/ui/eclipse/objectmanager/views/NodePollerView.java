@@ -331,6 +331,11 @@ public class NodePollerView extends ViewPart
          public void onError()
          {
          }
+
+         @Override
+         public void onFinish()
+         {
+         }
       };
 
       Job job = new Job(String.format(Messages.get().NodePollerView_JobName, target.getObjectName(), target.getObjectId())) {

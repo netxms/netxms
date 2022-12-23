@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.objects.views;
 
 import java.util.Date;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
@@ -27,13 +26,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.constants.ObjectPollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.StyledText;
 import org.netxms.nxmc.base.widgets.helpers.StyleRange;
@@ -46,7 +43,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Forced node poll view
  */
-public class ObjectPollerView extends AdHocObjectView
+public class ObjectPollerView extends AdHocObjectView implements TextOutputListener
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectPollerView.class);
 
@@ -67,12 +64,10 @@ public class ObjectPollerView extends AdHocObjectView
    private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
    private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
 
-   private NXCSession session;
    private PollingTarget target;
    private ObjectPollType pollType;
    private Display display;
    private StyledText textArea;
-   private boolean pollActive = false;
    private Action actionRestart;
    private Action actionClearOutput;
 
@@ -85,8 +80,6 @@ public class ObjectPollerView extends AdHocObjectView
    public ObjectPollerView(AbstractObject object, ObjectPollType type)
    {
       super(POLL_NAME[type.getValue()], ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), false);
-
-      session = Registry.getSession();
       display = Display.getCurrent();
 
       target = (PollingTarget)object;
@@ -99,7 +92,6 @@ public class ObjectPollerView extends AdHocObjectView
    protected ObjectPollerView()
    {
       super(null, null, null, 0, false);
-      session = Registry.getSession();
       display = Display.getCurrent();
    }
 
@@ -123,6 +115,7 @@ public class ObjectPollerView extends AdHocObjectView
    {
       super.postClone(origin);
       textArea.replaceContent(((ObjectPollerView)origin).textArea);
+      Registry.getInstance().followPoll(target, pollType, this);
    }
 
    /**
@@ -227,96 +220,54 @@ public class ObjectPollerView extends AdHocObjectView
       return null;
    }
 
-   /**
-    * Start poll
-    */
    public void startPoll()
    {
-      if (pollActive)
-         return;
-      pollActive = true;
-      actionRestart.setEnabled(false);
-
-      addPollerMessage("\u007Fl**** Poll request sent to server ****\r\n"); //$NON-NLS-1$
-
-      final TextOutputListener listener = new TextOutputListener() {
-         @Override
-         public void messageReceived(final String message)
-         {
-            display.asyncExec(new Runnable() {
-               @Override
-               public void run()
-               {
-                  if (!textArea.isDisposed())
-                     addPollerMessage(message);
-               }
-            });
-         }
-
-         @Override
-         public void setStreamId(long streamId)
-         {
-         }
-
-         @Override
-         public void onError()
-         {
-         }
-      };
-
-      Job job = new Job(String.format(i18n.tr("Node poll: %s [%d]"), target.getObjectName(), target.getObjectId()), this) {
-
-         @Override
-         protected void run(IProgressMonitor monitor) 
-         {
-            try
-            {
-               session.pollObject(target.getObjectId(), pollType, listener);
-               onPollComplete(true, null);
-            }
-            catch(Exception e)
-            {
-               onPollComplete(false, e.getMessage());
-            }
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return null;
-         }
-      };
-      job.setSystem(true);
-      job.start();
+      actionRestart.setEnabled(false);      
+      Registry.getInstance().startNewPoll(target, pollType, this);
    }
 
-   /**
-    * Poll completion handler
-    * 
-    * @param success
-    * @param errorMessage
-    */
-   private void onPollComplete(final boolean success, final String errorMessage)
+   @Override
+   public void messageReceived(String text)
    {
       display.asyncExec(new Runnable() {
          @Override
          public void run()
          {
-            if (textArea.isDisposed())
-               return;
-
-            if (success)
-            {
-               addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
-            }
-            else
-            {
-               addPollerMessage(String.format("\u007FePOLL ERROR: %s\r\n", errorMessage)); //$NON-NLS-1$
-               addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
-            }
-            pollActive = false;
-            actionRestart.setEnabled(true);
+            if (!textArea.isDisposed())
+               addPollerMessage(text);
          }
       });
+   }
+
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
+
+   @Override
+   public void onError()
+   {
+   }
+
+   @Override
+   public void onFinish()
+   {
+      display.asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            if (!textArea.isDisposed())
+            {
+               actionRestart.setEnabled(true);
+            }
+         }
+      });
+   }
+
+   @Override
+   public void dispose()
+   {
+      Registry.getInstance().removePollListener(target, pollType, this);
+      super.dispose();
    }
 }

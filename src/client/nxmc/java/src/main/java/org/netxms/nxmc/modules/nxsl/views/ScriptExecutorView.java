@@ -699,4 +699,12 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
    public void onError()
    {
    }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onFinish()
+    */
+   @Override
+   public void onFinish()
+   {
+   }
 }

@@ -96,5 +96,10 @@ public class SSHExecutor extends AbstractObjectToolExecutor implements TextOutpu
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }
 

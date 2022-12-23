@@ -190,4 +190,9 @@ public class SSHCommandResults extends AbstractCommandResults implements TextOut
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

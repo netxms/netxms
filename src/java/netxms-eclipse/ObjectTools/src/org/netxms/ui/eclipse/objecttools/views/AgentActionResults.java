@@ -201,4 +201,9 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

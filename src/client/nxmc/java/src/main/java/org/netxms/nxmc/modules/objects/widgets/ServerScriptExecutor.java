@@ -95,4 +95,9 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

@@ -311,4 +311,9 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

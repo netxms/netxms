@@ -219,4 +219,9 @@ public class AgentActionResults extends AbstractCommandResultView implements Tex
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

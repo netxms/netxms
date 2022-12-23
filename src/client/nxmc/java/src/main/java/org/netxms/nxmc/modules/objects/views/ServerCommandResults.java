@@ -280,4 +280,9 @@ public class ServerCommandResults extends AbstractCommandResultView implements T
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }

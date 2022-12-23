@@ -200,4 +200,9 @@ public class SSHCommandResults extends AbstractCommandResultView implements Text
    public void onError()
    {
    }
+   
+   @Override
+   public void onFinish()
+   {
+   }
 }

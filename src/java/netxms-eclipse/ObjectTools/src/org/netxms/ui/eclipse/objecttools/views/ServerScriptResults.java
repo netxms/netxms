@@ -196,4 +196,9 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    public void onError()
    {
    }
+
+   @Override
+   public void onFinish()
+   {
+   }
 }
