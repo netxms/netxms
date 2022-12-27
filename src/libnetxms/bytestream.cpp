@@ -658,3 +658,13 @@ ByteStream *ByteStream::load(const TCHAR *file)
    s->m_data = data;
    return s;
 }
+
+/**
+ * Callback for writing data received from cURL to provided byte stream
+ */
+size_t ByteStream::curlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data)
+{
+   size_t bytes = size * nmemb;
+   data->write(ptr, bytes);
+   return bytes;
+}

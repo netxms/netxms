@@ -3056,6 +3056,11 @@ public:
 
    static ByteStream *load(const TCHAR *file);
 
+   /**
+    * Callback for writing data received from cURL to provided byte stream
+    */
+   static size_t curlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data);
+
    off_t seek(off_t offset, int origin = SEEK_SET);
 
    /**
