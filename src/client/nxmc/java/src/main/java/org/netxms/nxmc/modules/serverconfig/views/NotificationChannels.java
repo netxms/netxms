@@ -49,6 +49,7 @@ import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.dialogs.NotificationChannelPropertiesDialog;
+import org.netxms.nxmc.modules.serverconfig.dialogs.SendNotificationDialog;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelFilter;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.NotificationChannelListComparator;
@@ -79,6 +80,7 @@ public class NotificationChannels extends ConfigurationView
    private Action actionNewChannel;
    private Action actionEditChannel;
    private Action actionDeleteChannel;
+   private Action actionSendNotification;
 
    /**
     * Create notification channels view
@@ -202,6 +204,14 @@ public class NotificationChannels extends ConfigurationView
          }
       };
       actionDeleteChannel.setEnabled(false);
+      
+      actionSendNotification = new Action(i18n.tr("&Send Notification"), ResourceManager.getImageDescriptor("icons/send-notification.png")) {
+         @Override
+         public void run()
+         {
+            sendNotification();
+         }
+      };
    }
 
    /**
@@ -233,6 +243,7 @@ public class NotificationChannels extends ConfigurationView
       mgr.add(actionNewChannel);
       mgr.add(actionEditChannel);
       mgr.add(actionDeleteChannel);
+      mgr.add(actionSendNotification);
    }
 
    /**
@@ -242,6 +253,7 @@ public class NotificationChannels extends ConfigurationView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionNewChannel);
+      manager.add(actionSendNotification);
    }
 
    /**
@@ -251,6 +263,7 @@ public class NotificationChannels extends ConfigurationView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionNewChannel);
+      manager.add(actionSendNotification);
    }
 
    /**
@@ -372,6 +385,46 @@ public class NotificationChannels extends ConfigurationView
          protected String getErrorMessage()
          {
             return i18n.tr("Cannot delete notification channel");
+         }
+      }.start();
+   }
+   
+   /**
+    * Send notification to channel
+    */
+   private void sendNotification()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      final String channelName;
+      if (selection.size() > 0)  
+         channelName = ((NotificationChannel)selection.getFirstElement()).getName();
+      else 
+         channelName = null;
+
+      final SendNotificationDialog dlg = new SendNotificationDialog(getWindow().getShell(), channelName);
+      if (dlg.open() != Window.OK)
+         return;
+      
+      final NXCSession session = Registry.getSession();
+      new Job("Send notification to" + dlg.getRecipient(), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.sendNotification(dlg.getChannelName(), dlg.getRecipient(), dlg.getSubject(), dlg.getMessage());
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  final String message = String.format("Notification to %s has been enqueued", dlg.getRecipient());
+                  MessageDialogHelper.openInformation(getWindow().getShell(), "Send Notification", message);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format("Cannot send notification to %s", dlg.getRecipient());
          }
       }.start();
    }
