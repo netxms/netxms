@@ -27,7 +27,7 @@ LONG NetworkServiceStatus_HTTP(CURL *curl, const OptionList &options, char *url,
 {
    *result = PC_ERR_BAD_PARAMS;
 
-   curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(1)); // include header in data
+   curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(options.getAsBoolean(_T("include-headers"), true) ? 1 : 0));
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
 
    // Receiving buffer
