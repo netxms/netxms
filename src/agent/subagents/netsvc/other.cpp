@@ -18,21 +18,12 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_util.h>
-#include <nms_agent.h>
-#include <netxms-regex.h>
-#include <netxms-version.h>
-#include <stdlib.h>
-
-#include <curl/curl.h>
 #include "netsvc.h"
 
 /**
  * Callback for processing data received from cURL
  */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb,
-        void *userdata)
+static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
     ByteStream *data = (ByteStream*) userdata;
     size_t bytes = size * nmemb;
@@ -40,28 +31,17 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb,
     return bytes;
 }
 
-LONG H_CheckServiceDefault(CURL *curl,
-        TCHAR *value)
+/**
+ * Service check sub-handler - other protocols
+ */
+LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, int *result)
 {
-    int retCode = PC_ERR_BAD_PARAMS;
-
     // Receiving buffer
     ByteStream data(32768);
     data.setAllocationStep(32768);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
 
-    CURLcode result = curl_easy_perform(curl);
-    if (result == 0)
-    {
-        retCode = PC_ERR_NONE;
-    }
-    else
-    {
-        nxlog_debug_tag(DEBUG_TAG, 6, _T("call to curl_easy_perform failed with result %hs"), result);
-    }
-
-   ret_int(value, retCode);
-
+    *result = CURLCodeToCheckResult(curl_easy_perform(curl));
    return SYSINFO_RC_SUCCESS;
 }

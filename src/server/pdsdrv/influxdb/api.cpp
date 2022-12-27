@@ -57,16 +57,6 @@ APISender::~APISender()
 }
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
-
-/**
  * Send data block via API
  */
 bool APISender::send(const char *data)
@@ -92,7 +82,7 @@ bool APISender::send(const char *data)
       curl_easy_setopt(m_curl, CURLOPT_POST, 1L);
       curl_easy_setopt(m_curl, CURLOPT_HEADER, 0L); // do not include header in data
       curl_easy_setopt(m_curl, CURLOPT_TIMEOUT, 300L);
-      curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
       curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
       curl_easy_setopt(m_curl, CURLOPT_USERAGENT, "NetXMS InfluxDB Driver/" NETXMS_VERSION_STRING_A);
 

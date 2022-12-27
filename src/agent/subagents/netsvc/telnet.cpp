@@ -19,95 +19,120 @@
 **/
 
 #include "netsvc.h"
-#include "netutil.h"
 
 /**
  * Check telnet service
  */
-int CheckTelnet(const char *hostname, const InetAddress &addr, uint16_t port, char *username, char *password, uint32_t timeout)
+int CheckTelnet(const char *hostname, const InetAddress &addr, uint16_t port, uint32_t timeout)
 {
-    int status = 0;
-    SOCKET nSd = NetConnectTCP(hostname, addr, port, timeout);
-    if (nSd != INVALID_SOCKET)
-    {
-        unsigned char szBuff[512];
+   int status = 0;
+   SOCKET nSd = NetConnectTCP(hostname, addr, port, timeout);
+   if (nSd != INVALID_SOCKET)
+   {
+      unsigned char szBuff[512];
 
-        status = PC_ERR_HANDSHAKE;
-        while (SocketCanRead(nSd, 1000) && status == PC_ERR_HANDSHAKE) // 1sec
-        {
-            ssize_t size = NetRead(nSd, (char *)szBuff, sizeof(szBuff));
-            unsigned char out[4];
+      status = PC_ERR_HANDSHAKE;
+      while (SocketCanRead(nSd, 1000) && status == PC_ERR_HANDSHAKE) // 1sec
+      {
+         ssize_t size = NetRead(nSd, (char*)szBuff, sizeof(szBuff));
+         unsigned char out[4];
 
-            memset(out, 0, sizeof(out));
-            for (ssize_t i = 0; i < size; i++)
+         memset(out, 0, sizeof(out));
+         for (ssize_t i = 0; i < size; i++)
+         {
+            if (szBuff[i] == 0xFF) // IAC
             {
-                if (szBuff[i] == 0xFF) // IAC
-                {
-                    out[0] = 0xFF;
-                    continue;
-                }
-                if (out[0] == 0xFF && (szBuff[i] == 251 || szBuff[i] == 252))
-                {
-                    out[1] = 254;
-                    continue;
-                }
-                if (out[0] == 0xFF && (szBuff[i] == 253 || szBuff[i] == 254))
-                {
-                    out[1] = 252;
-                    continue;
-                }
-
-                if (out[0] == 0xFF && out[1] != 0)
-                {
-                    out[2] = szBuff[i];
-
-                    // send reject
-                    NetWrite(nSd, out, 3);
-
-                    memset(out, 0, sizeof(out));
-                    continue;
-                }
-
-                // end of handshake, get out from here
-                status = PC_ERR_NONE;
-                break;
+               out[0] = 0xFF;
+               continue;
             }
-        }
+            if (out[0] == 0xFF && (szBuff[i] == 251 || szBuff[i] == 252))
+            {
+               out[1] = 254;
+               continue;
+            }
+            if (out[0] == 0xFF && (szBuff[i] == 253 || szBuff[i] == 254))
+            {
+               out[1] = 252;
+               continue;
+            }
 
-        NetClose(nSd);
-    }
-    else
-    {
-        status = PC_ERR_CONNECT;
-    }
+            if (out[0] == 0xFF && out[1] != 0)
+            {
+               out[2] = szBuff[i];
 
-    return status;
+               // send reject
+               NetWrite(nSd, out, 3);
+
+               memset(out, 0, sizeof(out));
+               continue;
+            }
+
+            // end of handshake, get out from here
+            status = PC_ERR_NONE;
+            break;
+         }
+      }
+
+      NetClose(nSd);
+   }
+   else
+   {
+      status = PC_ERR_CONNECT;
+   }
+
+   return status;
+}
+
+/**
+ * Check telnet service - metric sub-handler
+ */
+LONG NetworkServiceStatus_Telnet(const char *host, const char *port, const OptionList& options, int *result)
+{
+   if (host[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   uint16_t nPort = static_cast<uint16_t>(strtoul(port, nullptr, 10));
+   if (nPort == 0)
+      nPort = 22;
+
+   *result = CheckTelnet(host, InetAddress::INVALID, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Check telnet service - parameter handler
  */
-LONG H_CheckServiceTELNET(char *szHost, const TCHAR *szPort, TCHAR *value, const OptionList &options)
+LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-    LONG nRet = SYSINFO_RC_SUCCESS;
+   LONG nRet = SYSINFO_RC_SUCCESS;
 
-    if (szHost[0] == 0)
-        return SYSINFO_RC_ERROR;
+   char szHost[256];
+   TCHAR szPort[256];
+   AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
+   AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
 
-    uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
-    if (nPort == 0)
-    {
-        nPort = 23;
-    }
+   if (szHost[0] == 0)
+      return SYSINFO_RC_ERROR;
 
-    uint32_t timeout = 500;
-    if (options.exists(_T("timeout")))
-    {
-        timeout = _tcstoul(options.get(_T("timeout")), nullptr, 0);
-    }
+   uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
+   if (nPort == 0)
+      nPort = 23;
 
-    int result = CheckTelnet(szHost, InetAddress::INVALID, nPort, nullptr, nullptr, timeout);
-    ret_int(value, result);
-
-    return nRet;
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
+   int64_t start = GetCurrentTimeMs();
+   int result = CheckTelnet(szHost, InetAddress::INVALID, nPort, timeout);
+   if (*arg == 'R')
+   {
+      if (result == PC_ERR_NONE)
+         ret_int64(value, GetCurrentTimeMs() - start);
+      else if (g_netsvcFlags & NETSVC_AF_NEGATIVE_TIME_ON_ERROR)
+         ret_int64(value, -(GetCurrentTimeMs() - start));
+      else
+         nRet = SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      ret_int(value, result);
+   }
+   return nRet;
 }

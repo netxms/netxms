@@ -18,98 +18,101 @@
 **
 **/
 
-#include <nms_common.h>
-#include <nms_util.h>
-#include <nms_agent.h>
-#include <netxms-regex.h>
-#include <netxms-version.h>
-#include <stdlib.h>
-
-#include <curl/curl.h>
 #include "netsvc.h"
 
-static char payload_text[2048] = "";
-
-struct upload_status
+/**
+ * Check SMTP service (used by command handler and legacy metric handler)
+ */
+int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char* to, uint32_t timeout)
 {
-    size_t bytes_read;
-};
+   CURL *curl = PrepareCurlHandle(addr, port, enableTLS ? "smtps" : "smtp", timeout);
+   if (curl == nullptr)
+      return PC_ERR_BAD_PARAMS;
 
-static size_t payload_source(char *ptr, size_t size, size_t nmemb, void *userp)
-{
-    struct upload_status *upload_ctx = (struct upload_status*) userp;
-    const char *data;
-    size_t room = size * nmemb;
+   char from[128];
+   strcpy(from, "noreply@");
+   strlcat(from, g_netsvcDomainName, 128);
+   curl_easy_setopt(curl, CURLOPT_MAIL_FROM, from);
 
-    if ((size == 0) || (nmemb == 0) || ((size * nmemb) < 1))
-    {
-        return 0;
-    }
+   struct curl_slist *recipients = curl_slist_append(nullptr, to);
+   curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 
-    data = &payload_text[upload_ctx->bytes_read];
+   int result = CURLCodeToCheckResult(curl_easy_perform(curl));
 
-    if (data)
-    {
-        size_t len = strlen(data);
-        if (room < len)
-            len = room;
-        memcpy(ptr, data, len);
-        upload_ctx->bytes_read += len;
-
-        return len;
-    }
-
-    return 0;
+   curl_slist_free_all(recipients);
+   return result;
 }
 
-LONG H_CheckServiceSMTP(CURL *curl,
-        TCHAR *value,
-        const OptionList& options)
+/**
+ * Check SMTP service - metric sub-handler
+ */
+LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, int *result)
 {
-    int retCode = PC_ERR_BAD_PARAMS;
+   char from[128], to[128];
+   wchar_to_utf8(options.get(_T("from"), _T("")), -1, from, 128);
+   wchar_to_utf8(options.get(_T("to"), _T("")), -1, to, 128);
 
-    if(options.exists(_T("from")) &&
-       options.exists(_T("to")))
-    {
-        const int optionMaxSize = 64;
-        char from[optionMaxSize] = "";
-        wcstombs(from,options.get(_T("from")), optionMaxSize);
-        char to[optionMaxSize] = "";
-        wcstombs(to,options.get(_T("to")), optionMaxSize);
+   if (to[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
 
-        time_t currentTime;
-        struct tm* pCurrentTM;
-        char timeAsChar[64];
+   if (from[0] == 0)
+   {
+      strcpy(from, "noreply@");
+      strlcat(from, g_netsvcDomainName, 128);
+   }
+   curl_easy_setopt(curl, CURLOPT_MAIL_FROM, from);
 
-        time(&currentTime);
-#ifdef HAVE_LOCALTIME_R
-        struct tm currentTM;
-        localtime_r(&currentTime, &currentTM);
-        pCurrentTM = &currentTM;
-#else
-        pCurrentTM = localtime(&currentTime);
-#endif
-        strftime(timeAsChar, sizeof(timeAsChar), "%a, %d %b %Y %H:%M:%S %z\r\n", pCurrentTM);
+   struct curl_slist *recipients = curl_slist_append(nullptr, to);
+   curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 
-        snprintf(payload_text, sizeof(payload_text), "From: <%s>\r\nTo: <%s>\r\nSubject: NetXMS test mail\r\nDate: %s\r\n\r\nNetXMS test mail\r\n.\r\n",
-                 from, to, timeAsChar);
+   *result = CURLCodeToCheckResult(curl_easy_perform(curl));
 
-        struct curl_slist *recipients = NULL;
-        struct upload_status upload_ctx = { 0 };
-
-        curl_easy_setopt(curl, CURLOPT_MAIL_FROM, from);
-        recipients = curl_slist_append(recipients, to);
-        curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
-        curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source);
-        curl_easy_setopt(curl, CURLOPT_READDATA, &upload_ctx);
-        curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-        if (curl_easy_perform(curl) == 0)
-        {
-            retCode = PC_ERR_NONE;
-        }
-    }
-
-   ret_int(value, retCode);
-
+   curl_slist_free_all(recipients);
    return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Check SMTP/SMTPS service - legacy metric handler
+ */
+LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char host[256], recipient[256], portAsChar[256];
+   uint16_t port;
+
+   AgentGetParameterArgA(param, 1, host, sizeof(host));
+   AgentGetParameterArgA(param, 2, recipient, sizeof(recipient));
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
+   AgentGetParameterArgA(param, 4, portAsChar, sizeof(portAsChar));
+
+   if ((host[0] == 0) || (recipient[0] == 0))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (portAsChar[0] == 0)
+   {
+      port = (arg[1] == 'S') ? 465 : 25;
+   }
+   else
+   {
+      port = static_cast<uint16_t>(strtoul(portAsChar, nullptr, 10));
+      if (port == 0)
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   LONG rc = SYSINFO_RC_SUCCESS;
+   int64_t start = GetCurrentTimeMs();
+   int result = CheckSMTP(InetAddress::resolveHostName(host), port, arg[1] == 'S', recipient, timeout);
+   if (*arg == 'R')
+   {
+      if (result == PC_ERR_NONE)
+         ret_int64(value, GetCurrentTimeMs() - start);
+      else if (g_netsvcFlags & NETSVC_AF_NEGATIVE_TIME_ON_ERROR)
+         ret_int64(value, -(GetCurrentTimeMs() - start));
+      else
+         rc = SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      ret_int(value, result);
+   }
+   return rc;
 }

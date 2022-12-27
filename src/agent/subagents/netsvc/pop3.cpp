@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,17 +16,28 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: pop3.cpp
-**
 **/
 
-#include "portcheck.h"
-#include <tls_conn.h>
+#include "netsvc.h"
 
 /**
- * Check POP3/POP3S service - parameter handler
+ * Check POP3/POP3S service
  */
-LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+int CheckPOP3(const InetAddress& addr, uint16_t port, bool enableTLS, const char *username, const char *password, uint32_t timeout)
+{
+   CURL *curl = PrepareCurlHandle(addr, port, enableTLS ? "pop3s" : "pop3", timeout);
+   if (curl == nullptr)
+      return PC_ERR_BAD_PARAMS;
+
+   curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+   curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+   return CURLCodeToCheckResult(curl_easy_perform(curl));
+}
+
+/**
+ * Check POP3/POP3S service - legacy metric handler
+ */
+LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    LONG ret = SYSINFO_RC_SUCCESS;
    char hostname[256];
@@ -50,7 +61,7 @@ LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
    }
    else
    {
-      port = ParsePort(portText);
+      port = static_cast<uint16_t>(strtoul(portText, nullptr, 10));
       if (port == 0)
          return SYSINFO_RC_UNSUPPORTED;
    }
@@ -62,8 +73,8 @@ LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
    {
       if (result == PC_ERR_NONE)
          ret_int64(value, GetCurrentTimeMs() - start);
-      else if (g_serviceCheckFlags & SCF_NEGATIVE_TIME_ON_ERROR)
-         ret_int(value, -result);
+      else if (g_netsvcFlags & NETSVC_AF_NEGATIVE_TIME_ON_ERROR)
+         ret_int64(value, -(GetCurrentTimeMs() - start));
       else
          ret = SYSINFO_RC_ERROR;
    }
@@ -72,47 +83,4 @@ LONG H_CheckPOP3(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
       ret_int(value, result);
    }
    return ret;
-}
-
-/**
- * Check POP3/POP3S service
- */
-int CheckPOP3(const InetAddress& addr, uint16_t port, bool enableTLS, const char* username, const char* password, uint32_t timeout)
-{
-   int status = 0;
-   TLSConnection tc(SUBAGENT_DEBUG_TAG, false, timeout);
-   if (tc.connect(addr, port, enableTLS, timeout))
-   {
-      char buff[512];
-      char tmp[128];
-
-      status = PC_ERR_HANDSHAKE;
-
-#define CHECK_OK (tc.recv(buff, sizeof(buff)) > 3) && (strncmp(buff, "+OK", 3) == 0)
-
-      if (CHECK_OK)
-      {
-         snprintf(tmp, sizeof(tmp), "USER %s\r\n", username);
-         if (tc.send(tmp, strlen(tmp)))
-         {
-            if (CHECK_OK)
-            {
-               snprintf(tmp, sizeof(tmp), "PASS %s\r\n", password);
-               if (tc.send(tmp, strlen(tmp)))
-               {
-                  if (CHECK_OK)
-                  {
-                     status = PC_ERR_NONE;
-                  }
-               }
-            }
-         }
-      }
-   }
-   else
-   {
-      status = PC_ERR_CONNECT;
-   }
-
-   return status;
 }

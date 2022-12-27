@@ -14,5 +14,5 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-SUBDIRS = dbquery devemu ecs filemgr gps logwatch ping portcheck sms ups winnt winperf wmi ${SUBAGENT_DIRS} 
+SUBDIRS = dbquery devemu ecs filemgr gps logwatch ping sms ups winnt winperf wmi ${SUBAGENT_DIRS} 
 EXTRA_DIST = platform-subagent.sym subagent.sym

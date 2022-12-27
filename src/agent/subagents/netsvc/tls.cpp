@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2022 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,14 +21,12 @@
 **/
 
 #include "netsvc.h"
-#include "netutil.h"
-#include <functional>
 #include <openssl/ssl.h>
 
 /**
  * Setup TLS session and execute optional callback
  */
-static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, int port, std::function<bool(SSL_CTX *, SSL *)> callback)
+static bool SetupTLSSession(SOCKET hSocket, uint32_t timeout, const char *host, int port, std::function<bool(SSL_CTX*, SSL*)> callback)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    const SSL_METHOD *method = TLS_method();
@@ -133,8 +131,7 @@ int CheckTLS(const char *hostname, const InetAddress &addr, uint16_t port, uint3
 /**
  * Check TLS service - parameter handler
  */
-LONG H_CheckTLS(const TCHAR *parameters, const TCHAR *arg,
-                TCHAR *value, AbstractCommSession *session)
+LONG H_CheckTLS(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char host[1024];
    TCHAR portText[32];
@@ -151,11 +148,7 @@ LONG H_CheckTLS(const TCHAR *parameters, const TCHAR *arg,
    LONG rc = SYSINFO_RC_SUCCESS;
 
    const OptionList options(parameters, 3);
-   uint32_t timeout = 500;
-   if (options.exists(_T("timeout")))
-   {
-      timeout = _tcstoul(options.get(_T("timeout")), nullptr, 0);
-   }
+   uint32_t timeout = options.getAsUInt32(_T("timeout"), g_netsvcTimeout);
 
    int64_t start = GetCurrentTimeMs();
    int result = CheckTLS(host, InetAddress::INVALID, port, timeout);
@@ -163,8 +156,8 @@ LONG H_CheckTLS(const TCHAR *parameters, const TCHAR *arg,
    {
       if (result == PC_ERR_NONE)
          ret_int64(value, GetCurrentTimeMs() - start);
-      else if (g_serviceCheckFlags & SCF_NEGATIVE_TIME_ON_ERROR)
-         ret_int(value, -result);
+      else if (g_netsvcFlags & NETSVC_AF_NEGATIVE_TIME_ON_ERROR)
+         ret_int64(value, -(GetCurrentTimeMs() - start));
       else
          rc = SYSINFO_RC_ERROR;
    }
@@ -215,51 +208,47 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_ERROR;
 
    const OptionList options(parameters, 4);
-   uint32_t timeout = 500;
-   if (options.exists(_T("timeout")))
-   {
-      timeout = _tcstoul(options.get(_T("timeout")), nullptr, 0);
-   }
+   uint32_t timeout = options.getAsUInt32(_T("timeout"), g_netsvcTimeout);
 
    SOCKET hSocket = NetConnectTCP(host, InetAddress::INVALID, port, timeout);
    if (hSocket == INVALID_SOCKET)
       return SYSINFO_RC_ERROR;
 
    bool success = SetupTLSSession(hSocket, timeout, (sniServerName[0] != 0) ? sniServerName : host, port,
-                                  [host, port, arg, value](SSL_CTX *context, SSL *ssl) -> bool
-                                  {
-                                     X509 *cert = SSL_get_peer_certificate(ssl);
-                                     if (cert == nullptr)
-                                     {
-                                        nxlog_debug_tag(DEBUG_TAG, 7, _T("H_TLSCertificateInfo(%hs, %d): server certificate not provided"), host, port);
-                                        return false;
-                                     }
+       [host, port, arg, value](SSL_CTX *context, SSL *ssl) -> bool
+       {
+          X509 *cert = SSL_get_peer_certificate(ssl);
+          if (cert == nullptr)
+          {
+             nxlog_debug_tag(DEBUG_TAG, 7, _T("H_TLSCertificateInfo(%hs, %d): server certificate not provided"), host, port);
+             return false;
+          }
 
-                                     bool success = true;
-                                     switch (*arg)
-                                     {
-                                     case 'D': // Expiration date
-                                        ret_string(value, GetCertificateExpirationDate(cert));
-                                        break;
-                                     case 'E': // Expiration time
-                                        ret_uint64(value, GetCertificateExpirationTime(cert));
-                                        break;
-                                     case 'I': // Issuer
-                                        ret_string(value, GetCertificateIssuerString(cert));
-                                        break;
-                                     case 'S': // Subject
-                                        ret_string(value, GetCertificateSubjectString(cert));
-                                        break;
-                                     case 'T': // Template ID
-                                        ret_string(value, GetCertificateTemplateId(cert));
-                                        break;
-                                     case 'U': // Days until expiration
-                                        ret_int(value, GetCertificateDaysUntilExpiration(cert));
-                                        break;
-                                     }
-                                     X509_free(cert);
-                                     return success;
-                                  });
+          bool success = true;
+          switch (*arg)
+          {
+          case 'D': // Expiration date
+             ret_string(value, GetCertificateExpirationDate(cert));
+             break;
+          case 'E': // Expiration time
+             ret_uint64(value, GetCertificateExpirationTime(cert));
+             break;
+          case 'I': // Issuer
+             ret_string(value, GetCertificateIssuerString(cert));
+             break;
+          case 'S': // Subject
+             ret_string(value, GetCertificateSubjectString(cert));
+             break;
+          case 'T': // Template ID
+             ret_string(value, GetCertificateTemplateId(cert));
+             break;
+          case 'U': // Days until expiration
+             ret_int(value, GetCertificateDaysUntilExpiration(cert));
+             break;
+          }
+          X509_free(cert);
+          return success;
+       });
    NetClose(hSocket);
 
    return success ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;

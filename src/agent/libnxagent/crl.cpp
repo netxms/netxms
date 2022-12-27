@@ -85,7 +85,7 @@ static bool DownloadFile(const TCHAR *file, const char *url)
    {
       char curlError[CURL_ERROR_SIZE];
       curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curlError);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, &fileHandle);
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)

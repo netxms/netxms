@@ -19,12 +19,11 @@
 **/
 
 #include "netsvc.h"
-#include "netutil.h"
 
 /**
  * Check SSH service
  */
-int CheckSSH(char *hostname, const InetAddress &addr, uint16_t port, char *user, char *password, uint32_t timeout)
+int CheckSSH(const char *hostname, const InetAddress &addr, uint16_t port, uint32_t timeout)
 {
 	int rc;
 	SOCKET hSocket = NetConnectTCP(hostname, addr, port, timeout);
@@ -63,30 +62,55 @@ int CheckSSH(char *hostname, const InetAddress &addr, uint16_t port, char *user,
 }
 
 /**
- * Check SSH service - parameter handler
+ * Check SSH service - metric sub-handler
  */
-LONG H_CheckServiceSSH(char *szHost, const TCHAR *szPort, TCHAR *value, const OptionList &options)
+LONG NetworkServiceStatus_SSH(const char *host, const char *port, const OptionList& options, int *result)
 {
-	LONG nRet = SYSINFO_RC_SUCCESS;
+	if (host[0] == 0)
+		return SYSINFO_RC_UNSUPPORTED;
 
-	if (szHost[0] == 0)
-	{
-		return SYSINFO_RC_ERROR;
-	}
-
-	uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
+	uint16_t nPort = static_cast<uint16_t>(strtoul(port, nullptr, 10));
 	if (nPort == 0)
-	{
 		nPort = 22;
-	}
 
-	uint32_t timeout = 500;
-	if (options.exists(_T("timeout")))
-	{
-		timeout = _tcstoul(options.get(_T("timeout")), nullptr, 0);
-	}
-	
-	int result = CheckSSH(szHost, InetAddress::INVALID, nPort, nullptr, nullptr, timeout);
-	ret_int(value, result);
-	return nRet;
+	*result = CheckSSH(host, InetAddress::INVALID, nPort, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Check SSH service - legacy metrics handler
+ */
+LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   LONG nRet = SYSINFO_RC_SUCCESS;
+
+   char szHost[256];
+   TCHAR szPort[256];
+   AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
+   AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
+
+   if (szHost[0] == 0)
+      return SYSINFO_RC_ERROR;
+
+   uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
+   if (nPort == 0)
+      nPort = 22;
+
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
+   int64_t start = GetCurrentTimeMs();
+   int result = CheckSSH(szHost, InetAddress::INVALID, nPort, timeout);
+   if (*arg == 'R')
+   {
+      if (result == PC_ERR_NONE)
+         ret_int64(value, GetCurrentTimeMs() - start);
+      else if (g_netsvcFlags & NETSVC_AF_NEGATIVE_TIME_ON_ERROR)
+         ret_int64(value, -(GetCurrentTimeMs() - start));
+      else
+         nRet = SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      ret_int(value, result);
+   }
+   return nRet;
 }

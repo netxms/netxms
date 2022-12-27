@@ -1261,6 +1261,55 @@ struct LIBNXAGENT_EXPORTABLE ProcessInformation
 #endif
 
 /**
+ * Utility class for parsing and handling named options in metric arguments
+ */
+class LIBNXAGENT_EXPORTABLE OptionList
+{
+private:
+   StringMap m_options;
+
+public:
+   OptionList(const TCHAR *parameters, int offset = 1);
+
+   bool exists(const TCHAR *key) const
+   {
+      return m_options.contains(key);
+   }
+
+   const TCHAR *get(const TCHAR *key, const TCHAR *defaultValue = nullptr) const
+   {
+      const TCHAR *value = m_options.get(key);
+      return (value != nullptr) ? value : defaultValue;
+   }
+
+   int16_t getAsInt16(const TCHAR *key, int16_t defaultValue = 0) const
+   {
+      const TCHAR *value = m_options.get(key);
+      return (value != nullptr) ? static_cast<int16_t>(_tcstol(value, nullptr, 0)) : defaultValue;
+   }
+
+   uint16_t getAsUInt16(const TCHAR *key, uint16_t defaultValue = 0) const
+   {
+      const TCHAR *value = m_options.get(key);
+      return (value != nullptr) ? static_cast<uint16_t>(_tcstoul(value, nullptr, 0)) : defaultValue;
+   }
+
+   int32_t getAsInt32(const TCHAR *key, int32_t defaultValue = 0) const
+   {
+      const TCHAR *value = m_options.get(key);
+      return (value != nullptr) ? _tcstol(value, nullptr, 0) : defaultValue;
+   }
+
+   uint32_t getAsUInt32(const TCHAR *key, uint32_t defaultValue = 0) const
+   {
+      const TCHAR *value = m_options.get(key);
+      return (value != nullptr) ? _tcstoul(value, nullptr, 0) : defaultValue;
+   }
+
+   bool getAsBoolean(const TCHAR *key, bool defaultValue = false) const;
+};
+
+/**
  * API for subagents
  */
 bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets = true);
