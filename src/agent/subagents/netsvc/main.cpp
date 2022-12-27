@@ -117,17 +117,41 @@ static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR 
    if (!strcmp(scheme, "ssh"))
    {
       char *host, *port;
-      rc = NetworkServiceStatus_SSH(host, port, options, &checkResult);
+      if ((curl_url_get(hURL, CURLUPART_HOST, &host, 0) == CURLUE_OK) && (curl_url_get(hURL, CURLUPART_PORT, &port, CURLU_DEFAULT_PORT) == CURLUE_OK))
+      {
+         rc = NetworkServiceStatus_SSH(host, port, options, &checkResult);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("H_NetworkServiceStatus(%hs): cannot extract host and port parts from URL"), url);
+         rc = SYSINFO_RC_UNSUPPORTED;
+      }
    }
    else if (!strcmp(scheme, "telnet"))
    {
       char *host, *port;
-      rc = NetworkServiceStatus_Telnet(host, port, options, &checkResult);
+      if ((curl_url_get(hURL, CURLUPART_HOST, &host, 0) == CURLUE_OK) && (curl_url_get(hURL, CURLUPART_PORT, &port, CURLU_DEFAULT_PORT) == CURLUE_OK))
+      {
+         rc = NetworkServiceStatus_Telnet(host, port, options, &checkResult);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("H_NetworkServiceStatus(%hs): cannot extract host and port parts from URL"), url);
+         rc = SYSINFO_RC_UNSUPPORTED;
+      }
    }
    else if (!strcmp(scheme, "tcp"))
    {
       char *host, *port;
-      rc = NetworkServiceStatus_TCP(host, port, options, &checkResult);
+      if ((curl_url_get(hURL, CURLUPART_HOST, &host, 0) == CURLUE_OK) && (curl_url_get(hURL, CURLUPART_PORT, &port, CURLU_DEFAULT_PORT) == CURLUE_OK))
+      {
+         rc = NetworkServiceStatus_TCP(host, port, options, &checkResult);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("H_NetworkServiceStatus(%hs): cannot extract host and port parts from URL"), url);
+         rc = SYSINFO_RC_UNSUPPORTED;
+      }
    }
    else
    {

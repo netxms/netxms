@@ -861,6 +861,8 @@ class AgentConnectionReceiver;
 class AgentConnection;
 template class LIBNXSRV_EXPORTABLE weak_ptr<AgentConnection>;
 template class LIBNXSRV_EXPORTABLE shared_ptr<AgentConnectionReceiver>;
+template class LIBNXSRV_EXPORTABLE std::function<void(NXCPMessage*)>;
+template class LIBNXSRV_EXPORTABLE std::function<void(size_t)>;
 #endif
 
 /**

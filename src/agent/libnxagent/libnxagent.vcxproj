@@ -177,6 +177,7 @@
     <ClCompile Include="hwid.cpp" />
     <ClCompile Include="lora_device_data.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="optionlist.cpp" />
     <ClCompile Include="procexec.cpp" />
     <ClCompile Include="registry.cpp" />
     <ClCompile Include="smbios.cpp" />
