@@ -3058,6 +3058,11 @@ public:
 
    static ByteStream *load(const TCHAR *file);
 
+   /**
+    * Callback for writing data received from cURL to provided byte stream
+    */
+   static size_t curlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data);
+
    off_t seek(off_t offset, int origin = SEEK_SET);
 
    /**
@@ -5338,21 +5343,6 @@ struct LIBNETXMS_EXPORTABLE Color
     * Parse color definition in CSS compatible format
     */
    static Color parseCSS(const TCHAR *css);
-};
-
-/**
- * String list class
- */
-class LIBNETXMS_EXPORTABLE OptionList
-{
-private:
-    StringMap optionmap;
-
-public:
-    OptionList(const TCHAR *parameters, int offset = 0);
-
-    bool exists(const TCHAR *key) const;
-    const TCHAR* get(const TCHAR *key) const;
 };
 
 #endif   /* _nms_util_h_ */

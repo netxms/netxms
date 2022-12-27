@@ -58,16 +58,6 @@ static Mutex s_paramsLock;
 static bool s_inErrorState = false;
 
 /**
- * Callback for processing data received from cURL
- */
-static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *context)
-{
-   size_t bytes = size * nmemb;
-   static_cast<ByteStream*>(context)->write(ptr, bytes);
-   return bytes;
-}
-
-/**
  * Function to fetch stats json using cURL. Assumed to be called under s_paramsLock mutex
  */
 static void FetchStats()
@@ -97,7 +87,7 @@ static void FetchStats()
    }
 
    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
-   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Bind9 Driver/" NETXMS_VERSION_STRING_A);
 
    ByteStream responseData(32768);
