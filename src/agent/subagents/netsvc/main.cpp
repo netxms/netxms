@@ -82,17 +82,30 @@ CURL *PrepareCurlHandle(const InetAddress& addr, uint16_t port, const char *sche
 static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char url[2048];
-   TCHAR pattern[256];
-   if (!AgentGetParameterArgA(metric, 1, url, 2048) || !AgentGetParameterArg(metric, 2, pattern, 256))
+   if (!AgentGetParameterArgA(metric, 1, url, 2048))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (url[0] == 0)
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (pattern[0] == 0)
-      _tcscpy(pattern, _T("^HTTP\\/(1\\.[01]|2) 200 .*"));
-
-   const OptionList options(metric, 3);
+   // Legacy version requires pattern as second argument
+   // For new version pattern should be set as named option
+   const OptionList options(metric, (arg[1] == 'L') ? 3 : 2);
+   TCHAR pattern[256];
+   if (arg[1] == 'L')
+   {
+      if (!AgentGetParameterArg(metric, 2, pattern, 256))
+         return SYSINFO_RC_UNSUPPORTED;
+      if (pattern[0] == 0)
+         _tcscpy(pattern, _T("^HTTP\\/(1\\.[01]|2) 200 .*"));
+   }
+   else
+   {
+      if (options.exists(_T("pattern")))
+         _tcslcpy(pattern, options.get(_T("pattern")), 256);
+      else
+         pattern[0] = 0;
+   }
 
    // Analyze URL
    CURLU *hURL = curl_url();
@@ -161,18 +174,25 @@ static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR 
          CurlCommonSetup(curl, url, options, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
          if (!strcmp(scheme, "http") || !strcmp(scheme, "https"))
          {
-            const char *eptr;
-            int eoffset;
-            PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
-            if (compiledPattern != nullptr)
+            if (pattern[0] != 0)
             {
-               rc = NetworkServiceStatus_HTTP(curl, options, url, compiledPattern, &checkResult);
-               _pcre_free_t(compiledPattern);
+               const char *eptr;
+               int eoffset;
+               PCRE *compiledPattern = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(pattern), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+               if (compiledPattern != nullptr)
+               {
+                  rc = NetworkServiceStatus_HTTP(curl, options, url, compiledPattern, &checkResult);
+                  _pcre_free_t(compiledPattern);
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("H_NetworkServiceStatus(%hs): Cannot compile pattern \"%s\""), url, pattern);
+                  rc = SYSINFO_RC_UNSUPPORTED;
+               }
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("H_NetworkServiceStatus(%hs): Cannot compile pattern \"%s\""), url, pattern);
-               rc = SYSINFO_RC_UNSUPPORTED;
+               rc = NetworkServiceStatus_HTTP(curl, options, url, nullptr, &checkResult);
             }
          }
          else if (!strcmp(scheme, "smtp") || !strcmp(scheme, "smtps"))
@@ -363,8 +383,10 @@ static NETXMS_SUBAGENT_PARAM s_metrics[] =
    { _T("TLS.Certificate.Issuer(*)"), H_TLSCertificateInfo, _T("I"), DCI_DT_STRING, _T("Issuer of X.509 certificate of remote TLS service") },
    { _T("TLS.Certificate.Subject(*)"), H_TLSCertificateInfo, _T("S"), DCI_DT_STRING, _T("Subject of X.509 certificate of remote TLS service") },
    { _T("TLS.Certificate.TemplateID(*)"), H_TLSCertificateInfo, _T("T"), DCI_DT_STRING, _T("Template ID of X.509 certificate of remote TLS service") },
+   // Legacy metrics - netsvc subagent prior to 4.3
+   { _T("NetworkService.Check(*)"), H_NetworkServiceStatus, _T("CL"), DCI_DT_DEPRECATED, _T("Service {instance} status") },
+   { _T("Service.Check(*)"), H_NetworkServiceStatus, _T("CL"), DCI_DT_DEPRECATED, _T("Service {instance} status") },
    // Legacy metrics - portcheck subagent
-   { _T("NetworkService.Check(*)"), H_NetworkServiceStatus, _T("C"), DCI_DT_DEPRECATED, _T("Service {instance} status") },
    { _T("ServiceCheck.Custom(*)"), H_CheckTCP, _T("C"), DCI_DT_DEPRECATED, _T("Status of remote TCP service {instance}") },
    { _T("ServiceCheck.HTTP(*)"), H_CheckHTTP, _T("C"), DCI_DT_DEPRECATED, _T("Status of remote HTTP service {instance}") },
    { _T("ServiceCheck.HTTPS(*)"), H_CheckHTTP, _T("CS"), DCI_DT_DEPRECATED, _T("Status of remote HTTPS service {instance}") },
@@ -385,8 +407,8 @@ static NETXMS_SUBAGENT_PARAM s_metrics[] =
    { _T("ServiceResponseTime.Telnet(*)"), H_CheckTelnet, _T("R"), DCI_DT_DEPRECATED, _T("Response time of remote TELNET service {instance}") },
    { _T("ServiceResponseTime.TLS(*)"), H_CheckTLS, _T("R"), DCI_DT_DEPRECATED, _T("Response time of remote TLS service {instance}") },
    // Legacy metrics - ECS subagent
-   { _T("ECS.HttpMD5(*)"), H_HTTPChecksum, _T("5"), DCI_DT_STRING, _T("MD5 hash for content at {instance}") },
-   { _T("ECS.HttpSHA1(*)"), H_HTTPChecksum, _T("1"), DCI_DT_STRING, _T("SHA1 hash for content at {instance}") }
+   { _T("ECS.HttpMD5(*)"), H_HTTPChecksum, _T("5"), DCI_DT_DEPRECATED, _T("MD5 hash for content at {instance}") },
+   { _T("ECS.HttpSHA1(*)"), H_HTTPChecksum, _T("1"), DCI_DT_DEPRECATED, _T("SHA1 hash for content at {instance}") }
 };
 
 /**

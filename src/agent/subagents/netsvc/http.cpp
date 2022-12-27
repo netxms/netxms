@@ -62,33 +62,44 @@ retry:
             }
          }
 
-         if (data.size() > 0)
+         if (compiledPattern != nullptr)
          {
-            data.write('\0');
-            size_t size;
-            int pmatch[30];
-#ifdef UNICODE
-            WCHAR *text = WideStringFromUTF8String((char*)data.buffer(&size));
-            if (_pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_WCHAR*>(text), static_cast<int>(wcslen(text)), 0, 0, pmatch, 30) >= 0)
-#else
-            char *text = MBStringFromUTF8String((char*)data.buffer(&size));
-            if (pcre_exec(compiledPattern, nullptr, text, static_cast<int>(size), 0, 0, pmatch, 30) >= 0)
-#endif
+            if (data.size() > 0)
             {
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkServiceStatus_HTTP(%hs): matched"), url);
-               *result = PC_ERR_NONE;
+               data.write('\0');
+               size_t size;
+               int pmatch[30];
+#ifdef UNICODE
+               WCHAR *text = WideStringFromUTF8String((char*)data.buffer(&size));
+               if (_pcre_exec_t(compiledPattern, nullptr, reinterpret_cast<const PCRE_WCHAR*>(text), static_cast<int>(wcslen(text)), 0, 0, pmatch, 30) >= 0)
+#else
+               char *text = MBStringFromUTF8String((char*)data.buffer(&size));
+               if (pcre_exec(compiledPattern, nullptr, text, static_cast<int>(size), 0, 0, pmatch, 30) >= 0)
+#endif
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkServiceStatus_HTTP(%hs): matched"), url);
+                  *result = PC_ERR_NONE;
+               }
+               else
+               {
+                  nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkServiceStatus_HTTP(%hs): not matched"), url);
+                  *result = PC_ERR_NOMATCH;
+               }
+               MemFree(text);
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkServiceStatus_HTTP(%hs): not matched"), url);
+               // zero size reply
                *result = PC_ERR_NOMATCH;
             }
-            MemFree(text);
+         }
+         else if (options.exists(_T("response-code")))   // Match by response code
+         {
+            *result = (options.getAsInt32(_T("response-code")) == static_cast<int32_t>(responseCode)) ? PC_ERR_NONE : PC_ERR_NOMATCH;
          }
          else
          {
-            // zero size reply
-            *result = PC_ERR_NOMATCH;
+            *result = PC_ERR_NONE;
          }
       }
       else
