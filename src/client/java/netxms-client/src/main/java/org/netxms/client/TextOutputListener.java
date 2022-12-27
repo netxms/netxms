@@ -38,12 +38,12 @@ public interface TextOutputListener
    public void setStreamId(long streamId);
 
    /**
-    * Called when error occurs
+    * Called when all text output provided successfully
     */
-   public void onError();
+   public void onSuccess();
 
    /**
-    * Called when all text output provided
+    * Called on execution failure
     */
-   public void onFinish();
+   public void onFailure(String errorText);
 }

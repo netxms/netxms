@@ -7711,7 +7711,7 @@ public class NXCSession
             if ((listener != null))
             {
                listener.messageReceived(errorMessage + "\n\n");
-               listener.onError();
+               listener.onFailure(null);
             }
          }
          else
@@ -7724,7 +7724,10 @@ public class NXCSession
          }
 
          if (m.isEndOfSequence())
+         {
+            listener.onSuccess();
             setComplete();
+         }
          return true;
       }
 
@@ -10028,20 +10031,29 @@ public class NXCSession
       handler.setMessageWaitTimeout(600000); // 10 min timeout
       addMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), handler);
 
-      sendMessage(msg);
-      try
+      try 
       {
-         waitForRCC(msg.getMessageId());
+         sendMessage(msg);
+         try
+         {
+            waitForRCC(msg.getMessageId());
+         }
+         catch(NXCException e)
+         {
+            removeMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId());
+            throw e;
+         }
+   
+         handler.waitForCompletion();
+         if (handler.isExpired())
+            throw new NXCException(RCC.TIMEOUT);
+         listener.onSuccess();
       }
-      catch(NXCException e)
+      catch (Exception e)
       {
-         removeMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId());
+         listener.onFailure(e.getMessage());
          throw e;
       }
-
-      handler.waitForCompletion();
-      if (handler.isExpired())
-         throw new NXCException(RCC.TIMEOUT);
    }
 
    /**

@@ -115,7 +115,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    {
       super.postClone(origin);
       textArea.replaceContent(((ObjectPollerView)origin).textArea);
-      Registry.getInstance().followPoll(target, pollType, this);
+      Registry.getPollManager().followPoll(target, pollType, this);
    }
 
    /**
@@ -223,7 +223,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    public void startPoll()
    {
       actionRestart.setEnabled(false);      
-      Registry.getInstance().startNewPoll(target, pollType, this);
+      Registry.getPollManager().startNewPoll(target, pollType, this);
    }
 
    @Override
@@ -244,13 +244,19 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
+    */
    @Override
-   public void onError()
+   public void onFailure(String error)
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onSuccess()
+    */
    @Override
-   public void onFinish()
+   public void onSuccess()
    {
       display.asyncExec(new Runnable() {
          @Override
@@ -267,7 +273,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
    @Override
    public void dispose()
    {
-      Registry.getInstance().removePollListener(target, pollType, this);
+      Registry.getPollManager().removePollListener(target, pollType, this);
       super.dispose();
    }
 }

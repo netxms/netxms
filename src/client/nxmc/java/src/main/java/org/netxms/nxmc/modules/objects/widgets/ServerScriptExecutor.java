@@ -89,15 +89,18 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
    }
 
    /**
-    * @see org.netxms.client.TextOutputListener#onError()
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
     */
    @Override
-   public void onError()
+   public void onFailure(String error)
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onSuccess()
+    */
    @Override
-   public void onFinish()
+   public void onSuccess()
    {
    }
 }

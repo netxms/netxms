@@ -32,6 +32,9 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
+/**
+ * Proxy for multi view polling 
+ */
 public class PollerProxy implements TextOutputListener
 {
    private final I18n i18n = LocalizationHelper.getI18n(PollerProxy.class);
@@ -117,12 +120,11 @@ public class PollerProxy implements TextOutputListener
             try
             {
                session.pollObject(target.getObjectId(), pollType, PollerProxy.this);
-               onPollComplete(true, null);
             }
             catch(Exception e)
             {
-               onPollComplete(false, e.getMessage());
             }
+            pollActive = false;
          }
 
          @Override
@@ -133,27 +135,6 @@ public class PollerProxy implements TextOutputListener
       };
       job.setSystem(true);
       job.start();
-   }
-
-   /**
-    * Poll completion handler
-    * 
-    * @param success
-    * @param errorMessage
-    */
-   private void onPollComplete(final boolean success, final String errorMessage)
-   {
-      if (success)
-      {
-         messageReceived("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
-      }
-      else
-      {
-         messageReceived(String.format("\u007FePOLL ERROR: %s\r\n", errorMessage)); //$NON-NLS-1$
-         messageReceived("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
-      }
-      pollActive = false;
-      onFinish();
    }
 
    @Override
@@ -181,26 +162,28 @@ public class PollerProxy implements TextOutputListener
       }
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
+    */
    @Override
-   public void onError()
+   public void onFailure(String errorMessage)
    {
-      synchronized(listenerSet)
-      {
-         for (TextOutputListener l :listenerSet)
-         {
-            l.onError();
-         }
-      }
+      messageReceived(String.format("\u007FePOLL ERROR: %s\r\n", errorMessage)); //$NON-NLS-1$
+      messageReceived("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onSuccess()
+    */
    @Override
-   public void onFinish()
+   public void onSuccess()
    {
+      messageReceived("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
       synchronized(listenerSet)
       {
          for (TextOutputListener l :listenerSet)
          {
-            l.onFinish();
+            l.onSuccess();
          }
       }
    }

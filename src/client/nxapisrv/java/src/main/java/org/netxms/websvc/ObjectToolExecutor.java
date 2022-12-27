@@ -89,62 +89,43 @@ public class ObjectToolExecutor extends Thread
     */
    @Override public void run()
    {
-      switch(details.getToolType())
-      {
-         case ObjectTool.TYPE_ACTION:
-            executeAgentAction();
-            break;
-         /*case ObjectTool.TYPE_FILE_DOWNLOAD:
-            executeFileDownload(node, tool, inputValues);
-            break;*/
-         case ObjectTool.TYPE_SERVER_COMMAND:
-            executeServerCommand();
-            break;
-         /*case ObjectTool.TYPE_SERVER_SCRIPT:
-            executeServerScript(node, tool, inputValues);
-            break;
-         case ObjectTool.TYPE_TABLE_AGENT:
-         case ObjectTool.TYPE_TABLE_SNMP:
-            executeTableTool(node, tool);
-            break;
-         case ObjectTool.TYPE_URL:
-            openURL(node, tool, inputValues, expandedValue);
-            break;*/
-      }
-      
-      if (generateOutput && (listener != null))
-      {
-         listener.onComplete();
-      }
-   }
-
-   /**
-    * Execute agent action
-    */
-   private void executeAgentAction()
-   {
       try
       {
-         session.executeActionWithExpansion(objectId, 0, details.getData(), generateOutput, inputFields, maskedFields, listener, null);
+         switch(details.getToolType())
+         {
+            case ObjectTool.TYPE_ACTION:
+               session.executeActionWithExpansion(objectId, 0, details.getData(), generateOutput, inputFields, maskedFields, listener, null);
+               break;
+            /*case ObjectTool.TYPE_FILE_DOWNLOAD:
+               executeFileDownload(node, tool, inputValues);
+               break;*/
+            case ObjectTool.TYPE_SERVER_COMMAND:
+               session.executeServerCommand(objectId, details.getData(), inputFields, maskedFields, generateOutput, listener, null);
+               break;
+            /*case ObjectTool.TYPE_SERVER_SCRIPT:
+               executeServerScript(node, tool, inputValues);
+               break;
+            case ObjectTool.TYPE_TABLE_AGENT:
+            case ObjectTool.TYPE_TABLE_SNMP:
+               executeTableTool(node, tool);
+               break;
+            case ObjectTool.TYPE_URL:
+               openURL(node, tool, inputValues, expandedValue);
+               break;*/
+         }
+         
+         if (generateOutput && (listener != null))
+         {
+            listener.onSuccess();
+         }
       }
       catch(Exception e)
       {
          log.error(e.getMessage(), e);
-      }
-   }
-
-   /**
-    * Execute server command
-    */
-   private void executeServerCommand()
-   {
-      try
-      {
-         session.executeServerCommand(objectId, details.getData(), inputFields, maskedFields, generateOutput, listener, null);
-      }
-      catch(Exception e)
-      {
-         log.error(e.getMessage(), e);
+         if (generateOutput && (listener != null))
+         {
+            listener.onFailure(e.getMessage());
+         }
       }
    }
 }

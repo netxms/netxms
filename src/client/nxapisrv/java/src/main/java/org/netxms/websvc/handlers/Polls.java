@@ -84,11 +84,6 @@ public class Polls extends AbstractObjectHandler
          }
          catch(Exception e)
          {
-            listener.onError();
-         }
-         finally
-         {
-            listener.onComplete();
          }
       });
       pollingThread.setDaemon(true);

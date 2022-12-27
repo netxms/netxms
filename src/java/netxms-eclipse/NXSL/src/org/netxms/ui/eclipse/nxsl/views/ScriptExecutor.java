@@ -742,15 +742,18 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    }
 
    /**
-    * @see org.netxms.client.TextOutputListener#onError()
+    * @see org.netxms.client.TextOutputListener#onSuccess()
     */
    @Override
-   public void onError()
+   public void onSuccess()
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure()
+    */
    @Override
-   public void onFinish()
+   public void onFailure(String errorText)
    {
    }
 }

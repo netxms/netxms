@@ -328,13 +328,15 @@ public class NodePollerView extends ViewPart
          }
 
          @Override
-         public void onError()
+         public void onFailure(String errorText)
          {
+            onPollComplete(errorText);
          }
 
          @Override
-         public void onFinish()
+         public void onSuccess()
          {
+            onPollComplete(null);
          }
       };
 
@@ -345,11 +347,9 @@ public class NodePollerView extends ViewPart
             try
             {
                session.pollObject(target.getObjectId(), pollType, listener);
-               onPollComplete(true, null);
             }
             catch(Exception e)
             {
-               onPollComplete(false, e.getMessage());
             }
             return Status.OK_STATUS;
          }
@@ -364,7 +364,7 @@ public class NodePollerView extends ViewPart
     * @param success
     * @param errorMessage
     */
-   private void onPollComplete(final boolean success, final String errorMessage)
+   private void onPollComplete(final String errorMessage)
    {
       display.asyncExec(new Runnable() {
          @Override
@@ -373,7 +373,7 @@ public class NodePollerView extends ViewPart
             if (textArea.isDisposed())
                return;
 
-            if (success)
+            if (errorMessage == null)
             {
                addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
             }

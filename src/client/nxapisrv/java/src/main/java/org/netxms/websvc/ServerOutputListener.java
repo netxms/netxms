@@ -56,15 +56,19 @@ public class ServerOutputListener implements TextOutputListener
    }
 
    /**
-    * @see org.netxms.client.TextOutputListener#onError()
+    * @see org.netxms.client.TextOutputListener#onFailure()
     */
    @Override
-   public void onError()
+   public void onFailure(String errorText)
    {
       lastUpdateTime = new Date();
       synchronized(mutex)
       {
-         buffer.append("Error occured");
+         if (errorText != null)
+            buffer.append(errorText);
+         else
+            buffer.append("Error occured");
+         
          completed = true;
          mutex.notifyAll();
       }
@@ -100,9 +104,10 @@ public class ServerOutputListener implements TextOutputListener
    }
 
    /**
-    * Completion handler
+    * @see org.netxms.client.TextOutputListener#onSuccess()
     */
-   public void onComplete()
+   @Override
+   public void onSuccess()
    {
       lastUpdateTime = new Date();
       synchronized(mutex)
@@ -130,10 +135,5 @@ public class ServerOutputListener implements TextOutputListener
    public Date getLastUpdateTime()
    {
       return lastUpdateTime;
-   }
-
-   @Override
-   public void onFinish()
-   {
    }
 }

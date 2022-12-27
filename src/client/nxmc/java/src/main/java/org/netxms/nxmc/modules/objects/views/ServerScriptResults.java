@@ -196,13 +196,19 @@ public class ServerScriptResults extends AbstractCommandResultView implements Te
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
+    */
    @Override
-   public void onError()
+   public void onFailure(String error)
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onSuccess()
+    */
    @Override
-   public void onFinish()
+   public void onSuccess()
    {
    }
 }

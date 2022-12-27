@@ -192,13 +192,19 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onSuccess()
+    */
    @Override
-   public void onError()
+   public void onSuccess()
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure()
+    */
    @Override
-   public void onFinish()
+   public void onFailure(String errorText)
    {
    }
 }
