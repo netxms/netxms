@@ -90,13 +90,19 @@ public class NodePollerActivity extends AbstractClientActivity {
                         }
 
                         @Override
-                        public void onError() {
+                        public void onFailure(String errorText) 
+                        {
+                            onPollCompleted(e.getLocalizedMessage());
+                        }
+
+                        @Override
+                        public void onSuccess()
+                        {
+                           onPollComplete(null);
                         }
                     });
-                    onPollCompleted(true, null);
                 } catch (final Exception e) {
                     Log.e(TAG, "Exception in worker thread", e);
-                    onPollCompleted(false, e.getLocalizedMessage());
                 }
                 pollInProgress = false;
             }
@@ -111,11 +117,11 @@ public class NodePollerActivity extends AbstractClientActivity {
      * @param success
      * @param errorMessage
      */
-    private void onPollCompleted(final boolean success, final String errorMessage) {
+    private void onPollCompleted(final String errorMessage) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (success) {
+                if (errorMessage == null) {
                     addPollerMessage("\u007Fl**** Poll completed successfully ****\n\n");
                 } else {
                     addPollerMessage("\u007FePOLL ERROR: " + errorMessage + "\n");

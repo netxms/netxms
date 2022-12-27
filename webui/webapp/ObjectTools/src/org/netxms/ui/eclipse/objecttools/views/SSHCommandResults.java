@@ -186,8 +186,19 @@ public class SSHCommandResults extends AbstractCommandResults implements TextOut
    {
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#onSuccess()
+    */
    @Override
-   public void onError()
+   public void onSuccess()
+   {
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure()
+    */
+   @Override
+   public void onFailure(String errorText)
    {
    }
 }

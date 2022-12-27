@@ -410,9 +410,14 @@ public class ScriptTest extends AbstractSessionTest implements TextOutputListene
    }
 
    @Override
-   public void onError()
+   public void onFailure(String errorText)
    {
       System.out.println("[" + currentScriptName + "] EXECUTION ERROR");
       scriptFailed = true;
+   }
+
+   @Override
+   public void onSuccess()
+   {
    }
 }

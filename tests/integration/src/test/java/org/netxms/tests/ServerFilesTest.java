@@ -67,10 +67,10 @@ public class ServerFilesTest extends AbstractSessionTest
       int i = 3;
       while(i > 0)
       {
-         System.out.println("Tail content: \n" + session.waitForFileTail(file.getId(), 30000));
+         System.out.println("Tail content: \n" + session.waitForFileUpdate(file.getMonitorId(), 30000));
          i--;
       }
-      session.cancelFileMonitoring(TestConstants.LOCAL_NODE_ID, file.getId());
+      session.cancelFileMonitoring(file.getMonitorId());
       System.out.println("Monitoring have been canceled.\n");
       session.disconnect();
    }

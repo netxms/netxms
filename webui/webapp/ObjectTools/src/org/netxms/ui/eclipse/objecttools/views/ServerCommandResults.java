@@ -313,10 +313,18 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    }
 
    /**
-    * @see org.netxms.client.TextOutputListener#onError()
+    * @see org.netxms.client.TextOutputListener#onSuccess()
     */
    @Override
-   public void onError()
+   public void onSuccess()
+   {
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure()
+    */
+   @Override
+   public void onFailure(String errorText)
    {
    }
 }
