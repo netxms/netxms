@@ -79,11 +79,11 @@ CURL *PrepareCurlHandle(const InetAddress& addr, uint16_t port, const char *sche
 /**
  * Handler for NetworkService.Status and NetworkService.ResponseTime metrics
  */
-static LONG H_NetworkServiceStatus(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char url[2048];
    TCHAR pattern[256];
-   if (!AgentGetParameterArgA(parameters, 1, url, 2048) || AgentGetParameterArg(parameters, 2, pattern, 256))
+   if (!AgentGetParameterArgA(metric, 1, url, 2048) || !AgentGetParameterArg(metric, 2, pattern, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
    if (url[0] == 0)
@@ -92,7 +92,7 @@ static LONG H_NetworkServiceStatus(const TCHAR *parameters, const TCHAR *arg, TC
    if (pattern[0] == 0)
       _tcscpy(pattern, _T("^HTTP\\/(1\\.[01]|2) 200 .*"));
 
-   const OptionList options(parameters, 3);
+   const OptionList options(metric, 3);
 
    // Analyze URL
    CURLU *hURL = curl_url();
@@ -163,7 +163,7 @@ static LONG H_NetworkServiceStatus(const TCHAR *parameters, const TCHAR *arg, TC
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("H_NetworkServiceStatus(%hs): curl_init failed"), url);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("H_NetworkServiceStatus(%hs): curl_easy_init failed"), url);
          rc = SYSINFO_RC_ERROR;
       }
    }
@@ -324,7 +324,11 @@ bool CommandHandler(uint32_t dwCommand, NXCPMessage *pRequest, NXCPMessage *pRes
 /**
  * Provided metrics
  */
-static NETXMS_SUBAGENT_PARAM s_metrics[] = {
+static NETXMS_SUBAGENT_PARAM s_metrics[] =
+{
+   { _T("HTTP.Checksum.MD5(*)"), H_HTTPChecksum, _T("5"), DCI_DT_STRING, _T("MD5 hash for content at {instance}") },
+   { _T("HTTP.Checksum.SHA1(*)"), H_HTTPChecksum, _T("1"), DCI_DT_STRING, _T("SHA1 hash for content at {instance}") },
+   { _T("HTTP.Checksum.SHA256(*)"), H_HTTPChecksum, _T("2"), DCI_DT_STRING, _T("SHA256 hash for content at {instance}") },
    { _T("NetworkService.Status(*)"), H_NetworkServiceStatus, _T("C"), DCI_DT_INT, _T("Status of remote network service {instance}") },
    { _T("NetworkService.ResponseTime(*)"), H_NetworkServiceStatus, _T("R"), DCI_DT_INT, _T("Response time of remote network service {instance}") },
    { _T("NetworkService.TLSStatus(*)"), H_CheckTLS, _T("C"), DCI_DT_INT, _T("Status of remote TLS service {instance}") },
@@ -335,7 +339,7 @@ static NETXMS_SUBAGENT_PARAM s_metrics[] = {
    { _T("TLS.Certificate.Issuer(*)"), H_TLSCertificateInfo, _T("I"), DCI_DT_STRING, _T("Issuer of X.509 certificate of remote TLS service") },
    { _T("TLS.Certificate.Subject(*)"), H_TLSCertificateInfo, _T("S"), DCI_DT_STRING, _T("Subject of X.509 certificate of remote TLS service") },
    { _T("TLS.Certificate.TemplateID(*)"), H_TLSCertificateInfo, _T("T"), DCI_DT_STRING, _T("Template ID of X.509 certificate of remote TLS service") },
-   // Legacy metrics
+   // Legacy metrics - portcheck subagent
    { _T("NetworkService.Check(*)"), H_NetworkServiceStatus, _T("C"), DCI_DT_DEPRECATED, _T("Service {instance} status") },
    { _T("ServiceCheck.Custom(*)"), H_CheckTCP, _T("C"), DCI_DT_DEPRECATED, _T("Status of remote TCP service {instance}") },
    { _T("ServiceCheck.HTTP(*)"), H_CheckHTTP, _T("C"), DCI_DT_DEPRECATED, _T("Status of remote HTTP service {instance}") },
@@ -355,7 +359,10 @@ static NETXMS_SUBAGENT_PARAM s_metrics[] = {
    { _T("ServiceResponseTime.SMTP(*)"), H_CheckSMTP, _T("R"), DCI_DT_DEPRECATED, _T("Response time of remote SMTP service {instance}") },
    { _T("ServiceResponseTime.SSH(*)"), H_CheckSSH, _T("R"), DCI_DT_DEPRECATED, _T("Response time of remote SSH service {instance}") },
    { _T("ServiceResponseTime.Telnet(*)"), H_CheckTelnet, _T("R"), DCI_DT_DEPRECATED, _T("Response time of remote TELNET service {instance}") },
-   { _T("ServiceResponseTime.TLS(*)"), H_CheckTLS, _T("R"), DCI_DT_DEPRECATED, _T("Response time of remote TLS service {instance}") }
+   { _T("ServiceResponseTime.TLS(*)"), H_CheckTLS, _T("R"), DCI_DT_DEPRECATED, _T("Response time of remote TLS service {instance}") },
+   // Legacy metrics - ECS subagent
+   { _T("ECS.HttpMD5(*)"), H_HTTPChecksum, _T("5"), DCI_DT_STRING, _T("MD5 hash for content at {instance}") },
+   { _T("ECS.HttpSHA1(*)"), H_HTTPChecksum, _T("1"), DCI_DT_STRING, _T("SHA1 hash for content at {instance}") }
 };
 
 /**

@@ -1089,12 +1089,12 @@ if test $? = 0; then
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
-		STATIC_SUBAGENT_LIST="ecs filemgr logwatch ping ups"
+		STATIC_SUBAGENT_LIST="filemgr logwatch ping ups"
 	else
 		STATIC_SUBAGENT_LIST="$PROPOSED_STATIC_SUBAGENTS"
 	fi
 
-	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/ups/ups.la"
+	SUBAGENT_LIBS="../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/ups/ups.la"
 
 	check_substr "$STATIC_SUBAGENT_LIST" "asterisk"
 	if test $? = 0; then
@@ -4710,7 +4710,6 @@ AC_CONFIG_FILES([
 	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/devemu/Makefile
 	src/agent/subagents/ds18x20/Makefile
-	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/gps/Makefile

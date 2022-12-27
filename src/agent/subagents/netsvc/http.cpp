@@ -39,9 +39,10 @@ LONG NetworkServiceStatus_HTTP(CURL *curl, const OptionList &options, char *url,
    char *requestURL = url;
 
 retry:
-   if (curl_easy_setopt(curl, CURLOPT_URL, requestURL) == CURLE_OK)
+   CURLcode rc = curl_easy_setopt(curl, CURLOPT_URL, requestURL);
+   if (rc == CURLE_OK)
    {
-      CURLcode rc = curl_easy_perform(curl);
+      rc = curl_easy_perform(curl);
       if (rc == CURLE_OK)
       {
          long responseCode = 0;
@@ -96,6 +97,11 @@ retry:
          *result = CURLCodeToCheckResult(rc);
       }
    }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): cannot set URL with curl_easy_setopt"), url);
+      *result = CURLCodeToCheckResult(rc);
+   }
 
    return SYSINFO_RC_SUCCESS;
 }
@@ -136,20 +142,22 @@ int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool
       nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckHTTP(%hs): Cannot compile pattern \"%hs\""), url, match);
       result = PC_ERR_BAD_PARAMS;
    }
+
+   curl_easy_cleanup(curl);
    return result;
 }
 
 /**
  * Check HTTP/HTTPS service - parameter handler
  */
-LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session)
+LONG H_CheckHTTP(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char hostname[1024], portText[32], uri[1024], hostHeader[256], match[1024];
-   AgentGetParameterArgA(param, 1, hostname, sizeof(hostname));
-   AgentGetParameterArgA(param, 2, portText, sizeof(portText));
-   AgentGetParameterArgA(param, 3, uri, sizeof(uri));
-   AgentGetParameterArgA(param, 4, hostHeader, sizeof(hostHeader));
-   AgentGetParameterArgA(param, 5, match, sizeof(match));
+   AgentGetParameterArgA(metric, 1, hostname, sizeof(hostname));
+   AgentGetParameterArgA(metric, 2, portText, sizeof(portText));
+   AgentGetParameterArgA(metric, 3, uri, sizeof(uri));
+   AgentGetParameterArgA(metric, 4, hostHeader, sizeof(hostHeader));
+   AgentGetParameterArgA(metric, 5, match, sizeof(match));
 
    if (hostname[0] == 0 || uri[0] == 0)
       return SYSINFO_RC_ERROR;
@@ -166,7 +174,7 @@ LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
          return SYSINFO_RC_UNSUPPORTED;
    }
 
-   uint32_t timeout = GetTimeoutFromArgs(param, 6);
+   uint32_t timeout = GetTimeoutFromArgs(metric, 6);
    int64_t start = GetCurrentTimeMs();
 
    LONG ret = SYSINFO_RC_SUCCESS;
@@ -185,4 +193,147 @@ LONG H_CheckHTTP(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCom
       ret_int(value, result);
    }
    return ret;
+}
+
+/**
+ * Hash update data
+ */
+struct HashUpdateContext
+{
+   MD_STATE state;
+   void (*update)(MD_STATE*, const void*, size_t);
+   void (*final)(MD_STATE*, BYTE*);
+   size_t hashSize;
+};
+
+/**
+ * cURL write callback for calculating content hash
+ */
+static size_t HashUpdateCallback(char *ptr, size_t size, size_t nmemb, HashUpdateContext *context)
+{
+   size_t bytes = size * nmemb;
+   context->update(&context->state, ptr, bytes);
+   return bytes;
+}
+
+/**
+ * HTTP checksum for given URL
+ */
+LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char url[2048];
+   if (!AgentGetParameterArgA(metric, 1, url, 2048))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   // Analyze URL
+   CURLU *hURL = curl_url();
+   if (curl_url_set(hURL, CURLUPART_URL, url, CURLU_NON_SUPPORT_SCHEME | CURLU_GUESS_SCHEME) != CURLUE_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): URL parsing error"), url);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   char *scheme;
+   if (curl_url_get(hURL, CURLUPART_SCHEME, &scheme, 0) != CURLUE_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): cannot get scheme from URL"), url);
+      curl_url_cleanup(hURL);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   if (strcmp(scheme, "http") && strcmp(scheme, "https"))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): unsupported scheme"), url);
+      curl_url_cleanup(hURL);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+   curl_url_cleanup(hURL);
+
+   const OptionList options(metric, 2);
+
+   CURL *curl = curl_easy_init();
+   if (curl == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): curl_easy_init failed"), url);
+      return SYSINFO_RC_ERROR;
+   }
+
+   CurlCommonSetup(curl, url, options, options.getAsUInt32(_T("timeout"), g_netsvcTimeout));
+
+   curl_easy_setopt(curl, CURLOPT_HEADER, static_cast<long>(0)); // do not include header in data
+   curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
+
+   HashUpdateContext context;
+   switch(*arg)
+   {
+      case '1':   // SHA1
+         SHA1Init(&context.state);
+         context.update = SHA1Update;
+         context.final = SHA1Final;
+         context.hashSize = SHA1_DIGEST_SIZE;
+         break;
+      case '2':   // SHA256
+         SHA256Init(&context.state);
+         context.update = SHA256Update;
+         context.final = SHA256Final;
+         context.hashSize = SHA256_DIGEST_SIZE;
+         break;
+      case '5':   // MD5
+         MD5Init(&context.state);
+         context.update = MD5Update;
+         context.final = MD5Final;
+         context.hashSize = MD5_DIGEST_SIZE;
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &context);
+   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HashUpdateCallback);
+
+   char *requestURL = url;
+   bool success = false;
+
+retry:
+   CURLcode rc = curl_easy_setopt(curl, CURLOPT_URL, requestURL);
+   if (rc == CURLE_OK)
+   {
+      rc = curl_easy_perform(curl);
+      if (rc == CURLE_OK)
+      {
+         long responseCode = 0;
+         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("H_HTTPChecksum(%hs): got reply (response code %03ld)"), url, responseCode);
+
+         if ((responseCode >= 300) && (responseCode <= 399) && options.getAsBoolean(_T("follow-location")))
+         {
+            char *redirectURL = nullptr;
+            curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &redirectURL);
+            if (redirectURL != nullptr)
+            {
+               requestURL = redirectURL;
+               nxlog_debug_tag(DEBUG_TAG, 6, _T("H_HTTPChecksum(%hs): follow redirect to %hs"), url, redirectURL);
+               goto retry;
+            }
+         }
+
+         success = (responseCode == 200);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("H_HTTPChecksum(%hs): call to curl_easy_perform failed"), url);
+      }
+   }
+
+   curl_easy_cleanup(curl);
+
+   BYTE hash[SHA512_DIGEST_SIZE];
+   context.final(&context.state, hash);
+
+   // Call to context.final() still needed even in case of error to free any resources allocated by init function
+   if (!success)
+      return SYSINFO_RC_ERROR;
+
+   BinToStr(hash, context.hashSize, value);
+   return SYSINFO_RC_SUCCESS;
 }

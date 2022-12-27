@@ -55,8 +55,9 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CheckTCP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_CheckTLS(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
-LONG H_TLSCertificateInfo(const TCHAR* param, const TCHAR* arg, TCHAR* value, AbstractCommSession* session);
+LONG H_CheckTLS(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_HTTPChecksum(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_TLSCertificateInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool useTLS, const char *uri, const char *hostHeader, const char *match, uint32_t timeout);
 int CheckPOP3(const InetAddress& addr, uint16_t port, bool enableTLS, const char *username, const char *password, uint32_t timeout);
