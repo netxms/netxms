@@ -92,13 +92,13 @@ public class NodePollerActivity extends AbstractClientActivity {
                         @Override
                         public void onFailure(String errorText) 
                         {
-                            onPollCompleted(e.getLocalizedMessage());
+                            onPollCompleted(errorText);
                         }
 
                         @Override
                         public void onSuccess()
                         {
-                           onPollComplete(null);
+                           onPollCompleted(null);
                         }
                     });
                 } catch (final Exception e) {
