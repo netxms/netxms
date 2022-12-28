@@ -43,9 +43,9 @@ public class AgentTest extends AbstractSessionTest
          }
 
          @Override
-         public void onFailure(String errorText)
+         public void onFailure(Exception exception)
          {
-            System.out.print(errorText);
+            System.out.print(exception.getLocalizedMessage());
          }
 
          @Override
