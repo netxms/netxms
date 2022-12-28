@@ -67,7 +67,9 @@
 #define NXAGENTD_SYSLOG_NAME          _T("nxagentd")
 #endif
 
+#define DEBUG_TAG_COMM           _T("comm")
 #define DEBUG_TAG_LOCALDB        _T("db.agent")
+#define DEBUG_TAG_STARTUP        _T("startup")
 
 #define DEFAULT_CONFIG_SECTION   _T("CORE")
 
@@ -860,6 +862,9 @@ shared_ptr<AbstractCommSession> FindServerSessionById(uint32_t id);
 shared_ptr<AbstractCommSession> FindServerSessionByServerId(uint64_t serverId);
 shared_ptr<AbstractCommSession> FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 void NotifyConnectedServers(const TCHAR *notificationCode);
+
+void RegisterProblem(int severity, const TCHAR *key, const TCHAR *message);
+void UnregisterProblem(const TCHAR *key);
 
 bool LoadConfig(const TCHAR *configSection, bool firstStart);
 

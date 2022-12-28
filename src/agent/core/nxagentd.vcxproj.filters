@@ -73,6 +73,12 @@
     <ClCompile Include="policy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="problems.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="proxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="push.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -116,9 +122,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tcpproxy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="proxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="event.cpp">

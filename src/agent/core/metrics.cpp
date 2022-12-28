@@ -55,6 +55,7 @@ LONG H_IsSubagentLoaded(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstra
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NotificationStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ProblemsTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_PushValue(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_PushValues(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -465,9 +466,9 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("X509.Certificate.TemplateID(*)"), H_CertificateInfo, _T("T"), DCI_DT_STRING, _T("Template ID of X.509 certificate from file {instance}") },
 
    // Deprecated parameters
-   { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED },
-   { _T("Agent.LastTrapTime"), H_AgentEventSender, _T("T"), DCI_DT_UINT64, DCIDESC_DEPRECATED },
-   { _T("Agent.SentTraps"), H_AgentEventSender, _T("S"), DCI_DT_COUNTER64, DCIDESC_DEPRECATED }
+   { _T("Agent.GeneratedTraps"), H_AgentEventSender, _T("G"), DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Agent.LastTrapTime"), H_AgentEventSender, _T("T"), DCI_DT_DEPRECATED, DCIDESC_DEPRECATED },
+   { _T("Agent.SentTraps"), H_AgentEventSender, _T("S"), DCI_DT_DEPRECATED, DCIDESC_DEPRECATED }
 };
 
 /**
@@ -494,6 +495,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_standardTables[] =
 {
+   { _T("Agent.Problems"), H_ProblemsTable, nullptr, _T("KEY"), _T("Registered agent problems") },
    { _T("Agent.SessionAgents"), H_SessionAgents, nullptr, _T("SESSION_ID"), DCTDESC_AGENT_SESSION_AGENTS },
    { _T("Agent.SubAgents"), H_SubAgentTable, nullptr, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
    { _T("Agent.ZoneConfigurations"), H_ZoneConfigurations, nullptr, _T("SERVER_ID"), DCTDESC_AGENT_ZONE_CONFIGURATIONS },

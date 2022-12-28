@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -36,7 +36,9 @@ static const TCHAR *s_dataDirectory = nullptr;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = nullptr;
 static void (*s_fpExecuteAction)(const TCHAR*, const StringList&) = nullptr;
 static bool (*s_fpGetScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *) = nullptr;
-static void (*s_fpQueueNotificationMessage)(NXCPMessage *) = nullptr;
+static void (*s_fpQueueNotificationMessage)(NXCPMessage*) = nullptr;
+static void (*s_fpRegisterProblem)(int, const TCHAR*, const TCHAR*) = nullptr;
+static void (*s_fpUnregisterProblem)(const TCHAR*) = nullptr;
 
 /**
  * Initialize subagent API
@@ -53,7 +55,9 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
       const TCHAR *dataDirectory,
       void (*executeAction)(const TCHAR*, const StringList&),
       bool (*getScreenInfoForUserSession)(uint32_t, uint32_t *, uint32_t *, uint32_t *),
-      void (*queueNotificationMessage)(NXCPMessage*))
+      void (*queueNotificationMessage)(NXCPMessage*),
+      void (*registerProblem)(int, const TCHAR*, const TCHAR*),
+      void (*unregisterProblem)(const TCHAR*))
 {
    s_fpWriteLog = writeLog;
 	s_fpPostEvent1 = postEvent1;
@@ -67,6 +71,8 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(
    s_fpExecuteAction = executeAction;
    s_fpGetScreenInfoForUserSession = getScreenInfoForUserSession;
    s_fpQueueNotificationMessage = queueNotificationMessage;
+   s_fpRegisterProblem = registerProblem;
+   s_fpUnregisterProblem = unregisterProblem;
 }
 
 /**
@@ -300,4 +306,22 @@ void LIBNXAGENT_EXPORTABLE AgentQueueNotifictionMessage(NXCPMessage *msg)
       s_fpQueueNotificationMessage(msg);
    else
       delete msg;
+}
+
+/**
+ * Register agent problem
+ */
+void LIBNXAGENT_EXPORTABLE AgentRegisterProblem(int severity, const TCHAR *key, const TCHAR *message)
+{
+   if (s_fpRegisterProblem != nullptr)
+      s_fpRegisterProblem(severity, key, message);
+}
+
+/**
+ * Unregister agent problem with given key
+ */
+void LIBNXAGENT_EXPORTABLE AgentUnregisterProblem(const TCHAR *key)
+{
+   if (s_fpUnregisterProblem != nullptr)
+      s_fpUnregisterProblem(key);
 }

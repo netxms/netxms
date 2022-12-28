@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2022 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -356,6 +356,7 @@ bool OpenLocalDatabase()
    {
       nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_LOCALDB, _T("Cannot open database (%s)"), errorText);
 	   g_failFlags |= FAIL_OPEN_DATABASE;
+      RegisterProblem(SEVERITY_MAJOR, _T("localdb-open"), _T("Agent cannot open local database"));
       return false;
    }
 
@@ -364,6 +365,7 @@ bool OpenLocalDatabase()
 	   g_failFlags |= FAIL_UPGRADE_DATABASE;
       DBDisconnect(s_db);
       s_db = nullptr;
+      RegisterProblem(SEVERITY_MAJOR, _T("localdb-upgrade"), _T("Schema upgrade for agent local database failed"));
       return false;
    }
 

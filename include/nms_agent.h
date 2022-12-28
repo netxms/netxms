@@ -926,7 +926,7 @@ public:
 struct NETXMS_SUBAGENT_PARAM
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+   LONG (*handler)(const TCHAR*, const TCHAR*, TCHAR*, AbstractCommSession*);
    const TCHAR *arg;
    int dataType;		// Use DT_DEPRECATED to indicate deprecated parameter
    TCHAR description[MAX_DB_STRING];
@@ -948,7 +948,7 @@ struct NETXMS_SUBAGENT_PUSHPARAM
 struct NETXMS_SUBAGENT_LIST
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+   LONG (*handler)(const TCHAR*, const TCHAR*, StringList*, AbstractCommSession*);
    const TCHAR *arg;
    TCHAR description[MAX_DB_STRING];
 };
@@ -1152,9 +1152,9 @@ private:
    MacAddress m_devAddr;
    MacAddress m_devEui;
    lorawan_payload_t m_payload;
-   INT32 m_decoder;
+   uint32_t m_decoder;
    char m_dataRate[24];
-   INT32 m_rssi;
+   int32_t m_rssi;
    double m_snr;
    double m_freq;
    uint32_t m_fcnt;
@@ -1184,8 +1184,8 @@ public:
    const char *getDataRate() const { return m_dataRate; }
    void setDataRate(const char *dataRate) { strlcpy(m_dataRate, dataRate, 24); }
 
-   INT32 getRssi() const { return m_rssi; }
-   void setRssi(INT32 rssi) { m_rssi = rssi; }
+   int32_t getRssi() const { return m_rssi; }
+   void setRssi(int32_t rssi) { m_rssi = rssi; }
 
    double getSnr() const { return m_snr; }
    void setSnr(double snr) { m_snr = snr; }
@@ -1199,8 +1199,8 @@ public:
    uint32_t getPort() const { return m_port; }
    void setPort(uint32_t port) { m_port = port; }
 
-   INT32 getLastContact() const { return (INT32)m_lastContact; }
-   void updateLastContact() { m_lastContact = time(NULL); }
+   time_t getLastContact() const { return m_lastContact; }
+   void updateLastContact() { m_lastContact = time(nullptr); }
 };
 
 /**
@@ -1355,6 +1355,9 @@ DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle();
 void LIBNXAGENT_EXPORTABLE AgentExecuteAction(const TCHAR *action, const StringList& args);
 
 bool LIBNXAGENT_EXPORTABLE AgentGetScreenInfoForUserSession(uint32_t sessionId, uint32_t *width, uint32_t *height, uint32_t *bpp);
+
+void LIBNXAGENT_EXPORTABLE AgentRegisterProblem(int severity, const TCHAR *key, const TCHAR *message);
+void LIBNXAGENT_EXPORTABLE AgentUnregisterProblem(const TCHAR *key);
 
 TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer = nullptr, size_t bufferSize = 0, const TCHAR *defaultValue = nullptr);
 int32_t LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, int32_t defaultValue);
