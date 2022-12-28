@@ -255,9 +255,11 @@ LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstrac
    if (strcmp(scheme, "http") && strcmp(scheme, "https"))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): unsupported scheme"), url);
+      curl_free(scheme);
       curl_url_cleanup(hURL);
       return SYSINFO_RC_UNSUPPORTED;
    }
+   curl_free(scheme);
    curl_url_cleanup(hURL);
 
    const OptionList options(metric, 2);
