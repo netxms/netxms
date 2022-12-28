@@ -18,15 +18,12 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
-import java.io.IOException;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.ui.console.IOConsoleOutputStream;
-import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -35,11 +32,10 @@ import org.netxms.ui.eclipse.objecttools.Messages;
 /**
  * View for server script execution results
  */
-public class ServerScriptResults extends AbstractCommandResults implements TextOutputListener
+public class ServerScriptResults extends AbstractCommandResults
 {
    public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ServerScriptResults"; //$NON-NLS-1$
 
-   private IOConsoleOutputStream out;
    private String lastScript = null;
    private Action actionRestart;
    private Map<String, String> lastInputValues = null;
@@ -106,7 +102,7 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
    public void executeScript(final String script, final long alarmId, final Map<String, String> inputValues)
    {
       actionRestart.setEnabled(false);
-      out = console.newOutputStream();
+      createOutputStream();
       lastScript = script;
       this.alarmId = alarmId;
       lastInputValues = inputValues;
@@ -122,15 +118,11 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
          {
             try
             {
-               session.executeLibraryScript(nodeId, alarmId, script, inputValues, ServerScriptResults.this);
+               session.executeLibraryScript(nodeId, alarmId, script, inputValues, getOutputListener());
             }
             finally
             {
-               if (out != null)
-               {
-                  out.close();
-                  out = null;
-               }
+               closeOutputStream();
             }
          }
 
@@ -149,62 +141,5 @@ public class ServerScriptResults extends AbstractCommandResults implements TextO
       job.setUser(false);
       job.setSystem(true);
       job.start();
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      if (out != null)
-      {
-         try
-         {
-            out.close();
-         }
-         catch(IOException e)
-         {
-         }
-         out = null;
-      }
-      super.dispose();
-   }
-
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
-    */
-   @Override
-   public void onFailure(String errorText)
-   {
    }
 }

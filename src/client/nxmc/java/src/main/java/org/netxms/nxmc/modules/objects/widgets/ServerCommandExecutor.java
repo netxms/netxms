@@ -18,14 +18,12 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
-import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -36,13 +34,12 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Server command executor and output provider widget
  */
-public class ServerCommandExecutor extends AbstractObjectToolExecutor implements TextOutputListener
+public class ServerCommandExecutor extends AbstractObjectToolExecutor
 {
    private static I18n i18n = LocalizationHelper.getI18n(ServerCommandExecutor.class);
    
    private String lastCommand = null;
    private Map<String, String> lastInputValues = null;
-   private long streamId = 0;
    private NXCSession session;
    private List<String> maskedFields;
 
@@ -56,8 +53,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
     * @param inputValues input values provided by user
     * @param maskedFields list of input values that should be mased
     */
-   public ServerCommandExecutor(Composite resultArea, ObjectContext context, ActionSet actionSet,
-         ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
+   public ServerCommandExecutor(Composite resultArea, ObjectContext context, ActionSet actionSet, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    { 
       super(resultArea, context, actionSet);
       this.lastInputValues = inputValues;
@@ -67,17 +63,17 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
     */
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true, ServerCommandExecutor.this, null);
+      session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true, getOutputListener(), null);
       out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#terminate()
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectToolExecutor#terminate()
     */
    @Override
    public void terminate()
@@ -114,52 +110,11 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#isTerminateSupported()
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectToolExecutor#isTerminateSupported()
     */
    @Override
    protected boolean isTerminateSupported()
    {
       return true;
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-      this.streamId = streamId;
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
-    */
-   @Override
-   public void onFailure(String error)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
    }
 }

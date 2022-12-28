@@ -18,18 +18,16 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
-import java.io.IOException;
 import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 
 /**
  * Server script executor and output provider widget
  */
-public class ServerScriptExecutor extends AbstractObjectToolExecutor implements TextOutputListener
+public class ServerScriptExecutor extends AbstractObjectToolExecutor
 {
    private String script = null;
    private Map<String, String> inputValues = null;
@@ -56,51 +54,11 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
     */
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeLibraryScript(nodeId, alarmId, script, inputValues, ServerScriptExecutor.this);
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
-    */
-   @Override
-   public void onFailure(String error)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
+      session.executeLibraryScript(nodeId, alarmId, script, inputValues, getOutputListener());
    }
 }

@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -26,8 +25,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.ui.console.IOConsoleOutputStream;
-import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -36,11 +33,10 @@ import org.netxms.ui.eclipse.objecttools.Messages;
 /**
  * View for agent action execution results
  */
-public class AgentActionResults extends AbstractCommandResults implements TextOutputListener
+public class AgentActionResults extends AbstractCommandResults
 {
    public static final String ID = "org.netxms.ui.eclipse.objecttools.views.AgentActionResults"; //$NON-NLS-1$
 
-   private IOConsoleOutputStream out;
    private Action actionRestart;
    private String executionString;
    private long alarmId;
@@ -106,7 +102,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    public void executeAction(final String executionString, final long alarmId, final Map<String, String> inputValues, final List<String> maskedFields)
    {
       actionRestart.setEnabled(false);
-      out = console.newOutputStream();
+      createOutputStream();
       this.alarmId = alarmId;
       this.executionString = executionString;
       this.inputValues = inputValues;
@@ -123,13 +119,12 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
          {
             try
             {
-               session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, AgentActionResults.this, null);
-               out.write(Messages.get().LocalCommandResults_Terminated);
+               session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, getOutputListener(), null);
+               writeToOutputStream(Messages.get().LocalCommandResults_Terminated);
             }
             finally
             {
-               out.close();
-               out = null;
+               closeOutputStream();
             }
          }
 
@@ -148,65 +143,5 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
       job.setUser(false);
       job.setSystem(true);
       job.start();
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text);
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      if (out != null)
-      {
-         try
-         {
-            out.close();
-         }
-         catch(IOException e)
-         {
-         }
-         out = null;
-      }
-      super.dispose();
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
-    */
-   @Override
-   public void onFailure(String errorText)
-   {
    }
 }

@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
+import java.io.IOException;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -33,10 +34,13 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TextOutputAdapter;
+import org.netxms.client.TextOutputListener;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -54,7 +58,11 @@ public abstract class AbstractCommandResults extends ViewPart
 	protected long toolId;
    protected int remotePort;
 	protected TextConsole console;
+   protected long streamId = 0;
    protected NXCSession session;
+
+   private IOConsoleOutputStream out;
+   private TextOutputListener outputListener;
 
 	private Action actionClear;
 	private Action actionScrollLock;
@@ -64,10 +72,10 @@ public abstract class AbstractCommandResults extends ViewPart
 	/**
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
 
       // Secondary ID must be in form toolId&nodeId or toolId&nodeId&remotePort
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
@@ -75,6 +83,27 @@ public abstract class AbstractCommandResults extends ViewPart
 			throw new PartInitException("Internal error"); //$NON-NLS-1$
 
       session = ConsoleSharedData.getSession();
+
+      outputListener = new TextOutputAdapter() {
+         @Override
+         public void messageReceived(String text)
+         {
+            try
+            {
+               if (out != null)
+                  out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            catch(IOException e)
+            {
+            }
+         }
+
+         @Override
+         public void setStreamId(long streamId)
+         {
+            AbstractCommandResults.this.streamId = streamId;
+         }
+      };
 
 		try
 		{
@@ -89,13 +118,13 @@ public abstract class AbstractCommandResults extends ViewPart
 		{
 			throw new PartInitException("Unexpected initialization failure", e); //$NON-NLS-1$
 		}
-	}
+   }
 
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
-	@Override
-	public void createPartControl(Composite parent)
+   @Override
+   public void createPartControl(Composite parent)
 	{
 		console = new TextConsole(parent, SWT.NONE);
 		console.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -253,4 +282,70 @@ public abstract class AbstractCommandResults extends ViewPart
 	{
 		console.setFocus();
 	}	
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      closeOutputStream();
+      super.dispose();
+   }
+
+   /**
+    * Get output listener
+    *
+    * @return output listener
+    */
+   protected TextOutputListener getOutputListener()
+   {
+      return outputListener;
+   }
+
+   /**
+    * Open new output stream (will close existing one if any)
+    */
+   protected void createOutputStream()
+   {
+      closeOutputStream();
+      out = console.newOutputStream();
+   }
+
+   /**
+    * Close output stream
+    */
+   protected void closeOutputStream()
+   {
+      if (out == null)
+         return;
+
+      try
+      {
+         out.close();
+      }
+      catch(IOException e)
+      {
+      }
+      out = null;
+   }
+
+   /**
+    * Write text to output stream.
+    *
+    * @param text text to write
+    */
+   protected void writeToOutputStream(String text)
+   {
+      if (out == null)
+         return;
+
+      try
+      {
+         out.write(text);
+      }
+      catch(IOException e)
+      {
+      }
+   }
 }

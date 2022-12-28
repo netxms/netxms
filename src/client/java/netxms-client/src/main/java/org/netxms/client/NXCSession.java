@@ -7029,8 +7029,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String executeActionWithExpansion(long nodeId, long alarmId, String action, boolean receiveOutput,
-         final Map<String, String> inputValues, final List<String> maskedFields, final TextOutputListener listener, 
-         final Writer writer)
+         final Map<String, String> inputValues, final List<String> maskedFields, final TextOutputListener listener, final Writer writer)
          throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
@@ -7126,8 +7125,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action, String[] args, boolean receiveOutput, final TextOutputListener listener,
-         final Writer writer) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, String[] args, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
@@ -10051,7 +10049,7 @@ public class NXCSession
       }
       catch (Exception e)
       {
-         listener.onFailure(e.getMessage());
+         listener.onFailure(e);
          throw e;
       }
    }

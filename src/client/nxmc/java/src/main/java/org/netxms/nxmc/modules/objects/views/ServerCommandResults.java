@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -28,10 +27,8 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -40,15 +37,13 @@ import org.xnap.commons.i18n.I18n;
 /**
  * View for server command execution results
  */
-public class ServerCommandResults extends AbstractCommandResultView implements TextOutputListener
+public class ServerCommandResults extends AbstractCommandResultView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerCommandResults.class);
 
-   private IOConsoleOutputStream out;
    private String lastCommand = null;
    private Action actionRestart;
    private Action actionStop;
-   private long streamId = 0;
    private boolean isRunning = false;
 
    /**
@@ -142,7 +137,7 @@ public class ServerCommandResults extends AbstractCommandResultView implements T
       isRunning = true;
       actionRestart.setEnabled(false);
       actionStop.setEnabled(true);
-      out = console.newOutputStream();
+      createOutputStream();
       Job job = new Job(String.format(i18n.tr("Execute action on node %s"), object.object.getObjectName()), this) {
          @Override
          protected String getErrorMessage()
@@ -155,16 +150,12 @@ public class ServerCommandResults extends AbstractCommandResultView implements T
          {
             try
             {
-               session.executeServerCommand(object.object.getObjectId(), executionString, inputValues, maskedFields, true, ServerCommandResults.this, null);
-               out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+               session.executeServerCommand(object.object.getObjectId(), executionString, inputValues, maskedFields, true, getOutputListener(), null);
+               writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally
             {
-               if (out != null)
-               {
-                  out.close();
-                  out = null;
-               }
+               closeOutputStream();
             }
          }
 
@@ -224,40 +215,6 @@ public class ServerCommandResults extends AbstractCommandResultView implements T
       }
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      super.dispose();
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-      this.streamId = streamId;
-   }
-
    /**
     * @see org.netxms.nxmc.base.views.View#beforeClose()
     */
@@ -274,21 +231,5 @@ public class ServerCommandResults extends AbstractCommandResultView implements T
          return false;
       }
       return true;
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
-    */
-   @Override
-   public void onFailure(String error)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
    }
 }

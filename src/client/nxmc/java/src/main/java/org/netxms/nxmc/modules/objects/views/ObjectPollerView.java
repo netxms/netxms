@@ -220,12 +220,18 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
       return null;
    }
 
+   /**
+    * Start poll
+    */
    public void startPoll()
    {
       actionRestart.setEnabled(false);      
       Registry.getPollManager().startNewPoll(target, pollType, this);
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#messageReceived(java.lang.String)
+    */
    @Override
    public void messageReceived(String text)
    {
@@ -239,17 +245,30 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
       });
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
    @Override
    public void setStreamId(long streamId)
    {
    }
 
    /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.Exception)
     */
    @Override
-   public void onFailure(String error)
+   public void onFailure(Exception exception)
    {
+      display.asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            if (!textArea.isDisposed())
+            {
+               actionRestart.setEnabled(true);
+            }
+         }
+      });
    }
 
    /**

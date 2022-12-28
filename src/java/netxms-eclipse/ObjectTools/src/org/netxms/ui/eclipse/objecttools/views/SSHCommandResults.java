@@ -18,14 +18,11 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
-import java.io.IOException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.ui.console.IOConsoleOutputStream;
-import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -34,11 +31,10 @@ import org.netxms.ui.eclipse.objecttools.Messages;
 /**
  * View for agent action execution results
  */
-public class SSHCommandResults extends AbstractCommandResults implements TextOutputListener
+public class SSHCommandResults extends AbstractCommandResults
 {
    public static final String ID = "org.netxms.ui.eclipse.objecttools.views.SSHCommandResults"; //$NON-NLS-1$
 
-   private IOConsoleOutputStream out;
    private Action actionRestart;
    private String executionString;
 
@@ -101,7 +97,7 @@ public class SSHCommandResults extends AbstractCommandResults implements TextOut
    public void executeSshCommand(final String executionString)
    {
       actionRestart.setEnabled(false);
-      out = console.newOutputStream();
+      createOutputStream();
       this.executionString = executionString;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
@@ -115,13 +111,12 @@ public class SSHCommandResults extends AbstractCommandResults implements TextOut
          {
             try
             {
-               session.executeSshCommand(nodeId, executionString, true, SSHCommandResults.this, null);
-               out.write(Messages.get().LocalCommandResults_Terminated);
+               session.executeSshCommand(nodeId, executionString, true, getOutputListener(), null);
+               writeToOutputStream(Messages.get().LocalCommandResults_Terminated);
             }
             finally
             {
-               out.close();
-               out = null;
+               closeOutputStream();
             }
          }
 
@@ -140,65 +135,5 @@ public class SSHCommandResults extends AbstractCommandResults implements TextOut
       job.setUser(false);
       job.setSystem(true);
       job.start();
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text);
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      if (out != null)
-      {
-         try
-         {
-            out.close();
-         }
-         catch(IOException e)
-         {
-         }
-         out = null;
-      }
-      super.dispose();
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
-    */
-   @Override
-   public void onFailure(String errorText)
-   {
    }
 }

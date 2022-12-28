@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objecttools.widgets;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -26,7 +25,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objects.ObjectContext;
@@ -37,11 +35,10 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Server command executor and output provider widget
  */
-public class ServerCommandExecutor extends AbstractObjectToolExecutor implements TextOutputListener
+public class ServerCommandExecutor extends AbstractObjectToolExecutor
 {
    private String lastCommand = null;
    private Map<String, String> lastInputValues = null;
-   private long streamId = 0;
    private NXCSession session;
    private List<String> maskedFields;
 
@@ -71,7 +68,7 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true, ServerCommandExecutor.this, null);
+      session.executeServerCommand(objectContext.object.getObjectId(), lastCommand, lastInputValues, maskedFields, true, getOutputListener(), null);
       out.write(Messages.get().LocalCommandResults_Terminated);
    }
 
@@ -120,46 +117,5 @@ public class ServerCommandExecutor extends AbstractObjectToolExecutor implements
    protected boolean isTerminateSupported()
    {
       return true;
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-      this.streamId = streamId;
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
-    */
-   @Override
-   public void onFailure(String errorText)
-   {
    }
 }

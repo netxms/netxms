@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.constants.ObjectPollType;
@@ -38,13 +39,13 @@ import org.xnap.commons.i18n.I18n;
 public class PollerProxy implements TextOutputListener
 {
    private final I18n i18n = LocalizationHelper.getI18n(PollerProxy.class);
-   
+
    private Set<TextOutputListener> listenerSet;
    private List<String> content;
    private boolean pollActive;
    private PollingTarget target;
    private ObjectPollType pollType;
-   
+
    /**
     * Default constructor
     */
@@ -58,7 +59,7 @@ public class PollerProxy implements TextOutputListener
       this.pollType = pollType;
       startPoll();
    }
-   
+
    /**
     * Add new listener
     * 
@@ -137,6 +138,9 @@ public class PollerProxy implements TextOutputListener
       job.start();
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#messageReceived(java.lang.String)
+    */
    @Override
    public void messageReceived(String text)
    {
@@ -150,6 +154,9 @@ public class PollerProxy implements TextOutputListener
       }
    }
 
+   /**
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
+    */
    @Override
    public void setStreamId(long streamId)
    {
@@ -163,13 +170,13 @@ public class PollerProxy implements TextOutputListener
    }
 
    /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.Exception)
     */
    @Override
-   public void onFailure(String errorMessage)
+   public void onFailure(Exception exception)
    {
-      messageReceived(String.format("\u007FePOLL ERROR: %s\r\n", errorMessage)); //$NON-NLS-1$
-      messageReceived("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
+      messageReceived(String.format("\u007FePOLL ERROR: %s\r\n", (exception instanceof NXCException) ? exception.getLocalizedMessage() : exception.getClass().getName()));
+      messageReceived("\u007Fl**** Poll failed ****\r\n\r\n");
    }
 
    /**
@@ -178,7 +185,7 @@ public class PollerProxy implements TextOutputListener
    @Override
    public void onSuccess()
    {
-      messageReceived("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
+      messageReceived("\u007Fl**** Poll completed successfully ****\r\n\r\n");
       synchronized(listenerSet)
       {
          for (TextOutputListener l :listenerSet)
@@ -187,5 +194,4 @@ public class PollerProxy implements TextOutputListener
          }
       }
    }
-   
 }

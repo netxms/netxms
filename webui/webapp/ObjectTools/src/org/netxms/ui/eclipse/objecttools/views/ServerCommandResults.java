@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -27,29 +26,24 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISaveablePart2;
-import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
-import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
  * View for server command execution results
  */
-public class ServerCommandResults extends AbstractCommandResults implements TextOutputListener, ISaveablePart2
+public class ServerCommandResults extends AbstractCommandResults implements ISaveablePart2
 {
    public static final String ID = "org.netxms.ui.eclipse.objecttools.views.ServerCommandResults"; //$NON-NLS-1$
 
-   private IOConsoleOutputStream out;
    private String lastCommand = null;
    private Action actionRestart;
    private Action actionStop;
    private Map<String, String> lastInputValues = null;
-   private long streamId = 0;
    private boolean isRunning = false;
    private List<String> maskedFields;
 
@@ -133,7 +127,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       isRunning = true;
       actionRestart.setEnabled(false);
       actionStop.setEnabled(true);
-      out = console.newOutputStream();
+      createOutputStream();
       lastCommand = command;
       lastInputValues = inputValues;
       final String terminated = Messages.get().LocalCommandResults_Terminated;
@@ -150,19 +144,15 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
          {
             try
             {
-               session.executeServerCommand(nodeId, command, inputValues, maskedFields, true, ServerCommandResults.this, null);
-               out.write(terminated);
+               session.executeServerCommand(nodeId, command, inputValues, maskedFields, true, getOutputListener(), null);
+               writeToOutputStream(terminated);
             }
             catch (SWTException e)
             {
             }
             finally
             {
-               if (out != null)
-               {
-                  out.close();
-                  out = null;
-               }
+               closeOutputStream();
             }
          }
 
@@ -225,41 +215,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       }
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null && !console.isDisposed())
-            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      super.dispose();
-   }
-
-   /* (non-Javadoc)
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-      this.streamId = streamId;
-   }
-
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
@@ -310,21 +266,5 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    public int promptToSaveOnClose()
    {
       return MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? ") ? YES : CANCEL;
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
-    */
-   @Override
-   public void onFailure(String errorText)
-   {
    }
 }

@@ -18,12 +18,10 @@
  */
 package org.netxms.nxmc.modules.objects.widgets;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
@@ -32,16 +30,16 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Action executor widget to run an action and display it's result 
  */
-public class ActionExecutor extends AbstractObjectToolExecutor implements TextOutputListener
+public class ActionExecutor extends AbstractObjectToolExecutor
 {
    private static I18n i18n = LocalizationHelper.getI18n(ActionExecutor.class);
-   
+
    private String executionString;
    private long alarmId;
    private Map<String, String> inputValues;
    private List<String> maskedFields;
    protected long nodeId;
-   
+
    /**
     * Constructor for action execution
     * 
@@ -65,52 +63,12 @@ public class ActionExecutor extends AbstractObjectToolExecutor implements TextOu
    }
 
    /**
-    * @see org.netxms.ui.eclipse.objecttools.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractObjectToolExecutor#executeInternal(org.eclipse.swt.widgets.Display)
     */
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, ActionExecutor.this, null);
+      session.executeActionWithExpansion(nodeId, alarmId, executionString, true, inputValues, maskedFields, getOutputListener(), null);
       out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text);
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {      
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
-    */
-   @Override
-   public void onFailure(String error)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
    }
 }

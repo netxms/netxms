@@ -19,33 +19,39 @@
 package org.netxms.client;
 
 /**
- * Listener for text output (provided by actions, scripts, etc.)
+ * Adapter class for interface <code>TextOutputListener</code> that implements all interface methods as no-op.
  */
-public interface TextOutputListener
+public class TextOutputAdapter implements TextOutputListener
 {
    /**
-    * Called when new message is received.
-    * 
-    * @param text received message
+    * @see org.netxms.client.TextOutputListener#messageReceived(java.lang.String)
     */
-   public void messageReceived(String text);
+   @Override
+   public void messageReceived(String text)
+   {
+   }
 
    /**
-    * Called when output stream ID is known
-    * 
-    * @param streamId ID of output stream (actual meaning depends on API call)
+    * @see org.netxms.client.TextOutputListener#setStreamId(long)
     */
-   public void setStreamId(long streamId);
+   @Override
+   public void setStreamId(long streamId)
+   {
+   }
 
    /**
-    * Called when all text output provided successfully
+    * @see org.netxms.client.TextOutputListener#onSuccess()
     */
-   public void onSuccess();
+   @Override
+   public void onSuccess()
+   {
+   }
 
    /**
-    * Called on execution failure
-    * 
-    * @param exception cause of operation failure
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.Exception)
     */
-   public void onFailure(Exception exception);
+   @Override
+   public void onFailure(Exception exception)
+   {
+   }
 }

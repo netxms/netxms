@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.websvc;
 
 import java.util.Date;
+import org.netxms.client.NXCException;
 import org.netxms.client.TextOutputListener;
 
 /**
@@ -56,19 +57,29 @@ public class ServerOutputListener implements TextOutputListener
    }
 
    /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
+    * @see org.netxms.client.TextOutputListener#onSuccess()
     */
    @Override
-   public void onFailure(String errorText)
+   public void onSuccess()
    {
       lastUpdateTime = new Date();
       synchronized(mutex)
       {
-         if (errorText != null)
-            buffer.append(errorText);
-         else
-            buffer.append("Error occured");
-         
+         completed = true;
+         mutex.notifyAll();
+      }
+   }
+
+   /**
+    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.Exception)
+    */
+   @Override
+   public void onFailure(Exception exception)
+   {
+      lastUpdateTime = new Date();
+      synchronized(mutex)
+      {
+         buffer.append((exception instanceof NXCException) ? exception.getMessage() : String.format("Internal error (%s)", exception.getClass().getName()));
          completed = true;
          mutex.notifyAll();
       }
@@ -101,20 +112,6 @@ public class ServerOutputListener implements TextOutputListener
          buffer = new StringBuilder();
       }
       return data;
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-      lastUpdateTime = new Date();
-      synchronized(mutex)
-      {
-         completed = true;
-         mutex.notifyAll();
-      }
    }
 
    /**

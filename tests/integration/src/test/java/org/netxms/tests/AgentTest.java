@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2022 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ public class AgentTest extends AbstractSessionTest
    public void testExecuteAction() throws Exception
    {
       final NXCSession session = connect();
-      
+
       session.executeAction(TestConstants.LOCAL_NODE_ID, TestConstants.ACTION, null, true, new TextOutputListener() {
          @Override
          public void messageReceived(String text)

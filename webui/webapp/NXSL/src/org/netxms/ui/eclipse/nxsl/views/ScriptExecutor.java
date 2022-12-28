@@ -54,7 +54,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
-import org.netxms.client.TextOutputListener;
+import org.netxms.client.TextOutputAdapter;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -73,7 +73,7 @@ import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 /**
  * Sored on server agent's configuration editor
  */
-public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutputListener
+public class ScriptExecutor extends ViewPart implements ISaveablePart2
 {
    public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"; //$NON-NLS-1$
 
@@ -348,7 +348,6 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    {
       SaveScriptDialog dlg = new SaveScriptDialog(getSite().getShell(), actionSave.isEnabled());
       int rc = dlg.open();
-      
       switch(rc)
       {
          case SaveScriptDialog.SAVE_ID:
@@ -370,6 +369,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
 
    /**
     * Create new script
+    * 
+    * @param saveOnSelectionChange true if called because of library script selection change
     */
    private boolean createNewScript(final boolean saveOnSelectionChange)
    {
@@ -378,7 +379,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          return false;
 
       final String scriptSource = scriptEditor.getText();
-      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Create, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Create, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -420,13 +421,12 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       final int index = scriptCombo.getSelectionIndex();
       if (index == -1)
          return;
-      
+
       new ConsoleJob(Messages.get().ScriptExecutor_JobName_Update, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {            
             final Script script = session.getScript(library.get(index).getId());
-
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -461,7 +461,22 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          {
             try
             {
-               session.executeScript(objectId, script, parameters, ScriptExecutor.this, true);
+               session.executeScript(objectId, script, parameters, new TextOutputAdapter() {
+                  @Override
+                  public void messageReceived(String text)
+                  {
+                     if (consoleOutputStream != null)
+                     {
+                        try
+                        {
+                           consoleOutputStream.write(text);
+                        }
+                        catch(IOException e)
+                        {
+                        }
+                     }
+                  }
+               }, true);
             }
             catch(NXCException e)
             {
@@ -495,16 +510,16 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
                }
             });
          } 
-      }.start();      
+      }.start();
    }
-   
+
    /**
     * Populates list of scripts with scripts
     */
    private void updateScriptList(final Runnable postProcessor)
    {
       final String selection = (scriptCombo.getSelectionIndex() != -1) ? scriptCombo.getItem(scriptCombo.getSelectionIndex()) : null;
-            
+
       new ConsoleJob(Messages.get().ScriptExecutor_JobName_ReadList, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -516,7 +531,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
                    return lhs.getName().compareTo(rhs.getName());
                }
             });
-            
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -532,7 +547,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
                   }
                   else
                   {
-                     if(selection != null)
+                     if (selection != null)
                      {
                         scriptCombo.select(scriptCombo.indexOf(selection));
                      }  
@@ -548,7 +563,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          }
       }.start();
    }
-   
+
    /**
     * Update script
     */
@@ -556,7 +571,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    {
       final Script s = library.get(saveOnSelectionChange ? previousSelection : scriptCombo.getSelectionIndex());
       final String scriptSource = scriptEditor.getText();
-      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Update, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Update, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -713,47 +728,5 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       modified = (rc != SaveScriptDialog.DISCARD_ID); // Clear modification flag if "Discard" was selected
       doSaveAs = (rc == SaveScriptDialog.SAVE_AS_ID);
       return YES;    // Always return "YES" to prevent "Save resource" popup on exit
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(final String text)
-   {
-      if (consoleOutputStream != null)
-      {
-         try
-         {
-            consoleOutputStream.write(text);
-         }
-         catch(IOException e)
-         {
-         }
-      }
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
-    */
-   @Override
-   public void onFailure(String errorText)
-   {
    }
 }

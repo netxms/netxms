@@ -18,19 +18,17 @@
  */
 package org.netxms.ui.eclipse.objecttools.widgets;
 
-import java.io.IOException;
 import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objects.ObjectContext;
 
 /**
  * Server script executor and output provider widget
  */
-public class ServerScriptExecutor extends AbstractObjectToolExecutor implements TextOutputListener
+public class ServerScriptExecutor extends AbstractObjectToolExecutor
 {
    private String script = null;
    private Map<String, String> inputValues = null;
@@ -62,46 +60,6 @@ public class ServerScriptExecutor extends AbstractObjectToolExecutor implements 
    @Override
    protected void executeInternal(Display display) throws Exception
    {
-      session.executeLibraryScript(nodeId, alarmId, script, inputValues, ServerScriptExecutor.this);
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure()
-    */
-   @Override
-   public void onFailure(String errorText)
-   {
+      session.executeLibraryScript(nodeId, alarmId, script, inputValues, getOutputListener());
    }
 }

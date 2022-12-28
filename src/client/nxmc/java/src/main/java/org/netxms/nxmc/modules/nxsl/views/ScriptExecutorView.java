@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
-import org.netxms.client.TextOutputListener;
+import org.netxms.client.TextOutputAdapter;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -63,7 +63,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Sored on server agent's configuration editor
  */
-public class ScriptExecutorView extends AdHocObjectView implements TextOutputListener
+public class ScriptExecutorView extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ScriptExecutorView.class);
 
@@ -510,7 +510,22 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.executeScript(objectId, script, parameters, ScriptExecutorView.this, true);
+            session.executeScript(objectId, script, parameters, new TextOutputAdapter() {
+               @Override
+               public void messageReceived(final String text)
+               {
+                  if (consoleOutputStream != null)
+                  {
+                     try
+                     {
+                        consoleOutputStream.write(text);
+                     }
+                     catch(IOException e)
+                     {
+                     }
+                  }
+               }
+            }, true);
          }
 
          @Override
@@ -664,47 +679,5 @@ public class ScriptExecutorView extends AdHocObjectView implements TextOutputLis
       manager.add(actionSave);
       manager.add(actionSaveAs);
       manager.add(actionClear);
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(final String text)
-   {
-      if (consoleOutputStream != null)
-      {
-         try
-         {
-            consoleOutputStream.write(text);
-         }
-         catch(IOException e)
-         {
-         }
-      }
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
-    */
-   @Override
-   public void onFailure(String error)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
    }
 }

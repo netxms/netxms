@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.jface.action.Action;
@@ -31,8 +32,11 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.netxms.client.TextOutputAdapter;
+import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.widgets.TextConsole;
+import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -49,14 +53,17 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    protected String executionString;
    protected Map<String, String> inputValues;
    protected List<String> maskedFields;
+   protected TextConsole console;
+   protected long streamId = 0;
 
-	protected TextConsole console;
+   private IOConsoleOutputStream out;
+   private TextOutputListener outputListener;
 
 	private Action actionClear;
 	private Action actionScrollLock;
 	private Action actionCopy;
 	private Action actionSelectAll;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -66,13 +73,34 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 	 * @param nodeId
 	 * @param toolId
 	 */
-	public AbstractCommandResultView(ObjectContext node, ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields) 
-	{
+   public AbstractCommandResultView(ObjectContext node, ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields) 
+   {
       super(node, tool, ResourceManager.getImageDescriptor("icons/object-tools/terminal.png"), false);
       this.inputValues = inputValues;
       this.maskedFields = maskedFields;
       this.executionString = tool.getData();
-	}
+
+      outputListener = new TextOutputAdapter() {
+         @Override
+         public void messageReceived(String text)
+         {
+            try
+            {
+               if (out != null)
+                  out.write(text.replace("\r", ""));
+            }
+            catch(IOException e)
+            {
+            }
+         }
+
+         @Override
+         public void setStreamId(long streamId)
+         {
+            AbstractCommandResultView.this.streamId = streamId;
+         }
+      };
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -125,7 +153,7 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 			}
 		};
 		actionCopy.setEnabled(false);
-		
+
 		actionSelectAll = new Action(i18n.tr("Select &all")) {
 			@Override
 			public void run()
@@ -205,4 +233,70 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 	{
 		console.setFocus();
 	}	
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      closeOutputStream();
+      super.dispose();
+   }
+
+   /**
+    * Get output listener
+    *
+    * @return output listener
+    */
+   protected TextOutputListener getOutputListener()
+   {
+      return outputListener;
+   }
+
+   /**
+    * Open new output stream (will close existing one if any)
+    */
+   protected void createOutputStream()
+   {
+      closeOutputStream();
+      out = console.newOutputStream();
+   }
+
+   /**
+    * Close output stream
+    */
+   protected void closeOutputStream()
+   {
+      if (out == null)
+         return;
+
+      try
+      {
+         out.close();
+      }
+      catch(IOException e)
+      {
+      }
+      out = null;
+   }
+
+   /**
+    * Write text to output stream.
+    *
+    * @param text text to write
+    */
+   protected void writeToOutputStream(String text)
+   {
+      if (out == null)
+         return;
+
+      try
+      {
+         out.write(text);
+      }
+      catch(IOException e)
+      {
+      }
+   }
 }

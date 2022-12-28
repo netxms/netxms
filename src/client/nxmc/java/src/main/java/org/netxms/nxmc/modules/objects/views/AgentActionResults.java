@@ -18,7 +18,6 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -26,11 +25,9 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
-import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -39,13 +36,12 @@ import org.xnap.commons.i18n.I18n;
 /**
  * View for agent action execution results
  */
-public class AgentActionResults extends AbstractCommandResultView implements TextOutputListener
+public class AgentActionResults extends AbstractCommandResultView
 {
    private static I18n i18n = LocalizationHelper.getI18n(AgentActionResults.class);
 
-   private IOConsoleOutputStream out;
    private Action actionRestart;
-   
+
    /**
     * Constructor
     * 
@@ -71,7 +67,6 @@ public class AgentActionResults extends AbstractCommandResultView implements Tex
       view.maskedFields = maskedFields;
       return view;
    } 
-   
 
    /**
     * Create actions
@@ -124,11 +119,14 @@ public class AgentActionResults extends AbstractCommandResultView implements Tex
       super.fillContextMenu(manager);
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.AbstractCommandResultView#execute()
+    */
    @Override
    public void execute()
    {
       actionRestart.setEnabled(false);
-      out = console.newOutputStream();
+      createOutputStream();
       Job job = new Job(String.format(i18n.tr("Execute action on node %s"), object.object.getObjectName()), this) {
          @Override
          protected String getErrorMessage()
@@ -141,13 +139,12 @@ public class AgentActionResults extends AbstractCommandResultView implements Tex
          {
             try
             {
-               session.executeActionWithExpansion(object.object.getObjectId(), object.getAlarmId(), executionString, true, inputValues, maskedFields, AgentActionResults.this, null);
-               out.write(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+               session.executeActionWithExpansion(object.object.getObjectId(), object.getAlarmId(), executionString, true, inputValues, maskedFields, getOutputListener(), null);
+               writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally
             {
-               out.close();
-               out = null;
+               closeOutputStream();
             }
          }
 
@@ -166,65 +163,5 @@ public class AgentActionResults extends AbstractCommandResultView implements Tex
       job.setUser(false);
       job.setSystem(true);
       job.start();
-   }
-
-   /**
-    * @see org.netxms.client.ActionExecutionListener#messageReceived(java.lang.String)
-    */
-   @Override
-   public void messageReceived(String text)
-   {
-      try
-      {
-         if (out != null)
-            out.write(text);
-      }
-      catch(IOException e)
-      {
-      }
-   }
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      if (out != null)
-      {
-         try
-         {
-            out.close();
-         }
-         catch(IOException e)
-         {
-         }
-         out = null;
-      }
-      super.dispose();
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#setStreamId(long)
-    */
-   @Override
-   public void setStreamId(long streamId)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onFailure(java.lang.String)
-    */
-   @Override
-   public void onFailure(String error)
-   {
-   }
-
-   /**
-    * @see org.netxms.client.TextOutputListener#onSuccess()
-    */
-   @Override
-   public void onSuccess()
-   {
    }
 }

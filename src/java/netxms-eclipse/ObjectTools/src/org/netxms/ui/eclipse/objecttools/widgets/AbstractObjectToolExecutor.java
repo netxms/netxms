@@ -46,6 +46,8 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TextOutputAdapter;
+import org.netxms.client.TextOutputListener;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objects.ObjectContext;
@@ -67,8 +69,10 @@ public abstract class AbstractObjectToolExecutor extends Composite
    protected ToolBar toolBar;
    protected ViewPart viewPart;
    protected IOConsoleOutputStream out;
+   protected long streamId = 0;
    protected NXCSession session;
 
+   private TextOutputListener outputListener;
    private Font headerFont;
    private ActionSet actions;
    private Set<ExecutorStateChangeListener> stateChangeListeners = new HashSet<ExecutorStateChangeListener>();
@@ -141,7 +145,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
       gd.horizontalIndent = WidgetHelper.DIALOG_SPACING;
       toolBar.setLayoutData(gd);
       toolBarManager = new ToolBarManager(toolBar);
-      
+
       console = new TextConsole(this, SWT.NONE);
       console.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -151,7 +155,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
          }
       });
       console.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 3, 1));
-      
+
       fillToolBar();
       createPopupMenu();
 
@@ -174,6 +178,37 @@ public abstract class AbstractObjectToolExecutor extends Composite
             }
          }
       });
+
+      outputListener = new TextOutputAdapter() {
+         @Override
+         public void messageReceived(String text)
+         {
+            try
+            {
+               if (out != null)
+                  out.write(text);
+            }
+            catch(IOException e)
+            {
+            }
+         }
+
+         @Override
+         public void setStreamId(long streamId)
+         {
+            AbstractObjectToolExecutor.this.streamId = streamId;
+         }
+      };
+   }
+
+   /**
+    * Get output listener.
+    *
+    * @return output listener
+    */
+   protected TextOutputListener getOutputListener()
+   {
+      return outputListener;
    }
 
    /**
@@ -195,7 +230,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
       Menu menu = menuMgr.createContextMenu(console.getConsoleControl());
       console.getConsoleControl().setMenu(menu);
    }
-   
+
    /**
     * Fill context menu
     * 
@@ -213,7 +248,7 @@ public abstract class AbstractObjectToolExecutor extends Composite
       manager.add(actions.actionSelectAll);
       manager.add(actions.actionCopy);
    }
-   
+
    /**
     * Create toolbar items
     */

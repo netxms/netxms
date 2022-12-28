@@ -43,6 +43,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.constants.ObjectPollType;
@@ -328,9 +329,9 @@ public class NodePollerView extends ViewPart
          }
 
          @Override
-         public void onFailure(String errorText)
+         public void onFailure(Exception exception)
          {
-            onPollComplete(errorText);
+            onPollComplete((exception instanceof NXCException) ? exception.getLocalizedMessage() : String.format("Internal error (%s)", exception.getClass().getName()));
          }
 
          @Override
