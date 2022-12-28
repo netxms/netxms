@@ -247,30 +247,29 @@ void ExecuteAction(const TCHAR *name, const StringList& args)
 }
 
 /**
+ * Expand macros in action's command line
+ */
+static StringBuffer ExpandCommandLineMacros(const TCHAR *command, const StringList& args)
+{
+   StringBuffer sb(command);
+   TCHAR macro[3] = _T("$0");
+   for(int i = 0; (i < args.size()) && (i <= 9); i++)
+   {
+      macro[1] = static_cast<TCHAR>(i) + 1 - '0';
+      sb.replace(macro, args.get(i));
+   }
+   return sb;
+}
+
+/**
  * External action executor constructor
  */
 ExternalActionExecutor::ExternalActionExecutor(const TCHAR *command, const StringList& args, const shared_ptr<AbstractCommSession>& session,
-         uint32_t requestId, bool sendOutput) : ProcessExecutor(nullptr, true), m_session(session)
+      uint32_t requestId, bool sendOutput) : ProcessExecutor(ExpandCommandLineMacros(command, args), true), m_session(session)
 {
    m_sendOutput = sendOutput;
    m_replaceNullCharacters = true;
    m_requestId = requestId;
-
-   if (!args.isEmpty())
-   {
-      StringBuffer sb(command);
-      TCHAR macro[3];
-      for(int i = 0; (i < args.size()) && (i <= 9); i++)
-      {
-         _sntprintf(macro, 3, _T("$%d"), i + 1);
-         sb.replace(macro, args.get(i));
-      }
-      m_cmd = MemCopyString(sb);
-   }
-   else
-   {
-      m_cmd = MemCopyString(command);
-   }
 }
 
 /**
