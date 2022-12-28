@@ -10045,11 +10045,14 @@ public class NXCSession
          handler.waitForCompletion();
          if (handler.isExpired())
             throw new NXCException(RCC.TIMEOUT);
-         listener.onSuccess();
+         if (listener != null)
+            listener.onSuccess();
       }
       catch (Exception e)
       {
-         listener.onFailure(e);
+
+         if (listener != null)
+            listener.onFailure(e);
          throw e;
       }
    }
