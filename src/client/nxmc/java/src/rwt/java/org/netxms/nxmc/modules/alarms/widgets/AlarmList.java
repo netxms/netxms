@@ -36,6 +36,8 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -75,6 +77,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.alarms.dialogs.AcknowledgeCustomTimeDialog;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmStateChangeFailureDialog;
+import org.netxms.nxmc.modules.alarms.views.AlarmDetails;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmAcknowledgeTimeFunctions;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmComparator;
 import org.netxms.nxmc.modules.alarms.widgets.helpers.AlarmListFilter;
@@ -126,7 +129,6 @@ public class AlarmList extends CompositeWithMessageArea
    private boolean filterRunPending = false;
 	private Action actionCopy;
 	private Action actionCopyMessage;
-	private Action actionComments;
 	private Action actionAcknowledge;
 	private Action actionResolve;
 	private Action actionStickyAcknowledge;
@@ -136,12 +138,14 @@ public class AlarmList extends CompositeWithMessageArea
    private Action actionShowIssue;
    private Action actionUnlinkIssue;
    private Action actionExportToCsv;
+   private Action actionShowAlarmDetails;
    private MenuManager timeAcknowledgeMenu;
    private List<Action> timeAcknowledge;
    private Action timeAcknowledgeOther;
    private Action actionShowColor;
    private boolean initShowfilter;
    private boolean isLocalNotificationsEnabled = false;
+   private long rootObject;
 
    private final SearchQueryAttribute[] attributeProposals = {
          new SearchQueryAttribute("AcknowledgedBy:"),
@@ -206,6 +210,14 @@ public class AlarmList extends CompositeWithMessageArea
          public void widgetDisposed(DisposeEvent e)
          {
             WidgetHelper.saveTreeViewerSettings(alarmViewer, configPrefix);
+         }
+      });
+      
+      alarmViewer.addDoubleClickListener(new IDoubleClickListener() {         
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            actionShowAlarmDetails.run();
          }
       });
 
@@ -446,14 +458,6 @@ public class AlarmList extends CompositeWithMessageArea
 		};
       actionCopyMessage.setId("AlarmList.CopyMessage"); //$NON-NLS-1$
 
-      actionComments = new Action(i18n.tr("Comments"), SharedIcons.COMMENTS) {
-         @Override
-         public void run()
-         {
-         }
-      };
-      actionComments.setId("AlarmList.Comments");
-
       actionAcknowledge = new Action(i18n.tr("&Acknowledge"), ResourceManager.getImageDescriptor("icons/alarms/acknowledged.png")) {
 			@Override
 			public void run()
@@ -551,6 +555,21 @@ public class AlarmList extends CompositeWithMessageArea
          }
       };
       actionShowColor.setChecked(labelProvider.isShowColor());
+      
+      actionShowAlarmDetails = new Action(i18n.tr("Show &alarm details")) {
+         @Override
+         public void run()
+         {
+
+            IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+            if (selection.size() != 1)
+               return;
+
+            final long alarmId = ((Alarm)selection.getFirstElement()).getId();            
+            view.openView(new AlarmDetails(alarmId, rootObject));
+         }
+      };
+      actionShowAlarmDetails.setId("AlarmList.ShowAlarmDetails");
 	}
 
 	/**
@@ -685,7 +704,7 @@ public class AlarmList extends CompositeWithMessageArea
       if (selection.size() == 1)
       {
          manager.add(new Separator());
-         manager.add(actionComments);
+         manager.add(actionShowAlarmDetails);
          if (session.isHelpdeskLinkActive())
          {
             manager.add(new Separator());
@@ -739,6 +758,7 @@ public class AlarmList extends CompositeWithMessageArea
     */
    public void setRootObject(long objectId)
    {
+      rootObject = objectId;
       alarmFilter.setRootObject(objectId);
       filterRunPending = true;
       doPendingUpdates();
