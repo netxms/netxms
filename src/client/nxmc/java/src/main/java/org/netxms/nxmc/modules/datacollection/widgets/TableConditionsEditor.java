@@ -23,6 +23,8 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -37,6 +39,7 @@ import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.TableColumnEnumerator;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -47,6 +50,7 @@ public class TableConditionsEditor extends Composite
    private static I18n i18n = LocalizationHelper.getI18n(TableConditionsEditor.class);
    
 	private ScrolledComposite scroller;
+	private Composite editorsArea;
 	private ImageHyperlink addColumnLink;
 	private List<GroupEditor> groups = new ArrayList<GroupEditor>();
    private TableColumnEnumerator columnEnumerator = null;
@@ -64,9 +68,24 @@ public class TableConditionsEditor extends Composite
 		setLayout(new FillLayout());
 
 		scroller = new ScrolledComposite(this, SWT.NONE);
-		scroller.setLayout(new GridLayout());
-
-		addColumnLink = new ImageHyperlink(scroller, SWT.NONE);
+		scroller.setExpandHorizontal(true);
+		scroller.setExpandVertical(true);
+      WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+      scroller.addControlListener(new ControlAdapter() {
+         public void controlResized(ControlEvent e)
+         {
+            editorsArea.layout(true, true);
+            scroller.setMinSize(editorsArea.computeSize(scroller.getClientArea().width, SWT.DEFAULT));
+         }
+      });
+		
+		editorsArea = new Composite(scroller, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      editorsArea.setLayout(layout);
+      
+      scroller.setContent(editorsArea);
+      
+		addColumnLink = new ImageHyperlink(editorsArea, SWT.NONE);
 		addColumnLink.setText(i18n.tr("Add..."));
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
 		addColumnLink.setToolTipText(i18n.tr("Add new condition group"));
@@ -84,11 +103,12 @@ public class TableConditionsEditor extends Composite
 	 */
 	public void setConditions(List<List<TableCondition>> conditions)
 	{
+	   System.out.println(conditions.size());
 		for(List<TableCondition> g : conditions)
 		{
 			addGroup(addColumnLink, g);
 		}
-		scroller.layout(true);
+		editorsArea.layout(true);
 	}
 
 	/**
@@ -109,7 +129,7 @@ public class TableConditionsEditor extends Composite
 	 */
 	private void addGroup(final Control lastControl, List<TableCondition> initialData)
 	{
-		final GroupEditor editor = new GroupEditor(scroller);
+		final GroupEditor editor = new GroupEditor(editorsArea);
 		editor.moveAbove(lastControl);
 		editor.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		groups.add(editor);
@@ -122,7 +142,7 @@ public class TableConditionsEditor extends Composite
 		}
 		else
 		{
-			scroller.layout(true);
+		   editorsArea.layout(true);
 		}
 	}
 	
@@ -135,7 +155,7 @@ public class TableConditionsEditor extends Composite
 	{
 		groups.remove(editor);
 		editor.dispose();
-		scroller.layout(true);
+		editorsArea.layout(true);
 	}
 	
 	/**
@@ -149,7 +169,6 @@ public class TableConditionsEditor extends Composite
 		public GroupEditor(Composite parent)
 		{
 			super(parent, SWT.BORDER);
-			
 			GridLayout layout = new GridLayout();
 			layout.numColumns = 2;
 			setLayout(layout);
@@ -198,7 +217,8 @@ public class TableConditionsEditor extends Composite
 		/**
 		 * Get configured conditions
 		 * 
-		 * @return
+		 * @returnyfk/#l5g7
+		 * 
 		 */
 		public List<TableCondition> getConditions()
 		{
@@ -225,7 +245,7 @@ public class TableConditionsEditor extends Composite
 			}
 			else
 			{
-				scroller.layout(true);
+			   editorsArea.layout(true);
 			}
 		}
 		
@@ -236,7 +256,7 @@ public class TableConditionsEditor extends Composite
 		{
 			conditions.remove(editor);
 			editor.dispose();
-			scroller.layout(true);
+			editorsArea.layout(true);
 		}
 	}
 	

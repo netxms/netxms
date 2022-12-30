@@ -44,10 +44,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.client.datacollection.ColumnDefinition;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.TableThreshold;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
+import org.netxms.nxmc.modules.datacollection.TableColumnEnumerator;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditTableThresholdDialog;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.TableThresholdLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -89,6 +91,23 @@ public class TableThresholds extends AbstractDCIPropertyPage
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsTable();
+		
+		if (editor.getTableColumnEnumerator() == null)
+		{
+   	   final List<ColumnDefinition> columns = new ArrayList<ColumnDefinition>();
+         for(ColumnDefinition c : dci.getColumns())
+            columns.add(new ColumnDefinition(c));
+         editor.setTableColumnEnumerator(new TableColumnEnumerator() {
+            @Override
+            public List<String> getColumns()
+            {
+               List<String> list = new ArrayList<String>();
+               for(int i = 0; i < columns.size(); i++)
+                  list.add(columns.get(i).getName());
+               return list;
+            }
+         });
+		}
 		
 		thresholds = new ArrayList<TableThreshold>();
 		for(TableThreshold t : dci.getThresholds())

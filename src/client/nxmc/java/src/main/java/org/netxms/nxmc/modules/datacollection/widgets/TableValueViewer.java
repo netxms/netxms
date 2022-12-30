@@ -250,11 +250,11 @@ public class TableValueViewer extends BaseTableValueViewer
       Perspective p = view.getPerspective();
       if (p != null)
       {
-         p.addMainView(new DataComparisonView(items, chartType), true, false);
+         p.addMainView(new DataComparisonView(objectId, items, chartType), true, false);
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(new DataComparisonView(items, chartType));
+         PopOutViewWindow window = new PopOutViewWindow(new DataComparisonView(objectId, items, chartType));
          window.open();
       }
    }

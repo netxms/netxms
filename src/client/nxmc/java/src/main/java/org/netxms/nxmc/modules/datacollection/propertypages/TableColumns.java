@@ -84,7 +84,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 	
 	private DataCollectionTable dci;
 	private List<ColumnDefinition> columns;
-	private TableViewer columnList;
+	private TableViewer columnList = null;
    private Button queryButton;
 	private Button addButton;
 	private Button modifyButton;
@@ -526,7 +526,8 @@ public class TableColumns extends AbstractDCIPropertyPage
 	 */
 	private void saveSettings()
 	{
-		WidgetHelper.saveColumnSettings(columnList.getTable(), COLUMN_SETTINGS_PREFIX);
+	   if (columnList != null)
+	      WidgetHelper.saveColumnSettings(columnList.getTable(), COLUMN_SETTINGS_PREFIX);
 	}
 	
 	/**

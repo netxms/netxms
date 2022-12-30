@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
@@ -66,6 +67,7 @@ import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
+import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuManager;
 import org.netxms.nxmc.modules.datacollection.dialogs.BulkUpdateDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
 import org.netxms.nxmc.modules.datacollection.views.helpers.DciComparator;
@@ -359,18 +361,9 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          if (!isTemplate)
          {
-            if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
-            {
-               manager.add(actionLineChart);
-               manager.add(actionRawLineChart);
-               manager.add(actionShowHistoryData); 
-               manager.add(new Separator());
-            }
-            if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
-            {
-               manager.add(actionShowTableData);     
-               manager.add(new Separator());     
-            }
+            ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(this, getObject(), viewer, selectionType);
+            for (IContributionItem item : menu.getItems())
+               manager.add(item);
          }
          manager.add(actionCopyToClipboard);
          manager.add(actionCopyDciName);
@@ -405,18 +398,9 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          if (!isTemplate)
          {
-            if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
-            {
-               manager.add(new Separator());
-               manager.add(actionLineChart);
-               manager.add(actionRawLineChart);
-               manager.add(actionShowHistoryData); 
-            }
-            if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
-            {
-               manager.add(new Separator());
-               manager.add(actionShowTableData);          
-            }
+            ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(this, getObject(), viewer, selectionType);
+            for (IContributionItem item : menu.getItems())
+               manager.add(item);
          }
          manager.add(new Separator());
          manager.add(actionExportToCsv);

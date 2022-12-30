@@ -49,10 +49,11 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.PngTransfer;
@@ -61,9 +62,8 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * View for comparing DCI values visually using charts.
- *
  */
-public class DataComparisonView extends ObjectView
+public class DataComparisonView extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
 
@@ -81,6 +81,7 @@ public class DataComparisonView extends ObjectView
 	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private boolean translucent = false;
    private Image[] titleImages = new Image[4];
+   private long objectId;
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
@@ -121,15 +122,38 @@ public class DataComparisonView extends ObjectView
       return sb.toString();
    }  
 
-   public DataComparisonView(ArrayList<GraphItem> items, ChartType chartType)
+   public DataComparisonView(long objectId, ArrayList<GraphItem> items, ChartType chartType)
 	{      
       super(i18n.tr("Last Values Chart"),
-            ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), false);
-
+            ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), objectId, false);
+ 
       session = Registry.getSession();
       this.chartType = chartType;
       this.items = items;
+      this.objectId = objectId;
 	}
+
+   /**
+    * Default constructor for view popout
+    */
+   protected DataComparisonView()
+   {      
+      super(null, null, null, 0, false); 
+      session = Registry.getSession();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      DataComparisonView view = (DataComparisonView)super.cloneView();
+      view.chartType = chartType;
+      view.items = items;
+      view.objectId = objectId;
+      return view;
+   }      
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)

@@ -21,14 +21,23 @@ package org.netxms.nxmc.modules.datacollection.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.IContributionItem;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.ThresholdStateChange;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.objects.AbstractObject;
@@ -36,6 +45,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuManager;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdTreeComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdTreeContentProvider;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdTreeLabelProvider;
@@ -82,6 +92,8 @@ public class ThresholdSummaryWidget extends Composite
 		viewer.setContentProvider(new ThresholdTreeContentProvider());
 		viewer.setLabelProvider(new ThresholdTreeLabelProvider());		
 		viewer.setComparator(new ThresholdTreeComparator());
+		
+		createPopupMenu();
 		
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -150,6 +162,63 @@ public class ThresholdSummaryWidget extends Composite
          }
       });
 	}
+
+   /**
+    * Create pop-up menu for alarm list
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      viewer.getControl().setMenu(menu);
+   }
+   
+   /**
+    * Check if selection is DCI, tbale or mixed
+    */
+   public int getDciSelectionType()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
+         return DataCollectionObject.DCO_TYPE_GENERIC;
+
+      boolean isDci = false;
+      boolean isTable = false;
+      for(Object dcObject : selection.toList())
+      {
+         if ((dcObject instanceof DataCollectionTable) || ((dcObject instanceof DciValue) &&
+            ((DciValue)dcObject).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
+         {
+            isTable = true;
+         }
+         else 
+         {
+            isDci = true;
+         }
+      }
+      return (isTable & isDci) ? DataCollectionObject.DCO_TYPE_GENERIC : isTable ? DataCollectionObject.DCO_TYPE_TABLE : DataCollectionObject.DCO_TYPE_ITEM;
+   }
+   
+   /**
+    * Fill context menu
+    * @param mgr Menu manager
+    */
+   protected void fillContextMenu(IMenuManager mgr)
+   {      
+      ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(viewPart, object, viewer, getDciSelectionType());
+      for (IContributionItem item : menu.getItems())
+         mgr.add(item);
+   }
 
 	/**
 	 * Refresh widget

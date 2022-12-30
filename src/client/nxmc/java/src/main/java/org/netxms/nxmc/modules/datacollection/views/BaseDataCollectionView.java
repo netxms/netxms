@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -57,6 +58,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
+import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuManager;
 import org.netxms.nxmc.modules.datacollection.propertypages.AccessControl;
 import org.netxms.nxmc.modules.datacollection.propertypages.ClusterOptions;
 import org.netxms.nxmc.modules.datacollection.propertypages.Comments;
@@ -68,6 +70,7 @@ import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptionsTable;
 import org.netxms.nxmc.modules.datacollection.propertypages.PerfTab;
 import org.netxms.nxmc.modules.datacollection.propertypages.SNMP;
 import org.netxms.nxmc.modules.datacollection.propertypages.TableColumns;
+import org.netxms.nxmc.modules.datacollection.propertypages.TableThresholds;
 import org.netxms.nxmc.modules.datacollection.propertypages.Thresholds;
 import org.netxms.nxmc.modules.datacollection.propertypages.Transformation;
 import org.netxms.nxmc.modules.datacollection.propertypages.WinPerf;
@@ -108,8 +111,6 @@ public abstract class BaseDataCollectionView extends ObjectView
    private int autoRefreshInterval = 30;  // in seconds
    private ViewRefreshController refreshController;
 
-   protected Action actionLineChart;
-   protected Action actionRawLineChart;
    protected Action actionUseMultipliers;
    protected Action actionShowErrors;
    protected Action actionShowDisabled;
@@ -122,8 +123,6 @@ public abstract class BaseDataCollectionView extends ObjectView
    protected Action actionForcePoll;
    protected Action actionRecalculateData;
    protected Action actionClearData;
-   protected Action actionShowHistoryData;
-   protected Action actionShowTableData;
 
    /**
     * @param name
@@ -217,19 +216,9 @@ public abstract class BaseDataCollectionView extends ObjectView
     */
    protected void fillContextMenu(final IMenuManager manager)
    {
-      int selectionType = getDciSelectionType();
-      if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
-      {
-         manager.add(actionLineChart);
-         manager.add(actionRawLineChart);
-         manager.add(actionShowHistoryData); 
-         manager.add(new Separator());
-      }
-      if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
-      {
-         manager.add(actionShowTableData); 
-         manager.add(new Separator());         
-      }
+      ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(this, getObject(), viewer, getDciSelectionType());
+      for (IContributionItem item : menu.getItems())
+         manager.add(item);
       manager.add(actionCopyToClipboard);
       manager.add(actionCopyDciName);
       manager.add(actionExportToCsv);
@@ -346,41 +335,6 @@ public abstract class BaseDataCollectionView extends ObjectView
       };
       addKeyBinding("M1+M2+C", actionCopyDciName);
 
-      actionLineChart = new Action(i18n.tr("&Line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
-         @Override
-         public void run()
-         {
-            showLineChart(false);
-         }
-      };
-      addKeyBinding("M1+L", actionLineChart);
-
-      actionRawLineChart = new Action(i18n.tr("&Raw data line chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png")) {
-         @Override
-         public void run()
-         {
-            showLineChart(true);
-         }
-      };
-      addKeyBinding("M1+M2+L", actionRawLineChart);
-
-      actionShowHistoryData = new Action(i18n.tr("History"), ResourceManager.getImageDescriptor("icons/object-views/history-view.png")) {
-         @Override
-         public void run()
-         {
-            showHistoryData();
-         }
-      };
-      addKeyBinding("M1+H", actionShowHistoryData);
-
-      actionShowTableData = new Action(i18n.tr("Table last value"), ResourceManager.getImageDescriptor("icons/object-views/table-value.png")) {
-         @Override
-         public void run()
-         {
-            showHistoryData();
-         }
-      };
-
       actionForcePoll = new Action(i18n.tr("&Force poll")) {
          @Override
          public void run()
@@ -446,8 +400,11 @@ public abstract class BaseDataCollectionView extends ObjectView
       pm.addToRoot(new PreferenceNode("customSchedule", new CustomSchedule(dce)));
       if (dce.getObject() instanceof DataCollectionTable)
          pm.addToRoot(new PreferenceNode("columns", new TableColumns(dce)));    
-      pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));             
-      pm.addToRoot(new PreferenceNode("thresholds", new Thresholds(dce)));        
+      pm.addToRoot(new PreferenceNode("transformation", new Transformation(dce)));    
+      if (dce.getObject() instanceof DataCollectionItem)         
+         pm.addToRoot(new PreferenceNode("thresholds", new Thresholds(dce)));   
+      else
+         pm.addToRoot(new PreferenceNode("thresholds", new TableThresholds(dce)));            
       pm.addToRoot(new PreferenceNode("instanceDiscovery", new InstanceDiscovery(dce)));
       if (dce.getObject() instanceof DataCollectionItem)
          pm.addToRoot(new PreferenceNode("performanceTab", new PerfTab(dce)));
@@ -746,26 +703,6 @@ public abstract class BaseDataCollectionView extends ObjectView
    }
 
    /**
-    * Show line chart for selected items
-    */
-   private void showLineChart(boolean useRawValues)
-   {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-
-      List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(selection.size());
-      for(Object o : selection.toList())
-      {
-         ChartDciConfig config = getConfigFromObject(o);
-         config.useRawValues = useRawValues;
-         items.add(config);
-      }
-
-      openView(new HistoricalGraphView(getObject(), items));
-   }
-
-   /**
     * Get chart configuration form object
     * @param o object
     * @return chart configuration
@@ -773,29 +710,6 @@ public abstract class BaseDataCollectionView extends ObjectView
    protected ChartDciConfig getConfigFromObject(Object o)
    {
       return new ChartDciConfig((DciValue)o);
-   }
-
-   /**
-    * Show line chart for selected items
-    */
-   private void showHistoryData()
-   {
-      IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.isEmpty())
-         return;
-
-      for(Object dcObject : selection.toList())
-      {
-         if ((dcObject instanceof DataCollectionTable) || ((dcObject instanceof DciValue) &&
-               ((DciValue)dcObject).getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE))
-         {
-            openView(new TableLastValuesView(getObject(), getObjectId(dcObject), getDciId(dcObject)));
-         }
-         else 
-         {
-            openView(new HistoricalDataView(getObject(), getObjectId(dcObject), getDciId(dcObject), null, null, null));
-         }
-      }
    }
 
    /**

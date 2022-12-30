@@ -94,7 +94,8 @@ public class AgentConfigEditorView extends AdHocObjectView
     * Post clone action
     */
    protected void postClone(View origin)
-   {      
+   {    
+      super.postClone(origin);
       AgentConfigEditorView view = (AgentConfigEditorView)origin;
       editor.setText(view.editor.getText());
       modified = view.modified;

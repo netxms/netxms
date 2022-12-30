@@ -66,6 +66,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
 import org.netxms.nxmc.base.layout.DashboardLayoutData;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
 import org.netxms.nxmc.base.widgets.Section;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
@@ -163,6 +164,40 @@ public class AlarmDetails extends AdHocObjectView
       stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
       stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");
    }
+   
+   protected AlarmDetails()
+   {
+      super(null, null, null, 0, false); 
+      session = Registry.getSession();
+      objectLabelProvider = new BaseObjectLabelProvider();
+
+      stateImages[0] = ResourceManager.getImage("icons/alarms/outstanding.png");
+      stateImages[1] = ResourceManager.getImage("icons/alarms/acknowledged.png");
+      stateImages[2] = ResourceManager.getImage("icons/alarms/resolved.png");
+      stateImages[3] = ResourceManager.getImage("icons/alarms/terminated.png");
+      stateImages[4] = ResourceManager.getImage("icons/alarms/acknowledged_sticky.png");      
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      AlarmDetails view = (AlarmDetails)super.cloneView();
+      view.alarmId = alarmId;
+      view.rootObject = rootObject;
+      return view;
+   }  
+
+   /**
+    * Post clone action
+    */
+   protected void postClone(View origin)
+   {      
+      super.postClone(origin);
+      refresh();
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -182,9 +217,18 @@ public class AlarmDetails extends AdHocObjectView
       createEventsSection(parent);
       createCommentsSection(parent);
       createDataSection(parent);
-
-		refresh();
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      refresh();
+   }  
+   
 	/**
 	 * Create alarm details section
 	 */
