@@ -255,7 +255,7 @@ static StringBuffer ExpandCommandLineMacros(const TCHAR *command, const StringLi
    TCHAR macro[3] = _T("$0");
    for(int i = 0; (i < args.size()) && (i <= 9); i++)
    {
-      macro[1] = static_cast<TCHAR>(i) + 1 - '0';
+      macro[1] = static_cast<TCHAR>(i) + 1 + '0';
       sb.replace(macro, args.get(i));
    }
    return sb;
