@@ -49,8 +49,8 @@ int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char
 LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, int *result)
 {
    char from[128], to[128];
-   wchar_to_utf8(options.get(_T("from"), _T("")), -1, from, 128);
-   wchar_to_utf8(options.get(_T("to"), _T("")), -1, to, 128);
+   tchar_to_utf8(options.get(_T("from"), _T("")), -1, from, 128);
+   tchar_to_utf8(options.get(_T("to"), _T("")), -1, to, 128);
 
    if (to[0] == 0)
       return SYSINFO_RC_UNSUPPORTED;
