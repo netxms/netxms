@@ -111,7 +111,7 @@ void FileDownloadTask::run()
             // default - get parameters
             if (m_maxFileSize < m_fileSize)
             {
-               msg.setField(VID_FILE_OFFSET, static_cast<int32_t>(-m_maxFileSize));
+               msg.setField(VID_FILE_OFFSET, -static_cast<int32_t>(m_maxFileSize));
             }
             else
             {

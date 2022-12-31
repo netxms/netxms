@@ -1551,7 +1551,7 @@ BOOL Initialize()
 #ifdef _WIN32
       if (g_config->getValueAsBoolean(_T("/CORE/AutoStartUserAgent"), false))
       {
-         nxlog_debug_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Starting user agents for all logged in users"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Starting user agents for all logged in users"));
 
          TCHAR binDir[MAX_PATH];
          GetNetXMSDirectory(nxDirBin, binDir);
