@@ -78,11 +78,12 @@ public class ScheduledTaskView extends ViewPart
    public static final int PARAMETERS = 3;
    public static final int TIMER_KEY = 4;
    public static final int EXECUTION_TIME = 5;
-   public static final int LAST_EXECUTION_TIME = 6;
-   public static final int STATUS = 7;
-   public static final int MANAGMENT_STATE = 8;
-   public static final int OWNER = 9;
-   public static final int COMMENTS = 10;
+   public static final int EXECUTION_TIME_DESCRIPTION = 6;
+   public static final int LAST_EXECUTION_TIME = 7;
+   public static final int STATUS = 8;
+   public static final int MANAGMENT_STATE = 9;
+   public static final int OWNER = 10;
+   public static final int COMMENTS = 11;
    
    private NXCSession session;
    private SessionListener listener;
@@ -115,8 +116,8 @@ public class ScheduledTaskView extends ViewPart
    @Override
    public void createPartControl(Composite parent)
    {      
-      final int[] widths = { 50, 100, 200, 400, 200, 150, 150, 100, 200, 250, 200 };
-      final String[] names = { "Id", "Schedule Type", "Object", "Parameters", "Timer key", "Execution time", "Last execution time", "Execution status", "Administrative status", "Owner", "Comments" };
+      final int[] widths = { 50, 100, 200, 400, 200, 150, 200, 150, 100, 200, 250, 200 };
+      final String[] names = { "Id", "Schedule Type", "Object", "Parameters", "Timer key", "Execution time", "Execution time description", "Last execution time", "Execution status", "Administrative status", "Owner", "Comments" };
       viewer = new SortableTableViewer(parent, names, widths, SCHEDULE_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ScheduledTaskLabelProvider(viewer));

@@ -284,6 +284,26 @@ struct ActionExecutionConfiguration
 };
 
 /**
+ * Time frame class
+ */
+class TimeFrame
+{
+private:
+   uint32_t m_time; //BCD format startHour startMinute endHour endMinute
+   uint64_t m_date;
+
+   int m_startTime;
+   int m_endTime;
+
+public:
+   TimeFrame(uint32_t time, uint64_t date);
+   bool match(struct tm *local, int currentTime);
+
+   uint32_t getTime() const { return m_time; }
+   uint64_t getDate() const { return m_date; }
+};
+
+/**
  * Event policy rule
  */
 class EPRule
@@ -295,6 +315,7 @@ private:
    IntegerArray<uint32_t> m_sources;
    IntegerArray<uint32_t> m_sourceExclusions;
    IntegerArray<uint32_t> m_events;
+   ObjectArray<TimeFrame> m_timeFrames;
    ObjectArray<ActionExecutionConfiguration> m_actions;
    StringList m_timerCancellations;
    TCHAR *m_comments;
@@ -321,6 +342,7 @@ private:
    bool matchEvent(uint32_t eventCode) const;
    bool matchSeverity(uint32_t severity) const;
    bool matchScript(Event *event) const;
+   bool matchTime(struct tm *local) const;
 
    uint32_t generateAlarm(Event *event) const;
    void executeActionScript(Event *event) const;

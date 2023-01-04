@@ -36,6 +36,7 @@ import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.ScheduledTasks;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.ViewerElementUpdater;
+import it.burning.cron.CronExpressionDescriptor;
 
 /**
  * Label provider for scheduled task list
@@ -116,6 +117,11 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
             return task.getParameters();
          case ScheduledTasks.EXECUTION_TIME:
             return task.getSchedule().isEmpty() ? DateFormatFactory.getDateTimeFormat().format(task.getExecutionTime()) : task.getSchedule();
+         case ScheduledTasks.EXECUTION_TIME_DESCRIPTION:
+            if (task.getSchedule().isEmpty())
+               return String.format("Exactly at %s", DateFormatFactory.getDateTimeFormat().format(task.getExecutionTime()));
+            else
+               return CronExpressionDescriptor.getDescription(task.getSchedule());
          case ScheduledTasks.LAST_EXECUTION_TIME:
             return (task.getLastExecutionTime().getTime() == 0) ? "" : DateFormatFactory.getDateTimeFormat().format(task.getLastExecutionTime());
          case ScheduledTasks.STATUS:

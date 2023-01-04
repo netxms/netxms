@@ -547,6 +547,7 @@ public class EventProcessingPolicyEditor extends ConfigurationView
 
       imageStop.dispose();
       imageAlarm.dispose();
+      imagePersistentStorage.dispose();
       imageExecute.dispose();
       imageCancelTimer.dispose();
       imageTerminate.dispose();

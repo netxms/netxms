@@ -47,6 +47,7 @@ public class EventProcessingPolicyRule
    public static final int SEVERITY_CRITICAL   = 0x1000;
    public static final int CREATE_TICKET       = 0x2000;
    public static final int ACCEPT_CORRELATED   = 0x4000;
+   public static final int NEGATED_TIME_FRAMES = 0x8000;
 
    public static final int SEVERITY_ANY = SEVERITY_NORMAL | SEVERITY_WARNING | SEVERITY_MINOR | SEVERITY_MAJOR | SEVERITY_CRITICAL;
 
@@ -55,6 +56,7 @@ public class EventProcessingPolicyRule
    private List<Long> sourceExclusions;
    private List<Long> events;
    private String filterScript;
+   private List<TimeFrame> timeFrames;
    private int flags;
    private String alarmKey;
    private String alarmMessage;
@@ -83,6 +85,7 @@ public class EventProcessingPolicyRule
       sourceExclusions = new ArrayList<Long>(0);
       events = new ArrayList<Long>(0);
       filterScript = "";
+      timeFrames = new ArrayList<TimeFrame>();
       flags = SEVERITY_ANY;
       alarmKey = "";
       alarmMessage = "%m";
@@ -114,6 +117,8 @@ public class EventProcessingPolicyRule
       sourceExclusions = new ArrayList<Long>(src.sourceExclusions);
       events = new ArrayList<Long>(src.events);
       filterScript = src.filterScript;
+      for(TimeFrame d : src.timeFrames)
+         timeFrames.add(new TimeFrame(d));
       flags = src.flags;
       alarmKey = src.alarmKey;
       alarmMessage = src.alarmMessage;
@@ -148,6 +153,13 @@ public class EventProcessingPolicyRule
       sourceExclusions = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCE_EXCLUSIONS));
       events = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
       filterScript = msg.getFieldAsString(NXCPCodes.VID_SCRIPT);
+      int frameCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_TIME_FRAMES);
+      timeFrames = new ArrayList<TimeFrame>(frameCount);
+      long fieldId = NXCPCodes.VID_TIME_FRAME_LIST_BASE;
+      for(int i = 0; i < frameCount; i++)
+      {
+         timeFrames.add(new TimeFrame(msg.getFieldAsInt32(fieldId++), msg.getFieldAsInt64(fieldId++)));
+      }  
       flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
       alarmKey = msg.getFieldAsString(NXCPCodes.VID_ALARM_KEY);
       alarmMessage = msg.getFieldAsString(NXCPCodes.VID_ALARM_MESSAGE);
@@ -161,7 +173,7 @@ public class EventProcessingPolicyRule
 
       int actionCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ACTIONS);
       actions = new ArrayList<ActionExecutionConfiguration>(actionCount);
-      long fieldId = NXCPCodes.VID_ACTION_LIST_BASE;
+      fieldId = NXCPCodes.VID_ACTION_LIST_BASE;
       for(int i = 0; i < actionCount; i++)
       {
          actions.add(new ActionExecutionConfiguration(msg, fieldId));
@@ -202,7 +214,14 @@ public class EventProcessingPolicyRule
       msg.setField(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
       msg.setField(NXCPCodes.VID_RULE_SOURCES, sources.toArray(new Long[sources.size()]));
       msg.setField(NXCPCodes.VID_RULE_SOURCE_EXCLUSIONS, sourceExclusions.toArray(new Long[sourceExclusions.size()]));
-
+      msg.setFieldInt32(NXCPCodes.VID_NUM_TIME_FRAMES, timeFrames.size());
+      fieldId = NXCPCodes.VID_TIME_FRAME_LIST_BASE;
+      for(TimeFrame frame : timeFrames)
+      {
+         frame.fillMessage(msg, fieldId);
+         fieldId += 2;
+      }
+      
       msg.setField(NXCPCodes.VID_ALARM_KEY, alarmKey);
       msg.setField(NXCPCodes.VID_ALARM_MESSAGE, alarmMessage);
       msg.setFieldInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
@@ -548,6 +567,17 @@ public class EventProcessingPolicyRule
    }
 
    /**
+    * Check rule's NEGATED_TIME_FRAMES flag
+    *
+    * @return true if NEGATED_TIME_FRAMES flag set
+    */
+   public boolean isTimeFramesInverted()
+   {
+      return (flags & NEGATED_TIME_FRAMES) != 0;
+   }
+
+
+   /**
     * @return the guid
     */
    public UUID getGuid()
@@ -621,5 +651,21 @@ public class EventProcessingPolicyRule
    public void setCustomAttributeStorageDelete(List<String> customAttributeStorageDelete)
    {
       this.customAttributeStorageDelete = customAttributeStorageDelete;
+   }
+
+   /**
+    * @return the timeFrames
+    */
+   public List<TimeFrame> getTimeFrames()
+   {
+      return timeFrames;
+   }
+
+   /**
+    * @param timeFrames the timeFrames to set
+    */
+   public void setTimeFrames(List<TimeFrame> timeFrames)
+   {
+      this.timeFrames = timeFrames;
    }
 }

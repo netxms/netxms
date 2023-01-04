@@ -107,7 +107,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private Font boldFont;
 
    private Image imageAlarm;
-   private Image imageSituation;
+   private Image imageCustomAttribute;
    private Image imageExecute;
    private Image imageCancelTimer;
    private Image imageTerminate;
@@ -160,7 +160,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
       imageStop = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
       imageAlarm = Activator.getImageDescriptor("icons/alarm.png").createImage(); //$NON-NLS-1$
-      imageSituation = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
+      imageCustomAttribute = Activator.getImageDescriptor("icons/situation.gif").createImage(); //$NON-NLS-1$
       imageExecute = Activator.getImageDescriptor("icons/execute.png").createImage(); //$NON-NLS-1$
       imageCancelTimer = Activator.getImageDescriptor("icons/cancel_timer.png").createImage(); //$NON-NLS-1$
       imageTerminate = Activator.getImageDescriptor("icons/terminate.png").createImage(); //$NON-NLS-1$
@@ -683,6 +683,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
       imageStop.dispose();
       imageAlarm.dispose();
+      imageCustomAttribute.dispose();
       imageExecute.dispose();
       imageCancelTimer.dispose();
       imageTerminate.dispose();
@@ -1207,9 +1208,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    /**
     * @return the imageSituation
     */
-   public Image getImageSituation()
+   public Image getImageCustomAttribute()
    {
-      return imageSituation;
+      return imageCustomAttribute;
    }
 
    /**

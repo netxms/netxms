@@ -1125,6 +1125,7 @@ enum AggregationFunction
 #define RF_SEVERITY_CRITICAL     0x1000
 #define RF_CREATE_TICKET         0x2000
 #define RF_ACCEPT_CORRELATED     0x4000
+#define RF_NEGATED_TIME_FRAMES   0x8000
 
 /**
  * Network map types

@@ -28,7 +28,7 @@
 /**
  * Default event policy rule constructor
  */
-EPRule::EPRule(uint32_t id) : m_actions(0, 16, Ownership::True)
+EPRule::EPRule(uint32_t id) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -50,7 +50,7 @@ EPRule::EPRule(uint32_t id) : m_actions(0, 16, Ownership::True)
 /**
  * Create rule from config entry
  */
-EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const ConfigEntry& config) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = 0;
    m_guid = config.getSubEntryValueAsUUID(_T("guid"));
@@ -69,6 +69,18 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
          {
             m_events.add(e->getCode());
          }
+      }
+   }
+
+   ConfigEntry *timeFrameRoot = config.findEntry(_T("timeFrames"));
+   if (timeFrameRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> frames = timeFrameRoot->getSubEntries(_T("timeFrame#*"));
+      for(int i = 0; i < frames->size(); i++)
+      {
+         uint32_t time = frames->get(i)->getAttributeAsUInt(_T("time"));
+         uint64_t date = frames->get(i)->getAttributeAsUInt64(_T("date"));
+         m_timeFrames.add(new TimeFrame(time, date));
       }
    }
 
@@ -220,7 +232,7 @@ EPRule::EPRule(const ConfigEntry& config) : m_actions(0, 16, Ownership::True)
  * rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,
  * alarm_timeout,alarm_timeout_event,rca_script_name,alarm_impact
  */
-EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
+EPRule::EPRule(DB_RESULT hResult, int row) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
    m_guid = DBGetFieldGUID(hResult, row, 1);
@@ -268,7 +280,7 @@ EPRule::EPRule(DB_RESULT hResult, int row) : m_actions(0, 16, Ownership::True)
 /**
  * Construct event policy rule from NXCP message
  */
-EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
+EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m_actions(0, 16, Ownership::True)
 {
    m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    m_id = msg.getFieldAsUInt32(VID_RULE_ID);
@@ -309,6 +321,13 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
    msg.getFieldAsInt32Array(VID_RULE_SOURCES, &m_sources);
    msg.getFieldAsInt32Array(VID_RULE_SOURCE_EXCLUSIONS, &m_sourceExclusions);
 
+   int count = msg.getFieldAsInt32(VID_NUM_TIME_FRAMES);
+   int base = VID_TIME_FRAME_LIST_BASE;
+   for(int i = 0; i < count; i++)
+   {
+      m_timeFrames.add(new TimeFrame(msg.getFieldAsUInt32(base++), msg.getFieldAsUInt64(base++)));
+   }
+
    m_alarmKey = msg.getFieldAsString(VID_ALARM_KEY);
    m_alarmMessage = msg.getFieldAsString(VID_ALARM_MESSAGE);
    m_alarmImpact = msg.getFieldAsString(VID_IMPACT);
@@ -319,8 +338,8 @@ EPRule::EPRule(const NXCPMessage& msg) : m_actions(0, 16, Ownership::True)
 
    msg.getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
 
-   int count = msg.getFieldAsInt32(VID_NUM_SET_PSTORAGE);
-   int base = VID_PSTORAGE_SET_LIST_BASE;
+   count = msg.getFieldAsInt32(VID_NUM_SET_PSTORAGE);
+   base = VID_PSTORAGE_SET_LIST_BASE;
    for(int i = 0; i < count; i++, base+=2)
    {
       m_pstorageSetActions.setPreallocated(msg.getFieldAsString(base), msg.getFieldAsString(base+1));
@@ -488,7 +507,15 @@ void EPRule::createExportRecord(StringBuffer &xml) const
                              m_events.get(i), (const TCHAR *)EscapeStringForXML2(eventName));
    }
 
-   xml.append(_T("\t\t\t</events>\n\t\t\t<actions>\n"));
+   xml.append(_T("\t\t\t</events>\n\t\t\t<timeFrames>\n"));
+
+   for(int i = 0; i < m_timeFrames.size(); i++)
+   {
+      TimeFrame *timeFrame = m_timeFrames.get(i);
+      xml.appendFormattedString(_T("\t\t\t\t<timeFrame id=\"%d\" time=\"%d\" date=\"%ld\" />\n"), i + 1, timeFrame->getTime(), timeFrame->getDate());
+   }
+
+   xml.append(_T("\t\t\t</timeFrames>\n\t\t\t<actions>\n"));
    for(int i = 0; i < m_actions.size(); i++)
    {
       xml.append(_T("\t\t\t\t<action id=\""));
@@ -641,6 +668,45 @@ bool EPRule::matchSeverity(uint32_t severity) const
 	return (severityFlag[severity] & m_flags) != 0;
 }
 
+
+/**
+ * Last days for each day
+ */
+static const int daysInMonth[12] = {31, 28, 31, 30, 31, 30,
+                                    31, 31, 30, 31, 30, 31};
+/**
+ * Check if given date is last day of the month
+ */
+static bool IsLastDayOfMonth(struct tm *local)
+{
+   if (((local->tm_year % 4) == 0) && local->tm_mon == 1)
+   {
+      return local->tm_mday == (daysInMonth[1] + 1);
+   }
+   return local->tm_mday == daysInMonth[local->tm_mon];
+}
+
+/**
+ * Check if execution time matches the frames
+ */
+bool EPRule::matchTime(struct tm *local) const
+{
+   if (m_timeFrames.isEmpty())
+      return (m_flags & RF_NEGATED_TIME_FRAMES) ? false : true;
+
+   bool match = false;
+   uint32_t currentTime = local->tm_hour * 100 + local->tm_min; //BCD format
+   for(TimeFrame *frame : m_timeFrames)
+   {
+      if (frame->match(local, currentTime))
+      {
+         match = true;
+         break;
+      }
+   }
+   return (m_flags & RF_NEGATED_TIME_FRAMES) ? !match : match;
+}
+
 /**
  * Check if event match to the script
  */
@@ -785,9 +851,19 @@ bool EPRule::processEvent(Event *event) const
    if ((event->getRootId() != 0) && !(m_flags & RF_ACCEPT_CORRELATED))
       return false;
 
+
+   time_t now = time(nullptr);
+   struct tm currLocal;
+#if HAVE_LOCALTIME_R
+   localtime_r(&now, &currLocal);
+#else
+   memcpy(&currLocal, localtime(&now), sizeof(struct tm));
+#endif
+
    // Check if event match
    if (!matchSource(event->getSourceId()) || !matchEvent(event->getCode()) ||
-       !matchSeverity(event->getSeverity()) || !matchScript(event))
+       !matchSeverity(event->getSeverity()) || !matchScript(event) ||
+       !matchTime(&currLocal))
       return false;
 
    nxlog_debug_tag(DEBUG_TAG, 6, _T("Event ") UINT64_FMT _T(" match EPP rule %d"), event->getId(), (int)m_id + 1);
@@ -1014,6 +1090,23 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       bSuccess = false;
    }
 
+   // Load rule's events
+   _sntprintf(szQuery, 256, _T("SELECT time_filter,date_filter FROM policy_time_frame_list WHERE rule_id=%d"), m_id);
+   hResult = DBSelect(hdb, szQuery);
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         m_timeFrames.add(new TimeFrame(DBGetFieldULong(hResult, i, 0), DBGetFieldUInt64(hResult, i, 1)));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      bSuccess = false;
+   }
+
    // Load rule's actions
    _sntprintf(szQuery, 256, _T("SELECT action_id,timer_delay,timer_key,blocking_timer_key,snooze_time FROM policy_action_list WHERE rule_id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
@@ -1227,6 +1320,29 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
       }
    }
 
+   // Time frames
+   if (success && !m_timeFrames.isEmpty())
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_time_frame_list (rule_id,time_frame_id,time_filter,date_filter) VALUES (?,?,?,?)"), m_timeFrames.size() > 1);
+      if (hStmt != nullptr)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         int i = 0;
+         for(TimeFrame *frame : m_timeFrames)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i++);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, frame->getTime());
+            DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, frame->getDate());
+            success = DBExecute(hStmt);
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
    // Sources
    if (success && !m_sources.isEmpty())
    {
@@ -1353,6 +1469,15 @@ void EPRule::createMessage(NXCPMessage *msg) const
    msg->setFieldFromInt32Array(VID_RULE_EVENTS, &m_events);
    msg->setFieldFromInt32Array(VID_RULE_SOURCES, &m_sources);
    msg->setFieldFromInt32Array(VID_RULE_SOURCE_EXCLUSIONS, &m_sourceExclusions);
+
+   msg->setField(VID_NUM_TIME_FRAMES, static_cast<uint32_t>(m_timeFrames.size()));
+   fieldId = VID_TIME_FRAME_LIST_BASE;
+   for(int i = 0; i < m_timeFrames.size(); i++)
+   {
+      TimeFrame *timeFrame = m_timeFrames.get(i);
+      msg->setField(fieldId++, timeFrame->getTime());
+      msg->setField(fieldId++, timeFrame->getDate());
+   }
    msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_filterScriptSource));
    msg->setField(VID_ACTION_SCRIPT, CHECK_NULL_EX(m_actionScriptSource));
    m_pstorageSetActions.fillMessage(msg, VID_PSTORAGE_SET_LIST_BASE, VID_NUM_SET_PSTORAGE);
@@ -1372,6 +1497,15 @@ json_t *EPRule::toJson() const
    json_object_set_new(root, "sources", m_sources.toJson());
    json_object_set_new(root, "sourceExclusions", m_sourceExclusions.toJson());
    json_object_set_new(root, "events", m_events.toJson());
+   json_t *timeFrames = json_array();
+   for(TimeFrame *frame : m_timeFrames)
+   {
+      json_t *timeFrame = json_object();
+      json_object_set_new(timeFrame, "time", json_integer(frame->getTime()));
+      json_object_set_new(timeFrame, "date", json_integer(frame->getDate()));
+      json_array_append_new(timeFrames, timeFrame);
+   }
+   json_object_set_new(root, "timeFrames", timeFrames);
    json_t *actions = json_array();
    for(int i = 0; i < m_actions.size(); i++)
    {
@@ -1463,6 +1597,7 @@ bool EventPolicy::saveToDB() const
    if (success)
    {
       success = DBQuery(hdb, _T("DELETE FROM event_policy")) &&
+                DBQuery(hdb, _T("DELETE FROM policy_time_frame_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_action_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_timer_cancellation_list")) &&
                 DBQuery(hdb, _T("DELETE FROM policy_event_list")) &&
@@ -1731,4 +1866,27 @@ void EventPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventRefere
       }
    }
    unlock();
+}
+
+/**
+ * Time frame constructor
+ */
+TimeFrame::TimeFrame(uint32_t time, uint64_t date)
+{
+   m_date = date;
+   m_time = time;
+   m_startTime = m_time / 10000;
+   m_endTime = m_time % 10000;
+}
+
+/**
+ * Check if provided time matches current time frame
+ */
+bool TimeFrame::match(struct tm *local, int currentTime)
+{
+   return (m_startTime <= currentTime && m_endTime >= currentTime) && //Match time
+                  ((m_date & (1L << local->tm_mday)) ||  //Match day of month
+                  ((m_date & 1) && IsLastDayOfMonth(local))) && //Match last day if required
+                  (m_date & (1L << (local->tm_wday + 31))) && //Match day of week
+                  (m_date & (1L << (local->tm_mon + 7 + 32))); //Month
 }

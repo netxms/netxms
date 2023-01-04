@@ -45,6 +45,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditScheduleDialog;
+import org.netxms.nxmc.modules.datacollection.propertypages.helpers.CustomScheduleLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -87,12 +88,13 @@ public class CustomSchedule extends AbstractDCIPropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { i18n.tr("Schedule") };
-      final int[] columnWidths = { 300 };
+      final String[] columnNames = { i18n.tr("Schedule"), i18n.tr("Description") };
+      final int[] columnWidths = { 300, 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new StringComparator());
+      viewer.setLabelProvider(new CustomScheduleLabelProvider());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)

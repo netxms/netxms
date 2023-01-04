@@ -73,11 +73,12 @@ public class ScheduledTasks extends ConfigurationView
    public static final int PARAMETERS = 3;
    public static final int TIMER_KEY = 4;
    public static final int EXECUTION_TIME = 5;
-   public static final int LAST_EXECUTION_TIME = 6;
-   public static final int STATUS = 7;
-   public static final int MANAGMENT_STATE = 8;
-   public static final int OWNER = 9;
-   public static final int COMMENTS = 10;
+   public static final int EXECUTION_TIME_DESCRIPTION = 6;
+   public static final int LAST_EXECUTION_TIME = 7;
+   public static final int STATUS = 8;
+   public static final int MANAGMENT_STATE = 9;
+   public static final int OWNER = 10;
+   public static final int COMMENTS = 11;
    
    private NXCSession session;
    private SessionListener listener;
@@ -108,8 +109,8 @@ public class ScheduledTasks extends ConfigurationView
    @Override
    public void createContent(Composite parent)
    {      
-      final int[] widths = { 50, 100, 200, 400, 200, 150, 150, 100, 200, 250, 200 };
-      final String[] names = { i18n.tr("ID"), i18n.tr("Schedule Type"), i18n.tr("Object"), i18n.tr("Parameters"), i18n.tr("Timer key"), i18n.tr("Execution time"), i18n.tr("Last execution time"),
+      final int[] widths = { 50, 100, 200, 400, 200, 150, 200, 150, 100, 200, 250, 200 };
+      final String[] names = { i18n.tr("ID"), i18n.tr("Schedule Type"), i18n.tr("Object"), i18n.tr("Parameters"), i18n.tr("Timer key"), i18n.tr("Execution time"), i18n.tr("Execution time description"), i18n.tr("Last execution time"),
             i18n.tr("Execution status"), i18n.tr("Administrative status"), i18n.tr("Owner"), i18n.tr("Comments") };
       viewer = new SortableTableViewer(parent, names, widths, SCHEDULE_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());

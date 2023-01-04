@@ -22,6 +22,23 @@
 
 #include "nxdbmgr.h"
 
+
+/**
+ * Upgrade from 43.6 to 43.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE policy_time_frame_list (")
+            _T("rule_id integer not null,")
+            _T("time_frame_id integer not null,")
+            _T("time_filter integer not null,")
+            _T("date_filter $SQL:INT64 not null,")
+            _T("PRIMARY KEY(rule_id,time_frame_id))")));
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
 /**
  * Upgrade from 43.5 to 43.6
  */
@@ -260,6 +277,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  43, 7,  H_UpgradeFromV6  },
    { 5,  43, 6,  H_UpgradeFromV5  },
    { 4,  43, 5,  H_UpgradeFromV4  },
    { 3,  43, 4,  H_UpgradeFromV3  },

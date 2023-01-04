@@ -36,6 +36,7 @@ import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import it.burning.cron.CronExpressionDescriptor;
 
 /**
  * Label provider for scheduled task list
@@ -115,7 +116,15 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
          case ScheduledTaskView.PARAMETERS:
             return task.getParameters();
          case ScheduledTaskView.EXECUTION_TIME:
-            return task.getSchedule().isEmpty() ? RegionalSettings.getDateTimeFormat().format(task.getExecutionTime()) : task.getSchedule();
+            if (task.getSchedule().isEmpty())
+               return RegionalSettings.getDateTimeFormat().format(task.getExecutionTime());
+            else
+               return task.getSchedule();
+         case ScheduledTaskView.EXECUTION_TIME_DESCRIPTION:
+            if (task.getSchedule().isEmpty())
+               return String.format("Exactly at %s", RegionalSettings.getDateTimeFormat().format(task.getExecutionTime()));
+            else
+               return CronExpressionDescriptor.getDescription(task.getSchedule());
          case ScheduledTaskView.LAST_EXECUTION_TIME:
             return (task.getLastExecutionTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(task.getLastExecutionTime());
          case ScheduledTaskView.STATUS:

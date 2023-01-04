@@ -1294,6 +1294,7 @@ public class NXCPCodes
    public static final long VID_NETWORK_SERVICE_COUNT = 809;
    public static final long VID_VPN_CONNECTOR_COUNT = 810;
    public static final long VID_MONITOR_ID = 811;
+   public static final long VID_NUM_TIME_FRAMES = 812;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1366,7 +1367,8 @@ public class NXCPCodes
    public static final long VID_PSTORAGE_SET_LIST_BASE = 0x10000000L;
    public static final long VID_PSTORAGE_DELETE_LIST_BASE = 0x20000000L;   
    public static final long VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE = 0x30000000L;
-   public static final long VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE = 0x40000000L;   
+   public static final long VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE = 0x40000000L;  
+   public static final long VID_TIME_FRAME_LIST_BASE = 0x70000000L;   
 	public static final long VID_PSTORAGE_LIST_BASE = 0x10000000L;	
 	public static final long VID_INSTANCE_LIST_BASE = 0x20000000L;
 	public static final long VID_OBJECT_LINKS_BASE = 0x10000000L;

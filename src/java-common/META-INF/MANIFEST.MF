@@ -11,8 +11,10 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="3.26.0",
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Bundle-ClassPath: .,
- lib/simple-xml-2.6.4.jar
+ lib/simple-xml-2.6.4.jar,
+ lib/cron-expression-descriptor-1.2.6.jar
 Export-Package: com.jcraft.jzlib,
+ it.burning.cron,
  org.netxms.base,
  org.netxms.base.annotations,
  org.netxms.certificate.loader,

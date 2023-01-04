@@ -196,6 +196,17 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrames"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrame#10"
+            name="Time Frame">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">

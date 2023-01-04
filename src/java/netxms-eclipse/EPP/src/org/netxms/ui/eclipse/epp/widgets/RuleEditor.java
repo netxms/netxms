@@ -18,11 +18,13 @@
  */
 package org.netxms.ui.eclipse.epp.widgets;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -68,7 +70,9 @@ import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.TimeFrame;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.epp.Messages;
@@ -569,6 +573,22 @@ public class RuleEditor extends Composite
          }
          needAnd = true;
       }
+      
+      /* time filter */
+      if (rule.getTimeFrames().size() != 0)
+      {
+         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrame#10"); //$NON-NLS-1$
+         addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
+
+         final DateFormat dfTime = RegionalSettings.getShortTimeFormat();    
+         for(TimeFrame frame : rule.getTimeFrames())
+         {
+            CLabel clabel = createCLabel(clientArea, 2, false);
+            clabel.addMouseListener(listener);
+            clabel.setText(frame.getFormattedDateString(dfTime, Locale.getDefault()));
+         }
+         needAnd = true;
+      }
 
       /* severity */
       if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_ANY) != EventProcessingPolicyRule.SEVERITY_ANY)
@@ -608,7 +628,7 @@ public class RuleEditor extends Composite
          scriptEditor.setLayoutData(gd);
          scriptEditor.setText(rule.getFilterScript());
          scriptEditor.getTextWidget().setEditable(false);
-         scriptEditor.getTextWidget().addMouseListener(listener);
+         scriptEditor.getTextWidget().addMouseListener(listener);  
       }
 
       return clientArea;
@@ -767,7 +787,7 @@ public class RuleEditor extends Composite
       if (rule.getPStorageSet().size() != 0 || rule.getPStorageDelete().size() != 0)
       {
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RulePStorage#20"); //$NON-NLS-1$
-         addActionGroupLabel(clientArea, "Update persistent storage entries", editor.getImageSituation(), listener);
+         addActionGroupLabel(clientArea, "Update persistent storage entries", editor.getImageCustomAttribute(), listener);
 
          if(rule.getPStorageSet().size() != 0)
          {
@@ -794,7 +814,7 @@ public class RuleEditor extends Composite
       if (rule.getCustomAttributeStorageSet().size() != 0 || rule.getCustomAttributeStorageDelete().size() != 0)
       {
          final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleCustomAttribute#21"); //$NON-NLS-1$
-         addActionGroupLabel(clientArea, "Update custom attribute entries", editor.getImageSituation(), listener);
+         addActionGroupLabel(clientArea, "Update custom attribute entries", editor.getImageCustomAttribute(), listener);
 
          if(rule.getCustomAttributeStorageSet().size() != 0)
          {

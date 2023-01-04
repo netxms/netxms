@@ -1410,6 +1410,19 @@ CREATE TABLE policy_event_list
 ) TABLE_TYPE;
 
 /**
+ * Event processing policy time frame based filter
+ */
+CREATE TABLE policy_time_frame_list
+(
+  rule_id integer not null,
+  time_frame_id integer not null,
+  date_filter SQL_INT64 not null,
+  time_filter integer not null,
+  PRIMARY KEY(rule_id,time_frame_id)
+) TABLE_TYPE;
+
+
+/**
  * Event processing policy actions
  */
 CREATE TABLE policy_action_list

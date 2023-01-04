@@ -18,10 +18,12 @@
  */
 package org.netxms.nxmc.modules.events.widgets;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -60,11 +62,13 @@ import org.netxms.client.events.ActionExecutionConfiguration;
 import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.client.events.TimeFrame;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
 import org.netxms.nxmc.base.widgets.Card;
 import org.netxms.nxmc.base.widgets.helpers.DashboardElementButton;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.events.propertypages.RuleAction;
 import org.netxms.nxmc.modules.events.propertypages.RuleActionScript;
@@ -78,6 +82,7 @@ import org.netxms.nxmc.modules.events.propertypages.RulePersistentStorage;
 import org.netxms.nxmc.modules.events.propertypages.RuleServerActions;
 import org.netxms.nxmc.modules.events.propertypages.RuleSeverityFilter;
 import org.netxms.nxmc.modules.events.propertypages.RuleSourceObjects;
+import org.netxms.nxmc.modules.events.propertypages.RuleTimeFrames;
 import org.netxms.nxmc.modules.events.propertypages.RuleTimerCancellations;
 import org.netxms.nxmc.modules.events.views.EventProcessingPolicyEditor;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
@@ -576,6 +581,22 @@ public class RuleEditor extends Composite
          }
          needAnd = true;
       }
+      
+      /* time filter */
+      if (rule.getTimeFrames().size() != 0)
+      {
+         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrame#10"); //$NON-NLS-1$
+         addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
+
+         final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();    
+         for(TimeFrame frame : rule.getTimeFrames())
+         {
+            CLabel clabel = createCLabel(clientArea, 2, false);
+            clabel.addMouseListener(listener);
+            clabel.setText(frame.getFormattedDateString(dfTime, Locale.getDefault()));
+         }
+         needAnd = true;
+      }
 
       /* severity */
       if ((rule.getFlags() & EventProcessingPolicyRule.SEVERITY_ANY) != EventProcessingPolicyRule.SEVERITY_ANY)
@@ -998,6 +1019,7 @@ public class RuleEditor extends Composite
       PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("Condition", new RuleCondition(this)));
       pm.addTo("Condition", new PreferenceNode("Events", new RuleEvents(this)));
+      pm.addTo("Condition", new PreferenceNode("TimeFrame", new RuleTimeFrames(this)));
       pm.addTo("Condition", new PreferenceNode("SourceObjects", new RuleSourceObjects(this)));
       pm.addTo("Condition", new PreferenceNode("SeverityFilter", new RuleSeverityFilter(this)));
       pm.addTo("Condition", new PreferenceNode("FilteringScript", new RuleFilteringScript(this)));

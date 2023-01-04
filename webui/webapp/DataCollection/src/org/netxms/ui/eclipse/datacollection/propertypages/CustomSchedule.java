@@ -43,6 +43,7 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.EditScheduleDialog;
 import org.netxms.ui.eclipse.datacollection.propertypages.helpers.AbstractDCIPropertyPage;
+import org.netxms.ui.eclipse.datacollection.propertypages.helpers.CustomScheduleLabelProvider;
 import org.netxms.ui.eclipse.tools.StringComparator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -74,12 +75,13 @@ public class CustomSchedule extends AbstractDCIPropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       
-      final String[] columnNames = { Messages.get().CustomSchedule_Schedule };
-      final int[] columnWidths = { 300 };
+      final String[] columnNames = { Messages.get().CustomSchedule_Schedule, "Description" };
+      final int[] columnWidths = { 300, 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                        SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setComparator(new StringComparator());
+      viewer.setLabelProvider(new CustomScheduleLabelProvider());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)

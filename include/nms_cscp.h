@@ -1514,6 +1514,7 @@ typedef struct
 #define VID_NETWORK_SERVICE_COUNT   ((uint32_t)809)
 #define VID_VPN_CONNECTOR_COUNT     ((uint32_t)810)
 #define VID_MONITOR_ID              ((uint32_t)811)
+#define VID_NUM_TIME_FRAMES         ((uint32_t)812)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1685,6 +1686,8 @@ typedef struct
 // Base values for persistent storage actions in epp
 #define VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE     ((UINT32)0x30000000)
 #define VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE  ((UINT32)0x40000000)
+//Base value for time based filtr frames in epp
+#define VID_TIME_FRAME_LIST_BASE       ((UINT32)0x70000000)
 
 // Base values for persistent storage lists
 #define VID_PSTORAGE_LIST_BASE     ((UINT32)0x10000000)

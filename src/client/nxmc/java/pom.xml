@@ -586,6 +586,12 @@
          <version>1.7.0</version>
          <scope>${lib.scope}</scope>
       </dependency>
+      <dependency>
+         <groupId>it.burning</groupId>
+         <artifactId>cron-expression-descriptor</artifactId>
+         <version>1.2.6</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
    </dependencies>
    <build>
       <finalName>${build.finalName}</finalName>
