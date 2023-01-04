@@ -20,23 +20,52 @@ package org.netxms.nxmc.modules.objects.views;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TreeItem;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.BusinessService;
+import org.netxms.client.objects.BusinessServiceRoot;
+import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Condition;
+import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardGroup;
+import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.NetworkMap;
+import org.netxms.client.objects.NetworkMapGroup;
+import org.netxms.client.objects.NetworkMapRoot;
+import org.netxms.client.objects.Node;
+import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.Sensor;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
+import org.netxms.client.objects.TemplateRoot;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.NavigationView;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.netxms.nxmc.modules.objects.widgets.ObjectTree;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Object browser - displays object tree.
  */
 public class ObjectBrowser extends NavigationView
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(ObjectBrowser.class);
+   
    private SubtreeType subtreeType;
    private ObjectTree objectTree;
 
@@ -79,6 +108,9 @@ public class ObjectBrowser extends NavigationView
 
       Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
+      
+      objectTree.enableDropSupport(this);
+      objectTree.enableDragSupport();
 
       objectTree.getTreeViewer().expandToLevel(2);
    }
@@ -141,5 +173,100 @@ public class ObjectBrowser extends NavigationView
             break;
       }
       return classFilter;
+   }
+
+   /**
+    * Check if current selection is valid for moving object
+    * 
+    * @return true if current selection is valid for moving object
+    */
+   public boolean isValidSelectionForMove(SubtreeType subtree)
+   {
+      TreeItem[] selection = objectTree.getTreeControl().getSelection();
+      if (selection.length < 1)
+         return false;
+
+      for(int i = 0; i < selection.length; i++)
+      {
+         if (!isValidObjectForMove(selection, i, subtree) ||
+             ((AbstractObject)selection[0].getParentItem().getData()).getObjectId() != ((AbstractObject)selection[i].getParentItem().getData()).getObjectId())
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if given selection object is valid for move
+    * 
+    * @return true if current selection object is valid for moving object
+    */
+   public boolean isValidObjectForMove(TreeItem[] selection, int i, SubtreeType subtree)
+   {
+      if (selection[i].getParentItem() == null)
+         return false;
+      
+      final AbstractObject currentObject = (AbstractObject)selection[i].getData();
+      final AbstractObject parentObject = (AbstractObject)selection[i].getParentItem().getData();
+      
+      switch(subtree)
+      {
+         case INFRASTRUCTURE:
+            return ((currentObject instanceof Node) ||
+                    (currentObject instanceof Cluster) ||
+                    (currentObject instanceof Subnet) ||
+                    (currentObject instanceof Condition) ||
+                    (currentObject instanceof Rack) ||
+                    (currentObject instanceof MobileDevice) ||
+                    (currentObject instanceof Container) || 
+                    (currentObject instanceof Sensor)) &&
+                   ((parentObject instanceof Container) ||
+                    (parentObject instanceof ServiceRoot)) ? true : false;
+         case TEMPLATES:
+            return ((currentObject instanceof Template) ||
+                    (currentObject instanceof TemplateGroup)) &&
+                   ((parentObject instanceof TemplateGroup) ||
+                    (parentObject instanceof TemplateRoot)) ? true : false;
+         case BUSINESS_SERVICES:
+            return (currentObject instanceof BusinessService) &&
+                   ((parentObject instanceof BusinessService) ||
+                    (parentObject instanceof BusinessServiceRoot)) ? true : false;
+         case MAPS:
+            return ((currentObject instanceof NetworkMap) ||
+                  (currentObject instanceof NetworkMapGroup)) &&
+                  ((parentObject instanceof NetworkMapGroup) ||
+                  (parentObject instanceof NetworkMapRoot)) ? true : false;
+         case DASHBOARDS:
+            return (((currentObject instanceof Dashboard) ||
+                  (currentObject instanceof DashboardGroup)) &&
+                 ((parentObject instanceof DashboardRoot) ||
+                 (parentObject instanceof DashboardGroup) ||
+                 (parentObject instanceof Dashboard))) ? true : false;
+         default:
+            return false;
+      }
+   }
+   
+   public void performObjectMove(final AbstractObject target, final Object parentObject, final Object currentObject, final boolean isMove){
+      if (target.getObjectId() != ((AbstractObject)parentObject).getObjectId())
+      {
+         final NXCSession session = Registry.getSession();
+         
+         new Job(String.format(i18n.tr("Moving object %s"), ((AbstractObject)currentObject).getObjectName()), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               long objectId = ((AbstractObject)currentObject).getObjectId();
+               session.bindObject(target.getObjectId(), objectId);
+               if (isMove)
+                  session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
+            }
+   
+            @Override
+            protected String getErrorMessage()
+            {
+               return String.format(i18n.tr("Cannot move object %s"), ((AbstractObject)currentObject).getObjectName());
+            }
+         }.start();
+      }
    }
 }

@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.widgets;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -30,12 +31,16 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TreePath;
+import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -59,6 +64,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.DashboardGroup;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -69,6 +75,9 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.modules.objects.ObjectOpenListener;
+import org.netxms.nxmc.modules.objects.SubtreeType;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.views.ObjectBrowser;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectFilter;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectTreeComparator;
@@ -783,7 +792,6 @@ public class ObjectTree extends Composite
    /**
     * Enable drop support in object tree
     */
-   /*
    public void enableDropSupport(final ObjectBrowser obj)
    {
       final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
@@ -871,7 +879,6 @@ public class ObjectTree extends Composite
          }
       });
    }
-   */
 
    /**
     * Disables refresh option in RefreshTimer class. Is used for object name edit.
