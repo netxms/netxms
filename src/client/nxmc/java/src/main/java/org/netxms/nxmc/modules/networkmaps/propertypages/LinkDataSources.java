@@ -53,7 +53,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * DCI list editor for dashboard element
+ * DCI network map link data source property page
  */
 public class LinkDataSources extends PreferencePage
 {

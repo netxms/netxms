@@ -55,7 +55,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * DCI list editor for dashboard element
+ * DCI image rule editor for network map element
  */
 public class DCIImageRules extends PropertyPage
 {

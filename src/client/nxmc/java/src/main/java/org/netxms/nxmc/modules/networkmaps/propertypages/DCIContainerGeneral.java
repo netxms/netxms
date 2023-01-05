@@ -35,7 +35,6 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * DCI container general property page
- *
  */
 public class DCIContainerGeneral extends PropertyPage
 {

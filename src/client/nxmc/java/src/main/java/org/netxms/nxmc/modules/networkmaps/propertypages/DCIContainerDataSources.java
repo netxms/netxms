@@ -53,7 +53,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * DCI list editor for dashboard element
+ * DCI container editor for network map element
  */
 public class DCIContainerDataSources extends PropertyPage
 {

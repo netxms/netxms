@@ -37,8 +37,7 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * DCI container general property page
- *
+ * Network map DCI image property page
  */
 public class DCIImageGeneral extends PropertyPage
 {

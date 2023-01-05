@@ -54,6 +54,8 @@ import org.netxms.nxmc.modules.objects.propertypages.Location;
 import org.netxms.nxmc.modules.objects.propertypages.LocationControl;
 import org.netxms.nxmc.modules.objects.propertypages.MQTT;
 import org.netxms.nxmc.modules.objects.propertypages.MapAppearance;
+import org.netxms.nxmc.modules.objects.propertypages.MapBackground;
+import org.netxms.nxmc.modules.objects.propertypages.MapObjectFilter;
 import org.netxms.nxmc.modules.objects.propertypages.MapOptions;
 import org.netxms.nxmc.modules.objects.propertypages.MapSeedNodes;
 import org.netxms.nxmc.modules.objects.propertypages.NetworkServicePolling;
@@ -114,6 +116,8 @@ public class ObjectPropertiesManager
       pageClasses.add(LocationControl.class);
       pageClasses.add(MapAppearance.class);
       pageClasses.add(MapOptions.class);
+      pageClasses.add(MapBackground.class);
+      pageClasses.add(MapObjectFilter.class);
       pageClasses.add(MapSeedNodes.class);
       pageClasses.add(MQTT.class);
       pageClasses.add(NetworkServicePolling.class);
