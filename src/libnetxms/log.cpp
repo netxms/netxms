@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -33,11 +33,7 @@
 
 #define LOCAL_MSG_BUFFER_SIZE    1024
 
-typedef TCHAR msg_buffer_t[LOCAL_MSG_BUFFER_SIZE];
-
-#ifdef _WIN32
-static void DefaultConsoleWriter(const TCHAR *, ...);
-#endif
+typedef Buffer<TCHAR, LOCAL_MSG_BUFFER_SIZE> msg_buffer_t;
 
 /**
  * Debug tags
@@ -78,11 +74,7 @@ static int s_logHistorySize = 4;		// Keep up 4 previous log files
 static time_t s_lastRotationAttempt = 0;
 static TCHAR s_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t s_currentDayStart = 0;
-#ifdef _WIN32
-static NxLogConsoleWriter s_consoleWriter = DefaultConsoleWriter;
-#else
-static NxLogConsoleWriter s_consoleWriter = (NxLogConsoleWriter)_tprintf;
-#endif
+static NxLogConsoleWriter s_consoleWriter = WriteToTerminalEx;
 static StringBuffer s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static Condition s_writerStopCondition(true);
@@ -102,59 +94,24 @@ static inline void SwapAndWait()
 }
 
 /**
- * Allocate string buffer on heap if requested size is bigger than local buffer size
- */
-static inline TCHAR *AllocateStringBuffer(size_t size, TCHAR *localBuffer)
-{
-   return (size > LOCAL_MSG_BUFFER_SIZE) ? MemAllocString(size) : localBuffer;
-}
-
-/**
- * Allocate string buffer on heap if requested size is bigger than local buffer size
- */
-static inline char *AllocateStringBufferA(size_t size, char *localBuffer)
-{
-   return (size > LOCAL_MSG_BUFFER_SIZE) ? MemAllocStringA(size) : localBuffer;
-}
-
-/**
- * Free string buffer if it was allocated on heap
- */
-static inline void FreeStringBuffer(void *buffer, void *localBuffer)
-{
-   if (buffer != localBuffer)
-      MemFree(buffer);
-}
-
-/**
  * Format message into local or dynamic buffer
  */
-static inline TCHAR *FormatString(msg_buffer_t localBuffer, const TCHAR *format, va_list args)
+static inline void FormatString(msg_buffer_t& buffer, const TCHAR *format, va_list args)
 {
    va_list args2;
    va_copy(args2, args);   // Save arguments for stage 2 if it will be needed
 
-   int ch = _vsntprintf(localBuffer, LOCAL_MSG_BUFFER_SIZE, format, args);
+   int ch = _vsntprintf(buffer, LOCAL_MSG_BUFFER_SIZE, format, args);
    if ((ch != -1) && (ch < LOCAL_MSG_BUFFER_SIZE))
    {
       va_end(args2);
-      return localBuffer;
+      return;
    }
 
    size_t bufferSize = (ch != -1) ? (ch + 1) : 65536;
-   TCHAR *buffer = MemAllocString(bufferSize);
+   buffer.realloc(bufferSize);
    _vsntprintf(buffer, bufferSize, format, args2);
    va_end(args2);
-   return buffer;
-}
-
-/**
- * Free formatted string if needed
- */
-static inline void FreeFormattedString(TCHAR *message, msg_buffer_t localBuffer)
-{
-   if (message != localBuffer)
-      MemFree(message);
 }
 
 /**
@@ -164,11 +121,9 @@ static inline void FileWrite(int fh, const TCHAR *text)
 {
 #ifdef UNICODE
    size_t len = wchar_utf8len(text, -1);
-   char localBuffer[LOCAL_MSG_BUFFER_SIZE];
-   char *buffer = AllocateStringBufferA(len + 1, localBuffer);
+   Buffer<char, LOCAL_MSG_BUFFER_SIZE> buffer(len + 1);
    wchar_to_utf8(text, -1, buffer, len + 1);
    _write(fh, buffer, strlen(buffer));
-   FreeStringBuffer(buffer, localBuffer);
 #else
    _write(fh, text, strlen(text));
 #endif
@@ -181,30 +136,11 @@ static inline void FileFormattedWrite(int fh, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
-   msg_buffer_t localBuffer;
-   TCHAR *msg = FormatString(localBuffer, format, args);
+   msg_buffer_t msg(LOCAL_MSG_BUFFER_SIZE);
+   FormatString(msg, format, args);
    va_end(args);
    FileWrite(fh, msg);
-   FreeFormattedString(msg, localBuffer);
 }
-
-#ifdef _WIN32
-
-/**
- * Default console writer for Windows
- */
-static void DefaultConsoleWriter(const TCHAR *format, ...)
-{
-   va_list args;
-   va_start(args, format);
-   msg_buffer_t localBuffer;
-   TCHAR *msg = FormatString(localBuffer, format, args);
-   va_end(args);
-   FileWrite(STDOUT_FILENO, msg);
-   FreeFormattedString(msg, localBuffer);
-}
-
-#endif
 
 /**
  * Set debug level
@@ -387,11 +323,10 @@ static inline TCHAR *FormatTag(const TCHAR *tag, TCHAR *tagf)
 /**
  * Escape string for JSON. Use local buffer if possible and allocate large buffer on heap if string is too long.
  */
-static TCHAR *EscapeForJSON(const TCHAR *text, TCHAR *localBuffer, size_t *len)
+static size_t EscapeForJSON(const TCHAR *text, msg_buffer_t& buffer)
 {
    const TCHAR *ch = text;
-   TCHAR *buffer = localBuffer;
-   TCHAR *out = localBuffer;
+   TCHAR *out = buffer.buffer();
    size_t count = 0;
    while(*ch != 0)
    {
@@ -444,17 +379,15 @@ static TCHAR *EscapeForJSON(const TCHAR *text, TCHAR *localBuffer, size_t *len)
             }
             break;
       }
-      if ((count > LOCAL_MSG_BUFFER_SIZE - 8) && (buffer == localBuffer))
+      if ((count > LOCAL_MSG_BUFFER_SIZE - 8) && buffer.isInternal())
       {
-         buffer = MemAllocString(_tcslen(text) * 6 + 1);
-         memcpy(buffer, localBuffer, count * sizeof(TCHAR));
-         out = buffer + count;
+         buffer.realloc(_tcslen(text) * 6 + 1);
+         out = buffer.buffer() + count;
       }
       ch++;
    }
    *out = 0;
-   *len = count;
-   return buffer;
+   return count;
 }
 
 /**
@@ -462,7 +395,7 @@ static TCHAR *EscapeForJSON(const TCHAR *text, TCHAR *localBuffer, size_t *len)
  */
 static void SetDayStart()
 {
-	time_t now = time(NULL);
+	time_t now = time(nullptr);
 	struct tm dayStart;
 #if HAVE_LOCALTIME_R
 	localtime_r(&now, &dayStart);
@@ -667,12 +600,9 @@ static bool RotateLog(bool needLock)
             _write(s_logFileHandle, message, strlen(message));
             for(int i = 0; i < rotationErrors.size(); i++)
             {
-               TCHAR escapedTextBuffer[LOCAL_MSG_BUFFER_SIZE];
-               size_t textLen;
-               TCHAR *escapedText = EscapeForJSON(rotationErrors.get(i), escapedTextBuffer, &textLen);
-               snprintf(message, bufferSize, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"" TIMESTAMP_FORMAT_SPECIFIER "\"}\n",
-                      timestamp, escapedText);
-               FreeStringBuffer(escapedText, escapedTextBuffer);
+               msg_buffer_t escapedText(LOCAL_MSG_BUFFER_SIZE);
+               EscapeForJSON(rotationErrors.get(i), escapedText);
+               snprintf(message, bufferSize, "\n{\"timestamp\":\"" TIMESTAMP_FORMAT_SPECIFIER "\",\"severity\":\"error\",\"tag\":\"logger\",\"message\":\"" TIMESTAMP_FORMAT_SPECIFIER "\"}\n", timestamp, escapedText.buffer());
                _write(s_logFileHandle, message, strlen(message));
             }
          }
@@ -940,36 +870,36 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
 /**
  * Write log to console (assume that lock already set)
  */
-static void WriteLogToConsole(INT16 severity, const TCHAR *timestamp, const TCHAR *tag, const TCHAR *message)
+static void WriteLogToConsole(int16_t severity, const TCHAR *timestamp, const TCHAR *tag, const TCHAR *message)
 {
    const TCHAR *loglevel;
    switch(severity)
    {
       case NXLOG_ERROR:
-         loglevel = _T("*E* [");
+         loglevel = _T("\x1b[31;1m*E*\x1b[0m \x1b[33m[");
          break;
       case NXLOG_WARNING:
-         loglevel = _T("*W* [");
+         loglevel = _T("\x1b[33;1m*W*\x1b[0m \x1b[33m[");
          break;
       case NXLOG_INFO:
-         loglevel = _T("*I* [");
+         loglevel = _T("\x1b[32;1m*I*\x1b[0m \x1b[33m[");
          break;
       case NXLOG_DEBUG:
-         loglevel = _T("*D* [");
+         loglevel = _T("\x1b[34;1m*D*\x1b[0m \x1b[33m[");
          break;
       default:
-         loglevel = _T("*?* [");
+         loglevel = _T("*?* \x1b[33m[");
          break;
    }
 
    TCHAR tagf[20];
-   s_consoleWriter(_T("%s %s%s] %s\n"), timestamp, loglevel, FormatTag(tag, tagf), message);
+   s_consoleWriter(_T("\x1b[36m%s\x1b[0m %s%s]\x1b[0m %s\n"), timestamp, loglevel, FormatTag(tag, tagf), message);
 }
 
 /**
  * Write record to log file (text format)
  */
-static void WriteLogToFileAsText(INT16 severity, const TCHAR *tag, const TCHAR *message)
+static void WriteLogToFileAsText(int16_t severity, const TCHAR *tag, const TCHAR *message)
 {
    const TCHAR *loglevel;
    switch(severity)
@@ -1064,13 +994,12 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
          break;
    }
 
-   TCHAR escapedTagBuffer[LOCAL_MSG_BUFFER_SIZE], escapedMessageBuffer[LOCAL_MSG_BUFFER_SIZE];
-   size_t tagLen, messageLen;
-   TCHAR *escapedTag = EscapeForJSON(CHECK_NULL_EX(tag), escapedTagBuffer, &tagLen);
-   TCHAR *escapedMessage = EscapeForJSON(message, escapedMessageBuffer, &messageLen);
+   msg_buffer_t escapedTag(LOCAL_MSG_BUFFER_SIZE), escapedMessage(LOCAL_MSG_BUFFER_SIZE);
+   size_t tagLen = EscapeForJSON(CHECK_NULL_EX(tag), escapedTag);
+   size_t messageLen = EscapeForJSON(message, escapedMessage);
 
-   TCHAR jsonBuffer[LOCAL_MSG_BUFFER_SIZE], timestamp[64];
-   TCHAR *json = AllocateStringBuffer(tagLen + messageLen + 128, jsonBuffer);
+   msg_buffer_t json(tagLen + messageLen + 128);
+   TCHAR timestamp[64];
    _tcscpy(json, _T("{\"timestamp\":\""));
    _tcscat(json, FormatLogTimestamp(timestamp));
    _tcscat(json, _T("\",\"severity\":\""));
@@ -1094,7 +1023,7 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
    else if (s_logFileHandle != -1)
    {
       // Check for new day start
-      time_t t = time(NULL);
+      time_t t = time(nullptr);
       if ((s_rotationMode == NXLOG_ROTATION_DAILY) && (t >= s_currentDayStart + 86400))
       {
          RotateLog(false);
@@ -1107,7 +1036,7 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
       {
          NX_STAT_STRUCT st;
          NX_FSTAT(s_logFileHandle, &st);
-         if ((UINT64)st.st_size >= s_maxLogSize)
+         if (static_cast<uint64_t>(st.st_size) >= s_maxLogSize)
             RotateLog(false);
       }
    }
@@ -1116,10 +1045,6 @@ static void WriteLogToFileAsJSON(INT16 severity, const TCHAR *tag, const TCHAR *
       WriteLogToConsole(severity, timestamp, tag, message);
 
    s_mutexLogAccess.unlock();
-
-   FreeStringBuffer(json, jsonBuffer);
-   FreeStringBuffer(escapedMessage, escapedMessageBuffer);
-   FreeStringBuffer(escapedTag, escapedTagBuffer);
 }
 
 /**
@@ -1153,14 +1078,14 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
 
    if (s_flags & NXLOG_USE_SYSLOG)
    {
-      msg_buffer_t localBuffer;
-      TCHAR *message = FormatString(localBuffer, format, args);
+      msg_buffer_t message(LOCAL_MSG_BUFFER_SIZE);
+      FormatString(message, format, args);
 
 #ifdef _WIN32
-      const TCHAR *strings = message;
+      const TCHAR *strings = message.buffer();
       ReportEvent(s_eventLogHandle,
          (severity == NXLOG_DEBUG) ? EVENTLOG_INFORMATION_TYPE : severity,
-         0, 1000, NULL, 1, 0, &strings, NULL);
+         0, 1000, nullptr, 1, 0, &strings, nullptr);
 #else /* _WIN32 */
       int level;
       switch(severity)
@@ -1198,9 +1123,9 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
       MemFree(mbmsg);
 #else
       if (tag != nullptr)
-         syslog(level, "[%s] %s", tag, message);
+         syslog(level, "[%s] %s", tag, message.buffer());
       else
-         syslog(level, "%s", message);
+         syslog(level, "%s", message.buffer());
 #endif
 #endif   /* _WIN32 */
       if (s_flags & NXLOG_PRINT_TO_STDOUT)
@@ -1210,7 +1135,6 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
          WriteLogToConsole(severity, FormatLogTimestamp(timestamp), tag, message);
          s_mutexLogAccess.unlock();
       }
-      FreeFormattedString(message, localBuffer);
    }
    else if (s_flags & NXLOG_USE_SYSTEMD)
    {
@@ -1247,10 +1171,9 @@ static void WriteLog(int16_t severity, const TCHAR *tag, const TCHAR *format, va
    }
    else
    {
-      msg_buffer_t buffer;
-      TCHAR *message = FormatString(buffer, format, args);
+      msg_buffer_t message(LOCAL_MSG_BUFFER_SIZE);
+      FormatString(message, format, args);
       WriteLogToFile(severity, tag, message);
-      FreeFormattedString(message, buffer);
    }
 }
 
@@ -1385,28 +1308,27 @@ void LIBNETXMS_EXPORTABLE nxlog_report_event(DWORD msg, int level, int stringCou
       {
          va_list args2;
          va_copy(args2, args);
-         msg_buffer_t localBuffer;
-         TCHAR *message = FormatString(localBuffer, altMessage, args2);
+         msg_buffer_t message(LOCAL_MSG_BUFFER_SIZE);
+         FormatString(message, altMessage, args2);
          va_end(args2);
 
          s_mutexLogAccess.lock();
          TCHAR timestamp[64];
-         WriteLogToConsole(level, FormatLogTimestamp(timestamp), NULL, message);
+         WriteLogToConsole(level, FormatLogTimestamp(timestamp), nullptr, message);
          s_mutexLogAccess.unlock();
-         FreeFormattedString(message, localBuffer);
       }
 
-      const TCHAR **strings = (stringCount > 0) ? (const TCHAR **)alloca(sizeof(TCHAR*) * stringCount) : NULL;
+      const TCHAR **strings = (stringCount > 0) ? (const TCHAR **)alloca(sizeof(TCHAR*) * stringCount) : nullptr;
       for (int i = 0; i < stringCount; i++)
          strings[i] = va_arg(args, TCHAR*);
-      ReportEvent(s_eventLogHandle, level, 0, msg, NULL, stringCount, 0, strings, NULL);
+      ReportEvent(s_eventLogHandle, level, 0, msg, nullptr, stringCount, 0, strings, nullptr);
    }
    else
    {
-      WriteLog(level, NULL, altMessage, args);
+      WriteLog(level, nullptr, altMessage, args);
    }
 #else
-   WriteLog(level, NULL, altMessage, args);
+   WriteLog(level, nullptr, altMessage, args);
 #endif
    va_end(args);
 }

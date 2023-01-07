@@ -600,6 +600,7 @@ public:
    T& operator[](size_t index) { return buffer()[index]; }
    size_t size() const { return m_size; }
    size_t numElements() const { return m_size / sizeof(T); }
+   bool isInternal() const { return m_allocatedBuffer == nullptr; }
 
    void realloc(size_t numElements)
    {

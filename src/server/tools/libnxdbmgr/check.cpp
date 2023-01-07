@@ -31,30 +31,30 @@ int LIBNXDBMGR_EXPORTABLE g_dbCheckFixes = 0;
 /**
  * Stage data
  */
-static int m_iStageErrors;
+static int s_stageErrors;
 static int s_stageErrorsUpdate;
-static int m_iStageFixes;
-static TCHAR *m_pszStageMsg = NULL;
+static int s_stageFixes;
+static TCHAR *s_stageMessage = nullptr;
 static int s_stageWorkTotal = 0;
 static int s_stageWorkDone = 0;
 
 /**
  * Start stage
  */
-void LIBNXDBMGR_EXPORTABLE StartStage(const TCHAR *pszMsg, int workTotal)
+void LIBNXDBMGR_EXPORTABLE StartStage(const TCHAR *message, int workTotal)
 {
-   if (pszMsg != NULL)
+   if (message != nullptr)
    {
-      MemFree(m_pszStageMsg);
-      m_pszStageMsg = _tcsdup(pszMsg);
-      m_iStageErrors = g_dbCheckErrors;
+      MemFree(s_stageMessage);
+      s_stageMessage = MemCopyString(message);
+      s_stageErrors = g_dbCheckErrors;
       s_stageErrorsUpdate = g_dbCheckErrors;
-      m_iStageFixes = g_dbCheckFixes;
+      s_stageFixes = g_dbCheckFixes;
       s_stageWorkTotal = workTotal;
       s_stageWorkDone = 0;
       ResetBulkYesNo();
    }
-   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s  \x1b[37;1m[\x1b[0m   0%% \x1b[37;1m]\x1b[0m\b\b\b"), m_pszStageMsg);
+   WriteToTerminalEx(_T("\x1b[1m*\x1b[0m %-67s  \x1b[37;1m[\x1b[0m   0%% \x1b[37;1m]\x1b[0m\b\b\b"), s_stageMessage);
 #ifndef _WIN32
    fflush(stdout);
 #endif
@@ -100,12 +100,12 @@ void LIBNXDBMGR_EXPORTABLE EndStage()
    static int nColor[] = { 32, 33, 31 };
    int nCode, nErrors;
 
-   nErrors = g_dbCheckErrors - m_iStageErrors;
+   nErrors = g_dbCheckErrors - s_stageErrors;
    if (nErrors > 0)
    {
-      nCode = (g_dbCheckFixes - m_iStageFixes == nErrors) ? 1 : 2;
+      nCode = (g_dbCheckFixes - s_stageFixes == nErrors) ? 1 : 2;
       if (g_dbCheckErrors - s_stageErrorsUpdate > 0)
-         StartStage(NULL); // redisplay stage message
+         StartStage(nullptr); // redisplay stage message
    }
    else
    {
