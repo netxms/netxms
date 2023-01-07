@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -221,17 +221,17 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
    oids.add(_T(".1.3.6.1.2.1.1.2.0"));
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
-   SNMP_Transport *pTransport = SnmpCheckCommSettings(zoneProxy, ipAddr, &version, 0, nullptr, oids, zoneUIN);
-   if (pTransport != nullptr)
+   SNMP_Transport *snmpTransport = SnmpCheckCommSettings(zoneProxy, ipAddr, &version, 0, nullptr, oids, zoneUIN);
+   if (snmpTransport != nullptr)
    {
       if (transport != nullptr)
       {
-         pTransport->setSnmpVersion(version);
-         *transport = pTransport;
-         pTransport = nullptr;   // prevent deletion
+         snmpTransport->setSnmpVersion(version);
+         *transport = snmpTransport;
+         snmpTransport = nullptr;   // prevent deletion
       }
       reachable = true;
-      delete pTransport;
+      delete snmpTransport;
    }
 
    if (reachable && !fullCheck)
@@ -254,11 +254,25 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
    TCHAR buffer[256], ipAddrText[64];
 
    newNodeData->ipAddr.toString(ipAddrText);
-   if ((FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr) ||
-       (FindSubnetByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr))
+   if (FindNodeByIP(newNodeData->zoneUIN, newNodeData->ipAddr) != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): node already exist in database"), ipAddrText);
       return false;  // Node already exist in database
+   }
+
+   shared_ptr<Subnet> subnet = FindSubnetForNode(newNodeData->zoneUIN, newNodeData->ipAddr);
+   if (subnet != nullptr)
+   {
+      if (subnet->getIpAddress().equals(newNodeData->ipAddr))
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address already known as subnet address"), ipAddrText);
+         return false;
+      }
+      if (newNodeData->ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
+      {
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address already known as subnet broadcast address"), ipAddrText);
+         return false;
+      }
    }
 
    if (newNodeData->macAddr.isBroadcast())
@@ -277,6 +291,11 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
          MacAddress macAddr = subnet->findMacAddress(newNodeData->ipAddr);
          if (macAddr.isValid())
          {
+            if (macAddr.isBroadcast())
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): broadcast MAC address"), ipAddrText);
+               return false;  // Broadcast MAC
+            }
             nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("AcceptNewNode(%s): found MAC address %s"), ipAddrText, macAddr.toString().cstr());
             newNodeData->macAddr = macAddr;
          }
@@ -443,7 +462,86 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
                ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0), ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
    }
 
-   // TODO: check all interfaces for matching existing nodes
+   // Check all interfaces for matching existing nodes
+   InterfaceList *ifList = nullptr;
+   if (agentConnection != nullptr)
+   {
+      ifList = agentConnection->getInterfaceList();
+   }
+   if ((ifList == nullptr) && (snmpTransport != nullptr))
+   {
+      NObject node;
+      DriverData *driverData = nullptr;
+      data.driver->analyzeDevice(snmpTransport, data.snmpObjectId, &node, &driverData);
+      ifList = data.driver->getInterfaces(snmpTransport, &node, driverData, ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0), ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
+      delete driverData;
+   }
+   if (ifList != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("AcceptNewNode(%s): interface list retrieved, checking for duplicates"), ipAddrText);
+
+      bool duplicate = false;
+      for (int i = 0; (i < ifList->size()) && !duplicate; i++)
+      {
+         InterfaceInfo *iface = ifList->get(i);
+         if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
+            continue;
+
+         for (int j = 0; j < iface->ipAddrList.size(); j++)
+         {
+            InetAddress addr = iface->ipAddrList.get(j);
+            if (!addr.isValidUnicast())
+               continue;
+
+            shared_ptr<Node> existingNode = FindNodeByIP(newNodeData->zoneUIN, addr);
+            if (existingNode != nullptr)
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address %s on interface %s matches existing node %s [%u]"),
+                  ipAddrText, addr.toString().cstr(), iface->name, existingNode->getName(), existingNode->getId());
+               duplicate = true;
+               break;
+            }
+
+            subnet = FindSubnetForNode(newNodeData->zoneUIN, addr);
+            if (subnet != nullptr)
+            {
+               if (subnet->getIpAddress().equals(addr))
+               {
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address %s on interface %s already known as subnet address"), ipAddrText, addr.toString().cstr(), iface->name);
+                  duplicate = true;
+                  break;
+               }
+               if (newNodeData->ipAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
+               {
+                  nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address %s on interface %s already known as subnet broadcast address"), ipAddrText, addr.toString().cstr(), iface->name);
+                  duplicate = true;
+                  break;
+               }
+            }
+
+            InetAddress subnetAddress = addr.getSubnetAddress();
+            if (subnetAddress.contain(newNodeData->ipAddr) && newNodeData->ipAddr.isSubnetBroadcast(subnetAddress.getMaskBits()))
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address is a broadcast address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
+               duplicate = true;
+               break;
+            }
+            if (subnetAddress.equals(newNodeData->ipAddr))
+            {
+               nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): IP address is a subnet address for subnet %s/%d"), ipAddrText, subnetAddress.toString().cstr(), subnetAddress.getMaskBits());
+               duplicate = true;
+               break;
+            }
+         }
+      }
+      delete ifList;
+
+      if (duplicate)
+      {
+         delete snmpTransport;
+         return false;
+      }
+   }
 
    // Check for filter script
    if ((filterFlags & (DFF_CHECK_PROTOCOLS | DFF_CHECK_ADDRESS_RANGE | DFF_EXECUTE_SCRIPT)) == 0)
