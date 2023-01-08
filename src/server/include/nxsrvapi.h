@@ -999,8 +999,8 @@ public:
    uint32_t setServerId(uint64_t serverId);
    uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
          void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
-   uint32_t changeFileOwner(const TCHAR *file, const TCHAR *newOwner, const TCHAR *newGroup);
-   uint32_t changeFilePermissions(const TCHAR *file, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
+   uint32_t changeFileOwner(const TCHAR *file, bool allowPathExpansion, const TCHAR *newOwner, const TCHAR *newGroup);
+   uint32_t changeFilePermissions(const TCHAR *file, bool allowPathExpansion, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup);
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    uint32_t getFileFingerprint(const TCHAR *file, RemoteFileFingerprint *fp);
    uint32_t uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,

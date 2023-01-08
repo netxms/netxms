@@ -1,6 +1,6 @@
 /*
  ** File management subagent
- ** Copyright (C) 2014-2022 Raden Solutions
+ ** Copyright (C) 2014-2023 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -1371,36 +1371,38 @@ static void CH_ChangeFilePermissions(NXCPMessage *request, NXCPMessage *response
          }
          else
          {
-            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+            response->setField(VID_RCC, ERR_IO_FAILURE);
          }
 #else
          mode_t mode = 0;
-         if(accessRights & (1 << 0))
+         if (accessRights & (1 << 0))
             mode |= S_IRUSR;
-         if(accessRights & (1 << 1))
+         if (accessRights & (1 << 1))
             mode |= S_IWUSR;
-         if(accessRights & (1 << 2))
+         if (accessRights & (1 << 2))
             mode |= S_IXUSR;
-         if(accessRights & (1 << 3))
+         if (accessRights & (1 << 3))
             mode |= S_IRGRP;
-         if(accessRights & (1 << 4))
+         if (accessRights & (1 << 4))
             mode |= S_IWGRP;
-         if(accessRights & (1 << 5))
+         if (accessRights & (1 << 5))
             mode |= S_IXGRP;
-         if(accessRights & (1 << 6))
+         if (accessRights & (1 << 6))
             mode |= S_IROTH;
-         if(accessRights & (1 << 7))
+         if (accessRights & (1 << 7))
             mode |= S_IWOTH;
-         if(accessRights & (1 << 8))
+         if (accessRights & (1 << 8))
             mode |= S_IXOTH;
 
-         if(_tchmod(fullPath, mode) == 0)
+         bool success = (_tchmod(fullPath, mode) == 0);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("chmod(\"%s\", %o): %s"), fullPath, static_cast<int>(mode), _tcserror(errno));
+         if (success)
          {
             response->setField(VID_RCC, ERR_SUCCESS);
          }
          else
          {
-            response->setField(VID_RCC, ERR_INTERNAL_ERROR);
+            response->setField(VID_RCC, ((errno == EPERM) || (errno == EACCES)) ? ERR_ACCESS_DENIED : ERR_IO_FAILURE);
          }
 #endif
       }
@@ -1472,11 +1474,12 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
          bool success = false;
 #ifdef UNICODE
          char *fullPathStr = MBStringFromWideString(fullPath);
-         success = !chown(fullPathStr, newOwner, newGroup);
+         success = (chown(fullPathStr, newOwner, newGroup) == 0);
          MemFree(fullPathStr);
 #else
-         success = chown(fullPath, newOwner, newGroup) == 0;
+         success = (chown(fullPath, newOwner, newGroup) == 0);
 #endif
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("chown(\"%s\", %d, %d): %s"), fullPath, static_cast<int>(newOwner), static_cast<int>(newGroup), _tcserror(errno));
          if (success)
          {
             response->setField(VID_RCC, ERR_SUCCESS);

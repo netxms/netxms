@@ -1878,7 +1878,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
 /**
  * Change file owner
  */
-uint32_t AgentConnection::changeFileOwner(const TCHAR *file, const TCHAR *newOwner, const TCHAR *newGroup)
+uint32_t AgentConnection::changeFileOwner(const TCHAR *file, bool allowPathExpansion, const TCHAR *newOwner, const TCHAR *newGroup)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1887,6 +1887,7 @@ uint32_t AgentConnection::changeFileOwner(const TCHAR *file, const TCHAR *newOwn
    NXCPMessage msg(CMD_FILEMGR_CHOWN, requestId, m_nProtocolVersion);
 
    msg.setField(VID_FILE_NAME, file);
+   msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
    msg.setField(VID_USER_NAME, newOwner);
    msg.setField(VID_GROUP_NAME, newGroup);
 
@@ -1905,7 +1906,7 @@ uint32_t AgentConnection::changeFileOwner(const TCHAR *file, const TCHAR *newOwn
 /**
  * Change file permissions
  */
-uint32_t AgentConnection::changeFilePermissions(const TCHAR *file, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup)
+uint32_t AgentConnection::changeFilePermissions(const TCHAR *file, bool allowPathExpansion, uint32_t permissions, const TCHAR *newOwner, const TCHAR *newGroup)
 {
    if (!m_isConnected)
       return ERR_NOT_CONNECTED;
@@ -1914,6 +1915,7 @@ uint32_t AgentConnection::changeFilePermissions(const TCHAR *file, uint32_t perm
    NXCPMessage msg(CMD_FILEMGR_CHMOD, requestId, m_nProtocolVersion);
 
    msg.setField(VID_FILE_NAME, file);
+   msg.setField(VID_ALLOW_PATH_EXPANSION, allowPathExpansion);
    msg.setField(VID_FILE_PERMISSIONS, permissions);
 
    //For Windows agents
