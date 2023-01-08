@@ -868,6 +868,82 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
 }
 
 /**
+ * Colorize log message
+ */
+static StringBuffer ColorizeMessage(const TCHAR *message)
+{
+   StringBuffer out;
+   int state = 0;
+   for(const TCHAR *p = message; *p != 0; p++)
+   {
+      switch(state)
+      {
+         case 0:  // normal
+            if (*p == '"')
+            {
+               state = 1;
+               out.append(_T("\x1b[36;1m"));
+            }
+            else if (*p == '[')
+            {
+               state = 2;
+               out.append(_T("\x1b[32m"));
+            }
+            else if ((*p >= '0') && (*p <= '9') && ((p == message) || _istspace(*(p - 1)) || (*(p - 1) == '=')))
+            {
+               state = ((*p == '0') && (*(p + 1) == 'x')) ? 4 : 3;
+               out.append(_T("\x1b[34;1m"));
+               if (state == 4)
+               {
+                  out.append(*p);
+                  p++;  // shift to 'x'
+               }
+            }
+            out.append(*p);
+            break;
+         case 1:  // double quotes
+            out.append(*p);
+            if (*p == '"')
+            {
+               state = 0;
+               out.append(_T("\x1b[0m"));
+            }
+            break;
+         case 2:  // square brackets
+            out.append(*p);
+            if (*p == ']')
+            {
+               state = 0;
+               out.append(_T("\x1b[0m"));
+            }
+            break;
+         case 3:
+            if (!((*p >= '0') && (*p <= '9')))
+            {
+               state = 0;
+               out.append(_T("\x1b[0m"));
+            }
+            out.append(*p);
+            break;
+         case 4:
+            if (!(((*p >= '0') && (*p <= '9')) || ((*p >= 'A') && (*p <= 'Z')) || ((*p >= 'a') && (*p <= 'z'))))
+            {
+               state = 0;
+               out.append(_T("\x1b[0m"));
+            }
+            out.append(*p);
+            break;
+         default:
+            out.append(*p);
+            break;
+      }
+   }
+   if (state != 0)
+      out.append(_T("\x1b[0m"));
+   return out;
+}
+
+/**
  * Write log to console (assume that lock already set)
  */
 static void WriteLogToConsole(int16_t severity, const TCHAR *timestamp, const TCHAR *tag, const TCHAR *message)
@@ -893,7 +969,7 @@ static void WriteLogToConsole(int16_t severity, const TCHAR *timestamp, const TC
    }
 
    TCHAR tagf[20];
-   s_consoleWriter(_T("\x1b[36m%s\x1b[0m %s%s]\x1b[0m %s\n"), timestamp, loglevel, FormatTag(tag, tagf), message);
+   s_consoleWriter(_T("\x1b[36m%s\x1b[0m %s%s]\x1b[0m %s\n"), timestamp, loglevel, FormatTag(tag, tagf), ColorizeMessage(message).cstr());
 }
 
 /**
