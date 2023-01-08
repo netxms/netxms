@@ -823,6 +823,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): creating remote directory %s"), data->debugId, localFile->path);
          NXCPMessage request(CMD_FILEMGR_CREATE_FOLDER, conn->generateRequestId(), conn->getProtocolVersion());
          request.setField(VID_FILE_NAME, remoteFile->name());
+         request.setField(VID_ALLOW_PATH_EXPANSION, true);
          NXCPMessage *response = conn->customRequest(&request);
          if (response != nullptr)
          {
@@ -845,7 +846,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
       {
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing ownership for %s to %s:%s"),
                   data->debugId, localFile->path, CHECK_NULL(localFile->owner), CHECK_NULL(localFile->group));
-         rcc = conn->changeFileOwner(remoteFile->name(), localFile->owner, localFile->group);
+         rcc = conn->changeFileOwner(remoteFile->name(), true, localFile->owner, localFile->group);
          if (rcc == ERR_SUCCESS)
             nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): ownership changed"), data->debugId);
          else
@@ -857,7 +858,7 @@ void FileDeliveryPolicy::deploy(shared_ptr<AgentPolicyDeploymentData> data)
          TCHAR buffer[16];
          nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): changing permissions for %s to %s"),
                   data->debugId, localFile->path, FilePermissionsToText(localFile->permissions, buffer));
-         rcc = conn->changeFilePermissions(remoteFile->name(), localFile->permissions, localFile->owner, localFile->group);
+         rcc = conn->changeFilePermissions(remoteFile->name(), true, localFile->permissions, localFile->owner, localFile->group);
          if (rcc == ERR_SUCCESS)
             nxlog_debug_tag(DEBUG_TAG, 5, _T("FileDeliveryPolicy::deploy(%s): permissions changed"), data->debugId);
          else
