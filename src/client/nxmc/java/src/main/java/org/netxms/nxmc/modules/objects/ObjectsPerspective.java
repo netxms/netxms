@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,6 +89,7 @@ import org.netxms.nxmc.modules.objects.views.ServicesView;
 import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.StatusMapView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
+import org.netxms.nxmc.modules.objects.views.TemplateTargets;
 import org.netxms.nxmc.modules.objects.views.VpnView;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
@@ -188,6 +189,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new StatusMapView());
       addMainView(new SummaryDataCollectionView());
       addMainView(new SwitchForwardingDatabaseView());
+      addMainView(new TemplateTargets());      
       addMainView(new ThresholdSummary());
       addMainView(new VpnView());
 
