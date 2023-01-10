@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
 import org.netxms.nxmc.base.views.Perspective;
+import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.PinboardPerspective;
 import org.netxms.nxmc.base.views.ToolsPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
@@ -207,7 +208,8 @@ public final class Registry
    private TimeZone timeZone = null;
    private File stateDir = null;
    private MainWindow mainWindow = null;
-   private PollManager pollManager;
+   private PollManager pollManager = null;
+   private PinLocation lastViewPinLocation = PinLocation.PINBOARD;
 
    /**
     * Default constructor
@@ -299,5 +301,25 @@ public final class Registry
    {
       if (this.mainWindow == null)
          this.mainWindow = window;
+   }
+
+   /**
+    * Get last used view pin location
+    *
+    * @return last used view pin location
+    */
+   public PinLocation getLastViewPinLocation()
+   {
+      return lastViewPinLocation;
+   }
+
+   /**
+    * Set last used view pin location
+    * 
+    * @param lastViewPinLocation last used view pin location
+    */
+   public void setLastViewPinLocation(PinLocation lastViewPinLocation)
+   {
+      this.lastViewPinLocation = lastViewPinLocation;
    }
 }

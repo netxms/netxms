@@ -252,8 +252,10 @@ public abstract class ViewContainer extends Composite
 
    /**
     * Pin view that is currently active
+    * 
+    * @param location where top pin view
     */
-   protected void pinActiveView()
+   protected void pinActiveView(PinLocation location)
    {
       View view = getActiveView();
       if (view != null)
@@ -261,7 +263,7 @@ public abstract class ViewContainer extends Composite
          View clone = view.cloneView();
          if (clone != null)
          {
-            Registry.getMainWindow().pinView(clone);
+            Registry.getMainWindow().pinView(clone, location);
          }
       }
    }

@@ -164,14 +164,14 @@ public class ViewStack extends ViewContainer
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               pinActiveView();
+               pinActiveView(PinLocation.PINBOARD);
             }
          });
          keyBindingManager.addBinding(SWT.NONE, SWT.F7, new Action() {
             @Override
             public void run()
             {
-               pinActiveView();
+               pinActiveView(PinLocation.PINBOARD);
             }
          });
       }

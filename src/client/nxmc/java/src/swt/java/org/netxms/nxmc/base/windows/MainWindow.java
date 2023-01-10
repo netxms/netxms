@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import java.util.Arrays;
 import java.util.List;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
@@ -25,8 +26,9 @@ import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseAdapter;
@@ -67,7 +69,9 @@ import org.netxms.nxmc.base.menus.HelpMenuManager;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.views.Perspective;
+import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewFolder;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.base.widgets.ServerClock;
@@ -98,6 +102,11 @@ public class MainWindow extends Window implements MessageAreaHolder
    private List<Perspective> perspectives;
    private Perspective currentPerspective;
    private Perspective pinboardPerspective;
+   private SashForm verticalSplitArea;
+   private SashForm horizontalSplitArea;
+   private ViewFolder leftPinArea;
+   private ViewFolder rightPinArea;
+   private ViewFolder bottomPinArea;
    private boolean verticalLayout;
    private boolean showServerClock;
    private Composite serverClockArea;
@@ -360,24 +369,22 @@ public class MainWindow extends Window implements MessageAreaHolder
       gd.horizontalAlignment = SWT.FILL;
       messageArea.setLayoutData(gd);
 
-      perspectiveArea = new Composite(windowContent, SWT.NONE);
+      horizontalSplitArea = new SashForm(windowContent, SWT.HORIZONTAL);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
-      perspectiveArea.setLayoutData(gd);
+      horizontalSplitArea.setLayoutData(gd);
 
-      perspectiveArea.addControlListener(new ControlListener() {
+      verticalSplitArea = new SashForm(horizontalSplitArea, SWT.VERTICAL);
+
+      perspectiveArea = new Composite(verticalSplitArea, SWT.NONE);
+      perspectiveArea.addControlListener(new ControlAdapter() {
          @Override
          public void controlResized(ControlEvent e)
          {
             resizePerspectiveAreaContent();
-         }
-
-         @Override
-         public void controlMoved(ControlEvent e)
-         {
          }
       });
 
@@ -534,11 +541,69 @@ public class MainWindow extends Window implements MessageAreaHolder
     * Pin given view (add it to pinboard perspective).
     *
     * @param view view to pin
+    * @param location where to pin view
     */
-   public void pinView(View view)
+   public void pinView(View view, PinLocation location)
    {
-      logger.debug("Request to pin view with GlobalID=" + view.getGlobalId());
-      pinboardPerspective.addMainView(view, false, true);
+      logger.debug("Request to pin view with GlobalID=" + view.getGlobalId() + " at location=" + location);
+      switch(location)
+      {
+         case BOTTOM:
+            bottomPinArea = pinViewToArea(view, bottomPinArea, verticalSplitArea, false);
+            break;
+         case LEFT:
+            leftPinArea = pinViewToArea(view, leftPinArea, horizontalSplitArea, true);
+            break;
+         case PINBOARD:
+            pinboardPerspective.addMainView(view, false, true);
+            break;
+         case RIGHT:
+            rightPinArea = pinViewToArea(view, rightPinArea, horizontalSplitArea, false);
+            break;
+      }
+   }
+
+   /**
+    * Pin view to given area
+    *
+    * @param view view to pin
+    * @param pinArea area to pin to (can be null)
+    * @param splitter parent splitter control
+    * @param moveToTop true if newly created area should be moved above all other elements
+    * @return pin area (can be different from what was passed in <code>pinArea</code> argument)
+    */
+   private ViewFolder pinViewToArea(View view, ViewFolder pinArea, SashForm splitter, boolean moveToTop)
+   {
+      if ((pinArea == null) || pinArea.isDisposed())
+      {
+         int[] weights = splitter.getWeights();
+         pinArea = new ViewFolder(this, null, splitter, true, false, false);
+         pinArea.setAllViewsAsCloseable(true);
+         pinArea.setDisposeWhenEmpty(true);
+         if (moveToTop)
+         {
+            pinArea.moveAbove(null);
+            int[] nweights = new int[weights.length + 1];
+            int total = 0;
+            for(int w : weights)
+               total += w;
+            nweights[0] = 3 * total / 7; // 30% of new full weight
+            System.arraycopy(weights, 0, nweights, 1, weights.length);
+            weights = nweights;
+         }
+         else
+         {
+            weights = Arrays.copyOf(weights, weights.length + 1);
+            int total = 0;
+            for(int w : weights)
+               total += w;
+            weights[weights.length - 1] = 3 * total / 7; // 30% of new full weight
+         }
+         splitter.setWeights(weights);
+         windowContent.layout(true, true);
+      }
+      pinArea.addView(view, false, true);
+      return pinArea;
    }
 
    /**

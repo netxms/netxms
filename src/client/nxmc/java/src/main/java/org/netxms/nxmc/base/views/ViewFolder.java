@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,12 +34,17 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -60,6 +65,7 @@ public class ViewFolder extends ViewContainer
    private CTabFolder tabFolder;
    private Composite topRightControl;
    private boolean allViewsAreCloseable = false;
+   private boolean disposeWhenEmpty = false;
    private boolean useGlobalViewId = false;
    private String preferredViewId = null;
    private String lastViewId = null;
@@ -91,7 +97,7 @@ public class ViewFolder extends ViewContainer
          public void widgetSelected(SelectionEvent e)
          {
             if (contextChange)
-               return; // Do not handle selection change durint context change
+               return; // Do not handle selection change during context change
 
             CTabItem tabItem = tabFolder.getSelection();
             View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
@@ -197,21 +203,33 @@ public class ViewFolder extends ViewContainer
 
       if (enableViewPinning)
       {
+         final Menu pinMenu = createPinMenu();
          ToolItem pinView = new ToolItem(viewControlBar, SWT.DROP_DOWN);
          pinView.setImage(SharedIcons.IMG_PIN);
-         pinView.setToolTipText(i18n.tr("Add view to pinboard (F7)"));
+         pinView.setToolTipText(i18n.tr("Pin view (F7)"));
          pinView.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               pinActiveView();
+               if (e.detail == SWT.ARROW)
+               {
+                  ToolItem item = (ToolItem)e.widget;
+                  Rectangle rect = item.getBounds();
+                  Point pt = item.getParent().toDisplay(new Point(rect.x, rect.y));
+                  pinMenu.setLocation(pt.x, pt.y + rect.height);
+                  pinMenu.setVisible(true);
+               }
+               else
+               {
+                  pinActiveView(Registry.getInstance().getLastViewPinLocation());
+               }
             }
          });
          keyBindingManager.addBinding(SWT.NONE, SWT.F7, new Action() {
             @Override
             public void run()
             {
-               pinActiveView();
+               pinActiveView(Registry.getInstance().getLastViewPinLocation());
             }
          });
       }
@@ -235,6 +253,42 @@ public class ViewFolder extends ViewContainer
             }
          });
       }
+   }
+
+   /**
+    * Create view pinning menu
+    *
+    * @return view pinning menu
+    */
+   private Menu createPinMenu()
+   {
+      Menu menu = new Menu(viewControlBar);
+      createPinMenuItem(menu, PinLocation.PINBOARD, i18n.tr("&Pinboard"));
+      createPinMenuItem(menu, PinLocation.LEFT, i18n.tr("&Left"));
+      createPinMenuItem(menu, PinLocation.RIGHT, i18n.tr("&Right"));
+      createPinMenuItem(menu, PinLocation.BOTTOM, i18n.tr("&Bottom"));
+      return menu;
+   }
+
+   /**
+    * Create item for view pinning menu
+    *
+    * @param menu menu
+    * @param location pin location
+    * @param name menu item name
+    */
+   private void createPinMenuItem(Menu menu, PinLocation location, String name)
+   {
+      MenuItem item = new MenuItem(menu, SWT.PUSH);
+      item.setText(name);
+      item.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            Registry.getInstance().setLastViewPinLocation(location);
+            pinActiveView(location);
+         }
+      });
    }
 
    /**
@@ -453,6 +507,12 @@ public class ViewFolder extends ViewContainer
                view.dispose();
             }
             tabs.remove(viewId);
+            if (disposeWhenEmpty && (tabFolder.getItemCount() == 0))
+            {
+               Composite parent = ViewFolder.this.getParent();
+               ViewFolder.this.dispose();
+               parent.layout(true, true);
+            }
          }
       });
       tabs.put(getViewId(view), tabItem);
@@ -593,6 +653,26 @@ public class ViewFolder extends ViewContainer
    public void setAllViewsAsCloseable(boolean allViewsAreCloseable)
    {
       this.allViewsAreCloseable = allViewsAreCloseable;
+   }
+
+   /**
+    * Check if view folder will be disposed when all views are closed.
+    *
+    * @return true if view folder will be disposed when all views are closed
+    */
+   public boolean isDisposeWhenEmpty()
+   {
+      return disposeWhenEmpty;
+   }
+
+   /**
+    * Set if view folder will be disposed when all views are closed.
+    *
+    * @param disposeWhenEmpty true to dispose view folder when all views are closed
+    */
+   public void setDisposeWhenEmpty(boolean disposeWhenEmpty)
+   {
+      this.disposeWhenEmpty = disposeWhenEmpty;
    }
 
    /**
