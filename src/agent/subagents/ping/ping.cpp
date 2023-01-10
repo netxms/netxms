@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,8 +61,7 @@ static void Poller(PING_TARGET *target)
       if (!ip.equals(target->ipAddr))
       {
          TCHAR ip1[64], ip2[64];
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name,
-                         target->ipAddr.toString(ip1), ip.toString(ip2));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name, target->ipAddr.toString(ip1), ip.toString(ip2));
          target->ipAddr = ip;
       }
       target->ipAddrAge = 0;
@@ -75,8 +74,7 @@ retry:
       if (!ip.equals(target->ipAddr))
       {
          TCHAR ip1[64], ip2[64];
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name,
-                  target->ipAddr.toString(ip1), ip.toString(ip2));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("IP address for target %s changed from %s to %s"), target->name, target->ipAddr.toString(ip1), ip.toString(ip2));
          target->ipAddr = ip;
          goto retry;
       }
