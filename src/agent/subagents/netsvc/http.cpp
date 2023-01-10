@@ -237,30 +237,25 @@ LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstrac
       return SYSINFO_RC_UNSUPPORTED;
 
    // Analyze URL
-   CURLU *hURL = curl_url();
-   if (curl_url_set(hURL, CURLUPART_URL, url, CURLU_NON_SUPPORT_SCHEME | CURLU_GUESS_SCHEME) != CURLUE_OK)
+   URLParser urlParser(url);
+   if (!urlParser.isValid())
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): URL parsing error"), url);
       return SYSINFO_RC_UNSUPPORTED;
    }
 
-   char *scheme;
-   if (curl_url_get(hURL, CURLUPART_SCHEME, &scheme, 0) != CURLUE_OK)
+   const char *scheme = urlParser.scheme();
+   if (scheme == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): cannot get scheme from URL"), url);
-      curl_url_cleanup(hURL);
       return SYSINFO_RC_UNSUPPORTED;
    }
 
    if (strcmp(scheme, "http") && strcmp(scheme, "https"))
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): unsupported scheme"), url);
-      curl_free(scheme);
-      curl_url_cleanup(hURL);
       return SYSINFO_RC_UNSUPPORTED;
    }
-   curl_free(scheme);
-   curl_url_cleanup(hURL);
 
    const OptionList options(metric, 2);
 

@@ -70,3 +70,228 @@ uint32_t GetTimeoutFromArgs(const TCHAR *metric, int argIndex)
    uint32_t timeout = _tcstol(timeoutText, &eptr, 0);
    return ((timeout != 0) && (*eptr == 0)) ? timeout : g_netsvcTimeout;
 }
+
+/**
+ * Create URL parser
+ */
+URLParser::URLParser(const char *url)
+{
+#if HAVE_DECL_CURL_URL
+   m_url = curl_url();
+   m_valid = (curl_url_set(m_url, CURLUPART_URL, url, CURLU_NON_SUPPORT_SCHEME | CURLU_GUESS_SCHEME) == CURLUE_OK);
+   m_scheme = nullptr;
+#else
+   m_url = MemCopyStringA(url);
+   char *p = strchr(m_url, ':');
+   if (p != nullptr)
+   {
+      m_scheme = m_url;
+      *p = 0;
+      p++;
+      if ((*p == '/') && (*(p + 1) == '/'))
+      {
+         m_authority = p + 2;
+         p = strchr(m_authority, '/');
+         if (p != nullptr)
+            *p = 0;
+         strlwr(m_scheme);
+         m_valid = true;
+      }
+      else
+      {
+         m_valid = false;
+      }
+   }
+   else
+   {
+      m_valid = false;
+   }
+#endif
+   m_host = nullptr;
+   m_port = nullptr;
+}
+
+/**
+ * URL parser destructor
+ */
+URLParser::~URLParser()
+{
+#if HAVE_DECL_CURL_URL
+   curl_free(m_scheme);
+   curl_free(m_host);
+   curl_free(m_port);
+   curl_url_cleanup(m_url);
+#else
+   MemFree(m_url);
+#endif
+}
+
+/**
+ * Extract schema
+ */
+const char *URLParser::scheme()
+{
+   if (!m_valid)
+      return nullptr;
+
+#if HAVE_DECL_CURL_URL
+   if (m_scheme != nullptr)
+      return m_scheme;
+
+   if (curl_url_get(m_url, CURLUPART_SCHEME, &m_scheme, 0) != CURLUE_OK)
+   {
+      m_valid = false;
+      return nullptr;
+   }
+#endif
+
+   return m_scheme;
+}
+
+/**
+ * Extract host part
+ */
+const char *URLParser::host()
+{
+   if (!m_valid)
+      return nullptr;
+
+   if (m_host != nullptr)
+      return (m_host[0] == '[') ? &m_host[1] : m_host;
+
+#if HAVE_DECL_CURL_URL
+   if (curl_url_get(m_url, CURLUPART_HOST, &m_host, 0) != CURLUE_OK)
+   {
+      m_valid = false;
+      return nullptr;
+   }
+   if (m_host[0] == '[')
+   {
+      // IPv6 address
+      char *p = strchr(m_host, ']');
+      if (p != nullptr)
+         *p = 0;
+   }
+#else
+   parseAuthority();
+   if (!m_valid)
+      return nullptr;
+#endif
+
+   return (m_host[0] == '[') ? &m_host[1] : m_host;
+}
+
+/**
+ * Extract port part
+ */
+const char *URLParser::port()
+{
+   if (!m_valid)
+      return nullptr;
+
+   if (m_port != nullptr)
+      return m_port;
+
+#if HAVE_DECL_CURL_URL
+   if (curl_url_get(m_url, CURLUPART_PORT, &m_port, CURLU_DEFAULT_PORT) != CURLUE_OK)
+   {
+      m_valid = false;
+      return nullptr;
+   }
+#else
+   parseAuthority();
+   if (!m_valid)
+      return nullptr;
+#endif
+
+   return m_port;
+}
+
+#if !HAVE_DECL_CURL_URL
+
+/**
+ * Parse authority part
+ */
+void URLParser::parseAuthority()
+{
+   char *p = strchr(m_authority, '@');
+   if (p != nullptr)
+      m_host = p + 1;
+   else
+      m_host = m_authority;
+
+   if (m_host[0] == '[')
+   {
+      // IPv6 address
+      m_host++;
+      p = strchr(m_host, ']');
+      if (p == nullptr)
+      {
+         m_valid = false;
+         return;
+      }
+      *p = 0;
+      p++;
+      if (*p == ':')
+         m_port = p + 1;
+   }
+   else
+   {
+      m_port = strchr(m_host, ':');
+      if (m_port != nullptr)
+      {
+         *m_port = 0;
+         m_port++;
+      }
+   }
+
+   if (m_port == nullptr)
+   {
+      // Set default port
+      m_port = m_defaultPort;
+      if (!strcmp(m_scheme, "dict"))
+         strcpy(m_port, "2628");
+      else if (!strcmp(m_scheme, "ftp"))
+         strcpy(m_port, "21");
+      else if (!strcmp(m_scheme, "ftps"))
+         strcpy(m_port, "990");
+      else if (!strcmp(m_scheme, "gopher"))
+         strcpy(m_port, "70");
+      else if (!strcmp(m_scheme, "http"))
+         strcpy(m_port, "80");
+      else if (!strcmp(m_scheme, "https"))
+         strcpy(m_port, "443");
+      else if (!strcmp(m_scheme, "imap"))
+         strcpy(m_port, "143");
+      else if (!strcmp(m_scheme, "imaps"))
+         strcpy(m_port, "993");
+      else if (!strcmp(m_scheme, "ldap"))
+         strcpy(m_port, "389");
+      else if (!strcmp(m_scheme, "ldaps"))
+         strcpy(m_port, "636");
+      else if (!strcmp(m_scheme, "mqtt"))
+         strcpy(m_port, "1883");
+      else if (!strcmp(m_scheme, "pop3"))
+         strcpy(m_port, "110");
+      else if (!strcmp(m_scheme, "pop3s"))
+         strcpy(m_port, "995");
+      else if (!strcmp(m_scheme, "rtmp"))
+         strcpy(m_port, "1935");
+      else if (!strcmp(m_scheme, "rtsp"))
+         strcpy(m_port, "554");
+      else if (!strcmp(m_scheme, "smtp"))
+         strcpy(m_port, "25");
+      else if (!strcmp(m_scheme, "smtps"))
+         strcpy(m_port, "465");
+      else if (!strcmp(m_scheme, "ssh"))
+         strcpy(m_port, "22");
+      else if (!strcmp(m_scheme, "telnet"))
+         strcpy(m_port, "23");
+      else if (!strcmp(m_scheme, "tftp"))
+         strcpy(m_port, "69");
+      else
+         m_valid = false;
+   }
+}
+
+#endif

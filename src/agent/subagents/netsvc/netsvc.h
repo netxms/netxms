@@ -1,6 +1,6 @@
 /*
 ** NetXMS Network Service check subagent
-** Copyright (C) 2013-2022 Alex Kirhenshtein
+** Copyright (C) 2013-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,6 +41,39 @@ enum
 
 #define NETSVC_AF_VERIFYPEER              0x0001
 #define NETSVC_AF_NEGATIVE_TIME_ON_ERROR  0x0002
+
+/**
+ * URL parser
+ */
+class URLParser
+{
+private:
+#if HAVE_DECL_CURL_URL
+   CURLU *m_url;
+#else
+   char *m_url;
+   char *m_authority;
+   char m_defaultPort[8];
+#endif
+   char *m_scheme;
+   char *m_host;
+   char *m_port;
+   bool m_valid;
+
+#if !HAVE_DECL_CURL_URL
+   void parseAuthority();
+#endif
+
+public:
+   URLParser(const char *url);
+   ~URLParser();
+
+   const char *scheme();
+   const char *host();
+   const char *port();
+
+   bool isValid() const { return m_valid; }
+};
 
 LONG NetworkServiceStatus_HTTP(CURL *curl, const OptionList &options, char *url, PCRE *compiledPattern, int *result);
 LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, int *result);

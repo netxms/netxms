@@ -889,7 +889,7 @@ static StringBuffer ColorizeMessage(const TCHAR *message)
                state = 2;
                out.append(_T("\x1b[32m"));
             }
-            else if ((*p >= '0') && (*p <= '9') && ((p == message) || _istspace(*(p - 1)) || (*(p - 1) == '=')))
+            else if ((*p >= '0') && (*p <= '9') && ((p == message) || _istspace(*(p - 1)) || (*(p - 1) == '=') || (*(p - 1) == '(') || (*(p - 1) == '/')))
             {
                state = ((*p == '0') && (*(p + 1) == 'x')) ? 4 : 3;
                out.append(_T("\x1b[34;1m"));
@@ -918,7 +918,7 @@ static StringBuffer ColorizeMessage(const TCHAR *message)
             }
             break;
          case 3:
-            if (!((*p >= '0') && (*p <= '9')))
+            if (!((*p >= '0') && (*p <= '9')) && (*p != '.'))
             {
                state = 0;
                out.append(_T("\x1b[0m"));
