@@ -91,6 +91,7 @@ import org.netxms.nxmc.modules.objects.views.StatusMapView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.objects.views.TemplateTargets;
 import org.netxms.nxmc.modules.objects.views.VpnView;
+import org.netxms.nxmc.modules.objects.views.WirelessStations;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -192,6 +193,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new TemplateTargets());      
       addMainView(new ThresholdSummary());
       addMainView(new VpnView());
+      addMainView(new WirelessStations());
 
       NXCSession session = Registry.getSession();
       for(ObjectViewDescriptor e : additionalElements)

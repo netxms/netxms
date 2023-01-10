@@ -28,7 +28,7 @@ import org.netxms.nxmc.modules.objects.views.TemplateTargets;
 /**
  * Template targets label comparator
  */
-public class TemplateTargetsListComparator extends ViewerComparator
+public class TemplateTargetsComparator extends ViewerComparator
 {
    private TemplateTargetsLabelProvider labelProvider;
    
@@ -37,7 +37,7 @@ public class TemplateTargetsListComparator extends ViewerComparator
     * 
     * @param lablelProvider lable provider
     */
-   public TemplateTargetsListComparator(TemplateTargetsLabelProvider lablelProvider)
+   public TemplateTargetsComparator(TemplateTargetsLabelProvider lablelProvider)
    {
       this.labelProvider = lablelProvider;
    }   

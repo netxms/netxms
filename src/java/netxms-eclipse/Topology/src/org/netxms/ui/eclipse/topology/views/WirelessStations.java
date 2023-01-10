@@ -204,9 +204,9 @@ public class WirelessStations extends ViewPart
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{

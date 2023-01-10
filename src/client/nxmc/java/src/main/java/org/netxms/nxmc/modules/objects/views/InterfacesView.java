@@ -95,6 +95,15 @@ public class InterfacesView extends NodeSubObjectTableView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 50;
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectTableView#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -311,14 +320,5 @@ public class InterfacesView extends NodeSubObjectTableView
          if ((peerNode != null) && !peerNode.areChildrenSynchronized())
             objectsForSync.add(peerNode);
       }
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 50;
    }
 }

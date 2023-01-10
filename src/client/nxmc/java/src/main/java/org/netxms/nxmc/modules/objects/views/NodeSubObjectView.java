@@ -22,10 +22,12 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -78,6 +80,14 @@ public abstract class NodeSubObjectView extends ObjectView
       // Create tab main area
       mainArea = new Composite(parent, SWT.NONE);
       mainArea.setLayout(new FillLayout());
+
+      parent.setLayout(new FormLayout());
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      mainArea.setLayoutData(fd);
 
       sessionListener = new SessionListener() {
          @Override
@@ -171,7 +181,7 @@ public abstract class NodeSubObjectView extends ObjectView
          otherObjects = null;
       }
 
-      if ((thisObject != null) || (otherObjects != null))
+      if ((thisObject != null) || ((otherObjects != null) && !otherObjects.isEmpty()))
          syncChildren(thisObject, otherObjects);
       else
          refresh();
@@ -194,11 +204,12 @@ public abstract class NodeSubObjectView extends ObjectView
     */
    private void syncChildren(final AbstractObject thisObject, final Set<AbstractObject> otherObjects)
    {
-      final Composite label = new Composite(mainArea, SWT.NONE);
+      final Composite label = new Composite(mainArea.getParent(), SWT.NONE);
       label.setLayout(new GridLayout());
       label.setBackground(label.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 
       Label labelText = new Label(label, SWT.CENTER);
+      labelText.setFont(JFaceResources.getBannerFont());
       labelText.setText(i18n.tr("Loading..."));
       labelText.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
       labelText.setBackground(label.getBackground());
@@ -210,7 +221,7 @@ public abstract class NodeSubObjectView extends ObjectView
       fd.bottom = new FormAttachment(100, 0);
       fd.right = new FormAttachment(100, 0);
       label.setLayoutData(fd);
-      mainArea.layout();
+      mainArea.getParent().layout(true, true);
 
       Job job = new Job(i18n.tr("Synchronize node sub-objects"), this) {
          @Override
@@ -229,14 +240,21 @@ public abstract class NodeSubObjectView extends ObjectView
                for(AbstractObject object : otherObjects)
                   session.syncChildren(object);
             }
+         }
 
+         /**
+          * @see org.netxms.nxmc.base.jobs.Job#jobFinalize()
+          */
+         @Override
+         protected void jobFinalize()
+         {
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
                   refresh();
                   label.dispose();
-                  mainArea.layout();
+                  mainArea.getParent().layout(true, true);
                }
             });
          }

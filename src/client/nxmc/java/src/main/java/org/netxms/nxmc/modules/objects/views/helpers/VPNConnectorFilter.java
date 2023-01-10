@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 RadenSolutions
+ * Copyright (C) 2019-2023 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 public class VPNConnectorFilter extends NodeSubObjectFilter
 {
    private VPNConnectorListLabelProvider lp;
-   
+
    /**
     * Create filter
     * 
@@ -39,32 +39,22 @@ public class VPNConnectorFilter extends NodeSubObjectFilter
       this.lp = lp;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      final VPNConnector vpn = (VPNConnector)element;
-      
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      boolean matched = false;
-      
-      if (Long.toString(vpn.getObjectId()).contains(filterString))
-         matched = true;
-      else if (vpn.getObjectName().contains(filterString))
-         matched = true;
-      else if (lp.getPeerName(vpn).contains(filterString))
-         matched = true;
-      else if (StatusDisplayInfo.getStatusText(vpn.getStatus()).contains(filterString))
-         matched = true;
-      else if (lp.getSubnetsAsString(vpn.getLocalSubnets()).contains(filterString))
-         matched = true;
-      else if (lp.getSubnetsAsString(vpn.getRemoteSubnets()).contains(filterString))
-         matched = true;
-      
-      return matched;
+      final VPNConnector vpn = (VPNConnector)element;
+      return 
+         Long.toString(vpn.getObjectId()).contains(filterString) ||
+         vpn.getObjectName().contains(filterString) ||
+         lp.getPeerName(vpn).contains(filterString) ||
+         StatusDisplayInfo.getStatusText(vpn.getStatus()).contains(filterString) ||
+         lp.getSubnetsAsString(vpn.getLocalSubnets()).contains(filterString) ||
+         lp.getSubnetsAsString(vpn.getRemoteSubnets()).contains(filterString);
    }
 }

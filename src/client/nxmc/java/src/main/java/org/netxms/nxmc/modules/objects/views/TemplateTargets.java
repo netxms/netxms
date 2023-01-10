@@ -36,7 +36,7 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsLabelProvider;
-import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsListComparator;
+import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsFilter;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -66,10 +66,13 @@ public class TemplateTargets extends ObjectView
     */
    public TemplateTargets()
    {
-      super("Targets", ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "AppliedOnObjects", true);
+      super("Targets", ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "Targets", true);
       session = Registry.getSession();
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
    {
@@ -86,7 +89,7 @@ public class TemplateTargets extends ObjectView
       labelProvider = new TemplateTargetsLabelProvider();
       viewer.setLabelProvider(labelProvider);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setComparator(new TemplateTargetsListComparator(labelProvider));
+      viewer.setComparator(new TemplateTargetsComparator(labelProvider));
       filter = new TemplateTargetsFilter(labelProvider);
       setFilterClient(viewer, filter);
       viewer.addFilter(filter);
