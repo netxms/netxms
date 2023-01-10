@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -258,7 +258,7 @@ void SNMP_MIBObject::writeToFile(ZFile *file, uint32_t flags)
 /**
  * Save MIB tree to file
  */
-uint32_t LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags)
 {
    FILE *file = _tfopen(fileName, _T("wb"));
    if (file == nullptr)
@@ -395,87 +395,81 @@ bool SNMP_MIBObject::readFromFile(ZFile *file)
 /**
  * Load MIB tree from file
  */
-uint32_t LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject **ppRoot)
 {
-   uint32_t dwRet = SNMP_ERR_SUCCESS;
-   FILE *pFile = _tfopen(pszFile, _T("rb"));
-   if (pFile != nullptr)
+   uint32_t rc = SNMP_ERR_SUCCESS;
+   FILE *fp = _tfopen(pszFile, _T("rb"));
+   if (fp != nullptr)
    {
       SNMP_MIB_HEADER header;
-      if (fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile) == sizeof(SNMP_MIB_HEADER))
+      if (fread(&header, 1, sizeof(SNMP_MIB_HEADER), fp) == sizeof(SNMP_MIB_HEADER))
       {
          if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
          {
             header.flags = ntohs(header.flags);
-            fseek(pFile, header.bHeaderSize, SEEK_SET);
-            ZFile *pZFile = new ZFile(pFile, header.flags & SMT_COMPRESS_DATA, FALSE);
+            fseek(fp, header.bHeaderSize, SEEK_SET);
+            ZFile *pZFile = new ZFile(fp, header.flags & SMT_COMPRESS_DATA, FALSE);
             if (pZFile->readByte() == MIB_TAG_OBJECT)
             {
                *ppRoot = new SNMP_MIBObject;
                if (!(*ppRoot)->readFromFile(pZFile))
                {
                   delete *ppRoot;
-                  dwRet = SNMP_ERR_BAD_FILE_DATA;
+                  rc = SNMP_ERR_BAD_FILE_DATA;
                }
             }
             else
             {
-               dwRet = SNMP_ERR_BAD_FILE_DATA;
+               rc = SNMP_ERR_BAD_FILE_DATA;
             }
             pZFile->close();
             delete pZFile;
          }
          else
          {
-            dwRet = SNMP_ERR_BAD_FILE_HEADER;
-            fclose(pFile);
+            rc = SNMP_ERR_BAD_FILE_HEADER;
+            fclose(fp);
          }
       }
       else
       {
-         dwRet = SNMP_ERR_BAD_FILE_HEADER;
-         fclose(pFile);
+         rc = SNMP_ERR_BAD_FILE_HEADER;
+         fclose(fp);
       }
    }
    else
    {
-      dwRet = SNMP_ERR_FILE_IO;
+      rc = SNMP_ERR_FILE_IO;
    }
-   return dwRet;
+   return rc;
 }
 
 /**
  * Get timestamp from saved MIB tree
  */
-uint32_t LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *pszFile, uint32_t *pdwTimestamp)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetMIBTreeTimestamp(const TCHAR *pszFile, uint32_t *timestamp)
 {
-   FILE *pFile;
-   SNMP_MIB_HEADER header;
-   UINT32 dwRet = SNMP_ERR_SUCCESS;
+   FILE *fp = _tfopen(pszFile, _T("rb"));
+   if (fp == nullptr)
+      return SNMP_ERR_FILE_IO;
 
-   pFile = _tfopen(pszFile, _T("rb"));
-   if (pFile != NULL)
+   uint32_t rc = SNMP_ERR_SUCCESS;
+   SNMP_MIB_HEADER header;
+   if (fread(&header, 1, sizeof(SNMP_MIB_HEADER), fp) == sizeof(SNMP_MIB_HEADER))
    {
-      if (fread(&header, 1, sizeof(SNMP_MIB_HEADER), pFile) == sizeof(SNMP_MIB_HEADER))
+      if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
       {
-         if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
-         {
-            *pdwTimestamp = ntohl(header.dwTimeStamp);
-         }
-         else
-         {
-            dwRet = SNMP_ERR_BAD_FILE_HEADER;
-         }
+         *timestamp = ntohl(header.dwTimeStamp);
       }
       else
       {
-         dwRet = SNMP_ERR_BAD_FILE_HEADER;
+         rc = SNMP_ERR_BAD_FILE_HEADER;
       }
-      fclose(pFile);
    }
    else
    {
-      dwRet = SNMP_ERR_FILE_IO;
+      rc = SNMP_ERR_BAD_FILE_HEADER;
    }
-   return dwRet;
+   fclose(fp);
+   return rc;
 }

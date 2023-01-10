@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017-2020 Raden Solutions
+ * Copyright (C) 2017-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -136,7 +136,7 @@ uint32_t RittalDriverData::deviceInfoWalkCallback(SNMP_Variable *v, SNMP_Transpo
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   UINT32 rc = snmp->doRequest(&request, &response);
    if (rc != SNMP_ERR_SUCCESS)
       return rc;
 
@@ -159,7 +159,7 @@ uint32_t RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transpo
    SNMP_ObjectId oid = v->getName();
 
    RittalDevice *dev = getDevice(oid.getElement(13));
-   if (dev == NULL)
+   if (dev == nullptr)
    {
       nxlog_debug_tag(RITTAL_DEBUG_TAG, 4, _T("Internal error: missing device entry for variable %s"), (const TCHAR *)oid.toString());
       return SNMP_ERR_SUCCESS;
@@ -170,7 +170,7 @@ uint32_t RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transpo
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
+   uint32_t rc = snmp->doRequest(&request, &response);
    if (rc != SNMP_ERR_SUCCESS)
       return rc;
 
@@ -180,7 +180,7 @@ uint32_t RittalDriverData::metricInfoWalkCallback(SNMP_Variable *v, SNMP_Transpo
       m->index = oid.getElement(14);
       v->getValueAsString(m->name, MAX_OBJECT_NAME);
       m->dataType = response->getVariable(0)->getValueAsInt();
-      memcpy(m->oid, oid.value(), 15 * sizeof(UINT32));
+      memcpy(m->oid, oid.value(), 15 * sizeof(uint32_t));
       m->oid[12] = (m->dataType == 2) ? 11 : 10; // Use cmcIIIVarValueInt for integer variables and cmcIIIVarValueStr for the rest
       _sntprintf(m->description, 256, _T("%s: %s"), dev->alias, m->name);
       dev->metrics->add(m);

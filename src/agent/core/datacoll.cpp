@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,16 +79,8 @@ SNMPTableColumnDefinition::SNMPTableColumnDefinition(const NXCPMessage& msg, uin
       size_t len = msg.getFieldAsInt32Array(baseId + 2, 256, oid);
       if (len > 0)
       {
-         m_snmpOid = new SNMP_ObjectId(oid, len);
+         m_snmpOid = SNMP_ObjectId(oid, len);
       }
-      else
-      {
-         m_snmpOid = nullptr;
-      }
-   }
-   else
-   {
-      m_snmpOid = nullptr;
    }
 }
 
@@ -105,33 +97,16 @@ SNMPTableColumnDefinition::SNMPTableColumnDefinition(DB_RESULT hResult, int row)
    oid[0] = 0;
    DBGetField(hResult, row, 3, oid, 1024);
    Trim(oid);
-   if (oid[0] != 0)
-   {
-      uint32_t oidBin[256];
-      size_t len = SNMPParseOID(oid, oidBin, 256);
-      if (len > 0)
-      {
-         m_snmpOid = new SNMP_ObjectId(oidBin, len);
-      }
-      else
-      {
-         m_snmpOid = nullptr;
-      }
-   }
-   else
-   {
-      m_snmpOid = nullptr;
-   }
+   m_snmpOid = SNMP_ObjectId::parse(oid);
 }
 
 /**
  * Create copy of column object
  */
-SNMPTableColumnDefinition::SNMPTableColumnDefinition(const SNMPTableColumnDefinition *src)
+SNMPTableColumnDefinition::SNMPTableColumnDefinition(const SNMPTableColumnDefinition *src) : m_snmpOid(src->m_snmpOid)
 {
    memcpy(m_name, src->m_name, sizeof(m_name));
    m_displayName = MemCopyString(src->m_displayName);
-   m_snmpOid = (src->m_snmpOid != nullptr) ? new SNMP_ObjectId(*src->m_snmpOid) : nullptr;
    m_flags = src->m_flags;
 }
 
@@ -141,7 +116,6 @@ SNMPTableColumnDefinition::SNMPTableColumnDefinition(const SNMPTableColumnDefini
 SNMPTableColumnDefinition::~SNMPTableColumnDefinition()
 {
    MemFree(m_displayName);
-   delete m_snmpOid;
 }
 
 /**
@@ -607,9 +581,9 @@ void DataCollectionItem::saveToDatabase(bool newObject, DB_HANDLE hdb, DataColle
             DBBind(statements->insertColumn, 4, DB_SQLTYPE_VARCHAR, c->getName(), DB_BIND_STATIC);
             DBBind(statements->insertColumn, 5, DB_SQLTYPE_VARCHAR, c->getDisplayName(), DB_BIND_STATIC);
             DBBind(statements->insertColumn, 6, DB_SQLTYPE_INTEGER, c->getFlags());
-            const SNMP_ObjectId *oid = c->getSnmpOid();
+            const SNMP_ObjectId& oid = c->getSnmpOid();
             TCHAR text[1024];
-            DBBind(statements->insertColumn, 7, DB_SQLTYPE_VARCHAR, (oid != nullptr) ? oid->toString(text, 1024) : nullptr, DB_BIND_STATIC);
+            DBBind(statements->insertColumn, 7, DB_SQLTYPE_VARCHAR, oid.isValid() ? oid.toString(text, 1024) : nullptr, DB_BIND_STATIC);
             DBExecute(statements->insertColumn);
          }
       }

@@ -138,109 +138,133 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
       return true;
 
    // *** NetXMS agent ***
-   auto agentConnection = make_shared<AgentConnectionEx>(0, ipAddr, AGENT_LISTEN_PORT, nullptr);
-   shared_ptr<Node> proxyNode;
-   if (zoneProxy != 0)
+   if (!(g_flags & AF_DISABLE_AGENT_PROBE))
    {
-      proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
-      if (proxyNode != nullptr)
+      auto agentConnection = make_shared<AgentConnectionEx>(0, ipAddr, AGENT_LISTEN_PORT, nullptr);
+      shared_ptr<Node> proxyNode;
+      if (zoneProxy != 0)
       {
-         shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(zoneProxy);
-         if (tunnel != nullptr)
+         proxyNode = static_pointer_cast<Node>(g_idxNodeById.get(zoneProxy));
+         if (proxyNode != nullptr)
          {
-            agentConnection->setProxy(tunnel, proxyNode->getAgentSecret());
-         }
-         else
-         {
-            agentConnection->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(), proxyNode->getAgentSecret());
-         }
-      }
-   }
-
-   agentConnection->setCommandTimeout(g_agentCommandTimeout);
-   uint32_t rcc;
-   if (!agentConnection->connect(g_pServerKey, &rcc))
-   {
-      // If there are authentication problem, try default shared secret
-      if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
-      {
-         StringList secrets;
-         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
-         if (hStmt != nullptr)
-         {
-           DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (proxyNode != nullptr) ? proxyNode->getZoneUIN() : 0);
-
-           DB_RESULT hResult = DBSelectPrepared(hStmt);
-           if (hResult != nullptr)
-           {
-              int count = DBGetNumRows(hResult);
-              for(int i = 0; i < count; i++)
-                 secrets.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
-              DBFreeResult(hResult);
-           }
-           DBFreeStatement(hStmt);
-         }
-         DBConnectionPoolReleaseConnection(hdb);
-
-         for (int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
-         {
-            agentConnection->setSharedSecret(secrets.get(i));
-            if (agentConnection->connect(g_pServerKey, &rcc))
+            shared_ptr<AgentTunnel> tunnel = GetTunnelForNode(zoneProxy);
+            if (tunnel != nullptr)
             {
-               break;
+               agentConnection->setProxy(tunnel, proxyNode->getAgentSecret());
             }
-
-            if (((rcc != ERR_AUTH_REQUIRED) || (rcc != ERR_AUTH_FAILED)))
+            else
             {
-               break;
+               agentConnection->setProxy(proxyNode->getIpAddress(), proxyNode->getAgentPort(), proxyNode->getAgentSecret());
             }
          }
       }
-   }
-   if (rcc == ERR_SUCCESS)
-   {
-      if (preparedAgentConnection != nullptr)
-         *preparedAgentConnection = agentConnection;
-      reachable = true;
+
+      agentConnection->setCommandTimeout(g_agentCommandTimeout);
+      uint32_t rcc;
+      if (!agentConnection->connect(g_pServerKey, &rcc))
+      {
+         // If there are authentication problem, try default shared secret
+         if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
+         {
+            StringList secrets;
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+            DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT secret FROM shared_secrets WHERE zone=? OR zone=-1 ORDER BY zone DESC, id ASC"));
+            if (hStmt != nullptr)
+            {
+              DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (proxyNode != nullptr) ? proxyNode->getZoneUIN() : 0);
+
+              DB_RESULT hResult = DBSelectPrepared(hStmt);
+              if (hResult != nullptr)
+              {
+                 int count = DBGetNumRows(hResult);
+                 for(int i = 0; i < count; i++)
+                    secrets.addPreallocated(DBGetField(hResult, i, 0, nullptr, 0));
+                 DBFreeResult(hResult);
+              }
+              DBFreeStatement(hStmt);
+            }
+            DBConnectionPoolReleaseConnection(hdb);
+
+            for (int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
+            {
+               agentConnection->setSharedSecret(secrets.get(i));
+               if (agentConnection->connect(g_pServerKey, &rcc))
+               {
+                  break;
+               }
+
+               if (((rcc != ERR_AUTH_REQUIRED) || (rcc != ERR_AUTH_FAILED)))
+               {
+                  break;
+               }
+            }
+         }
+      }
+      if (rcc == ERR_SUCCESS)
+      {
+         if (preparedAgentConnection != nullptr)
+            *preparedAgentConnection = agentConnection;
+         reachable = true;
+      }
+      else
+      {
+         TCHAR ipAddrText[64];
+         nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("HostIsReachable(%s): agent connection check failed with error %u (%s)%s%s"),
+                  ipAddr.toString(ipAddrText), rcc, AgentErrorCodeToText(rcc), (proxyNode != nullptr) ? _T(", proxy node ") : _T(""),
+                  (proxyNode != nullptr) ? proxyNode->getName() : _T(""));
+      }
    }
    else
    {
       TCHAR ipAddrText[64];
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("HostIsReachable(%s): agent connection check failed with error %u (%s)%s%s"),
-               ipAddr.toString(ipAddrText), rcc, AgentErrorCodeToText(rcc), (proxyNode != nullptr) ? _T(", proxy node ") : _T(""),
-               (proxyNode != nullptr) ? proxyNode->getName() : _T(""));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("HostIsReachable(%s): agent connection probe disabled"), ipAddr.toString(ipAddrText));
    }
 
    if (reachable && !fullCheck)
       return true;
 
    // *** SNMP ***
-   SNMP_Version version;
-   StringList oids;
-   oids.add(_T(".1.3.6.1.2.1.1.2.0"));
-   oids.add(_T(".1.3.6.1.2.1.1.1.0"));
-   AddDriverSpecificOids(&oids);
-   SNMP_Transport *snmpTransport = SnmpCheckCommSettings(zoneProxy, ipAddr, &version, 0, nullptr, oids, zoneUIN);
-   if (snmpTransport != nullptr)
+   if ((g_flags & (AF_DISABLE_SNMP_V3_PROBE | AF_DISABLE_SNMP_V2_PROBE | AF_DISABLE_SNMP_V1_PROBE)) != (AF_DISABLE_SNMP_V3_PROBE | AF_DISABLE_SNMP_V2_PROBE | AF_DISABLE_SNMP_V1_PROBE))
    {
-      if (transport != nullptr)
+      SNMP_Version version;
+      StringList oids;
+      oids.add(_T(".1.3.6.1.2.1.1.2.0"));
+      oids.add(_T(".1.3.6.1.2.1.1.1.0"));
+      AddDriverSpecificOids(&oids);
+      SNMP_Transport *snmpTransport = SnmpCheckCommSettings(zoneProxy, ipAddr, &version, 0, nullptr, oids, zoneUIN, true);
+      if (snmpTransport != nullptr)
       {
-         snmpTransport->setSnmpVersion(version);
-         *transport = snmpTransport;
-         snmpTransport = nullptr;   // prevent deletion
+         if (transport != nullptr)
+         {
+            snmpTransport->setSnmpVersion(version);
+            *transport = snmpTransport;
+            snmpTransport = nullptr;   // prevent deletion
+         }
+         reachable = true;
+         delete snmpTransport;
       }
-      reachable = true;
-      delete snmpTransport;
+   }
+   else
+   {
+      TCHAR ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("HostIsReachable(%s): all SNMP probes disabled"), ipAddr.toString(ipAddrText));
    }
 
    if (reachable && !fullCheck)
       return true;
 
    // *** SSH ***
-   if (SSHCheckCommSettings((zoneProxy != 0) ? zoneProxy : g_dwMgmtNode, ipAddr, zoneUIN, sshCredentials, sshPort))
+   if (!(g_flags & AF_DISABLE_SSH_PROBE))
    {
-      reachable = true;
+      if (SSHCheckCommSettings((zoneProxy != 0) ? zoneProxy : g_dwMgmtNode, ipAddr, zoneUIN, sshCredentials, sshPort))
+      {
+         reachable = true;
+      }
+   }
+   else
+   {
+      TCHAR ipAddrText[64];
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("HostIsReachable(%s): SSH connection probe disabled"), ipAddr.toString(ipAddrText));
    }
 
    return reachable;

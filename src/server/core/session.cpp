@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1118,10 +1118,10 @@ void ClientSession::processRequest(NXCPMessage *request)
          recalculateDCIValues(*request);
          break;
       case CMD_GET_MIB_TIMESTAMP:
-         sendMIBTimestamp(*request);
+         getMIBTimestamp(*request);
          break;
       case CMD_GET_MIB:
-         sendMib(*request);
+         getMIBFile(*request);
          break;
       case CMD_CREATE_OBJECT:
          createObject(*request);
@@ -5649,9 +5649,9 @@ void ClientSession::processEventProcessingPolicyRecord(NXCPMessage *request)
 }
 
 /**
- * Send compiled MIB file to client
+ * Get compiled MIB file
  */
-void ClientSession::sendMib(const NXCPMessage& request)
+void ClientSession::getMIBFile(const NXCPMessage& request)
 {
    TCHAR mibFile[MAX_PATH];
    _tcscpy(mibFile, g_netxmsdDataDir);
@@ -5660,42 +5660,41 @@ void ClientSession::sendMib(const NXCPMessage& request)
 }
 
 /**
- * Send timestamp of compiled MIB file to client
+ * Get timestamp of compiled MIB file
  */
-void ClientSession::sendMIBTimestamp(const NXCPMessage& request)
+void ClientSession::getMIBTimestamp(const NXCPMessage& request)
 {
-   TCHAR szBuffer[MAX_PATH];
-   UINT32 dwResult, dwTimeStamp;
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   TCHAR mibFileName[MAX_PATH];
+   _tcscpy(mibFileName, g_netxmsdDataDir);
+   _tcscat(mibFileName, DFILE_COMPILED_MIB);
 
-   _tcscpy(szBuffer, g_netxmsdDataDir);
-   _tcscat(szBuffer, DFILE_COMPILED_MIB);
-   dwResult = SNMPGetMIBTreeTimestamp(szBuffer, &dwTimeStamp);
-   if (dwResult == SNMP_ERR_SUCCESS)
+   uint32_t timestamp;
+   uint32_t rc = SnmpGetMIBTreeTimestamp(mibFileName, &timestamp);
+   if (rc == SNMP_ERR_SUCCESS)
    {
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      msg.setField(VID_TIMESTAMP, dwTimeStamp);
-		msg.setField(VID_FILE_SIZE, FileSize(szBuffer));
+      response.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_TIMESTAMP, timestamp);
+		response.setField(VID_FILE_SIZE, FileSize(mibFileName));
    }
    else
    {
-      switch(dwResult)
+      switch(rc)
       {
          case SNMP_ERR_FILE_IO:
-            msg.setField(VID_RCC, RCC_FILE_IO_ERROR);
+            response.setField(VID_RCC, RCC_FILE_IO_ERROR);
             break;
          case SNMP_ERR_BAD_FILE_HEADER:
-            msg.setField(VID_RCC, RCC_CORRUPTED_MIB_FILE);
+            response.setField(VID_RCC, RCC_CORRUPTED_MIB_FILE);
             break;
          default:
-            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+            response.setField(VID_RCC, RCC_INTERNAL_ERROR);
             break;
       }
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

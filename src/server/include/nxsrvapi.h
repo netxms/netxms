@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2022 Reden Solutions
+** Copyright (C) 2003-2023 Reden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -146,23 +146,27 @@
 #define AF_CASE_INSENSITIVE_LOGINS             _LL(0x0000000400000000)
 #define AF_TRAP_SOURCES_IN_ALL_ZONES           _LL(0x0000000800000000)
 #define AF_SYSLOG_DISCOVERY                    _LL(0x0000001000000000)
-// unused: #define AF_ENABLE_LOCAL_CONSOLE                _ULL(0x0000002000000000)
-#define AF_CACHE_DB_ON_STARTUP                 _LL(0x0000004000000000)
-#define AF_ENABLE_NXSL_FILE_IO_FUNCTIONS       _LL(0x0000008000000000)
-// unused: #define AF_ENABLE_EMBEDDED_PYTHON              _LL(0x0000010000000000)
-#define AF_DB_SUPPORTS_MERGE                   _LL(0x0000020000000000)
-#define AF_PARALLEL_NETWORK_DISCOVERY          _LL(0x0000040000000000)
-#define AF_SINGLE_TABLE_PERF_DATA              _LL(0x0000080000000000)
-#define AF_MERGE_DUPLICATE_NODES               _LL(0x0000100000000000)
-#define AF_SYSTEMD_DAEMON                      _LL(0x0000200000000000)
-#define AF_USE_SYSTEMD_JOURNAL                 _LL(0x0000400000000000)
-#define AF_COLLECT_ICMP_STATISTICS             _LL(0x0000800000000000)
-#define AF_LOG_IN_JSON_FORMAT                  _LL(0x0001000000000000)
-#define AF_LOG_TO_STDOUT                       _LL(0x0002000000000000)
-#define AF_DBWRITER_HK_INTERLOCK               _LL(0x0004000000000000)
-#define AF_LOG_ALL_SNMP_TRAPS                  _LL(0x0008000000000000)
-#define AF_ALLOW_TRAP_VARBIND_CONVERSION       _LL(0x0010000000000000)
-#define AF_TSDB_DROP_CHUNKS_V2                 _LL(0x0020000000000000)
+#define AF_CACHE_DB_ON_STARTUP                 _LL(0x0000002000000000)
+#define AF_ENABLE_NXSL_FILE_IO_FUNCTIONS       _LL(0x0000004000000000)
+#define AF_DB_SUPPORTS_MERGE                   _LL(0x0000008000000000)
+#define AF_PARALLEL_NETWORK_DISCOVERY          _LL(0x0000010000000000)
+#define AF_SINGLE_TABLE_PERF_DATA              _LL(0x0000020000000000)
+#define AF_MERGE_DUPLICATE_NODES               _LL(0x0000040000000000)
+#define AF_SYSTEMD_DAEMON                      _LL(0x0000080000000000)
+#define AF_USE_SYSTEMD_JOURNAL                 _LL(0x0000100000000000)
+#define AF_COLLECT_ICMP_STATISTICS             _LL(0x0000200000000000)
+#define AF_LOG_IN_JSON_FORMAT                  _LL(0x0000400000000000)
+#define AF_LOG_TO_STDOUT                       _LL(0x0000800000000000)
+#define AF_DBWRITER_HK_INTERLOCK               _LL(0x0001000000000000)
+#define AF_LOG_ALL_SNMP_TRAPS                  _LL(0x0002000000000000)
+#define AF_ALLOW_TRAP_VARBIND_CONVERSION       _LL(0x0004000000000000)
+#define AF_TSDB_DROP_CHUNKS_V2                 _LL(0x0008000000000000)
+#define AF_DISABLE_AGENT_PROBE                 _LL(0x0010000000000000)
+#define AF_DISABLE_ETHERNETIP_PROBE            _LL(0x0020000000000000)
+#define AF_DISABLE_SNMP_V1_PROBE               _LL(0x0040000000000000)
+#define AF_DISABLE_SNMP_V2_PROBE               _LL(0x0080000000000000)
+#define AF_DISABLE_SNMP_V3_PROBE               _LL(0x0100000000000000)
+#define AF_DISABLE_SSH_PROBE                   _LL(0x0200000000000000)
 #define AF_SERVER_INITIALIZED                  _LL(0x2000000000000000)
 #define AF_SHUTDOWN                            _LL(0x4000000000000000)
 

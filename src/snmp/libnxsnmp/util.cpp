@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ static VolatileCounter s_requestId = 0;
  */
 uint32_t LIBNXSNMP_EXPORTABLE SnmpNewRequestId()
 {
-   return (UINT32)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF;
+   return static_cast<uint32_t>(InterlockedIncrement(&s_requestId) & 0x7FFFFFFF);
 }
 
 /**
@@ -45,7 +45,8 @@ static uint32_t s_snmpTimeout = 1500;
  */
 void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(uint32_t timeout)
 {
-   s_snmpTimeout = timeout;
+   s_snmpTimeout = (timeout >= 10) ? timeout : 10;
+   nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 4, _T("SNMP request timeout set to %u milliseconds"), s_snmpTimeout);
 }
 
 /**
@@ -98,7 +99,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
    size_t nameLength;
    if (oidStr != nullptr)
    {
-      nameLength = SNMPParseOID(oidStr, varName, MAX_OID_LEN);
+      nameLength = SnmpParseOID(oidStr, varName, MAX_OID_LEN);
       if (nameLength == 0)
       {
          InetAddress a = pTransport->getPeerIpAddress();
@@ -122,7 +123,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport, const TCHAR 
       SNMP_PDU requestPDU((flags & SG_GET_NEXT_REQUEST) ? SNMP_GET_NEXT_REQUEST : SNMP_GET_REQUEST, (uint32_t)InterlockedIncrement(&s_requestId) & 0x7FFFFFFF, pTransport->getSnmpVersion());
       requestPDU.bindVariable(new SNMP_Variable(varName, nameLength));
       SNMP_PDU *responsePDU;
-      result = pTransport->doRequest(&requestPDU, &responsePDU, s_snmpTimeout, 3);
+      result = pTransport->doRequest(&requestPDU, &responsePDU);
 
       // Analyze response
       if (result == SNMP_ERR_SUCCESS)
@@ -260,7 +261,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *r
       return SNMP_ERR_COMM;
 
    uint32_t rootOidBin[MAX_OID_LEN];
-   size_t rootOidLen = SNMPParseOID(rootOid, rootOidBin, MAX_OID_LEN);
+   size_t rootOidLen = SnmpParseOID(rootOid, rootOidBin, MAX_OID_LEN);
    if (rootOidLen == 0)
    {
       if (logErrors)
@@ -304,7 +305,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const uint32_t
       SNMP_PDU requestPDU(SNMP_GET_NEXT_REQUEST, static_cast<uint32_t>(InterlockedIncrement(&s_requestId)) & 0x7FFFFFFF, transport->getSnmpVersion());
       requestPDU.bindVariable(new SNMP_Variable(pdwName, nameLength));
       SNMP_PDU *responsePDU;
-      result = transport->doRequest(&requestPDU, &responsePDU, s_snmpTimeout, 3);
+      result = transport->doRequest(&requestPDU, &responsePDU);
 
       // Analyze response
       if (result == SNMP_ERR_SUCCESS)

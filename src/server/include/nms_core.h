@@ -656,8 +656,8 @@ private:
    void getLastValue(const NXCPMessage& request);
    void getActiveThresholds(const NXCPMessage& request);
 	void getThresholdSummary(const NXCPMessage& request);
-   void sendMIBTimestamp(const NXCPMessage& request);
-   void sendMib(const NXCPMessage& request);
+   void getMIBTimestamp(const NXCPMessage& request);
+   void getMIBFile(const NXCPMessage& request);
    void createObject(const NXCPMessage& request);
    void changeObjectBinding(const NXCPMessage& request, bool bind);
    void deleteObject(const NXCPMessage& request);
@@ -1257,7 +1257,7 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 bool SnmpTestRequest(SNMP_Transport *snmp, const StringList &testOids, bool separateRequests);
 SNMP_Transport *SnmpCheckCommSettings(uint32_t snmpProxy, const InetAddress& ipAddr, SNMP_Version *version,
          uint16_t originalPort, SNMP_SecurityContext *originalContext, const StringList &customTestOids,
-         int32_t zoneUIN);
+         int32_t zoneUIN, bool initialDiscovery);
 unique_ptr<StringList> SnmpGetKnownCommunities(int32_t zoneUIN);
 
 bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& addr, uint16_t port, const TCHAR *login, const TCHAR *password, uint32_t keyId);

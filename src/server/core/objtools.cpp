@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -424,9 +424,9 @@ static uint32_t TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, SN
    }
    else
    {
-      nameLen = SNMPParseOID(args->ppszOidList[0], varbindName, MAX_OID_LEN);
+      nameLen = SnmpParseOID(args->ppszOidList[0], varbindName, MAX_OID_LEN);
       const SNMP_ObjectId& oid = pVar->getName();
-      SNMPConvertOIDToText(oid.length() - nameLen, (UINT32 *)&(oid.value())[nameLen], szSuffix, MAX_OID_LEN * 4);
+      SnmpConvertOIDToText(oid.length() - nameLen, (UINT32 *)&(oid.value())[nameLen], szSuffix, MAX_OID_LEN * 4);
    }
 
    // Get values for other columns
@@ -437,7 +437,7 @@ static uint32_t TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, SN
       {
          _tcscpy(szOid, args->ppszOidList[i]);
          _tcscat(szOid, szSuffix);
-         nameLen = SNMPParseOID(szOid, varbindName, MAX_OID_LEN);
+         nameLen = SnmpParseOID(szOid, varbindName, MAX_OID_LEN);
          if (nameLen != 0)
          {
             request.bindVariable(new SNMP_Variable(varbindName, nameLen));

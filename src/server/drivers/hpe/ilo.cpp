@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Driver for HPE iLO controllers
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -77,7 +77,7 @@ bool ILODriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, Driv
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.232.9.2.2.2.0")));  // Version
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       const SNMP_Variable *v = response->getVariable(0);
       if (v != nullptr)
@@ -150,7 +150,7 @@ static uint32_t HandlerInterfaceList(SNMP_Variable *var, SNMP_Transport *snmp, I
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == request.getNumVariables())
       {
@@ -226,7 +226,7 @@ void ILODriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverDat
    request.bindVariable(new SNMP_Variable(oid));
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
    {
       if (response->getNumVariables() == 2)
       {

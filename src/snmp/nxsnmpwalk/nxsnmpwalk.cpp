@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpwalk - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,20 +58,20 @@ static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void
          bool convert = true;
          subvar->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
          _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-               convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), buffer);
+               convert ? _T("Hex-STRING") : SnmpDataTypeName(subvar->getType(), typeName, 256), buffer);
          delete subvar;
       }
       else
       {
-         _tprintf(_T("%s [OPAQUE]:\n"), (const TCHAR *)var->getName().toString());
+         _tprintf(_T("%s [OPAQUE]:\n"), var->getName().toString().cstr());
       }
    }
    else
    {
       bool convert = true;
       var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
-      _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-            convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), buffer);
+      _tprintf(_T("%s [%s]: %s\n"), var->getName().toString().cstr(),
+            convert ? _T("Hex-STRING") : SnmpDataTypeName(var->getType(), typeName, 256), buffer);
    }
    return SNMP_ERR_SUCCESS;
 }
@@ -88,38 +88,35 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
 #endif
 
    // Create SNMP transport
-   auto transport = new SNMP_UDPTransport();
-   uint32_t result = transport->createUDPTransport(pszHost, m_port);
+   SNMP_UDPTransport transport;
+   uint32_t result = transport.createUDPTransport(pszHost, m_port);
    if (result != SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(result));
-      delete transport;
+      _tprintf(_T("Unable to create UDP transport: %s\n"), SnmpGetErrorText(result));
       return 2;
    }
 
-   transport->setSnmpVersion(m_snmpVersion);
+   transport.setSnmpVersion(m_snmpVersion);
    if (m_snmpVersion == SNMP_VERSION_3)
    {
       SNMP_SecurityContext *context = new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);
       if (m_contextName[0] != 0)
          context->setContextName(m_contextName);
-      transport->setSecurityContext(context);
+      transport.setSecurityContext(context);
    }
    else
    {
-      transport->setSecurityContext(new SNMP_SecurityContext(m_community));
+      transport.setSecurityContext(new SNMP_SecurityContext(m_community));
    }
 
-   int iExit = 0;
-   result = SnmpWalk(transport, pszRootOid, WalkCallback, nullptr);
+   result = SnmpWalk(&transport, pszRootOid, WalkCallback, nullptr);
    if (result != SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("SNMP Error: %s\n"), SNMPGetErrorText(result));
-      iExit = 3;
+      _tprintf(_T("SNMP Error: %s\n"), SnmpGetErrorText(result));
+      return 3;
    }
 
-   delete transport;
-   return iExit;
+   return 0;
 }
 
 /**

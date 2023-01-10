@@ -6,13 +6,13 @@
 
 NETXMS_EXECUTABLE_HEADER(test-libnxsnmp)
 
-static UINT32 s_sysDescription[] = { 1, 3, 6, 1, 2, 1, 1, 1, 0 };
-static SNMP_ObjectId s_oidSysDescription(s_sysDescription, sizeof(s_sysDescription) / sizeof(UINT32));
-static UINT32 s_unsignedTest[] = { 1, 3, 6, 1, 2, 1, 1, 2164260864, 0 };
-static UINT32 s_sysLocation[] = { 1, 3, 6, 1, 2, 1, 1, 6, 0 };
-static SNMP_ObjectId s_oidSysLocation(s_sysLocation, sizeof(s_sysLocation) / sizeof(UINT32));
-static UINT32 s_system[] = { 1, 3, 6, 1, 2, 1, 1 };
-static SNMP_ObjectId s_oidSystem(s_system, sizeof(s_system) / sizeof(UINT32));
+static uint32_t s_sysDescription[] = { 1, 3, 6, 1, 2, 1, 1, 1, 0 };
+static SNMP_ObjectId s_oidSysDescription(s_sysDescription, sizeof(s_sysDescription) / sizeof(uint32_t));
+static uint32_t s_unsignedTest[] = { 1, 3, 6, 1, 2, 1, 1, 2164260864, 0 };
+static uint32_t s_sysLocation[] = { 1, 3, 6, 1, 2, 1, 1, 6, 0 };
+static SNMP_ObjectId s_oidSysLocation(s_sysLocation, sizeof(s_sysLocation) / sizeof(uint32_t));
+static uint32_t s_system[] = { 1, 3, 6, 1, 2, 1, 1 };
+static SNMP_ObjectId s_oidSystem(s_system, sizeof(s_system) / sizeof(uint32_t));
 
 /**
  * Test OID conversion
@@ -20,26 +20,26 @@ static SNMP_ObjectId s_oidSystem(s_system, sizeof(s_system) / sizeof(UINT32));
 static void TestOidConversion()
 {
    TCHAR text[256];
-   UINT32 bin[256];
+   uint32_t bin[256];
 
    StartTest(_T("SNMPConvertOIDToText"));
-   SNMPConvertOIDToText(9, s_sysDescription, text, 256);
+   SnmpConvertOIDToText(9, s_sysDescription, text, 256);
    AssertTrue(!_tcscmp(text, _T(".1.3.6.1.2.1.1.1.0")));
    EndTest();
 
    StartTest(_T("SNMPConvertOIDToText - handling high bit set"));
-   SNMPConvertOIDToText(9, s_unsignedTest, text, 256);
+   SnmpConvertOIDToText(9, s_unsignedTest, text, 256);
    AssertTrue(!_tcscmp(text, _T(".1.3.6.1.2.1.1.2164260864.0")));
    EndTest();
 
    StartTest(_T("SNMPParseOID"));
-   AssertEquals(SNMPParseOID(_T(".1.3.6.1.2.1.1.1.0"), bin, 256), 9);
-   AssertTrue(!memcmp(bin, s_sysDescription, 9 * sizeof(UINT32)));
+   AssertEquals(SnmpParseOID(_T(".1.3.6.1.2.1.1.1.0"), bin, 256), 9);
+   AssertTrue(!memcmp(bin, s_sysDescription, 9 * sizeof(uint32_t)));
    EndTest();
 
    StartTest(_T("SNMPParseOID - handling high bit set"));
-   AssertEquals(SNMPParseOID(_T(".1.3.6.1.2.1.1.2164260864.0"), bin, 256), 9);
-   AssertTrue(!memcmp(bin, s_unsignedTest, 9 * sizeof(UINT32)));
+   AssertEquals(SnmpParseOID(_T(".1.3.6.1.2.1.1.2164260864.0"), bin, 256), 9);
+   AssertTrue(!memcmp(bin, s_unsignedTest, 9 * sizeof(uint32_t)));
    EndTest();
 }
 

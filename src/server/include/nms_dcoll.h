@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -597,7 +597,7 @@ class NXCORE_EXPORTABLE DCTableColumn
 private:
 	TCHAR m_name[MAX_COLUMN_NAME];
    TCHAR *m_displayName;
-	SNMP_ObjectId *m_snmpOid;
+	SNMP_ObjectId m_snmpOid;
 	uint16_t m_flags;
 
 public:
@@ -608,11 +608,11 @@ public:
 	~DCTableColumn();
 
 	const TCHAR *getName() const { return m_name; }
-   const TCHAR *getDisplayName() const { return (m_displayName != NULL) ? m_displayName : m_name; }
+   const TCHAR *getDisplayName() const { return (m_displayName != nullptr) ? m_displayName : m_name; }
    uint16_t getFlags() const { return m_flags; }
    int getDataType() const { return TCF_GET_DATA_TYPE(m_flags); }
    int getAggregationFunction() const { return TCF_GET_AGGREGATION_FUNCTION(m_flags); }
-	const SNMP_ObjectId *getSnmpOid() const { return m_snmpOid; }
+	const SNMP_ObjectId& getSnmpOid() const { return m_snmpOid; }
    bool isInstanceColumn() const { return (m_flags & TCF_INSTANCE_COLUMN) != 0; }
    bool isConvertSnmpStringToHex() const { return (m_flags & TCF_SNMP_HEX_STRING) != 0; }
 

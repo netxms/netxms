@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for SAF Tehnika devices
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ bool SafIntegraBDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *no
    request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.2.1.1.1.0")));                    // sysDescr
 
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) != SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response) != SNMP_ERR_SUCCESS)
       return false;
 
    if (response->getNumVariables() != request.getNumVariables())

@@ -650,6 +650,30 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       WakeupActiveDiscoveryThread();
    }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.Agent")))
+   {
+      UpdateServerFlag(AF_DISABLE_AGENT_PROBE, value);
+   }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.EtherNetIP")))
+   {
+      UpdateServerFlag(AF_DISABLE_ETHERNETIP_PROBE, value);
+   }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SNMP.V1")))
+   {
+      UpdateServerFlag(AF_DISABLE_SNMP_V1_PROBE, value);
+   }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SNMP.V2")))
+   {
+      UpdateServerFlag(AF_DISABLE_SNMP_V2_PROBE, value);
+   }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SNMP.V3")))
+   {
+      UpdateServerFlag(AF_DISABLE_SNMP_V3_PROBE, value);
+   }
+   else if (!_tcscmp(name, _T("NetworkDiscovery.DisableProtocolProbe.SSH")))
+   {
+      UpdateServerFlag(AF_DISABLE_SSH_PROBE, value);
+   }
    else if (!_tcscmp(name, _T("NetworkDiscovery.EnableParallelProcessing")))
    {
       UpdateServerFlag(AF_PARALLEL_NETWORK_DISCOVERY, value);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -56,7 +56,7 @@ static uint32_t PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transpo
 	else
 	{
 		_tcscpy(port->ifDescr, _T("###error###"));
-	   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("PortLocalInfoHandler: failed SNMP request for port information (%s)"), SNMPGetErrorText(rcc));
+	   nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("PortLocalInfoHandler: failed SNMP request for port information (%s)"), SnmpGetErrorText(rcc));
 	}
 
 	static_cast<ObjectArray<LLDP_LOCAL_PORT_INFO>*>(arg)->add(port);
@@ -187,7 +187,7 @@ static shared_ptr<Interface> FindRemoteInterface(Node *node, uint32_t idType, BY
 static const SNMP_Variable *GetVariableFromCache(uint32_t *oid, size_t oidLen, const StringObjectMap<SNMP_Variable>& cache)
 {
    TCHAR oidText[MAX_OID_LEN * 6];
-   SNMPConvertOIDToText(oidLen, oid, oidText, MAX_OID_LEN * 6);
+   SnmpConvertOIDToText(oidLen, oid, oidText, MAX_OID_LEN * 6);
    return cache.get(oidText);
 }
 

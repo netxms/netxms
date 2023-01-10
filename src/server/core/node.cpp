@@ -5188,7 +5188,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    }
    if (pTransport == nullptr)
       pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress,
-               &m_snmpVersion, m_snmpPort, m_snmpSecurity, oids, m_zoneUIN);
+               &m_snmpVersion, m_snmpPort, m_snmpSecurity, oids, m_zoneUIN, false);
    if (pTransport == nullptr)
    {
       sendPollerMsg(_T("   No response from SNMP agent\r\n"));
@@ -6502,15 +6502,15 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
    for(int i = 0; i < columns.size(); i++)
    {
       const DCTableColumn *c = columns.get(i);
-      if (c->getSnmpOid() != nullptr)
+      if (c->getSnmpOid().isValid())
       {
          uint32_t oid[MAX_OID_LEN];
-         size_t oidLen = c->getSnmpOid()->length();
-         memcpy(oid, c->getSnmpOid()->value(), oidLen * sizeof(UINT32));
+         size_t oidLen = c->getSnmpOid().length();
+         memcpy(oid, c->getSnmpOid().value(), oidLen * sizeof(uint32_t));
          if (rowOid != nullptr)
          {
             size_t suffixLen = rowOid->length() - baseOidLen;
-            memcpy(&oid[oidLen], rowOid->value() + baseOidLen, suffixLen * sizeof(UINT32));
+            memcpy(&oid[oidLen], rowOid->value() + baseOidLen, suffixLen * sizeof(uint32_t));
             oidLen += suffixLen;
          }
          else
@@ -6582,11 +6582,11 @@ DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, 
       for(int i = 0; i < columns.size(); i++)
       {
          const DCTableColumn *c = columns.get(i);
-         if (c->getSnmpOid() != nullptr)
+         if (c->getSnmpOid().isValid())
             (*table)->addColumn(c->getName(), c->getDataType(), c->getDisplayName(), c->isInstanceColumn());
       }
 
-      size_t baseOidLen = SNMPGetOIDLength(oid);
+      size_t baseOidLen = SnmpGetOIDLength(oid);
       for(int i = 0; i < oidList.size(); i++)
       {
          rc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, table->get());
@@ -6652,7 +6652,7 @@ static uint32_t SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport
    if (oid.length() <= data->oidLen)
       return SNMP_ERR_SUCCESS;
    TCHAR buffer[256];
-   SNMPConvertOIDToText(oid.length() - data->oidLen, &(oid.value()[data->oidLen]), buffer, 256);
+   SnmpConvertOIDToText(oid.length() - data->oidLen, &(oid.value()[data->oidLen]), buffer, 256);
 
    const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
 
@@ -6675,7 +6675,7 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version v
 
    SNMPOIDSuffixListCallback_Data data;
    uint32_t oidBin[256];
-   data.oidLen = SNMPParseOID(oid, oidBin, 256);
+   data.oidLen = SnmpParseOID(oid, oidBin, 256);
    if (data.oidLen == 0)
    {
       delete snmp;

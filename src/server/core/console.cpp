@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1015,6 +1015,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_LOG_ALL_SNMP_TRAPS));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ALLOW_TRAP_VARBIND_CONVERSION));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TSDB_DROP_CHUNKS_V2));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_AGENT_PROBE));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_ETHERNETIP_PROBE));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V1_PROBE));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V2_PROBE));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SNMP_V3_PROBE));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DISABLE_SSH_PROBE));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
          ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
          ConsolePrintf(pCtx, _T("\n"));

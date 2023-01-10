@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2022 Raden Solutions
+** Copyright (C) 2022-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,22 @@
 **/
 
 #include "nxdbmgr.h"
+
+/**
+ * Upgrade from 43.4 to 43.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.DisableProtocolProbe.Agent"), _T("0"), _T("Disable probing discovered addresses for NetXMS agent."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.DisableProtocolProbe.EtherNetIP"), _T("0"), _T("Disable probing discovered addresses for EtherNet/IP support."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.DisableProtocolProbe.SNMP.V1"), _T("0"), _T("Disable SNMP version 1 when probing discovered addresses for SNMP support."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.DisableProtocolProbe.SNMP.V2"), _T("0"), _T("Disable SNMP version 2 when probing discovered addresses for SNMP support."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.DisableProtocolProbe.SNMP.V3"), _T("0"), _T("Disable SNMP version 3 when probing discovered addresses for SNMP support."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("NetworkDiscovery.DisableProtocolProbe.SSH"), _T("0"), _T("Disable probing discovered addresses for SSH support."), nullptr, 'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMP.RetryCount"), _T("3"), _T("Number of retries for SNMP requests sent by NetXMS server."), nullptr, 'I', true, true, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
 
 /**
  * Upgrade from 43.3 to 43.4
@@ -208,6 +224,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  43, 5,  H_UpgradeFromV4  },
    { 3,  43, 4,  H_UpgradeFromV3  },
    { 2,  43, 3,  H_UpgradeFromV2  },
    { 1,  43, 2,  H_UpgradeFromV1  },

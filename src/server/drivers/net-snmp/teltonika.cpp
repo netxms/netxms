@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Teltonika modems
-** Copyright (C) 2022 Raden Solutions
+** Copyright (C) 2022-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -86,7 +86,7 @@ bool TeltonikaDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node
    uint32_t rc;
    if ((rc = snmp->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("TeltonikaDriver::getHardwareInformation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("TeltonikaDriver::getHardwareInformation(%s): SNMP failure (%s)"), node->getName(), SnmpGetErrorText(rc));
       return false;
    }
 

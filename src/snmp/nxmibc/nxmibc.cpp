@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS MIB compiler
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -275,19 +275,19 @@ int main(int argc, char *argv[])
    {
       ParseMIBFiles(&s_fileList, &pRoot);
 
-      if (pRoot != NULL)
+      if (pRoot != nullptr)
       {
 #ifdef UNICODE
 			WCHAR *wname = WideStringFromMBString(m_szOutFile);
-         dwRet = SNMPSaveMIBTree(wname, pRoot, dwFlags);
+         dwRet = SnmpSaveMIBTree(wname, pRoot, dwFlags);
 			free(wname);
 #else
-         dwRet = SNMPSaveMIBTree(m_szOutFile, pRoot, dwFlags);
+         dwRet = SnmpSaveMIBTree(m_szOutFile, pRoot, dwFlags);
 #endif
          delete pRoot;
          if (dwRet != SNMP_ERR_SUCCESS)
          {
-            _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), m_szOutFile, SNMPGetErrorText(dwRet));
+            _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), m_szOutFile, SnmpGetErrorText(dwRet));
             rc = 1;
          }
       }

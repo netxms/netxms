@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Convert OID to text
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize)
 {
    buffer[0] = 0;
    for(size_t i = 0, bufPos = 0; (i < length) && (bufPos < bufferSize); i++)
@@ -42,7 +42,7 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const uint32_t *
  * Will return 0 if OID is invalid or empty, and OID length (in UINT32s) on success
  * Buffer size should be given in number of UINT32s
  */
-size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize)
+size_t LIBNXSNMP_EXPORTABLE SnmpParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize)
 {
    TCHAR *pCurr = (TCHAR *)text, *pEnd, szNumber[32];
    size_t length = 0;
@@ -62,7 +62,7 @@ size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, uint32_t *buffer, si
          return 0;   // Number is definitely too large or not a number
       memcpy(szNumber, pCurr, sizeof(TCHAR) * iNumLen);
       szNumber[iNumLen] = 0;
-      buffer[length++] = _tcstoul(szNumber, NULL, 10);
+      buffer[length++] = _tcstoul(szNumber, nullptr, 10);
    }
    return length;
 }
@@ -70,26 +70,26 @@ size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, uint32_t *buffer, si
 /**
  * Check if given OID is syntaxically correct
  */
-bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid)
+bool LIBNXSNMP_EXPORTABLE SnmpIsCorrectOID(const TCHAR *oid)
 {
    uint32_t buffer[MAX_OID_LEN];
-   size_t len = SNMPParseOID(oid, buffer, MAX_OID_LEN);
+   size_t len = SnmpParseOID(oid, buffer, MAX_OID_LEN);
    return (len > 0);
 }
 
 /**
  * Check if given OID is syntaxically correct
  */
-size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid)
+size_t LIBNXSNMP_EXPORTABLE SnmpGetOIDLength(const TCHAR *oid)
 {
    uint32_t buffer[MAX_OID_LEN];
-   return SNMPParseOID(oid, buffer, MAX_OID_LEN);
+   return SnmpParseOID(oid, buffer, MAX_OID_LEN);
 }
 
 /**
  * Get text for libnxsnmp error code
  */
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(uint32_t errorCode)
+const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetErrorText(uint32_t errorCode)
 {
    static const TCHAR *errorText[] =
    {
@@ -123,7 +123,7 @@ const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(uint32_t errorCode)
 /**
  * Get text for protocol error code
  */
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetProtocolErrorText(SNMP_ErrorCode errorCode)
+const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetProtocolErrorText(SNMP_ErrorCode errorCode)
 {
    static const TCHAR *errorText[] =
    {
@@ -185,7 +185,7 @@ static CodeLookupElement s_typeList[] =
 /**
  * Resolve text representation of data type to integer value
  */
-uint32_t LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *type)
+uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataType(const TCHAR *type)
 {
    for(int i = 0; s_typeList[i].text != nullptr; i++)
       if (!_tcsicmp(s_typeList[i].text, type))
@@ -196,7 +196,7 @@ uint32_t LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *type)
 /**
  * Get type name
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize)
+TCHAR LIBNXSNMP_EXPORTABLE *SnmpDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize)
 {
 	for(int i = 0; s_typeList[i].text != nullptr; i++)
 		if (static_cast<uint32_t>(s_typeList[i].code) == type)

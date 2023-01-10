@@ -1,6 +1,6 @@
 /*
 ** NetXMS database manager library
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -138,7 +138,7 @@ bool LIBNXDBMGR_EXPORTABLE CreateConfigParam(const TCHAR *name, const TCHAR *val
    TCHAR szQuery[3024];
    if (!IsConfigurationVariableExist(name))
    {
-      INT32 major, minor;
+      int32_t major, minor;
       if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
          return false;
       if ((major > 30) || ((major == 30) && (minor >= 22)))

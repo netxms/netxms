@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpget - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ static int GetData(int argc, TCHAR *argv[], int interval)
    uint32_t rc = transport.createUDPTransport(argv[0], m_port);
    if (rc != SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(rc));
+      _tprintf(_T("Unable to create UDP transport: %s\n"), SnmpGetErrorText(rc));
       return 2;
    }
 
@@ -77,7 +77,7 @@ static int GetData(int argc, TCHAR *argv[], int interval)
    SNMP_PDU request(SNMP_GET_REQUEST, GetCurrentProcessId(), m_snmpVersion);
    for(int i = 1; i < argc; i++)
    {
-      if (!SNMPIsCorrectOID(argv[i]))
+      if (!SnmpIsCorrectOID(argv[i]))
       {
          _tprintf(_T("Invalid OID: %s\n"), argv[i]);
          return 4;
@@ -90,7 +90,7 @@ static int GetData(int argc, TCHAR *argv[], int interval)
    do
    {
       SNMP_PDU *response;
-      if ((rc = transport.doRequest(&request, &response, m_timeout, 3)) == SNMP_ERR_SUCCESS)
+      if ((rc = transport.doRequest(&request, &response, m_timeout, SnmpGetDefaultRetryCount())) == SNMP_ERR_SUCCESS)
       {
          TCHAR buffer[1024];
          for(int i = 0; i < response->getNumVariables(); i++)
@@ -111,7 +111,7 @@ static int GetData(int argc, TCHAR *argv[], int interval)
                TCHAR typeName[256];
                subvar->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
                _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-                     convert ? _T("Hex-STRING") : SNMPDataTypeName(subvar->getType(), typeName, 256), buffer);
+                     convert ? _T("Hex-STRING") : SnmpDataTypeName(subvar->getType(), typeName, 256), buffer);
                delete subvar;
             }
             else
@@ -120,7 +120,7 @@ static int GetData(int argc, TCHAR *argv[], int interval)
                TCHAR typeName[256];
                var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
                _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
-                     convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256), buffer);
+                     convert ? _T("Hex-STRING") : SnmpDataTypeName(var->getType(), typeName, 256), buffer);
             }
          }
          delete response;
@@ -128,7 +128,7 @@ static int GetData(int argc, TCHAR *argv[], int interval)
       }
       else
       {
-         _tprintf(_T("%s\n"), SNMPGetErrorText(rc));
+         _tprintf(_T("%s\n"), SnmpGetErrorText(rc));
          exitCode = 3;
       }
    } while((interval > 0) && (exitCode == 0));

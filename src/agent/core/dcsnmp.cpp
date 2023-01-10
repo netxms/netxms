@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -216,15 +216,15 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
    for(int i = 0; i < columns.size(); i++)
    {
       const SNMPTableColumnDefinition *c = columns.get(i);
-      if (c->getSnmpOid() != nullptr)
+      if (c->getSnmpOid().isValid())
       {
          uint32_t oid[MAX_OID_LEN];
-         size_t oidLen = c->getSnmpOid()->length();
-         memcpy(oid, c->getSnmpOid()->value(), oidLen * sizeof(UINT32));
+         size_t oidLen = c->getSnmpOid().length();
+         memcpy(oid, c->getSnmpOid().value(), oidLen * sizeof(uint32_t));
          if (rowOid != nullptr)
          {
             size_t suffixLen = rowOid->length() - baseOidLen;
-            memcpy(&oid[oidLen], rowOid->value() + baseOidLen, suffixLen * sizeof(UINT32));
+            memcpy(&oid[oidLen], rowOid->value() + baseOidLen, suffixLen * sizeof(uint32_t));
             oidLen += suffixLen;
          }
          else
@@ -301,11 +301,11 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
       for(int i = 0; i < columns.size(); i++)
       {
          const SNMPTableColumnDefinition *c = columns.get(i);
-         if (c->getSnmpOid() != nullptr)
+         if (c->getSnmpOid().isValid())
             value->addColumn(c->getName(), c->getDataType(), c->getDisplayName(), c->isInstanceColumn());
       }
 
-      size_t baseOidLen = SNMPGetOIDLength(oid);
+      size_t baseOidLen = SnmpGetOIDLength(oid);
       for(int i = 0; i < oidList.size(); i++)
       {
          rcc = ReadSNMPTableRow(snmp, oidList.get(i), baseOidLen, 0, columns, value);
@@ -315,7 +315,7 @@ uint32_t GetSnmpTable(const uuid& target, uint16_t port, SNMP_Version version, c
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 7, _T("GetSnmpTable: SNMP walk on %s failed (%s)"), oid, SNMPGetErrorText(rcc));
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("GetSnmpTable: SNMP walk on %s failed (%s)"), oid, SnmpGetErrorText(rcc));
    }
 
    return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :

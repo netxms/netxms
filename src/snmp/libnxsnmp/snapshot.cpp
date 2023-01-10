@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -99,7 +99,7 @@ SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const SNMP_ObjectId& oid) const
 SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const TCHAR *oid) const
 {
    uint32_t binOid[MAX_OID_LEN];
-   size_t oidLen = SNMPParseOID(oid, binOid, MAX_OID_LEN);
+   size_t oidLen = SnmpParseOID(oid, binOid, MAX_OID_LEN);
    if (oidLen == 0)
       return nullptr;
    return find(binOid, oidLen);
@@ -176,7 +176,7 @@ const SNMP_Variable *SNMP_Snapshot::get(const uint32_t *oid, size_t oidLen) cons
 const SNMP_Variable *SNMP_Snapshot::getNext(const TCHAR *oid) const
 {
    uint32_t binOid[MAX_OID_LEN];
-   size_t oidLen = SNMPParseOID(oid, binOid, MAX_OID_LEN);
+   size_t oidLen = SnmpParseOID(oid, binOid, MAX_OID_LEN);
    if (oidLen == 0)
       return nullptr;
    return getNext(binOid, oidLen);
@@ -215,7 +215,7 @@ const SNMP_Variable *SNMP_Snapshot::getNext(const uint32_t *oid, size_t oidLen) 
 EnumerationCallbackResult SNMP_Snapshot::walk(const TCHAR *baseOid, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const
 {
    uint32_t binOid[MAX_OID_LEN];
-   size_t oidLen = SNMPParseOID(baseOid, binOid, MAX_OID_LEN);
+   size_t oidLen = SnmpParseOID(baseOid, binOid, MAX_OID_LEN);
    if (oidLen == 0)
       return _CONTINUE;
    return walk(binOid, oidLen, handler, userArg);

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Westerstrand clocks
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -85,7 +85,7 @@ bool WesterstrandDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *n
    uint32_t rc;
    if ((rc = snmp->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getHardwareInformation(%s): SNMP failure (%s)"), node->getName(), SnmpGetErrorText(rc));
       return false;
    }
 
@@ -145,7 +145,7 @@ GeoLocation WesterstrandDriver::getGeoLocation(SNMP_Transport *snmp, NObject *no
    uint32_t rc;
    if ((rc = snmp->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): SNMP failure (%s)"), node->getName(), SNMPGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("WesterstrandDriver::getGeoLocation(%s): SNMP failure (%s)"), node->getName(), SnmpGetErrorText(rc));
       return GeoLocation();
    }
 

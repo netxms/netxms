@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -903,22 +903,24 @@ public:
 /**
  * Functions
  */
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize);
-size_t LIBNXSNMP_EXPORTABLE SNMPParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize);
-bool LIBNXSNMP_EXPORTABLE SNMPIsCorrectOID(const TCHAR *oid);
-size_t LIBNXSNMP_EXPORTABLE SNMPGetOIDLength(const TCHAR *oid);
-uint32_t LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags);
-uint32_t LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
-uint32_t LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *fileName, uint32_t *pdwTimestamp);
-uint32_t LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *type);
-TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize);
+TCHAR LIBNXSNMP_EXPORTABLE *SnmpConvertOIDToText(size_t length, const uint32_t *value, TCHAR *buffer, size_t bufferSize);
+size_t LIBNXSNMP_EXPORTABLE SnmpParseOID(const TCHAR *text, uint32_t *buffer, size_t bufferSize);
+bool LIBNXSNMP_EXPORTABLE SnmpIsCorrectOID(const TCHAR *oid);
+size_t LIBNXSNMP_EXPORTABLE SnmpGetOIDLength(const TCHAR *oid);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpSaveMIBTree(const TCHAR *fileName, SNMP_MIBObject *root, uint32_t flags);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpLoadMIBTree(const TCHAR *fileName, SNMP_MIBObject **ppRoot);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpGetMIBTreeTimestamp(const TCHAR *fileName, uint32_t *timestamp);
+uint32_t LIBNXSNMP_EXPORTABLE SnmpResolveDataType(const TCHAR *type);
+TCHAR LIBNXSNMP_EXPORTABLE *SnmpDataTypeName(uint32_t type, TCHAR *buffer, size_t bufferSize);
 
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetErrorText(uint32_t errorCode);
-const TCHAR LIBNXSNMP_EXPORTABLE *SNMPGetProtocolErrorText(SNMP_ErrorCode errorCode);
+const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetErrorText(uint32_t errorCode);
+const TCHAR LIBNXSNMP_EXPORTABLE *SnmpGetProtocolErrorText(SNMP_ErrorCode errorCode);
 
 uint32_t LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
 void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(uint32_t timeout);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
+void LIBNXSNMP_EXPORTABLE SnmpSetDefaultRetryCount(int numRetries);
+int LIBNXSNMP_EXPORTABLE SnmpGetDefaultRetryCount();
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGet(SNMP_Version version, SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen, void *value, size_t bufferSize, uint32_t flags);
 uint32_t LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *transport, const TCHAR *oidStr, const uint32_t *oidBinary, size_t oidLen,
       void *value, size_t bufferSize, uint32_t flags, uint32_t *dataLen = nullptr, const char *codepage = nullptr);

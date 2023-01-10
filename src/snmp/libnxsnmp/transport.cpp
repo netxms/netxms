@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -43,6 +43,28 @@ static struct
 	{ { 1, 3, 6, 1, 6, 3, 15, 1, 1, 6, 0 }, 11, SNMP_ERR_DECRYPTION },
 	{ { 0 }, 0, 0 }
 };
+
+/**
+ * Default retry count
+ */
+static int s_defaultRetryCount = 3;
+
+/**
+ * Set default retry count
+ */
+void LIBNXSNMP_EXPORTABLE SnmpSetDefaultRetryCount(int numRetries)
+{
+   s_defaultRetryCount = (numRetries >= 1) ? numRetries : 1;
+   nxlog_debug_tag(LIBNXSNMP_DEBUG_TAG, 4, _T("SNMP default number of retries set to %d"), s_defaultRetryCount);
+}
+
+/**
+ * Get default retry count
+ */
+int LIBNXSNMP_EXPORTABLE SnmpGetDefaultRetryCount()
+{
+   return s_defaultRetryCount;
+}
 
 /**
  * Create new SNMP transport.
@@ -112,7 +134,7 @@ uint32_t SNMP_Transport::doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t
  */
 uint32_t SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response)
 {
-   return doRequest(request, response, SnmpGetDefaultTimeout(), 3, false);
+   return doRequest(request, response, SnmpGetDefaultTimeout(), s_defaultRetryCount, false);
 }
 
 /**

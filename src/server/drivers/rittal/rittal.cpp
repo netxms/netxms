@@ -1,7 +1,7 @@
 /**
  * NetXMS - Network Management System
  * Driver for Rittal CMC and LCP devices
- * Copyright (C) 2017-2020 Raden Solutions
+ * Copyright (C) 2017-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -117,7 +117,7 @@ DataCollectionError RittalDriver::getMetric(SNMP_Transport *snmp, NObject *node,
 
    TCHAR oidText[256];
    nxlog_debug_tag(RITTAL_DEBUG_TAG, 7, _T("RittalDriver::getMetric(%s [%u]): metric object found, OID=\"%s\""),
-            driverData->getNodeName(), driverData->getNodeId(), SNMPConvertOIDToText(15, metric.oid, oidText, 256));
+            driverData->getNodeName(), driverData->getNodeId(), SnmpConvertOIDToText(15, metric.oid, oidText, 256));
    return (SnmpGetEx(snmp, nullptr, metric.oid, 15, value, size * sizeof(TCHAR), SG_STRING_RESULT, nullptr) == SNMP_ERR_SUCCESS) ? DCE_SUCCESS : DCE_COMM_ERROR;
 }
 

@@ -1,6 +1,6 @@
 /* 
 ** nddload - command line tool for network device driver testing
-** Copyright (C) 2013-2021 Raden Solutions
+** Copyright (C) 2013-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -119,10 +119,10 @@ static EnumerationCallbackResult PrintAttributeCallback(const TCHAR *key, const 
 static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 {
    TCHAR oid[256];
-   DWORD snmpErr = SnmpGet(transport->getSnmpVersion(), transport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, oid, sizeof(oid), SG_STRING_RESULT);
+   uint32_t snmpErr = SnmpGet(transport->getSnmpVersion(), transport, _T(".1.3.6.1.2.1.1.2.0"), nullptr, 0, oid, sizeof(oid), SG_STRING_RESULT);
    if (snmpErr != SNMP_ERR_SUCCESS)
    {
-      _tprintf(_T("Cannot get device OID (%s)\n"), SNMPGetErrorText(snmpErr));
+      _tprintf(_T("Cannot get device OID (%s)\n"), SnmpGetErrorText(snmpErr));
       return false;
    }
 
@@ -144,7 +144,7 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
    }
 
    _tprintf(_T("Device is supported by driver\n"));
-   
+
    driver->analyzeDevice(transport, oid, &s_object, &s_driverData);
    _tprintf(_T("Custom attributes after device analyze:\n"));
    auto attributes = s_object.getCustomAttributes();
@@ -298,12 +298,12 @@ static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVe
 #else
    HMODULE hModule = DLOpen(driver, errorText);
 #endif
-   if (hModule == NULL)
+   if (hModule == nullptr)
    {
       _tprintf(_T("Cannot load driver: %s\n"), errorText);
       return;
    }
-   
+
    auto transport = new SNMP_UDPTransport;
    transport->createUDPTransport(InetAddress::resolveHostName(host), snmpPort);
    transport->setSnmpVersion(snmpVersion);
@@ -311,25 +311,24 @@ static void LoadDriver(const char *driver, const char *host, SNMP_Version snmpVe
 
    int *apiVersion = (int *)DLGetSymbolAddr(hModule, "nddAPIVersion", errorText);
    ObjectArray<NetworkDeviceDriver> *(* CreateInstances)() = (ObjectArray<NetworkDeviceDriver> *(*)())DLGetSymbolAddr(hModule, "nddCreateInstances", errorText);
-   if ((apiVersion != NULL) && (CreateInstances != NULL))
+   if ((apiVersion != nullptr) && (CreateInstances != nullptr))
    {
       if (*apiVersion == NDDRV_API_VERSION)
       {
          s_drivers = CreateInstances();
-         if (s_drivers != NULL)
+         if (s_drivers != nullptr)
          {
             NetworkDeviceDriver *driver = s_drivers->get(0);
             for(int i = 0; i < s_drivers->size(); i++)
             {
                _tprintf(_T("Driver %s (version %s) loaded\n"), s_drivers->get(i)->getName(), s_drivers->get(i)->getVersion());
-               if ((s_driverName != NULL) && !_tcsicmp(s_driverName, s_drivers->get(i)->getName()))
+               if ((s_driverName != nullptr) && !_tcsicmp(s_driverName, s_drivers->get(i)->getName()))
                {
                   driver = s_drivers->get(i);
                }
             }
 
-            _tprintf(_T("Connecting to host %hs:%d using community string %hs and driver %s\n"),
-                     host, snmpPort, community, driver->getName());
+            _tprintf(_T("Connecting to host %hs:%d using community string %hs and driver %s\n"), host, snmpPort, community, driver->getName());
 
             if (ConnectToDevice(driver, transport))
             {

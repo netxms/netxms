@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -223,7 +223,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       if (suffixText[0] == 0)
       {
          uint32_t suffix[16];
-         size_t l = SNMPParseOID(suffixText, suffix, 16);
+         size_t l = SnmpParseOID(suffixText, suffix, 16);
          if (l > 0)
          {
             m_ifTableSuffixLen = (int)l;
@@ -374,7 +374,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          if (m_ifTableSuffixLen > 0)
          {
             TCHAR buffer[128];
-            DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+            DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, SnmpConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
          }
          else
          {

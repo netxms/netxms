@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1283,7 +1283,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
 
    // Create PDU and send request
    uint32_t oid[MAX_OID_LEN];
-   size_t nameLen = SNMPParseOID(argv[1]->getValueAsCString(), oid, MAX_OID_LEN);
+   size_t nameLen = SnmpParseOID(argv[1]->getValueAsCString(), oid, MAX_OID_LEN);
    if (nameLen == 0)
    {
       *result = vm->createValue();
@@ -1383,7 +1383,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    SNMP_PDU request(SNMP_SET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    SNMP_PDU *response = nullptr;
    bool success = false;
-   if (SNMPIsCorrectOID(argv[1]->getValueAsCString()))
+   if (SnmpIsCorrectOID(argv[1]->getValueAsCString()))
    {
       SNMP_Variable *var = new SNMP_Variable(argv[1]->getValueAsCString());
       if (argc == 3)
@@ -1395,7 +1395,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       }
       else
       {
-         uint32_t dataType = SNMPResolveDataType(argv[3]->getValueAsCString());
+         uint32_t dataType = SnmpResolveDataType(argv[3]->getValueAsCString());
          if (dataType == ASN_NULL)
          {
             nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: failed to resolve data type '%s', assume string"),
@@ -1436,7 +1436,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
       }
       else
       {
-         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: %s"), SNMPGetErrorText(snmpResult));
+         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPSet: %s"), SnmpGetErrorText(snmpResult));
       }
    }
 

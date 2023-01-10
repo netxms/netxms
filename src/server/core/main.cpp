@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -543,6 +543,7 @@ static void LoadGlobalConfig()
    g_pollsBetweenPrimaryIpUpdate = ConfigReadULong(_T("Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval"), 1);
 
    SnmpSetDefaultTimeout(ConfigReadInt(_T("SNMP.RequestTimeout"), 1500));
+   SnmpSetDefaultRetryCount(ConfigReadInt(_T("SNMP.RetryCount"), 3));
 }
 
 /**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -4541,7 +4541,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
 
    SNMP_PDU request(SNMP_SET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    bool success;
-   if (SNMPIsCorrectOID(argv[0]->getValueAsCString()))
+   if (SnmpIsCorrectOID(argv[0]->getValueAsCString()))
    {
       SNMP_Variable *var = new SNMP_Variable(argv[0]->getValueAsCString());
       if (argc == 2)
@@ -4553,7 +4553,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
       }
       else
       {
-         uint32_t dataType = SNMPResolveDataType(argv[2]->getValueAsCString());
+         uint32_t dataType = SnmpResolveDataType(argv[2]->getValueAsCString());
          if (dataType == ASN_NULL)
          {
             nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: failed to resolve data type '%s', assume string"),
@@ -4595,7 +4595,7 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
       }
       else
       {
-         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: %s"), SNMPGetErrorText(snmpResult));
+         nxlog_debug_tag(_T("snmp.nxsl"), 6, _T("SNMPTransport::set: %s"), SnmpGetErrorText(snmpResult));
       }
    }
 

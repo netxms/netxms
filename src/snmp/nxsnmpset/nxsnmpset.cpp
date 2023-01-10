@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpset - command line tool used to set parameters on SNMP agent
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,14 +73,14 @@ static int SetVariables(int argc, TCHAR *argv[])
          {
             *p = 0;
             p++;
-            type = SNMPResolveDataType(p);
+            type = SnmpResolveDataType(p);
             if (type == ASN_NULL)
             {
                _tprintf(_T("Invalid data type: %s\n"), p);
                exitCode = 5;
             }
          }
-         if (SNMPIsCorrectOID(argv[i]))
+         if (SnmpIsCorrectOID(argv[i]))
          {
             auto varbind = new SNMP_Variable(argv[i]);
             if (s_hexString)
@@ -125,17 +125,17 @@ static int SetVariables(int argc, TCHAR *argv[])
       if (exitCode == 0)
       {
          SNMP_PDU *response;
-         if ((snmpResult = transport->doRequest(request, &response, s_timeout, 3)) == SNMP_ERR_SUCCESS)
+         if ((snmpResult = transport->doRequest(request, &response, s_timeout, SnmpGetDefaultRetryCount())) == SNMP_ERR_SUCCESS)
          {
             if (response->getErrorCode() != 0)
             {
-               _tprintf(_T("SET operation failed (%s)\n"), SNMPGetProtocolErrorText(response->getErrorCode()));
+               _tprintf(_T("SET operation failed (%s)\n"), SnmpGetProtocolErrorText(response->getErrorCode()));
             }
             delete response;
          }
          else
          {
-            _tprintf(_T("%s\n"), SNMPGetErrorText(snmpResult));
+            _tprintf(_T("%s\n"), SnmpGetErrorText(snmpResult));
             exitCode = 3;
          }
       }
@@ -144,7 +144,7 @@ static int SetVariables(int argc, TCHAR *argv[])
    }
    else
    {
-      _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(snmpResult));
+      _tprintf(_T("Unable to create UDP transport: %s\n"), SnmpGetErrorText(snmpResult));
       exitCode = 2;
    }
 
@@ -202,10 +202,10 @@ int main(int argc, char *argv[])
                // Try to resolve from symbolic form
 #ifdef UNICODE
 					WCHAR *wdt = WideStringFromMBString(optarg);
-               value = SNMPResolveDataType(wdt);
+               value = SnmpResolveDataType(wdt);
 					MemFree(wdt);
 #else
-               value = SNMPResolveDataType(optarg);
+               value = SnmpResolveDataType(optarg);
 #endif
                if (value == ASN_NULL)
                {

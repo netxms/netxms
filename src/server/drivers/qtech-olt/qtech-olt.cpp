@@ -5,7 +5,8 @@
 ** Licensed under MIT lisence, as stated by the original
 ** author: https://dev.raden.solutions/issues/779#note-4
 ** 
-** Copyright (C) 2015 Procyshin Dmitriy
+** Copyright (c) 2015 Procyshin Dmitriy
+** Copyright (c) 2023 Raden Solutions
 ** 
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of
 ** this software and associated documentation files (the “Software”), to deal in
@@ -81,15 +82,15 @@ bool QtechOLTDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for enumerating indexes
  */
-static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static uint32_t HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, InterfaceList *ifList)
 {
-    UINT32 slot = pVar->getName().getElement(14);
-    InterfaceInfo *info = new InterfaceInfo(pVar->getValueAsUInt() + slot * 1000);
-    info->location.module = slot;
-    info->location.port = info->index - slot * 1000;
-    info->isPhysicalPort = true;
-    ((InterfaceList *)pArg)->add(info);
-    return SNMP_ERR_SUCCESS;
+   uint32_t slot = pVar->getName().getElement(14);
+   InterfaceInfo *info = new InterfaceInfo(pVar->getValueAsUInt() + slot * 1000);
+   info->location.module = slot;
+   info->location.port = info->index - slot * 1000;
+   info->isPhysicalPort = true;
+   ifList->add(info);
+   return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -100,7 +101,6 @@ static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
  */
 InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
-   uint32_t oid[MAX_OID_LEN];
    InterfaceList *pIfList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.27514.1.11.4.1.1.1"), HandlerIndex, pIfList) == SNMP_ERR_SUCCESS)
    {
@@ -109,7 +109,8 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
          InterfaceInfo *iface = pIfList->get(i);
          if (iface->index > 1000)
          {
-            SNMPParseOID(_T(".1.3.6.1.4.1.27514.1.11.4.1.1.0.0.0.0"), oid, MAX_OID_LEN);
+            uint32_t oid[MAX_OID_LEN];
+            SnmpParseOID(_T(".1.3.6.1.4.1.27514.1.11.4.1.1.0.0.0.0"), oid, MAX_OID_LEN);
             oid[12] = 22;
             oid[14] = iface->location.module;
             oid[15] = iface->index - iface->location.module * 1000;
@@ -147,18 +148,16 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
          int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
-   UINT32 dwOperStatus = 0;
-   UINT32 oid[MAX_OID_LEN];
-
    *adminState = IF_ADMIN_STATE_UP;
-
    if (ifIndex > 1000)
    {
-      SNMPParseOID(_T(".1.3.6.1.4.1.27514.1.11.4.1.1.3.0.0.0"), oid, MAX_OID_LEN);
+      uint32_t oid[MAX_OID_LEN];
+      SnmpParseOID(_T(".1.3.6.1.4.1.27514.1.11.4.1.1.3.0.0.0"), oid, MAX_OID_LEN);
       oid[14] = ifIndex / 1000;
       oid[15] = ifIndex - oid[14] * 1000;
-      SnmpGetEx(snmp, NULL, oid, 16, &dwOperStatus, sizeof(UINT32), 0, NULL);
-      switch(dwOperStatus)
+      uint32_t operStatus = 0;
+      SnmpGetEx(snmp, nullptr, oid, 16, &operStatus, sizeof(uint32_t), 0, nullptr);
+      switch(operStatus)
       {
          case 1:
             *operState = IF_OPER_STATE_UP;

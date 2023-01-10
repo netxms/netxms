@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -416,7 +416,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
             buffer[0] = 0;
          break;
       case ASN_OBJECT_ID:
-         SNMPConvertOIDToText(m_valueLength / sizeof(uint32_t), reinterpret_cast<uint32_t*>(m_value), buffer, bufferSize);
+         SnmpConvertOIDToText(m_valueLength / sizeof(uint32_t), reinterpret_cast<uint32_t*>(m_value), buffer, bufferSize);
          break;
       case ASN_OCTET_STRING:
          length = std::min(bufferSize - 1, m_valueLength);
@@ -671,7 +671,7 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
          break;
       case ASN_OBJECT_ID:
          pdwBuffer = MemAllocArrayNoInit<uint32_t>(256);
-         length = SNMPParseOID(value, pdwBuffer, 256);
+         length = SnmpParseOID(value, pdwBuffer, 256);
          if (length > 0)
          {
             reallocValueBuffer(length * sizeof(uint32_t));

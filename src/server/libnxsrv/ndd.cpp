@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -300,13 +300,13 @@ static uint32_t HandlerIpAddr(SNMP_Variable *var, SNMP_Transport *transport, Int
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), transport, SNMPGetProtocolErrorText(response->getErrorCode()));
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), transport, SnmpGetProtocolErrorText(response->getErrorCode()));
       }
       delete response;
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), transport, SNMPGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP GET in HandlerIpAddr failed (%s)"), transport, SnmpGetErrorText(rc));
    }
    return rc;
 }
@@ -651,7 +651,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SNMPGetErrorText(error));
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SnmpGetErrorText(error));
          }
 		}
 		else
@@ -702,7 +702,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
    uint32_t state = 0;
    TCHAR oid[256], suffix[128];
    if (ifTableSuffixLen > 0)
-      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128)); // Interface administrative state
+      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7%s"), SnmpConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128)); // Interface administrative state
    else
       _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
    SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);
@@ -719,7 +719,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
          // Get interface operational state
          state = 0;
          if (ifTableSuffixLen > 0)
-            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
+            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8%s"), SnmpConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
          else
             _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%u"), ifIndex);
          SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);

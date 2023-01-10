@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for sending SNMP traps
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -178,7 +178,7 @@ int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
    uint32_t rc = transport.createUDPTransport(recipient, m_port);
    if (rc != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create SNMP transport for target %s (%s)"), recipient, SNMPGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot create SNMP transport for target %s (%s)"), recipient, SnmpGetErrorText(rc));
       return -1;
    }
 
@@ -194,7 +194,7 @@ int SNMPTrapDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
    rc = transport.sendTrap(&pdu, 2000);
    if (rc != SNMP_ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send SNMP trap to %s (%s)"), recipient, SNMPGetErrorText(rc));
+      nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot send SNMP trap to %s (%s)"), recipient, SnmpGetErrorText(rc));
       return -1;
    }
    return 0;

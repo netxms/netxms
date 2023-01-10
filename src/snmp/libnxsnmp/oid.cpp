@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,7 @@ SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &src)
 SNMP_ObjectId::SNMP_ObjectId(const uint32_t *value, size_t length)
 {
    m_length = length;
-   m_value = MemCopyArray(value, length);
+   m_value = (length > 0) ? MemCopyArray(value, length) : nullptr;
 }
 
 /**
@@ -77,7 +77,7 @@ SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
 String SNMP_ObjectId::toString() const
 {
    TCHAR buffer[MAX_OID_LEN * 5];
-   SNMPConvertOIDToText(m_length, m_value, buffer, MAX_OID_LEN * 5);
+   SnmpConvertOIDToText(m_length, m_value, buffer, MAX_OID_LEN * 5);
    return String(buffer);
 }
 
@@ -86,17 +86,17 @@ String SNMP_ObjectId::toString() const
  */
 TCHAR *SNMP_ObjectId::toString(TCHAR *buffer, size_t bufferSize) const
 {
-   SNMPConvertOIDToText(m_length, m_value, buffer, bufferSize);
+   SnmpConvertOIDToText(m_length, m_value, buffer, bufferSize);
    return buffer;
 }
 
 /**
  * Compare this OID with another
  */
-int SNMP_ObjectId::compare(const TCHAR *pszOid) const
+int SNMP_ObjectId::compare(const TCHAR *oid) const
 {
    uint32_t buffer[MAX_OID_LEN];
-   size_t length = SNMPParseOID(pszOid, buffer, MAX_OID_LEN);
+   size_t length = SnmpParseOID(oid, buffer, MAX_OID_LEN);
    if (length == 0)
       return OID_ERROR;
    return compare(buffer, length);
@@ -186,6 +186,6 @@ void SNMP_ObjectId::truncate(size_t count)
 SNMP_ObjectId SNMP_ObjectId::parse(const TCHAR *oid)
 {
    uint32_t buffer[MAX_OID_LEN];
-   size_t length = SNMPParseOID(oid, buffer, MAX_OID_LEN);
+   size_t length = SnmpParseOID(oid, buffer, MAX_OID_LEN);
    return SNMP_ObjectId(buffer, length);
 }
