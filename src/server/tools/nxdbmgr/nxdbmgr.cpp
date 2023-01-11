@@ -47,7 +47,7 @@ int g_migrationTxnSize = 4096;
  */
 static char m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
-static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
+static TCHAR s_dbDriverOptions[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
 static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
 static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
@@ -58,7 +58,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
-   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
+   { _T("DBDriverOptions"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriverOptions },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
@@ -66,6 +66,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_moduleLoadList, nullptr },
+   /* deprecated parameters */
+   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriverOptions },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 static DB_DRIVER s_driver = nullptr;
@@ -654,7 +656,7 @@ stop_search:
       return 3;
    }
 
-	s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, nullptr, nullptr);
+	s_driver = DBLoadDriver(s_dbDriver, s_dbDriverOptions, nullptr, nullptr);
 	if (s_driver == nullptr)
    {
       _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);

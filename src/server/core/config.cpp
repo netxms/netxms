@@ -101,7 +101,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, nullptr },
    { _T("DBCacheConfigurationTables"), CT_BOOLEAN_FLAG_64, 0, 0, AF_CACHE_DB_ON_STARTUP, 0, (void*)&g_flags, nullptr },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, nullptr },
-   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr },
+   { _T("DBDriverOptions"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, nullptr },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, nullptr },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, nullptr },
@@ -129,7 +129,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("PeerNode"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_peerNode, nullptr },
    { _T("PerfDataStorageDriver"), CT_STRING_CONCAT, '\n', 0, 0, 0, &g_pdsLoadList, nullptr },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, nullptr },
-   { _T("ServerCACertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr }, //Do not document is depricated
    { _T("ServerCertificate"), CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificatePath, nullptr },
    { _T("ServerCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_serverCertificateKeyPath, nullptr },
    { _T("ServerCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_serverCertificatePassword, nullptr },
@@ -139,6 +138,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("TunnelCertificateKey"), CT_STRING, 0, 0, MAX_PATH, 0, s_tunnelCertificateKeyPath, nullptr },
    { _T("TunnelCertificatePassword"), CT_MB_STRING, 0, 0, MAX_PASSWORD, 0, s_tunnelCertificatePassword, nullptr },
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_64, 0, 0, AF_LOG_IN_JSON_FORMAT, 0, (void*)&g_flags, nullptr },
+   /* deprecated parameters */
+   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, nullptr }, 
+   { _T("ServerCACertificate"), CT_STRING_SET, 0, 0, 0, 0, &g_trustedCertificates, nullptr },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr, nullptr }
 };
 
