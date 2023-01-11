@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 **/
 
 #include "netsvc.h"
+
+#ifdef CURLPROTO_SMTP
 
 /**
  * Check SMTP service (used by command handler and legacy metric handler)
@@ -116,3 +118,34 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
    }
    return rc;
 }
+
+#else /* No SMTP support in libcurl */
+
+/**
+ * Check SMTP service (used by command handler and legacy metric handler)
+ */
+int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char* to, uint32_t timeout)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("CheckSMTP: agent was built with libcurl version that does not support SMTP protocol"));
+   return PC_ERR_INTERNAL;
+}
+
+/**
+ * Check SMTP service - metric sub-handler
+ */
+LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, int *result)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("NetworkServiceStatus_SMTP: agent was built with libcurl version that does not support SMTP protocol"));
+   return SYSINFO_RC_UNSUPPORTED;
+}
+
+/**
+ * Check SMTP/SMTPS service - legacy metric handler
+ */
+LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("H_CheckSMTP: agent was built with libcurl version that does not support SMTP protocol"));
+   return SYSINFO_RC_UNSUPPORTED;
+}
+
+#endif
