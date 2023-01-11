@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,9 +43,13 @@ int CURLCodeToCheckResult(CURLcode cc)
          return PC_ERR_NONE;
       case CURLE_UNSUPPORTED_PROTOCOL:
       case CURLE_URL_MALFORMAT:
-      case CURLE_NOT_BUILT_IN:
-      case CURLE_UNKNOWN_OPTION:
       case CURLE_LDAP_INVALID_URL:
+#if HAVE_DECL_CURLE_NOT_BUILT_IN
+      case CURLE_NOT_BUILT_IN:
+#endif
+#if HAVE_DECL_CURLE_UNKNOWN_OPTION
+      case CURLE_UNKNOWN_OPTION:
+#endif
          return PC_ERR_BAD_PARAMS;
       case CURLE_COULDNT_RESOLVE_PROXY:
       case CURLE_COULDNT_RESOLVE_HOST:
