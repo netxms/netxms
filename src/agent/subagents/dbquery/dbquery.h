@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -30,6 +30,8 @@
 
 #define MAX_DBID_LEN       64
 #define MAX_QUERY_NAME_LEN 64
+
+#define DBQUERY_DEBUG_TAG  _T("dbquery")
 
 /**
  * Query definition
@@ -97,7 +99,6 @@ class DBConnection
 {
 private:
    TCHAR *m_id;
-	TCHAR *m_driver;
 	TCHAR *m_server;
 	TCHAR *m_dbName;
 	TCHAR *m_login;
@@ -109,6 +110,7 @@ private:
 
 public:
    static DBConnection *createFromConfig(const TCHAR *config);
+   static DBConnection *createFromConfig(const ConfigEntry& config);
 
    ~DBConnection();
 
@@ -132,6 +134,7 @@ LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstr
  * Functions
  */
 bool AddDatabaseFromConfig(const TCHAR *db);
+bool AddDatabaseFromConfig(const ConfigEntry& config);
 bool AddQueryFromConfig(const TCHAR *config, Query** createdQuery);
 bool AddConfigurableQueryFromConfig(const TCHAR *config, Query** createdQuery);
 void ShutdownConnections();

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -34,7 +34,6 @@ static Mutex s_dbConnectionsLock;
 DBConnection::DBConnection()
 {
    m_id = nullptr;
-	m_driver = nullptr;
 	m_server = nullptr;
 	m_dbName = nullptr;
 	m_login = nullptr;
@@ -49,7 +48,6 @@ DBConnection::DBConnection()
 DBConnection::~DBConnection()
 {
    MemFree(m_id);
-   MemFree(m_driver);
    MemFree(m_server);
    MemFree(m_dbName);
    MemFree(m_login);
@@ -72,13 +70,25 @@ static TCHAR *ReadAttribute(const TCHAR *config, const TCHAR *attribute)
 }
 
 /**
- * Create DB connection from config
+ * Create DB connection from INI-style config
  */
 DBConnection *DBConnection::createFromConfig(const TCHAR *config)
 {
+   TCHAR driver[256];
+   if (!ExtractNamedOptionValue(config, _T("driver"), driver, 256))
+      return nullptr;
+   if (driver[0] == 0)
+      return nullptr;
+
    DBConnection *conn = new DBConnection();
+
    conn->m_id = ReadAttribute(config, _T("id"));
-   conn->m_driver = ReadAttribute(config, _T("driver"));
+   if (conn->m_id == nullptr)
+   {
+      delete conn;
+      return nullptr;
+   }
+
    conn->m_server = ReadAttribute(config, _T("server"));
    conn->m_dbName = ReadAttribute(config, _T("dbname"));
    conn->m_login = ReadAttribute(config, _T("login"));
@@ -90,13 +100,39 @@ DBConnection *DBConnection::createFromConfig(const TCHAR *config)
    if (conn->m_password != nullptr)
       DecryptPassword(CHECK_NULL_EX(conn->m_login), conn->m_password, conn->m_password, _tcslen(conn->m_password));
 
-   if ((conn->m_id == nullptr) || (conn->m_driver == nullptr))
+   TCHAR driverOptions[256] = _T("");
+   ExtractNamedOptionValue(config, _T("driverOptions"), driverOptions, 256);
+   conn->m_hDriver = DBLoadDriver(driver, driverOptions, nullptr, nullptr);
+   if (conn->m_hDriver == nullptr)
    {
       delete conn;
       return nullptr;
    }
 
-   conn->m_hDriver = DBLoadDriver(conn->m_driver, _T(""), nullptr, nullptr);
+   conn->connect();
+   return conn;
+}
+
+/**
+ * Create DB connection from hierarchical config
+ */
+DBConnection *DBConnection::createFromConfig(const ConfigEntry& config)
+{
+   const TCHAR *driver = config.getSubEntryValue(_T("Driver"));
+   if ((driver == nullptr) || (*driver == 0))
+      return nullptr;
+
+   DBConnection *conn = new DBConnection();
+   conn->m_id = MemCopyString(config.getName());
+   conn->m_server = MemCopyString(config.getSubEntryValue(_T("Server")));
+   conn->m_dbName = MemCopyString(config.getSubEntryValue(_T("Name")));
+   conn->m_login = MemCopyString(config.getSubEntryValue(_T("Login")));
+   conn->m_password = MemCopyString(config.getSubEntryValue(_T("Password")));
+
+   if (conn->m_password != nullptr)
+      DecryptPassword(CHECK_NULL_EX(conn->m_login), conn->m_password, conn->m_password, _tcslen(conn->m_password));
+
+   conn->m_hDriver = DBLoadDriver(driver, config.getSubEntryValue(_T("DriverOptions"), 0, _T("")), nullptr, nullptr);
    if (conn->m_hDriver == nullptr)
    {
       delete conn;
@@ -119,21 +155,36 @@ bool DBConnection::connect()
    m_hdb = DBConnect(m_hDriver, m_server, m_dbName, m_login, m_password, nullptr, errorText);
    if (m_hdb != nullptr)
    {
-      AgentWriteLog(NXLOG_INFO, _T("DBQUERY: connected to database %s"), m_id);
+      nxlog_write_tag(NXLOG_INFO, DBQUERY_DEBUG_TAG, _T("Connected to database \"%s\""), m_id);
    }
    else
    {
-      AgentWriteLog(NXLOG_WARNING, _T("DBQUERY: cannot connect to database %s (%s)"), m_id, errorText);
+      nxlog_write_tag(NXLOG_WARNING, DBQUERY_DEBUG_TAG, _T("Cannot connect to database \"%s\" (%s)"), m_id, errorText);
    }
    return m_hdb != nullptr;
 }
 
 /**
- * Add database connection to the list from config
+ * Add database connection to the list from INI-style config
  */
 bool AddDatabaseFromConfig(const TCHAR *db)
 {
    DBConnection *conn = DBConnection::createFromConfig(db);
+   if (conn == nullptr)
+      return false;
+
+   s_dbConnectionsLock.lock();
+   s_dbConnections.add(conn);
+   s_dbConnectionsLock.unlock();
+   return true;
+}
+
+/**
+ * Add database connection to the list from hierarchical config
+ */
+bool AddDatabaseFromConfig(const ConfigEntry& config)
+{
+   DBConnection *conn = DBConnection::createFromConfig(config);
    if (conn == nullptr)
       return false;
 

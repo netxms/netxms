@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -27,17 +27,17 @@
  */
 Query::Query()
 {
-   m_name = NULL;
-   m_dbid = NULL;
-   m_query = NULL;
+   m_name = nullptr;
+   m_dbid = nullptr;
+   m_query = nullptr;
    m_interval = 60;
    m_lastPoll = 0;
    m_status = QUERY_STATUS_UNKNOWN;
    _tcscpy(m_statusText, _T("UNKNOWN"));
-   m_result = NULL;
+   m_result = nullptr;
    m_pollerThread = INVALID_THREAD_HANDLE;
    m_pollRequired = false;
-   m_description = NULL;
+   m_description = nullptr;
 }
 
 /**
@@ -49,8 +49,7 @@ Query::~Query()
    MemFree(m_dbid);
    MemFree(m_query);
    MemFree(m_description);
-   if (m_result != nullptr)
-      DBFreeResult(m_result);
+   DBFreeResult(m_result);
 }
 
 /**
@@ -58,7 +57,7 @@ Query::~Query()
  */
 LONG Query::getResult(TCHAR *buffer)
 {
-   if (m_result == NULL)
+   if (m_result == nullptr)
       return SYSINFO_RC_ERROR;
    if (DBGetNumRows(m_result) == 0)
       return SYSINFO_RC_ERROR;
@@ -71,7 +70,7 @@ LONG Query::getResult(TCHAR *buffer)
  */
 LONG Query::fillResultTable(Table *table)
 {
-   if (m_result == NULL)
+   if (m_result == nullptr)
       return SYSINFO_RC_ERROR;
    DBResultToTable(m_result, table);
    return SYSINFO_RC_SUCCESS;
@@ -85,10 +84,10 @@ void Query::setError(const TCHAR *msg)
    lock();
    m_status = QUERY_STATUS_ERROR;
    _tcslcpy(m_statusText, msg, MAX_RESULT_LENGTH);
-   if (m_result != NULL)
+   if (m_result != nullptr)
    {
       DBFreeResult(m_result);
-      m_result = NULL;
+      m_result = nullptr;
    }
    unlock();
 }
@@ -103,7 +102,7 @@ void Query::poll()
    DB_HANDLE hdb = GetConnectionHandle(m_dbid);
    if (hdb == nullptr)
    {
-      AgentWriteDebugLog(4, _T("DBQUERY: Query::poll(%s): no connection handle for database %s"), m_name, m_dbid);
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("DBQUERY: Query::poll(%s): no connection handle for database %s"), m_name, m_dbid);
       setError(_T("DB connection not available"));
       return;
    }
@@ -112,7 +111,7 @@ void Query::poll()
    DB_RESULT hResult = DBSelectEx(hdb, m_query, errorText);
    if (hResult == nullptr)
    {
-      AgentWriteDebugLog(4, _T("DBQUERY: Query::poll(%s): query failed (%s)"), m_name, errorText);
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("DBQUERY: Query::poll(%s): query failed (%s)"), m_name, errorText);
       setError(errorText);
       return;
    }
@@ -160,7 +159,7 @@ Query *Query::createFromConfig(const TCHAR *src)
    query->m_interval = _tcstol(curr, nullptr, 0);
    if ((query->m_interval < 1) || (query->m_interval > 86400))
    {
-      AgentWriteDebugLog(1, _T("DBQuery: invalid interval %s for query %s"), curr, query->m_name);
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 1, _T("Invalid interval %s for query \"%s\""), curr, query->m_name);
       goto fail;
    }
    curr = s + 1;
@@ -254,7 +253,7 @@ Query *AcquireQueryObject(const TCHAR *name)
  */
 static void PollerThread(Query *query)
 {
-   AgentWriteDebugLog(3, _T("DBQuery: Polling thread for query %s started"), query->getName());
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 3, _T("Polling thread for query \"%s\" started"), query->getName());
 
    int sleepTime = (int)(query->getNextPoll() - time(nullptr));
    if (sleepTime <= 0)
@@ -267,7 +266,7 @@ static void PollerThread(Query *query)
          sleepTime = 1;
    }
 
-   AgentWriteDebugLog(3, _T("DBQuery: Polling thread for query %s stopped"), query->getName());
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 3, _T("Polling thread for query \"%s\" stopped"), query->getName());
 }
 
 /**
@@ -300,7 +299,7 @@ void StopPollingThreads()
       s_queries.get(i)->joinPollerThread();
       delete s_queries.get(i);
    }
-   AgentWriteDebugLog(3, _T("DBQuery: All polling threads stopped"));
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 3, _T("All polling threads stopped"));
 }
 
 /**
@@ -315,7 +314,7 @@ bool AddQueryFromConfig(const TCHAR *config, Query **createdQuery)
    {
       s_queries.add(query);
       *createdQuery = query;
-      AgentWriteDebugLog(1, _T("DBQuery: query %s added for polling"), query->getName());
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 1, _T("Query \"%s\" added for polling"), query->getName());
       return true;
    }
    return false;
@@ -333,7 +332,7 @@ bool AddConfigurableQueryFromConfig(const TCHAR *config, Query **createdQuery)
    {
       s_queries.add(query);
       *createdQuery = query;
-      AgentWriteDebugLog(1, _T("DBQuery: query %s added to query list"), query->getName());
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 1, _T("Query \"%s\" added to query list"), query->getName());
       return true;
    }
    return false;
