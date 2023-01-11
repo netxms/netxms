@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -187,6 +187,7 @@ typedef int bool;
 #define HAVE_OVERRIDE_SPECIFIER   1
 #define HAVE_THREAD_LOCAL_STORAGE 1
 #define HAVE_STD_MAKE_UNIQUE      1
+#define HAVE_DECL_CURL_URL        1
 
 // Disable some warnings:
 //   4293 - 'function xxx' not available as intrinsic function
