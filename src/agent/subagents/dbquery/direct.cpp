@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -34,7 +34,7 @@ LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    DB_HANDLE hdb = GetConnectionHandle(dbid);
    if (hdb == NULL)
    {
-      AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQuery: no connection handle for database %s"), dbid);
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("H_DirectQuery: no connection handle for database \"%s\""), dbid);
       return SYSINFO_RC_ERROR;
    }
 
@@ -70,11 +70,11 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
    if (hdb == NULL)
    {
       queryObj->unlock();
-      AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQueryConfigurable: no connection handle for database %s"), dbid);
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("H_DirectQueryConfigurable: no connection handle for database \"%s\""), dbid);
       return SYSINFO_RC_ERROR;
    }
 
-   AgentWriteDebugLog(7, _T("DBQUERY: H_DirectQueryConfigurable: Executing query \"%s\" in database %s"), query, dbid);
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 7, _T("H_DirectQueryConfigurable: Executing query \"%s\" in database \"%s\""), query, dbid);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt != NULL)
@@ -84,7 +84,7 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
       while(bindParam[0] != 0)
       {
          DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, DB_BIND_TRANSIENT);
-         AgentWriteDebugLog(7, _T("DBQUERY: H_DirectQueryConfigurable: Parameter bind: \"%s\" at position %d"), bindParam, i);
+         nxlog_debug_tag(DBQUERY_DEBUG_TAG, 7, _T("H_DirectQueryConfigurable: Parameter bind: \"%s\" at position %d"), bindParam, i);
          i++;
          AgentGetParameterArg(param, i, bindParam, 256);
       }
@@ -116,7 +116,7 @@ LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value, Abst
    DB_HANDLE hdb = GetConnectionHandle(dbid);
    if (hdb == NULL)
    {
-      AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQueryTable: no connection handle for database %s"), dbid);
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("H_DirectQueryTable: no connection handle for database \"%s\""), dbid);
       return SYSINFO_RC_ERROR;
    }
 
@@ -139,33 +139,31 @@ LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table 
    TCHAR bindParam[256];
    Query *queryObj = AcquireQueryObject(arg);
 
-   if (queryObj == NULL)
-   {
+   if (queryObj == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
-   }
 
    const TCHAR *dbid = queryObj->getDBid();
    const TCHAR *query = queryObj->getQuery();
 
    DB_HANDLE hdb = GetConnectionHandle(dbid);
-   if (hdb == NULL)
+   if (hdb == nullptr)
    {
       queryObj->unlock();
-      AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQueryConfigurableTable: no connection handle for database %s"), dbid);
+      nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("H_DirectQueryConfigurableTable: no connection handle for database \"%s\""), dbid);
       return SYSINFO_RC_ERROR;
    }
 
-   AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Executing query \"%s\" in database %s"), query, dbid);
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 6, _T("H_DirectQueryConfigurableTable: Executing query \"%s\" in database \"%s\""), query, dbid);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       int i = 1;
       AgentGetParameterArg(param, i, bindParam, 256);
       while(bindParam[0] != 0)
       {
          DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, DB_BIND_TRANSIENT);
-         AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Parameter bind: \"%s\" at position %d"), bindParam, i);
+         nxlog_debug_tag(DBQUERY_DEBUG_TAG, 6, _T("H_DirectQueryConfigurableTable: Parameter bind: \"%s\" at position %d"), bindParam, i);
          i++;
          AgentGetParameterArg(param, i, bindParam, 256);
       }
@@ -174,7 +172,7 @@ LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table 
 
    LONG rc = SYSINFO_RC_ERROR;
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       DBResultToTable(hResult, value);
       DBFreeResult(hResult);
