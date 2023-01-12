@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,12 @@ package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.UnknownObject;
+import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 
@@ -75,7 +77,15 @@ public class BaseObjectLabelProvider extends LabelProvider
    {
       if (element instanceof UnknownObject)
          return SharedIcons.IMG_UNKNOWN_OBJECT;
-      
+
+      UUID iconId = ((AbstractObject)element).getIcon();
+      if (iconId != null)
+      {
+         Image icon = ImageProvider.getInstance().getImage(iconId);
+         if (icon != null)
+            return icon;
+      }
+
       Image image = images.get(((AbstractObject)element).getObjectClass());
       return (image != null) ? image : SharedIcons.IMG_UNKNOWN_OBJECT;
    }
