@@ -27,6 +27,8 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -37,6 +39,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
@@ -44,6 +50,8 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
@@ -51,6 +59,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig.St
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
@@ -353,6 +362,13 @@ public class StatusIndicatorElement extends ElementWidget
                drawContent(e.gc);
             }
          });
+         addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseDoubleClick(MouseEvent e)
+            {
+               openDrillDownObject();
+            }
+         });
       }
 
       /**
@@ -419,6 +435,28 @@ public class StatusIndicatorElement extends ElementWidget
                gc.setBackground(getBackground());
                gc.drawText(elementConfig.getLabel(), ELEMENT_HEIGHT + 4, (clientArea.height - textExtent.y) / 2);
             }
+         }
+      }
+
+      /**
+       * Open drill-down object
+       */
+      void openDrillDownObject()
+      {
+         AbstractObject object = session.findObjectById(elementConfig.getDrilldownObjectId());
+         if ((object == null) || (!(object instanceof Dashboard) && !(object instanceof NetworkMap)))
+            return;
+
+         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+         try
+         {
+            window.getActivePage().showView((object instanceof Dashboard) ? "org.netxms.ui.eclipse.dashboard.views.DashboardView" : "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap",
+                  Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+         }
+         catch(PartInitException e)
+         {
+            MessageDialogHelper.openError(window.getShell(), "Error",
+                  String.format("Cannot open %s view \"%s\" (%s)", (object instanceof Dashboard) ? "dashboard" : "network map", object.getObjectName(), e.getMessage()));
          }
       }
 

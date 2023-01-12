@@ -68,6 +68,7 @@ public class StatusIndicatorElements extends PropertyPage
    public static final int COLUMN_OBJECT = 2;
    public static final int COLUMN_METRIC = 3;
    public static final int COLUMN_LABEL = 4;
+   public static final int COLUMN_DRILLDOWN_OBJECT = 5;
 
    private StatusIndicatorConfig config;
    private List<StatusIndicatorElementConfig> elements;
@@ -103,8 +104,8 @@ public class StatusIndicatorElements extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { Messages.get().DataSources_Pos, "Type", "Object/Tag", Messages.get().DataSources_Parameter, Messages.get().DataSources_Label };
-      final int[] columnWidths = { 40, 90, 200, 200, 150 };
+      final String[] columnNames = { Messages.get().DataSources_Pos, "Type", "Object/Tag", Messages.get().DataSources_Parameter, Messages.get().DataSources_Label, "Drilldown Object" };
+      final int[] columnWidths = { 40, 90, 200, 200, 150, 200 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
@@ -400,6 +401,8 @@ public class StatusIndicatorElements extends PropertyPage
          StatusIndicatorElementConfig e = (StatusIndicatorElementConfig)element;
          switch(columnIndex)
          {
+            case COLUMN_DRILLDOWN_OBJECT:
+               return (e.getDrilldownObjectId() != 0) ? session.getObjectName(e.getDrilldownObjectId()) : "";
             case COLUMN_LABEL:
                return e.getLabel();
             case COLUMN_METRIC:
