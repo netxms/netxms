@@ -117,7 +117,7 @@ void FileDownloadTask::run()
             {
                msg.setField(VID_FILE_OFFSET, 0);
             }
-            msg.setField(VID_FILE_FOLLOW, m_monitor);
+            msg.setField(VID_FILE_FOLLOW, m_monitor && !IsFileMonitorActive(m_node->getId(), m_localFile));
             msg.setField(VID_NAME, m_localFile);
             msg.setField(VID_ENABLE_COMPRESSION, (m_session == nullptr) || m_session->isCompressionEnabled());
 

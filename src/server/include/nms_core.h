@@ -1509,6 +1509,7 @@ DB_STATEMENT NXCORE_EXPORTABLE DBPrepareMerge(DB_HANDLE hdb, const TCHAR *table,
  * Managing file monitors
  */
 void AddFileMonitor(Node *node, const shared_ptr<AgentConnection>& conn, ClientSession *session, const TCHAR *agentId, const uuid& clientId);
+bool IsFileMonitorActive(uint32_t nodeId, const TCHAR *agentId);
 bool RemoveFileMonitorsByAgentId(const TCHAR *agentId, session_id_t sessionId = -1);
 bool RemoveFileMonitorByClientId(const uuid& clientId, session_id_t sessionId = -1);
 void RemoveFileMonitorsBySessionId(session_id_t sessionId);
