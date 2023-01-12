@@ -268,6 +268,9 @@ public class StatusIndicatorConfig extends DashboardElementConfig
       @Element(required = false)
       private String tag;
 
+      @Element(required = false)
+      private long drilldownObjectId;
+
       /**
        * Default constructor
        */
@@ -279,6 +282,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          dciId = 0;
          dciName = null;
          tag = null;
+         drilldownObjectId = 0;
       }
 
       /**
@@ -294,6 +298,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
          dciId = src.dciId;
          dciName = src.dciName;
          tag = src.tag;
+         drilldownObjectId = src.drilldownObjectId;
       }
 
       /**
@@ -422,6 +427,22 @@ public class StatusIndicatorConfig extends DashboardElementConfig
       public void setTag(String tag)
       {
          this.tag = tag;
+      }
+
+      /**
+       * @return the drilldownObjectId
+       */
+      public long getDrilldownObjectId()
+      {
+         return drilldownObjectId;
+      }
+
+      /**
+       * @param drilldownObjectId the drilldownObjectId to set
+       */
+      public void setDrilldownObjectId(long drilldownObjectId)
+      {
+         this.drilldownObjectId = drilldownObjectId;
       }
 
       /**

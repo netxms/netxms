@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig.StatusIndicatorElementConfig;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.datacollection.widgets.TemplateDciSelector;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -45,6 +46,7 @@ public class StatusIndicatorElementEditDialog extends Dialog
 {
    private StatusIndicatorElementConfig element;
    private LabeledText label;
+   private ObjectSelector drilldownObjectSelector;
    private Combo typeSelector;
    private Composite typeSpecificControl;
    private ObjectSelector objectSelector;
@@ -114,6 +116,13 @@ public class StatusIndicatorElementEditDialog extends Dialog
 
       createTypeSpecificControls();
 
+      drilldownObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      drilldownObjectSelector.setObjectClass(AbstractObject.class);
+      drilldownObjectSelector.setClassFilter(ObjectSelectionDialog.createDashboardAndNetworkMapSelectionFilter());
+      drilldownObjectSelector.setLabel("Drilldown object");
+      drilldownObjectSelector.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      drilldownObjectSelector.setObjectId(element.getDrilldownObjectId());
+
       return dialogArea;
    }
 
@@ -165,6 +174,7 @@ public class StatusIndicatorElementEditDialog extends Dialog
    {
       element.setLabel(label.getText().trim());
       element.setType(typeSelector.getSelectionIndex());
+      element.setDrilldownObjectId(drilldownObjectSelector.getObjectId());
       switch(element.getType())
       {
          case StatusIndicatorConfig.ELEMENT_TYPE_DCI:
