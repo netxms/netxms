@@ -92,7 +92,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %right '=' T_ASSIGN_ADD T_ASSIGN_SUB T_ASSIGN_MUL T_ASSIGN_DIV T_ASSIGN_IDIV T_ASSIGN_REM T_ASSIGN_CONCAT T_ASSIGN_AND T_ASSIGN_OR T_ASSIGN_XOR
 %right ':'
 %left '?'
-%left '.'
+%left T_CONCAT
 %left T_OR
 %left T_AND
 %left '|'
@@ -707,7 +707,7 @@ Expression:
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_RSHIFT);
 }
-|	Expression '.' Expression
+|	Expression T_CONCAT Expression
 {
 	builder->addInstruction(lexer->getCurrLine(), OPCODE_CONCAT);
 }

@@ -157,12 +157,14 @@ static inline uint32_t StringToUInt32(const char *s)
 <INITIAL,FEXPR>"/="	return T_ASSIGN_DIV;
 <INITIAL,FEXPR>"\\="	return T_ASSIGN_IDIV;
 <INITIAL,FEXPR>"%="	return T_ASSIGN_REM;
+<INITIAL,FEXPR>"..="	return T_ASSIGN_CONCAT;
 <INITIAL,FEXPR>".="	return T_ASSIGN_CONCAT;
 <INITIAL,FEXPR>"&="	return T_ASSIGN_AND;
 <INITIAL,FEXPR>"|="	return T_ASSIGN_OR;
 <INITIAL,FEXPR>"^="	return T_ASSIGN_XOR;
 <INITIAL,FEXPR>"..."	return T_RANGE;
-<INITIAL,FEXPR>"."	return '.';
+<INITIAL,FEXPR>".."	return T_CONCAT;
+<INITIAL,FEXPR>"."	return T_CONCAT;
 <INITIAL,FEXPR>"("	return '(';
 <INITIAL,FEXPR>")"	return ')';
 <INITIAL,FEXPR>";"	return ';';
