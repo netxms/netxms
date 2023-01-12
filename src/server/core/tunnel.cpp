@@ -775,7 +775,7 @@ uint32_t AgentTunnel::bind(uint32_t nodeId, uint32_t userId)
    if (node == nullptr)
       return RCC_INVALID_OBJECT_ID;
 
-   if (!static_cast<Node&>(*node).getAgentId().equals(m_agentId))
+   if (!static_cast<Node&>(*node).getAgentId().isNull() && !static_cast<Node&>(*node).getAgentId().equals(m_agentId))
    {
       debugPrintf(3, _T("Node agent ID (%s) do not match tunnel agent ID (%s) on bind"),
                static_cast<Node&>(*node).getAgentId().toString().cstr(), m_agentId.toString().cstr());
