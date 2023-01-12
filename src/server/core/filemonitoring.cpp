@@ -76,6 +76,26 @@ void AddFileMonitor(Node *node, const shared_ptr<AgentConnection>& conn, ClientS
 }
 
 /**
+ * Check if file monitor with given node and agent ID already active
+ */
+bool IsFileMonitorActive(uint32_t nodeId, const TCHAR *agentId)
+{
+   bool found = false;
+   s_monitorLock.lock();
+   for(int i = 0; i < s_monitors.size(); i++)
+   {
+      FileMonitor *m = s_monitors.get(i);
+      if ((m->nodeId == nodeId) && !_tcscmp(m->agentId, agentId))
+      {
+         found = true;
+         break;
+      }
+   }
+   s_monitorLock.unlock();
+   return found;
+}
+
+/**
  * Find client sessions
  */
 unique_ptr<StructArray<std::pair<ClientSession*, uuid>>> FindFileMonitoringSessions(const TCHAR *agentId)
