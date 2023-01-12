@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.topology.views;
 
@@ -14,8 +29,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
@@ -44,14 +57,15 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class WirelessStations extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.WirelessStations"; //$NON-NLS-1$
-	
-	public static final int COLUMN_MAC_ADDRESS = 0;
-	public static final int COLUMN_IP_ADDRESS = 1;
-	public static final int COLUMN_NODE_NAME = 2;
-	public static final int COLUMN_ACCESS_POINT = 3;
-	public static final int COLUMN_RADIO = 4;
-	public static final int COLUMN_SSID = 5;
-	
+
+   public static final int COLUMN_MAC_ADDRESS = 0;
+   public static final int COLUMN_VENDOR = 1;
+   public static final int COLUMN_IP_ADDRESS = 2;
+   public static final int COLUMN_NODE_NAME = 3;
+   public static final int COLUMN_ACCESS_POINT = 4;
+   public static final int COLUMN_RADIO = 5;
+   public static final int COLUMN_SSID = 6;
+
 	private NXCSession session;
 	private long rootObject;
 	private SortableTableViewer viewer;
@@ -60,9 +74,9 @@ public class WirelessStations extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -80,34 +94,27 @@ public class WirelessStations extends ViewPart
 		setPartName(String.format(Messages.get().WirelessStations_PartName, session.getObjectName(rootObject)));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.get().WirelessStations_ColMacAddr, Messages.get().WirelessStations_ColIpAddr, Messages.get().WirelessStations_ColNode, Messages.get().WirelessStations_ColAp, Messages.get().WirelessStations_ColRadio, Messages.get().WirelessStations_ColSSID };
-		final int[] widths = { 120, 90, 180, 180, 100, 100 };
+      final String[] names = { Messages.get().WirelessStations_ColMacAddr, "NIC Vendor", Messages.get().WirelessStations_ColIpAddr, Messages.get().WirelessStations_ColNode,
+            Messages.get().WirelessStations_ColAp, Messages.get().WirelessStations_ColRadio, Messages.get().WirelessStations_ColSSID };
+      final int[] widths = { 120, 150, 90, 180, 180, 100, 100 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WirelessStationLabelProvider(viewer));
 		viewer.setComparator(new WirelessStationComparator());
 		
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations"); //$NON-NLS-1$
-		viewer.getTable().addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "WirelessStations"); //$NON-NLS-1$
-			}
-		});
-
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
 		refresh();
 	}
+
 	/**
 	 * Create actions
 	 */
@@ -228,10 +235,11 @@ public class WirelessStations extends ViewPart
 					public void run()
 					{
 						viewer.setInput(stations.toArray());
+                  viewer.packColumns();
 					}
 				});
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{

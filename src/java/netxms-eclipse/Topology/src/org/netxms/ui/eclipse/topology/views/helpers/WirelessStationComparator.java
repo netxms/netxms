@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,11 +33,11 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class WirelessStationComparator extends ViewerComparator
 {
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   private NXCSession session = ConsoleSharedData.getSession();
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -50,6 +50,9 @@ public class WirelessStationComparator extends ViewerComparator
 			case WirelessStations.COLUMN_MAC_ADDRESS:
 				result = ws1.getMacAddress().compareTo(ws2.getMacAddress());
 				break;
+         case WirelessStations.COLUMN_VENDOR:
+            result = getVendor(ws1).compareToIgnoreCase(getVendor(ws2));
+            break;
 			case WirelessStations.COLUMN_IP_ADDRESS:
 				result = ComparatorHelper.compareInetAddresses(ws1.getIpAddress(), ws2.getIpAddress());
 				break;
@@ -71,4 +74,16 @@ public class WirelessStationComparator extends ViewerComparator
 		}
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
+
+   /**
+    * Get NIC vendor
+    *
+    * @param ws wireless station
+    * @return NIC vendor
+    */
+   private String getVendor(WirelessStation ws)
+   {
+      String vendor = session.getVendorByMac(ws.getMacAddress(), null);
+      return (vendor != null) ? vendor : "";
+   }
 }

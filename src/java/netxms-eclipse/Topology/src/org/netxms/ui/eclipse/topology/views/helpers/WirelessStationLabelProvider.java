@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ import org.netxms.ui.eclipse.topology.views.WirelessStations;
  */
 public class WirelessStationLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private NXCSession session = ConsoleSharedData.getSession();
    private TableViewer viewer;
-	
+
 	/**
 	 * Constructor
 	 */
@@ -43,19 +43,19 @@ public class WirelessStationLabelProvider extends LabelProvider implements ITabl
 	{
 	   this.viewer = viewer;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -63,8 +63,9 @@ public class WirelessStationLabelProvider extends LabelProvider implements ITabl
 		switch(columnIndex)
 		{
 			case WirelessStations.COLUMN_MAC_ADDRESS:
-            String vendor = session.getVendorByMac(ws.getMacAddress(), new ViewerElementUpdater(viewer, element));
-            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", ws.getMacAddress().toString(), vendor) : ws.getMacAddress().toString();
+            return ws.getMacAddress().toString();
+         case WirelessStations.COLUMN_VENDOR:
+            return session.getVendorByMac(ws.getMacAddress(), new ViewerElementUpdater(viewer, element));
 			case WirelessStations.COLUMN_IP_ADDRESS:
 				if ((ws.getIpAddress() == null) || ws.getIpAddress().isAnyLocalAddress())
 					return ""; //$NON-NLS-1$

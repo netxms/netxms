@@ -63,8 +63,9 @@ public class WirelessStationLabelProvider extends LabelProvider implements ITabl
 		switch(columnIndex)
 		{
 			case WirelessStations.COLUMN_MAC_ADDRESS:
-            String vendor = session.getVendorByMac(ws.getMacAddress(), new ViewerElementUpdater(viewer, element));
-            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", ws.getMacAddress().toString(), vendor) : ws.getMacAddress().toString();
+            return ws.getMacAddress().toString();
+         case WirelessStations.COLUMN_VENDOR:
+            return session.getVendorByMac(ws.getMacAddress(), new ViewerElementUpdater(viewer, element));
 			case WirelessStations.COLUMN_IP_ADDRESS:
 				if ((ws.getIpAddress() == null) || ws.getIpAddress().isAnyLocalAddress())
 					return ""; //$NON-NLS-1$

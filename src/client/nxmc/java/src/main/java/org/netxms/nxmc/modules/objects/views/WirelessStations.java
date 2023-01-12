@@ -56,13 +56,14 @@ public class WirelessStations extends NodeSubObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(WirelessStations.class);
 
-	public static final int COLUMN_MAC_ADDRESS = 0;
-	public static final int COLUMN_IP_ADDRESS = 1;
-	public static final int COLUMN_NODE_NAME = 2;
-	public static final int COLUMN_ACCESS_POINT = 3;
-	public static final int COLUMN_RADIO = 4;
-	public static final int COLUMN_SSID = 5;
-	
+   public static final int COLUMN_MAC_ADDRESS = 0;
+   public static final int COLUMN_VENDOR = 1;
+   public static final int COLUMN_IP_ADDRESS = 2;
+   public static final int COLUMN_NODE_NAME = 3;
+   public static final int COLUMN_ACCESS_POINT = 4;
+   public static final int COLUMN_RADIO = 5;
+   public static final int COLUMN_SSID = 6;
+
 	private NXCSession session;
 	private SortableTableViewer viewer;
 	private Action actionCopyRecord;
@@ -104,8 +105,8 @@ public class WirelessStations extends NodeSubObjectView
 	{
       super.createContent(parent);
 
-      final String[] names = { i18n.tr("MAC Address"), i18n.tr("IP Address"), i18n.tr("Node"), i18n.tr("Access Point"), i18n.tr("Radio"), "SSID" };
-		final int[] widths = { 120, 90, 180, 180, 100, 100 };
+      final String[] names = { i18n.tr("MAC Address"), i18n.tr("NIC Vendor"), i18n.tr("IP Address"), i18n.tr("Node"), i18n.tr("Access Point"), i18n.tr("Radio"), "SSID" };
+		final int[] widths = { 120, 200, 100, 180, 180, 100, 100 };
       viewer = new SortableTableViewer(mainArea, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WirelessStationLabelProvider(viewer));

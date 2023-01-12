@@ -56,7 +56,11 @@ public class WirelessStationFilter extends ViewerFilter implements AbstractViewe
       if ((ws.getIpAddress() != null) && !ws.getIpAddress().isAnyLocalAddress() && ws.getIpAddress().getHostAddress().contains(filterString))
          return true;
 
-      return ws.getMacAddress().toString().toLowerCase().contains(filterString);
+      if (ws.getMacAddress().toString().toLowerCase().contains(filterString))
+         return true;
+
+      String vendor = session.getVendorByMac(ws.getMacAddress(), null);
+      return (vendor != null) && vendor.toLowerCase().contains(filterString);
    }
 
    /**
