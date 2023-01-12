@@ -51,9 +51,9 @@ static StringObjectMap<CacheEntry> s_cache(Ownership::True);
 static Mutex s_cacheLock(MutexType::FAST);
 
 /**
- * Executes smartctl command with given options
+ * Executes smartctl command for given device
  *
- * @returns smartctl output as json_t array or nullptr on failure
+ * @returns smartctl output as json_t object or nullptr on failure
  */
 json_t* RunSmartCtl(const TCHAR *device)
 {
@@ -192,19 +192,19 @@ LONG H_PhysicalDiskInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abst
       return SYSINFO_RC_ERROR;
    }
 
-   LONG nRet;
+   LONG rc;
    json_t *element = json_object_get_by_path_a(root, jsonPath);
    if ((element != nullptr) && !json_is_null(element))
    {
       GetValueFromJson(element, value);
-      nRet = SYSINFO_RC_SUCCESS;
+      rc = SYSINFO_RC_SUCCESS;
    }
    else
    {
-      nRet = SYSINFO_RC_UNSUPPORTED;
+      rc = SYSINFO_RC_UNSUPPORTED;
    }
 
    s_cacheLock.unlock();
 
-   return nRet;
+   return rc;
 }
