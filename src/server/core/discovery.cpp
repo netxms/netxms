@@ -1326,6 +1326,14 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
 static Condition s_activeDiscoveryWakeup(false);
 
 /**
+ * Active discovery state
+ */
+static bool s_activeDiscoveryActive = false;
+static ObjectArray<InetAddressListElement> *s_activeDiscoveryRanges = nullptr;
+static int s_activeDiscoveryCurrentRange = 0;
+static Mutex s_activeDiscoveryStateLock(MutexType::FAST);
+
+/**
  * Active discovery poller thread
  */
 void ActiveDiscoveryPoller()
@@ -1388,21 +1396,73 @@ void ActiveDiscoveryPoller()
          }
       }
 
-      ObjectArray<InetAddressListElement> *addressList = LoadServerAddressList(1);
-      if (addressList != nullptr)
+      s_activeDiscoveryStateLock.lock();
+      s_activeDiscoveryRanges = LoadServerAddressList(1);
+      if (s_activeDiscoveryRanges != nullptr)
       {
-         for(int i = 0; (i < addressList->size()) && !IsShutdownInProgress(); i++)
+         if (!s_activeDiscoveryRanges->isEmpty())
          {
-            CheckRange(*addressList->get(i), RangeScanCallback, nullptr, nullptr);
+            s_activeDiscoveryActive = true;
+            s_activeDiscoveryStateLock.unlock();
+            for(s_activeDiscoveryCurrentRange = 0; (s_activeDiscoveryCurrentRange < s_activeDiscoveryRanges->size()) && !IsShutdownInProgress(); s_activeDiscoveryCurrentRange++)
+            {
+               CheckRange(*s_activeDiscoveryRanges->get(s_activeDiscoveryCurrentRange), RangeScanCallback, nullptr, nullptr);
+            }
+            s_activeDiscoveryStateLock.lock();
+            s_activeDiscoveryActive = false;
          }
-         delete addressList;
+         delete_and_null(s_activeDiscoveryRanges);
       }
+      s_activeDiscoveryStateLock.unlock();
 
       interval = ConfigReadInt(_T("NetworkDiscovery.ActiveDiscovery.Interval"), 7200);
       sleepTime = (interval > 0) ? interval * 1000 : 60000;
    }
 
    nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 2, _T("Active discovery thread terminated"));
+}
+
+/**
+ * Show active discovery state on server console
+ */
+void ShowActiveDiscoveryState(ServerConsole *console)
+{
+   s_activeDiscoveryStateLock.lock();
+   if (s_activeDiscoveryActive)
+   {
+      console->print(_T("Active discovery poller is \x1b[1;32mRUNNING\x1b[0m\n"));
+      console->print(_T("Address ranges:\n"));
+      for(int i = 0; i < s_activeDiscoveryRanges->size(); i++)
+      {
+         InetAddressListElement *range = s_activeDiscoveryRanges->get(i);
+         console->printf(_T("   %-36s %s\n"), range->toString().cstr(),
+            (i < s_activeDiscoveryCurrentRange) ? _T("\x1b[32mcompleted\x1b[0m") : ((i == s_activeDiscoveryCurrentRange) ? _T("\x1b[33mprocessing\x1b[0m") : _T("\x1b[36mpending\x1b[0m")));
+      }
+   }
+   else
+   {
+      console->print(_T("Active discovery poller is \x1b[1;34mSLEEPING\x1b[0m\n"));
+   }
+   s_activeDiscoveryStateLock.unlock();
+}
+
+/**
+ * Check if active discovery is currently running
+ */
+bool IsActiveDiscoveryRunning()
+{
+   return s_activeDiscoveryActive;
+}
+
+/**
+ * Get textual description of active discovery range currently being processed (empty string if none)
+ */
+String GetCurrentActiveDiscoveryRange()
+{
+   s_activeDiscoveryStateLock.lock();
+   String range = s_activeDiscoveryActive ? s_activeDiscoveryRanges->get(s_activeDiscoveryCurrentRange)->toString() : String();
+   s_activeDiscoveryStateLock.unlock();
+   return range;
 }
 
 /**

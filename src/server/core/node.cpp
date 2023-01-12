@@ -79,6 +79,12 @@ DataCollectionError GetPerfDataStorageDriverMetric(const TCHAR *driver, const TC
 bool GetNotificationChannelStatus(const TCHAR *name, NotificationChannelStatus *status);
 
 /**
+ * Get active discovery state
+ */
+bool IsActiveDiscoveryRunning();
+String GetCurrentActiveDiscoveryRange();
+
+/**
  * Poll cancellation checkpoint
  */
 #define POLL_CANCELLATION_CHECKPOINT() \
@@ -7480,6 +7486,14 @@ DataCollectionError Node::getInternalMetric(const TCHAR *name, TCHAR *buffer, si
       if (!_tcsicmp(name, _T("Server.ActiveAlarms")))
       {
          ret_int(buffer, GetAlarmCount());
+      }
+      else if (!_tcsicmp(name, _T("Server.ActiveNetworkDiscovery.CurrentRange")))
+      {
+         ret_string(buffer, GetCurrentActiveDiscoveryRange());
+      }
+      else if (!_tcsicmp(name, _T("Server.ActiveNetworkDiscovery.IsRunning")))
+      {
+         ret_boolean(buffer, IsActiveDiscoveryRunning());
       }
       else if (!_tcsicmp(name, _T("Server.AgentTunnels.Bound.AgentProxy")))
       {

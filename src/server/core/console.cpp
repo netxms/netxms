@@ -47,7 +47,7 @@ void CheckRange(const InetAddressListElement& range, void(*callback)(const InetA
 void ShowSyncerStats(ServerConsole *console);
 void ShowAuthenticationTokens(ServerConsole *console);
 void RunHouseKeeper(ServerConsole *console);
-
+void ShowActiveDiscoveryState(ServerConsole *console);
 
 /**
  * Format string to show value of global flag
@@ -903,6 +903,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          if (IsCommand(_T("QUEUE"), szBuffer, 1))
          {
             g_nodePollerQueue.forEach(ShowDiscoveryQueueElement, pCtx);
+         }
+         else if (IsCommand(_T("RANGES"), szBuffer, 1))
+         {
+            ShowActiveDiscoveryState(pCtx);
          }
          else
          {
@@ -1785,6 +1789,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show components <node>            - Show physical components of given node\n")
             _T("   show dbcp                         - Show active sessions in database connection pool\n")
             _T("   show dbstats                      - Show DB library statistics\n")
+            _T("   show discovery ranges             - Show state of active network discovery by address range\n")
             _T("   show discovery queue              - Show content of network discovery queue\n")
             _T("   show ep                           - Show event processing threads statistics\n")
             _T("   show fdb <node>                   - Show forwarding database for node\n")

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -241,10 +241,10 @@ ObjectArray<InetAddressListElement> *LoadServerAddressList(int listType)
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2,zone_uin,proxy_id,comments FROM address_lists WHERE list_type=%d"), listType);
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult == NULL)
+   if (hResult == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
-      return NULL;
+      return nullptr;
    }
 
    int count = DBGetNumRows(hResult);

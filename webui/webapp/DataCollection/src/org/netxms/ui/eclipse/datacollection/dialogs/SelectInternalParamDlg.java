@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -128,15 +128,17 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("ZoneProxy.State", "Zone proxy: state", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("ZoneProxy.ZoneUIN", "Zone proxy: UIN of parent zone", DataType.UINT32)); //$NON-NLS-1$
 		}
-		
+
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).hasAgent()))
 		{
 			list.add(new AgentParameter("AgentStatus", Messages.get().SelectInternalParamDlg_DCI_AgentStatus, DataType.INT32)); //$NON-NLS-1$
 		}
-		
+
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
 		{
          list.add(new AgentParameter("Server.ActiveAlarms", "Number of active alarms in the system", DataType.UINT32)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ActiveNetworkDiscovery.CurrentRange", "Address range currently being processed by active network discovery", DataType.STRING)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ActiveNetworkDiscovery.IsRunning", "Active network discovery run indicator", DataType.INT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AgentTunnels.Bound.Total", "Number of bound agent tunnels", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AgentTunnels.Bound.AgentProxy", "Number of bound agent tunnels with enabled agent proxy", DataType.UINT32)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AgentTunnels.Bound.SnmpProxy", "Number of bound agent tunnels with enabled SNMP proxy", DataType.UINT32)); //$NON-NLS-1$
