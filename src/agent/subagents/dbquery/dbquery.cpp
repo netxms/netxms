@@ -24,15 +24,21 @@
 #include <netxms-version.h>
 
 /**
- * Global variables
+ * Shutdown condition
  */
 Condition g_condShutdown(true);
+
+/**
+ * Flag for allowing empty result sets
+ */
+bool g_allowEmptyResultSet = true;
 
 /**
  * Subagent initialization
  */
 static bool SubAgentInit(Config *config)
 {
+   g_allowEmptyResultSet = config->getValueAsBoolean(_T("/DBQuery/AllowEmptyResultSet"), true);
    StartPollingThreads();
    return true;
 }

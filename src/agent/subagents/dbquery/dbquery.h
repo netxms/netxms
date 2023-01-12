@@ -148,4 +148,9 @@ Query *AcquireQueryObject(const TCHAR *name);
  */
 extern Condition g_condShutdown;
 
+/**
+ * Flag for allowing empty result sets
+ */
+extern bool g_allowEmptyResultSet;
+
 #endif

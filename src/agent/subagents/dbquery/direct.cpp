@@ -32,7 +32,7 @@ LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    AgentGetParameterArg(param, 2, query, 256);
 
    DB_HANDLE hdb = GetConnectionHandle(dbid);
-   if (hdb == NULL)
+   if (hdb == nullptr)
    {
       nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("H_DirectQuery: no connection handle for database \"%s\""), dbid);
       return SYSINFO_RC_ERROR;
@@ -40,12 +40,15 @@ LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 
    LONG rc = SYSINFO_RC_ERROR;
    DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
-      *value = 0;
-      DBGetField(hResult, 0, 0, value, MAX_RESULT_LENGTH);
-      DBFreeResult(hResult);
-      rc = SYSINFO_RC_SUCCESS;
+      if (g_allowEmptyResultSet || (DBGetNumRows(hResult) > 0))
+      {
+         *value = 0;
+         DBGetField(hResult, 0, 0, value, MAX_RESULT_LENGTH);
+         DBFreeResult(hResult);
+         rc = SYSINFO_RC_SUCCESS;
+      }
    }
    return rc;
 }
@@ -58,16 +61,14 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
    TCHAR bindParam[256];
    Query *queryObj = AcquireQueryObject(arg);
 
-   if (queryObj == NULL)
-   {
+   if (queryObj == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
-   }
 
    const TCHAR *dbid = queryObj->getDBid();
    const TCHAR *query = queryObj->getQuery();
 
    DB_HANDLE hdb = GetConnectionHandle(dbid);
-   if (hdb == NULL)
+   if (hdb == nullptr)
    {
       queryObj->unlock();
       nxlog_debug_tag(DBQUERY_DEBUG_TAG, 4, _T("H_DirectQueryConfigurable: no connection handle for database \"%s\""), dbid);
@@ -77,7 +78,7 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
    nxlog_debug_tag(DBQUERY_DEBUG_TAG, 7, _T("H_DirectQueryConfigurable: Executing query \"%s\" in database \"%s\""), query, dbid);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
-   if (hStmt != NULL)
+   if (hStmt != nullptr)
    {
       int i = 1;
       AgentGetParameterArg(param, i, bindParam, 256);
@@ -92,12 +93,15 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
 
    LONG rc = SYSINFO_RC_ERROR;
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
-      *value = 0;
-      DBGetField(hResult, 0, 0, value, MAX_RESULT_LENGTH);
-      DBFreeResult(hResult);
-      rc = SYSINFO_RC_SUCCESS;
+      if (g_allowEmptyResultSet || (DBGetNumRows(hResult) > 0))
+      {
+         *value = 0;
+         DBGetField(hResult, 0, 0, value, MAX_RESULT_LENGTH);
+         DBFreeResult(hResult);
+         rc = SYSINFO_RC_SUCCESS;
+      }
    }
    DBFreeStatement(hStmt);
    queryObj->unlock();

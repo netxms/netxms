@@ -60,7 +60,14 @@ LONG Query::getResult(TCHAR *buffer)
    if (m_result == nullptr)
       return SYSINFO_RC_ERROR;
    if (DBGetNumRows(m_result) == 0)
+   {
+      if (g_allowEmptyResultSet)
+      {
+         buffer[0] = 0;
+         return SYSINFO_RC_SUCCESS;
+      }
       return SYSINFO_RC_ERROR;
+   }
    DBGetField(m_result, 0, 0, buffer, MAX_RESULT_LENGTH);
    return SYSINFO_RC_SUCCESS;
 }
@@ -346,7 +353,7 @@ LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
    TCHAR name[MAX_QUERY_NAME_LEN];
    AgentGetParameterArg(param, 1, name, MAX_QUERY_NAME_LEN);
    Query *query = AcquireQueryObject(name);
-   if (query == NULL)
+   if (query == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_ERROR;
