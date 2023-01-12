@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectList;
@@ -35,26 +34,26 @@ import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
- *"Trusted nodes" property page for NetXMS objects
+ * "Trusted Objects" property page for NetXMS objects
  */
-public class TrustedNodes extends PropertyPage
+public class TrustedObjects extends PropertyPage
 {
 	private AbstractObject object = null;
-	private ObjectList trustedNodes = null;
+	private ObjectList trustedObjects = null;
 	private boolean isModified = false;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
-		object = (AbstractObject)getElement().getAdapter(AbstractObject.class); 
+
+      object = getElement().getAdapter(AbstractObject.class);
       dialogArea.setLayout(new FillLayout());   
 
-      trustedNodes = new ObjectList(dialogArea, SWT.NONE, null, object.getTrustedNodes(), AbstractNode.class, new Runnable() {
+      trustedObjects = new ObjectList(dialogArea, SWT.NONE, null, object.getTrustedObjects(), AbstractObject.class, null, new Runnable() {
          @Override
          public void run()
          {
@@ -64,7 +63,7 @@ public class TrustedNodes extends PropertyPage
       
 		return dialogArea;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -74,14 +73,14 @@ public class TrustedNodes extends PropertyPage
 	{
 		if (!isModified)
 			return;		// Nothing to apply
-		
+
 		if (isApply)
 			setValid(false);
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+
+      final NXCSession session = ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setTrustedNodes(trustedNodes.getObjectIdentifiers());
-		
+		md.setTrustedObjects(trustedObjects.getObjectIdentifiers());
+
 		new ConsoleJob(String.format(Messages.get().TrustedNodes_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -98,7 +97,7 @@ public class TrustedNodes extends PropertyPage
 						@Override
 						public void run()
 						{
-							TrustedNodes.this.setValid(true);
+							TrustedObjects.this.setValid(true);
 						}
 					});
 				}
@@ -112,18 +111,18 @@ public class TrustedNodes extends PropertyPage
 		}.schedule();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{
@@ -131,13 +130,13 @@ public class TrustedNodes extends PropertyPage
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
-		trustedNodes.clear();
+		trustedObjects.clear();
 		isModified = true;
 		super.performDefaults();
 	}

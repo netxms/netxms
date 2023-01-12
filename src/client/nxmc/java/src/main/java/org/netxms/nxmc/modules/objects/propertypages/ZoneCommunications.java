@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.ObjectList;
 import org.xnap.commons.i18n.I18n;
 
@@ -94,14 +95,14 @@ public class ZoneCommunications extends ObjectPropertyPage
       dialogArea.setLayout(new FillLayout());   
 
       proxyNodes = new ObjectList(dialogArea, SWT.NONE, i18n.tr("Proxy nodes"), 
-            zone.getProxyNodes(), AbstractNode.class, new Runnable() {
+            zone.getProxyNodes(), AbstractNode.class, ObjectSelectionDialog.createNodeSelectionFilter(false), new Runnable() {
          @Override
          public void run()
          {
             isModified = true;
          }
       });
-      
+
 		return dialogArea;
 	}
 

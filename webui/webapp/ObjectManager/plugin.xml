@@ -92,36 +92,13 @@
         </page>
 
         <page
-           id="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes"
-           name="%page.name.TrustedNodes"
-	       class="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes">
+           id="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedObjects"
+           name="%page.name.TrustedObjects"
+	       class="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedObjects">
           <enabledWhen>
-             <or>
-                <instanceof
-                      value="org.netxms.client.objects.Node">
-                </instanceof>
-                <instanceof
-                      value="org.netxms.client.objects.Subnet">
-                </instanceof>
-                <instanceof
-                      value="org.netxms.client.objects.Container">
-                </instanceof>
-                <instanceof
-                      value="org.netxms.client.objects.Cluster">
-                </instanceof>
-                <instanceof
-                      value="org.netxms.client.objects.ServiceRoot">
-                </instanceof>
-                <instanceof
-                      value="org.netxms.client.objects.Condition">
-                </instanceof>
-                <instanceof
-                      value="org.netxms.client.objects.MobileDevice">
-                </instanceof>
-                <instanceof
-                      value="org.netxms.client.objects.Sensor">
-                </instanceof>
-             </or>
+             <instanceof
+                   value="org.netxms.client.objects.AbstractObject">
+             </instanceof>
           </enabledWhen>
         </page>
         <page

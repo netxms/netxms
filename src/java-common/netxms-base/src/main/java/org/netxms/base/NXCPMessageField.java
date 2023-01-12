@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -560,13 +560,16 @@ public class NXCPMessageField
 	{
 		if ((type != TYPE_BINARY) || (binaryValue == null))
 			return null;
-		
-		int count = binaryValue.length / 4;
-		Long[] value = new Long[count];
+
+		int numElements = binaryValue.length / 4;
+		Long[] value = new Long[numElements];
+      if (numElements == 0)
+         return value;
+
 		NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
 		try
 		{
-			for(int i = 0; i < count; i++)
+			for(int i = 0; i < numElements; i++)
 				value[i] = in.readUnsignedInt();
 		}
 		catch(IOException e)

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1052,7 +1052,7 @@ DataCollectionError DataCollectionTarget::getInternalMetric(const TCHAR *name, T
 
       if (object != nullptr)
       {
-			if (object->isTrustedNode(m_id))
+			if (object->isTrustedObject(m_id))
 			{
 	         IntegerToString(object->getStatus(), buffer);
 			}
@@ -2520,7 +2520,7 @@ NXSL_Array *DataCollectionTarget::getTemplatesForNXSL(NXSL_VM *vm)
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *object = getParentList().get(i);
-      if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedNode(m_id))
+      if ((object->getObjectClass() == OBJECT_TEMPLATE) && object->isTrustedObject(m_id))
       {
          parents->set(index++, object->createNXSLObject(vm));
       }

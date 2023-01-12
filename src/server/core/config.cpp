@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -578,9 +578,9 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       CASReadSettings();
    }
-   else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedNodes")))
+   else if (!_tcscmp(name, _T("Objects.Security.CheckTrustedObjects")))
    {
-      UpdateServerFlag(AF_CHECK_TRUSTED_NODES, value);
+      UpdateServerFlag(AF_CHECK_TRUSTED_OBJECTS, value);
    }
    else if (!_tcscmp(name, _T("DataCollection.InstanceRetentionTime")))
    {

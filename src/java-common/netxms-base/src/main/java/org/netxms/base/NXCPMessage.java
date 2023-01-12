@@ -659,7 +659,7 @@ public class NXCPMessage
 		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsUInt32ArrayEx() : null;
 	}
-	
+
 	/**
 	 * Get field as boolean
 	 * 

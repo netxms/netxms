@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,18 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.Chassis;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Condition;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.Sensor;
-import org.netxms.client.objects.ServiceRoot;
-import org.netxms.client.objects.Subnet;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -44,11 +33,11 @@ import org.netxms.nxmc.modules.objects.widgets.ObjectList;
 import org.xnap.commons.i18n.I18n;
 
 /**
- *"Trusted nodes" property page for NetXMS objects
+ * "Trusted Objects" property page for NetXMS objects
  */
-public class TrustedNodes extends ObjectPropertyPage
+public class TrustedObjects extends ObjectPropertyPage
 {
-   private static I18n i18n = LocalizationHelper.getI18n(TrustedNodes.class);
+   private static I18n i18n = LocalizationHelper.getI18n(TrustedObjects.class);
 
 	private ObjectList trustedNodes = null;
 	private boolean isModified = false;
@@ -58,9 +47,9 @@ public class TrustedNodes extends ObjectPropertyPage
     *
     * @param object object to edit
     */
-   public TrustedNodes(AbstractObject object)
+   public TrustedObjects(AbstractObject object)
    {
-      super(i18n.tr("Trusted Nodes"), object);
+      super(i18n.tr("Trusted Objects"), object);
    }
 
    /**
@@ -69,19 +58,7 @@ public class TrustedNodes extends ObjectPropertyPage
    @Override
    public String getId()
    {
-      return "trustedNodes";
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
-    */
-   @Override
-   public boolean isVisible()
-   {
-      return (object instanceof AbstractNode) || (object instanceof AccessPoint) || (object instanceof Chassis) ||
-             (object instanceof Cluster) || (object instanceof Condition) || (object instanceof Container) ||
-             (object instanceof MobileDevice) || (object instanceof Rack) || (object instanceof Sensor) ||
-             (object instanceof ServiceRoot) || (object instanceof Subnet);
+      return "trustedObjects";
    }
 
    /**
@@ -94,7 +71,7 @@ public class TrustedNodes extends ObjectPropertyPage
 		
       dialogArea.setLayout(new FillLayout());   
 
-      trustedNodes = new ObjectList(dialogArea, SWT.NONE, null, object.getTrustedNodes(), AbstractNode.class, new Runnable() {
+      trustedNodes = new ObjectList(dialogArea, SWT.NONE, null, object.getTrustedObjects(), AbstractObject.class, null, new Runnable() {
          @Override
          public void run()
          {
@@ -104,7 +81,7 @@ public class TrustedNodes extends ObjectPropertyPage
       
 		return dialogArea;
 	}
-	
+
 	/**
     * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#applyChanges(boolean)
     */
@@ -119,7 +96,7 @@ public class TrustedNodes extends ObjectPropertyPage
 
       final NXCSession session = Registry.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setTrustedNodes(trustedNodes.getObjectIdentifiers());
+      md.setTrustedObjects(trustedNodes.getObjectIdentifiers());
 
       new Job(String.format(i18n.tr("Update trusted nodes for object %s"), object.getObjectName()), null) {
 			@Override
@@ -137,7 +114,7 @@ public class TrustedNodes extends ObjectPropertyPage
 						@Override
 						public void run()
 						{
-							TrustedNodes.this.setValid(true);
+							TrustedObjects.this.setValid(true);
 						}
 					});
 				}

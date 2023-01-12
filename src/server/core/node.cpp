@@ -6205,7 +6205,7 @@ StringMap *Node::getInstanceList(DCObject *dco)
          nxlog_debug(6, _T("Node::getInstanceList(%s [%d]): source node [%d] not found"), dco->getName().cstr(), dco->getId(), dco->getSourceNode());
          return nullptr;
       }
-      if (!node->isTrustedNode(m_id))
+      if (!node->isTrustedObject(m_id))
       {
          nxlog_debug(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source node %s [%d]"),
                   dco->getName().cstr(), dco->getId(), m_name, m_id, node->getName(), node->getId());
@@ -10661,7 +10661,7 @@ NXSL_Value *Node::getParentsForNXSL(NXSL_VM *vm)
    for(int i = 0; i < getParentList().size(); i++)
    {
       NetObj *object = getParentList().get(i);
-      if ((object->getObjectClass() != OBJECT_TEMPLATE) && object->isTrustedNode(m_id))
+      if ((object->getObjectClass() != OBJECT_TEMPLATE) && object->isTrustedObject(m_id))
       {
          parents->set(index++, object->createNXSLObject(vm));
       }

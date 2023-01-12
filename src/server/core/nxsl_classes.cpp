@@ -2566,13 +2566,13 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
       shared_ptr<NetObj> peerIface = FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
 		if (peerIface != nullptr)
 		{
-			if (g_flags & AF_CHECK_TRUSTED_NODES)
+			if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
 			{
 			   shared_ptr<Node> parentNode = iface->getParentNode();
 				shared_ptr<Node> peerNode = static_cast<Interface*>(peerIface.get())->getParentNode();
 				if ((parentNode != nullptr) && (peerNode != nullptr))
 				{
-					if (peerNode->isTrustedNode(parentNode->getId()))
+					if (peerNode->isTrustedObject(parentNode->getId()))
 					{
 						value = peerIface->createNXSLObject(vm);
 					}
@@ -2606,10 +2606,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
       shared_ptr<NetObj> peerNode = FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
 		if (peerNode != nullptr)
 		{
-			if (g_flags & AF_CHECK_TRUSTED_NODES)
+			if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
 			{
 			   shared_ptr<Node> parentNode = iface->getParentNode();
-				if ((parentNode != nullptr) && (peerNode->isTrustedNode(parentNode->getId())))
+				if ((parentNode != nullptr) && (peerNode->isTrustedObject(parentNode->getId())))
 				{
 					value = peerNode->createNXSLObject(vm);
 				}

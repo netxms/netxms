@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -272,7 +272,7 @@ void DataCollector(const shared_ptr<DCObject>& dcObject)
       if (sourceNode != nullptr)
       {
          if (((target->getObjectClass() == OBJECT_CHASSIS) && (static_cast<Chassis*>(target.get())->getControllerId() == sourceNodeId)) ||
-             sourceNode->isTrustedNode(target->getId()))
+             sourceNode->isTrustedObject(target->getId()))
          {
             target = sourceNode;
          }

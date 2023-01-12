@@ -82,7 +82,7 @@ public class NXCObjectModificationData
    private Long mqttProxy;
    private Long icmpProxy;
    private Long webServiceProxy;
-   private Long[] trustedNodes;
+   private Long[] trustedObjects;
    private GeoLocation geolocation;
    private InetAddress primaryIpAddress;
    private MapLayoutAlgorithm mapLayout;
@@ -561,19 +561,23 @@ public class NXCObjectModificationData
    }
 
    /**
-    * @return the trustedNodes
+    * Get trusted objects
+    *
+    * @return trusted object list
     */
-   public Long[] getTrustedNodes()
+   public Long[] getTrustedObjects()
    {
-      return trustedNodes;
+      return trustedObjects;
    }
 
    /**
-    * @param trustedNodes the trustedNodes to set
+    * Set trusted objects
+    *
+    * @param trustedObjects trusted objects list
     */
-   public void setTrustedNodes(Long[] trustedNodes)
+   public void setTrustedObjects(Long[] trustedObjects)
    {
-      this.trustedNodes = trustedNodes;
+      this.trustedObjects = trustedObjects;
    }
 
    /**

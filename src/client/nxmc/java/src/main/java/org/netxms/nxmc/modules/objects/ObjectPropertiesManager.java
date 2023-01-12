@@ -70,7 +70,7 @@ import org.netxms.nxmc.modules.objects.propertypages.SSH;
 import org.netxms.nxmc.modules.objects.propertypages.SensorProperties;
 import org.netxms.nxmc.modules.objects.propertypages.StatusCalculation;
 import org.netxms.nxmc.modules.objects.propertypages.Syslog;
-import org.netxms.nxmc.modules.objects.propertypages.TrustedNodes;
+import org.netxms.nxmc.modules.objects.propertypages.TrustedObjects;
 import org.netxms.nxmc.modules.objects.propertypages.VPNSubnets;
 import org.netxms.nxmc.modules.objects.propertypages.WebServices;
 import org.netxms.nxmc.modules.objects.propertypages.ZoneAgentCredentials;
@@ -131,7 +131,7 @@ public class ObjectPropertiesManager
       pageClasses.add(SSH.class);
       pageClasses.add(StatusCalculation.class);
       pageClasses.add(Syslog.class);
-      pageClasses.add(TrustedNodes.class);
+      pageClasses.add(TrustedObjects.class);
       pageClasses.add(VPNSubnets.class);
       pageClasses.add(WebServices.class);
       pageClasses.add(ZoneAgentCredentials.class);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1526,7 +1526,7 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("business_services"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("business_service_prototypes"), _T("id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("acl"), _T("object_id,user_id"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("trusted_nodes"), _T("source_object_id,target_node_id"), _T("*")) &&
+               DBCacheTable(cachedb, mainDB, _T("trusted_objects"), _T("object_id,trusted_object_id"), _T("*")) &&
                DBCacheTable(cachedb, mainDB, _T("auto_bind_target"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_statistics"), _T("object_id,poll_target"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("icmp_target_address_list"), _T("node_id,ip_addr"), _T("*"), intColumns) &&

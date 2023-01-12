@@ -792,15 +792,13 @@ CREATE TABLE acl
 ) TABLE_TYPE;
 
 /**
- * Trusted nodes - used for cross-node data collection
- * Source object is an object providing data (it can be node or condition),
- * and target node is a node owning DCI
+ * Trusted objects - used for cross-object access and data collection
  */
-CREATE TABLE trusted_nodes
+CREATE TABLE trusted_objects
 (
-  source_object_id integer not null,
-  target_node_id integer not null,
-  PRIMARY KEY(source_object_id,target_node_id)
+  object_id integer not null,
+  trusted_object_id integer not null,
+  PRIMARY KEY(object_id,trusted_object_id)
 ) TABLE_TYPE;
 
 /**

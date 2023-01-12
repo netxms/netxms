@@ -1128,7 +1128,7 @@ private:
 
    void getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly) const;
 
-   bool saveTrustedNodes(DB_HANDLE hdb);
+   bool saveTrustedObjects(DB_HANDLE hdb);
    bool saveACLToDB(DB_HANDLE hdb);
    bool saveModuleData(DB_HANDLE hdb);
 
@@ -1176,7 +1176,7 @@ protected:
    bool m_inheritAccessRights;
    Mutex m_mutexACL;
 
-   IntegerArray<uint32_t> *m_trustedNodes;
+   IntegerArray<uint32_t> *m_trustedObjects;
 
    StringObjectMap<ModuleData> *m_moduleData;
    Mutex m_moduleDataLock;
@@ -1200,7 +1200,7 @@ protected:
 
    bool loadACLFromDB(DB_HANDLE hdb);
    bool loadCommonProperties(DB_HANDLE hdb);
-   bool loadTrustedNodes(DB_HANDLE hdb);
+   bool loadTrustedObjects(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
    virtual void prepareForDeletion();
@@ -1277,7 +1277,7 @@ public:
    void setFlag(uint32_t flag) { lockProperties(); m_flags |= flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
    void clearFlag(uint32_t flag) { lockProperties(); m_flags &= ~flag; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
 
-   bool isTrustedNode(uint32_t id) const;
+   bool isTrustedObject(uint32_t id) const;
 
    virtual void onCustomAttributeChange() override;
 

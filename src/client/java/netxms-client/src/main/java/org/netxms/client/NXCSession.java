@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  * <p>
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -6067,11 +6067,9 @@ public class NXCSession
          msg.setField(NXCPCodes.VID_SHARED_SECRET, data.getAgentSecret());
       }
 
-      if (data.getTrustedNodes() != null)
+      if (data.getTrustedObjects() != null)
       {
-         final Long[] nodes = data.getTrustedNodes();
-         msg.setFieldInt32(NXCPCodes.VID_NUM_TRUSTED_NODES, nodes.length);
-         msg.setField(NXCPCodes.VID_TRUSTED_NODES, nodes);
+         msg.setField(NXCPCodes.VID_TRUSTED_OBJECTS, data.getTrustedObjects());
       }
 
       if (data.getSnmpVersion() != null)

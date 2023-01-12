@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,14 +22,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -56,16 +57,17 @@ public class ObjectList extends Composite
 
    /**
     * Create new object list widget
-    *  
+    * 
     * @param parent parent composite
     * @param style object list holding composite style
     * @param title List title (if set to null, no title will be displayed)
     * @param initialContent initial object list (can be null)
-    * @param classFilter class filter for object selection dialog (can be null)
+    * @param classFilter class filter for object selection dialog
+    * @param treeFilter tree filter for object selection dialog (can be null)
     * @param modifyListener modify listener (can be null)
     */
    public ObjectList(Composite parent, int style, String title, Collection<AbstractObject> initialContent,
-         final Class<? extends AbstractObject> classFilter, final Runnable modifyListener)
+         final Class<? extends AbstractObject> classFilter, final Set<Integer> treeFilter, final Runnable modifyListener)
    {
       super(parent, style);
 
@@ -75,26 +77,26 @@ public class ObjectList extends Composite
          for(AbstractObject o : initialContent)
             objects.put(o.getObjectId(), o);
       }
-      
+
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.INNER_SPACING;
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       setLayout(layout);
-      
+
       if (title != null)
       {
          Label titleLabel = new Label(this, SWT.NONE);
          titleLabel.setText(title);
       }
-      
+
       viewer = new TableViewer(this, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.getTable().setSortDirection(SWT.UP);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new WorkbenchLabelProvider());
       viewer.setComparator(new ElementLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       viewer.setInput(objects.values().toArray());
-      
+
       GridData gd = new GridData();
       gd.verticalAlignment = GridData.FILL;
       gd.grabExcessVerticalSpace = true;
@@ -102,7 +104,7 @@ public class ObjectList extends Composite
       gd.grabExcessHorizontalSpace = true;
       gd.heightHint = 0;
       viewer.getControl().setLayoutData(gd);
-      
+
       Composite buttons = new Composite(this, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -116,17 +118,11 @@ public class ObjectList extends Composite
 
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(Messages.get().ObjectList_Add);
-      addButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createNodeSelectionFilter(true));
+            ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), treeFilter);
             if (dlg.open() == Window.OK)
             {
                for (AbstractObject o :dlg.getSelectedObjects(classFilter))
@@ -143,13 +139,7 @@ public class ObjectList extends Composite
       
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(Messages.get().ObjectList_Delete);
-      deleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {

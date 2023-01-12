@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -292,22 +292,22 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 
 		if (acceptRequest)
 		{
-         shared_ptr<Node> target;
+         shared_ptr<DataCollectionTarget> target;
          uint32_t objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
          if (objectId != 0)
          {
             // push on behalf of other node
-            target = static_pointer_cast<Node>(FindObjectById(objectId, OBJECT_NODE));
-            if (target != nullptr)
+            shared_ptr<NetObj> object = FindObjectById(objectId);
+            if ((object != nullptr) && object->isDataCollectionTarget())
             {
-               if (target->isTrustedNode(sender->getId()))
+               if (object->isTrustedObject(sender->getId()))
                {
+                  target = static_pointer_cast<DataCollectionTarget>(object);
                   debugPrintf(5, _T("%s: agent data push: target set to %s [%d]"), sender->getName(), target->getName(), target->getId());
                }
                else
                {
-                  debugPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->getName(), target->getName(), target->getId());
-                  target.reset();
+                  debugPrintf(5, _T("%s: agent data push: not in trusted object list for target %s [%d]"), sender->getName(), target->getName(), target->getId());
                }
             }
          }

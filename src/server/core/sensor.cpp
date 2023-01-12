@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -457,7 +457,7 @@ StringMap *Sensor::getInstanceList(DCObject *dco)
          return nullptr;
       }
       dataSourceObject = static_cast<DataCollectionTarget*>(proxyNode.get());
-      if (!dataSourceObject->isTrustedNode(m_id))
+      if (!dataSourceObject->isTrustedObject(m_id))
       {
          DbgPrintf(6, _T("Sensor::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by source sensor %s [%d]"),
                   dco->getName().cstr(), dco->getId(), m_name, m_id, dataSourceObject->getName(), dataSourceObject->getId());

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1084,15 +1084,15 @@ const BYTE *NXCPMessage::getBinaryFieldPtr(uint32_t fieldId, size_t *size) const
 {
    BYTE *data, type;
    void *value = get(fieldId, 0xFF, &type);
-   if ((value != NULL) && ((type == NXCP_DT_BINARY) || (type == NXCP_DT_STRING) || (type == NXCP_DT_UTF8_STRING)))
+   if ((value != nullptr) && ((type == NXCP_DT_BINARY) || (type == NXCP_DT_STRING) || (type == NXCP_DT_UTF8_STRING)))
    {
-      *size = static_cast<size_t>(*static_cast<UINT32*>(value));
+      *size = static_cast<size_t>(*static_cast<uint32_t*>(value));
       data = static_cast<BYTE*>(value) + 4;
    }
    else
    {
       *size = 0;
-      data = NULL;
+      data = nullptr;
    }
    return data;
 }
@@ -1104,7 +1104,7 @@ const BYTE *NXCPMessage::getBinaryFieldPtr(uint32_t fieldId, size_t *size) const
 uuid NXCPMessage::getFieldAsGUID(uint32_t fieldId) const
 {
    NXCP_MESSAGE_FIELD *f = find(fieldId);
-   if (f == NULL)
+   if (f == nullptr)
       return uuid::NULL_UUID;
 
    if ((f->type == NXCP_DT_BINARY) && (f->df_binary.length == UUID_LENGTH))

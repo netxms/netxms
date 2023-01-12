@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -58,16 +59,17 @@ public class ObjectList extends Composite
 
    /**
     * Create new object list widget
-    *  
+    * 
     * @param parent parent composite
     * @param style object list holding composite style
     * @param title List title (if set to null, no title will be displayed)
     * @param initialContent initial object list (can be null)
-    * @param classFilter class filter for object selection dialog (can be null)
+    * @param classFilter class filter for object selection dialog
+    * @param selectionTreeFilter class filter for object tree during selection (can be null)
     * @param modifyListener modify listener (can be null)
     */
    public ObjectList(Composite parent, int style, String title, Collection<AbstractObject> initialContent,
-         final Class<? extends AbstractObject> classFilter, final Runnable modifyListener)
+         final Class<? extends AbstractObject> classFilter, final Set<Integer> selectionTreeFilter, final Runnable modifyListener)
    {
       super(parent, style);
 
@@ -128,7 +130,7 @@ public class ObjectList extends Composite
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createNodeSelectionFilter(true));
+            ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), selectionTreeFilter);
             if (dlg.open() == Window.OK)
             {
                for (AbstractObject o :dlg.getSelectedObjects(classFilter))

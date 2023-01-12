@@ -23,6 +23,42 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 43.5 to 43.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='Objects.Security.CheckTrustedObjects',description='Enable/disable trusted objects check for cross-object access.' WHERE var_name='Objects.Security.CheckTrustedNodes'")));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE trusted_objects (")
+      _T("  object_id integer not null,")
+      _T("  trusted_object_id integer not null,")
+      _T("  PRIMARY KEY(object_id,trusted_object_id))")
+      ));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT source_object_id,target_node_id FROM trusted_nodes ORDER BY source_object_id"));
+   if (hResult != nullptr)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR query[128];
+         _sntprintf(query, 128, _T("INSERT INTO trusted_objects (object_id, trusted_object_id) VALUES (%u, %u)"), DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
+         CHK_EXEC_NO_SP(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_ignoreErrors)
+   {
+      return false;
+   }
+   CHK_EXEC(SQLQuery(_T("DROP TABLE trusted_nodes")));
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 43.4 to 43.5
  */
 static bool H_UpgradeFromV4()
@@ -224,6 +260,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  43, 6,  H_UpgradeFromV5  },
    { 4,  43, 5,  H_UpgradeFromV4  },
    { 3,  43, 4,  H_UpgradeFromV3  },
    { 2,  43, 3,  H_UpgradeFromV2  },

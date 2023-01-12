@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ public abstract class AbstractObject
 	protected PostalAddress postalAddress;
 	protected UUID mapImage;
 	protected long drillDownObjectId;
-	protected final HashSet<Long> trustedNodes = new HashSet<Long>(0);
+	protected final HashSet<Long> trustedObjects = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
 	protected int statusCalculationMethod;
@@ -272,13 +272,10 @@ public abstract class AbstractObject
 			children.add(msg.getFieldAsInt64(id));
 		}
 		
-		// Trusted nodes
-		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_TRUSTED_NODES);
-		if (count > 0)
-		{
-			Long[] nodes = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_NODES);
-			trustedNodes.addAll(Arrays.asList(nodes));
-		}
+      // Trusted objects
+      Long[] tobjects = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_OBJECTS);
+      if ((tobjects != null) && (tobjects.length > 0))
+         trustedObjects.addAll(Arrays.asList(tobjects));
 
 		// Dashboards
 		Long[] d = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_DASHBOARDS);
@@ -291,7 +288,7 @@ public abstract class AbstractObject
 		{
 			customAttributes.put(msg.getFieldAsString(id), new CustomAttribute(msg, id+1));
 		}
-		
+
 		// URLs
       count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_URLS);
       for(i = 0, id = NXCPCodes.VID_URL_LIST_BASE; i < count; i++, id += 10)
@@ -840,13 +837,13 @@ public abstract class AbstractObject
    }
 
 	/**
-	 * Get list of trusted nodes
-	 * 
-	 * @return List of trusted nodes
-	 */
-	public List<AbstractObject> getTrustedNodes()
+    * Get list of trusted objects
+    * 
+    * @return List of trusted objects
+    */
+	public List<AbstractObject> getTrustedObjects()
 	{
-      return session.findMultipleObjects(trustedNodes, true);
+      return session.findMultipleObjects(trustedObjects, true);
 	}
 
    /**

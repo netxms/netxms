@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -115,8 +115,7 @@ public class ObjectTree extends Composite
     * @param parent
     * @param style
     */
-   public ObjectTree(Composite parent, int style, int options,
-         Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
+   public ObjectTree(Composite parent, int style, int options, Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
    {
       super(parent, style);
 

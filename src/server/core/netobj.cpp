@@ -77,7 +77,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_maintenanceEventId = 0;
    m_maintenanceInitiator = 0;
    m_inheritAccessRights = true;
-   m_trustedNodes = nullptr;
+   m_trustedObjects = nullptr;
    m_pollRequestor = nullptr;
    m_pollRequestId = 0;
    m_statusCalcAlg = SA_CALCULATE_DEFAULT;
@@ -113,7 +113,7 @@ NetObj::~NetObj()
 {
    if (!(g_flags & AF_SHUTDOWN))
       nxlog_debug_tag(DEBUG_TAG_OBJECT_LIFECYCLE, 7, _T("Called destructor for object %s [%u]"), m_name, m_id);
-   delete m_trustedNodes;
+   delete m_trustedObjects;
    delete m_moduleData;
    delete m_responsibleUsers;
 }
@@ -368,7 +368,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    unlockProperties();
 
    if (success)
-      success = saveTrustedNodes(hdb);
+      success = saveTrustedObjects(hdb);
 
    // Save responsible users
    if (success)
@@ -500,6 +500,8 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_custom_attributes WHERE object_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM object_urls WHERE object_id=?"));
+   if (success)
+      success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_objects WHERE object_id=?"));
 
    // Delete events
    if (success && (g_dbSyntax != DB_SYNTAX_TSDB) && ConfigReadBoolean(_T("Events.DeleteEventsOfDeletedObject"), true))
@@ -704,7 +706,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
    }
 
 	if (success)
-		success = loadTrustedNodes(hdb);
+		success = loadTrustedObjects(hdb);
 
 	if (success)
 	{
@@ -933,13 +935,17 @@ void NetObj::deleteObject(NetObj *initiator)
 void NetObj::onObjectDelete(const NetObj& object)
 {
    lockProperties();
-   if (m_trustedNodes != nullptr)
+   if (m_trustedObjects != nullptr)
    {
-      int index = m_trustedNodes->indexOf(object.getId());
+      int index = m_trustedObjects->indexOf(object.getId());
       if (index != -1)
       {
-         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %s [%u] was listed as trusted node"), m_name, m_id, object.getName(), object.getId());
-         m_trustedNodes->remove(index);
+         nxlog_debug_tag(DEBUG_TAG_OBJECT_RELATIONS, 5, _T("NetObj::onObjectDelete(%s [%u]): deleted object %s [%u] was listed as trusted object"), m_name, m_id, object.getName(), object.getId());
+         m_trustedObjects->remove(index);
+         if (m_trustedObjects->isEmpty())
+         {
+            delete_and_null(m_trustedObjects);
+         }
          setModified(MODIFY_COMMON_PROPERTIES);
       }
    }
@@ -1246,14 +1252,9 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
    msg->setField(VID_CATEGORY_ID, m_categoryId);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
-	if ((m_trustedNodes != nullptr) && !m_trustedNodes->isEmpty())
+	if ((m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
 	{
-	   msg->setField(VID_NUM_TRUSTED_NODES, m_trustedNodes->size());
-		msg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
-	}
-	else
-	{
-	   msg->setField(VID_NUM_TRUSTED_NODES, (UINT32)0);
+		msg->setFieldFromInt32Array(VID_TRUSTED_OBJECTS, m_trustedObjects);
 	}
    msg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
@@ -1463,18 +1464,19 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
    }
 
 	// Change trusted nodes list
-   if (msg.isFieldExist(VID_NUM_TRUSTED_NODES))
+   if (msg.isFieldExist(VID_TRUSTED_OBJECTS))
    {
-      int count = msg.getFieldAsInt32(VID_NUM_TRUSTED_NODES);
-      if (count > 0)
+      size_t size;
+      msg.getBinaryFieldPtr(VID_TRUSTED_OBJECTS, &size);
+      if (size > 0)
       {
-         if (m_trustedNodes == nullptr)
-            m_trustedNodes = new IntegerArray<uint32_t>(count);
-         msg.getFieldAsInt32Array(VID_TRUSTED_NODES, m_trustedNodes);
+         if (m_trustedObjects == nullptr)
+            m_trustedObjects = new IntegerArray<uint32_t>();
+         msg.getFieldAsInt32Array(VID_TRUSTED_OBJECTS, m_trustedObjects);
       }
       else
       {
-         delete_and_null(m_trustedNodes);
+         delete_and_null(m_trustedObjects);
       }
    }
 
@@ -1958,20 +1960,20 @@ void NetObj::commentsToMessage(NXCPMessage *pMsg)
 /**
  * Load trusted nodes list from database
  */
-bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
+bool NetObj::loadTrustedObjects(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT target_node_id FROM trusted_nodes WHERE source_object_id=%d"), m_id);
+	_sntprintf(query, 256, _T("SELECT trusted_object_id FROM trusted_objects WHERE object_id=%u"), m_id);
 	DB_RESULT hResult = DBSelect(hdb, query);
-	if (hResult != NULL)
+	if (hResult != nullptr)
 	{
-		int count = DBGetNumRows(hResult);
-		if (count > 0)
+		int numElements = DBGetNumRows(hResult);
+		if (numElements > 0)
 		{
-		   m_trustedNodes = new IntegerArray<uint32_t>(count);
-			for(int i = 0; i < count; i++)
+		   m_trustedObjects = new IntegerArray<uint32_t>(numElements);
+			for(int i = 0; i < numElements; i++)
 			{
-				m_trustedNodes->add(DBGetFieldULong(hResult, i, 0));
+			   m_trustedObjects->add(DBGetFieldULong(hResult, i, 0));
 			}
 		}
 		DBFreeResult(hResult);
@@ -1982,19 +1984,19 @@ bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
 /**
  * Save list of trusted nodes to database
  */
-bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
+bool NetObj::saveTrustedObjects(DB_HANDLE hdb)
 {
-   bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_nodes WHERE source_object_id=?"));
+   bool success = executeQueryOnObject(hdb, _T("DELETE FROM trusted_objects WHERE object_id=?"));
    lockProperties();
-	if (success && (m_trustedNodes != nullptr) && !m_trustedNodes->isEmpty())
+	if (success && (m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
 	{
-	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (?,?)"), m_trustedNodes->size() > 1);
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO trusted_objects (object_id,trusted_object_id) VALUES (?,?)"), m_trustedObjects->size() > 1);
 	   if (hStmt != nullptr)
 	   {
 	      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         for(int i = 0; (i < m_trustedNodes->size()) && success; i++)
+         for(int i = 0; (i < m_trustedObjects->size()) && success; i++)
          {
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_trustedNodes->get(i));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_trustedObjects->get(i));
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -2009,16 +2011,16 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 }
 
 /**
- * Check if given node is in trust list
- * Will always return TRUE if system parameter Objects.Security.CheckTrustedNodes set to false
+ * Check if given object is in trust list
+ * Will always return TRUE if system parameter Objects.Security.CheckTrustedObjects set to false
  */
-bool NetObj::isTrustedNode(uint32_t id) const
+bool NetObj::isTrustedObject(uint32_t id) const
 {
-   if (!(g_flags & AF_CHECK_TRUSTED_NODES))
+   if (!(g_flags & AF_CHECK_TRUSTED_OBJECTS))
       return true;
 
    lockProperties();
-   bool rc = (m_trustedNodes != nullptr) ? m_trustedNodes->contains(id) : false;
+   bool rc = (m_trustedObjects != nullptr) ? m_trustedObjects->contains(id) : false;
    unlockProperties();
 	return rc;
 }
@@ -2632,7 +2634,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "urls", json_object_array(m_urls));
    json_object_set_new(root, "accessList", m_accessList.toJson());
    json_object_set_new(root, "inheritAccessRights", json_boolean(m_inheritAccessRights));
-   json_object_set_new(root, "trustedNodes", (m_trustedNodes != nullptr) ? m_trustedNodes->toJson() : json_array());
+   json_object_set_new(root, "trustedObjects", (m_trustedObjects != nullptr) ? m_trustedObjects->toJson() : json_array());
    json_object_set_new(root, "creationTime", json_integer(m_creationTime));
    json_object_set_new(root, "categoryId", json_integer(m_categoryId));
 

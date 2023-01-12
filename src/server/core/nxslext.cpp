@@ -185,9 +185,9 @@ static int F_GetServerNode(int argc, NXSL_Value **argv, NXSL_Value **result, NXS
    shared_ptr<Node> serverNode = static_pointer_cast<Node>(FindObjectById(g_dwMgmtNode, OBJECT_NODE));
    if (serverNode != nullptr)
    {
-      if (g_flags & AF_CHECK_TRUSTED_NODES)
+      if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
       {
-         if ((currNode != nullptr) && (serverNode->isTrustedNode(currNode->getId())))
+         if ((currNode != nullptr) && (serverNode->isTrustedObject(currNode->getId())))
          {
             *result = serverNode->createNXSLObject(vm);
          }
@@ -248,9 +248,9 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 	if (node != nullptr)
 	{
-		if (g_flags & AF_CHECK_TRUSTED_NODES)
+		if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
 		{
-			if ((currNode != nullptr) && (node->isTrustedNode(currNode->getId())))
+			if ((currNode != nullptr) && (node->isTrustedObject(currNode->getId())))
 			{
 				*ppResult = node->createNXSLObject(vm);
 			}
@@ -297,18 +297,18 @@ static int F_FindObjectImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NX
    shared_ptr<NetObj> object = finder(argv[0]);
 	if (object != nullptr)
 	{
-		if (g_flags & AF_CHECK_TRUSTED_NODES)
+		if (g_flags & AF_CHECK_TRUSTED_OBJECTS)
 		{
-			Node *currNode = nullptr;
+			NetObj *refObject = nullptr;
 			if ((argc == 2) && !argv[1]->isNull())
 			{
 				NXSL_Object *o = argv[1]->getValueAsObject();
-				if (!o->getClass()->instanceOf(g_nxslNodeClass.getName()))
+				if (!o->getClass()->instanceOf(g_nxslNetObjClass.getName()))
 					return NXSL_ERR_BAD_CLASS;
 
-				currNode = static_cast<shared_ptr<Node>*>(o->getData())->get();
+				refObject = static_cast<shared_ptr<NetObj>*>(o->getData())->get();
 			}
-			if ((currNode != nullptr) && (object->isTrustedNode(currNode->getId())))
+			if ((refObject != nullptr) && (object->isTrustedObject(refObject->getId())))
 			{
 				*result = object->createNXSLObject(vm);
 			}
@@ -316,9 +316,9 @@ static int F_FindObjectImpl(int argc, NXSL_Value **argv, NXSL_Value **result, NX
 			{
 				// No access, return null
 				*result = vm->createValue();
-				nxlog_debug_tag(_T("nxsl.objects"), 4, _T("%s('%s', %s [%d]): object %s [%d] found but trusted node check failed"),
+				nxlog_debug_tag(_T("nxsl.objects"), 4, _T("%s('%s', %s [%u]): object %s [%u] found but trusted object check failed"),
                    fname, argv[0]->getValueAsCString(),
-                   (currNode != nullptr) ? currNode->getName() : _T("null"), (currNode != nullptr) ? currNode->getId() : 0,
+                   (refObject != nullptr) ? refObject->getName() : _T("null"), (refObject != nullptr) ? refObject->getId() : 0,
                    object->getName(), object->getId());
 			}
 		}
@@ -559,28 +559,28 @@ static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_
    if (argc > 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   Node *node = nullptr;
+   NetObj *contextObject = nullptr;
    if (argc > 0)
    {
       if (!argv[0]->isObject())
          return NXSL_ERR_NOT_OBJECT;
 
       NXSL_Object *object = argv[0]->getValueAsObject();
-      if (!object->getClass()->instanceOf(g_nxslNodeClass.getName()))
+      if (!object->getClass()->instanceOf(g_nxslNetObjClass.getName()))
          return NXSL_ERR_BAD_CLASS;
 
-      node = static_cast<shared_ptr<Node>*>(object->getData())->get();
+      contextObject = static_cast<shared_ptr<NetObj>*>(object->getData())->get();
    }
 
    NXSL_Array *a = new NXSL_Array(vm);
-   if (!(g_flags & AF_CHECK_TRUSTED_NODES) || (node != nullptr))
+   if (!(g_flags & AF_CHECK_TRUSTED_OBJECTS) || (contextObject != nullptr))
    {
       unique_ptr<SharedObjectArray<NetObj>> nodes = g_idxNodeById.getObjects();
       int index = 0;
       for(int i = 0; i < nodes->size(); i++)
       {
-         Node *n = (Node *)nodes->get(i);
-         if ((node == nullptr) || n->isTrustedNode(node->getId()))
+         Node *n = static_cast<Node*>(nodes->get(i));
+         if ((contextObject == nullptr) || n->isTrustedObject(contextObject->getId()))
          {
             a->set(index++, n->createNXSLObject(vm));
          }
