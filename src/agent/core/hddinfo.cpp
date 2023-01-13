@@ -59,7 +59,7 @@ json_t* RunSmartCtl(const TCHAR *device)
 {
    TCHAR cmd[1024];
 #ifdef _WIN32
-   _sntprintf(cmd, 1024, _T("smartctl --all %s -j 2>NUL"), device);
+   _sntprintf(cmd, 1024, _T("smartctl.exe --all %s -j 2>NUL"), device);
 #else
    _sntprintf(cmd, 1024, _T("smartctl --all %s -j 2>/dev/null"), device);
 #endif
