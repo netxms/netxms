@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -116,11 +116,12 @@ static VOID WINAPI CoreServiceMain(DWORD argc, LPTSTR *argv)
  */
 void InitService()
 {
-   static SERVICE_TABLE_ENTRY serviceTable[2] = { { CORE_SERVICE_NAME, CoreServiceMain }, { NULL, NULL } };
-	TCHAR errorText[1024];
-
+   static SERVICE_TABLE_ENTRY serviceTable[2] = { { CORE_SERVICE_NAME, CoreServiceMain }, { nullptr, nullptr } };
    if (!StartServiceCtrlDispatcher(serviceTable))
-      _tprintf(_T("StartServiceCtrlDispatcher() failed: %s\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+   {
+      TCHAR errorText[1024];
+      wprintf(L"StartServiceCtrlDispatcher() failed: %s\n", GetSystemErrorText(GetLastError(), errorText, 1024));
+   }
 }
 
 /**
@@ -128,66 +129,76 @@ void InitService()
  */
 void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *login, const TCHAR *password, bool manualStart)
 {
-   SC_HANDLE hMgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
-   if (hMgr == NULL)
+   SC_HANDLE hMgr = OpenSCManagerW(nullptr, nullptr, GENERIC_WRITE);
+   if (hMgr == nullptr)
    {
       TCHAR errorText[1024];
-      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      wprintf(L"ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
+   bool update = false;
    TCHAR szCmdLine[MAX_PATH * 2];
    _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), execName, g_szConfigFile, g_checkDatabase ? _T(" --check-db") : _T(""));
-   SC_HANDLE hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
-                            GENERIC_READ | SERVICE_CHANGE_CONFIG, SERVICE_WIN32_OWN_PROCESS,
-                            manualStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
-                            szCmdLine, NULL, NULL, NULL, login, password);
-   if (hService == NULL)
+   SC_HANDLE hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"), GENERIC_READ | SERVICE_CHANGE_CONFIG | SERVICE_START,
+         SERVICE_WIN32_OWN_PROCESS, manualStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+         szCmdLine, nullptr, nullptr, nullptr, login, password);
+   if (hService == nullptr)
    {
       DWORD code = GetLastError();
       if (code == ERROR_SERVICE_EXISTS)
       {
          _tprintf(_T("WARNING: Service named '") CORE_SERVICE_NAME _T("' already exist\n"));
 
-         // Update service description in case we are updating older installation
-         hService = OpenService(hMgr, CORE_SERVICE_NAME, SERVICE_CHANGE_CONFIG);
-         if (hService != NULL)
+         // Open service for update in case we are updating older installation and change startup mode
+         hService = OpenService(hMgr, CORE_SERVICE_NAME, SERVICE_CHANGE_CONFIG | SERVICE_START);
+         if (hService != nullptr)
          {
-            SERVICE_DESCRIPTION sd;
-            sd.lpDescription = _T("This service provides core functionality of NetXMS management server");
-            if (!ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sd))
+            if (!ChangeServiceConfig(hService, SERVICE_NO_CHANGE, manualStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START, SERVICE_NO_CHANGE, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr))
             {
                TCHAR errorText[1024];
-               _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+               wprintf(L"WARNING: cannot set service start type (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
             }
-
-            if (!ChangeServiceConfig(hService, SERVICE_NO_CHANGE, manualStart ? SERVICE_DEMAND_START : SERVICE_AUTO_START,
-                  SERVICE_NO_CHANGE, NULL, NULL, NULL, NULL, NULL, NULL, NULL))
-            {
-               TCHAR errorText[1024];
-               _tprintf(_T("WARNING: cannot set service start type (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
-            }
-
-            CloseServiceHandle(hService);
          }
+         update = true;
       }
       else
       {
          TCHAR errorText[1024];
-         _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, errorText, 1024));
+         wprintf(L"ERROR: Cannot create service (%s)\n", GetSystemErrorText(code, errorText, 1024));
       }
    }
-   else
+
+   if (hService != nullptr)
    {
-      SERVICE_DESCRIPTION sd;
-      sd.lpDescription = _T("This service provides core functionality of NetXMS management server");
+      bool warnings = false;
+
+      SERVICE_DESCRIPTIONW sd;
+      sd.lpDescription = L"This service provides core functionality of NetXMS management server";
       if (!ChangeServiceConfig2(hService, SERVICE_CONFIG_DESCRIPTION, &sd))
       {
          TCHAR errorText[1024];
-         _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+         wprintf(L"WARNING: cannot set service description (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
+         warnings = true;
       }
 
-      _tprintf(_T("NetXMS Core service created successfully\n"));
+      SC_ACTION restartServiceAction;
+      restartServiceAction.Type = SC_ACTION_RESTART;
+      restartServiceAction.Delay = 30000;
+
+      SERVICE_FAILURE_ACTIONSW failureActions;
+      memset(&failureActions, 0, sizeof(failureActions));
+      failureActions.dwResetPeriod = 3600;
+      failureActions.cActions = 1;
+      failureActions.lpsaActions = &restartServiceAction;
+      if (!ChangeServiceConfig2W(hService, SERVICE_CONFIG_FAILURE_ACTIONS, &failureActions))
+      {
+         WCHAR errorText[1024];
+         wprintf(L"WARNING: cannot set service failure actions (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
+         warnings = true;
+      }
+
+      wprintf(L"NetXMS Core service %s %s\n", update ? L"updated" : L"created", warnings ? L"with warnings" : L"successfully");
       CloseServiceHandle(hService);
    }
 
@@ -201,31 +212,27 @@ void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *lo
  */
 void RemoveService()
 {
-   SC_HANDLE mgr, service;
-	TCHAR errorText[1024];
+	WCHAR errorText[1024];
 
-   mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
-   if (mgr == NULL)
+   SC_HANDLE mgr = OpenSCManagerW(nullptr, nullptr, GENERIC_WRITE);
+   if (mgr == nullptr)
    {
-      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      wprintf(L"ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
-   service = OpenService(mgr, CORE_SERVICE_NAME, DELETE);
-   if (service == NULL)
+   SC_HANDLE service = OpenService(mgr, CORE_SERVICE_NAME, DELETE);
+   if (service != nullptr)
    {
-      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
-             GetSystemErrorText(GetLastError(), errorText, 1024));
+      if (DeleteService(service))
+         wprintf(L"NetXMS Core service deleted successfully\n");
+      else
+         wprintf(L"ERROR: Cannot remove service named '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
+      CloseServiceHandle(service);
    }
    else
    {
-      if (DeleteService(service))
-         _tprintf(_T("NetXMS Core service deleted successfully\n"));
-      else
-         _tprintf(_T("ERROR: Cannot remove service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
-                GetSystemErrorText(GetLastError(), errorText, 1024));
-
-      CloseServiceHandle(service);
+      wprintf(L"ERROR: Cannot open service named '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
    }
 
    CloseServiceHandle(mgr);
@@ -236,11 +243,10 @@ void RemoveService()
 /**
  * Check if -d switch is given on command line
  */
-static BOOL IsDSwitchPresent(TCHAR *cmdLine)
+static bool IsDSwitchPresent(const WCHAR *cmdLine)
 {
 	int state;
-	TCHAR *ptr;
-
+	const WCHAR *ptr;
 	for(ptr = cmdLine, state = 0; *ptr != 0; ptr++)
 	{
 		switch(state)
@@ -262,7 +268,7 @@ static BOOL IsDSwitchPresent(TCHAR *cmdLine)
 						break;
 					case '-':
 						if (*(ptr + 1) == 'd')
-							return TRUE;
+							return true;
 					default:
 						state = 4;
 						break;
@@ -276,7 +282,7 @@ static BOOL IsDSwitchPresent(TCHAR *cmdLine)
 				break;
 		}
 	}
-	return FALSE;
+	return false;
 }
 
 /**
@@ -286,69 +292,59 @@ static BOOL IsDSwitchPresent(TCHAR *cmdLine)
  */
 void CheckServiceConfig()
 {
-   SC_HANDLE mgr, service;
-	QUERY_SERVICE_CONFIG *cfg;
-	TCHAR *cmdLine, errorText[1024];
-	DWORD bytes, error;
+	WCHAR errorText[1024];
 
-   mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
-   if (mgr == NULL)
+   SC_HANDLE mgr = OpenSCManagerW(nullptr, nullptr, GENERIC_WRITE);
+   if (mgr == nullptr)
    {
-      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+      wprintf(L"ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
-   service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG);
-   if (service != NULL)
+   SC_HANDLE service = OpenServiceW(mgr, CORE_SERVICE_NAME, SERVICE_QUERY_CONFIG | SERVICE_CHANGE_CONFIG);
+   if (service != nullptr)
 	{
-		QueryServiceConfig(service, NULL, 0, &bytes);
-		error = GetLastError();
+      DWORD bytes;
+      QueryServiceConfigW(service, nullptr, 0, &bytes);
+		DWORD error = GetLastError();
 		if (error == ERROR_INSUFFICIENT_BUFFER)
 		{
-			cfg = (QUERY_SERVICE_CONFIG *)malloc(bytes);
-			if (QueryServiceConfig(service, cfg, bytes, &bytes))
+         QUERY_SERVICE_CONFIG *cfg = (QUERY_SERVICE_CONFIG *)MemAlloc(bytes);
+			if (QueryServiceConfigW(service, cfg, bytes, &bytes))
 			{
 				if (!IsDSwitchPresent(cfg->lpBinaryPathName))
 				{
-					cmdLine = (TCHAR *)malloc(sizeof(TCHAR) * _tcslen(cfg->lpBinaryPathName) + 8);
-					_tcscpy(cmdLine, cfg->lpBinaryPathName);
-					_tcscat(cmdLine, _T(" -d"));
-					if (ChangeServiceConfig(service, cfg->dwServiceType, cfg->dwStartType,
-													cfg->dwErrorControl, cmdLine, NULL, NULL,
-													NULL, NULL, NULL, NULL))
+					StringBuffer cmdLine(cfg->lpBinaryPathName);
+					cmdLine.append(L" -d");
+					if (ChangeServiceConfigW(service, cfg->dwServiceType, cfg->dwStartType, cfg->dwErrorControl, cmdLine, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr))
 					{
-						_tprintf(_T("INFO: Service configuration successfully updated\n"));
+						wprintf(L"INFO: Service configuration successfully updated\n");
 					}
 					else
 					{
-						_tprintf(_T("ERROR: Cannot update configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-								 GetSystemErrorText(GetLastError(), errorText, 1024));
+						wprintf(L"ERROR: Cannot update configuration for service '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
 					}
-					free(cmdLine);
 				}
 				else
 				{
-					_tprintf(_T("INFO: Service configuration is valid\n"));
+					wprintf(L"INFO: Service configuration is valid\n");
 				}
 			}
 			else
 			{
-				_tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-						 GetSystemErrorText(GetLastError(), errorText, 1024));
+				wprintf(L"ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
 			}
-			free(cfg);
+			MemFree(cfg);
 		}
 		else
 		{
-			_tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-					 GetSystemErrorText(error, errorText, 1024));
+			wprintf(L"ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(error, errorText, 1024));
 		}
       CloseServiceHandle(service);
 	}
 	else
    {
-      _tprintf(_T("ERROR: Cannot open service named '") CORE_SERVICE_NAME _T("' (%s)\n"),
-             GetSystemErrorText(GetLastError(), errorText, 1024));
+      wprintf(L"ERROR: Cannot open service named '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
    }
 
    CloseServiceHandle(mgr);
@@ -362,28 +358,26 @@ static bool IsManualStartup(SC_HANDLE service)
    bool result = false;
 
    DWORD bytes;
-   QueryServiceConfig(service, NULL, 0, &bytes);
+   QueryServiceConfigW(service, nullptr, 0, &bytes);
    DWORD error = GetLastError();
    if (error == ERROR_INSUFFICIENT_BUFFER)
    {
-      QUERY_SERVICE_CONFIG *cfg = (QUERY_SERVICE_CONFIG *)malloc(bytes);
-      if (QueryServiceConfig(service, cfg, bytes, &bytes))
+      QUERY_SERVICE_CONFIG *cfg = (QUERY_SERVICE_CONFIG *)MemAlloc(bytes);
+      if (QueryServiceConfigW(service, cfg, bytes, &bytes))
       {
          result = (cfg->dwStartType == SERVICE_DEMAND_START);
       }
       else
       {
          TCHAR errorText[1024];
-         _tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-            GetSystemErrorText(GetLastError(), errorText, 1024));
+         wprintf(L"ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
       }
-      free(cfg);
+      MemFree(cfg);
    }
    else
    {
       TCHAR errorText[1024];
-      _tprintf(_T("ERROR: Cannot query configuration for service '") CORE_SERVICE_NAME _T("' (%s)\n"),
-         GetSystemErrorText(error, errorText, 1024));
+      wprintf(L"ERROR: Cannot query configuration for service '" CORE_SERVICE_NAME L"' (%s)\n", GetSystemErrorText(error, errorText, 1024));
    }
    return result;
 }
@@ -393,16 +387,16 @@ static bool IsManualStartup(SC_HANDLE service)
  */
 void StartCoreService(bool ignoreManualStartService)
 {
-   SC_HANDLE mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
-   if (mgr == NULL)
+   SC_HANDLE mgr = OpenSCManagerW(nullptr, nullptr, GENERIC_WRITE);
+   if (mgr == nullptr)
    {
       TCHAR errorText[1024];
       _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
       return;
    }
 
-   SC_HANDLE service = OpenService(mgr, CORE_SERVICE_NAME, SERVICE_START | SERVICE_QUERY_CONFIG);
-   if (service != NULL)
+   SC_HANDLE service = OpenServiceW(mgr, CORE_SERVICE_NAME, SERVICE_START | SERVICE_QUERY_CONFIG);
+   if (service != nullptr)
    {
       if (!ignoreManualStartService || !IsManualStartup(service))
       {

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -114,11 +114,12 @@ static VOID WINAPI AgentServiceMain(DWORD argc, LPTSTR *argv)
  */
 void InitService()
 {
-   static SERVICE_TABLE_ENTRY serviceTable[2]={ { g_windowsServiceName, AgentServiceMain }, { NULL, NULL } };
-   TCHAR szErrorText[256];
-
+   static SERVICE_TABLE_ENTRY serviceTable[2]={ { g_windowsServiceName, AgentServiceMain }, { nullptr, nullptr } };
    if (!StartServiceCtrlDispatcher(serviceTable))
-      _tprintf(_T("StartServiceCtrlDispatcher() failed: %s\n"), GetSystemErrorText(GetLastError(), szErrorText, 256));
+   {
+      TCHAR errorText[256];
+      _tprintf(_T("StartServiceCtrlDispatcher() failed: %s\n"), GetSystemErrorText(GetLastError(), errorText, 256));
+   }
 }
 
 /**
@@ -127,77 +128,89 @@ void InitService()
 void InstallService(TCHAR *execName, TCHAR *confFile, int debugLevel)
 {
    SC_HANDLE mgr, service;
-   TCHAR cmdLine[8192], szErrorText[256];
+   TCHAR cmdLine[8192];
 
-   mgr = OpenSCManager(NULL, NULL, GENERIC_WRITE);
-   if (mgr == NULL)
+   mgr = OpenSCManagerW(nullptr, nullptr, GENERIC_WRITE);
+   if (mgr == nullptr)
    {
-      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
-               GetSystemErrorText(GetLastError(), szErrorText, 256));
+      WCHAR errorText[256];
+      wprintf(L"ERROR: Cannot connect to Service Manager (%s)\n", GetSystemErrorText(GetLastError(), errorText, 256));
       return;
    }
 
-   _sntprintf(cmdLine, 8192, _T("\"%s\" -d -c \"%s\" -n \"%s\" -e \"%s\""),
-	           execName, confFile, g_windowsServiceName, g_windowsEventSourceName);
+   snwprintf(cmdLine, 8192, L"\"%s\" -d -c \"%s\" -n \"%s\" -e \"%s\"", execName, confFile, g_windowsServiceName, g_windowsEventSourceName);
    if (debugLevel != NXCONFIG_UNINITIALIZED_VALUE)
    {
       size_t len = _tcslen(cmdLine);
-      _sntprintf(&cmdLine[len], 8192 - len, _T(" -D %d"), debugLevel);
+      snwprintf(&cmdLine[len], 8192 - len, L" -D %d", debugLevel);
    }
 	
 	if (g_szPlatformSuffix[0] != 0)
 	{
-		_tcscat(cmdLine, _T(" -P \""));
-		_tcscat(cmdLine, g_szPlatformSuffix);
-		_tcscat(cmdLine, _T("\""));
+		wcscat(cmdLine, L" -P \"");
+		wcscat(cmdLine, g_szPlatformSuffix);
+		wcscat(cmdLine, L"\"");
 	}
 	if (g_dwFlags & AF_CENTRAL_CONFIG)
 	{
-		_tcscat(cmdLine, _T(" -M \""));
-		_tcscat(cmdLine, g_szConfigServer);
-		_tcscat(cmdLine, _T("\""));
+		wcscat(cmdLine, L" -M \"");
+		wcscat(cmdLine, g_szConfigServer);
+		wcscat(cmdLine, L"\"");
 	}
    
-	service = CreateService(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ | SERVICE_CHANGE_CONFIG,
-	                        SERVICE_WIN32_OWN_PROCESS | ((g_dwFlags & AF_INTERACTIVE_SERVICE) ? SERVICE_INTERACTIVE_PROCESS : 0),
-                           SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, cmdLine, NULL, NULL, NULL, NULL, NULL);
-   if (service == NULL)
+   bool update = false;
+	service = CreateServiceW(mgr, g_windowsServiceName, g_windowsServiceDisplayName, GENERIC_READ | SERVICE_CHANGE_CONFIG | SERVICE_START,
+         SERVICE_WIN32_OWN_PROCESS | ((g_dwFlags & AF_INTERACTIVE_SERVICE) ? SERVICE_INTERACTIVE_PROCESS : 0),
+         SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, cmdLine, nullptr, nullptr, nullptr, nullptr, nullptr);
+   if (service == nullptr)
    {
       DWORD code = GetLastError();
       if (code == ERROR_SERVICE_EXISTS)
       {
-         _tprintf(_T("WARNING: Service named '%s' already exist\n"), g_windowsServiceName);
+         wprintf(L"WARNING: Service named '%s' already exist\n", g_windowsServiceName);
 
-         // Update service description in case we are updating older installation
-         service = OpenService(mgr, g_windowsServiceName, SERVICE_CHANGE_CONFIG);
-         if (service != NULL)
-         {
-            SERVICE_DESCRIPTION sd;
-            sd.lpDescription = _T("This service collects system health and performance information and forwards it to remote NetXMS server");
-            if (!ChangeServiceConfig2(service, SERVICE_CONFIG_DESCRIPTION, &sd))
-            {
-               TCHAR errorText[1024];
-               _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
-            }
-            CloseServiceHandle(service);
-         }
+         // Open service for update in case we are updating older installation
+         service = OpenServiceW(mgr, g_windowsServiceName, SERVICE_CHANGE_CONFIG | SERVICE_START);
+         update = true;
       }
       else
       {
-         _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, szErrorText, 256));
+         TCHAR errorText[256];
+         _tprintf(_T("ERROR: Cannot create service (%s)\n"), GetSystemErrorText(code, errorText, 256));
       }
    }
-   else
+
+   // Set or update service description and recovery mode
+   if (service != nullptr)
    {
-      SERVICE_DESCRIPTION sd;
-      sd.lpDescription = _T("This service collects system health and performance information and forwards it to remote NetXMS server");
-      if (!ChangeServiceConfig2(service, SERVICE_CONFIG_DESCRIPTION, &sd))
+      bool warnings = false;
+
+      SERVICE_DESCRIPTIONW sd;
+      sd.lpDescription = L"This service collects system health and performance information and forwards it to remote NetXMS server";
+      if (!ChangeServiceConfig2W(service, SERVICE_CONFIG_DESCRIPTION, &sd))
       {
-         TCHAR errorText[1024];
-         _tprintf(_T("WARNING: cannot set service description (%s)\n"), GetSystemErrorText(GetLastError(), errorText, 1024));
+         WCHAR errorText[1024];
+         wprintf(L"WARNING: cannot set service description (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
+         warnings = true;
       }
 
-      _tprintf(_T("Service \"%s\" created successfully\n"), g_windowsServiceName);
+      SC_ACTION restartServiceAction;
+      restartServiceAction.Type = SC_ACTION_RESTART;
+      restartServiceAction.Delay = 5000;
+
+      SERVICE_FAILURE_ACTIONSW failureActions;
+      memset(&failureActions, 0, sizeof(failureActions));
+      failureActions.dwResetPeriod = 3600;
+      failureActions.cActions = 1;
+      failureActions.lpsaActions = &restartServiceAction;
+      if (!ChangeServiceConfig2W(service, SERVICE_CONFIG_FAILURE_ACTIONS, &failureActions))
+      {
+         WCHAR errorText[1024];
+         wprintf(L"WARNING: cannot set service failure actions (%s)\n", GetSystemErrorText(GetLastError(), errorText, 1024));
+         warnings = true;
+      }
+
+      wprintf(L"Service \"%s\" %s %s\n", g_windowsServiceName, update ? L"updated" : L"created", warnings ? L"with warnings" : L"successfully");
       CloseServiceHandle(service);
 
 		InstallEventSource(execName);
@@ -211,32 +224,27 @@ void InstallService(TCHAR *execName, TCHAR *confFile, int debugLevel)
  */
 void RemoveService()
 {
-   SC_HANDLE mgr, service;
    TCHAR szErrorText[256];
 
-   mgr = OpenSCManager(NULL,NULL,GENERIC_WRITE);
-   if (mgr==NULL)
+   SC_HANDLE mgr = OpenSCManagerW(nullptr, nullptr, GENERIC_WRITE);
+   if (mgr == nullptr)
    {
-      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"),
-             GetSystemErrorText(GetLastError(), szErrorText, 256));
+      _tprintf(_T("ERROR: Cannot connect to Service Manager (%s)\n"), GetSystemErrorText(GetLastError(), szErrorText, 256));
       return;
    }
 
-   service=OpenService(mgr, g_windowsServiceName, DELETE);
-   if (service==NULL)
+   SC_HANDLE service = OpenServiceW(mgr, g_windowsServiceName, DELETE);
+   if (service != nullptr)
    {
-      _tprintf(_T("ERROR: Cannot open service named '%s' (%s)\n"), g_windowsServiceName,
-             GetSystemErrorText(GetLastError(), szErrorText, 256));
+      if (DeleteService(service))
+         _tprintf(_T("NetXMS Agent service deleted successfully\n"));
+      else
+         _tprintf(_T("ERROR: Cannot remove service named '%s' (%s)\n"), g_windowsServiceName, GetSystemErrorText(GetLastError(), szErrorText, 256));
+      CloseServiceHandle(service);
    }
    else
    {
-      if (DeleteService(service))
-         _tprintf(_T("Win32 Agent service deleted successfully\n"));
-      else
-         _tprintf(_T("ERROR: Cannot remove service named '%s' (%s)\n"), g_windowsServiceName,
-                GetSystemErrorText(GetLastError(), szErrorText, 256));
-
-      CloseServiceHandle(service);
+      _tprintf(_T("ERROR: Cannot open service named '%s' (%s)\n"), g_windowsServiceName, GetSystemErrorText(GetLastError(), szErrorText, 256));
    }
 
    CloseServiceHandle(mgr);
