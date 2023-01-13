@@ -1,6 +1,6 @@
 /* 
 ** MariaDB Database Driver
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -76,39 +76,39 @@ static void UpdateErrorMessage(const char *source, WCHAR *errorText)
 static StringBuffer PrepareString(const TCHAR *str, size_t maxSize)
 {
    StringBuffer out;
-	out.append(_T('\''));
-	for(const TCHAR *src = str; (*src != 0) && (maxSize > 0); src++, maxSize--)
-	{
-		switch(*src)
-		{
-			case '\'':
-	         out.append(_T("''"), 2);
-				break;
-			case '\r':
-            out.append(_T("\\r"), 2);
-				break;
-			case '\n':
-            out.append(_T("\\n"), 2);
-				break;
-			case '\b':
-            out.append(_T("\\b"), 2);
-				break;
-			case '\t':
-            out.append(_T("\\t"), 2);
-				break;
-			case 26:
-            out.append(_T("\\Z"), 2);
-				break;
-			case '\\':
-            out.append(_T("\\\\"), 2);
-				break;
-			default:
-	         out.append(*src);
-				break;
-		}
-	}
    out.append(_T('\''));
-	return out;
+   for(const TCHAR *src = str; (*src != 0) && (maxSize > 0); src++, maxSize--)
+   {
+      switch(*src)
+      {
+         case '\'':
+            out.append(_T("''"), 2);
+            break;
+         case '\r':
+            out.append(_T("\\r"), 2);
+            break;
+         case '\n':
+            out.append(_T("\\n"), 2);
+            break;
+         case '\b':
+            out.append(_T("\\b"), 2);
+            break;
+         case '\t':
+            out.append(_T("\\t"), 2);
+            break;
+         case 26:
+            out.append(_T("\\Z"), 2);
+            break;
+         case '\\':
+            out.append(_T("\\\\"), 2);
+            break;
+         default:
+            out.append(*src);
+            break;
+      }
+   }
+   out.append(_T('\''));
+   return out;
 }
 
 /**
@@ -220,11 +220,11 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
 		mysql_close(mysql);
 		return nullptr;
 	}
-	
-	auto connection = new MARIADB_CONN(mysql);
+
+   auto connection = new MARIADB_CONN(mysql);
 
    // Switch to UTF-8 encoding
-   mysql_set_character_set(mysql, "utf8");
+   mysql_set_character_set(mysql, "utf8mb4");
 
    // Disable truncation reporting
    v = 0;
@@ -251,7 +251,8 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
    }
    if (connection->fixForCONC281)
       nxlog_debug_tag(DEBUG_TAG, 7, _T("Enabled workaround for MariadB bug CONC-281"));
-	return (DBDRV_CONNECTION)connection;
+
+   return (DBDRV_CONNECTION)connection;
 }
 
 /**
@@ -268,13 +269,13 @@ static void Disconnect(DBDRV_CONNECTION connection)
  */
 static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *query, bool optimizeForReuse, uint32_t *errorCode, WCHAR *errorText)
 {
-	MARIADB_STATEMENT *result = nullptr;
+   MARIADB_STATEMENT *result = nullptr;
 
-	static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.lock();
-	MYSQL_STMT *stmt = mysql_stmt_init(static_cast<MARIADB_CONN*>(connection)->mysql);
-	if (stmt != NULL)
-	{
-	   char localBuffer[1024];
+   static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.lock();
+   MYSQL_STMT *stmt = mysql_stmt_init(static_cast<MARIADB_CONN*>(connection)->mysql);
+   if (stmt != nullptr)
+   {
+      char localBuffer[1024];
 		char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
 		int rc = mysql_stmt_prepare(stmt, pszQueryUTF8, (unsigned long)strlen(pszQueryUTF8));
 		if (rc == 0)
@@ -422,8 +423,8 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
 		rc = DBERR_OTHER_ERROR;
 	}
 
-	static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.unlock();
-	return rc;
+   static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.unlock();
+   return rc;
 }
 
 /**
@@ -431,14 +432,14 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
  */
 static void FreeStatement(DBDRV_STATEMENT hStmt)
 {
-   auto stmt = static_cast<MARIADB_STATEMENT*>(hStmt);
-   stmt->connection->mutexQueryLock.lock();
-	mysql_stmt_close(stmt->statement);
-	stmt->connection->mutexQueryLock.unlock();
-	delete stmt->buffers;
-	MemFree(stmt->bindings);
-	MemFree(stmt->lengthFields);
-	MemFree(stmt);
+   auto statement = static_cast<MARIADB_STATEMENT*>(hStmt);
+   statement->connection->mutexQueryLock.lock();
+   mysql_stmt_close(statement->statement);
+   statement->connection->mutexQueryLock.unlock();
+   delete statement->buffers;
+   MemFree(statement->bindings);
+   MemFree(statement->lengthFields);
+   MemFree(statement);
 }
 
 /**
@@ -449,28 +450,28 @@ static uint32_t QueryInternal(DBDRV_CONNECTION connection, const char *query, WC
    uint32_t rc = DBERR_INVALID_HANDLE;
 
    static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.lock();
-	if (mysql_query(static_cast<MARIADB_CONN*>(connection)->mysql, query) == 0)
-	{
-		rc = DBERR_SUCCESS;
-		if (errorText != NULL)
-			*errorText = 0;
-	}
-	else
-	{
-		int nErr = mysql_errno(static_cast<MARIADB_CONN*>(connection)->mysql);
-		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
-		{
-			rc = DBERR_CONNECTION_LOST;
-		}
-		else
-		{
-			rc = DBERR_OTHER_ERROR;
-		}
-		UpdateErrorMessage(mysql_error(static_cast<MARIADB_CONN*>(connection)->mysql), errorText);
-	}
+   if (mysql_query(static_cast<MARIADB_CONN*>(connection)->mysql, query) == 0)
+   {
+      rc = DBERR_SUCCESS;
+      if (errorText != nullptr)
+         *errorText = 0;
+   }
+   else
+   {
+      int nErr = mysql_errno(static_cast<MARIADB_CONN*>(connection)->mysql);
+      if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+      {
+         rc = DBERR_CONNECTION_LOST;
+      }
+      else
+      {
+         rc = DBERR_OTHER_ERROR;
+      }
+      UpdateErrorMessage(mysql_error(static_cast<MARIADB_CONN*>(connection)->mysql), errorText);
+   }
 
-	static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.unlock();
-	return rc;
+   static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.unlock();
+   return rc;
 }
 
 /**
@@ -482,7 +483,7 @@ static uint32_t Query(DBDRV_CONNECTION connection, const WCHAR *query, WCHAR *er
    char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
    uint32_t rc = QueryInternal(connection, pszQueryUTF8, errorText);
    FreeConvertedString(pszQueryUTF8, localBuffer);
-	return rc;
+   return rc;
 }
 
 /**
@@ -788,7 +789,7 @@ static int GetNumRows(DBDRV_RESULT hResult)
  */
 static int GetColumnCount(DBDRV_RESULT hResult)
 {
-	return static_cast<MARIADB_RESULT*>(hResult)->numColumns;
+   return static_cast<MARIADB_RESULT*>(hResult)->numColumns;
 }
 
 /**
@@ -825,8 +826,8 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
    MARIADB_UNBUFFERED_RESULT *pResult = nullptr;
 
    char localBuffer[1024];
-	char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
-	static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.lock();
+   char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
+   static_cast<MARIADB_CONN*>(connection)->mutexQueryLock.lock();
 	if (mysql_query(static_cast<MARIADB_CONN*>(connection)->mysql, pszQueryUTF8) == 0)
 	{
 		pResult = MemAllocStruct<MARIADB_UNBUFFERED_RESULT>();
@@ -1011,7 +1012,7 @@ static int32_t GetFieldLengthUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int col
 {
    auto result = static_cast<MARIADB_UNBUFFERED_RESULT*>(hResult);
 
-	// Check if there are valid fetched row
+   // Check if there are valid fetched row
 	if (result->noMoreRows || ((result->pCurrRow == nullptr) && !result->isPreparedStatement))
 		return 0;
 	
@@ -1133,11 +1134,12 @@ static int GetColumnCountUnbuffered(DBDRV_UNBUFFERED_RESULT hResult)
  */
 static const char *GetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
-	if (static_cast<MARIADB_UNBUFFERED_RESULT*>(hResult)->resultSet == nullptr)
-		return nullptr;
+   auto result = static_cast<MARIADB_UNBUFFERED_RESULT*>(hResult);
+   if (result->resultSet == nullptr)
+      return nullptr;
 
-	MYSQL_FIELD *field = mysql_fetch_field_direct(static_cast<MARIADB_UNBUFFERED_RESULT*>(hResult)->resultSet, column);
-	return (field != nullptr) ? field->name : nullptr;
+   MYSQL_FIELD *field = mysql_fetch_field_direct(result->resultSet, column);
+   return (field != nullptr) ? field->name : nullptr;
 }
 
 /**
@@ -1172,7 +1174,7 @@ static void FreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
  */
 static uint32_t Begin(DBDRV_CONNECTION connection)
 {
-	return QueryInternal(connection, "BEGIN", nullptr);
+   return QueryInternal(connection, "BEGIN", nullptr);
 }
 
 /**
@@ -1180,7 +1182,7 @@ static uint32_t Begin(DBDRV_CONNECTION connection)
  */
 static uint32_t Commit(DBDRV_CONNECTION connection)
 {
-	return QueryInternal(connection, "COMMIT", nullptr);
+   return QueryInternal(connection, "COMMIT", nullptr);
 }
 
 /**
@@ -1188,7 +1190,7 @@ static uint32_t Commit(DBDRV_CONNECTION connection)
  */
 static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
-	return QueryInternal(connection, "ROLLBACK", nullptr);
+   return QueryInternal(connection, "ROLLBACK", nullptr);
 }
 
 /**
@@ -1196,6 +1198,9 @@ static uint32_t Rollback(DBDRV_CONNECTION connection)
  */
 static int IsTableExist(DBDRV_CONNECTION connection, const WCHAR *name)
 {
+   if (connection == nullptr)
+      return DBIsTableExist_Failure;
+
    WCHAR query[256], lname[256];
    wcsncpy(lname, name, 256);
    wcslwr(lname);
@@ -1206,7 +1211,7 @@ static int IsTableExist(DBDRV_CONNECTION connection, const WCHAR *name)
    DBDRV_RESULT hResult = Select(connection, query, &error, errorText);
    if (hResult != nullptr)
    {
-      rc = (static_cast<MARIADB_RESULT*>(hResult)->numRows > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      rc = (GetNumRows(hResult) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
       FreeResult(hResult);
    }
    return rc;

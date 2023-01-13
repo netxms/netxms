@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -179,7 +179,7 @@ static DBDRV_CONNECTION Connect(const char *host, const char *login, const char 
    // Switch to UTF-8 encoding
    mysql_set_character_set(mysql, "utf8mb4");
 
-	return new MYSQL_CONN(mysql);
+   return new MYSQL_CONN(mysql);
 }
 
 /**
@@ -196,13 +196,13 @@ static void Disconnect(DBDRV_CONNECTION connection)
  */
 static DBDRV_STATEMENT Prepare(DBDRV_CONNECTION connection, const WCHAR *pwszQuery, bool optimizeForReuse, uint32_t *pdwError, WCHAR *errorText)
 {
-	MYSQL_STATEMENT *result = NULL;
+   MYSQL_STATEMENT *result = nullptr;
 
    static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.lock();
-	MYSQL_STMT *stmt = mysql_stmt_init(static_cast<MYSQL_CONN*>(connection)->mysql);
-	if (stmt != NULL)
-	{
-	   char localBuffer[1024];
+   MYSQL_STMT *stmt = mysql_stmt_init(static_cast<MYSQL_CONN*>(connection)->mysql);
+   if (stmt != nullptr)
+   {
+      char localBuffer[1024];
 		char *pszQueryUTF8 = WideStringToUTF8(pwszQuery, localBuffer, 1024);
 		int rc = mysql_stmt_prepare(stmt, pszQueryUTF8, (unsigned long)strlen(pszQueryUTF8));
 		if (rc == 0)
@@ -318,9 +318,9 @@ static void Bind(DBDRV_STATEMENT hStmt, int pos, int sqlType, int cType, void *b
  */
 static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHAR *errorText)
 {
-	uint32_t rc;
+   uint32_t rc;
 
-	static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.lock();
+   static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.lock();
    auto statement = static_cast<MYSQL_STATEMENT*>(hStmt);
 	if (mysql_stmt_bind_param(statement->statement, statement->bindings) == 0)
 	{
@@ -349,7 +349,7 @@ static uint32_t Execute(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, WCHA
 	}
 
    static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.unlock();
-	return rc;
+   return rc;
 }
 
 /**
@@ -359,44 +359,44 @@ static void FreeStatement(DBDRV_STATEMENT hStmt)
 {
    auto statement = static_cast<MYSQL_STATEMENT*>(hStmt);
    statement->connection->mutexQueryLock.lock();
-	mysql_stmt_close(statement->statement);
+   mysql_stmt_close(statement->statement);
    statement->connection->mutexQueryLock.unlock();
-	delete statement->buffers;
-	MemFree(statement->bindings);
-	MemFree(statement->lengthFields);
-	MemFree(statement);
+   delete statement->buffers;
+   MemFree(statement->bindings);
+   MemFree(statement->lengthFields);
+   MemFree(statement);
 }
 
 /**
  * Perform actual non-SELECT query
  */
-static uint32_t QueryInternal(MYSQL_CONN *connection, const char *query, WCHAR *errorText)
+static uint32_t QueryInternal(DBDRV_CONNECTION connection, const char *query, WCHAR *errorText)
 {
-	uint32_t dwRet = DBERR_INVALID_HANDLE;
+   uint32_t rc = DBERR_INVALID_HANDLE;
 
-	connection->mutexQueryLock.lock();
-	if (mysql_query(connection->mysql, query) == 0)
-	{
-		dwRet = DBERR_SUCCESS;
-		if (errorText != nullptr)
-			*errorText = 0;
-	}
-	else
-	{
-		int nErr = mysql_errno(connection->mysql);
-		if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
-		{
-			dwRet = DBERR_CONNECTION_LOST;
-		}
-		else
-		{
-			dwRet = DBERR_OTHER_ERROR;
-		}
-		UpdateErrorMessage(mysql_error(connection->mysql), errorText);
-	}
+   static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.lock();
+   if (mysql_query(static_cast<MYSQL_CONN*>(connection)->mysql, query) == 0)
+   {
+      rc = DBERR_SUCCESS;
+      if (errorText != nullptr)
+         *errorText = 0;
+   }
+   else
+   {
+      int nErr = mysql_errno(static_cast<MYSQL_CONN*>(connection)->mysql);
+      if (nErr == CR_SERVER_LOST || nErr == CR_CONNECTION_ERROR || nErr == CR_SERVER_GONE_ERROR) // CR_SERVER_GONE_ERROR - ???
+      {
+         rc = DBERR_CONNECTION_LOST;
+      }
+      else
+      {
+         rc = DBERR_OTHER_ERROR;
+      }
+      UpdateErrorMessage(mysql_error(static_cast<MYSQL_CONN*>(connection)->mysql), errorText);
+   }
 
-	connection->mutexQueryLock.unlock();
-	return dwRet;
+   static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.unlock();
+   return rc;
 }
 
 /**
@@ -406,9 +406,9 @@ static uint32_t Query(DBDRV_CONNECTION connection, const WCHAR *query, WCHAR *er
 {
    char localBuffer[1024];
    char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
-   DWORD rc = QueryInternal(static_cast<MYSQL_CONN*>(connection), pszQueryUTF8, errorText);
+   uint32_t rc = QueryInternal(connection, pszQueryUTF8, errorText);
    FreeConvertedString(pszQueryUTF8, localBuffer);
-	return rc;
+   return rc;
 }
 
 /**
@@ -459,7 +459,7 @@ static DBDRV_RESULT Select(DBDRV_CONNECTION connection, const WCHAR *query, uint
  */
 static DBDRV_RESULT SelectPrepared(DBDRV_CONNECTION connection, DBDRV_STATEMENT hStmt, uint32_t *errorCode, WCHAR *errorText)
 {
-	MYSQL_RESULT *result = nullptr;
+   MYSQL_RESULT *result = nullptr;
 
    static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.lock();
    auto statement = static_cast<MYSQL_STATEMENT*>(hStmt);
@@ -716,7 +716,7 @@ static int GetNumRows(DBDRV_RESULT hResult)
  */
 static int GetColumnCount(DBDRV_RESULT hResult)
 {
-	return static_cast<MYSQL_RESULT*>(hResult)->numColumns;
+   return static_cast<MYSQL_RESULT*>(hResult)->numColumns;
 }
 
 /**
@@ -734,7 +734,6 @@ static const char *GetColumnName(DBDRV_RESULT hResult, int column)
 static void FreeResult(DBDRV_RESULT hResult)
 {
    auto result = static_cast<MYSQL_RESULT*>(hResult);
-
    if (result->isPreparedStatement)
    {
       MemFree(result->bindings);
@@ -754,7 +753,7 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
    MYSQL_UNBUFFERED_RESULT *pResult = nullptr;
 
    char localBuffer[1024];
-	char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
+   char *pszQueryUTF8 = WideStringToUTF8(query, localBuffer, 1024);
    static_cast<MYSQL_CONN*>(connection)->mutexQueryLock.lock();
 	if (mysql_query(static_cast<MYSQL_CONN*>(connection)->mysql, pszQueryUTF8) == 0)
 	{
@@ -762,7 +761,7 @@ static DBDRV_UNBUFFERED_RESULT SelectUnbuffered(DBDRV_CONNECTION connection, con
 		pResult->connection = static_cast<MYSQL_CONN*>(connection);
 		pResult->isPreparedStatement = false;
 		pResult->resultSet = mysql_use_result(static_cast<MYSQL_CONN*>(connection)->mysql);
-		if (pResult->resultSet != NULL)
+		if (pResult->resultSet != nullptr)
 		{
 			pResult->numColumns = mysql_num_fields(pResult->resultSet);
 			pResult->lengthFields = MemAllocArray<unsigned long>(pResult->numColumns);
@@ -906,11 +905,9 @@ static bool Fetch(DBDRV_UNBUFFERED_RESULT hResult)
       }
       else
       {
-         unsigned long *pLen;
-
          // Get column lengths for current row
-         pLen = mysql_fetch_lengths(result->resultSet);
-         if (pLen != NULL)
+         unsigned long *pLen = mysql_fetch_lengths(result->resultSet);
+         if (pLen != nullptr)
          {
             memcpy(result->lengthFields, pLen, sizeof(unsigned long) * result->numColumns);
          }
@@ -948,14 +945,14 @@ static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iC
 {
    // Check if there are valid fetched row
    if ((hResult->noMoreRows) || ((hResult->pCurrRow == nullptr) && !hResult->isPreparedStatement))
-      return NULL;
+      return nullptr;
 
    // Check if column number is valid
    if ((iColumn < 0) || (iColumn >= hResult->numColumns))
       return nullptr;
 
    // Now get column data
-   void *value = NULL;
+   void *value = nullptr;
    if (hResult->isPreparedStatement)
    {
       MYSQL_BIND b;
@@ -1058,10 +1055,10 @@ static const char *GetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int 
 {
    auto result = static_cast<MYSQL_UNBUFFERED_RESULT*>(hResult);
    if (result->resultSet == nullptr)
-		return nullptr;
+      return nullptr;
 
-	MYSQL_FIELD *field = mysql_fetch_field_direct(result->resultSet, column);
-	return (field != nullptr) ? field->name : nullptr;
+   MYSQL_FIELD *field = mysql_fetch_field_direct(result->resultSet, column);
+   return (field != nullptr) ? field->name : nullptr;
 }
 
 /**
@@ -1096,7 +1093,7 @@ static void FreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
  */
 static uint32_t Begin(DBDRV_CONNECTION connection)
 {
-	return QueryInternal(static_cast<MYSQL_CONN*>(connection), "BEGIN", nullptr);
+   return QueryInternal(connection, "BEGIN", nullptr);
 }
 
 /**
@@ -1104,7 +1101,7 @@ static uint32_t Begin(DBDRV_CONNECTION connection)
  */
 static uint32_t Commit(DBDRV_CONNECTION connection)
 {
-	return QueryInternal(static_cast<MYSQL_CONN*>(connection), "COMMIT", nullptr);
+   return QueryInternal(connection, "COMMIT", nullptr);
 }
 
 /**
@@ -1112,7 +1109,7 @@ static uint32_t Commit(DBDRV_CONNECTION connection)
  */
 static uint32_t Rollback(DBDRV_CONNECTION connection)
 {
-	return QueryInternal(static_cast<MYSQL_CONN*>(connection), "ROLLBACK", nullptr);
+   return QueryInternal(connection, "ROLLBACK", nullptr);
 }
 
 /**
