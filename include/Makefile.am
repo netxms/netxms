@@ -67,6 +67,7 @@ include_HEADERS = \
 	unicode.h \
 	uthash.h \
 	uuid.h \
+	welford.h \
 	winmutex.h \
 	winrwlock.h
 
