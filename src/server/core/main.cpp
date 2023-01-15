@@ -1100,8 +1100,8 @@ retry_db_lock:
    // Setup thread pool resize parameters
    ThreadPoolSetResizeParameters(
             ConfigReadInt(_T("ThreadPool.Global.Responsiveness"), 12),
-            ConfigReadInt(_T("ThreadPool.Global.WaitTimeHighWatermark"), 200),
-            ConfigReadInt(_T("ThreadPool.Global.WaitTimeLowWatermark"), 100));
+            ConfigReadInt(_T("ThreadPool.Global.WaitTimeHighWatermark"), 100),
+            ConfigReadInt(_T("ThreadPool.Global.WaitTimeLowWatermark"), 50));
 
    // Check data directory
    if (!CheckDataDir())

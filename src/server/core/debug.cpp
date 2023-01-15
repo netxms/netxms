@@ -62,15 +62,15 @@ void ShowServerStats(CONSOLE_CTX console)
 /**
  * Show queue stats from function
  */
-void ShowQueueStats(CONSOLE_CTX console, int64_t size, const TCHAR *name)
+void ShowQueueStats(ServerConsole *console, int64_t size, const TCHAR *name)
 {
-   ConsolePrintf(console, _T("%-32s : %u\n"), name, static_cast<unsigned int>(size));
+   console->printf(_T("%-32s : %u\n"), name, static_cast<unsigned int>(size));
 }
 
 /**
  * Show queue stats
  */
-void ShowQueueStats(CONSOLE_CTX console, const Queue *queue, const TCHAR *name)
+void ShowQueueStats(ServerConsole *console, const Queue *queue, const TCHAR *name)
 {
    if (queue != nullptr)
       ShowQueueStats(console, queue->size(), name);
@@ -79,7 +79,7 @@ void ShowQueueStats(CONSOLE_CTX console, const Queue *queue, const TCHAR *name)
 /**
  * Show queue stats
  */
-void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *name)
+void ShowThreadPoolPendingQueue(ServerConsole *console, ThreadPool *p, const TCHAR *name)
 {
    int size;
    if (p != nullptr)
@@ -92,33 +92,44 @@ void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR 
    {
       size = 0;
    }
-   ConsolePrintf(console, _T("%-32s : %d\n"), name, size);
+   console->printf( _T("%-32s : %d\n"), name, size);
 }
 
 /**
  * Show thread pool stats
  */
-void ShowThreadPool(CONSOLE_CTX console, const TCHAR *p)
+void ShowThreadPool(ServerConsole *console, const TCHAR *p)
 {
    ThreadPoolInfo info;
    if (ThreadPoolGetInfo(p, &info))
    {
-      ConsolePrintf(console, _T("\x1b[1m%s\x1b[0m\n")
-                             _T("   Threads.............. %d (%d/%d)\n")
-                             _T("   Load average......... %0.2f %0.2f %0.2f\n")
-                             _T("   Current load......... %d%%\n")
-                             _T("   Usage................ %d%%\n")
-                             _T("   Active requests...... %d\n")
-                             _T("   Scheduled requests... %d\n")
-                             _T("   Total requests....... ") UINT64_FMT _T("\n")
-                             _T("   Thread starts........ ") UINT64_FMT _T("\n")
-                             _T("   Thread stops......... ") UINT64_FMT _T("\n")
-                             _T("   Average wait time.... %u ms\n\n"),
-                    info.name, info.curThreads, info.minThreads, info.maxThreads,
-                    info.loadAvg[0], info.loadAvg[1], info.loadAvg[2],
-                    info.load, info.usage, info.activeRequests, info.scheduledRequests,
-                    info.totalRequests, info.threadStarts, info.threadStops,
-                    info.averageWaitTime);
+      console->printf(
+            _T("\x1b[1m%s\x1b[0m\n")
+           _T("   Threads.............. %d (%d/%d)\n")
+           _T("   Load average......... %0.2f %0.2f %0.2f\n")
+           _T("   Current load......... %d%%\n")
+           _T("   Usage................ %d%%\n")
+           _T("   Active requests...... %d\n")
+           _T("   Scheduled requests... %d\n")
+           _T("   Total requests....... ") UINT64_FMT _T("\n")
+           _T("   Thread starts........ ") UINT64_FMT _T("\n")
+           _T("   Thread stops......... ") UINT64_FMT _T("\n")
+           _T("   Wait time EMA........ %u ms\n")
+           _T("   Wait time SMA........ %u ms\n")
+           _T("   Wait time SD......... %u ms\n")
+           _T("   Queue size EMA....... %u\n")
+           _T("   Queue size SMA....... %u\n")
+           _T("   Queue size SD........ %u\n\n"),
+        info.name, info.curThreads, info.minThreads, info.maxThreads,
+        info.loadAvg[0], info.loadAvg[1], info.loadAvg[2],
+        info.load, info.usage, info.activeRequests, info.scheduledRequests,
+        info.totalRequests, info.threadStarts, info.threadStops,
+        info.waitTimeEMA, info.waitTimeSMA, info.waitTimeSD,
+        info.queueSizeEMA, info.queueSizeSMA, info.queueSizeSD);
+   }
+   else
+   {
+      console->printf(_T("Cannot get information for thread pool \x1b[1m%s\x1b[0m\n"), p);
    }
 }
 
@@ -178,12 +189,37 @@ DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, T
          ret_int(value, info.usage);
          break;
       case THREAD_POOL_AVERAGE_WAIT_TIME:
-         ret_uint(value, info.averageWaitTime);
+         ret_uint(value, info.waitTimeEMA);
          break;
       default:
          return DCE_NOT_SUPPORTED;
    }
    return DCE_SUCCESS;
+}
+
+/**
+ * Run load test in thread pool
+ */
+void RunThreadPoolLoadTest(const TCHAR *poolName, int numTasks, ServerConsole *console)
+{
+   ThreadPool *pool = ThreadPoolGetByName(poolName);
+   if (pool != nullptr)
+   {
+      console->printf(_T("Starting %d test tasks in thread pool %s\n"), numTasks, poolName);
+      for(int i = 0; i < numTasks; i++)
+      {
+         ThreadPoolExecute(pool,
+            [i] () -> void
+            {
+               ThreadSleepMs(rand() % 500);
+               nxlog_debug_tag(_T("threads.pool"), 6, _T("Test task #%d completed"), i + 1);
+            });
+      }
+   }
+   else
+   {
+      console->print(_T("Invalid thread pool name"));
+   }
 }
 
 /**
@@ -222,7 +258,7 @@ void DumpProcess(CONSOLE_CTX console)
 
 void DumpProcess(CONSOLE_CTX console)
 {
-	ConsolePrintf(console, _T("DUMP command is not supported for current operating system\n"));
+	console->print(_T("DUMP command is not supported for current operating system\n"));
 }
 
 #endif

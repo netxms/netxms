@@ -48,6 +48,7 @@ void ShowSyncerStats(ServerConsole *console);
 void ShowAuthenticationTokens(ServerConsole *console);
 void RunHouseKeeper(ServerConsole *console);
 void ShowActiveDiscoveryState(ServerConsole *console);
+void RunThreadPoolLoadTest(const TCHAR *poolName, int numTasks, ServerConsole *console);
 
 /**
  * Format string to show value of global flag
@@ -1392,10 +1393,18 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("THREADS"), szBuffer, 2))
       {
-         StringList *pools = ThreadPoolGetAllPools();
-         for(int i = 0; i < pools->size(); i++)
-            ShowThreadPool(pCtx, pools->get(i));
-         delete pools;
+         ExtractWord(pArg, szBuffer);
+         if (*szBuffer == 0)
+         {
+            StringList *pools = ThreadPoolGetAllPools();
+            for(int i = 0; i < pools->size(); i++)
+               ShowThreadPool(pCtx, pools->get(i));
+            delete pools;
+         }
+         else
+         {
+            ShowThreadPool(pCtx, szBuffer);
+         }
       }
       else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
       {
@@ -1626,8 +1635,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             ExtractWord(pArg, szBuffer);
             if (szBuffer[0] != 0)
             {
-               UINT16 port = static_cast<UINT16>(_tcstoul(szBuffer, nullptr, 0));
-               UINT32 rc = TcpPing(addr, port, 1000);
+               uint16_t port = static_cast<uint16_t>(_tcstoul(szBuffer, nullptr, 0));
+               uint32_t rc = TcpPing(addr, port, 1000);
                switch(rc)
                {
                   case TCP_PING_SUCCESS:
@@ -1657,6 +1666,32 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else
       {
          ConsoleWrite(pCtx, _T("Usage: TCPPING <address> <port>\n"));
+      }
+   }
+   else if (IsCommand(_T("TP"), szBuffer, 2))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (IsCommand(_T("LOADTEST"), szBuffer, 2))
+      {
+         TCHAR poolName[256];
+         pArg = ExtractWord(pArg, poolName);
+
+         ExtractWord(pArg, szBuffer);
+         TCHAR *eptr;
+         int numTasks = _tcstol(szBuffer, &eptr, 0);
+         if ((poolName[0] != 0) && (*eptr == 0) && (numTasks > 0))
+         {
+            _tcsupr(poolName);
+            RunThreadPoolLoadTest(poolName, numTasks, pCtx);
+         }
+         else
+         {
+            pCtx->print(_T("Invalid arguments\n"));
+         }
+      }
+      else
+      {
+         pCtx->print(_T("Invalid subcommand\n"));
       }
    }
    else if (IsCommand(_T("TRACE"), szBuffer, 1))
@@ -1727,7 +1762,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
          if ((tunnelId != 0) && (nodeId != 0))
          {
-            UINT32 rcc = BindAgentTunnel(tunnelId, nodeId, 0);
+            uint32_t rcc = BindAgentTunnel(tunnelId, nodeId, 0);
             ConsolePrintf(pCtx, _T("Bind tunnel %d to node %d: RCC = %d\n\n"), tunnelId, nodeId, rcc);
          }
          else
@@ -1738,11 +1773,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       else if (IsCommand(_T("UNBIND"), szBuffer, 1))
       {
          ExtractWord(pArg, szBuffer);
-         UINT32 nodeId = _tcstoul(szBuffer, nullptr, 0);
-
+         uint32_t nodeId = _tcstoul(szBuffer, nullptr, 0);
          if (nodeId != 0)
          {
-            UINT32 rcc = UnbindAgentTunnel(nodeId, 0);
+            uint32_t rcc = UnbindAgentTunnel(nodeId, 0);
             ConsolePrintf(pCtx, _T("Unbind tunnel from node %d: RCC = %d\n\n"), nodeId, rcc);
          }
          else
@@ -1781,7 +1815,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   ping <address>                    - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>                - Initiate node poll\n")
             _T("   raise <exception>                 - Raise exception\n")
-            _T("   scan rangeStart rangeEnd [proxy <id>|zone <uin>] [discovery] \n")
+            _T("   scan <range start> <range end> [proxy <id>|zone <uin>] [discovery] \n")
             _T("                                     - Manual active discovery scan for given range. Without 'discovery' parameter prints results only\n")
             _T("   set <variable> <value>            - Set value of server configuration variable\n")
             _T("   show arp <node>                   - Show ARP cache for node\n")
@@ -1808,13 +1842,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show sessions                     - Show active client sessions\n")
             _T("   show stats                        - Show global server statistics\n")
             _T("   show syncer                       - Show syncer statistics\n")
-            _T("   show threads                      - Show thread statistics\n")
+            _T("   show threads [<pool>]             - Show thread statistics\n")
             _T("   show topology <node>              - Collect and show link layer topology for node\n")
             _T("   show tunnels                      - Show active agent tunnels\n")
             _T("   show users                        - Show users\n")
             _T("   show version                      - Show NetXMS server version\n")
             _T("   show vlans <node>                 - Show cached VLAN information for node\n")
             _T("   show watchdog                     - Display watchdog information\n")
+            _T("   tcpping <address> <port>          - TCP ping on given address and port\n")
+            _T("   tp loadtest <pool> <tasks>        - Start test tasks in given thread pool\n")
             _T("   trace <node1> <node2>             - Show network path trace between two nodes\n")
             _T("   tunnel bind <tunnel> <node>       - Bind agent tunnel to node\n")
             _T("   tunnel unbind <node>              - Unbind agent tunnel from node\n")

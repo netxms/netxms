@@ -884,7 +884,12 @@ struct ThreadPoolInfo
    int32_t usage;              // Pool usage in %
    int32_t load;               // Pool current load in % (can be more than 100% if there are more requests then threads available)
    double loadAvg[3];          // Pool load average
-   uint32_t averageWaitTime;   // Average task wait time
+   uint32_t waitTimeEMA;       // Task wait time exponential moving average
+   uint32_t waitTimeSMA;       // Task wait time simple moving average
+   uint32_t waitTimeSD;        // Task wait time standard deviation
+   uint32_t queueSizeEMA;      // Task queue size exponential moving average
+   uint32_t queueSizeSMA;      // Task queue size simple moving average
+   uint32_t queueSizeSD;       // Task queue size standard deviation
 };
 
 /**
@@ -902,6 +907,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsoluteMs(ThreadPool *p, int64_t ru
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, uint32_t delay, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
 bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info);
+ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolGetByName(const TCHAR *name);
 int LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestCount(ThreadPool *p, const TCHAR *key);
 uint32_t LIBNETXMS_EXPORTABLE ThreadPoolGetSerializedRequestMaxWaitTime(ThreadPool *p, const TCHAR *key);
 StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();

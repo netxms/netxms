@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,14 +23,15 @@
 
 #include "libnetxms.h"
 #include <nxqueue.h>
+#include <welford.h>
 
 #define DEBUG_TAG _T("threads.pool")
 
 /**
  * Wait time watermarks (milliseconds)
  */
-static uint32_t s_waitTimeHighWatermark = 200;
-static uint32_t s_waitTimeLowWatermark = 100;
+static uint32_t s_waitTimeHighWatermark = 100;
+static uint32_t s_waitTimeLowWatermark = 50;
 
 /**
  * Thread pool maintenance thread responsiveness
@@ -38,10 +39,9 @@ static uint32_t s_waitTimeLowWatermark = 100;
 static int s_maintThreadResponsiveness = 12;
 
 /**
- * Worker thread idle timeout (milliseconds)
+ * Indicator for stop with deregistration
  */
-#define MIN_WORKER_IDLE_TIMEOUT  10000
-#define MAX_WORKER_IDLE_TIMEOUT  600000
+static char s_stopAndUnregister[] = "UNREGISTER";
 
 /**
  * Worker thread data
@@ -87,7 +87,6 @@ struct ThreadPool
    int minThreads;
    int maxThreads;
    int stackSize;
-   uint32_t workerIdleTimeout;
    VolatileCounter activeRequests;
    Mutex mutex;
    THREAD maintThread;
@@ -101,7 +100,10 @@ struct ThreadPool
    TCHAR *name;
    bool shutdownMode;
    int64_t loadAverage[3];
-   int64_t averageWaitTime;
+   int64_t waitTimeEMA;
+   WelfordVariance waitTimeVariance;
+   int64_t queueSizeEMA;
+   WelfordVariance queueSizeVariance;
    uint64_t threadStartCount;
    uint64_t threadStopCount;
    VolatileCounter64 taskExecutionCount;
@@ -115,13 +117,13 @@ struct ThreadPool
       this->minThreads = std::max(minThreads, 1);
       this->maxThreads = std::max(maxThreads, this->minThreads);
       this->stackSize = stackSize;
-      workerIdleTimeout = MIN_WORKER_IDLE_TIMEOUT;
       activeRequests = 0;
       maintThread = INVALID_THREAD_HANDLE;
       serializationQueues.setIgnoreCase(false);
       shutdownMode = false;
       memset(loadAverage, 0, sizeof(loadAverage));
-      averageWaitTime = 0;
+      waitTimeEMA = 0;
+      queueSizeEMA = 0;
       threadStartCount = 0;
       threadStopCount = 0;
       taskExecutionCount = 0;
@@ -169,44 +171,29 @@ static void WorkerThread(WorkerThreadInfo *threadInfo)
 
    while(true)
    {
-      WorkRequest *rq = p->queue.getOrBlock(p->workerIdleTimeout);
-      if (rq == nullptr)
+      WorkRequest *rq = p->queue.getOrBlock(INFINITE);
+      if (rq->func == nullptr) // stop indicator
       {
-         if (p->shutdownMode)
+         if (rq->arg == s_stopAndUnregister)
          {
-            // If pool shutdown already activated ignore timeout and wait for stop request
-            nxlog_debug_tag(DEBUG_TAG, 2, _T("Worker thread timeout during shutdown in thread pool %s"), p->name);
-            continue;
-         }
-
-         p->mutex.lock();
-         if ((p->threads.size() <= p->minThreads) || (p->averageWaitTime / EMA_FP_1 > s_waitTimeLowWatermark))
-         {
+            p->mutex.lock();
+            p->threads.remove(CAST_FROM_POINTER(threadInfo, uint64_t));
+            p->threadStopCount++;
             p->mutex.unlock();
-            continue;
+
+            rq->func = JoinWorkerThread;
+            rq->arg = threadInfo;
+            rq->queueTime = GetCurrentTimeMs();
+            InterlockedIncrement(&p->activeRequests);
+            p->queue.put(rq);
          }
-         p->threads.remove(CAST_FROM_POINTER(threadInfo, uint64_t));
-         p->threadStopCount++;
-         p->mutex.unlock();
-
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
-
-         p->workRequestMemoryPool.destroy(rq);
-         rq = p->workRequestMemoryPool.create();
-         rq->func = JoinWorkerThread;
-         rq->arg = threadInfo;
-         rq->queueTime = GetCurrentTimeMs();
-         InterlockedIncrement(&p->activeRequests);
-         p->queue.put(rq);
          break;
       }
-      
-      if (rq->func == nullptr) // stop indicator
-         break;
-      
+
       int64_t waitTime = GetCurrentTimeMs() - rq->queueTime;
       p->mutex.lock();
-      UpdateExpMovingAverage(p->averageWaitTime, EMA_EXP_180, waitTime);
+      UpdateExpMovingAverage(p->waitTimeEMA, EMA_EXP(1, 1000), waitTime); // Use last 1000 executions
+      p->waitTimeVariance.update(waitTime);
       p->mutex.unlock();
 
       rq->func(rq->arg);
@@ -252,20 +239,27 @@ static void MaintenanceThread(ThreadPool *p)
          UpdateExpMovingAverage(p->loadAverage[1], EMA_EXP_60, requestCount);
          UpdateExpMovingAverage(p->loadAverage[2], EMA_EXP_180, requestCount);
 
+         int64_t queueSize = static_cast<int64_t>(p->queue.size());
+         UpdateExpMovingAverage(p->queueSizeEMA, EMA_EXP_180, queueSize);
+         p->queueSizeVariance.update(queueSize);
+
          count++;
          if (count == s_maintThreadResponsiveness)
          {
-            TCHAR debugMessage[1024] = _T("");
             int started = 0;
+            int stopped = 0;
             bool failure = false;
 
             p->mutex.lock();
             int threadCount = p->threads.size();
-            int64_t averageWaitTime = p->averageWaitTime / EMA_FP_1;
-            if (((averageWaitTime > s_waitTimeHighWatermark) && (threadCount < p->maxThreads)) ||
+            uint32_t waitTimeEMA = static_cast<uint32_t>(p->waitTimeEMA / EMA_FP_1);
+            uint32_t waitTimeSMA = static_cast<uint32_t>(p->waitTimeVariance.mean());
+            int queueSizeEMA = static_cast<int>(p->queueSizeEMA / EMA_FP_1);
+            int queueSizeSMA = static_cast<int>(p->queueSizeVariance.mean());
+            if (((waitTimeEMA > s_waitTimeHighWatermark) && (waitTimeSMA > s_waitTimeHighWatermark) && (threadCount < p->maxThreads)) ||
                 ((threadCount == 0) && (p->activeRequests > 0)))
             {
-               int delta = std::min(p->maxThreads - threadCount, std::max((static_cast<int>(p->activeRequests) - threadCount) / 2, 1));
+               int delta = std::min(p->maxThreads - threadCount, std::max(std::min(queueSizeSMA, queueSizeEMA) / 2, 1));
                for(int i = 0; i < delta; i++)
                {
                   WorkerThreadInfo *wt = new WorkerThreadInfo;
@@ -284,28 +278,46 @@ static void MaintenanceThread(ThreadPool *p)
                      break;
                   }
                }
-               if (p->workerIdleTimeout < MAX_WORKER_IDLE_TIMEOUT)
+            }
+            else if ((waitTimeEMA < s_waitTimeLowWatermark) && (waitTimeSMA < s_waitTimeLowWatermark) && (threadCount > p->minThreads))
+            {
+               int loadAverage15 = static_cast<int>(GetExpMovingAverageValue(p->loadAverage[2]));
+               if (loadAverage15 < threadCount / 2)
                {
-                  p->workerIdleTimeout *= 2;
-                  _sntprintf(debugMessage, 1024, _T("Worker idle timeout increased to %d milliseconds for thread pool %s"), p->workerIdleTimeout, p->name);
+                  stopped = threadCount - 2 * loadAverage15;
+                  if (stopped > threadCount - p->minThreads)
+                     stopped = threadCount - p->minThreads;
+               }
+               for(int i = 0; i < stopped; i++)
+               {
+                  WorkRequest *rq = p->workRequestMemoryPool.create();
+                  rq->func = nullptr;
+                  rq->arg = s_stopAndUnregister;
+                  rq->queueTime = GetCurrentTimeMs();
+                  p->queue.put(rq);
                }
             }
-            else if ((averageWaitTime < s_waitTimeLowWatermark) && (threadCount > p->minThreads) && (p->workerIdleTimeout > MIN_WORKER_IDLE_TIMEOUT))
-            {
-               p->workerIdleTimeout /= 2;
-               _sntprintf(debugMessage, 1024, _T("Worker idle timeout decreased to %d milliseconds for thread pool %s"), p->workerIdleTimeout, p->name);
-            }
+            p->waitTimeVariance.reset();
+            p->queueSizeVariance.reset();
             p->mutex.unlock();
             count = 0;
 
             if (started > 1)
-               nxlog_debug_tag(DEBUG_TAG, 3, _T("%d new threads started in thread pool %s"), started, p->name);
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("%d new threads started in thread pool %s (wait time EMA/SMA = %u/%u, queue size EMA/SMA = %d/%d)"),
+                  started, p->name, waitTimeEMA, waitTimeSMA, queueSizeEMA, queueSizeSMA);
             else if (started > 0)
-               nxlog_debug_tag(DEBUG_TAG, 3, _T("New thread started in thread pool %s"), p->name);
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("New thread started in thread pool %s (wait time EMA/SMA = %u/%u, queue size EMA/SMA = %d/%d)"),
+                  p->name, waitTimeEMA, waitTimeSMA, queueSizeEMA, queueSizeSMA);
+
             if (failure)
                nxlog_debug_tag(DEBUG_TAG, 1, _T("Cannot create worker thread in pool %s"), p->name);
-            if (debugMessage[0] != 0)
-               nxlog_debug_tag(DEBUG_TAG, 4, _T("%s"), debugMessage);
+
+            if (stopped > 1)
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("Requested stop for %d threads in thread pool %s (wait time EMA/SMA = %u/%u, queue size SMA = %d)"),
+                  stopped, p->name, waitTimeEMA, waitTimeSMA, queueSizeSMA);
+            else if (stopped > 0)
+               nxlog_debug_tag(DEBUG_TAG, 3, _T("Requested thread stop in thread pool %s (wait time EMA/SMA = %u/%u, queue size SMA = %d)"),
+                  p->name, waitTimeEMA, waitTimeSMA, queueSizeSMA);
          }
       }
       sleepTime = 5000 - cycleTime;
@@ -405,6 +417,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 
    WorkRequest rq;
    rq.func = nullptr;
+   rq.arg = nullptr;
    rq.queueTime = GetCurrentTimeMs();
    p->mutex.lock();
    int count = p->threads.size();
@@ -582,7 +595,12 @@ void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info)
    info->loadAvg[0] = GetExpMovingAverageValue(p->loadAverage[0]);
    info->loadAvg[1] = GetExpMovingAverageValue(p->loadAverage[1]);
    info->loadAvg[2] = GetExpMovingAverageValue(p->loadAverage[2]);
-   info->averageWaitTime = static_cast<uint32_t>(p->averageWaitTime / EMA_FP_1);
+   info->waitTimeEMA = static_cast<uint32_t>(p->waitTimeEMA / EMA_FP_1);
+   info->waitTimeSMA = static_cast<uint32_t>(p->waitTimeVariance.mean());
+   info->waitTimeSD = static_cast<uint32_t>(p->waitTimeVariance.sd());
+   info->queueSizeEMA = static_cast<uint32_t>(p->queueSizeEMA / EMA_FP_1);
+   info->queueSizeSMA = static_cast<uint32_t>(p->queueSizeVariance.mean());
+   info->queueSizeSD = static_cast<uint32_t>(p->queueSizeVariance.sd());
    p->mutex.unlock();
 
    p->schedulerLock.lock();
@@ -608,6 +626,17 @@ bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *i
       ThreadPoolGetInfo(p, info);
    s_registryLock.unlock();
    return p != nullptr;
+}
+
+/**
+ * Get registered thread pool by name
+ */
+ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolGetByName(const TCHAR *name)
+{
+   s_registryLock.lock();
+   ThreadPool *p = s_registry.get(name);
+   s_registryLock.unlock();
+   return p;
 }
 
 /**

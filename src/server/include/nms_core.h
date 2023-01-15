@@ -1442,10 +1442,10 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 void DumpClientSessions(ServerConsole *console);
 void DumpMobileDeviceSessions(CONSOLE_CTX console);
 void ShowServerStats(CONSOLE_CTX console);
-void ShowQueueStats(CONSOLE_CTX console, const Queue *queue, const TCHAR *name);
-void ShowQueueStats(CONSOLE_CTX console, int64_t size, const TCHAR *name);
-void ShowThreadPoolPendingQueue(CONSOLE_CTX console, ThreadPool *p, const TCHAR *name);
-void ShowThreadPool(CONSOLE_CTX console, const TCHAR *p);
+void ShowQueueStats(ServerConsole *console, const Queue *queue, const TCHAR *name);
+void ShowQueueStats(ServerConsole *console, int64_t size, const TCHAR *name);
+void ShowThreadPoolPendingQueue(ServerConsole *console, ThreadPool *p, const TCHAR *name);
+void ShowThreadPool(ServerConsole *console, const TCHAR *p);
 DataCollectionError GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);
 void DumpProcess(CONSOLE_CTX console);
 
