@@ -2,11 +2,11 @@
 #include <nms_util.h>
 #include <testtools.h>
 
-static void EmptyWorkload(void *arg)
+static void EmptyWorkload()
 {
 }
 
-static void SlowWorkload(void *arg)
+static void SlowWorkload()
 {
    ThreadSleepMs(1000);
 }
@@ -27,7 +27,7 @@ void TestThreadPool()
    EndTest();
 
    StartTest(_T("Thread pool - low load"));
-   ThreadPoolExecute(p, EmptyWorkload, NULL);
+   ThreadPoolExecute(p, EmptyWorkload);
    ThreadSleepMs(500);
    ThreadPoolGetInfo(p, &info);
    AssertEquals(info.curThreads, 4);
@@ -37,13 +37,13 @@ void TestThreadPool()
    StartTest(_T("Thread pool - high load"));
    for(int i = 0; i < 40; i++)
    {
-      ThreadPoolExecute(p, SlowWorkload, NULL);
+      ThreadPoolExecute(p, SlowWorkload);
    }
    ThreadSleepMs(2000);
    ThreadPoolGetInfo(p, &info);
    AssertTrue(info.activeRequests > 0);
    AssertEquals(info.totalRequests, 41);
-   AssertTrue(info.averageWaitTime > 0);
+   AssertTrue(info.waitTimeEMA > 0);
    EndTest();
 
    StartTest(_T("Thread pool - destroy"));

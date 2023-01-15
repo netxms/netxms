@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -631,7 +631,7 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
          ret_int(value, info.activeRequests);
          break;
       case THREAD_POOL_AVG_WAIT_TIME:
-         ret_int(value, info.averageWaitTime);
+         ret_int(value, info.waitTimeEMA);
          break;
       case THREAD_POOL_CURR_SIZE:
          ret_int(value, info.curThreads);
@@ -640,19 +640,19 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
          ret_int(value, info.load);
          break;
       case THREAD_POOL_LOADAVG_1:
-         if ((options[0] != 0) && _tcstol(options, NULL, 10))
+         if ((options[0] != 0) && _tcstol(options, nullptr, 10))
             ret_double(value, info.loadAvg[0] / info.maxThreads, 2);
          else
             ret_double(value, info.loadAvg[0], 2);
          break;
       case THREAD_POOL_LOADAVG_5:
-         if ((options[0] != 0) && _tcstol(options, NULL, 10))
+         if ((options[0] != 0) && _tcstol(options, nullptr, 10))
             ret_double(value, info.loadAvg[1] / info.maxThreads, 2);
          else
             ret_double(value, info.loadAvg[1], 2);
          break;
       case THREAD_POOL_LOADAVG_15:
-         if ((options[0] != 0) && _tcstol(options, NULL, 10))
+         if ((options[0] != 0) && _tcstol(options, nullptr, 10))
             ret_double(value, info.loadAvg[2] / info.maxThreads, 2);
          else
             ret_double(value, info.loadAvg[2], 2);
