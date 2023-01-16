@@ -3794,6 +3794,18 @@ public class NXCSession
    }
 
    /**
+    * Get object name with alias by ID.
+    *
+    * @param objectId object ID
+    * @return object name with alias if object is known, or string in form [&lt;object_id&gt;] for unknown objects
+    */
+   public String getObjectNameWithAlias(long objectId)
+   {
+      AbstractObject object = findObjectById(objectId);
+      return (object != null) ? object.getNameWithAlias() : ("[" + Long.toString(objectId) + "]");
+   }
+
+   /**
     * Get zone name by UIN
     *
     * @param zoneUIN zone UIN

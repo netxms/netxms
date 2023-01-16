@@ -65,7 +65,7 @@ import org.netxms.nxmc.modules.dashboards.views.DashboardView;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
-import org.netxms.nxmc.modules.datacollection.views.ThresholdSummary;
+import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
@@ -191,7 +191,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new SummaryDataCollectionView());
       addMainView(new SwitchForwardingDatabaseView());
       addMainView(new TemplateTargets());      
-      addMainView(new ThresholdSummary());
+      addMainView(new ThresholdSummaryView());
       addMainView(new VpnView());
       addMainView(new WirelessStations());
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.datacollection.widgets.helpers;
+package org.netxms.nxmc.modules.datacollection.views.helpers;
 
 import java.util.Date;
 import org.eclipse.jface.viewers.Viewer;
@@ -27,7 +27,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
-import org.netxms.nxmc.modules.datacollection.widgets.ThresholdSummaryWidget;
+import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 
 /**
  * Comparator for threshold overview tree
@@ -36,9 +36,9 @@ public class ThresholdTreeComparator extends ViewerComparator
 {
 	private NXCSession session = Registry.getSession();
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -48,12 +48,12 @@ public class ThresholdTreeComparator extends ViewerComparator
 		{
 			switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID")) //$NON-NLS-1$
 			{
-				case ThresholdSummaryWidget.COLUMN_NODE:
+            case ThresholdSummaryView.COLUMN_NODE:
 					String name1 = session.getObjectName(((ThresholdViolationSummary)e1).getNodeId());
 					String name2 = session.getObjectName(((ThresholdViolationSummary)e2).getNodeId());
 					result = name1.compareToIgnoreCase(name2);
 					break;
-				case ThresholdSummaryWidget.COLUMN_STATUS:
+            case ThresholdSummaryView.COLUMN_STATUS:
 					result = ((ThresholdViolationSummary)e1).getCurrentSeverity().compareTo(((ThresholdViolationSummary)e2).getCurrentSeverity());
 					break;
 				default:
@@ -64,16 +64,16 @@ public class ThresholdTreeComparator extends ViewerComparator
 		{
 			switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID")) //$NON-NLS-1$
 			{
-				case ThresholdSummaryWidget.COLUMN_STATUS:
+            case ThresholdSummaryView.COLUMN_STATUS:
 					result = ((DciValue)e1).getActiveThreshold().getCurrentSeverity().compareTo(((DciValue)e2).getActiveThreshold().getCurrentSeverity());
 					break;
-				case ThresholdSummaryWidget.COLUMN_PARAMETER:
+            case ThresholdSummaryView.COLUMN_PARAMETER:
 					result = ((DciValue)e1).getDescription().compareToIgnoreCase(((DciValue)e2).getDescription());
 					break;
-				case ThresholdSummaryWidget.COLUMN_VALUE:
+            case ThresholdSummaryView.COLUMN_VALUE:
 					result = ((DciValue)e1).getValue().compareToIgnoreCase(((DciValue)e2).getValue());
 					break;
-				case ThresholdSummaryWidget.COLUMN_TIMESTAMP:
+            case ThresholdSummaryView.COLUMN_TIMESTAMP:
 					Date t1 = ((DciValue)e1).getActiveThreshold().getLastEventTimestamp();
 					Date t2 = ((DciValue)e2).getActiveThreshold().getLastEventTimestamp();
 					result = Long.signum(t1.getTime() - t2.getTime());
