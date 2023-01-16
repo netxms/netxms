@@ -68,6 +68,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
 import org.netxms.nxmc.modules.imagelibrary.dialogs.ImageSelectionDialog;
+import org.netxms.nxmc.modules.networkmaps.algorithms.ManualLayout;
 import org.netxms.nxmc.modules.networkmaps.dialogs.EditGroupBoxDialog;
 import org.netxms.nxmc.modules.networkmaps.propertypages.DCIContainerDataSources;
 import org.netxms.nxmc.modules.networkmaps.propertypages.DCIContainerGeneral;
@@ -190,12 +191,19 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
       {
          automaticLayoutEnabled = false;
+         viewer.setLayoutAlgorithm(new ManualLayout());
       }
       else
       {
          automaticLayoutEnabled = true;
          layoutAlgorithm = mapObject.getLayout();
+         setLayoutAlgorithm(layoutAlgorithm, true);
       }
+      
+      for(int i = 0; i < actionSetAlgorithm.length; i++)
+         actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
+      actionSaveLayout.setEnabled(!automaticLayoutEnabled);
+      actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
 
       if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
       {
