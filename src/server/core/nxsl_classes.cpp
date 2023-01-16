@@ -4189,6 +4189,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    {
 		value = vm->createValue(dci->getErrorCount());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("flags"))
+   {
+      value = vm->createValue(dci->getFlags());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("hasActiveThreshold"))
    {
       value = vm->createValue(dci->hasActiveThreshold());

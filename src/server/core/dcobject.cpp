@@ -1808,6 +1808,7 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
    m_ownerId = object.getOwnerId();
    m_templateId = object.m_dwTemplateId;
    m_templateItemId = object.m_dwTemplateItemId;
+   m_flags = object.m_flags;
    m_type = object.getType();
    _tcslcpy(m_name, object.m_name, MAX_ITEM_NAME);
    _tcslcpy(m_description, object.m_description, MAX_DB_STRING);
@@ -1846,6 +1847,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
    m_ownerId = msg.getFieldAsUInt32(VID_OBJECT_ID);
    m_templateId = (object != nullptr) ? object->getTemplateId() : 0;
    m_templateItemId = (object != nullptr) ? object->getTemplateItemId() : 0;
+   m_flags = msg.getFieldAsUInt32(VID_FLAGS);
    m_type = msg.getFieldAsInt16(VID_DCOBJECT_TYPE);
    msg.getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
    msg.getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);

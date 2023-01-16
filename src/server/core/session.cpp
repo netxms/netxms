@@ -10877,7 +10877,7 @@ void ClientSession::testDCITransformation(const NXCPMessage& request)
 				   shared_ptr<DCObjectInfo> dcObjectInfo;
 				   if (request.isFieldExist(VID_DCI_ID))
 				   {
-				      UINT32 dciId = request.getFieldAsUInt32(VID_DCI_ID);
+				      uint32_t dciId = request.getFieldAsUInt32(VID_DCI_ID);
 				      shared_ptr<DCObject> dcObject = static_cast<DataCollectionTarget&>(*object).getDCObjectById(dciId, m_dwUserId);
 				      dcObjectInfo = make_shared<DCObjectInfo>(request, dcObject.get());
 				   }

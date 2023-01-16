@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,12 +38,12 @@ public abstract class DataCollectionObject
 	public static final int DCO_TYPE_GENERIC = 0;
 	public static final int DCO_TYPE_ITEM    = 1;
 	public static final int DCO_TYPE_TABLE   = 2;
-	
+
 	// data collection object status
 	public static final int ACTIVE = 0;
 	public static final int DISABLED = 1;
 	public static final int NOT_SUPPORTED = 2;
-	
+
 	// common data collection flags
 	public static final int DCF_AGGREGATE_ON_CLUSTER     = 0x00080;
    public static final int DCF_TRANSFORM_AGGREGATED     = 0x00100;
@@ -86,8 +86,8 @@ public abstract class DataCollectionObject
 	protected String retentionTime;
    protected DataOrigin origin;
 	protected int status;
-	protected long flags;
-   protected long stateFlags;
+   protected int flags;
+   protected int stateFlags;
 	protected String transformationScript;
 	protected String name;
 	protected String description;
@@ -285,7 +285,7 @@ public abstract class DataCollectionObject
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setField(NXCPCodes.VID_SYSTEM_TAG, systemTag);
-		msg.setFieldInt32(NXCPCodes.VID_FLAGS, (int)flags);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
 		msg.setField(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setFieldInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
 		msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)sourceNode);
@@ -666,7 +666,7 @@ public abstract class DataCollectionObject
    /**
     * @return the flags
     */
-	public long getFlags()
+   public int getFlags()
 	{
 		return flags;
 	}
@@ -682,7 +682,7 @@ public abstract class DataCollectionObject
    /**
     * @return the stateFlags
     */
-	public long getStateFlags()
+   public int getStateFlags()
 	{
 		return stateFlags;
 	}

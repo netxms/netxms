@@ -872,6 +872,7 @@ private:
    uint32_t m_ownerId;
    uint32_t m_templateId;
    uint32_t m_templateItemId;
+   uint32_t m_flags;
    int m_type;
    TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_description[MAX_DB_STRING];
@@ -900,6 +901,7 @@ public:
    uint32_t getId() const { return m_id; }
    uint32_t getTemplateId() const { return m_templateId; }
    uint32_t getTemplateItemId() const { return m_templateItemId; }
+   uint32_t getFlags() const { return m_flags; }
    int getType() const { return m_type; }
    const TCHAR *getName() const { return m_name; }
    const TCHAR *getDescription() const { return m_description; }
