@@ -80,11 +80,11 @@ shared_ptr<Sensor> Sensor::create(const TCHAR *name, const NXCPMessage& request)
    sensor->generateGuid();
    switch(request.getFieldAsUInt32(VID_COMM_PROTOCOL))
    {
-      case COMM_LORAWAN:
+      case SENSOR_PROTO_LORAWAN:
          if (!registerLoraDevice(sensor.get()))
             return shared_ptr<Sensor>();
          break;
-      case COMM_DLMS:
+      case SENSOR_PROTO_DLMS:
          sensor->m_state = SSF_PROVISIONED | SSF_REGISTERED | SSF_ACTIVE;
          break;
    }
@@ -556,7 +556,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
 
    bool hasChanges = false;
 
-   if (m_commProtocol == COMM_LORAWAN)
+   if (m_commProtocol == SENSOR_PROTO_LORAWAN)
    {
       poller->setStatus(_T("lorawan"));
       if (!(m_state & SSF_PROVISIONED))
@@ -673,7 +673,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
 
    switch(m_commProtocol)
    {
-      case COMM_LORAWAN:
+      case SENSOR_PROTO_LORAWAN:
          if (m_runtimeFlags & SSF_PROVISIONED)
          {
             lockProperties();
@@ -721,7 +721,7 @@ void Sensor::statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqI
             unlockProperties();
          }
          break;
-      case COMM_DLMS:
+      case SENSOR_PROTO_DLMS:
          checkDlmsConverterAccessibility();
          break;
       default:
@@ -770,10 +770,10 @@ void Sensor::prepareDlmsDciParameters(StringBuffer &parameter)
    Config config;
 #ifdef UNICODE
    char *xml = UTF8StringFromWideString(m_xmlConfig);
-   config.loadXmlConfigFromMemory(xml, (UINT32)strlen(xml), nullptr, "config", false);
+   config.loadXmlConfigFromMemory(xml, strlen(xml), nullptr, "config", false);
    free(xml);
 #else
-   config.loadXmlConfigFromMemory(m_xmlConfig, (UINT32)strlen(m_xmlConfig), nullptr, "config", false);
+   config.loadXmlConfigFromMemory(m_xmlConfig, strlen(m_xmlConfig), nullptr, "config", false);
 #endif
    ConfigEntry *configRoot = config.getEntry(_T("/connections"));
 	if (configRoot != nullptr)
@@ -840,7 +840,7 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
    DataCollectionError result = DCE_COMM_ERROR;
    int retry = 3;
 
-   nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s)"), m_name, name);
+   nxlog_debug(7, _T("Sensor(%s)->getMetricFromAgent(%s)"), m_name, name);
    // Establish connection if needed
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
    if (conn == nullptr)
@@ -849,15 +849,15 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
    StringBuffer parameter(name);
    switch(m_commProtocol)
    {
-      case COMM_LORAWAN:
+      case SENSOR_PROTO_LORAWAN:
          prepareLoraDciParameters(parameter);
          break;
-      case COMM_DLMS:
+      case SENSOR_PROTO_DLMS:
          if (parameter.find(_T("Sensor")) != -1)
             prepareDlmsDciParameters(parameter);
          break;
    }
-   nxlog_debug(3, _T("Sensor(%s)->getItemFromAgent(%s)"), m_name, parameter.getBuffer());
+   nxlog_debug(3, _T("Sensor(%s)->getMetricFromAgent(%s)"), m_name, parameter.cstr());
 
    // Get parameter from agent
    while(retry-- > 0)
@@ -880,10 +880,10 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
             break;
          case ERR_REQUEST_TIMEOUT:
             // Reset connection to agent after timeout
-            nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
+            nxlog_debug(7, _T("Sensor(%s)->getMetricFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
             if (getAgentConnection() == nullptr)
                break;
-            nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): connection to agent restored successfully"), m_name, name);
+            nxlog_debug(7, _T("Sensor(%s)->getMetricFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
          case ERR_INTERNAL_ERROR:
             result = DCE_COLLECTION_ERROR;
@@ -891,7 +891,7 @@ DataCollectionError Sensor::getMetricFromAgent(const TCHAR *name, TCHAR *buffer,
       }
    }
 
-   nxlog_debug(7, _T("Sensor(%s)->getItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, result);
+   nxlog_debug(7, _T("Sensor(%s)->getMetricFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, result);
    return result;
 }
 
@@ -913,10 +913,10 @@ DataCollectionError Sensor::getListFromAgent(const TCHAR *name, StringList **lis
    StringBuffer parameter(name);
    switch(m_commProtocol)
    {
-      case COMM_LORAWAN:
+      case SENSOR_PROTO_LORAWAN:
          prepareLoraDciParameters(parameter);
          break;
-      case COMM_DLMS:
+      case SENSOR_PROTO_DLMS:
          if (parameter.find(_T("Sensor")) != -1)
             prepareDlmsDciParameters(parameter);
          break;
@@ -980,10 +980,10 @@ DataCollectionError Sensor::getTableFromAgent(const TCHAR *name, shared_ptr<Tabl
    StringBuffer parameter(name);
    switch(m_commProtocol)
    {
-      case COMM_LORAWAN:
+      case SENSOR_PROTO_LORAWAN:
          prepareLoraDciParameters(parameter);
          break;
-      case COMM_DLMS:
+      case SENSOR_PROTO_DLMS:
          if (parameter.find(_T("Sensor")) != -1)
             prepareDlmsDciParameters(parameter);
          break;
@@ -1040,13 +1040,11 @@ void Sensor::prepareForDeletion()
    nxlog_debug(4, _T("Sensor::PrepareForDeletion(%s [%u]): no outstanding polls left"), m_name, m_id);
 
    shared_ptr<AgentConnectionEx> conn = getAgentConnection();
-   if ((m_commProtocol == COMM_LORAWAN) && (conn != nullptr))
+   if ((m_commProtocol == SENSOR_PROTO_LORAWAN) && (conn != nullptr))
    {
-      NXCPMessage msg(conn->getProtocolVersion());
-      msg.setCode(CMD_UNREGISTER_LORAWAN_SENSOR);
-      msg.setId(conn->generateRequestId());
-      msg.setField(VID_GUID, m_guid);
-      NXCPMessage *response = conn->customRequest(&msg);
+      NXCPMessage request(CMD_UNREGISTER_LORAWAN_SENSOR, conn->generateRequestId(), conn->getProtocolVersion());
+      request.setField(VID_GUID, m_guid);
+      NXCPMessage *response = conn->customRequest(&request);
       if (response != nullptr)
       {
          if (response->getFieldAsUInt32(VID_RCC) == RCC_SUCCESS)

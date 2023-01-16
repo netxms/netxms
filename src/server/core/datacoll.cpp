@@ -161,6 +161,20 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
                   *error = DCE_COMM_ERROR;
                }
             }
+            else if (dcTarget->getObjectClass() == OBJECT_SENSOR)
+            {
+               shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(static_cast<Sensor*>(dcTarget)->getProxyNodeId(), OBJECT_NODE));
+               if (proxy != nullptr)
+               {
+                  TCHAR name[MAX_PARAM_NAME];
+                  _sntprintf(name, MAX_PARAM_NAME, _T("MQTT.TopicData(\"%s\")"), EscapeStringForAgent(pItem->getName()).cstr());
+                  *error = proxy->getMetricFromAgent(name, buffer, MAX_LINE_SIZE);
+               }
+               else
+               {
+                  *error = DCE_COMM_ERROR;
+               }
+            }
             else
             {
                *error = DCE_NOT_SUPPORTED;

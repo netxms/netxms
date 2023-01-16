@@ -2786,16 +2786,16 @@ public:
  * Sensor communication protocol type
  */
 #define SENSOR_PROTO_UNKNOWN  0
-#define COMM_LORAWAN          1
-#define COMM_DLMS             2
+#define SENSOR_PROTO_LORAWAN  1
+#define SENSOR_PROTO_DLMS     2
 
 /**
  * Sensor device class
  */
-#define SENSOR_CLASS_UNKNOWN 0
-#define SENSOR_UPS           1
-#define SENSOR_WATER_METER   2
-#define SENSOR_ELECTR_METER  3
+#define SENSOR_CLASS_UNKNOWN        0
+#define SENSOR_UPS                  1
+#define SENSOR_WATER_METER          2
+#define SENSOR_ELECTRICITY_METER    3
 
 /**
  * Mobile device class
