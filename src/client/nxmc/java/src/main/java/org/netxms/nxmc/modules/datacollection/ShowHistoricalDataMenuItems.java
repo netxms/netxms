@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.datacollection;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
@@ -44,9 +44,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Helper class for building object context menu
  */
-public class ShowHistoricalDataMenuManager extends MenuManager
+public class ShowHistoricalDataMenuItems
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ShowHistoricalDataMenuManager.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(ShowHistoricalDataMenuItems.class);
    
    private View view;
    private StructuredViewer viewer;
@@ -58,6 +58,29 @@ public class ShowHistoricalDataMenuManager extends MenuManager
    private Action actionShowBarChart;
    private Action actionShowPieChart;
    private Action actionShowTableData;
+   
+
+
+   public static void populateMenu(IMenuManager manager, View view, AbstractObject object,
+         StructuredViewer viewer, int selectionType)
+   {
+      ShowHistoricalDataMenuItems items = new ShowHistoricalDataMenuItems(view, object, viewer);
+
+      if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
+      {
+         manager.add(items.actionShowHistory);
+         manager.add(items.actionRawLineChart);
+         manager.add(items.actionShowLineChart);
+         manager.add(items.actionShowBarChart);
+         manager.add(items.actionShowPieChart);
+         manager.add(new Separator());   
+      }
+      if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
+      {
+         manager.add(items.actionShowTableData);   
+         manager.add(new Separator());      
+      }
+   }
 
    /**
     * Create new menu manager for object's "Create" menu.
@@ -66,28 +89,12 @@ public class ShowHistoricalDataMenuManager extends MenuManager
     * @param view parent view
     * @param parent object to create menu for
     */
-   public ShowHistoricalDataMenuManager(View view, AbstractObject parent, StructuredViewer viewer, int selectionType)
+   private ShowHistoricalDataMenuItems(View view, AbstractObject parent, StructuredViewer viewer)
    {
       this.view = view;
       this.viewer = viewer;
       this.parent = parent;   
-
       createActions();
-
-      if (selectionType == DataCollectionObject.DCO_TYPE_ITEM)
-      {
-         add(actionShowHistory);
-         add(actionRawLineChart);
-         add(actionShowLineChart);
-         add(actionShowBarChart);
-         add(actionShowPieChart);
-         add(new Separator());   
-      }
-      if (selectionType == DataCollectionObject.DCO_TYPE_TABLE)
-      {
-         add(actionShowTableData);   
-         add(new Separator());      
-      }
     }
 
    /**
@@ -233,6 +240,5 @@ public class ShowHistoricalDataMenuManager extends MenuManager
       }
       
       view.openView(new DataComparisonView(parent.getObjectId(), items, chartType));
-   }
-   
+   }   
 }

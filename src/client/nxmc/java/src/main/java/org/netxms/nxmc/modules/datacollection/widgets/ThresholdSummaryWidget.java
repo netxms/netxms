@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.datacollection.widgets;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -45,7 +44,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuManager;
+import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuItems;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdTreeComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdTreeContentProvider;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.ThresholdTreeLabelProvider;
@@ -215,9 +214,7 @@ public class ThresholdSummaryWidget extends Composite
     */
    protected void fillContextMenu(IMenuManager mgr)
    {      
-      ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(viewPart, object, viewer, getDciSelectionType());
-      for (IContributionItem item : menu.getItems())
-         mgr.add(item);
+      ShowHistoricalDataMenuItems.populateMenu(mgr, viewPart, object, viewer, getDciSelectionType());
    }
 
 	/**

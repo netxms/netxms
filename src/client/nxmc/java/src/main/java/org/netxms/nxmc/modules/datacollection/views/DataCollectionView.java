@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
@@ -67,7 +66,7 @@ import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
-import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuManager;
+import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuItems;
 import org.netxms.nxmc.modules.datacollection.dialogs.BulkUpdateDialog;
 import org.netxms.nxmc.modules.datacollection.dialogs.helpers.BulkDciUpdateElementUI;
 import org.netxms.nxmc.modules.datacollection.views.helpers.DciComparator;
@@ -361,9 +360,7 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          if (!isTemplate)
          {
-            ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(this, getObject(), viewer, selectionType);
-            for (IContributionItem item : menu.getItems())
-               manager.add(item);
+            ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, selectionType);
          }
          manager.add(actionCopyToClipboard);
          manager.add(actionCopyDciName);
@@ -398,9 +395,7 @@ public class DataCollectionView extends BaseDataCollectionView
       {
          if (!isTemplate)
          {
-            ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(this, getObject(), viewer, selectionType);
-            for (IContributionItem item : menu.getItems())
-               manager.add(item);
+            ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, selectionType);
          }
          manager.add(new Separator());
          manager.add(actionExportToCsv);

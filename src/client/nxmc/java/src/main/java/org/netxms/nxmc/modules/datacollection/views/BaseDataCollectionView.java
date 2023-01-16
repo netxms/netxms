@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -58,7 +57,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
-import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuManager;
+import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuItems;
 import org.netxms.nxmc.modules.datacollection.propertypages.AccessControl;
 import org.netxms.nxmc.modules.datacollection.propertypages.ClusterOptions;
 import org.netxms.nxmc.modules.datacollection.propertypages.Comments;
@@ -216,9 +215,7 @@ public abstract class BaseDataCollectionView extends ObjectView
     */
    protected void fillContextMenu(final IMenuManager manager)
    {
-      ShowHistoricalDataMenuManager menu = new ShowHistoricalDataMenuManager(this, getObject(), viewer, getDciSelectionType());
-      for (IContributionItem item : menu.getItems())
-         manager.add(item);
+      ShowHistoricalDataMenuItems.populateMenu(manager, this, getObject(), viewer, getDciSelectionType());
       manager.add(actionCopyToClipboard);
       manager.add(actionCopyDciName);
       manager.add(actionExportToCsv);
