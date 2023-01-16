@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,14 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -392,8 +395,23 @@ public class NetworkCredentialsEditor extends ConfigurationView
 			}
 		});
 
+      final ImageHyperlink linkCopy = new ImageHyperlink(controlArea, SWT.NONE);
+      linkCopy.setText(i18n.tr("Copy"));
+      linkCopy.setImage(SharedIcons.IMG_COPY);
+      linkCopy.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkCopy.setLayoutData(gd);
+      linkCopy.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            copyCommunity();
+         }
+      });
+
       final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
-      linkUp.setText("Up");
+      linkUp.setText(i18n.tr("Up"));
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -408,7 +426,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       });
 
       final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
-      linkDown.setText("Down");
+      linkDown.setText(i18n.tr("Down"));
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -419,6 +437,64 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void linkActivated(HyperlinkEvent e)
          {
             moveCommunity(false);
+         }
+      });
+
+      linkCopy.setEnabled(false);
+      linkRemove.setEnabled(false);
+      linkUp.setEnabled(false);
+      linkDown.setEnabled(false);
+
+      final Action actionCopy = new Action(i18n.tr("&Copy"), SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copyCommunity();
+         }
+      };
+      final Action actionRemove = new Action(i18n.tr("&Remove"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            removeCommunity();
+         }
+      };
+      final Action actionUp = new Action(i18n.tr("&Up"), SharedIcons.UP) {
+         @Override
+         public void run()
+         {
+            moveCommunity(true);
+         }
+      };
+      final Action actionDown = new Action(i18n.tr("&Down"), SharedIcons.DOWN) {
+         @Override
+         public void run()
+         {
+            moveCommunity(false);
+         }
+      };
+      MenuManager manager = new MenuManager();
+      manager.add(actionCopy);
+      manager.add(actionRemove);
+      manager.add(actionUp);
+      manager.add(actionDown);
+      snmpCommunityList.getTable().setMenu(manager.createContextMenu(snmpCommunityList.getTable()));
+
+      snmpCommunityList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = snmpCommunityList.getStructuredSelection();
+
+            actionCopy.setEnabled(selection.size() == 1);
+            actionRemove.setEnabled(!selection.isEmpty());
+            actionUp.setEnabled(!selection.isEmpty());
+            actionDown.setEnabled(!selection.isEmpty());
+
+            linkCopy.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+            linkUp.setEnabled(!selection.isEmpty());
+            linkDown.setEnabled(!selection.isEmpty());
          }
       });
 	}
@@ -440,7 +516,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 		
-      final String[] names = { "User name", "Auth type", "Priv type", "Auth password", "Priv password", "Comments" };
+      final String[] names = { i18n.tr("User name"), i18n.tr("Auth type"), i18n.tr("Priv type"), i18n.tr("Auth password"), i18n.tr("Priv password"), i18n.tr("Comments") };
 		final int[] widths = { 100, 100, 100, 100, 100, 100 };
       snmpUsmCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
 		GridData gd = new GridData();
@@ -487,7 +563,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 		});
 
       final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
-      linkEdit.setText("Edit...");
+      linkEdit.setText(i18n.tr("Edit..."));
       linkEdit.setImage(SharedIcons.IMG_EDIT);
       linkEdit.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -517,7 +593,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 		});
 
       final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
-      linkUp.setText("Up");
+      linkUp.setText(i18n.tr("Up"));
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -532,7 +608,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       });
 
       final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
-      linkDown.setText("Down");
+      linkDown.setText(i18n.tr("Down"));
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -543,6 +619,64 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void linkActivated(HyperlinkEvent e)
          {
             moveUsmCredentials(false);
+         }
+      });
+
+      linkEdit.setEnabled(false);
+      linkRemove.setEnabled(false);
+      linkUp.setEnabled(false);
+      linkDown.setEnabled(false);
+
+      final Action actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
+         @Override
+         public void run()
+         {
+            editUsmCredentials();
+         }
+      };
+      final Action actionRemove = new Action(i18n.tr("&Remove"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            removeUsmCredentials();
+         }
+      };
+      final Action actionUp = new Action(i18n.tr("&Up"), SharedIcons.UP) {
+         @Override
+         public void run()
+         {
+            moveUsmCredentials(true);
+         }
+      };
+      final Action actionDown = new Action(i18n.tr("&Down"), SharedIcons.DOWN) {
+         @Override
+         public void run()
+         {
+            moveUsmCredentials(false);
+         }
+      };
+      MenuManager manager = new MenuManager();
+      manager.add(actionEdit);
+      manager.add(actionRemove);
+      manager.add(actionUp);
+      manager.add(actionDown);
+      snmpUsmCredentialsList.getTable().setMenu(manager.createContextMenu(snmpUsmCredentialsList.getTable()));
+
+      snmpUsmCredentialsList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = snmpUsmCredentialsList.getStructuredSelection();
+
+            actionEdit.setEnabled(selection.size() == 1);
+            actionRemove.setEnabled(!selection.isEmpty());
+            actionUp.setEnabled(!selection.isEmpty());
+            actionDown.setEnabled(!selection.isEmpty());
+
+            linkEdit.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+            linkUp.setEnabled(!selection.isEmpty());
+            linkDown.setEnabled(!selection.isEmpty());
          }
       });
 	}
@@ -615,8 +749,23 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
+      final ImageHyperlink linkCopy = new ImageHyperlink(controlArea, SWT.NONE);
+      linkCopy.setText(i18n.tr("Copy"));
+      linkCopy.setImage(SharedIcons.IMG_COPY);
+      linkCopy.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkCopy.setLayoutData(gd);
+      linkCopy.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            copySharedSecret();
+         }
+      });
+
       final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
-      linkUp.setText("Up");
+      linkUp.setText(i18n.tr("Up"));
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -631,7 +780,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       });
 
       final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
-      linkDown.setText("Down");
+      linkDown.setText(i18n.tr("Down"));
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -642,6 +791,64 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void linkActivated(HyperlinkEvent e)
          {
             moveSharedSecret(false);
+         }
+      });
+
+      linkCopy.setEnabled(false);
+      linkRemove.setEnabled(false);
+      linkUp.setEnabled(false);
+      linkDown.setEnabled(false);
+
+      final Action actionCopy = new Action(i18n.tr("&Copy"), SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copySharedSecret();
+         }
+      };
+      final Action actionRemove = new Action(i18n.tr("&Remove"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            removeSharedSecret();
+         }
+      };
+      final Action actionUp = new Action(i18n.tr("&Up"), SharedIcons.UP) {
+         @Override
+         public void run()
+         {
+            moveSharedSecret(true);
+         }
+      };
+      final Action actionDown = new Action(i18n.tr("&Down"), SharedIcons.DOWN) {
+         @Override
+         public void run()
+         {
+            moveSharedSecret(false);
+         }
+      };
+      MenuManager manager = new MenuManager();
+      manager.add(actionCopy);
+      manager.add(actionRemove);
+      manager.add(actionUp);
+      manager.add(actionDown);
+      sharedSecretList.getTable().setMenu(manager.createContextMenu(sharedSecretList.getTable()));
+
+      sharedSecretList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = sharedSecretList.getStructuredSelection();
+
+            actionCopy.setEnabled(selection.size() == 1);
+            actionRemove.setEnabled(!selection.isEmpty());
+            actionUp.setEnabled(!selection.isEmpty());
+            actionDown.setEnabled(!selection.isEmpty());
+
+            linkCopy.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+            linkUp.setEnabled(!selection.isEmpty());
+            linkDown.setEnabled(!selection.isEmpty());
          }
       });
    }
@@ -663,7 +870,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
 
-      final String[] names = { "Login", "Password", "Key" };
+      final String[] names = { i18n.tr("Login"), i18n.tr("Password"), i18n.tr("Key") };
       final int[] widths = { 150, 150, 150 };
       sshCredentialsList = new SortableTableViewer(clientArea, names, widths, 0, SWT.DOWN, SWT.MULTI | SWT.FULL_SELECTION);
       GridData gd = new GridData();
@@ -711,7 +918,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       });
 
       final ImageHyperlink linkEdit = new ImageHyperlink(controlArea, SWT.NONE);
-      linkEdit.setText("Edit...");
+      linkEdit.setText(i18n.tr("Edit..."));
       linkEdit.setImage(SharedIcons.IMG_EDIT);
       linkEdit.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -740,8 +947,23 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
       });
 
+      final ImageHyperlink linkCopy = new ImageHyperlink(controlArea, SWT.NONE);
+      linkCopy.setText(i18n.tr("Copy"));
+      linkCopy.setImage(SharedIcons.IMG_COPY);
+      linkCopy.setBackground(clientArea.getBackground());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkCopy.setLayoutData(gd);
+      linkCopy.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            copySshPassword();
+         }
+      });
+
       final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
-      linkUp.setText("Up");
+      linkUp.setText(i18n.tr("Up"));
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -756,7 +978,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       });
 
       final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
-      linkDown.setText("Down");
+      linkDown.setText(i18n.tr("Down"));
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -769,6 +991,75 @@ public class NetworkCredentialsEditor extends ConfigurationView
             moveSshCredentials(false);
          }
       });
+
+      linkEdit.setEnabled(false);
+      linkCopy.setEnabled(false);
+      linkRemove.setEnabled(false);
+      linkUp.setEnabled(false);
+      linkDown.setEnabled(false);
+
+      final Action actionCopy = new Action(i18n.tr("&Copy password"), SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copySshPassword();
+         }
+      };
+      final Action actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            editSshCredentials();
+         }
+      };
+      final Action actionRemove = new Action(i18n.tr("&Remove"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            removeSshCredentials();
+         }
+      };
+      final Action actionUp = new Action(i18n.tr("&Up"), SharedIcons.UP) {
+         @Override
+         public void run()
+         {
+            moveSshCredentials(true);
+         }
+      };
+      final Action actionDown = new Action(i18n.tr("&Down"), SharedIcons.DOWN) {
+         @Override
+         public void run()
+         {
+            moveSshCredentials(false);
+         }
+      };
+      MenuManager manager = new MenuManager();
+      manager.add(actionEdit);
+      manager.add(actionCopy);
+      manager.add(actionRemove);
+      manager.add(actionUp);
+      manager.add(actionDown);
+      sshCredentialsList.getTable().setMenu(manager.createContextMenu(sshCredentialsList.getTable()));
+
+      sshCredentialsList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = sshCredentialsList.getStructuredSelection();
+
+            actionEdit.setEnabled(selection.size() == 1);
+            actionCopy.setEnabled(selection.size() == 1);
+            actionRemove.setEnabled(!selection.isEmpty());
+            actionUp.setEnabled(!selection.isEmpty());
+            actionDown.setEnabled(!selection.isEmpty());
+
+            linkEdit.setEnabled(selection.size() == 1);
+            linkCopy.setEnabled(selection.size() == 1);
+            linkRemove.setEnabled(!selection.isEmpty());
+            linkUp.setEnabled(!selection.isEmpty());
+            linkDown.setEnabled(!selection.isEmpty());
+         }
+      });
    }
 
    /**
@@ -776,7 +1067,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
     */
    private TableViewer createPortList(int portType, String typeName)
    {
-      Section section = new Section(content, String.format("%s ports", typeName), false);
+      Section section = new Section(content, String.format(i18n.tr("%s ports"), typeName), false);
       section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
       Composite clientArea = section.getClient();
@@ -841,7 +1132,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       });
 
       final ImageHyperlink linkUp = new ImageHyperlink(controlArea, SWT.NONE);
-      linkUp.setText("Up");
+      linkUp.setText(i18n.tr("Up"));
       linkUp.setImage(SharedIcons.IMG_UP);
       linkUp.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -856,7 +1147,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
       });
 
       final ImageHyperlink linkDown = new ImageHyperlink(controlArea, SWT.NONE);
-      linkDown.setText("Down");
+      linkDown.setText(i18n.tr("Down"));
       linkDown.setImage(SharedIcons.IMG_DOWN);
       linkDown.setBackground(clientArea.getBackground());
       gd = new GridData();
@@ -867,6 +1158,53 @@ public class NetworkCredentialsEditor extends ConfigurationView
          public void linkActivated(HyperlinkEvent e)
          {
             movePort(viewer, false);
+         }
+      });
+
+      linkRemove.setEnabled(false);
+      linkUp.setEnabled(false);
+      linkDown.setEnabled(false);
+
+      final Action actionRemove = new Action(i18n.tr("&Remove"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            removePort(viewer);
+         }
+      };
+      final Action actionUp = new Action(i18n.tr("&Up"), SharedIcons.UP) {
+         @Override
+         public void run()
+         {
+            movePort(viewer, true);
+         }
+      };
+      final Action actionDown = new Action(i18n.tr("&Down"), SharedIcons.DOWN) {
+         @Override
+         public void run()
+         {
+            movePort(viewer, false);
+         }
+      };
+      MenuManager manager = new MenuManager();
+      manager.add(actionRemove);
+      manager.add(actionUp);
+      manager.add(actionDown);
+      viewer.getTable().setMenu(manager.createContextMenu(viewer.getTable()));
+
+      viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = viewer.getStructuredSelection();
+
+            actionRemove.setEnabled(!selection.isEmpty());
+            actionUp.setEnabled(!selection.isEmpty());
+            actionDown.setEnabled(!selection.isEmpty());
+
+            linkRemove.setEnabled(!selection.isEmpty());
+            linkUp.setEnabled(!selection.isEmpty());
+            linkDown.setEnabled(!selection.isEmpty());
          }
       });
 
@@ -1010,6 +1348,18 @@ public class NetworkCredentialsEditor extends ConfigurationView
 		}
 	}
    
+   /**
+    * Copy selected SNMP community to clipboard
+    */
+   private void copyCommunity()
+   {
+      IStructuredSelection selection = snmpCommunityList.getStructuredSelection();
+      if (selection.size() == 1)
+      {
+         WidgetHelper.copyToClipboard((String)selection.getFirstElement());
+      }
+   }
+
 	/**
 	 * Move community string in priority
 	 * 
@@ -1164,6 +1514,18 @@ public class NetworkCredentialsEditor extends ConfigurationView
    }
 
    /**
+    * Copy agent shared secret to clipboard
+    */
+   protected void copySharedSecret()
+   {
+      IStructuredSelection selection = sharedSecretList.getStructuredSelection();
+      if (selection.size() == 1)
+      {
+         WidgetHelper.copyToClipboard((String)selection.getFirstElement());
+      }
+   }
+
+   /**
     * Move up or down agent shared secret
     * 
     * @param up true if up, false if down
@@ -1245,6 +1607,18 @@ public class NetworkCredentialsEditor extends ConfigurationView
          }
          sshCredentialsList.setInput(list.toArray());
          setModified(NetworkCredentials.SSH_CREDENTIALS);
+      }
+   }
+
+   /**
+    * Copy selected SSH password
+    */
+   private void copySshPassword()
+   {
+      IStructuredSelection selection = sshCredentialsList.getStructuredSelection();
+      if (selection.size() == 1)
+      {
+         WidgetHelper.copyToClipboard(((SSHCredentials)selection.getFirstElement()).getPassword());
       }
    }
 
