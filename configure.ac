@@ -982,9 +982,9 @@ AC_ARG_WITH(dist,
 	TOOLS="nxlptest"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix mqtt mysql pgsql netbsd sunos aix informix oracle lmsensors darwin rpi java jmx opcua ubntlw bind9 netsvc db2 tuxedo mongodb ssh vmgr xen lorawan asterisk python"
 	AGENT_DIRS="libnxappc libnxtux"
-	NCDRV_MODULES="anysms googlechat kannel mqtt msteams mymobile nexmo nxagent slack smseagle telegram text2reach twilio websms xmpp"
-   HDLINK_DIRS="jira redmine"
-   PDSDRV_DIRS="influxdb rrdtool"
+	NCDRV_MODULES="anysms googlechat kannel mqtt msteams mymobile nexmo nxagent slack smtp smseagle telegram text2reach twilio websms xmpp"
+	HDLINK_DIRS="jira redmine"
+	PDSDRV_DIRS="influxdb rrdtool"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds music oui templates"
@@ -2533,7 +2533,7 @@ if test "x$DISABLE_CURL" = "xno" -a "x$DIST_BUILD" != "xyes"; then
 
 	if test "x$HAVE_LIBCURL" = "xyes"; then
 	   SUBAGENT_DIRS="$SUBAGENT_DIRS bind9 netsvc"
-	   NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel msteams mymobile nexmo slack smseagle telegram text2reach twilio websms"
+	   NCDRV_MODULES="$NCDRV_MODULES anysms googlechat kannel msteams mymobile nexmo slack smtp smseagle telegram text2reach twilio websms"
 	   HDLINK_DIRS="$HDLINK_DIRS jira redmine"
 	   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
    fi
@@ -4826,7 +4826,7 @@ AC_CONFIG_FILES([
 	src/ncdrivers/textfile/Makefile
 	src/ncdrivers/twilio/Makefile
 	src/ncdrivers/websms/Makefile
-   src/ncdrivers/xmpp/Makefile
+	src/ncdrivers/xmpp/Makefile
 	src/nxcproxy/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile

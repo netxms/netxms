@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Microsoft Teams
-** Copyright (C) 2014-2022 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -257,7 +257,7 @@ DECLARE_NCD_ENTRY_POINT(MicrosoftTeams, &s_config)
    if (!InitializeLibCURL())
    {
       nxlog_debug_tag(DEBUG_TAG, 1, _T("cURL initialization failed"));
-      return NULL;
+      return nullptr;
    }
    return MicrosoftTeamsDriver::createInstance(config);
 }

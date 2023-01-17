@@ -8,12 +8,12 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-DRIVERS = dbtable dummy gsm portech shell smtp snmptrap textfile @NCDRV_MODULES@
+DRIVERS = dbtable dummy gsm portech shell snmptrap textfile @NCDRV_MODULES@
 
 SUBDIRS = $(DRIVERS)
 
-EXTRA_LTLIBRARIES = anysms.la googlechat.la kannel.la mqtt.la msteams.la mymobile.la nexmo.la nxagent.la slack.la smseagle.la telegram.la text2reach.la twilio.la websms.la xmpp.la
-pkglib_LTLIBRARIES = dbtable.la dummy.la gsm.la portech.la shell.la smtp.la snmptrap.la textfile.la @NCDRV_LTLIBRARIES@
+EXTRA_LTLIBRARIES = anysms.la googlechat.la kannel.la mqtt.la msteams.la mymobile.la nexmo.la nxagent.la slack.la smtp.la smseagle.la telegram.la text2reach.la twilio.la websms.la xmpp.la
+pkglib_LTLIBRARIES = dbtable.la dummy.la gsm.la portech.la shell.la snmptrap.la textfile.la @NCDRV_LTLIBRARIES@
 
 anysms_la_SOURCES = anysms/anysms.cpp
 anysms_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build
@@ -107,7 +107,7 @@ smseagle_la_LIBADD = ../libnetxms/libnetxms.la
 
 smtp_la_SOURCES = smtp/smtp.cpp
 smtp_la_CPPFLAGS=-I@top_srcdir@/include  -I@top_srcdir@/build
-smtp_la_LDFLAGS = -module -avoid-version
+smtp_la_LDFLAGS = -module -avoid-version -rpath '$(pkglibdir)'
 smtp_la_LIBADD = ../libnetxms/libnetxms.la
 
 snmptrap_la_SOURCES = snmptrap/snmptrap.cpp
