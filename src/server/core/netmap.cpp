@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -852,48 +852,36 @@ void NetworkMap::updateContent()
    if ((m_mapType != MAP_TYPE_CUSTOM) && (m_status != STATUS_UNMANAGED))
    {
       NetworkMapObjectList objects;
-      bool topologyRecieved = true;
-      for(int i = 0; i < m_seedObjects.size(); i++)
+      bool success = true;
+      for(int i = 0; (i < m_seedObjects.size()) && success; i++)
       {
-         shared_ptr<Node> seed = static_pointer_cast<Node>(FindObjectById(m_seedObjects.get(i), OBJECT_NODE));
+         shared_ptr<NetObj> seed = FindObjectById(m_seedObjects.get(i));
          if (seed != nullptr)
          {
-            uint32_t status;
-            shared_ptr<NetworkMapObjectList> topology;
-            switch(m_mapType)
+            if (seed->getObjectClass() == OBJECT_NODE)
             {
-               case MAP_TYPE_LAYER2_TOPOLOGY:
-                  topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0);
-                  break;
-               case MAP_TYPE_IP_TOPOLOGY:
-                  topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0).release());
-                  break;
-               case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
-                  topology = shared_ptr<NetworkMapObjectList>(seed->buildInternalCommunicationTopology().release());
-                  break;
-               case MAP_TYPE_OSPF_TOPOLOGY:
-                  topology = shared_ptr<NetworkMapObjectList>(BuildOSPFTopology(seed, m_discoveryRadius).release());
-                  break;
-               default:
-                  break;
+               success = updateContent(static_pointer_cast<Node>(seed), &objects);
             }
-            if (topology != nullptr)
+            else if ((seed->getObjectClass() == OBJECT_CONTAINER) || (seed->getObjectClass() == OBJECT_CLUSTER) || (seed->getObjectClass() == OBJECT_RACK))
             {
-               objects.merge(*topology);
-            }
-            else
-            {
-               nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): cannot get topology information for node %s [%d], map won't be updated"), m_name, m_id, seed->getName(), seed->getId());
-               topologyRecieved = false;
-               break;
+               nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): seed object %s [%u] is a container, using child nodes as seeds"), m_name, m_id, seed->getName(), seed->getId());
+               unique_ptr<SharedObjectArray<NetObj>> children = seed->getAllChildren(true);
+               for(int j = 0; j < children->size(); j++)
+               {
+                  shared_ptr<NetObj> s = children->getShared(j);
+                  if (s->getObjectClass() == OBJECT_NODE)
+                  {
+                     success = updateContent(static_pointer_cast<Node>(s), &objects);
+                  }
+               }
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object %d cannot be found"), m_name, m_id, m_seedObjects.get(i));
+            nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): seed object [%u] cannot be found"), m_name, m_id, m_seedObjects.get(i));
          }
       }
-      if (!IsShutdownInProgress() && topologyRecieved)
+      if (!IsShutdownInProgress() && success)
       {
          updateObjects(&objects);
       }
@@ -903,6 +891,43 @@ void NetworkMap::updateContent()
       updateLinks();
    }
    nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): completed"), m_name, m_id);
+}
+
+/**
+ * Update map content for seeded map types using specific seed
+ */
+bool NetworkMap::updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects)
+{
+   nxlog_debug_tag(DEBUG_TAG_NETMAP, 6, _T("NetworkMap::updateContent(%s [%u]): reading topology information from node %s [%u]"), m_name, m_id, seed->getName(), seed->getId());
+
+   uint32_t status;
+   shared_ptr<NetworkMapObjectList> topology;
+   switch(m_mapType)
+   {
+      case MAP_TYPE_LAYER2_TOPOLOGY:
+         topology = seed->buildL2Topology(&status, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0, (m_flags & MF_USE_L1_TOPOLOGY) != 0);
+         break;
+      case MAP_TYPE_IP_TOPOLOGY:
+         topology = shared_ptr<NetworkMapObjectList>(BuildIPTopology(seed, m_discoveryRadius, (m_flags & MF_SHOW_END_NODES) != 0).release());
+         break;
+      case MAP_INTERNAL_COMMUNICATION_TOPOLOGY:
+         topology = shared_ptr<NetworkMapObjectList>(seed->buildInternalCommunicationTopology().release());
+         break;
+      case MAP_TYPE_OSPF_TOPOLOGY:
+         topology = shared_ptr<NetworkMapObjectList>(BuildOSPFTopology(seed, m_discoveryRadius).release());
+         break;
+      default:
+         break;
+   }
+
+   if (topology == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_NETMAP, 3, _T("NetworkMap::updateContent(%s [%u]): cannot get topology information for node %s [%d], map won't be updated"), m_name, m_id, seed->getName(), seed->getId());
+      return false;
+   }
+
+   objects->merge(*topology);
+   return true;
 }
 
 /**

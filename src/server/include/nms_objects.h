@@ -4245,6 +4245,7 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
+   bool updateContent(const shared_ptr<Node>& seed, NetworkMapObjectList *objects);
    void updateObjects(NetworkMapObjectList *objects);
    void updateLinks();
    uint32_t objectIdFromElementId(uint32_t eid);

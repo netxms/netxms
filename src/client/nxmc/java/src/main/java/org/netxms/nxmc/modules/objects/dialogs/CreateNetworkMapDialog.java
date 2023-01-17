@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.objects.Node;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -52,7 +52,7 @@ public class CreateNetworkMapDialog extends Dialog
    private String alias;
 	private int type;
 	private long seedObject;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -83,7 +83,7 @@ public class CreateNetworkMapDialog extends Dialog
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
-		
+
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, i18n.tr("Name"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
 
@@ -111,7 +111,7 @@ public class CreateNetworkMapDialog extends Dialog
 
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       seedObjectSelector.setLabel(i18n.tr("Seed node"));
-      seedObjectSelector.setObjectClass(Node.class);
+      seedObjectSelector.setObjectClass(AbstractObject.class);
       seedObjectSelector.setClassFilter(ObjectSelectionDialog.createNodeSelectionFilter(false));
       seedObjectSelector.setEnabled(false);
       gd = new GridData();

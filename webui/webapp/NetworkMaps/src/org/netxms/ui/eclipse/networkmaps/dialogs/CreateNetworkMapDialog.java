@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.networkmaps.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -29,8 +29,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -50,7 +50,7 @@ public class CreateNetworkMapDialog extends Dialog
    private String alias;
 	private int type;
 	private long seedObject;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -81,11 +81,11 @@ public class CreateNetworkMapDialog extends Dialog
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
-		
+
       textName = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateNetworkMapDialog_Name, "", //$NON-NLS-1$
                                                 WidgetHelper.DEFAULT_LAYOUT_DATA);
       textName.getShell().setMinimumSize(300, 0);
-      
+
       textAlias = WidgetHelper.createLabeledText(dialogArea, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().CreateNetworkMapDialog_Alias, "", //$NON-NLS-1$
             WidgetHelper.DEFAULT_LAYOUT_DATA);
       textAlias.getShell().setMinimumSize(300, 0);
@@ -101,30 +101,24 @@ public class CreateNetworkMapDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       mapType.getParent().setLayoutData(gd);
-      mapType.addSelectionListener(new SelectionListener() {
+      mapType.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 		      seedObjectSelector.setEnabled(mapType.getSelectionIndex() > 0 && mapType.getSelectionIndex() != 3);
 			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
       });
-      
+
       seedObjectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       seedObjectSelector.setLabel(Messages.get().CreateNetworkMapDialog_SeedNode);
-      seedObjectSelector.setObjectClass(Node.class);
+      seedObjectSelector.setObjectClass(AbstractObject.class);
       seedObjectSelector.setClassFilter(ObjectSelectionDialog.createNodeSelectionFilter(false));
       seedObjectSelector.setEnabled(false);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       seedObjectSelector.setLayoutData(gd);
-      
+
 		return dialogArea;
 	}
 
@@ -141,9 +135,9 @@ public class CreateNetworkMapDialog extends Dialog
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNetworkMapDialog_Warning, Messages.get().CreateNetworkMapDialog_PleaseEnterName);
 			return;
 		}
-		
+
 		type = mapType.getSelectionIndex();
-		if (type > 0 && type != NetworkMap.TYPE_INTERNAL_TOPOLOGY)
+      if ((type == NetworkMap.TYPE_IP_TOPOLOGY) || (type == NetworkMap.TYPE_LAYER2_TOPOLOGY))
 		{
 			seedObject = seedObjectSelector.getObjectId();
 			if (seedObject == 0)
