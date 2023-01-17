@@ -57,6 +57,7 @@ public class ObjectOverviewView extends ObjectView
    private Composite viewArea;
    private Composite leftColumn;
    private Composite rightColumn;
+   private boolean updateLayoutOnSelect = false;
 
    /**
     * Constructor.
@@ -64,6 +65,15 @@ public class ObjectOverviewView extends ObjectView
    public ObjectOverviewView()
    {
       super(i18n.tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.gif"), "ObjectOverview", false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 10;
    }
 
    /**
@@ -149,6 +159,33 @@ public class ObjectOverviewView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
+      if (isActive())
+         updateLayout();
+      else
+         updateLayoutOnSelect = true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
+   @Override
+   public void activate()
+   {
+      super.activate();
+      if (updateLayoutOnSelect)
+      {
+         updateLayout();
+         updateLayoutOnSelect = false;
+      }
+   }
+
+   /**
+    * Update view layout
+    */
+   private void updateLayout()
+   {
+      AbstractObject object = getObject();
+
       viewArea.setRedraw(false);
       for(OverviewPageElement element : elements)
       {
@@ -171,14 +208,5 @@ public class ObjectOverviewView extends ObjectView
 
       Point s = viewArea.getSize();
       viewArea.redraw(0, 0, s.x, s.y, true);
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 10;
    }
 }
