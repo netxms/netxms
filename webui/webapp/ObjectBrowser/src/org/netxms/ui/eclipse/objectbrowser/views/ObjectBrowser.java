@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -735,35 +735,43 @@ public class ObjectBrowser extends ViewPart
 	      final AbstractObject target = dlg.getSelectedObjects().get(0);
 	      for (int i = 0; i < selection.length; i++)
 	      {
-	         performObjectMove(target, parentObjects.get(i), selectedObjects.get(i), true);
+	         moveObject(target, parentObjects.get(i), selectedObjects.get(i), true);
 	      }
 		}
 	}
-	
-	public void performObjectMove(final AbstractObject target, final Object parentObject, final Object currentObject, final boolean isMove){
-      if (target.getObjectId() != ((AbstractObject)parentObject).getObjectId())
-      {
-         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         
-         new ConsoleJob(Messages.get().ObjectBrowser_MoveJob_Title + ((AbstractObject)currentObject).getObjectName(), this, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
-            {
-               long objectId = ((AbstractObject)currentObject).getObjectId();
-               session.bindObject(target.getObjectId(), objectId);
-               if (isMove)
-                  session.unbindObject(((AbstractObject)parentObject).getObjectId(), objectId);
-            }
-   
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().ObjectBrowser_MoveJob_Error + ((AbstractObject)currentObject).getObjectName();
-            }
-         }.start();
-      }
-	}
-	
+
+   /**
+    * Move object to new parent
+    *
+    * @param destination destination (new parent for movable object)
+    * @param source source (current parent for movable object)
+    * @param movableObject object to move
+    * @param move true if operation is a "true" move (object should be removed from old parent)
+    */
+   public void moveObject(final AbstractObject destination, final AbstractObject source, final AbstractObject movableObject, final boolean move)
+   {
+      if (destination.getObjectId() == source.getObjectId())
+         return;
+
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob(Messages.get().ObjectBrowser_MoveJob_Title + ((AbstractObject)movableObject).getObjectName(), this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            long objectId = ((AbstractObject)movableObject).getObjectId();
+            session.bindObject(destination.getObjectId(), objectId);
+            if (move)
+               session.unbindObject(((AbstractObject)source).getObjectId(), objectId);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ObjectBrowser_MoveJob_Error + ((AbstractObject)movableObject).getObjectName();
+         }
+      }.start();
+   }
+
 	/**
 	 * Register object action validators
 	 */

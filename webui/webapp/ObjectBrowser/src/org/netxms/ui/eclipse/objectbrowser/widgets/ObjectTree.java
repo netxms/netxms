@@ -770,7 +770,7 @@ public class ObjectTree extends Composite
                AbstractObject movableObject = (AbstractObject)movableSelection.get(i);
                TreePath path = selection.getPaths()[0];
                AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
-               obj.performObjectMove((AbstractObject)getCurrentTarget(), parent, movableObject,
+               obj.moveObject((AbstractObject)getCurrentTarget(), parent, movableObject,
                      operation == DND.DROP_MOVE ? true : false);
             }
             return true;

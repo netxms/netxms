@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,9 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.NetworkService;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -177,18 +179,24 @@ public class ObjectFilter extends ViewerFilter
 			return true;
 
 		boolean pass = objectList.containsKey(((AbstractObject)element).getObjectId());
-		if (!pass && ((AbstractObject)element).hasChildren())
+		if (!pass)
 		{
-			Iterator<AbstractObject> it = objectList.values().iterator();
-			while(it.hasNext())
-			{
-				AbstractObject obj = it.next();
-				if (obj.isChildOf(((AbstractObject)element).getObjectId()))
-				{
-					pass = true;
-					break;
-				}
-			}
+		   if (((AbstractObject)element).hasChildren())
+         {
+            for(AbstractObject o : objectList.values())
+            {
+               if (o.isChildOf(((AbstractObject)element).getObjectId()))
+               {
+                  pass = true;
+                  break;
+               }
+            }
+         }
+         else if (((AbstractObject)element).hasParents() &&
+               ((element instanceof Interface) || (element instanceof AccessPoint) || (element instanceof NetworkService) || (element instanceof VPNConnector)))
+         {
+            pass = objectList.containsKey(((AbstractObject)element).getParentIdList()[0]);
+         }
 		}
 		return pass;
 	}
