@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,11 +92,11 @@ public class DialGauge extends GenericGauge
 
    /**
     * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
     *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
     */
 	@Override
-   protected void renderElement(GC gc, ChartConfiguration configuration, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 

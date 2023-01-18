@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,12 +84,70 @@ public class TextGauge extends GenericGauge
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, org.netxms.client.datacollection.GraphItem,
-    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
+    * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#createRenderData()
+    */
+   @Override
+   protected Object createRenderData()
+   {
+      return new Font[1];
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#prepareElementRender(org.eclipse.swt.graphics.GC,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int)
+    */
+   @Override
+   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   {
+      if (valueFonts == null)
+      {
+         ((Font[])renderData)[0] = fixedValueFont;
+         return;
+      }
+
+      Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+      if (configuration.isElementBordersVisible())
+      {
+         rect.x += INNER_MARGIN_WIDTH;
+         rect.y += INNER_MARGIN_HEIGHT;
+         rect.width -= INNER_MARGIN_WIDTH * 2;
+         rect.height -= INNER_MARGIN_HEIGHT * 2;
+      }
+      if (configuration.areLabelsVisible())
+      {
+         rect.height -= gc.textExtent("MMM").y + 8;
+      }
+
+      final String value = (configuration.getExpectedTextWidth() > 0) ? createTemplateString(configuration.getExpectedTextWidth()) : getValueAsDisplayString(dci, data);
+      final Font font = WidgetHelper.getBestFittingFont(gc, valueFonts, value, rect.width, rect.height);
+      if ((((Font[])renderData)[0] == null) || (font.getFontData()[0].getHeight() < ((Font[])renderData)[0].getFontData()[0].getHeight()))
+      {
+         ((Font[])renderData)[0] = font;
+      }
+   }
+
+   /**
+    * Create template string for font fitting.
+    *
+    * @param length string length
+    * @return template string for font fitting
+    */
+   private static String createTemplateString(int length)
+   {
+      char ch[] = new char[length];
+      for(int i = 0; i < length; i++)
+         ch[i] = 'M';
+      return new String(ch);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int)
     */
 	@Override
-   protected void renderElement(GC gc, ChartConfiguration config, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 		gc.setAntialias(SWT.ON);
@@ -109,9 +167,6 @@ public class TextGauge extends GenericGauge
 			rect.height -= gc.textExtent("MMM").y + 8; //$NON-NLS-1$
 		}
 
-      final String value = getValueAsDisplayString(dci, data);
-      final Font font = (valueFonts != null) ? WidgetHelper.getBestFittingFont(gc, valueFonts, value, rect.width, rect.height) : fixedValueFont;
-		gc.setFont(font);
       switch(GaugeColorMode.getByValue(config.getGaugeColorMode()))
 		{
 		   case ZONE:
@@ -138,7 +193,10 @@ public class TextGauge extends GenericGauge
             gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
             break;
 		}
-      Point ext = gc.textExtent(value);
+      final String value = getValueAsDisplayString(dci, data);
+      final Font font = ((Font[])renderData)[0];
+      gc.setFont(font);
+		Point ext = gc.textExtent(value);
 		gc.drawText(value, rect.x + rect.width / 2 - ext.x / 2, rect.y + rect.height / 2 - ext.y / 2, SWT.DRAW_TRANSPARENT);
 
       // Draw label

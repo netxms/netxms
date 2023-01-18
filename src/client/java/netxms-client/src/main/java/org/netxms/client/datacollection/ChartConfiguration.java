@@ -166,6 +166,9 @@ public class ChartConfiguration
    @Element(required = false)
    private int fontSize = 0;
 
+   @Element(required = false)
+   private int expectedTextWidth = 0;
+
    private Set<ChartConfigurationChangeListener> changeListeners = new HashSet<ChartConfigurationChangeListener>(0);
 
 	/**
@@ -241,6 +244,8 @@ public class ChartConfiguration
       elementBordersVisible = src.elementBordersVisible;
       gaugeColorMode = src.gaugeColorMode;
       fontName = src.fontName;
+      fontSize = src.fontSize;
+      expectedTextWidth = src.expectedTextWidth;
    }
 
 	/**
@@ -893,5 +898,21 @@ public class ChartConfiguration
    public void setFontSize(int fontSize)
    {
       this.fontSize = fontSize;
+   }
+
+   /**
+    * @return the expectedTextWidth
+    */
+   public int getExpectedTextWidth()
+   {
+      return expectedTextWidth;
+   }
+
+   /**
+    * @param expectedTextWidth the expectedTextWidth to set
+    */
+   public void setExpectedTextWidth(int expectedTextWidth)
+   {
+      this.expectedTextWidth = expectedTextWidth;
    }
 }

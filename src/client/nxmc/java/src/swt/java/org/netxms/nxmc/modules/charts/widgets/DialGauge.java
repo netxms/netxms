@@ -91,12 +91,12 @@ public class DialGauge extends GenericGauge
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, org.netxms.client.datacollection.GraphItem,
-    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
+    * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int)
     */
 	@Override
-   protected void renderElement(GC gc, ChartConfiguration configuration, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2022 RadenSolutions
+ * Copyright (C) 2016-2023 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,43 +32,46 @@ public class GaugeConfig extends AbstractChartConfig
 	public static final int DIAL = 0;
 	public static final int BAR = 1;
 	public static final int TEXT = 2;
-	
+
 	@Element(required = false)
 	private int gaugeType = DIAL;
-		
+
 	@Element(required = false)
 	private boolean legendInside = false;
-	
+
 	@Element(required = false)
 	private boolean vertical = false;
-	
+
 	@Element(required = false)
 	private double minValue = 0.0;
-	
+
 	@Element(required = false)
 	private double maxValue = 100.0;
-	
+
 	@Element(required = false)
 	private double leftYellowZone = 0.0;
-	
+
 	@Element(required = false)
 	private double leftRedZone = 0.0;
-	
+
 	@Element(required = false)
 	private double rightYellowZone = 70.0;
-	
+
 	@Element(required = false)
 	private double rightRedZone = 90.0;
-	
+
 	@Element(required = false)
-   private String fontName = ""; //$NON-NLS-1$
+   private String fontName = "";
 
    @Element(required = false)
    private int fontSize = 0;
 
    @Element(required = false)
+   private int expectedTextWidth = 0;
+
+   @Element(required = false)
 	private boolean elementBordersVisible = false;
-	
+
    @Element(required = false)
    private int colorMode = GaugeColorMode.ZONE.getValue();
 
@@ -262,6 +265,22 @@ public class GaugeConfig extends AbstractChartConfig
    public void setFontSize(int fontSize)
    {
       this.fontSize = fontSize;
+   }
+
+   /**
+    * @return the expectedTextWidth
+    */
+   public int getExpectedTextWidth()
+   {
+      return expectedTextWidth;
+   }
+
+   /**
+    * @param expectedTextWidth the expectedTextWidth to set
+    */
+   public void setExpectedTextWidth(int expectedTextWidth)
+   {
+      this.expectedTextWidth = expectedTextWidth;
    }
 
    /**

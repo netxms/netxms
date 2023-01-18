@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ public class Gauge extends DashboardElementPropertyPage
 	private Combo gaugeType;
 	private LabeledText fontName;
    private LabeledSpinner fontSize;
+   private LabeledSpinner expectedTextWidth;
 	private Button checkLegendInside;
 	private Button checkVertical;
 	private Button checkElementBorders;
@@ -135,7 +136,7 @@ public class Gauge extends DashboardElementPropertyPage
       gd.verticalAlignment = SWT.BOTTOM;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 1;
+      gd.horizontalSpan = 2;
 		fontName.setLayoutData(gd);
 
       fontSize = new LabeledSpinner(dialogArea, SWT.NONE);
@@ -145,8 +146,16 @@ public class Gauge extends DashboardElementPropertyPage
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 1;
       fontSize.setLayoutData(gd);
+
+      expectedTextWidth = new LabeledSpinner(dialogArea, SWT.NONE);
+      expectedTextWidth.setLabel(i18n.tr("Expected text width (0 for autoscale)"));
+      expectedTextWidth.setRange(0, 1000);
+      expectedTextWidth.setSelection(config.getExpectedTextWidth());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
+      gd.horizontalAlignment = SWT.FILL;
+      expectedTextWidth.setLayoutData(gd);
 
 		minValue = new LabeledText(dialogArea, SWT.NONE);
       minValue.setLabel(i18n.tr("Minimum value"));
@@ -284,6 +293,7 @@ public class Gauge extends DashboardElementPropertyPage
 		config.setGaugeType(gaugeType.getSelectionIndex());
 		config.setFontName(fontName.getText().trim());
       config.setFontSize(fontSize.getSelection());
+      config.setExpectedTextWidth(expectedTextWidth.getSelection());
 		config.setMinValue(min);
 		config.setMaxValue(max);
 		config.setLeftYellowZone(ly);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ public class GaugeElement extends ComparisonChartElement
       chartConfig.setRightRedZone(elementConfig.getRightRedZone());
       chartConfig.setFontName(elementConfig.getFontName());
       chartConfig.setFontSize(elementConfig.getFontSize());
+      chartConfig.setExpectedTextWidth(elementConfig.getExpectedTextWidth());
       chartConfig.setGaugeColorMode(elementConfig.getColorMode());
 
 		switch(elementConfig.getGaugeType())

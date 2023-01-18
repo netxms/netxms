@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,12 +81,12 @@ public class BarGauge extends GenericGauge
    }
 
    /**
-    * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
-    *      org.netxms.client.datacollection.ChartConfiguration, org.netxms.client.datacollection.GraphItem,
-    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
+    * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
+    *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
+    *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int)
     */
    @Override
-   protected void renderElement(GC gc, ChartConfiguration config, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
    {
       Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
       gc.setAntialias(SWT.ON);
@@ -151,8 +151,8 @@ public class BarGauge extends GenericGauge
          rect.x -= SCALE_TEXT_WIDTH / 2;
       }
       
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale")); //$NON-NLS-1$
+      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
+      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
       gc.fillRectangle(rect);
       gc.drawRectangle(rect);
 
@@ -196,7 +196,7 @@ public class BarGauge extends GenericGauge
             double v = data.getCurrentValue();
             if (v < maxValue)
             {
-               gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+               gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
                if (config.isTransposed())
                {
                   int points = (int)((v - minValue) / pointValue);
@@ -276,8 +276,8 @@ public class BarGauge extends GenericGauge
     */
    private void drawScale(GC gc, Rectangle rect, double minValue, double maxValue, double pointValue, boolean isTransposed, boolean gridVisible)
    {
-      Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
-      Color scaleTextColor = chart.getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
+      Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale");
+      Color scaleTextColor = chart.getColorFromPreferences("Chart.Colors.DialScaleText");
       final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", SCALE_TEXT_WIDTH, SCALE_TEXT_HEIGHT); //$NON-NLS-1$
       gc.setFont(markFont);
 

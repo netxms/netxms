@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,10 +71,14 @@ public abstract class GenericGauge extends GenericComparisonChart
          Point minSize = getMinElementSize();
          if ((w >= minSize.x) && (h >= minSize.x))
          {
-            for(int i = 0; i < items.size(); i++)
+            Object renderData = createRenderData();
+            if (renderData != null)
             {
-               renderElement(gc, config, items.get(i), series.get(i), 0, top + i * h, w, h);
+               for(int i = 0; i < items.size(); i++)
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h);
             }
+            for(int i = 0; i < items.size(); i++)
+               renderElement(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h);
          }
       }
       else
@@ -84,10 +88,14 @@ public abstract class GenericGauge extends GenericComparisonChart
          Point minSize = getMinElementSize();
          if ((w >= minSize.x) && (h >= minSize.x))
          {
-            for(int i = 0; i < items.size(); i++)
+            Object renderData = createRenderData();
+            if (renderData != null)
             {
-               renderElement(gc, config, items.get(i), series.get(i), i * w, top, w, h);
+               for(int i = 0; i < items.size(); i++)
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h);
             }
+            for(int i = 0; i < items.size(); i++)
+               renderElement(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h);
          }
       }
    }
@@ -103,10 +111,22 @@ public abstract class GenericGauge extends GenericComparisonChart
    }
 
    /**
-    * Render single gauge element.
+    * Create gauge specific render data. Default implementation returns null.
+    *
+    * @return render data or null
+    */
+   protected Object createRenderData()
+   {
+      return null;
+   }
+
+   /**
+    * Prepare for element rendering. Will not be called if <code>createRenderData()</code> returns null. Default implementation does
+    * nothing.
     *
     * @param gc graphics context
     * @param configuration chart configuration
+    * @param renderData data for rendering from <code>createRenderData()</code>
     * @param dci chart item configuration
     * @param data chart item data
     * @param x X position
@@ -114,5 +134,22 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param w width
     * @param h height
     */
-   protected abstract void renderElement(GC gc, ChartConfiguration configuration, GraphItem dci, DataSeries data, int x, int y, int w, int h);
+   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   {
+   }
+
+   /**
+    * Render single gauge element.
+    *
+    * @param gc graphics context
+    * @param configuration chart configuration
+    * @param renderData data for rendering from preparation step
+    * @param dci chart item configuration
+    * @param data chart item data
+    * @param x X position
+    * @param y Y position
+    * @param w width
+    * @param h height
+    */
+   protected abstract void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h);
 }
