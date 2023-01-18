@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Solutions
+ * Copyright (C) 2022-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,14 @@
  */
 package org.netxms.nxmc.modules.tools.views;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -40,6 +44,7 @@ import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -57,6 +62,8 @@ public class ServerConsole extends View
    private boolean connected = false;
    private Action actionClearOutput;
    private Action actionScrollLock;
+   private Action actionCopy;
+   private Action actionSave;
 
    /**
     * Create server console view
@@ -154,6 +161,25 @@ public class ServerConsole extends View
       actionScrollLock.setImageDescriptor(ResourceManager.getImageDescriptor("icons/scroll-lock.png"));
       actionScrollLock.setChecked(false);
       addKeyBinding("SCROLLLOCK", actionScrollLock);
+
+      actionCopy = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY_TO_CLIPBOARD) {
+         @Override
+         public void run()
+         {
+            WidgetHelper.copyToClipboard(console.getCleanText());
+         }
+      };
+      addKeyBinding("M1+C", actionCopy);
+
+      actionSave = new Action(i18n.tr("&Save..."), SharedIcons.SAVE) {
+         @Override
+         public void run()
+         {
+            DateFormat df = new SimpleDateFormat("yyyyMMdd-HHmmss");
+            WidgetHelper.saveTextToFile(ServerConsole.this, "netxmsd-console-output-" + df.format(new Date()) + ".log", console.getCleanText());
+         }
+      };
+      addKeyBinding("M1+S", actionSave);
    }
 
    /**
@@ -162,6 +188,9 @@ public class ServerConsole extends View
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionCopy);
+      manager.add(actionSave);
+      manager.add(new Separator());
       manager.add(actionClearOutput);
       manager.add(actionScrollLock);
    }
@@ -172,6 +201,9 @@ public class ServerConsole extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionCopy);
+      manager.add(actionSave);
+      manager.add(new Separator());
       manager.add(actionClearOutput);
       manager.add(actionScrollLock);
    }

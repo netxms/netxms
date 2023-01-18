@@ -19,12 +19,15 @@
 package org.netxms.nxmc.tools;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.BreakIterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
@@ -65,6 +68,8 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
@@ -1289,5 +1294,41 @@ public class WidgetHelper
    public static Image createImageFromImageData(Display display, ImageData imageData)
    {
       return new Image(display, imageData);
+   }
+
+   /**
+    * Save given text to file (will show file save dialog in desktop client and initiate download in web client).
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param text text to save
+    */
+   public static void saveTextToFile(View view, String fileNameHint, String text)
+   {
+      FileDialog dlg = new FileDialog((view != null) ? view.getWindow().getShell() : null, SWT.SAVE);
+      if (fileNameHint != null)
+         dlg.setFileName(fileNameHint);
+      String fileName = dlg.open();
+      if (fileName == null)
+         return;
+
+      Job job = new Job("Saving file", view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            try (OutputStream out = new FileOutputStream(new File(fileName)))
+            {
+               out.write(text.getBytes("utf-8"));
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot save file";
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 }

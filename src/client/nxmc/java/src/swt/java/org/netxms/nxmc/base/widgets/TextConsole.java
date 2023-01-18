@@ -46,7 +46,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
  */
 public class TextConsole extends Composite implements LineStyleListener
 {
-   private static final Pattern pattern = Pattern.compile("\\x1b\\[[^\\x40-\\x7e]*."); //$NON-NLS-1$
+   private static final Pattern PATTERN = Pattern.compile("\\x1b\\[[^\\x40-\\x7e]*.");
    private static final char ESCAPE_SGR = 'm';
 
    private StyledText console;
@@ -188,7 +188,7 @@ public class TextConsole extends Composite implements LineStyleListener
       lastRangeEnd = 0;
       List<StyleRange> ranges = new ArrayList<StyleRange>();
       String currentText = event.lineText;
-      Matcher matcher = pattern.matcher(currentText);
+      Matcher matcher = PATTERN.matcher(currentText);
       while(matcher.find())
       {
          int start = matcher.start();
@@ -486,5 +486,15 @@ public class TextConsole extends Composite implements LineStyleListener
    public void setText(String text)
    {
       console.setText(text);
+   }
+
+   /**
+    * Get clean text (without color control commands)
+    *
+    * @return clean text
+    */
+   public String getCleanText()
+   {
+      return getText().replaceAll(PATTERN.pattern(), "");
    }
 }

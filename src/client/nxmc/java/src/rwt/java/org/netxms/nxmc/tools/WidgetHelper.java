@@ -20,14 +20,18 @@ package org.netxms.nxmc.tools;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.text.BreakIterator;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.PreferencePage;
@@ -66,8 +70,11 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
+import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
@@ -1375,5 +1382,44 @@ public class WidgetHelper
          }
       });
       return imageContainer[0];
+   }
+
+   /**
+    * Save given text to file (will show file save dialog in desktop client and initiate download in web client).
+    * 
+    * @param view parent view (can be null)
+    * @param fileNameHint hint for the file name (can be null)
+    * @param text text to save
+    */
+   public static void saveTextToFile(View view, String fileNameHint, String text)
+   {
+      Job job = new Job("Preparing file for download", view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final File tmpFile = File.createTempFile("SaveTextToFile_" + UUID.randomUUID().toString(), "_" + System.currentTimeMillis());
+            try (OutputStream out = new FileOutputStream(tmpFile))
+            {
+               out.write(text.getBytes("utf-8"));
+            }
+
+            DownloadServiceHandler.addDownload(tmpFile.getName(), (fileNameHint != null) ? fileNameHint : (System.currentTimeMillis() / 1000 + ".txt"), tmpFile, "text/plain");
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  DownloadServiceHandler.startDownload(tmpFile.getName());
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot prepare file for download";
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 }
