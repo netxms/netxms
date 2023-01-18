@@ -46,7 +46,7 @@ public class MapObjectFilter extends ObjectPropertyPage
 {
    private static I18n i18n = LocalizationHelper.getI18n(MapObjectFilter.class);
    
-	private NetworkMap object;
+   private NetworkMap map;
 	private Button checkboxEnableFilter;
 	private ScriptEditor filterSource;
 	private String initialFilter;
@@ -60,7 +60,6 @@ public class MapObjectFilter extends ObjectPropertyPage
    public MapObjectFilter(AbstractObject object)
    {
       super(i18n.tr("Object Filter"), object);
-      this.object = (NetworkMap)object;
    }
 
    /**
@@ -81,16 +80,18 @@ public class MapObjectFilter extends ObjectPropertyPage
       return (object instanceof NetworkMap);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		initialFilter = object.getFilter();
-		initialEnable = (object.getFlags() & NetworkMap.MF_FILTER_OBJECTS) != 0;
+      map = (NetworkMap)object;
+
+      initialFilter = map.getFilter();
+      initialEnable = (map.getFlags() & NetworkMap.MF_FILTER_OBJECTS) != 0;
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;

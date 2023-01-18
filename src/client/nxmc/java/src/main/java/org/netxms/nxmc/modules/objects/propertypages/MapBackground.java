@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -57,7 +58,7 @@ public class MapBackground extends ObjectPropertyPage
 {
    private static I18n i18n = LocalizationHelper.getI18n(MapBackground.class);
    
-	private NetworkMap object;
+   private NetworkMap map;
 	private Button radioTypeNone;
 	private Button radioTypeImage;
 	private Button radioTypeGeoMap;
@@ -79,7 +80,6 @@ public class MapBackground extends ObjectPropertyPage
    public MapBackground(AbstractObject object)
    {
       super(i18n.tr("Map Background"), object);
-      this.object = (NetworkMap)object;
    }
 
    /**
@@ -99,14 +99,16 @@ public class MapBackground extends ObjectPropertyPage
    {
       return (object instanceof NetworkMap);
    }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
+
+      map = (NetworkMap)object;
 
       PreferenceStore settings = PreferenceStore.getInstance();
       disableGeolocationBackground = settings.getAsBoolean("DISABLE_GEOLOCATION_BACKGROUND", false); //$NON-NLS-1$
@@ -127,47 +129,41 @@ public class MapBackground extends ObjectPropertyPage
       layout = new GridLayout();
       typeGroup.setLayout(layout);
 
-      final SelectionListener listener = new SelectionListener() {
+      final SelectionListener listener = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 		      enableControls(radioTypeImage.getSelection(), disableGeolocationBackground ? false : radioTypeGeoMap.getSelection());
 			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
 		};
       
       radioTypeNone = new Button(typeGroup, SWT.RADIO);
       radioTypeNone.setText(i18n.tr("&None"));
-      radioTypeNone.setSelection(object.getBackground().equals(NXCommon.EMPTY_GUID));
+      radioTypeNone.setSelection(map.getBackground().equals(NXCommon.EMPTY_GUID));
       radioTypeNone.addSelectionListener(listener);
       
       radioTypeImage = new Button(typeGroup, SWT.RADIO);
       radioTypeImage.setText(i18n.tr("&Image"));
-      radioTypeImage.setSelection(!object.getBackground().equals(NXCommon.EMPTY_GUID) && !object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
+      radioTypeImage.setSelection(!map.getBackground().equals(NXCommon.EMPTY_GUID) && !map.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
       radioTypeImage.addSelectionListener(listener);
 
       if (!disableGeolocationBackground)
       {
          radioTypeGeoMap = new Button(typeGroup, SWT.RADIO);
          radioTypeGeoMap.setText(i18n.tr("&Geographic Map"));
-         radioTypeGeoMap.setSelection(object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
+         radioTypeGeoMap.setSelection(map.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND));
          radioTypeGeoMap.addSelectionListener(listener);
       }
       else
       {
-         if (object.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND))
+         if (map.getBackground().equals(NetworkMap.GEOMAP_BACKGROUND))
             radioTypeNone.setSelection(true);
       }
 
       image = new ImageSelector(dialogArea, SWT.NONE);
       image.setLabel(i18n.tr("Background image"));
       if (radioTypeImage.getSelection())
-      	image.setImageGuid(object.getBackground(), true);
+         image.setImageGuid(map.getBackground(), true);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -175,7 +171,7 @@ public class MapBackground extends ObjectPropertyPage
       
       checkCenterImage = new Button(dialogArea, SWT.CHECK);
       checkCenterImage.setText("Center image");
-      checkCenterImage.setSelection(object.isCenterBackgroundImage());
+      checkCenterImage.setSelection(map.isCenterBackgroundImage());
 
       if (!disableGeolocationBackground)
       {
@@ -188,7 +184,7 @@ public class MapBackground extends ObjectPropertyPage
          layout = new GridLayout();
          geomapGroup.setLayout(layout);
          
-         GeoLocation gl = object.getBackgroundLocation();
+         GeoLocation gl = map.getBackgroundLocation();
    
          latitude = new LabeledText(geomapGroup, SWT.NONE);
          latitude.setLabel(i18n.tr("Latitude"));
@@ -229,40 +225,28 @@ public class MapBackground extends ObjectPropertyPage
          zoomScale = new Scale(zoomGroup, SWT.HORIZONTAL);
          zoomScale.setMinimum(1);
          zoomScale.setMaximum(18);
-         zoomScale.setSelection(object.getBackgroundZoom());
+         zoomScale.setSelection(map.getBackgroundZoom());
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          zoomScale.setLayoutData(gd);
-         zoomScale.addSelectionListener(new SelectionListener() {
+         zoomScale.addSelectionListener(new SelectionAdapter() {
    			@Override
    			public void widgetSelected(SelectionEvent e)
    			{
    				zoomSpinner.setSelection(zoomScale.getSelection());
-   			}
-   
-   			@Override
-   			public void widgetDefaultSelected(SelectionEvent e)
-   			{
-   				widgetSelected(e);
    			}
          });
          
          zoomSpinner = new Spinner(zoomGroup, SWT.BORDER);
          zoomSpinner.setMinimum(1);
          zoomSpinner.setMaximum(18);
-         zoomSpinner.setSelection(object.getBackgroundZoom());
-         zoomSpinner.addSelectionListener(new SelectionListener() {
+         zoomSpinner.setSelection(map.getBackgroundZoom());
+         zoomSpinner.addSelectionListener(new SelectionAdapter() {
    			@Override
    			public void widgetSelected(SelectionEvent e)
    			{
    				zoomScale.setSelection(zoomSpinner.getSelection());
-   			}
-   			
-   			@Override
-   			public void widgetDefaultSelected(SelectionEvent e)
-   			{
-   				widgetSelected(e);
    			}
    		});
       }
@@ -282,7 +266,7 @@ public class MapBackground extends ObjectPropertyPage
       label.setText(i18n.tr("Background color:"));
       
       backgroundColor = new ColorSelector(colorArea);
-      backgroundColor.setColorValue(ColorConverter.rgbFromInt(object.getBackgroundColor()));
+      backgroundColor.setColorValue(ColorConverter.rgbFromInt(map.getBackgroundColor()));
 
 		enableControls(radioTypeImage.getSelection(), disableGeolocationBackground ? false : radioTypeGeoMap.getSelection());
       return dialogArea;
