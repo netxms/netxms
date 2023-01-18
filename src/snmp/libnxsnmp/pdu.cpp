@@ -162,8 +162,6 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 1
 {
    m_version = src.m_version;
    m_command = src.m_command;
-   for(int i = 0; i < src.m_variables.size(); i++)
-      m_variables.add(new SNMP_Variable(src.m_variables.get(i)));
    m_errorCode = src.m_errorCode;
    m_errorIndex = src.m_errorIndex;
    m_requestId = src.m_requestId;
@@ -181,7 +179,14 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 1
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = src.m_signatureOffset;
-   m_codepage[0] = 0;
+   strcpy(m_codepage, src.m_codepage);
+
+   for(int i = 0; i < src.m_variables.size(); i++)
+   {
+      auto v = new SNMP_Variable(src.m_variables.get(i));
+      v->setCodepage((m_codepage[0] != 0) ? m_codepage : nullptr);
+      m_variables.add(v);
+   }
 }
 
 /**
@@ -1408,4 +1413,26 @@ void SNMP_PDU::setTrapId(const uint32_t *value, size_t length)
       m_trapType = 6;
       m_specificTrap = m_trapId.value()[m_trapId.length() - 1];
    }
+}
+
+/**
+ * Set codepage for PDU
+ */
+void SNMP_PDU::setCodepage(const char *codepage)
+{
+   strlcpy(m_codepage, codepage, 16);
+   for(int i = 0; i < m_variables.size(); i++)
+      m_variables.get(i)->setCodepage((m_codepage[0] != 0) ? m_codepage : nullptr);
+}
+
+/**
+ * Unlink variables
+ */
+void SNMP_PDU::unlinkVariables()
+{
+   for(int i = 0; i < m_variables.size(); i++)
+      m_variables.get(i)->setCodepage(nullptr);
+   m_variables.setOwner(Ownership::False);
+   m_variables.clear();
+   m_variables.setOwner(Ownership::True);
 }

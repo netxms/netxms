@@ -711,15 +711,7 @@ public:
 
    SNMP_Command getCommand() const { return m_command; }
    int getNumVariables() const { return m_variables.size(); }
-   SNMP_Variable *getVariable(int index)
-   {
-      auto var = m_variables.get(index);
-      if (var != nullptr && m_codepage[0] != 0)
-      {
-         var->setCodepage(m_codepage);
-      }
-      return var;
-   }
+   SNMP_Variable *getVariable(int index) { return m_variables.get(index); }
    SNMP_Version getVersion() const { return m_version; }
    SNMP_ErrorCode getErrorCode() const { return static_cast<SNMP_ErrorCode>(m_errorCode); }
 
@@ -751,18 +743,14 @@ public:
 	size_t getContextEngineIdLength() const { return m_contextEngineIdLen; }
 	const BYTE *getContextEngineId() const { return m_contextEngineId; }
 
+   void setCodepage(const char *codepage);
+
    void bindVariable(SNMP_Variable *var)
    {
       m_variables.add(var);
+      var->setCodepage((m_codepage[0] != 0) ? m_codepage : nullptr);
    }
-   void unlinkVariables()
-   {
-      m_variables.setOwner(Ownership::False);
-      m_variables.clear();
-      m_variables.setOwner(Ownership::True);
-   }
-
-   void setCodepage(const char* codepage) { strlcpy(m_codepage, codepage, 16); }
+   void unlinkVariables();
 };
 
 /**

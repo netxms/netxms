@@ -423,11 +423,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
          if (length > 0)
          {
 #ifdef UNICODE
-            if (codepage == nullptr && m_codepage != nullptr)
-            {
-               codepage = m_codepage;
-            }
-            size_t cch = mbcp_to_wchar(reinterpret_cast<const char *>(m_value), length, buffer, bufferSize, codepage);
+            size_t cch = mbcp_to_wchar(reinterpret_cast<const char *>(m_value), length, buffer, bufferSize, (codepage != nullptr) ? codepage : m_codepage);
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -500,12 +496,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          if (!conversionNeeded)
          {
 #ifdef UNICODE
-            if (codepage == nullptr && m_codepage != nullptr)
-            {
-               codepage = m_codepage;
-            }
-
-            size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, codepage);
+            size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, (codepage != nullptr) ? codepage : m_codepage);
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -687,13 +678,9 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
       case ASN_OCTET_STRING:
 #ifdef UNICODE
          length = wcslen(value) * 3;
-         if ((codepage == nullptr) && (m_codepage != nullptr))
-         {
-            codepage = m_codepage;
-         }
          reallocValueBuffer(length);
          // wchar_to_mbcp returns number of characters in converted string including terminating \0 which should be excluded from value being sent
-         m_valueLength = wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, codepage) - 1;
+         m_valueLength = wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, (codepage != nullptr) ? codepage : m_codepage) - 1;
 #else
          length = strlen(value);
          reallocValueBuffer(length);
