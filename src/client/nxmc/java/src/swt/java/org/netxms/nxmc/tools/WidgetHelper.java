@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -710,6 +710,8 @@ public class WidgetHelper
     */
    public static int getBestFittingFontMultiline(GC gc, Font[] fonts, String text, int width, int height, int maxLineCount)
    {
+      Font originalFont = gc.getFont();
+
       int first = 0;
       int last = fonts.length - 1;
       int curr = last / 2;
@@ -730,6 +732,7 @@ public class WidgetHelper
          }
       }
       
+      gc.setFont(originalFont);
       return font;
    }
    
@@ -830,6 +833,8 @@ public class WidgetHelper
 	 */
 	public static Font getBestFittingFont(GC gc, Font[] fonts, String text, int width, int height)
 	{
+      Font originalFont = gc.getFont();
+
 		int first = 0;
 		int last = fonts.length - 1;
 		int curr = last / 2;
@@ -851,12 +856,14 @@ public class WidgetHelper
 			}
 		}
 
-		// Use smallest font if no one fit
-		if (font == null)
-			font = fonts[0];
+      // Use smallest font if no one fit
+      if (font == null)
+         font = fonts[0];
+
+      gc.setFont(originalFont);
 		return font;
 	}
-	
+
 	/**
 	 * Find font with matching size in font array.
 	 * 
