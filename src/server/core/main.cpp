@@ -34,12 +34,6 @@
 #include <nxcore_websvc.h>
 #include <nxnet.h>
 
-#if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
-#include <readline/readline.h>
-#include <readline/history.h>
-#define USE_READLINE 1
-#endif
-
 #ifdef _WIN32
 #include <errno.h>
 #include <psapi.h>
@@ -1616,16 +1610,8 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 				             _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
 				             _T("System Console\n\n"));
 
-#if USE_READLINE
-		   // Initialize readline library if we use it
-		   rl_bind_key('\t', RL_INSERT_CAST rl_insert);
-#endif
-
 		   while(1)
 		   {
-#if USE_READLINE
-   			ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
-#else
 			   WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
 			   fflush(stdout);
 			   if (fgets(szCommand, 255, stdin) == nullptr)
@@ -1634,7 +1620,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 			   if (ptr != nullptr)
 				   *ptr = 0;
 			   ptr = szCommand;
-#endif
 
 			   if (ptr != nullptr)
 			   {
@@ -1652,13 +1637,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 					   if (ProcessConsoleCommand(ptr, &ctx) == CMD_EXIT_SHUTDOWN)
 #endif
 						   break;
-#if USE_READLINE
-					   add_history(ptr);
-#endif
 				   }
-#if USE_READLINE
-				   free(ptr);
-#endif
 			   }
 			   else
 			   {
@@ -1666,9 +1645,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 			   }
 		   }
 
-#if USE_READLINE
-   		free(ptr);
-#endif
    		if (!(g_flags & AF_SHUTDOWN))
    		{
    		   s_shutdownReason = ShutdownReason::FROM_LOCAL_CONSOLE;

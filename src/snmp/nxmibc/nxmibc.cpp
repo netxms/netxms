@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
    InitNetXMSProcess(true);
 
    _tprintf(_T("NetXMS MIB Compiler  Version ") NETXMS_VERSION_STRING _T(" (") NETXMS_BUILD_TAG _T(")\n")
-            _T("Copyright (c) 2005-2020 Raden Solutions\n\n"));
+            _T("Copyright (c) 2005-2023 Raden Solutions\n\n"));
 
    StringList paths;
    StringSet extensions;
