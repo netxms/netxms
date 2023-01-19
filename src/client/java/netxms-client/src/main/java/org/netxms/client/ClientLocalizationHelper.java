@@ -42,9 +42,8 @@ public class ClientLocalizationHelper
    /**
     * Get message text for given RCC
     * 
-    * @param code request completion code
+    * @param key request completion code
     * @param lang language code
-    * @param additionalInfo additional info (to be included into message text)
     * @return message text
     */
    public static String getText(String key, String lang)
@@ -55,9 +54,8 @@ public class ClientLocalizationHelper
    /**
     * Get message text for given text
     * 
-    * @param code request completion code
-    * @param lang language code
-    * @param additionalInfo additional info (to be included into message text)
+    * @param key request completion code
+    * @param locale locale
     * @return message text
     */
    public static String getText(String key, Locale locale)

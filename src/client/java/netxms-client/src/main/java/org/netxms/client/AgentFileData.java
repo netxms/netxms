@@ -37,6 +37,7 @@ public class AgentFileData
     * @param id file id
     * @param remoteName name of remote file
     * @param file local file
+    * @param monitorId UUID of monitor
     */
    public AgentFileData(String id, String remoteName, File file, UUID monitorId)
    {

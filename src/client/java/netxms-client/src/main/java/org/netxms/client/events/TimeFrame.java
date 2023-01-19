@@ -167,7 +167,8 @@ public class TimeFrame
     * 
     * @param dfTime time format 
     * @param locale loacale to use
-    * @return
+    * 
+    * @return formatted and translated time frame string
     */
    public String getFormattedDateString(final DateFormat dfTime, Locale locale)
    {
@@ -351,7 +352,7 @@ public class TimeFrame
     * 
     * @throws TimeRangeFormatException exception in case of parsing error
     */
-   public void update(int startHour, int startMinute, int endHour, int endMinute, boolean[] daysOfWeek, String daysOfMonth, boolean[] months, Locale locale) throws TimeRangeFormatException
+   public void update(int startHour, int startMinute, int endHour, int endMinute, boolean[] daysOfWeek, String daysOfMonth, boolean[] months) throws TimeRangeFormatException
    {    
       int startTime = startHour *100 + startMinute; //BCD format
       int endTime = endHour * 100 + endMinute; //BCD format
@@ -473,7 +474,7 @@ public class TimeFrame
    /**
     * Check if this schedule will never be executed 
     * 
-    * @returntrue if this filter is equal to never execute
+    * @return true if this filter is equal to never execute
     */
    public boolean isNever()
    {

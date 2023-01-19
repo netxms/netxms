@@ -48,7 +48,6 @@ public class TimeRangeFormatException extends Exception
     * Exception constructor
     * 
     * @param errorCode one of error codes
-    * @param string error message 
     */
    public TimeRangeFormatException(int errorCode)
    {

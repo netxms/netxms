@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.epp.dialogs;
 
-import java.util.Locale;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
@@ -311,7 +310,7 @@ public class TimeFrameEditorDialog  extends Dialog
       try
       {
          timeFrame.update(timePickerFrom.getHours(), timePickerFrom.getMinutes(), timePickerTo.getHours(), timePickerTo.getMinutes(), 
-               daysOfWeek, days, months, Locale.getDefault());
+               daysOfWeek, days, months);
       }
       catch(TimeRangeFormatException e)
       {
