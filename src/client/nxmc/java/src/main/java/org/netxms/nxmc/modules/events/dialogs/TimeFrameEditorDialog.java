@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ClientLocalizationHelper;
 import org.netxms.client.events.TimeFrame;
-import org.netxms.client.events.TimeRangeFormatException;
+import org.netxms.client.events.TimeFrameFormatException;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -317,7 +317,7 @@ public class TimeFrameEditorDialog  extends Dialog
          timeFrame.update(timePickerFrom.getHours(), timePickerFrom.getMinutes(), timePickerTo.getHours(), timePickerTo.getMinutes(), 
                daysOfWeek, days, months);
       }
-      catch(TimeRangeFormatException e)
+      catch(TimeFrameFormatException e)
       {
          MessageDialogHelper.openError(getShell(), "Error", e.getMessage());
          return;

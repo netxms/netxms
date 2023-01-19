@@ -24,7 +24,7 @@ import org.netxms.client.ClientLocalizationHelper;
 /**
  * Exception in case of time frame data parsing
  */
-public class TimeRangeFormatException extends Exception
+public class TimeFrameFormatException extends Exception
 {
    private static final long serialVersionUID = 5935877340735559718L;
    
@@ -49,10 +49,10 @@ public class TimeRangeFormatException extends Exception
     * 
     * @param errorCode one of error codes
     */
-   public TimeRangeFormatException(int errorCode)
+   public TimeFrameFormatException(int errorCode)
    {
       this.errorCode = errorCode;
-      key = String.format("TimeRangeFormatException_%d", errorCode);
+      key = String.format("TimeFrameFormatException_%d", errorCode);
    }
 
    /**

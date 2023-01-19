@@ -185,11 +185,11 @@ public class TimeFrame
       {
          Calendar from = Calendar.getInstance();
          from.set(Calendar.MINUTE, getStartMinute());
-         from.set(Calendar.HOUR, getStartHour());   
+         from.set(Calendar.HOUR_OF_DAY, getStartHour());   
          from.set(Calendar.SECOND, 0);    
          Calendar to = Calendar.getInstance();
          to.set(Calendar.MINUTE, getEndMinute());
-         to.set(Calendar.HOUR, getEndHour()); 
+         to.set(Calendar.HOUR_OF_DAY, getEndHour()); 
          to.set(Calendar.SECOND, 0);    
          builder.append(String.format(ClientLocalizationHelper.getText("TimeFrame_TimeFormat", locale), dfTime.format(from.getTime()), dfTime.format(to.getTime())));
       }
@@ -350,20 +350,20 @@ public class TimeFrame
     * @param daysOfMonth selected days of month
     * @param months selected months
     * 
-    * @throws TimeRangeFormatException exception in case of parsing error
+    * @throws TimeFrameFormatException exception in case of parsing error
     */
-   public void update(int startHour, int startMinute, int endHour, int endMinute, boolean[] daysOfWeek, String daysOfMonth, boolean[] months) throws TimeRangeFormatException
+   public void update(int startHour, int startMinute, int endHour, int endMinute, boolean[] daysOfWeek, String daysOfMonth, boolean[] months) throws TimeFrameFormatException
    {    
       int startTime = startHour *100 + startMinute; //BCD format
       int endTime = endHour * 100 + endMinute; //BCD format
       if (startHour < 0 || startHour > 23 || endHour < 0 || endHour > 23 ||
             startMinute < 0 || startMinute > 59  || endMinute < 0 || endMinute > 59)
       {
-         throw new TimeRangeFormatException(TimeRangeFormatException.TIME_VALIDATION_FAILURE);
+         throw new TimeFrameFormatException(TimeFrameFormatException.TIME_VALIDATION_FAILURE);
       }
       if (startTime > endTime)
       {
-         throw new TimeRangeFormatException(TimeRangeFormatException.TIME_INCORRECT_ORDER);
+         throw new TimeFrameFormatException(TimeFrameFormatException.TIME_INCORRECT_ORDER);
       } 
       
       long date = 0;
@@ -408,12 +408,12 @@ public class TimeFrame
                   }
                   else
                   {
-                     throw new TimeRangeFormatException(TimeRangeFormatException.DAY_OUT_OF_RANGE);
+                     throw new TimeFrameFormatException(TimeFrameFormatException.DAY_OUT_OF_RANGE);
                   }
                }
                catch (Exception e)
                {
-                  throw new TimeRangeFormatException(TimeRangeFormatException.DAY_NOT_A_NUMBER);
+                  throw new TimeFrameFormatException(TimeFrameFormatException.DAY_NOT_A_NUMBER);
                }
             }
             else if (entry.equalsIgnoreCase("L"))
@@ -432,12 +432,12 @@ public class TimeFrame
                   }
                   else
                   {
-                     throw new TimeRangeFormatException(TimeRangeFormatException.DAY_OUT_OF_RANGE);
+                     throw new TimeFrameFormatException(TimeFrameFormatException.DAY_OUT_OF_RANGE);
                   }
                }
                catch (Exception e)
                {
-                  throw new TimeRangeFormatException(TimeRangeFormatException.DAY_NOT_A_NUMBER);
+                  throw new TimeFrameFormatException(TimeFrameFormatException.DAY_NOT_A_NUMBER);
                }
             }
          }         
