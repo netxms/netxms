@@ -535,9 +535,13 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          else
          {
             // Replace non-printable characters with question marks
-            for(UINT32 i = 0; i < length; i++)
+            for(size_t i = 0; i < length; i++)
+            {
+               if ((buffer[i] == 0) && (i == length - 1))
+                  break;   // 0 at the end is OK
                if ((buffer[i] < 0x1F) && (buffer[i] != 0x0D) && (buffer[i] != 0x0A))
                   buffer[i] = _T('?');
+            }
          }
       }
       else

@@ -41,6 +41,7 @@ static SNMP_EncryptionMethod m_encryptionMethod = SNMP_ENCRYPT_NONE;
 static uint16_t m_port = 161;
 static SNMP_Version m_snmpVersion = SNMP_VERSION_2C;
 static uint32_t m_timeout = 3000;
+static bool s_rawValueInHex = false;
 static const char *s_codepage = nullptr;
 
 /**
@@ -107,18 +108,36 @@ static int GetData(int argc, TCHAR *argv[], int interval)
             else if (var->getType() == ASN_OPAQUE)
             {
                SNMP_Variable *subvar = var->decodeOpaque();
+
                bool convert = true;
+               if (s_rawValueInHex)
+               {
+                  BinToStr(subvar->getValue(), std::min(subvar->getValueLength(), (sizeof(buffer) / sizeof(TCHAR) - 1) / 2), buffer);
+               }
+               else
+               {
+                  subvar->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
+               }
+
                TCHAR typeName[256];
-               subvar->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
                _tprintf(_T("%s [OPAQUE]: [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
                      convert ? _T("Hex-STRING") : SnmpDataTypeName(subvar->getType(), typeName, 256), buffer);
+
                delete subvar;
             }
             else
             {
                bool convert = true;
+               if (s_rawValueInHex)
+               {
+                  BinToStr(var->getValue(), std::min(var->getValueLength(), (sizeof(buffer) / sizeof(TCHAR) - 1) / 2), buffer);
+               }
+               else
+               {
+                  var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
+               }
+
                TCHAR typeName[256];
-               var->getValueAsPrintableString(buffer, 1024, &convert, s_codepage);
                _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
                      convert ? _T("Hex-STRING") : SnmpDataTypeName(var->getType(), typeName, 256), buffer);
             }
@@ -149,25 +168,26 @@ int main(int argc, char *argv[])
    uint32_t value;
    char *eptr;
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hi:p:u:v:w:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:c:C:e:E:hi:p:u:v:w:x")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             _tprintf(_T("Usage: nxsnmpget [<options>] <host> <variables>\n")
                      _T("Valid options are:\n")
-						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
-                     _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
-                     _T("   -c <string>  : Community string. Default is \"public\"\n")
+						   _T("   -a <method>   : Authentication method for SNMP v3 USM. Valid methods are MD5, SHA1, SHA224, SHA256, SHA384, SHA512\n")
+                     _T("   -A <passwd>   : User's authentication password for SNMP v3 USM\n")
+                     _T("   -c <string>   : Community string. Default is \"public\"\n")
                      _T("   -C <codepage> : Codepage for remote system\n")
-						   _T("   -e <method>  : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
-                     _T("   -E <passwd>  : User's encryption password for SNMP v3 USM\n")
-                     _T("   -h           : Display help and exit\n")
-                     _T("   -i <seconds> : Repeat request with given interval in seconds\n")
-                     _T("   -p <port>    : Agent's port number. Default is 161\n")
-                     _T("   -u <user>    : User name for SNMP v3 USM\n")
-                     _T("   -v <version> : SNMP version to use (valid values is 1, 2c, and 3)\n")
-                     _T("   -w <seconds> : Request timeout (default is 3 seconds)\n")
+						   _T("   -e <method>   : Encryption method for SNMP v3 USM. Valid methods are DES and AES\n")
+                     _T("   -E <passwd>   : User's encryption password for SNMP v3 USM\n")
+                     _T("   -h            : Display help and exit\n")
+                     _T("   -i <seconds>  : Repeat request with given interval in seconds\n")
+                     _T("   -p <port>     : Agent's port number. Default is 161\n")
+                     _T("   -u <user>     : User name for SNMP v3 USM\n")
+                     _T("   -v <version>  : SNMP version to use (valid values is 1, 2c, and 3)\n")
+                     _T("   -w <seconds>  : Request timeout (default is 3 seconds)\n")
+                     _T("   -x            : Show raw value in hex\n")
                      _T("\n"));
             exitCode = 0;
             start = false;
@@ -305,6 +325,9 @@ int main(int argc, char *argv[])
             {
                m_timeout = value;
             }
+            break;
+         case 'x':   // Raw value in hex
+            s_rawValueInHex = true;
             break;
          case '?':
             start = false;
