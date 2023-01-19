@@ -3408,6 +3408,8 @@ public:
    bool isBridge() const { return m_capabilities & NC_IS_BRIDGE ? true : false; }
    bool isRouter() const { return m_capabilities & NC_IS_ROUTER ? true : false; }
    bool isOSPFSupported() const { return m_capabilities & NC_IS_OSPF ? true : false; }
+   bool isLLDPSupported() const { return m_capabilities & NC_IS_LLDP ? true : false; }
+   bool isLLDPV2MIBSupported() const { return m_capabilities & NC_LLDP_V2_MIB ? true : false; }
    bool isLocalManagement() const { return m_capabilities & NC_IS_LOCAL_MGMT ? true : false; }
    bool isPerVlanFdbSupported() const { return (m_driver != nullptr) ? m_driver->isPerVlanFdbSupported() : false; }
    bool isFdbUsingIfIndex() const { return (m_driver != nullptr) ? m_driver->isFdbUsingIfIndex(this, m_driverData) : false; }
@@ -3525,8 +3527,8 @@ public:
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);
    shared_ptr<ComponentTree> getComponents();
-   bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
-   void showLLDPInfo(CONSOLE_CTX console);
+   bool getLldpLocalPortInfo(uint32_t idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
+   void showLLDPInfo(ServerConsole *console);
 
    void setRecheckCapsFlag() { lockProperties(); m_runtimeFlags |= NDF_RECHECK_CAPABILITIES; unlockProperties(); }
    void resolveVlanPorts(VlanList *vlanList);

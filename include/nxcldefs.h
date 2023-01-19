@@ -217,6 +217,7 @@
 #define NC_IS_MODBUS_TCP          0x01000000
 #define NC_IS_PROFINET            0x02000000
 #define NC_HAS_FILE_MANAGER       0x04000000
+#define NC_LLDP_V2_MIB            0x08000000
 
 /**
  * Flag separator

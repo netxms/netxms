@@ -41,6 +41,16 @@ struct LLDP_LOCAL_PORT_INFO
 };
 
 /**
+ * Build LLDP OID depending on MIB version
+ */
+static inline String LLDP_OID(const TCHAR *suffix, bool v2)
+{
+   StringBuffer oid(v2 ? _T(".1.3.111.2.802.1.1.13.") : _T(".1.0.8802.1.1.2."));
+   oid.append(suffix);
+   return oid;
+}
+
+/**
  * Network path element type
  */
 enum class NetworkPathElementType

@@ -5398,18 +5398,24 @@ bool Node::confPollSnmp(uint32_t requestId)
    // Check for LLDP (Link Layer Discovery Protocol) support
    // MikroTik devices are known to not return lldpLocChassisId and lldpLocChassisIdSubtype so we
    // use lldpLocSysCapEnabled as fallback check
-   if ((SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS) ||
-       (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.6.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS))
+   bool lldpMIB = (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS) ||
+                  (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.6.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS);
+   bool lldpV2MIB = (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.111.2.802.1.1.13.1.3.2.0"), nullptr, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS);
+   if (lldpMIB || lldpV2MIB)
    {
       lockProperties();
       m_capabilities |= NC_IS_LLDP;
+      if (lldpV2MIB)
+         m_capabilities |= NC_LLDP_V2_MIB;
+      else
+         m_capabilities &= ~NC_LLDP_V2_MIB;
       unlockProperties();
 
       int32_t type;
       BYTE data[256];
       uint32_t dataLen;
-      if ((SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), nullptr, 0, &type, sizeof(int32_t), 0, nullptr) == SNMP_ERR_SUCCESS) &&
-          (SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), nullptr, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
+      if ((SnmpGetEx(pTransport, LLDP_OID(_T("1.3.1.0"), lldpV2MIB), nullptr, 0, &type, sizeof(int32_t), 0, nullptr) == SNMP_ERR_SUCCESS) &&
+          (SnmpGetEx(pTransport, LLDP_OID(_T("1.3.2.0"), lldpV2MIB), nullptr, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
       {
          String lldpId = BuildLldpId(type, data, dataLen);
          lockProperties();
@@ -5432,7 +5438,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    else
    {
       lockProperties();
-      m_capabilities &= ~NC_IS_LLDP;
+      m_capabilities &= ~(NC_IS_LLDP | NC_LLDP_V2_MIB);
       unlockProperties();
    }
 
@@ -10867,7 +10873,7 @@ bool Node::isDataCollectionDisabled()
  * @param idLen port ID length in bytes
  * @param buffer buffer for storing port information
  */
-bool Node::getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
+bool Node::getLldpLocalPortInfo(uint32_t idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
 {
    bool result = false;
    lockProperties();
@@ -10891,27 +10897,27 @@ bool Node::getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCA
 /**
  * Show node LLDP information
  */
-void Node::showLLDPInfo(CONSOLE_CTX console)
+void Node::showLLDPInfo(ServerConsole *console)
 {
    TCHAR buffer[256];
 
    lockProperties();
-   ConsolePrintf(console, _T("\x1b[1m*\x1b[0m Node LLDP ID: %s\n\n"), m_lldpNodeId);
-   ConsolePrintf(console, _T("\x1b[1m*\x1b[0m Local LLDP ports\n"));
+   console->printf(_T("\x1b[1m*\x1b[0m Node LLDP ID: %s\n\n"), m_lldpNodeId);
+   console->print(_T("\x1b[1m*\x1b[0m Local LLDP ports\n"));
    if (m_lldpLocalPortInfo != nullptr)
    {
-      ConsolePrintf(console, _T("   Port | ST | Len | Local ID                 | Description\n")
-                             _T("   -----+----+-----+--------------------------+--------------------------------------\n"));
+      console->print(_T("   Port | ST | Len | Local ID                 | Description\n")
+                     _T("   -----+----+-----+--------------------------+--------------------------------------\n"));
       for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
       {
          LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
-         ConsolePrintf(console, _T("   %4u | %2u | %3d | %-24s | %s\n"), port->portNumber,
+         console->printf(_T("   %4u | %2u | %3d | %-24s | %s\n"), port->portNumber,
                   port->localIdSubtype, (int)port->localIdLen, BinToStr(port->localId, port->localIdLen, buffer), port->ifDescr);
       }
    }
    else
    {
-      ConsolePrintf(console, _T("   No local LLDP port info\n"));
+      console->print(_T("   No local LLDP port info\n"));
    }
    unlockProperties();
 }
