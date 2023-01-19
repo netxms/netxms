@@ -27,18 +27,17 @@ import org.netxms.client.ClientLocalizationHelper;
 public class TimeFrameFormatException extends Exception
 {
    private static final long serialVersionUID = 5935877340735559718L;
-   
+
    public static final int TIME_VALIDATION_FAILURE = 1;
    public static final int TIME_INCORRECT_ORDER = 2;
    public static final int DAY_OUT_OF_RANGE = 3;
    public static final int DAY_NOT_A_NUMBER = 4;
-   
 
    /**
     * Specific error code
     */
    protected int errorCode;
-   
+
    /**
     * Translation key
     */
@@ -81,5 +80,5 @@ public class TimeFrameFormatException extends Exception
       Locale locale = Locale.getDefault();
       return ClientLocalizationHelper.getText(key, locale.getLanguage());
    }
-   
+
 }

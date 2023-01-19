@@ -28,21 +28,18 @@ import org.netxms.client.ClientLocalizationHelper;
 /**
  * Time frame configuration
  * 
- * Server format:
- * time has format: 
- * startHours startMinutes endHours endMinutes dddddddd in int BCD format
+ * Server format: time has format: startHours startMinutes endHours endMinutes dddddddd in int BCD format
  * 
- * date has format: 
- * 12 bits of months form December to January, 7 bits of week days form Sunday to Monday, 31 dates of month + last bit is last day of month
+ * date has format: 12 bits of months form December to January, 7 bits of week days form Sunday to Monday, 31 dates of month + last
+ * bit is last day of month
  */
 public class TimeFrame
 {
    public static final String[] DAYS_OF_THE_WEEK = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-   public static final String[] MONTHS = { "January", "February", "March", "April", "May", "June", 
-      "July", "August", "September", "October", "November", "December" };
+   public static final String[] MONTHS = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
 
    private long daysConfiguration;
-   
+
    private int startMinute;
    private int startHour;
    private int endMinute;
@@ -50,7 +47,7 @@ public class TimeFrame
    private String daysOfMonth;
    private boolean[] daysOfWeek;
    private boolean[] months;
-   
+
    /**
     * Default constructor
     */
@@ -62,12 +59,12 @@ public class TimeFrame
       endHour = 59;
       daysOfMonth = new String("1-31");
       daysOfWeek = new boolean[7];
-      months = new boolean[12];    
+      months = new boolean[12];
       daysConfiguration = 0;
    }
-   
+
    /**
-    * Constructor 
+    * Constructor
     * 
     * @param time time form server
     * @param date date from server
@@ -75,20 +72,20 @@ public class TimeFrame
    public TimeFrame(int time, long date)
    {
       daysConfiguration = date;
-      
+
       startHour = (time / 1000000);
       startMinute = (time / 10000) % 100;
-      endHour = (time % 10000) / 100;     
+      endHour = (time % 10000) / 100;
       endMinute = time % 100;
-      
+
       StringBuilder days = new StringBuilder();
       int state = 0;
       if ((date & 1) == 1)
       {
-         days.append("L");         
+         days.append("L");
       }
       date >>= 1;
-      for (int i = 0; i < 31; i++)
+      for(int i = 0; i < 31; i++)
       {
          switch(state)
          {
@@ -105,12 +102,12 @@ public class TimeFrame
                if ((date & 1) == 1 && (date & 2) == 2)
                {
                   state = 2;
-                  days.append("-");                  
+                  days.append("-");
                }
                else if ((date & 1) == 1)
                {
                   days.append(", ");
-                  days.append(i + 1);                  
+                  days.append(i + 1);
                }
                else
                {
@@ -121,30 +118,30 @@ public class TimeFrame
                if ((date & 1) == 1 && ((date & 2) == 0 || i == 30))
                {
                   state = 0;
-                  days.append(i + 1);                   
+                  days.append(i + 1);
                }
                break;
          }
-         
+
          date >>= 1;
-      } 
+      }
       daysOfMonth = days.toString();
-      
+
       daysOfWeek = new boolean[7];
-      for (int i = 0; i < 7; i++)
+      for(int i = 0; i < 7; i++)
       {
          daysOfWeek[i] = ((date & 1) == 1);
          date >>= 1;
       }
-      
+
       months = new boolean[12];
-      for (int i = 0; i < 12; i++)
+      for(int i = 0; i < 12; i++)
       {
          months[i] = ((date & 1) == 1);
          date >>= 1;
       }
-   }   
-   
+   }
+
    /**
     * Copy constructor
     * 
@@ -165,7 +162,7 @@ public class TimeFrame
    /**
     * Format time frame to human readable
     * 
-    * @param dfTime time format 
+    * @param dfTime time format
     * @param locale loacale to use
     * 
     * @return formatted and translated time frame string
@@ -174,41 +171,40 @@ public class TimeFrame
    {
       if (isNever())
          return ClientLocalizationHelper.getText("TimeFrame_Never", locale);
-   
-      StringBuilder builder = new StringBuilder();   
-      
+
+      StringBuilder builder = new StringBuilder();
+
       if (isAnyTime())
       {
-         builder.append(ClientLocalizationHelper.getText("TimeFrame_AnyTime", locale));         
+         builder.append(ClientLocalizationHelper.getText("TimeFrame_AnyTime", locale));
       }
       else
       {
          Calendar from = Calendar.getInstance();
          from.set(Calendar.MINUTE, getStartMinute());
-         from.set(Calendar.HOUR_OF_DAY, getStartHour());   
-         from.set(Calendar.SECOND, 0);    
+         from.set(Calendar.HOUR_OF_DAY, getStartHour());
+         from.set(Calendar.SECOND, 0);
          Calendar to = Calendar.getInstance();
          to.set(Calendar.MINUTE, getEndMinute());
-         to.set(Calendar.HOUR_OF_DAY, getEndHour()); 
-         to.set(Calendar.SECOND, 0);    
+         to.set(Calendar.HOUR_OF_DAY, getEndHour());
+         to.set(Calendar.SECOND, 0);
          builder.append(String.format(ClientLocalizationHelper.getText("TimeFrame_TimeFormat", locale), dfTime.format(from.getTime()), dfTime.format(to.getTime())));
       }
-      
+
       if (isAnyDay())
       {
-         builder.append(ClientLocalizationHelper.getText("TimeFrame_AnyDay", locale));   
+         builder.append(ClientLocalizationHelper.getText("TimeFrame_AnyDay", locale));
       }
       else
       {
-         builder.append(String.format(ClientLocalizationHelper.getText("TimeFrame_DayFormat", locale), getDaysOfMonth(), 
-               buildIntervals(daysOfWeek, DAYS_OF_THE_WEEK, locale), 
+         builder.append(String.format(ClientLocalizationHelper.getText("TimeFrame_DayFormat", locale), getDaysOfMonth(), buildIntervals(daysOfWeek, DAYS_OF_THE_WEEK, locale),
                buildIntervals(months, MONTHS, locale)));
       }
-      return builder.toString();     
+      return builder.toString();
    }
-   
+
    /**
-    * Build interval text 
+    * Build interval text
     * 
     * @param bits array with selected items
     * @param options array with each item name
@@ -220,7 +216,7 @@ public class TimeFrame
    {
       StringBuilder text = new StringBuilder();
       int state = 0;
-      for (int i = 0; i < bits.length; i++)
+      for(int i = 0; i < bits.length; i++)
       {
          switch(state)
          {
@@ -237,12 +233,12 @@ public class TimeFrame
                if (bits[i] && (i + 1 != bits.length) && bits[i + 1])
                {
                   state = 2;
-                  text.append("-");                  
+                  text.append("-");
                }
                else if (bits[i])
                {
                   text.append(", ");
-                  text.append(ClientLocalizationHelper.getText(options[i], locale));                  
+                  text.append(ClientLocalizationHelper.getText(options[i], locale));
                }
                else
                {
@@ -253,13 +249,13 @@ public class TimeFrame
                if (bits[i] && ((i + 1 == bits.length) || !bits[i + 1]))
                {
                   state = 0;
-                  text.append(ClientLocalizationHelper.getText(options[i], locale));                   
+                  text.append(ClientLocalizationHelper.getText(options[i], locale));
                }
                break;
          }
-      } 
+      }
       return text.toString();
-      
+
    }
 
    /**
@@ -270,9 +266,9 @@ public class TimeFrame
     */
    public void fillMessage(NXCPMessage msg, long baseId)
    {
-      int time = startHour *1000000 + startMinute * 10000 + endHour * 100 + endMinute; //BCD format
-      msg.setFieldInt32(baseId++, time);      
-      msg.setFieldInt64(baseId++, daysConfiguration);      
+      int time = startHour * 1000000 + startMinute * 10000 + endHour * 100 + endMinute; // BCD format
+      msg.setFieldInt32(baseId++, time);
+      msg.setFieldInt64(baseId++, daysConfiguration);
    }
 
    /**
@@ -338,9 +334,9 @@ public class TimeFrame
    {
       return daysConfiguration;
    }
-   
+
    /**
-    * Update time frame with new data 
+    * Update time frame with new data
     * 
     * @param startHour start hour
     * @param startMinute start minute
@@ -353,28 +349,27 @@ public class TimeFrame
     * @throws TimeFrameFormatException exception in case of parsing error
     */
    public void update(int startHour, int startMinute, int endHour, int endMinute, boolean[] daysOfWeek, String daysOfMonth, boolean[] months) throws TimeFrameFormatException
-   {    
-      int startTime = startHour *100 + startMinute; //BCD format
-      int endTime = endHour * 100 + endMinute; //BCD format
-      if (startHour < 0 || startHour > 23 || endHour < 0 || endHour > 23 ||
-            startMinute < 0 || startMinute > 59  || endMinute < 0 || endMinute > 59)
+   {
+      int startTime = startHour * 100 + startMinute; // BCD format
+      int endTime = endHour * 100 + endMinute; // BCD format
+      if (startHour < 0 || startHour > 23 || endHour < 0 || endHour > 23 || startMinute < 0 || startMinute > 59 || endMinute < 0 || endMinute > 59)
       {
          throw new TimeFrameFormatException(TimeFrameFormatException.TIME_VALIDATION_FAILURE);
       }
       if (startTime > endTime)
       {
          throw new TimeFrameFormatException(TimeFrameFormatException.TIME_INCORRECT_ORDER);
-      } 
-      
+      }
+
       long date = 0;
-      for (int i = 11; i >= 0; i--)
+      for(int i = 11; i >= 0; i--)
       {
          if (months[i])
             date++;
          date <<= 1;
-      }      
+      }
 
-      for (int i = 6; i >= 0; i--)
+      for(int i = 6; i >= 0; i--)
       {
          if (daysOfWeek[i])
             date++;
@@ -389,18 +384,18 @@ public class TimeFrame
       else
       {
          String[] entries = daysOfMonth.split(",");
-         for (String entry : entries)
+         for(String entry : entries)
          {
             if (entry.contains("-"))
             {
-               String ranges[]  = entry.split("-");
+               String ranges[] = entry.split("-");
                try
                {
                   int start = Integer.parseInt(ranges[0].trim());
                   int end = Integer.parseInt(ranges[1].trim());
                   if (start >= 1 && end <= 31)
                   {
-                     while (start <= end)
+                     while(start <= end)
                      {
                         date |= 1L << start;
                         start++;
@@ -411,7 +406,7 @@ public class TimeFrame
                      throw new TimeFrameFormatException(TimeFrameFormatException.DAY_OUT_OF_RANGE);
                   }
                }
-               catch (Exception e)
+               catch(Exception e)
                {
                   throw new TimeFrameFormatException(TimeFrameFormatException.DAY_NOT_A_NUMBER);
                }
@@ -427,7 +422,7 @@ public class TimeFrame
                {
                   int num = Integer.parseInt(entry.trim());
                   if (num >= 1 && num <= 31)
-                  {                     
+                  {
                      date |= 1 << num;
                   }
                   else
@@ -435,12 +430,12 @@ public class TimeFrame
                      throw new TimeFrameFormatException(TimeFrameFormatException.DAY_OUT_OF_RANGE);
                   }
                }
-               catch (Exception e)
+               catch(Exception e)
                {
                   throw new TimeFrameFormatException(TimeFrameFormatException.DAY_NOT_A_NUMBER);
                }
             }
-         }         
+         }
       }
       this.startHour = startHour;
       this.startMinute = startMinute;
@@ -460,7 +455,7 @@ public class TimeFrame
    public boolean isAnyDay()
    {
       return daysConfiguration == 0x7FFFFFFFFFFFFL || daysConfiguration == 0x7FFFFFFFFFFFEL;
-   }   
+   }
 
    /**
     * Check if any time filter is selected
@@ -470,15 +465,15 @@ public class TimeFrame
    public boolean isAnyTime()
    {
       return startHour == 0 && startMinute == 0 && endHour == 23 && endMinute == 59;
-   } 
+   }
+
    /**
-    * Check if this schedule will never be executed 
+    * Check if this schedule will never be executed
     * 
     * @return true if this filter is equal to never execute
     */
    public boolean isNever()
    {
-      return (daysConfiguration & 0xFFFFFFFFL) == 0 || (daysConfiguration & 0x7F00000000L) == 0
-            || (daysConfiguration & 0x7FF8000000000L) == 0;      
+      return (daysConfiguration & 0xFFFFFFFFL) == 0 || (daysConfiguration & 0x7F00000000L) == 0 || (daysConfiguration & 0x7FF8000000000L) == 0;
    }
 }
