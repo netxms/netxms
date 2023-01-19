@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -159,10 +159,10 @@ static void ProcessingThread(SOCKET sock)
          break;
       }
 
-      uint32_t rcc;
-      int32_t executionResult = 0;  // For script execution
+      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
       if (request->getCode() == CMD_ADM_REQUEST)
       {
+         uint32_t rcc;
          if (isAuthenticated || !requireAuthentication)
          {
             if (request->isFieldExist(VID_SCRIPT))
@@ -171,7 +171,9 @@ static void ProcessingThread(SOCKET sock)
                request->getFieldAsString(VID_SCRIPT, script, 256);
 
                StringList args(*request, VID_ACTION_ARG_BASE, VID_NUM_ARGS);
+               int executionResult = 0;
                rcc = ExecuteServerScript(script, args, &console, &executionResult);
+               response.setField(VID_EXECUTION_RESULT, executionResult);
             }
             else
             {
@@ -197,6 +199,7 @@ static void ProcessingThread(SOCKET sock)
          {
             rcc = RCC_ACCESS_DENIED;
          }
+         response.setField(VID_RCC, rcc);
       }
       else if (request->getCode() == CMD_LOGIN)
       {
@@ -207,7 +210,7 @@ static void ProcessingThread(SOCKET sock)
          uint32_t userId, graceLogins;
          uint64_t systemRights;
          bool changePassword, intruderLockout, closeOtherSessions;
-         rcc = AuthenticateUser(loginName, password, 0, nullptr, nullptr, &userId, &systemRights, &changePassword, &intruderLockout, &closeOtherSessions, false, &graceLogins);
+         uint32_t rcc = AuthenticateUser(loginName, password, 0, nullptr, nullptr, &userId, &systemRights, &changePassword, &intruderLockout, &closeOtherSessions, false, &graceLogins);
          if (rcc == RCC_SUCCESS)
          {
             if (systemRights & SYSTEM_ACCESS_SERVER_CONSOLE)
@@ -215,22 +218,25 @@ static void ProcessingThread(SOCKET sock)
             else
                rcc = RCC_ACCESS_DENIED;
          }
+         response.setField(VID_RCC, rcc);
       }
       else if (request->getCode() == CMD_SET_DB_PASSWORD)
       {
          request->getFieldAsString(VID_PASSWORD, g_szDbPassword, MAX_PASSWORD);
          DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
          g_dbPasswordReady.set();
-         rcc = RCC_SUCCESS;
+         response.setField(VID_RCC, RCC_SUCCESS);
+      }
+      else if (request->getCode() == CMD_GET_SERVER_INFO)
+      {
+         response.setField(VID_AUTH_TYPE, requireAuthentication);
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
       else
       {
-         rcc = RCC_NOT_IMPLEMENTED;
+         response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
       }
 
-      NXCPMessage response(CMD_REQUEST_COMPLETED, request->getId());
-      response.setField(VID_RCC, rcc);
-      response.setField(VID_EXECUTION_RESULT, executionResult);
       NXCP_MESSAGE *rawMsgOut = response.serialize();
 		SendEx(sock, rawMsgOut, ntohl(rawMsgOut->size), 0, console.getMutex());
       MemFree(rawMsgOut);

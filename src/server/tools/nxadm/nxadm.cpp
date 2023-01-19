@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Local administration tool
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,12 +26,6 @@
 #include <netxms_getopt.h>
 #include <netxms-version.h>
 
-#if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
-#include <readline/readline.h>
-#include <readline/history.h>
-#define USE_READLINE 1
-#endif
-
 NETXMS_EXECUTABLE_HEADER(nxadm)
 
 /**
@@ -40,7 +34,7 @@ NETXMS_EXECUTABLE_HEADER(nxadm)
 static void Help()
 {
    _tprintf(_T("NetXMS Server Administration Tool  Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2004-2022 Raden Solutions\n\n")
+            _T("Copyright (c) 2004-2023 Raden Solutions\n\n")
             _T("Usage: nxadm [-u <login>] [-P|-p <password>] -c <command>\n")
             _T("       nxadm [-u <login>] [-P|-p <password>] -i\n")
             _T("       nxadm [-u <login>] [-P|-p <password>] [-r] -s <script>\n")
@@ -63,6 +57,23 @@ static void Help()
 }
 
 /**
+ * Get server error text
+ */
+static const TCHAR *GetServerErrorText(uint32_t rcc)
+{
+   switch(rcc)
+   {
+      case RCC_SUCCESS:
+         return _T("Success");
+      case RCC_ACCESS_DENIED:
+         return _T("Access denied");
+      case RCC_NOT_IMPLEMENTED:
+         return _T("Command not implemented");
+   }
+   return _T("Internal error");
+}
+
+/**
  * Send database password
  */
 static bool SendPassword(const TCHAR *password)
@@ -77,7 +88,7 @@ static bool SendPassword(const TCHAR *password)
    {
       uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
       if (rcc != 0)
-         _tprintf(_T("ERROR: server error %u\n"), rcc);
+         _tprintf(_T("ERROR: server error %u (%s)\n"), rcc, GetServerErrorText(rcc));
       delete response;
       success = (rcc == 0);
    }
@@ -110,7 +121,7 @@ static bool Login(const TCHAR *login, const TCHAR *password)
    delete response;
    if (rcc != RCC_SUCCESS)
    {
-      _tprintf(_T("Authentication failed (server error %u)\n"), rcc);
+      _tprintf(_T("Authentication failed (server error %u: %s)\n"), rcc, GetServerErrorText(rcc));
       return false;
    }
    return true;
@@ -157,7 +168,7 @@ static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *p
       {
          uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc != RCC_SUCCESS)
-            _tprintf(_T("Server error %u\n"), rcc);
+            _tprintf(_T("Server error %u (%s)\n"), rcc, GetServerErrorText(rcc));
          delete response;
          break;
       }
@@ -214,7 +225,7 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
          }
          else
          {
-            _tprintf(_T("Server error %d\n"), rcc);
+            _tprintf(_T("Server error %u (%s)\n"), rcc, GetServerErrorText(rcc));
          }
          delete response;
          break;
@@ -230,72 +241,73 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
  */
 static void Shell(const TCHAR *login, const TCHAR *password)
 {
+   NXCPMessage msg(CMD_GET_SERVER_INFO, g_requestId++);
+   SendMsg(msg);
+   NXCPMessage *response = RecvMsg();
+   if (response == nullptr)
+   {
+      _tprintf(_T("Connection closed\n"));
+      return;
+   }
+
+   bool authenticationRequired = response->getFieldAsBoolean(VID_AUTH_TYPE);
+   delete response;
+
+   TCHAR loginBuffer[256], passwordBuffer[MAX_PASSWORD];
+   if (authenticationRequired && (login == nullptr))
+   {
+      _tprintf(_T("Server requires authentication. Please provide login and password.\n\nLogin: "));
+      fflush(stdout);
+
+      if (_fgetts(loginBuffer, 255, stdin) == nullptr)
+         return;   // Error reading stdin
+
+      TCHAR *nl = _tcschr(loginBuffer, '\n');
+      if (nl != nullptr)
+         *nl = 0;
+
+      if (!ReadPassword(_T("Password: "), passwordBuffer, MAX_PASSWORD))
+      {
+         _tprintf(_T("Cannot read password from terminal\n"));
+         return;
+      }
+
+      login = loginBuffer;
+      password = passwordBuffer;
+   }
+
    if (login != nullptr)
    {
       if (!Login(login, password))
          return;
    }
 
-   char *ptr;
-
    _tprintf(_T("\nNetXMS Server Remote Console V") NETXMS_VERSION_STRING _T(" Ready\n")
             _T("Enter \"help\" for command list\n\n"));
 
-#if USE_READLINE
-   // Initialize readline library if we use it
-   rl_bind_key('\t', RL_INSERT_CAST rl_insert);
-#endif
-      
    while(1)
    {
-#if USE_READLINE
-      ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
-#else
       WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
       fflush(stdout);
-      char szCommand[256];
-      if (fgets(szCommand, 255, stdin) == nullptr)
-         break;   // Error reading stdin
-      ptr = strchr(szCommand, '\n');
-      if (ptr != nullptr)
-         *ptr = 0;
-      ptr = szCommand;
-#endif
 
-      if (ptr != nullptr)
+      TCHAR command[256];
+      if (_fgetts(command, 255, stdin) == nullptr)
+         break;   // Error reading stdin
+
+      TCHAR *nl = _tcschr(command, '\n');
+      if (nl != nullptr)
+         *nl = 0;
+      Trim(command);
+      if (command[0] != 0)
       {
-#ifdef UNICODE
-         WCHAR wcCommand[256];
-         MultiByteToWideCharSysLocale(ptr, wcCommand, 255);
-         wcCommand[255] = 0;
-         TrimW(wcCommand);
-         if (wcCommand[0] != 0)
-         {
-            if (ExecCommand(wcCommand, nullptr, nullptr))
-#else
-         TrimA(ptr);
-         if (*ptr != 0)
-         {
-            if (ExecCommand(ptr, nullptr, nullptr))
-#endif
-               break;
-#if USE_READLINE
-            add_history(ptr);
-#endif
-         }
-#if USE_READLINE
-         free(ptr);
-#endif
+         if (ExecCommand(command, nullptr, nullptr))
+            break;
       }
       else
       {
          _tprintf(_T("\n"));
       }
    }
-
-#if USE_READLINE
-   free(ptr);
-#endif
 }
 
 enum WorkMode
