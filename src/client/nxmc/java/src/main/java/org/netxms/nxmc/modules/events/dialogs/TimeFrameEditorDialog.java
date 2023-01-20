@@ -192,7 +192,7 @@ public class TimeFrameEditorDialog  extends Dialog
       });
       
       daysText = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
-      daysText.setLabel("Days of the month (e.g. 1-5, 8, 11-13)");
+      daysText.setLabel("Days of the month (e.g. 1-5, 8, 11-13, L)");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -271,6 +271,13 @@ public class TimeFrameEditorDialog  extends Dialog
          {
             monthsButton[i].setSelection(timeFrame.getMonths()[i]);
          }  
+      }
+      else
+      {
+         timePickerFrom.setHours(0);
+         timePickerFrom.setMinutes(0);
+         timePickerTo.setHours(23);
+         timePickerTo.setMinutes(59);
       }
       
       return dialogArea;

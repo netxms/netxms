@@ -2179,7 +2179,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("BusinessServiceState::DEGRADED", STATUS_MINOR);
       NXSL_ENV_CONSTANT("BusinessServiceState::FAILED", STATUS_CRITICAL);
 
-      // Business service types
+      // Business service check types
       NXSL_ENV_CONSTANT("BusinessServiceType::DCI", static_cast<int32_t>(BusinessServiceCheckType::DCI));
       NXSL_ENV_CONSTANT("BusinessServiceType::NONE", static_cast<int32_t>(BusinessServiceCheckType::NONE));
       NXSL_ENV_CONSTANT("BusinessServiceType::OBJECT", static_cast<int32_t>(BusinessServiceCheckType::OBJECT));

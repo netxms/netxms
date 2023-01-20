@@ -129,7 +129,7 @@ public class RuleTimeFrames extends PropertyPage
       rightButtons.setLayoutData(gd);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText("Add");
+      addButton.setText("Add...");
       addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)

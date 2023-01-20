@@ -80,10 +80,7 @@ public class TimeFrame
 
       StringBuilder days = new StringBuilder();
       int state = 0;
-      if ((date & 1) == 1)
-      {
-         days.append("L");
-      }
+      boolean isLastDay = (date & 1) == 1;
       date >>= 1;
       for(int i = 0; i < 31; i++)
       {
@@ -124,6 +121,12 @@ public class TimeFrame
          }
 
          date >>= 1;
+      }
+      if (isLastDay)
+      {
+         if (days.length() != 0)
+            days.append(", ");
+         days.append("L");
       }
       daysOfMonth = days.toString();
 
@@ -423,7 +426,7 @@ public class TimeFrame
                   int num = Integer.parseInt(entry.trim());
                   if (num >= 1 && num <= 31)
                   {
-                     date |= 1 << num;
+                     date |= 1L << num;
                   }
                   else
                   {

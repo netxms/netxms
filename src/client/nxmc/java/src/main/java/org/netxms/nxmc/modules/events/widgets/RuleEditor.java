@@ -585,7 +585,7 @@ public class RuleEditor extends Composite
       /* time filter */
       if (rule.getTimeFrames().size() != 0)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrame#10"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("TimeFrame"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
 
          final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();    
