@@ -239,9 +239,7 @@ public abstract class View implements MessageAreaHolder
          clientArea.setLayoutData(fd);
 
          filterEnabled = PreferenceStore.getInstance().getAsBoolean(getBaseId() + ".showFilter", true);
-         if (filterEnabled)
-            filterText.setFocus();
-         else
+         if (!filterEnabled)
             enableFilter(false);
       }
       else
@@ -329,16 +327,6 @@ public abstract class View implements MessageAreaHolder
    public void activate()
    {
       viewArea.moveAbove(null);
-
-      // sometimes recursive activation can happen when tab selection changed - it's OK here
-      try
-      {
-         setFocus();
-      }
-      catch(RuntimeException e)
-      {
-      }
-
       for(ViewStateListener listener : stateListeners)
          listener.viewActivated(this);
    }
@@ -358,9 +346,17 @@ public abstract class View implements MessageAreaHolder
    public void setFocus()
    {
       if (hasFilter && filterEnabled)
+      {
          filterText.setFocus();
+      }
+      else if ((viewer != null) && (viewer instanceof StructuredViewer))
+      {
+         ((StructuredViewer)viewer).getControl().setFocus();
+      }
       else
+      {
          viewArea.setFocus();
+      }
    }
 
    /**

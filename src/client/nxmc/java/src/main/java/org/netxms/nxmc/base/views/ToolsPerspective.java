@@ -174,7 +174,7 @@ public class ToolsPerspective extends Perspective
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
       ToolDescriptor currentElement = (ToolDescriptor)selection.getFirstElement();
-      
+
       if (previousSelectedElement == currentElement)
          return; //do nothing for reselection
 

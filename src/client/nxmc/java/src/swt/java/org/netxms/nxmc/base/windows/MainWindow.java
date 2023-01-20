@@ -555,7 +555,7 @@ public class MainWindow extends Window implements MessageAreaHolder
             leftPinArea = pinViewToArea(view, leftPinArea, horizontalSplitArea, true);
             break;
          case PINBOARD:
-            pinboardPerspective.addMainView(view, false, true);
+            pinboardPerspective.addMainView(view, true, true);
             break;
          case RIGHT:
             rightPinArea = pinViewToArea(view, rightPinArea, horizontalSplitArea, false);
@@ -602,7 +602,7 @@ public class MainWindow extends Window implements MessageAreaHolder
          splitter.setWeights(weights);
          windowContent.layout(true, true);
       }
-      pinArea.addView(view, false, true);
+      pinArea.addView(view, true, true);
       return pinArea;
    }
 

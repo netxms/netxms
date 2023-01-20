@@ -102,7 +102,10 @@ public class ViewFolder extends ViewContainer
             CTabItem tabItem = tabFolder.getSelection();
             View view = (tabItem != null) ? (View)tabItem.getData("view") : null;
             if (view != null)
+            {
                activateView(view, tabItem);
+               view.setFocus();
+            }
             fireSelectionListeners(view);
          }
       });
