@@ -198,9 +198,9 @@
       </page>
       <page
             category="org.netxms.ui.eclipse.epp.propertypages.RuleCondition#0"
-            class="org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrames"
-            id="org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrame#10"
-            name="Time Frame">
+            class="org.netxms.ui.eclipse.epp.propertypages.RuleTimeFilter"
+            id="org.netxms.ui.eclipse.epp.propertypages.RuleTimeFilter#15"
+            name="Time Filter">
          <enabledWhen>
             <instanceof
                   value="org.netxms.ui.eclipse.epp.widgets.RuleEditor">

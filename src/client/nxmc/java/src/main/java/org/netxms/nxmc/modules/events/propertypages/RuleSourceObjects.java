@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 	private Button addButtonExclusion;
    private Button deleteButtonExclusion;
 	private Button checkInverted;
-	
+
    /**
     * Create property page.
     *
@@ -95,10 +95,12 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       dialogArea.setLayout(layout);
 
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText(i18n.tr("Inverted rule (match objects NOT in the list below)"));
+      checkInverted.setText(i18n.tr("Inverse rule (match objects NOT listed below)"));
       checkInverted.setSelection(rule.isSourceInverted());
-      
+
       /* source */
+      new Label(dialogArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       sourceViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       sourceViewer.setContentProvider(new ArrayContentProvider());
       sourceViewer.setLabelProvider(new BaseObjectLabelProvider());
@@ -162,10 +164,12 @@ public class RuleSourceObjects extends RuleBasePropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButtonSource.setLayoutData(rd);
 
+      /* exclusions */
+      new Label(dialogArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Exclusions:");   
       
-      /* exclude */
       excludeViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       excludeViewer.setContentProvider(new ArrayContentProvider());
       excludeViewer.setLabelProvider(new BaseObjectLabelProvider());
@@ -260,9 +264,9 @@ public class RuleSourceObjects extends RuleBasePropertyPage
 			while(it.hasNext())
 			{
 				AbstractObject o = it.next();
-				objects.remove(o.getObjectId());
+	         objects.remove(o.getObjectId());
 			}
-	      sourceViewer.setInput(objects.values().toArray());
+         sourceViewer.setInput(objects.values().toArray());
 		}
 	}
 

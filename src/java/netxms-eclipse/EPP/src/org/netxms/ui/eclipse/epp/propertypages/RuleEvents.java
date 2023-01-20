@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -64,28 +64,28 @@ public class RuleEvents extends PropertyPage
 	private Button addButton;
 	private Button deleteButton;
 	private Button checkInverted;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		session = (NXCSession)ConsoleSharedData.getSession();
-		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
+      session = ConsoleSharedData.getSession();
+      editor = getElement().getAdapter(RuleEditor.class);
 		rule = editor.getRule();
-		
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       checkInverted = new Button(dialogArea, SWT.CHECK);
       checkInverted.setText(Messages.get().RuleEvents_InvertedRule);
       checkInverted.setSelection(rule.isEventsInverted());
-      
+
       final String[] columnNames = { Messages.get().RuleEvents_Event };
       final int[] columnWidths = { 300 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -104,7 +104,7 @@ public class RuleEvents extends PropertyPage
       for(EventTemplate o : session.findMultipleEventTemplates(rule.getEvents()))
       	events.put(o.getCode(), o);
       viewer.setInput(events.values().toArray());
-      
+
       GridData gridData = new GridData();
       gridData.verticalAlignment = GridData.FILL;
       gridData.grabExcessVerticalSpace = true;
@@ -112,7 +112,7 @@ public class RuleEvents extends PropertyPage
       gridData.grabExcessHorizontalSpace = true;
       gridData.heightHint = 0;
       viewer.getControl().setLayoutData(gridData);
-      
+
       Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
@@ -126,13 +126,7 @@ public class RuleEvents extends PropertyPage
 
       addButton = new Button(buttons, SWT.PUSH);
       addButton.setText(Messages.get().RuleEvents_Add);
-      addButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -145,13 +139,7 @@ public class RuleEvents extends PropertyPage
 		
       deleteButton = new Button(buttons, SWT.PUSH);
       deleteButton.setText(Messages.get().RuleEvents_Delete);
-      deleteButton.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-
+      deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -214,18 +202,18 @@ public class RuleEvents extends PropertyPage
 		editor.setModified(true);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performApply()
+    */
 	@Override
 	protected void performApply()
 	{
 		doApply();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{

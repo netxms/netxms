@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ import org.netxms.nxmc.modules.events.propertypages.RulePersistentStorage;
 import org.netxms.nxmc.modules.events.propertypages.RuleServerActions;
 import org.netxms.nxmc.modules.events.propertypages.RuleSeverityFilter;
 import org.netxms.nxmc.modules.events.propertypages.RuleSourceObjects;
-import org.netxms.nxmc.modules.events.propertypages.RuleTimeFrames;
+import org.netxms.nxmc.modules.events.propertypages.RuleTimeFilter;
 import org.netxms.nxmc.modules.events.propertypages.RuleTimerCancellations;
 import org.netxms.nxmc.modules.events.views.EventProcessingPolicyEditor;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
@@ -581,11 +581,11 @@ public class RuleEditor extends Composite
          }
          needAnd = true;
       }
-      
+
       /* time filter */
       if (rule.getTimeFrames().size() != 0)
       {
-         final MouseListener listener = createMouseListener("TimeFrame"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("TimeFilter");
          addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
 
          final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();    
@@ -817,7 +817,7 @@ public class RuleEditor extends Composite
          }
          
       }
-      
+
       /* custom attributes */
       if (rule.getCustomAttributeStorageSet().size() != 0 || rule.getCustomAttributeStorageDelete().size() != 0)
       {
@@ -891,7 +891,6 @@ public class RuleEditor extends Composite
             }
          }
       }
-      
 
       /* script */
       if ((rule.getActionScript() != null) && !rule.getActionScript().isEmpty())
@@ -1019,8 +1018,8 @@ public class RuleEditor extends Composite
       PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("Condition", new RuleCondition(this)));
       pm.addTo("Condition", new PreferenceNode("Events", new RuleEvents(this)));
-      pm.addTo("Condition", new PreferenceNode("TimeFrame", new RuleTimeFrames(this)));
       pm.addTo("Condition", new PreferenceNode("SourceObjects", new RuleSourceObjects(this)));
+      pm.addTo("Condition", new PreferenceNode("TimeFilter", new RuleTimeFilter(this)));
       pm.addTo("Condition", new PreferenceNode("SeverityFilter", new RuleSeverityFilter(this)));
       pm.addTo("Condition", new PreferenceNode("FilteringScript", new RuleFilteringScript(this)));
       pm.addToRoot(new PreferenceNode("Action", new RuleAction(this)));

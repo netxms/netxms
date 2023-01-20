@@ -90,7 +90,7 @@ public class RuleEvents extends RuleBasePropertyPage
       dialogArea.setLayout(layout);
 
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText(i18n.tr("Inverted rule (match events NOT in the list below)"));
+      checkInverted.setText(i18n.tr("Invertse rule (match events NOT listed below)"));
       checkInverted.setSelection(rule.isEventsInverted());
 
       final String[] columnNames = { i18n.tr("Events") };

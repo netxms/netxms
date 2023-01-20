@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -573,11 +573,11 @@ public class RuleEditor extends Composite
          }
          needAnd = true;
       }
-      
+
       /* time filter */
       if (rule.getTimeFrames().size() != 0)
       {
-         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleTimeFrame#10"); //$NON-NLS-1$
+         final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleTimeFilter#15"); //$NON-NLS-1$
          addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
 
          final DateFormat dfTime = RegionalSettings.getShortTimeFormat();    
@@ -628,7 +628,7 @@ public class RuleEditor extends Composite
          scriptEditor.setLayoutData(gd);
          scriptEditor.setText(rule.getFilterScript());
          scriptEditor.getTextWidget().setEditable(false);
-         scriptEditor.getTextWidget().addMouseListener(listener);  
+         scriptEditor.getTextWidget().addMouseListener(listener);
       }
 
       return clientArea;

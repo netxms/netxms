@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.events.propertypages;
+package org.netxms.ui.eclipse.epp.propertypages;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,50 +35,43 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.TimeFrame;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.events.dialogs.TimeFrameEditorDialog;
-import org.netxms.nxmc.modules.events.propertypages.helpers.TimeFrameLabelProvider;
-import org.netxms.nxmc.modules.events.widgets.RuleEditor;
-import org.netxms.nxmc.tools.ElementLabelComparator;
-import org.netxms.nxmc.tools.WidgetHelper;
-import org.xnap.commons.i18n.I18n;
+import org.netxms.ui.eclipse.epp.dialogs.TimeFrameEditorDialog;
+import org.netxms.ui.eclipse.epp.propertypages.helpers.TimeFrameLabelProvider;
+import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
+import org.netxms.ui.eclipse.tools.ElementLabelComparator;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * "Time" property page for EPP rule
+ * "Time Filter" property page for EPP rule
  */
-public class RuleTimeFrames extends RuleBasePropertyPage
+public class RuleTimeFilter extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RuleTimeFrames.class);
-   
+   private RuleEditor editor;
+   private EventProcessingPolicyRule rule;
    private List<TimeFrame> frames = new ArrayList<TimeFrame>();
-	private TableViewer viewer;
-	private Button addButton;
+   private TableViewer viewer;
+   private Button addButton;
    private Button editButton;
-	private Button deleteButton;
-	private Button checkInverted;
+   private Button deleteButton;
+   private Button checkInverted;
 
    /**
-    * Create property page.
-    *
-    * @param editor rule editor
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
-   public RuleTimeFrames(RuleEditor editor)
-   {
-      super(editor, i18n.tr("Time Frames"));
-   }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
 	@Override
 	protected Control createContents(Composite parent)
-	{		
+	{
+		editor = (RuleEditor)getElement().getAdapter(RuleEditor.class);
+		rule = editor.getRule();
+
 		Composite dialogArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -86,11 +79,11 @@ public class RuleTimeFrames extends RuleBasePropertyPage
       layout.marginHeight = 0;
       layout.numColumns = 1;
       dialogArea.setLayout(layout);
-      
+
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText("Inverse rule (the marked timeframes are NOT listed below)");
+      checkInverted.setText("Inverse rule (match time that is NOT within time frames listed below)");
       checkInverted.setSelection(rule.isTimeFramesInverted());
-      
+
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new TimeFrameLabelProvider());
@@ -117,7 +110,6 @@ public class RuleTimeFrames extends RuleBasePropertyPage
       gd.horizontalSpan = 1;
       viewer.getControl().setLayoutData(gd);      
       viewer.addDoubleClickListener(new IDoubleClickListener() {
-         
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
@@ -125,19 +117,19 @@ public class RuleTimeFrames extends RuleBasePropertyPage
          }
       });
 
-      Composite rightButtons = new Composite(dialogArea, SWT.NONE);
+      Composite buttons = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
       buttonLayout.marginWidth = 0;
       buttonLayout.marginRight = 0;
-      rightButtons.setLayout(buttonLayout);
+      buttons.setLayout(buttonLayout);
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
-      rightButtons.setLayoutData(gd);
+      buttons.setLayoutData(gd);
 
-      addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText("Add...");
+      addButton = new Button(buttons, SWT.PUSH);
+      addButton.setText("&Add...");
       addButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -145,9 +137,12 @@ public class RuleTimeFrames extends RuleBasePropertyPage
             addFrame();
          }
       });
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      addButton.setLayoutData(rd);
 
-      editButton = new Button(rightButtons, SWT.PUSH);
-      editButton.setText("Edit");
+      editButton = new Button(buttons, SWT.PUSH);
+      editButton.setText("&Edit...");
       editButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -155,9 +150,12 @@ public class RuleTimeFrames extends RuleBasePropertyPage
             editFrame();
          }
       });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      editButton.setLayoutData(rd);
       
-      deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton = new Button(buttons, SWT.PUSH);
+      deleteButton.setText("&Delete");
       deleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -165,13 +163,16 @@ public class RuleTimeFrames extends RuleBasePropertyPage
             deleteFrame();
          }
       });
-		
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      deleteButton.setLayoutData(rd);
+
 		return dialogArea;
 	}
 
 	/**
-	 * Add new event
-	 */
+    * Add new time frame
+    */
 	private void addFrame()
 	{
 	   TimeFrameEditorDialog dlg = new TimeFrameEditorDialog(getShell(), null);
@@ -181,7 +182,7 @@ public class RuleTimeFrames extends RuleBasePropertyPage
 	      viewer.setInput(frames);
 		}
 	}
-   
+
    /**
     * Delete event from list
     */
@@ -191,7 +192,6 @@ public class RuleTimeFrames extends RuleBasePropertyPage
       if (selection.size() == 1)
       {
          TimeFrame element = (TimeFrame)selection.getFirstElement();
-
          TimeFrameEditorDialog dlg = new TimeFrameEditorDialog(getShell(), element);
          if (dlg.open() == Window.OK)
          {
@@ -199,13 +199,13 @@ public class RuleTimeFrames extends RuleBasePropertyPage
          }
       }
    }
-	
+
 	/**
 	 * Delete event from list
 	 */
 	private void deleteFrame()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      IStructuredSelection selection = viewer.getStructuredSelection();
 		Iterator<?> it = selection.iterator();
 		if (it.hasNext())
 		{
@@ -219,10 +219,9 @@ public class RuleTimeFrames extends RuleBasePropertyPage
 	}
 
    /**
-    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
+    * Update rule object
     */
-   @Override
-   protected boolean applyChanges(final boolean isApply)
+   private void doApply()
    {
       int flags = rule.getFlags();
       if (checkInverted.getSelection() && !frames.isEmpty()) // ignore "negate" flag if frames set is empty
@@ -232,6 +231,24 @@ public class RuleTimeFrames extends RuleBasePropertyPage
       rule.setFlags(flags);
       rule.setTimeFrames(frames);
 		editor.setModified(true);
-		return true;
+   }
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
+	 */
+	@Override
+	protected void performApply()
+	{
+		doApply();
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
+	 */
+	@Override
+	public boolean performOk()
+	{
+		doApply();
+		return super.performOk();
 	}
 }

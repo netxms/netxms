@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ public class RuleSourceObjects extends PropertyPage
 	private RuleEditor editor;
 	private EventProcessingPolicyRule rule;
 	private TableViewer sourceViewer;
-   private TableViewer excludeViewer;
+	private TableViewer excludeViewer;
 	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
    private Map<Long, AbstractObject> excludedObjects = new HashMap<Long, AbstractObject>();
 	private Button addButtonSource;
@@ -90,8 +90,10 @@ public class RuleSourceObjects extends PropertyPage
       checkInverted = new Button(dialogArea, SWT.CHECK);
       checkInverted.setText(Messages.get().RuleSourceObjects_InvertRule);
       checkInverted.setSelection(rule.isSourceInverted());
-      
+
       /* source */
+      new Label(dialogArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       sourceViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       sourceViewer.setContentProvider(new ArrayContentProvider());
       sourceViewer.setLabelProvider(new WorkbenchLabelProvider());
@@ -155,10 +157,12 @@ public class RuleSourceObjects extends PropertyPage
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButtonSource.setLayoutData(rd);
 
+      /* exclusions */
+      new Label(dialogArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       Label label = new Label(dialogArea, SWT.NONE);
       label.setText("Exclusions:");   
       
-      /* exclude */
       excludeViewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       excludeViewer.setContentProvider(new ArrayContentProvider());
       excludeViewer.setLabelProvider(new WorkbenchLabelProvider());
@@ -235,9 +239,7 @@ public class RuleSourceObjects extends PropertyPage
 		if (dlg.open() == Window.OK)
 		{
 			for(AbstractObject o : dlg.getSelectedObjects())
-			{ 
-		      objects.put(o.getObjectId(), o);
-			}
+				objects.put(o.getObjectId(), o);
 		}
       sourceViewer.setInput(objects.values().toArray());
 	}
@@ -249,7 +251,6 @@ public class RuleSourceObjects extends PropertyPage
 	private void deleteSourceObject()
 	{
 		IStructuredSelection selection = sourceViewer.getStructuredSelection();
-         
 		Iterator<AbstractObject> it = selection.iterator();
 		if (it.hasNext())
 		{
@@ -298,11 +299,11 @@ public class RuleSourceObjects extends PropertyPage
          excludeViewer.setInput(excludedObjects.values().toArray());
       }
    }
-	
-	/**
-	 * Update rule object
-	 */
-	private void doApply()
+
+   /**
+    * Update rule object
+    */
+   private void doApply()
 	{
 		int flags = rule.getFlags();
 		if (checkInverted.getSelection() && (!objects.isEmpty() || !excludedObjects.isEmpty())) // ignore "negate" flag if object set is empty
