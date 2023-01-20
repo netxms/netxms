@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,18 +40,19 @@ public class RadioInterfaceLabelProvider extends LabelProvider implements ITable
    {
       this.viewer = viewer;
    }
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -59,8 +60,7 @@ public class RadioInterfaceLabelProvider extends LabelProvider implements ITable
 		switch(columnIndex)
 		{
 			case RadioInterfaces.COLUMN_AP_MAC_ADDR:
-            String apVendor = session.getVendorByMac(rif.getAccessPoint().getMacAddress(), new ViewerElementUpdater(viewer, element));
-            return apVendor != null && !apVendor.isEmpty() ? String.format("%s (%s)",rif.getAccessPoint().getMacAddress().toString(), apVendor) : rif.getAccessPoint().getMacAddress().toString();
+            return rif.getAccessPoint().getMacAddress().toString();
 			case RadioInterfaces.COLUMN_AP_MODEL:
 				return rif.getAccessPoint().getModel();
 			case RadioInterfaces.COLUMN_AP_NAME:
@@ -74,8 +74,9 @@ public class RadioInterfaceLabelProvider extends LabelProvider implements ITable
 			case RadioInterfaces.COLUMN_INDEX:
 				return Integer.toString(rif.getIndex());
 			case RadioInterfaces.COLUMN_MAC_ADDR:
-            String vendor = session.getVendorByMac(rif.getMacAddress(), new ViewerElementUpdater(viewer, element));
-            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)",rif.getMacAddress().toString(), vendor) : rif.getMacAddress().toString();
+            return rif.getMacAddress().toString();
+         case RadioInterfaces.COLUMN_NIC_VENDOR:
+            return session.getVendorByMac(rif.getMacAddress(), new ViewerElementUpdater(viewer, element));
 			case RadioInterfaces.COLUMN_NAME:
 				return rif.getName();
 			case RadioInterfaces.COLUMN_TX_POWER_DBM:

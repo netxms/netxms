@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,6 +90,9 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesTab.COLUMN_NAME:
             result = NaturalOrderComparator.compare(iface1.getObjectName(), iface2.getObjectName());
 				break;
+         case InterfacesTab.COLUMN_NIC_VENDOR:
+            result = getVendor(iface1).compareTo(getVendor(iface2));
+            break;
          case InterfacesTab.COLUMN_OPER_STATE:
 				result = iface1.getOperState() - iface2.getOperState();
 				break;
@@ -116,6 +119,9 @@ public class InterfaceListComparator extends ViewerComparator
             break;
          case InterfacesTab.COLUMN_PEER_MAC_ADDRESS:
             result = getPeerMacAddress(iface1).compareTo(getPeerMacAddress(iface2));
+            break;
+         case InterfacesTab.COLUMN_PEER_NIC_VENDOR:
+            result = getPeerVendor(iface1).compareTo(getPeerVendor(iface2));
             break;
          case InterfacesTab.COLUMN_PEER_NODE:
             result = NaturalOrderComparator.compare(getPeerNodeName(iface1), getPeerNodeName(iface2));
@@ -170,7 +176,7 @@ public class InterfaceListComparator extends ViewerComparator
     */
    private InetAddress getPeerIpAddress(Interface iface)
    {
-      AbstractNode peer = (AbstractNode)session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
+      AbstractNode peer = session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
       if (peer == null)
          return null;
       if (!peer.getPrimaryIP().isValidUnicastAddress())
@@ -184,8 +190,21 @@ public class InterfaceListComparator extends ViewerComparator
     */
    private MacAddress getPeerMacAddress(Interface iface)
    {
-      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       return (peer != null) ? peer.getMacAddress() : ZERO_MAC_ADDRESS;
+   }
+
+   /**
+    * @param iface
+    * @return
+    */
+   private String getPeerVendor(Interface iface)
+   {
+      Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      if (peer == null)
+         return "";
+      String vendor = session.getVendorByMac(peer.getMacAddress(), null);
+      return (vendor != null) ? vendor : "";
    }
 
    /**
@@ -194,7 +213,7 @@ public class InterfaceListComparator extends ViewerComparator
     */
    private String getPeerProtocol(Interface iface)
    {
-      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       return (peer != null) ? iface.getPeerDiscoveryProtocol().toString() : "";
    }
 
@@ -204,7 +223,7 @@ public class InterfaceListComparator extends ViewerComparator
     */
    private String getPeerNodeName(Interface iface)
    {
-      AbstractNode peer = (AbstractNode)session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
+      AbstractNode peer = session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
       return (peer != null) ? peer.getObjectName() : "";
    }
 
@@ -214,7 +233,19 @@ public class InterfaceListComparator extends ViewerComparator
     */
    private String getPeerInterfaceName(Interface iface)
    {
-      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      Interface peer = session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       return (peer != null) ? peer.getObjectName() : "";
+   }
+
+   /**
+    * Get NIC vendor
+    *
+    * @param iface interface
+    * @return NIC vendor
+    */
+   private String getVendor(Interface iface)
+   {
+      String vendor = session.getVendorByMac(iface.getMacAddress(), null);
+      return (vendor != null) ? vendor : "";
    }
 }

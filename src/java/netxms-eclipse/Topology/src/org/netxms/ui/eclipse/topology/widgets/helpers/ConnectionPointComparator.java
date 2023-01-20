@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.base.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
@@ -33,13 +34,12 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Comparator for ConnectionPoint objects 
- *
  */
 public class ConnectionPointComparator extends ViewerComparator
 {
 	private ITableLabelProvider labelProvider;
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-	
+   private NXCSession session = ConsoleSharedData.getSession();
+
 	/**
 	 * @param labelProvider
 	 */
@@ -49,9 +49,9 @@ public class ConnectionPointComparator extends ViewerComparator
 		this.labelProvider = labelProvider;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -64,11 +64,19 @@ public class ConnectionPointComparator extends ViewerComparator
 				break;
 			case SearchResult.COLUMN_NODE:
 			case SearchResult.COLUMN_INTERFACE:
-			case SearchResult.COLUMN_MAC_ADDRESS:
+         case SearchResult.COLUMN_NIC_VENDOR:
 			case SearchResult.COLUMN_SWITCH:
 			case SearchResult.COLUMN_PORT:
 				result = labelProvider.getColumnText(e1, column).compareToIgnoreCase(labelProvider.getColumnText(e2, column));
 				break;
+         case SearchResult.COLUMN_MAC_ADDRESS:
+            MacAddress m1 = ((ConnectionPoint)e1).getLocalMacAddress();
+            MacAddress m2 = ((ConnectionPoint)e2).getLocalMacAddress();
+            if (m1 == null)
+               result = (m2 == null) ? 0 : -1;
+            else
+               result = m1.compareTo(m2);
+            break;
 			case SearchResult.COLUMN_IP_ADDRESS:
 				Interface iface1 = (Interface)session.findObjectById(((ConnectionPoint)e1).getLocalInterfaceId(), Interface.class);
 				Interface iface2 = (Interface)session.findObjectById(((ConnectionPoint)e2).getLocalInterfaceId(), Interface.class);

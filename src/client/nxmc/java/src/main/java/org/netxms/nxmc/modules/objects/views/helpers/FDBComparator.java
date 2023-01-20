@@ -52,6 +52,9 @@ public class FDBComparator extends ViewerComparator
          case SwitchForwardingDatabaseView.COLUMN_MAC_ADDRESS:
             result = fdb1.getAddress().compareTo(fdb2.getAddress());
             break;
+         case SwitchForwardingDatabaseView.COLUMN_VENDOR:
+            result = getVendor(fdb1).compareTo(getVendor(fdb2));
+            break;
          case SwitchForwardingDatabaseView.COLUMN_NODE:
             String n1 = (fdb1.getNodeId() != 0) ? session.getObjectName(fdb1.getNodeId()) : ""; //$NON-NLS-1$
             String n2 = (fdb2.getNodeId() != 0) ? session.getObjectName(fdb2.getNodeId()) : ""; //$NON-NLS-1$
@@ -71,5 +74,17 @@ public class FDBComparator extends ViewerComparator
             break;
       }
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+   }
+
+   /**
+    * Get NIC vendor
+    *
+    * @param ws FDB entry
+    * @return NIC vendor
+    */
+   private String getVendor(FdbEntry entry)
+   {
+      String vendor = session.getVendorByMac(entry.getAddress(), null);
+      return (vendor != null) ? vendor : "";
    }
 }

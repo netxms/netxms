@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,10 @@ package org.netxms.ui.eclipse.topology.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.base.MacAddress;
+import org.netxms.client.NXCSession;
 import org.netxms.client.topology.RadioInterface;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.views.RadioInterfaces;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -30,9 +33,11 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class RadioInterfaceComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   private NXCSession session = ConsoleSharedData.getSession();
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -66,6 +71,9 @@ public class RadioInterfaceComparator extends ViewerComparator
 			case RadioInterfaces.COLUMN_MAC_ADDR:
 				result = rif1.getMacAddress().compareTo(rif2.getMacAddress());
 				break;
+         case RadioInterfaces.COLUMN_NIC_VENDOR:
+            result = getVendorByMAC(rif1.getMacAddress()).compareToIgnoreCase(getVendorByMAC(rif2.getMacAddress()));
+            break;
 			case RadioInterfaces.COLUMN_NAME:
 				result = rif1.getName().compareToIgnoreCase(rif2.getName());
 				break;
@@ -81,4 +89,16 @@ public class RadioInterfaceComparator extends ViewerComparator
 		}
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
+
+   /**
+    * Get vendor by MAC address
+    *
+    * @param macAddr MAC address
+    * @return vendor name or empty string
+    */
+   private String getVendorByMAC(MacAddress macAddr)
+   {
+      String vendor = session.getVendorByMac(macAddr, null);
+      return vendor != null ? vendor : "";
+   }
 }

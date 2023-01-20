@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2022 RadenSolutions
+ * Copyright (C) 2016-2023 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,9 @@ public class InterfacesTabFilter extends NodeComponentTabFilter
             matchExpState(iface) ||
             matchStatus(iface) ||
             matchDot1xPaeState(iface) ||
-            matchDot1xBackendState(iface);
+            matchDot1xBackendState(iface) ||
+            matchVendor(iface) ||
+            matchPeerVendor(iface);
    }
 
    /**
@@ -331,13 +333,38 @@ public class InterfacesTabFilter extends NodeComponentTabFilter
 
    /**
     * @param interf
-    * @return
+    * @return true if matched
     */
    private boolean matchDot1xBackendState(Interface interf)
    {
       if (interf.getDot1xBackendStateAsText().toLowerCase().contains(filterString))
          return true;
       return false;
+   }
+
+   /**
+    * @param iface
+    * @return true if matched
+    */
+   private boolean matchVendor(Interface iface)
+   {
+      String vendor = session.getVendorByMac(iface.getMacAddress(), null);
+      return (vendor != null) && vendor.toLowerCase().contains(filterString);
+   }
+
+   /**
+    * Match peer interface's vendor
+    *
+    * @param iface interface
+    * @return true if matched
+    */
+   private boolean matchPeerVendor(Interface iface)
+   {
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      if (peer == null)
+         return false;
+      String vendor = session.getVendorByMac(peer.getMacAddress(), null);
+      return (vendor != null) && vendor.toLowerCase().contains(filterString);
    }
 
    /**

@@ -56,11 +56,12 @@ public class SwitchForwardingDatabaseView extends ObjectView
    private static final I18n i18n = LocalizationHelper.getI18n(SwitchForwardingDatabaseView.class);
 
 	public static final int COLUMN_MAC_ADDRESS = 0;
-	public static final int COLUMN_PORT = 1;
-	public static final int COLUMN_INTERFACE = 2;
-   public static final int COLUMN_VLAN = 3;
-	public static final int COLUMN_NODE = 4;
-   public static final int COLUMN_TYPE = 5;
+   public static final int COLUMN_VENDOR = 1;
+	public static final int COLUMN_PORT = 2;
+	public static final int COLUMN_INTERFACE = 3;
+   public static final int COLUMN_VLAN = 4;
+	public static final int COLUMN_NODE = 5;
+   public static final int COLUMN_TYPE = 6;
 	
 	private NXCSession session;
 	private SortableTableViewer viewer;
@@ -85,9 +86,9 @@ public class SwitchForwardingDatabaseView extends ObjectView
    protected void createContent(Composite parent)
 	{	   
 		final String[] names = { 
-            i18n.tr("MAC"), i18n.tr("Port"), i18n.tr("Interface"), i18n.tr("VLAN"), i18n.tr("Node"), i18n.tr("Type")
+            i18n.tr("MAC"), i18n.tr("NIC Vendor"), i18n.tr("Port"), i18n.tr("Interface"), i18n.tr("VLAN"), i18n.tr("Node"), i18n.tr("Type")
 		   };
-		final int[] widths = { 180, 100, 200, 100, 250, 110 };
+		final int[] widths = { 180, 200, 100, 200, 100, 250, 110 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new FDBLabelProvider(viewer));

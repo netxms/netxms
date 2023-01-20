@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,7 +59,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class RadioInterfaces extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.RadioInterfaces"; //$NON-NLS-1$
-	
+
 	public static final int COLUMN_AP_NAME = 0;
 	public static final int COLUMN_AP_MAC_ADDR = 1;
 	public static final int COLUMN_AP_VENDOR = 2;
@@ -68,10 +68,11 @@ public class RadioInterfaces extends ViewPart
 	public static final int COLUMN_INDEX = 5;
 	public static final int COLUMN_NAME = 6;
 	public static final int COLUMN_MAC_ADDR = 7;
-	public static final int COLUMN_CHANNEL = 8;
-	public static final int COLUMN_TX_POWER_DBM = 9;
-	public static final int COLUMN_TX_POWER_MW = 10;
-	
+   public static final int COLUMN_NIC_VENDOR = 8;
+	public static final int COLUMN_CHANNEL = 9;
+	public static final int COLUMN_TX_POWER_DBM = 10;
+	public static final int COLUMN_TX_POWER_MW = 11;
+
 	private NXCSession session;
 	private long rootObject;
 	private SortableTableViewer viewer;
@@ -79,9 +80,9 @@ public class RadioInterfaces extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -95,23 +96,23 @@ public class RadioInterfaces extends ViewPart
 			rootObject = 0;
 		}
 
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
 		setPartName(String.format(Messages.get().RadioInterfaces_PartName, session.getObjectName(rootObject)));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.get().RadioInterfaces_ColApName, Messages.get().RadioInterfaces_ColApMac, Messages.get().RadioInterfaces_ColApVendor, Messages.get().RadioInterfaces_ColApModel, Messages.get().RadioInterfaces_ColApSerial, Messages.get().RadioInterfaces_ColRadioIndex, Messages.get().RadioInterfaces_ColRadioName, Messages.get().RadioInterfaces_ColRadioMac, Messages.get().RadioInterfaces_ColChannel, Messages.get().RadioInterfaces_ColTxPowerDbm, Messages.get().RadioInterfaces_ColTxPowerMw };
-		final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 100, 90, 90, 90 };
+		final String[] names = { Messages.get().RadioInterfaces_ColApName, Messages.get().RadioInterfaces_ColApMac, Messages.get().RadioInterfaces_ColApVendor, Messages.get().RadioInterfaces_ColApModel, Messages.get().RadioInterfaces_ColApSerial, Messages.get().RadioInterfaces_ColRadioIndex, Messages.get().RadioInterfaces_ColRadioName, Messages.get().RadioInterfaces_ColRadioMac, "NIC vendor", Messages.get().RadioInterfaces_ColChannel, Messages.get().RadioInterfaces_ColTxPowerDbm, Messages.get().RadioInterfaces_ColTxPowerMw };
+		final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 100, 200, 90, 90, 90 };
 		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new RadioInterfaceLabelProvider(viewer));
 		viewer.setComparator(new RadioInterfaceComparator());
-		
+
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override

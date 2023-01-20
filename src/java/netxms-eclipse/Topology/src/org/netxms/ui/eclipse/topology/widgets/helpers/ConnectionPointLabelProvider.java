@@ -52,11 +52,11 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	private static final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkSlateBlue"));
    private static final Color COLOR_FOUND_MAC_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SteelBlue"));
 	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkRed"));
-	
+
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   private NXCSession session = ConsoleSharedData.getSession();
    private TableViewer viewer;
-	
+
 	/**
 	 * Constructor
 	 */
@@ -64,7 +64,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	{
 	   this.viewer = viewer;
 	}
-	
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -73,7 +73,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	{
 		return null;
 	}
-	
+
 	/**
 	 * Get (cached) object name by object ID
 	 * @param id object id
@@ -83,7 +83,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	{
 		if (id == 0)
 			return ""; //$NON-NLS-1$
-		
+
 		String name = cachedObjectNames.get(id);
 		if (name == null)
 		{
@@ -109,13 +109,11 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 			case SearchResult.COLUMN_INTERFACE:
 				return getObjectName(cp.getLocalInterfaceId());
 			case SearchResult.COLUMN_MAC_ADDRESS:
-			   if (cp.getLocalMacAddress() == null)
-			      return "n/a";
-			   else
-			   {
-	            String vendor = session.getVendorByMac(cp.getLocalMacAddress(), new ViewerElementUpdater(viewer, element));
-	            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", cp.getLocalMacAddress().toString(), vendor) : cp.getLocalMacAddress().toString();
-			   }
+            return (cp.getLocalMacAddress() != null) ? cp.getLocalMacAddress().toString() : "n/a";
+         case SearchResult.COLUMN_NIC_VENDOR:
+            if (cp.getLocalMacAddress() == null)
+               return "";
+            return session.getVendorByMac(cp.getLocalMacAddress(), new ViewerElementUpdater(viewer, element));
 			case SearchResult.COLUMN_IP_ADDRESS:
 				InetAddress addr = cp.getLocalIpAddress();
 				if (addr != null)
@@ -126,15 +124,9 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 				InetAddress a = iface.getFirstUnicastAddress();
 				return (a != null) ? a.getHostAddress() : ""; //$NON-NLS-1$
 			case SearchResult.COLUMN_SWITCH:
-			   if ((cp.getNodeId() == 0))
-			      return "n/a";
-			   else
-			      return getObjectName(cp.getNodeId());
+            return (cp.getNodeId() != 0) ? getObjectName(cp.getNodeId()) : "n/a";
 			case SearchResult.COLUMN_PORT:
-			   if (cp.getInterfaceId() == 0)
-			      return "n/a";
-			   else
-			      return getObjectName(cp.getInterfaceId());
+            return (cp.getInterfaceId() != 0) ? getObjectName(cp.getInterfaceId()) : "n/a";
 			case SearchResult.COLUMN_TYPE:
 			   if (cp.getType() == null)
                return "n/a";

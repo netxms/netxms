@@ -31,6 +31,7 @@ import org.netxms.ui.eclipse.topology.Messages;
 public class SwitchForwardingDatabaseFilter extends ViewerFilter
 {
    private String filterString = null;
+   private NXCSession session = ConsoleSharedData.getSession();;
    
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -66,7 +67,9 @@ public class SwitchForwardingDatabaseFilter extends ViewerFilter
       {
          return true;
       }
-      return false;
+      
+      String vendor = session.getVendorByMac(en.getAddress(), null);
+      return (vendor != null) && vendor.toLowerCase().contains(filterString);
    }
    
    /**

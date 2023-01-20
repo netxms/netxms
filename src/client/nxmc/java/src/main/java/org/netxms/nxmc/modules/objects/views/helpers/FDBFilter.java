@@ -63,7 +63,9 @@ public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
          return true;
       if (containsType(en))
          return true;
-      return false;
+      
+      String vendor = session.getVendorByMac(en.getAddress(), null);
+      return (vendor != null) && vendor.toLowerCase().contains(filterString);
    }
 
    /**

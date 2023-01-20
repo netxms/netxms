@@ -42,10 +42,11 @@ public class SearchResult extends CompositeWithMessageBar
    public static final int COLUMN_NODE = 1;
    public static final int COLUMN_INTERFACE = 2;
    public static final int COLUMN_MAC_ADDRESS = 3;
-   public static final int COLUMN_IP_ADDRESS = 4;
-   public static final int COLUMN_SWITCH = 5;
-   public static final int COLUMN_PORT = 6;
-   public static final int COLUMN_TYPE = 7;
+   public static final int COLUMN_NIC_VENDOR = 4;
+   public static final int COLUMN_IP_ADDRESS = 5;
+   public static final int COLUMN_SWITCH = 6;
+   public static final int COLUMN_PORT = 7;
+   public static final int COLUMN_TYPE = 8;
    
    private ViewPart viewPart;
    private SortableTableViewer viewer;
@@ -68,8 +69,8 @@ public class SearchResult extends CompositeWithMessageBar
       super(parent, style);
       this.viewPart = viewPart;
 
-      final String[] names = { Messages.get().HostSearchResults_ColSeq, Messages.get().HostSearchResults_ColNode, Messages.get().HostSearchResults_ColIface, Messages.get().HostSearchResults_ColMac, Messages.get().HostSearchResults_ColIp, Messages.get().HostSearchResults_ColSwitch, Messages.get().HostSearchResults_ColPort, Messages.get().HostSearchResults_ColType };
-      final int[] widths = { 70, 120, 120, 90, 90, 120, 120, 60 };
+      final String[] names = { Messages.get().HostSearchResults_ColSeq, Messages.get().HostSearchResults_ColNode, Messages.get().HostSearchResults_ColIface, Messages.get().HostSearchResults_ColMac, "NIC vendor", Messages.get().HostSearchResults_ColIp, Messages.get().HostSearchResults_ColSwitch, Messages.get().HostSearchResults_ColPort, Messages.get().HostSearchResults_ColType };
+      final int[] widths = { 70, 120, 120, 180, 90, 90, 120, 120, 60 };
       viewer = new SortableTableViewer(getContent(), names, widths, COLUMN_SEQUENCE, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       ConnectionPointLabelProvider labelProvider = new ConnectionPointLabelProvider(viewer);
@@ -224,7 +225,7 @@ public class SearchResult extends CompositeWithMessageBar
       }
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 			return null;
 		
 		Interface iface = (Interface)element;
+      MacAddress macAddr;
 		switch(columnIndex)
 		{
          case InterfacesView.COLUMN_8021X_BACKEND_STATE:
@@ -101,9 +102,10 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return Integer.toString(iface.getIfIndex());
          case InterfacesView.COLUMN_IP_ADDRESS:
             return iface.getIpAddressListAsString();
+         case InterfacesView.COLUMN_NIC_VENDOR:
+            return session.getVendorByMac(iface.getMacAddress(), new ViewerElementUpdater(viewer, element));
          case InterfacesView.COLUMN_MAC_ADDRESS:
-            String vendor = session.getVendorByMac(iface.getMacAddress(), new ViewerElementUpdater(viewer, element));
-            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", iface.getMacAddress().toString(), vendor) : iface.getMacAddress().toString();
+            return iface.getMacAddress().toString();
          case InterfacesView.COLUMN_MTU:
             return Integer.toString(iface.getMtu());
          case InterfacesView.COLUMN_NAME:
@@ -121,13 +123,11 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
          case InterfacesView.COLUMN_PEER_IP_ADDRESS:
             return getPeerIpAddress(iface);
          case InterfacesView.COLUMN_PEER_MAC_ADDRESS:
-            MacAddress mac = getPeerMacAddress(iface);
-            if (mac != null)
-            {
-               String peerVendor = session.getVendorByMac(mac, new ViewerElementUpdater(viewer, element));
-               return peerVendor != null && !peerVendor.isEmpty() ? String.format("%s (%s)", mac.toString(), peerVendor) : mac.toString();
-            }
-            return "";
+            macAddr = getPeerMacAddress(iface);
+            return (macAddr != null) ? macAddr.toString() : null;
+         case InterfacesView.COLUMN_PEER_NIC_VENDOR:
+            macAddr = getPeerMacAddress(iface);
+            return (macAddr != null) ? session.getVendorByMac(macAddr, new ViewerElementUpdater(viewer, element)) : null;
          case InterfacesView.COLUMN_PEER_NODE:
             return getPeerNodeName(iface);
          case InterfacesView.COLUMN_PEER_PROTOCOL:

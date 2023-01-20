@@ -72,11 +72,12 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView"; //$NON-NLS-1$
 	
 	public static final int COLUMN_MAC_ADDRESS = 0;
-	public static final int COLUMN_PORT = 1;
-	public static final int COLUMN_INTERFACE = 2;
-   public static final int COLUMN_VLAN = 3;
-	public static final int COLUMN_NODE = 4;
-   public static final int COLUMN_TYPE = 5;
+   public static final int COLUMN_VENDOR = 1;
+	public static final int COLUMN_PORT = 2;
+	public static final int COLUMN_INTERFACE = 3;
+   public static final int COLUMN_VLAN = 4;
+	public static final int COLUMN_NODE = 5;
+   public static final int COLUMN_TYPE = 6;
 	
 	private NXCSession session;
 	private long rootObject;
@@ -163,13 +164,14 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	   
 		final String[] names = { 
 		      Messages.get().SwitchForwardingDatabaseView_ColMacAddr, 
+		      "NIC vendor", 
 		      Messages.get().SwitchForwardingDatabaseView_ColPort, 
 		      Messages.get().SwitchForwardingDatabaseView_ConIface, 
 		      Messages.get().SwitchForwardingDatabaseView_ColVlan, 
 		      Messages.get().SwitchForwardingDatabaseView_ColNode,
 		      Messages.get().SwitchForwardingDatabaseView_ColType
 		   };
-		final int[] widths = { 180, 100, 200, 100, 250, 110 };
+		final int[] widths = { 180, 200, 100, 200, 100, 250, 110 };
 		viewer = new SortableTableViewer(resultArea, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new FDBLabelProvider(viewer));

@@ -66,8 +66,9 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
          case SwitchForwardingDatabaseView.COLUMN_INTERFACE:
             return e.getInterfaceName();
          case SwitchForwardingDatabaseView.COLUMN_MAC_ADDRESS:
-            String vendor = session.getVendorByMac(e.getAddress(), new ViewerElementUpdater(viewer, element));
-            return vendor != null && !vendor.isEmpty() ? String.format("%s (%s)", e.getAddress().toString(), vendor) : e.getAddress().toString();
+            return e.getAddress().toString();
+         case SwitchForwardingDatabaseView.COLUMN_VENDOR:
+            return session.getVendorByMac(e.getAddress(), new ViewerElementUpdater(viewer, element));
          case SwitchForwardingDatabaseView.COLUMN_NODE:
             if (e.getNodeId() == 0)
                return ""; //$NON-NLS-1$
