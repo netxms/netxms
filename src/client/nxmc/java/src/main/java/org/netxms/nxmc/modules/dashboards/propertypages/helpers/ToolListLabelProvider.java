@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.config.ObjectToolsConfig.Tool;
-import org.netxms.nxmc.modules.objects.ObjectToolsCache;
+import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 
 /**
  * Label provider for tool list

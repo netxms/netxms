@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views;
+package org.netxms.nxmc.modules.objecttools.views;
 
 import java.util.List;
 import java.util.Map;
@@ -29,15 +29,13 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView;
-import org.netxms.nxmc.modules.objecttools.views.ServerCommandResults;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * View for agent action execution results
+ * View for server script execution results
  */
-public class SSHCommandResults extends AbstractCommandResultView
+public class ServerScriptResults extends AbstractCommandResultView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerCommandResults.class);
 
@@ -51,10 +49,11 @@ public class SSHCommandResults extends AbstractCommandResultView
     * @param inputValues
     * @param maskedFields
     */
-   public SSHCommandResults(ObjectContext node, ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
+   public ServerScriptResults(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
       super(node, tool, inputValues, maskedFields);
    }
+   
    /**
     * Create actions
     */
@@ -126,8 +125,7 @@ public class SSHCommandResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeSshCommand(object.object.getObjectId(), executionString, true, getOutputListener(), null);
-               writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
+               session.executeLibraryScript(object.object.getObjectId(), object.getAlarmId(), executionString, inputValues, getOutputListener());
             }
             finally
             {

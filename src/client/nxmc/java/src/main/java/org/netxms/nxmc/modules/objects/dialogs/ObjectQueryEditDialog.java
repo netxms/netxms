@@ -56,6 +56,7 @@ import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.modules.objects.dialogs.helpers.InputFieldLabelProvider;
+import org.netxms.nxmc.modules.objecttools.dialogs.InputFieldEditDialog;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 

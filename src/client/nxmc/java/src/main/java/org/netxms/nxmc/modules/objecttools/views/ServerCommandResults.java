@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views;
+package org.netxms.nxmc.modules.objecttools.views;
 
 import java.util.List;
 import java.util.Map;
@@ -25,23 +25,26 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView;
-import org.netxms.nxmc.modules.objecttools.views.ServerCommandResults;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * View for agent action execution results
+ * View for server command execution results
  */
-public class SSHCommandResults extends AbstractCommandResultView
+public class ServerCommandResults extends AbstractCommandResultView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerCommandResults.class);
 
+   private String lastCommand = null;
    private Action actionRestart;
+   private Action actionStop;
+   private boolean isRunning = false;
 
    /**
     * Constructor
@@ -51,17 +54,18 @@ public class SSHCommandResults extends AbstractCommandResultView
     * @param inputValues
     * @param maskedFields
     */
-   public SSHCommandResults(ObjectContext node, ObjectTool tool, final Map<String, String> inputValues, final List<String> maskedFields)
+   public ServerCommandResults(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
       super(node, tool, inputValues, maskedFields);
    }
+
    /**
     * Create actions
     */
    protected void createActions()
    {
       super.createActions();
-
+      
       actionRestart = new Action(i18n.tr("&Restart"), SharedIcons.RESTART) {
          @Override
          public void run()
@@ -70,6 +74,15 @@ public class SSHCommandResults extends AbstractCommandResultView
          }
       };
       actionRestart.setEnabled(false);
+      
+      actionStop = new Action("Stop", SharedIcons.TERMINATE) {
+         @Override
+         public void run()
+         {
+            stopCommand();
+         }
+      };
+      actionStop.setEnabled(false);
    }
 
    /**
@@ -79,6 +92,7 @@ public class SSHCommandResults extends AbstractCommandResultView
    protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionRestart);
+      manager.add(actionStop);
       manager.add(new Separator());
       super.fillLocalMenu(manager);
    }
@@ -90,6 +104,7 @@ public class SSHCommandResults extends AbstractCommandResultView
    protected void fillLocalToolBar(IToolBarManager manager)
    {
       manager.add(actionRestart);
+      manager.add(actionStop);
       manager.add(new Separator());
       super.fillLocalToolBar(manager);
    }
@@ -102,17 +117,26 @@ public class SSHCommandResults extends AbstractCommandResultView
    protected void fillContextMenu(final IMenuManager manager)
    {
       manager.add(actionRestart);
+      manager.add(actionStop);
       manager.add(new Separator());
       super.fillContextMenu(manager);
    }
-
+   
    /**
     * @see org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView#execute()
     */
    @Override
    public void execute()
    {
+      if (isRunning)
+      {
+         MessageDialog.openError(Display.getCurrent().getActiveShell(), "Error", "Command already running!");
+         return;
+      }
+
+      isRunning = true;
       actionRestart.setEnabled(false);
+      actionStop.setEnabled(true);
       createOutputStream();
       Job job = new Job(String.format(i18n.tr("Execute action on node %s"), object.object.getObjectName()), this) {
          @Override
@@ -126,7 +150,7 @@ public class SSHCommandResults extends AbstractCommandResultView
          {
             try
             {
-               session.executeSshCommand(object.object.getObjectId(), executionString, true, getOutputListener(), null);
+               session.executeServerCommand(object.object.getObjectId(), executionString, inputValues, maskedFields, true, getOutputListener(), null);
                writeToOutputStream(i18n.tr("\n\n*** TERMINATED ***\n\n\n"));
             }
             finally
@@ -143,6 +167,8 @@ public class SSHCommandResults extends AbstractCommandResultView
                public void run()
                {
                   actionRestart.setEnabled(true);
+                  actionStop.setEnabled(false);
+                  isRunning = false;
                }
             });
          }
@@ -150,5 +176,60 @@ public class SSHCommandResults extends AbstractCommandResultView
       job.setUser(false);
       job.setSystem(true);
       job.start();
+   }
+
+   /**
+    * Stops running server command
+    */
+   private void stopCommand()
+   {
+      if (streamId > 0)
+      {
+         Job job = new Job("Stop server command for node: " + object.object.getObjectName(), this) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               session.stopServerCommand(streamId);
+            }
+            
+            @Override
+            protected void jobFinalize()
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     actionStop.setEnabled(false);
+                     actionRestart.setEnabled(true);
+                  }
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Failed to stop server command for node: " + object.object.getObjectName();
+            }
+         };
+         job.start();
+      }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#beforeClose()
+    */
+   @Override
+   public boolean beforeClose()
+   {
+      if (isRunning)
+      {
+         if (MessageDialog.openConfirm(Display.getCurrent().getActiveShell(), "Stop command", "Do you wish to stop the command \"" + lastCommand + "\"? "))
+         {
+            stopCommand();
+            return true;
+         }
+         return false;
+      }
+      return true;
    }
 }

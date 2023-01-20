@@ -52,6 +52,8 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectPollerView;
+import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
+import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.tools.ImageCache;
 import org.xnap.commons.i18n.I18n;
 

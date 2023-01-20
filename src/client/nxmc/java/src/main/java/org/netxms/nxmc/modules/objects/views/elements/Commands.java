@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,9 +38,9 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.CommandBox;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.netxms.nxmc.modules.objects.ObjectToolExecutor;
-import org.netxms.nxmc.modules.objects.ObjectToolsCache;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
+import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
