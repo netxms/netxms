@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.agentmanagement;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.agentmanagement.views.ServerStoredAgentConfigEditorView;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationsManager;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;
@@ -29,9 +29,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Server stored agent configuration element
  */
-public class ServerStoredAgentConfigurationElement implements ConfigurationPerspectiveElement
+public class AgentConfigurationManagerElement implements ConfigurationPerspectiveElement
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ServerStoredAgentConfigurationElement.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationManagerElement.class);
 
    /**
     * @see org.netxms.nxmc.services.ConfigurationPerspectiveElement#getName()
@@ -57,6 +57,6 @@ public class ServerStoredAgentConfigurationElement implements ConfigurationPersp
    @Override
    public ConfigurationView createView()
    {
-      return new ServerStoredAgentConfigEditorView();
+      return new AgentConfigurationsManager();
    }
 }

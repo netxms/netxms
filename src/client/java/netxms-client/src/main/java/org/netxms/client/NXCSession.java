@@ -11825,15 +11825,17 @@ public class NXCSession
     * Update server side agent configuration
     *
     * @param configuration agent configuration object
+    * @return configuration ID (possibly newly assigned)
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void saveAgentConfig(AgentConfiguration configuration) throws NXCException, IOException
+   public long saveAgentConfig(AgentConfiguration configuration) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AGENT_CONFIGURATION);
       configuration.fillMessage(msg);
       sendMessage(msg);
-      waitForRCC(msg.getMessageId());
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsInt64(NXCPCodes.VID_CONFIG_ID);
    }
 
    /**

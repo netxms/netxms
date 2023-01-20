@@ -27,6 +27,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -132,7 +133,7 @@ public class ScriptLibraryView extends ConfigurationView
       });
 
       createActions();
-      createPopupMenu();
+      createContextMenu();
    }
 
    /**
@@ -192,6 +193,7 @@ public class ScriptLibraryView extends ConfigurationView
          }
       };
       actionRename.setEnabled(false);
+      addKeyBinding("F2", actionRename);
 
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
@@ -201,6 +203,7 @@ public class ScriptLibraryView extends ConfigurationView
          }
       };
       actionDelete.setEnabled(false);
+      addKeyBinding("M1+D", actionDelete);
 
       actionCopyName = new Action(i18n.tr("&Copy name to clipboard"), SharedIcons.COPY) {
          @Override
@@ -209,12 +212,13 @@ public class ScriptLibraryView extends ConfigurationView
             copyNameToClipboard();
          }
       };
+      addKeyBinding("M1+C", actionCopyName);
    }
 
    /**
-    * Create pop-up menu
+    * Create context menu
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager.
       MenuManager menuMgr = new MenuManager();
@@ -239,9 +243,11 @@ public class ScriptLibraryView extends ConfigurationView
    protected void fillContextMenu(final IMenuManager mgr)
    {
       mgr.add(actionNew);
+      mgr.add(new Separator());
       mgr.add(actionEdit);
       mgr.add(actionRename);
       mgr.add(actionDelete);
+      mgr.add(new Separator());
       mgr.add(actionCopyName);
    }
 
@@ -289,37 +295,37 @@ public class ScriptLibraryView extends ConfigurationView
    private void createNewScript()
    {
       final CreateScriptDialog dlg = new CreateScriptDialog(getWindow().getShell(), null);
-      if (dlg.open() == Window.OK)
-      {
-         new Job(i18n.tr("Creating new script"), this) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               final long id = session.modifyScript(0, dlg.getName(), ""); //$NON-NLS-1$
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     Object[] input = (Object[])viewer.getInput();
-                     List<Script> list = new ArrayList<Script>(input.length);
-                     for(Object o : input)
-                        list.add((Script)o);
-                     final Script script = new Script(id, dlg.getName(), ""); //$NON-NLS-1$
-                     list.add(script);
-                     viewer.setInput(list.toArray());
-                     viewer.setSelection(new StructuredSelection(script));
-                     editScript();
-                  }
-               });
-            }
+      if (dlg.open() != Window.OK)
+         return;
 
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot create new script in library");
-            }
-         }.start();
-      }
+      new Job(i18n.tr("Creating new script"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final long id = session.modifyScript(0, dlg.getName(), ""); //$NON-NLS-1$
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  Object[] input = (Object[])viewer.getInput();
+                  List<Script> list = new ArrayList<Script>(input.length);
+                  for(Object o : input)
+                     list.add((Script)o);
+                  final Script script = new Script(id, dlg.getName(), ""); //$NON-NLS-1$
+                  list.add(script);
+                  viewer.setInput(list.toArray());
+                  viewer.setSelection(new StructuredSelection(script));
+                  editScript();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create new script in library");
+         }
+      }.start();
    }
 
    /**

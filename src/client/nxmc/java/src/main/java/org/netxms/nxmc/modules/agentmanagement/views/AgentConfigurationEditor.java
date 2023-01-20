@@ -45,12 +45,11 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Agent's master config editor
  */
-public class AgentConfigEditorView extends AdHocObjectView
+public class AgentConfigurationEditor extends AdHocObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AgentConfigEditorView.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationEditor.class);
 
 	private NXCSession session;
-	private long nodeId;
 	private AgentConfigEditor editor;
 	private boolean modified = false;
 	private Action actionSave;
@@ -61,11 +60,10 @@ public class AgentConfigEditorView extends AdHocObjectView
     *
     * @param node node object
     */
-   public AgentConfigEditorView(Node node)
+   public AgentConfigurationEditor(Node node)
    {
-      super(i18n.tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfig", node.getObjectId(), false);
+      super(i18n.tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfigurationEditor", node.getObjectId(), false);
       session = Registry.getSession();
-      nodeId = node.getObjectId();
    }
 
    /**
@@ -73,22 +71,11 @@ public class AgentConfigEditorView extends AdHocObjectView
     *
     * @param node node object
     */
-   protected AgentConfigEditorView()
+   protected AgentConfigurationEditor()
    {
       super(null, null, null, 0, false); 
       session = Registry.getSession(); 
    }
-
-   /**
-    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
-    */
-   @Override
-   public View cloneView()
-   {
-      AgentConfigEditorView view = (AgentConfigEditorView)super.cloneView();
-      view.nodeId = nodeId;
-      return view;
-   }   
 
    /**
     * Post clone action
@@ -96,7 +83,7 @@ public class AgentConfigEditorView extends AdHocObjectView
    protected void postClone(View origin)
    {    
       super.postClone(origin);
-      AgentConfigEditorView view = (AgentConfigEditorView)origin;
+      AgentConfigurationEditor view = (AgentConfigurationEditor)origin;
       editor.setText(view.editor.getText());
       modified = view.modified;
       actionSave.setEnabled(view.actionSave.isEnabled());
@@ -201,6 +188,7 @@ public class AgentConfigEditorView extends AdHocObjectView
       }
 
       clearMessages();
+      final long nodeId = getObjectId();
       new Job(i18n.tr("Loading agent configuration"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -258,6 +246,7 @@ public class AgentConfigEditorView extends AdHocObjectView
 
       clearMessages();
       final String content = editor.getText();
+      final long nodeId = getObjectId();
       new Job(i18n.tr("Saving agent configuration"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

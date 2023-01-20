@@ -58,7 +58,7 @@ import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
-import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigEditorView;
+import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
@@ -720,7 +720,7 @@ public class ObjectContextMenuManager extends MenuManager
       if (!(object instanceof Node))
          return;
 
-      AgentConfigEditorView editor = new AgentConfigEditorView((Node)object);
+      AgentConfigurationEditor editor = new AgentConfigurationEditor((Node)object);
       if (view.getPerspective() != null)
       {
          view.getPerspective().addMainView(editor, true, false);

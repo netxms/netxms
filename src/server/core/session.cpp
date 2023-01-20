@@ -9216,7 +9216,7 @@ void ClientSession::getAgentConfiguration(const NXCPMessage& request)
  */
 void ClientSession::updateAgentConfiguration(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
@@ -9225,7 +9225,7 @@ void ClientSession::updateAgentConfiguration(const NXCPMessage& request)
 
       uint32_t sequence;
       DB_STATEMENT hStmt;
-      if (IsDatabaseRecordExist(hdb, _T("agent_configs"), _T("config_id"), configId))
+      if ((configId != 0) && IsDatabaseRecordExist(hdb, _T("agent_configs"), _T("config_id"), configId))
       {
          sequence = request.getFieldAsUInt32(VID_SEQUENCE_NUMBER);
          hStmt = DBPrepare(hdb, _T("UPDATE agent_configs SET config_name=?,config_filter=?,config_file=?,sequence_number=? WHERE config_id=?"));
@@ -9236,7 +9236,7 @@ void ClientSession::updateAgentConfiguration(const NXCPMessage& request)
          {
             // Request for new ID creation
             configId = CreateUniqueId(IDG_AGENT_CONFIG);
-            msg.setField(VID_CONFIG_ID, configId);
+            response.setField(VID_CONFIG_ID, configId);
 
             // Request sequence number
             DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(sequence_number) FROM agent_configs"));
@@ -9252,13 +9252,13 @@ void ClientSession::updateAgentConfiguration(const NXCPMessage& request)
             {
                sequence = 1;
             }
-            msg.setField(VID_SEQUENCE_NUMBER, sequence);
+            response.setField(VID_SEQUENCE_NUMBER, sequence);
          }
          else
          {
             sequence = request.getFieldAsUInt32(VID_SEQUENCE_NUMBER);
          }
-         hStmt = DBPrepare(hdb,  _T("INSERT INTO agent_configs (config_name,config_filter,config_file,sequence_number,config_id) VALUES (?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO agent_configs (config_name,config_filter,config_file,sequence_number,config_id) VALUES (?,?,?,?,?)"));
       }
       if (hStmt != nullptr)
       {
@@ -9269,26 +9269,26 @@ void ClientSession::updateAgentConfiguration(const NXCPMessage& request)
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, configId);
          if (DBExecute(hStmt))
          {
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
+            response.setField(VID_RCC, RCC_DB_FAILURE);
          }
          DBFreeStatement(hStmt);
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
       DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
