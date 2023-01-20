@@ -80,7 +80,7 @@ public class RuleTimeFrames extends PropertyPage
       dialogArea.setLayout(layout);
       
       checkInverted = new Button(dialogArea, SWT.CHECK);
-      checkInverted.setText("Invert rule (match time frames NOT in the list below)");
+      checkInverted.setText("Inverse rule (the marked timeframes are NOT listed below)");
       checkInverted.setSelection(rule.isTimeFramesInverted());
       
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
