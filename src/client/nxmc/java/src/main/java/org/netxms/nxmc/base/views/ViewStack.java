@@ -295,7 +295,7 @@ public class ViewStack extends ViewContainer
    }
 
    /**
-    * Pop view (will dispose current view and switch to next in stack). Thes method may return failure if view is modified and user
+    * Pop view (will dispose current view and switch to next in stack). This method may return failure if view is modified and user
     * selected "cancel" as an option.
     * 
     * @return true if view at the top successfully removed
@@ -388,8 +388,9 @@ public class ViewStack extends ViewContainer
     * Switch to specific view in stack (will dispose all views on top of given view).
     *
     * @param view view to switch to
+    * @param focus if true set focus on selected view
     */
-   public void switchToView(View view)
+   public void switchToView(View view, boolean focus)
    {
       if (!views.contains(view))
          return;
@@ -397,6 +398,9 @@ public class ViewStack extends ViewContainer
       while(getActiveView() != view)
          if (!popView())
             break;
+
+      if (getActiveView() == view)
+         view.setFocus();
    }
 
    /**
@@ -489,7 +493,7 @@ public class ViewStack extends ViewContainer
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            switchToView(view);
+            switchToView(view, true);
          }
       });
    }

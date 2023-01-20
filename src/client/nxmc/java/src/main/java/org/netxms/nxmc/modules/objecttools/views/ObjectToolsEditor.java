@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -534,15 +534,6 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
             return i18n.tr("Cannot clone object tool");
          }
       }.start();
-   }
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-    */
-   @Override
-   public void setFocus()
-   {
-      viewer.getControl().setFocus();
    }
 
    /**
