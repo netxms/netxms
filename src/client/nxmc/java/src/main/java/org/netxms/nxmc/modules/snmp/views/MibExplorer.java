@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -46,7 +45,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
@@ -74,17 +72,15 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 {
    private static I18n i18n = LocalizationHelper.getI18n(MibExplorer.class);
    private static final String ID = "MibExplorer";
-	
+
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_TEXT = 1;
 	public static final int COLUMN_TYPE = 2;
 	public static final int COLUMN_VALUE = 3;
-	
-	private Font headerFont;
+
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
 	private TableViewer viewer;
-	private AbstractNode currentNode = null;
 	private NXCSession session;
 	private boolean walkActive = false;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
@@ -122,21 +118,19 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	@Override
 	public void createContent(Composite parent)
 	{
-		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD); //$NON-NLS-1$
-		
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		layout.verticalSpacing = 0;
 		parent.setLayout(layout);
-		
+
 		SashForm splitter = new SashForm(parent, SWT.VERTICAL);
 		splitter.setLayout(new FillLayout());
 		splitter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
 		SashForm mibViewSplitter = new SashForm(splitter, SWT.HORIZONTAL);
 		mibViewSplitter.setLayout(new FillLayout());
-		
+
 		mibBrowser = new MibBrowser(mibViewSplitter, SWT.BORDER);
 		mibBrowser.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -152,7 +146,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		// Create result area
 		resultArea = new Composite(splitter, SWT.BORDER);
 		resultArea.setLayout(new FillLayout());
-      
+
       // walk results
 		viewer = new TableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		viewer.getTable().setLinesVisible(true);
@@ -174,7 +168,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
 				actionSelect.setEnabled(selection.size() == 1);
 				actionCreateSnmpDci.selectionChanged(viewer.getSelection());
 			}
@@ -186,14 +180,17 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 				selectInTree();
 			}
 		});
-				
+
 		splitter.setWeights(new int[] { 70, 30 });
-		
+
       createActions();
-		createTreePopupMenu();
+		createTreeContextMenu();
 		createResultsPopupMenu();
 	}
-   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
 	@Override
    public void refresh()
    {
@@ -212,7 +209,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 				doWalk();
 			}
 		};
-		actionWalk.setEnabled(currentNode != null);
+      actionWalk.setEnabled(getObject() != null);
 
 		actionCopyObjectName = new Action(i18n.tr("Copy &name to clipboard")) {
 			@Override
@@ -293,7 +290,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		
 		actionCreateSnmpDci = new CreateSnmpDci(this);
 	}
-	
+
 	/**
 	 * Select current result in tree
 	 */
@@ -331,11 +328,11 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			WidgetHelper.copyToClipboard(sb.toString());
 		}
 	}
-	
+
 	/**
-	 * Create popup menu for MIB tree
-	 */
-	private void createTreePopupMenu()
+    * Create context menu for MIB tree
+    */
+	private void createTreeContextMenu()
 	{
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
@@ -437,7 +434,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	@Override
    protected void onObjectChange(AbstractObject object)
    {
-      currentNode = (AbstractNode)object;
       actionWalk.setEnabled((object != null) && !walkActive);
    }
 
@@ -446,23 +442,24 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	 */
 	private void doWalk()
 	{
-		if (walkActive || (currentNode == null))
+      if (walkActive || (getObject() == null))
 			return;
-		
-		final MibObject object = mibBrowser.getSelection();
-		if (object == null)
+
+		final MibObject mibObject = mibBrowser.getSelection();
+		if (mibObject == null)
 			return;
-		
+
 		walkActive = true;
 		actionWalk.setEnabled(false);
 		viewer.setInput(new SnmpValue[0]);
 		walkData.clear();
-		
-		Job job = new Job(i18n.tr("Walk MIB tree"), this) {
+
+      final long nodeId = getObjectId();
+      Job job = new Job(i18n.tr("Walking MIB tree"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				session.snmpWalk(currentNode.getObjectId(), object.getObjectId().toString(), MibExplorer.this);
+            session.snmpWalk(nodeId, mibObject.getObjectId().toString(), MibExplorer.this);
 			}
 
 			@Override
@@ -479,7 +476,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 					public void run()
 					{
 						walkActive = false;
-						actionWalk.setEnabled(currentNode != null);
+                  actionWalk.setEnabled(getObject() != null);
 					}
 				});
 			}
@@ -488,9 +485,9 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		job.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(java.util.List)
-	 */
+   /**
+    * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(java.util.List)
+    */
 	@Override
 	public void onSnmpWalkData(final List<SnmpValue> data)
 	{
@@ -512,16 +509,18 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
-		headerFont.dispose();		
 		super.dispose();
 	}
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
    @Override
    public boolean isValidForContext(Object context)
    {
