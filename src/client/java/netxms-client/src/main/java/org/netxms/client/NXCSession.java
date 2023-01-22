@@ -716,8 +716,16 @@ public class NXCSession
                         MessageHandler handler = messageSubscriptions.get(s);
                         if (handler != null)
                         {
-                           if (handler.processMessage(msg))
-                              msg = null;
+                           try
+                           {
+                              if (handler.processMessage(msg))
+                                 msg = null;
+                           }
+                           catch(Exception e)
+                           {
+                              logger.error("Exception in message handler", e);
+                           }
+
                            if (handler.isComplete())
                               messageSubscriptions.remove(s);
                            else
@@ -7716,7 +7724,7 @@ public class NXCSession
             if (errorMessage == null)
                errorMessage = "Unspecified sript execution error (RCC=" + rcc + ")";
 
-            if ((listener != null))
+            if (listener != null)
             {
                listener.messageReceived(errorMessage + "\n\n");
                listener.onFailure(null);
@@ -7733,7 +7741,8 @@ public class NXCSession
 
          if (m.isEndOfSequence())
          {
-            listener.onSuccess();
+            if (listener != null)
+               listener.onSuccess();
             setComplete();
          }
          return true;

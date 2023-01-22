@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,11 +30,11 @@ public abstract class MessageHandler
    private boolean expired = false;
    private long lastMessageTimestamp = System.currentTimeMillis();
    private int messageWaitTimeout = 60000;
-   
+
    /**
     * Set handler to complete state. This will signal all waiters and remove subscription. 
     */
-   protected void setComplete()
+   protected final void setComplete()
    {
       latch.countDown();
    }
@@ -44,7 +44,7 @@ public abstract class MessageHandler
     * 
     * @return returns if message is complete
     */
-   public boolean isComplete()
+   public final boolean isComplete()
    {
       return latch.getCount() == 0;
    }
@@ -52,7 +52,7 @@ public abstract class MessageHandler
    /**
     * Wait for handler completion
     */
-   public void waitForCompletion()
+   public final void waitForCompletion()
    {
       boolean done = false;
       do
