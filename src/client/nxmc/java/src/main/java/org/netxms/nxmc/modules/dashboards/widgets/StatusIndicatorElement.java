@@ -89,6 +89,7 @@ public class StatusIndicatorElement extends ElementWidget
 		catch(final Exception e)
 		{
          logger.error("Cannot parse dashboard element configuration", e);
+         logger.debug("Original XML:\n" + element.getData());
 			config = new StatusIndicatorConfig();
 		}
 

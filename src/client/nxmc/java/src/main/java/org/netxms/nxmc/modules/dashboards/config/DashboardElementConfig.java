@@ -34,7 +34,7 @@ import org.simpleframework.xml.core.Persister;
 /**
  * Abstract base class for all dashboard element configs
  */
-@Root(name="element", strict=false)
+@Root(name = "element", strict = false)
 public class DashboardElementConfig
 {
 	private DashboardElementLayout layout;

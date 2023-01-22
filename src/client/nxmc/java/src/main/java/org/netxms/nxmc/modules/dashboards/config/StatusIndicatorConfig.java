@@ -244,7 +244,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
    /**
     * Represents single element for status indicator
     */
-   @Root(name = "element")
+   @Root(name = "element", strict = false)
    public static class StatusIndicatorElementConfig implements NodeItemPair
    {
       @Element

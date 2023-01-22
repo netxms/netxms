@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -244,7 +244,7 @@ public class StatusIndicatorConfig extends DashboardElementConfig
    /**
     * Represents single element for status indicator
     */
-   @Root(name = "element")
+   @Root(name = "element", strict = false)
    public static class StatusIndicatorElementConfig implements NodeItemPair
    {
       @Element
