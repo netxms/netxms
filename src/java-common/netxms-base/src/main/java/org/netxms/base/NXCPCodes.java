@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -790,7 +790,7 @@ public class NXCPCodes
 	public static final long VID_NUM_DELETE_PSTORAGE = 303;
 	public static final long VID_INSTANCE_COUNT = 304;
 	public static final long VID_NUM_SET_PSTORAGE = 305;
-   // public static final long VID_NUM_TRUSTED_NODES = 306;
+   public static final long VID_SERVER_BUILD = 306;
 	public static final long VID_TRUSTED_OBJECTS = 307;
 	public static final long VID_TIMEZONE = 308;
 	public static final long VID_NUM_CUSTOM_ATTRIBUTES = 309;

@@ -2088,11 +2088,11 @@ void ClientSession::sendServerInfo(const NXCPMessage& request)
 
    // Fill message with server info
    msg.setField(VID_RCC, RCC_SUCCESS);
-   msg.setField(VID_SERVER_VERSION, NETXMS_BUILD_TAG);
+   msg.setField(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
+   msg.setField(VID_SERVER_BUILD, NETXMS_BUILD_TAG);
    msg.setField(VID_SERVER_ID, g_serverId);
-   msg.setField(VID_SUPPORTED_ENCRYPTION, (UINT32)0);
-   msg.setField(VID_PROTOCOL_VERSION, (UINT32)CLIENT_PROTOCOL_VERSION_BASE);
-   msg.setFieldFromInt32Array(VID_PROTOCOL_VERSION_EX, sizeof(protocolVersions) / sizeof(UINT32), protocolVersions);
+   msg.setField(VID_PROTOCOL_VERSION, static_cast<uint32_t>(CLIENT_PROTOCOL_VERSION_BASE));
+   msg.setFieldFromInt32Array(VID_PROTOCOL_VERSION_EX, sizeof(protocolVersions) / sizeof(uint32_t), protocolVersions);
    msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
    msg.setField(VID_TIMESTAMP, (UINT32)time(nullptr));
 

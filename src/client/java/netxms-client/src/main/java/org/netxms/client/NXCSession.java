@@ -336,6 +336,7 @@ public class NXCSession
    // Server information
    private ProtocolVersion protocolVersion;
    private String serverVersion = "(unknown)";
+   private String serverBuild = "(unknown)";
    private long serverId = 0;
    private String serverTimeZone;
    private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
@@ -2189,6 +2190,7 @@ public class NXCSession
          }
 
          serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION);
+         serverBuild = response.getFieldAsString(NXCPCodes.VID_SERVER_BUILD);
          serverId = response.getFieldAsInt64(NXCPCodes.VID_SERVER_ID);
          serverTimeZone = response.getFieldAsString(NXCPCodes.VID_TIMEZONE);
          serverTime = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000;
@@ -2232,7 +2234,7 @@ public class NXCSession
             waitForRCC(request.getMessageId());
          }
 
-         logger.info("Connected to server version " + serverVersion);
+         logger.info("Connected to server version " + serverVersion + " (build " + serverBuild + ")");
          connected = true;
       }
       finally
@@ -2701,6 +2703,16 @@ public class NXCSession
    public String getServerVersion()
    {
       return serverVersion;
+   }
+
+   /**
+    * Get NetXMS server build information.
+    *
+    * @return Server version
+    */
+   public String getServerBuild()
+   {
+      return serverBuild;
    }
 
    /**

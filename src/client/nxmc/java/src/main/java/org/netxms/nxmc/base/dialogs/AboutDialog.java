@@ -141,7 +141,9 @@ public class AboutDialog extends Dialog
       sb.append(session.getUserName());
       sb.append("\nServer version: ");
       sb.append(session.getServerVersion());
-      sb.append("\nServer ID: ");
+      sb.append(" (build ");
+      sb.append(session.getServerBuild());
+      sb.append(")\nServer ID: ");
       sb.append(Long.toHexString(session.getServerId()));
       sb.append("\nJava version: ");
       sb.append(System.getProperty("java.version"));

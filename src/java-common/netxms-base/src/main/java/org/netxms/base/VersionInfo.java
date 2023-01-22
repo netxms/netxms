@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ public final class VersionInfo
    private VersionInfo()
    {
    }
-   
+
    /**
     * Read property form specific bundle
     * 
@@ -75,7 +75,7 @@ public final class VersionInfo
          value = readPropertyFromBundle("netxms-version", propertyName);
       return (value != null) ? value : defaultValue;
    }
-   
+
    /**
     * Get product version
     * 
@@ -83,9 +83,9 @@ public final class VersionInfo
     */
    public static String version()
    {
-      return readProperty("NETXMS_VERSION", "3.0-SNAPSHOT");
+      return readProperty("NETXMS_VERSION", "0.1-SNAPSHOT");
    }
-   
+
    /**
     * Get product build tag
     * 
