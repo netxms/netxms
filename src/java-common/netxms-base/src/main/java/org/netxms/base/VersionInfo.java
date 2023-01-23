@@ -36,7 +36,7 @@ public final class VersionInfo
 
    /**
     * Read property form specific bundle
-    * 
+    *
     * @param bundleName bundle name
     * @param propertyName property name
     * @return property value or null
@@ -63,7 +63,7 @@ public final class VersionInfo
 
    /**
     * Read property from resource bundle
-    * 
+    *
     * @param propertyName property name
     * @param defaultValue default value if cannot be read
     * @return property value or default value
@@ -78,7 +78,7 @@ public final class VersionInfo
 
    /**
     * Get product version
-    * 
+    *
     * @return product version
     */
    public static String version()
@@ -87,8 +87,28 @@ public final class VersionInfo
    }
 
    /**
+    * Get product base version
+    *
+    * @return product base version
+    */
+   public static String baseVersion()
+   {
+      return readProperty("NETXMS_BASE_VERSION", "0.1");
+   }
+
+   /**
+    * Get product version qualifier (rc, sp, etc.)
+    *
+    * @return product version qualifier
+    */
+   public static String qualifier()
+   {
+      return readProperty("NETXMS_VERSION_QUALIFIER", "");
+   }
+
+   /**
     * Get product build tag
-    * 
+    *
     * @return product build tag
     */
    public static String buildTag()
