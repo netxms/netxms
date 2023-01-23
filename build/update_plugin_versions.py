@@ -31,7 +31,10 @@ def processDirectory(directory):
         with open(manifestFile) as f:
             for line in f.readlines():
                 if line.startswith("Bundle-Version:"):
-                    output += "Bundle-Version: %s\n" % (sys.argv[2])
+                    if len(sys.argv) > 3:
+                        output += "Bundle-Version: %s.%s\n" % (sys.argv[2], sys.argv[3])
+                    else:
+                        output += "Bundle-Version: %s\n" % (sys.argv[2])
                 else:
                     m = re.search("(.*) ([a-zA-Z0-9.]+);bundle-version=\"[0-9.]+\"(.*)", line)
                     if m and (m.group(2).startswith("org.netxms.ui") or m.group(2).startswith("org.netxms.webui") or m.group(2).startswith("com.radensolutions")):
@@ -50,7 +53,7 @@ def main():
        if "MANIFEST.MF" in files:
          processDirectory(root)
 
-if len(sys.argv) == 3:
+if len(sys.argv) in (3, 4):
     main()
 else:
-    print("Usage: ./update_plugin_versions.py <source root> <version>")
+    print("Usage: ./update_plugin_versions.py <source root> <version> <qualifier>")

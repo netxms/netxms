@@ -21,11 +21,11 @@ cd build
 cd ..
 cp build/netxms-build-tag.properties src/java-common/netxms-base/src/main/resources/ 
 
-VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION | cut -d = -f 2`
-BASE_VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_BASE_VERSION | cut -d = -f 2`
-QUALIFIER=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION_QUALIFIER | cut -d = -f 2`
+VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION= | cut -d = -f 2`
+BASE_VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_BASE_VERSION= | cut -d = -f 2`
+QUALIFIER=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION_QUALIFIER= | cut -d = -f 2`
 
-./build/update_plugin_versions.py . "$BASE_VERSION.$QUALIFIER"
+./build/update_plugin_versions.py . $BASE_VERSION $QUALIFIER
 
 cat src/java/netxms-eclipse/Core/plugin.xml | $SED -r "s,^(.*;Version) [0-9.]+(&#x0A.*)\$,\\1 $VERSION\\2," > ./plugin.xml
 mv ./plugin.xml src/java/netxms-eclipse/Core/plugin.xml
