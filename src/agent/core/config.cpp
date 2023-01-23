@@ -84,7 +84,7 @@ bool DownloadConfig(const TCHAR *server)
          msg.setField(VID_PLATFORM_NAME, buffer);
          msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
          msg.setField(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
-         msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
+         msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_RELEASE);
          msg.setField(VID_VERSION, NETXMS_VERSION_STRING);
 
          // Send request

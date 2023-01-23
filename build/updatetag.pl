@@ -12,7 +12,7 @@ chomp $tag;
 if ($tag eq "")
 {
 	print "Cannot read git tag\n";
-	exit 0;
+	exit 1;
 }
 if ($tag =~ /^Release-(.*)/)
 {
@@ -20,13 +20,60 @@ if ($tag =~ /^Release-(.*)/)
 }
 print "Git tag: $tag\n";
 
-my $version_string = $tag;
-my $build_number = 0;
-if ($tag =~ /(.*)-([0-9]+)-g.*/)
+my $version_major=`cat ../include/netxms-version.h | grep NETXMS_VERSION_MAJOR | awk '{print \$3}'`;
+my $version_minor=`cat ../include/netxms-version.h | grep NETXMS_VERSION_MINOR | awk '{print \$3}'`;
+my $version_release=`cat ../include/netxms-version.h | grep NETXMS_VERSION_RELEASE | awk '{print \$3}'`;
+chomp $version_major;
+chomp $version_minor;
+chomp $version_release;
+my $version_base=$version_major . "." . $version_minor . "." . $version_release;
+
+my $build_number=0;
+my $is_release=0;
+my $is_release_candidate=0;
+my $version_qualifier="";
+my $exact_tag=`git describe --exact-match --tags`;
+if ($? == 0)
 {
-   $version_string = $1 . "." . $2;
-   $build_number = $2;
+   chomp $exact_tag;
+   if ($exact_tag eq "release-" . $version_base)
+   {
+      $is_release=1;
+   }
 }
+
+my $version_string=$version_base . "-SNAPSHOT";
+if ($is_release)
+{
+   $version_string=$version_base;
+}
+else
+{
+   my $release_tag=`git describe --tags --match release-$version_base`;
+   if ($? == 0)
+   {
+      chomp $release_tag;
+      if ($release_tag =~ /release-(.*)-([0-9]+)-g.*/)
+      {
+         $build_number=$2;
+         $version_string=$version_base . "." . $2;
+         $version_qualifier="sp" . $2;
+      }
+   }
+   else
+   {
+      if ($tag =~ /(.*)-([0-9]+)-g.*/)
+      {
+         $build_number=$2;
+         $version_string=$version_base . "-rc" . $2;
+         $version_qualifier="rc" . $2;
+         $is_release_candidate=1;
+      }
+   }
+}
+
+print "Base version: $version_base\n";
+print "Version string: $version_string\n";
 
 if (IsUpdateNeeded($h_file, $tag) == 1)
 {
@@ -37,6 +84,8 @@ if (IsUpdateNeeded($h_file, $tag) == 1)
 	print OUT "#define " . $define_prefix . "_BUILD_TAG _T(\"$tag\")\n";
 	print OUT "#define " . $define_prefix . "_BUILD_TAG_A \"$tag\"\n";
 	print OUT "#define " . $define_prefix . "_BUILD_NUMBER $build_number\n";
+	print OUT "#define " . $define_prefix . "_BUILD_NUMBER_STRING _T(\"$build_number\")\n";
+	print OUT "#define " . $define_prefix . "_BUILD_NUMBER_STRING_A \"$build_number\"\n";
 	print OUT "#define " . $define_prefix . "_VERSION_BUILD $build_number\n";
 	print OUT "#define " . $define_prefix . "_VERSION_STRING _T(\"$version_string\")\n";
 	print OUT "#define " . $define_prefix . "_VERSION_STRING_A \"$version_string\"\n";
@@ -51,6 +100,7 @@ if (IsUpdateNeeded($iss_file, $tag) == 1)
 	open(OUT, ">$iss_file") or die "Cannot open output file: $!";
 	print OUT ";* BUILDTAG:$tag *\n";
 	print OUT "#define VersionString \"$version_string\"\n";
+	print OUT "#define BuildNumber \"$build_number\"\n";
 	print OUT "#define BuildTag \"$tag\"\n";
 	close OUT;
 
@@ -61,8 +111,11 @@ if (IsUpdateNeeded($property_file, $tag) == 1)
 {
 	open(OUT, ">$property_file") or die "Cannot open output file: $!";
 	print OUT "#* BUILDTAG:$tag *\n";
-	print OUT $define_prefix . "_VERSION=$version_string\n";
+	print OUT $define_prefix . "_BUILD_NUMBER=$build_number\n";
 	print OUT $define_prefix . "_BUILD_TAG=$tag\n";
+	print OUT $define_prefix . "_VERSION=$version_string\n";
+	print OUT $define_prefix . "_BASE_VERSION=$version_base\n";
+	print OUT $define_prefix . "_VERSION_QUALIFIER=$version_qualifier\n";
 	close OUT;
 
 	print "Build tag updated in $property_file\n";
@@ -70,14 +123,14 @@ if (IsUpdateNeeded($property_file, $tag) == 1)
 
 if (IsUpdateNeeded($rc_file, $tag) == 1)
 {
-   my $file_version = $version_string;
-   $file_version =~ tr /\./,/;
+   my $file_build_number=($is_release_candidate ? 0 : $build_number);
+   my $file_version = $version_major . "," . $version_minor . "," . $version_release . "," . $file_build_number;
 	open(OUT, ">$rc_file") or die "Cannot open output file: $!";
 	print OUT "/* BUILDTAG:$tag */\n";
 	print OUT "#include \"winres.h\"\n";
    print OUT "VS_VERSION_INFO VERSIONINFO\n";
-   print OUT "   FILEVERSION $file_version,0\n";
-   print OUT "   PRODUCTVERSION $file_version,0\n";
+   print OUT "   FILEVERSION $file_version\n";
+   print OUT "   PRODUCTVERSION $file_version\n";
    print OUT "{\n";
    print OUT "   BLOCK \"StringFileInfo\"\n";
    print OUT "   {\n";
@@ -85,10 +138,10 @@ if (IsUpdateNeeded($rc_file, $tag) == 1)
    print OUT "      {\n";
    print OUT "         VALUE \"CompanyName\",      \"Raden Solutions\\0\"\n";
    print OUT "         VALUE \"FileDescription\",  \"NetXMS Monitoring System Component\\0\"\n";
-   print OUT "         VALUE \"FileVersion\",      \"$version_string.0\\0\"\n";
-   print OUT "         VALUE \"LegalCopyright\",   \"© 2021 Raden Solutions SIA. All Rights Reserved\\0\"\n";
+   print OUT "         VALUE \"FileVersion\",      \"$version_major.$version_minor.$version_release.$file_build_number\\0\"\n";
+   print OUT "         VALUE \"LegalCopyright\",   \"ï¿½ 2023 Raden Solutions SIA. All Rights Reserved\\0\"\n";
    print OUT "         VALUE \"ProductName\",      \"NetXMS\\0\"\n";
-   print OUT "         VALUE \"ProductVersion\",   \"$version_string.0\\0\"\n";
+   print OUT "         VALUE \"ProductVersion\",   \"$version_major.$version_minor.$version_release.$file_build_number\\0\"\n";
    print OUT "      }\n";
    print OUT "   }\n";
    print OUT "   BLOCK \"VarFileInfo\"\n";

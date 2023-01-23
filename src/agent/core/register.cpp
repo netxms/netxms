@@ -62,7 +62,7 @@ bool RegisterOnServer(const TCHAR *server, int32_t zoneUIN)
          msg.setField(VID_PLATFORM_NAME, buffer);
          msg.setField(VID_VERSION_MAJOR, static_cast<uint16_t>(NETXMS_VERSION_MAJOR));
          msg.setField(VID_VERSION_MINOR, static_cast<uint16_t>(NETXMS_VERSION_MINOR));
-         msg.setField(VID_VERSION_RELEASE, static_cast<uint16_t>(NETXMS_VERSION_BUILD));
+         msg.setField(VID_VERSION_RELEASE, static_cast<uint16_t>(NETXMS_VERSION_RELEASE));
          msg.setField(VID_ZONE_UIN, zoneUIN);
 
          // Send request
