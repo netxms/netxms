@@ -26,7 +26,6 @@ Source: "..\..\..\x64\release\bind9.nsm"; DestDir: "{app}\bin"; Flags: ignorever
 Source: "..\..\..\x64\release\db2.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\dbquery.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\devemu.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\ecs.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\filemgr.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\Release\informix.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\Release\java.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -37,7 +36,6 @@ Source: "..\..\..\x64\release\netsvc.nsm"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\..\..\x64\Release\oracle.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\pgsql.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\ping.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\..\x64\release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\release\tuxedo.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -62,16 +60,17 @@ Source: "..\..\..\x64\Release\nxsqlite.dll"; DestDir: "{app}\bin"; Flags: ignore
 Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\jq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\install\files\windows\x64\libcrypto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\install\files\windows\x64\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\install\files\windows\x64\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\install\files\windows\x64\libssl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\..\install\files\windows\x64\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\smartctl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\unzip.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x64\openssl-3\capi.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x64\openssl-3\libmosquitto.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x64\openssl-3\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x64\openssl-3\openssl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\CRT\*"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\java-common\netxms-base\target\netxms-base-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion
 Source: "..\..\libnxjava\java\target\netxms-java-bridge-{#VersionString}.jar"; DestDir: "{app}\lib\java"; Flags: ignoreversion

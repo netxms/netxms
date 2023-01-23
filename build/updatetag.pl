@@ -100,6 +100,7 @@ if (IsUpdateNeeded($iss_file, $tag) == 1)
 	open(OUT, ">$iss_file") or die "Cannot open output file: $!";
 	print OUT ";* BUILDTAG:$tag *\n";
 	print OUT "#define VersionString \"$version_string\"\n";
+	print OUT "#define BaseVersion \"$version_base\"\n";
 	print OUT "#define BuildNumber \"$build_number\"\n";
 	print OUT "#define BuildTag \"$tag\"\n";
 	close OUT;

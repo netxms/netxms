@@ -3,7 +3,7 @@
 AppName=NetXMS Agent
 AppVerName=NetXMS Agent {#VersionString}
 AppVersion={#VersionString}
-VersionInfoVersion={#VersionString}
+VersionInfoVersion={#BaseVersion}.{#BuildNumber}
 VersionInfoTextVersion={#VersionString}
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
