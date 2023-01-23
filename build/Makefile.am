@@ -10,8 +10,6 @@
 
 include_HEADERS = netxms-build-tag.h
 
-BUILT_SOURCES = netxms-build-tag.iss netxms-build-tag.h netxms-build-tag.properties
-
 EXTRA_DIST = \
 	build.vcxproj \
 	build.vcxproj.filters \
@@ -19,16 +17,7 @@ EXTRA_DIST = \
 	get_jar_file.sh \
 	msvc_setenv_x64.cmd \
 	msvc_setenv_x86.cmd \
+	netxms-build-tag.iss \
 	netxms-build-tag.properties \
+	netxms-build-tag.rc \
 	updatetag.pl
-
-netxms-build-tag.properties: netxms-build-tag.iss
-
-netxms-build-tag.iss: netxms-build-tag.h
-
-netxms-build-tag.h: update-tag
-
-.PHONY: update-tag
-
-update-tag:
-	./updatetag.pl
