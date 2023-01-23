@@ -11,7 +11,7 @@ cd build
 cd ..
 cp build/netxms-build-tag.properties src/java-common/netxms-base/src/main/resources/
 
-VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION | cut -d = -f 2`
+VERSION=`cat build/netxms-build-tag.properties | grep NETXMS_VERSION= | cut -d = -f 2`
 
 REVERT_VERSION="yes"
 BUILD_NXMC="yes"
