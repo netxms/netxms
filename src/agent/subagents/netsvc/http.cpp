@@ -195,7 +195,7 @@ LONG H_CheckHTTP(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCo
       if (result == PC_ERR_NONE)
          ret_int64(value, GetCurrentTimeMs() - start);
       else if (g_netsvcFlags & NETSVC_AF_NEGATIVE_TIME_ON_ERROR)
-         ret_int(value, -(GetCurrentTimeMs() - start));
+         ret_int64(value, -(GetCurrentTimeMs() - start));
       else
          ret = SYSINFO_RC_ERROR;
    }

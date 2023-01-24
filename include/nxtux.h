@@ -33,7 +33,7 @@
 #include <nms_util.h>
 
 #undef getopt
-#define NOWHAT
+#define NOWHAT 1
 #include <atmi.h>
 #include <fml32.h>
 

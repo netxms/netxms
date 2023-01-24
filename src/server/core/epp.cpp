@@ -512,7 +512,7 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    for(int i = 0; i < m_timeFrames.size(); i++)
    {
       TimeFrame *timeFrame = m_timeFrames.get(i);
-      xml.appendFormattedString(_T("\t\t\t\t<timeFrame id=\"%d\" time=\"%d\" date=\"%ld\" />\n"), i + 1, timeFrame->getTime(), timeFrame->getDate());
+      xml.appendFormattedString(_T("\t\t\t\t<timeFrame id=\"%d\" time=\"%u\" date=\"") UINT64_FMT _T("\" />\n"), i + 1, timeFrame->getTimeFilter(), timeFrame->getDateFilter());
    }
 
    xml.append(_T("\t\t\t</timeFrames>\n\t\t\t<actions>\n"));
@@ -668,37 +668,19 @@ bool EPRule::matchSeverity(uint32_t severity) const
 	return (severityFlag[severity] & m_flags) != 0;
 }
 
-
-/**
- * Last days for each day
- */
-static const int daysInMonth[12] = {31, 28, 31, 30, 31, 30,
-                                    31, 31, 30, 31, 30, 31};
-/**
- * Check if given date is last day of the month
- */
-static bool IsLastDayOfMonth(struct tm *local)
-{
-   if (((local->tm_year % 4) == 0) && local->tm_mon == 1)
-   {
-      return local->tm_mday == (daysInMonth[1] + 1);
-   }
-   return local->tm_mday == daysInMonth[local->tm_mon];
-}
-
 /**
  * Check if execution time matches the frames
  */
-bool EPRule::matchTime(struct tm *local) const
+bool EPRule::matchTime(struct tm *localTime) const
 {
    if (m_timeFrames.isEmpty())
       return (m_flags & RF_NEGATED_TIME_FRAMES) ? false : true;
 
    bool match = false;
-   uint32_t currentTime = local->tm_hour * 100 + local->tm_min; //BCD format
+   uint32_t currentTime = localTime->tm_hour * 100 + localTime->tm_min; // BCD format
    for(TimeFrame *frame : m_timeFrames)
    {
-      if (frame->match(local, currentTime))
+      if (frame->match(localTime, currentTime))
       {
          match = true;
          break;
@@ -1331,8 +1313,8 @@ bool EPRule::saveToDB(DB_HANDLE hdb) const
          for(TimeFrame *frame : m_timeFrames)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, i++);
-            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, frame->getTime());
-            DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, frame->getDate());
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, frame->getTimeFilter());
+            DBBind(hStmt, 4, DB_SQLTYPE_BIGINT, frame->getDateFilter());
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
@@ -1475,8 +1457,8 @@ void EPRule::createMessage(NXCPMessage *msg) const
    for(int i = 0; i < m_timeFrames.size(); i++)
    {
       TimeFrame *timeFrame = m_timeFrames.get(i);
-      msg->setField(fieldId++, timeFrame->getTime());
-      msg->setField(fieldId++, timeFrame->getDate());
+      msg->setField(fieldId++, timeFrame->getTimeFilter());
+      msg->setField(fieldId++, timeFrame->getDateFilter());
    }
    msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_filterScriptSource));
    msg->setField(VID_ACTION_SCRIPT, CHECK_NULL_EX(m_actionScriptSource));
@@ -1501,8 +1483,8 @@ json_t *EPRule::toJson() const
    for(TimeFrame *frame : m_timeFrames)
    {
       json_t *timeFrame = json_object();
-      json_object_set_new(timeFrame, "time", json_integer(frame->getTime()));
-      json_object_set_new(timeFrame, "date", json_integer(frame->getDate()));
+      json_object_set_new(timeFrame, "time", json_integer(frame->getTimeFilter()));
+      json_object_set_new(timeFrame, "date", json_integer(frame->getDateFilter()));
       json_array_append_new(timeFrames, timeFrame);
    }
    json_object_set_new(root, "timeFrames", timeFrames);
@@ -1866,27 +1848,4 @@ void EventPolicy::getEventReferences(uint32_t eventCode, ObjectArray<EventRefere
       }
    }
    unlock();
-}
-
-/**
- * Time frame constructor
- */
-TimeFrame::TimeFrame(uint32_t time, uint64_t date)
-{
-   m_date = date;
-   m_time = time;
-   m_startTime = m_time / 10000;
-   m_endTime = m_time % 10000;
-}
-
-/**
- * Check if provided time matches current time frame
- */
-bool TimeFrame::match(struct tm *local, int currentTime)
-{
-   return (m_startTime <= currentTime && m_endTime >= currentTime) && //Match time
-                  ((m_date & (1L << local->tm_mday)) ||  //Match day of month
-                  ((m_date & 1) && IsLastDayOfMonth(local))) && //Match last day if required
-                  (m_date & (1L << (local->tm_wday + 31))) && //Match day of week
-                  (m_date & (1L << (local->tm_mon + 7 + 32))); //Month
 }

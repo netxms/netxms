@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -97,7 +97,7 @@ int ZFile::zwrite(const void *buffer, size_t size)
          m_nBufferSize = 0;
       }
       if (result != -1)
-         result += bytes;
+         result += static_cast<int>(bytes);
    }
    return result;
 }
@@ -160,7 +160,7 @@ int ZFile::zread(void *buffer, size_t size)
       m_pBufferPos += bytes;
       m_nBufferSize -= bytes;
    }
-   return size;
+   return static_cast<int>(size);
 }
 
 /**
@@ -185,7 +185,7 @@ int ZFile::zclose()
       if (m_nBufferSize > 0)
       {
          m_stream.next_in = m_pDataBuffer;
-         m_stream.avail_in = m_nBufferSize;
+         m_stream.avail_in = static_cast<uInt>(m_nBufferSize);
          do
          {
             m_stream.next_out = m_pCompBuffer;

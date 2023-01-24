@@ -56,6 +56,22 @@ public:
    }
 
    /**
+    * Update with new sample - convenience wrapper
+    */
+   void update(int64_t v)
+   {
+      update(static_cast<double>(v));
+   }
+
+   /**
+    * Update with new sample - convenience wrapper
+    */
+   void update(uint64_t v)
+   {
+      update(static_cast<double>(v));
+   }
+
+   /**
     * Reset
     */
    void reset()

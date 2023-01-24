@@ -284,23 +284,50 @@ struct ActionExecutionConfiguration
 };
 
 /**
+ * Check if given date is last day of the month
+ */
+static inline bool IsLastDayOfMonth(struct tm *localTime)
+{
+   if (((localTime->tm_year % 4) == 0) && (localTime->tm_mon == 1))
+   {
+      return localTime->tm_mday == 29;  // February in leap year
+   }
+   const int daysInMonth[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+   return localTime->tm_mday == daysInMonth[localTime->tm_mon];
+}
+
+/**
  * Time frame class
  */
 class TimeFrame
 {
 private:
-   uint32_t m_time; //BCD format startHour startMinute endHour endMinute
-   uint64_t m_date;
+   uint32_t m_timeFilter; // Time range packed as BCD: startHour startMinute endHour endMinute
+   uint64_t m_dateFilter; // Date filter bit masks
 
-   int m_startTime;
-   int m_endTime;
+   int m_startTime; // Time range start extracted from m_time
+   int m_endTime;   // Time range end extracted from m_time
 
 public:
-   TimeFrame(uint32_t time, uint64_t date);
-   bool match(struct tm *local, int currentTime);
+   TimeFrame(uint32_t timeFilter, uint64_t dateFilter)
+   {
+      m_dateFilter = dateFilter;
+      m_timeFilter = timeFilter;
+      m_startTime = timeFilter / 10000;
+      m_endTime = timeFilter % 10000;
+   }
 
-   uint32_t getTime() const { return m_time; }
-   uint64_t getDate() const { return m_date; }
+   bool match(struct tm *localTime, int currentTimeBCD)
+   {
+      return 
+         (m_startTime <= currentTimeBCD && currentTimeBCD <= m_endTime) && // Time is within range
+         ((m_dateFilter & (_ULL(1) << localTime->tm_mday)) || ((m_dateFilter & _ULL(1)) && IsLastDayOfMonth(localTime))) && // Day of month is allowed
+         (m_dateFilter & (_ULL(1) << (localTime->tm_wday + 31))) && // Day of week is allowed
+         (m_dateFilter & (_ULL(1) << (localTime->tm_mon + 7 + 32))); // Month is allowed
+   }
+
+   uint32_t getTimeFilter() const { return m_timeFilter; }
+   uint64_t getDateFilter() const { return m_dateFilter; }
 };
 
 /**
@@ -342,7 +369,7 @@ private:
    bool matchEvent(uint32_t eventCode) const;
    bool matchSeverity(uint32_t severity) const;
    bool matchScript(Event *event) const;
-   bool matchTime(struct tm *local) const;
+   bool matchTime(struct tm *localTime) const;
 
    uint32_t generateAlarm(Event *event) const;
    void executeActionScript(Event *event) const;

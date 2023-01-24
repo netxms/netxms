@@ -190,7 +190,7 @@ bool NetworkMapLink::update(const ObjLink& src)
          {
             while((startIndex > 0) && _istspace(config.charAt(startIndex - 1)))
                startIndex--;
-            int endIndex = config.find(_T("</objectStatusList>"));
+            ssize_t endIndex = config.find(_T("</objectStatusList>"));
             if (endIndex != -1)
             {
                endIndex += 19;

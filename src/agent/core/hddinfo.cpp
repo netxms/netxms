@@ -64,7 +64,7 @@ json_t* RunSmartCtl(const TCHAR *device)
    _sntprintf(cmd, 1024, _T("smartctl --all %s -j 2>/dev/null"), device);
 #endif
 
-   OutputCapturingProcessExecutor pe(cmd, 100);
+   OutputCapturingProcessExecutor pe(cmd);
    if (!pe.execute())
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Failed to execute smartctl for device \"%s\""), device);
