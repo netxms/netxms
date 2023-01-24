@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,7 +203,7 @@ void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, con
 {
    va_list args;
    va_start(args, format);
-   PostEvent(eventCode, eventName, timestamp, format, args, nullptr);
+   PostEvent(eventCode, eventName, timestamp, format, args);
    va_end(args);
 }
 
@@ -212,7 +212,7 @@ void PostEvent(uint32_t eventCode, const TCHAR *eventName, time_t timestamp, con
  */
 void ForwardEvent(NXCPMessage *msg)
 {
-	msg->setField(VID_TRAP_ID, s_eventIdBase | (UINT64)InterlockedIncrement(&s_eventIdCounter));
+	msg->setField(VID_TRAP_ID, s_eventIdBase | static_cast<uint64_t>(InterlockedIncrement(&s_eventIdCounter)));
 	s_generatedEventsCount++;
 	s_lastEventTimestamp = time(nullptr);
 	g_notificationProcessorQueue.put(msg);
