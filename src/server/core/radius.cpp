@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2022 Victor Kirhenshtein
+ ** Copyright (C) 2003-2023 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -37,7 +37,7 @@
  */
 static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    EVP_MD_CTX *context = EVP_MD_CTX_new();
 #else
    EVP_MD_CTX contextBuffer;
@@ -47,7 +47,7 @@ static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
    EVP_DigestInit_ex(context, EVP_md4(), nullptr);
    EVP_DigestUpdate(context, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
    EVP_DigestFinal_ex(context, hash, nullptr);
-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
    EVP_MD_CTX_free(context);
 #else
    EVP_MD_CTX_cleanup(context);
