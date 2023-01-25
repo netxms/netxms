@@ -152,7 +152,7 @@ public class DataFormatter
                         String unitName = unit.getName();
                         if (v.suffix.isEmpty() && !unitName.isEmpty())
                         {
-                           sb.append(" ");
+                           sb.append("\u2009");
                         }
                         sb.append(unitName);
                      }
@@ -177,9 +177,9 @@ public class DataFormatter
    private static final double[] DECIMAL_MULTIPLIERS = { 1L, 1000L, 1000000L, 1000000000L, 1000000000000L, 1000000000000000L };
    private static final double[] DECIMAL_MULTIPLIERS_SMALL = { 0.000000000000001, 0.000000000001, 0.000000001, 0.000001, 0.001, 1 };
    private static final double[] BINARY_MULTIPLIERS = { 1L, 0x400L, 0x100000L, 0x40000000L, 0x10000000000L, 0x4000000000000L };
-   private static final String[] SUFFIX = { "", " k", " M", " G", " T", " P" };
-   private static final String[] BINARY_SUFFIX = { "", " Ki", " Mi", " Gi", " Ti", " Pi" };
-   private static final String[] SUFFIX_SMALL = { " f", " p", " n", " \u03bc", " m", "" };
+   private static final String[] SUFFIX = { "", "\u2009k", "\u2009M", "\u2009G", "\u2009T", "\u2009P" };
+   private static final String[] BINARY_SUFFIX = { "", "\u2009Ki", "\u2009Mi", "\u2009Gi", "\u2009Ti", "\u2009Pi" };
+   private static final String[] SUFFIX_SMALL = { "\u2009f", "\u2009p", "\u2009n", "\u2009\u03bc", "\u2009m", "" };
 
    /**
     * Get value ready for formatter
