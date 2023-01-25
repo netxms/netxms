@@ -181,7 +181,13 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   if (subfields.length >= 8)
                      dci.lineChartType = Integer.parseInt(subfields[7]);
                   if (subfields.length >= 9)
-                     dci.color = "0x" + Integer.toHexString(Integer.parseInt(subfields[8]));
+                  {
+                     Integer color = Integer.parseInt(subfields[8]);
+                     if (color == -1)
+                        dci.color = dci.UNSET_COLOR;
+                     else
+                        dci.color = "0x" + Integer.toHexString(color);
+                  }
                   if (subfields.length >= 10)
                      configuration.setStacked(Boolean.parseBoolean(subfields[9]));
 
