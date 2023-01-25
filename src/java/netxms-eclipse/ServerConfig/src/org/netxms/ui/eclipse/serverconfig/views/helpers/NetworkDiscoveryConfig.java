@@ -40,6 +40,7 @@ public class NetworkDiscoveryConfig
 
    private NXCSession session;
 	private int discoveryType;
+   private boolean enableTCPProbing;
 	private boolean useSnmpTraps;
 	private boolean useSyslog;
 	private int filterFlags;
@@ -74,6 +75,7 @@ public class NetworkDiscoveryConfig
 		Map<String, ServerVariable> variables = session.getServerVariables();
 
 		config.discoveryType = getInteger(variables, "NetworkDiscovery.Type", 0);
+      config.enableTCPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", false); 
       config.useSnmpTraps = getBoolean(variables, "NetworkDiscovery.UseSNMPTraps", false); //$NON-NLS-1$
       config.useSyslog = getBoolean(variables, "NetworkDiscovery.UseSyslog", false); //$NON-NLS-1$
       config.filterFlags = getInteger(variables, "NetworkDiscovery.Filter.Flags", 0); //$NON-NLS-1$
@@ -160,6 +162,7 @@ public class NetworkDiscoveryConfig
 	public void save() throws NXCException, IOException
 	{
 		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", enableTCPProbing ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.UseSNMPTraps", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.UseSyslog", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.Filter.Flags", Integer.toString(filterFlags)); //$NON-NLS-1$
@@ -256,6 +259,22 @@ public class NetworkDiscoveryConfig
    public void setUseSnmpTraps(boolean useSnmpTraps)
    {
       this.useSnmpTraps = useSnmpTraps;
+   }
+
+   /**
+    * @return the enableTCPProbing
+    */
+   public boolean isEnableTCPProbing()
+   {
+      return enableTCPProbing;
+   }
+
+   /**
+    * @param enableTCPProbing the enableTCPProbing to set
+    */
+   public void setEnableTCPProbing(boolean enableTCPProbing)
+   {
+      this.enableTCPProbing = enableTCPProbing;
    }
 
    /**

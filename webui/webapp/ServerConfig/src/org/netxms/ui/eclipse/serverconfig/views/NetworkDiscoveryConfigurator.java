@@ -92,6 +92,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button radioDiscoveryPassive;
    private Button radioDiscoveryActive;
    private Button radioDiscoveryActiveAndPassive;
+   private Button checkEnableTCPProbing;
    private Button checkUseSnmpTraps;
    private Button checkUseSyslog;
    private Spinner passiveDiscoveryInterval;
@@ -283,7 +284,21 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryActive.addSelectionListener(listener);
       radioDiscoveryActiveAndPassive = new Button(clientArea, SWT.RADIO);
       radioDiscoveryActiveAndPassive.setText(Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery);
-      radioDiscoveryActiveAndPassive.addSelectionListener(listener);      
+      radioDiscoveryActiveAndPassive.addSelectionListener(listener); 
+
+      checkEnableTCPProbing = new Button(clientArea, SWT.CHECK);
+      checkEnableTCPProbing.setText("Enable TCP probing");
+      checkEnableTCPProbing.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            config.setEnableTCPProbing(checkEnableTCPProbing.getSelection());
+            setModified();
+         }
+      });
+      gd = new GridData();
+      gd.verticalIndent = 10;
+      checkEnableTCPProbing.setLayoutData(gd);     
 
       checkUseSnmpTraps = new Button(clientArea, SWT.CHECK);
       checkUseSnmpTraps.setText(Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery);
@@ -295,9 +310,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             setModified();
          }
       });
-      gd = new GridData();
-      gd.verticalIndent = 10;
-      checkUseSnmpTraps.setLayoutData(gd);
 
       checkUseSyslog = new Button(clientArea, SWT.CHECK);
       checkUseSyslog.setText(Messages.get().NetworkDiscoveryConfigurator_UseSyslogForDiscovery);
@@ -338,6 +350,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       }
       radioActiveDiscoveryInterval.setEnabled(enabled);
       radioActiveDiscoverySchedule.setEnabled(enabled);
+      checkEnableTCPProbing.setEnabled(enabled);
    }
 
    /**
@@ -789,6 +802,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
       radioDiscoveryActive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
       radioDiscoveryActiveAndPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      checkEnableTCPProbing.setSelection(config.isEnableTCPProbing());
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
       
