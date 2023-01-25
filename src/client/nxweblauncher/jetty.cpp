@@ -21,6 +21,7 @@
 **/
 
 #include "nxweblauncher.h"
+#include <nxproc.h>
 
 /**
  * Jetty process handle
@@ -56,34 +57,35 @@ bool RunJetty(WCHAR *commandLine)
 }
 
 /**
+ * Process executor that logs it's output
+ */
+class LoggingProcessExecutor : public ProcessExecutor
+{
+protected:
+   virtual void onOutput(const char *text, size_t length) override
+   {
+      nxlog_debug_tag(L"jetty", 5, L"%hs", text);
+   }
+
+public:
+   LoggingProcessExecutor(const WCHAR *cmdLine) : ProcessExecutor(cmdLine, false) { }
+};
+
+/**
  * Send stop signal to jetty
  */
 void StopJetty()
 {
    StringBuffer commandLine;
-   commandLine.append(L"-jar \"");
+   commandLine.append(L"\"");
+   commandLine.append(g_javaExecutable);
+   commandLine.append(L"\" -jar \"");
    commandLine.append(g_installDir);
    commandLine.append(L"\\jetty-home\\start.jar\" --stop stop.port=17003 stop.key=nxmc$jetty$key stop.wait=20");
-   nxlog_debug_tag(DEBUG_TAG_STARTUP, 5, _T("Stop command line: %s"), commandLine.cstr());
 
-   STARTUPINFO si;
-   memset(&si, 0, sizeof(STARTUPINFO));
-   si.cb = sizeof(STARTUPINFO);
-
-   PROCESS_INFORMATION pi;
-   if (!CreateProcess(g_javaExecutable, commandLine.getBuffer(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi))
-   {
-      TCHAR buffer[1024];
-      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_SHUTDOWN, _T("Cannot create process (Error 0x%08x: %s)"), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
-      return;
-   }
-
-   CloseHandle(pi.hThread);
-
-   nxlog_debug_tag(DEBUG_TAG_STARTUP, 5, _T("Waiting for Jetty to stop"));
-   WaitForSingleObject(pi.hProcess, 25000);
-
-   CloseHandle(pi.hProcess);
+   LoggingProcessExecutor executor(commandLine);
+   executor.execute();
+   executor.waitForCompletion(30000);
 
    TerminateProcess(s_jettyProcess, 0);
 }
