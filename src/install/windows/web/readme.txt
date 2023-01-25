@@ -1,34 +1,55 @@
-SSL certificate: jetty-base/etc/keystore.p12
+# Introduction
 
-generate self-signed certificate:
+This package provides web interface for NetXMS, both legacy and new one, as well as API module.
+It's build on top of Jetty10.
 
-    openssl genrsa -out server-key.pem
-    openssl req -new -key server-key.pem -out server-cert.req
-    openssl x509 -req -signkey server-key.pem -in server-cert.req -days 365 -out server-cert.pem
-    openssl pkcs12 -export -inkey server-key.pem -in server-cert.pem -out jetty-base/etc/keystore.p12 -password pass:example1
+Default setup have both HTTP and HTTPS connectors enabled, with self-signed certificate.
 
-Custom logo:
+HTTP connector is available at http://localhost:4788/
+HTTPS connector is available at https://localhost:4733/
 
-jetty-base/resources/logo.jpg
+Certificate is issued to localhost and not trusted by any CA, so you will get warning in browser.
+It's worth to mention that SNI check is disabled in default setup, so you can access HTTPS connector
+using any hostname (or even IP address).
 
-API configuration:
+# Configuration
 
-jetty-base/resources/nxapisrv.properties
+## Changing ports
 
-NXMC configuration:
+HTTP connector - modify `jetty.http.port` in file `jetty-base/start.d/http.ini`.
+HTTPS connector - modify `jetty.ssl.port` in file `jetty-base/start.d/ssl.ini`.
 
-jetty-base/resources/nxmc.properties
+If you want to disable http connector entirely, comment out line `--module=http`
+in file `jetty-base/start.d/http.ini`.
 
-HTTP port:
 
-"jetty.http.port" in jetty-base/start.d/http.ini
+## Changing certificate
 
-to disable http connector - delete http.ini
+You can replace certificate in file `jetty-base/etc/keystore.jks` with your own.
+Change password in file `jetty-base/start.d/ssl.ini` (property `jetty.sslContext.keyStorePassword`) if required.
 
-SSL configuration:
+It's highly recommended to use certificate issued by trusted CA like LetsEncrypt, your internal CA,
+or any commecial CA instead of self-signed.
 
-jetty-base/start.d/ssl.ini
+To simplify inital setup, SNI check is disabled. It's recommended to renable it by setting
+property `jetty.sslContext.sniHostCheck` in file `jetty-base/start.d/ssl.ini` to `true`.
 
-Parameters jetty.ssl.port, jetty.sslContext.keyStorePath, jetty.sslContext.keyStorePassword
 
-Web apps should be placed in jetty-base/webapps
+## Changing IP address of the NetXMS server
+
+Both management console and API module are configured to connect to the NetXMS server at `127.0.0.1:4701`. If you want to change this, modify property `server` in files `jetty-base/resources/nxmc.properties` (management console) and `jetty-base/resources/nxapisrv.properties` (API).
+
+
+# Configuration files
+
+jetty-base/etc/keystore.p12 - keystore for HTTPS connector
+jetty-base/etc/launcher.conf - configuration file for Jetty service launcher (e.g. memory limits)
+jetty-base/start.d/http.ini - http connector configuration
+jetty-base/start.d/ssl.ini - https connector configuration
+jetty-base/resources/nxmc.properties - management console configuration (both legacy and new one)
+jetty-base/resources/nxapisrv.properties - API configuration
+
+# Additional information:
+
+NetXMS administrator guide: https://netxms.org/documentation/adminguide/
+Jetty10 operations guide: https://www.eclipse.org/jetty/documentation/jetty-10/operations-guide/
