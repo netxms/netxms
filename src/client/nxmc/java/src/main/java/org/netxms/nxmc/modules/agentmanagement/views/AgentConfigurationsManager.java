@@ -132,6 +132,7 @@ public class AgentConfigurationsManager extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

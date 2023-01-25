@@ -78,6 +78,7 @@ public class ObjectQueryResultView extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       updateResultTable(resultSet);
    }
 

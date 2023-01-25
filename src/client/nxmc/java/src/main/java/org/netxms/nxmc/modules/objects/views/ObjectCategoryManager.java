@@ -150,6 +150,7 @@ public class ObjectCategoryManager extends ConfigurationView implements SessionL
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

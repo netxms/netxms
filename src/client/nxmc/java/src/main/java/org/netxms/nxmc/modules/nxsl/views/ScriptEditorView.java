@@ -126,6 +126,7 @@ public class ScriptEditorView extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

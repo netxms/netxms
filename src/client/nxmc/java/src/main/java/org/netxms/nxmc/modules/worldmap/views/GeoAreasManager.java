@@ -181,6 +181,7 @@ public class GeoAreasManager extends ConfigurationView implements SessionListene
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

@@ -306,7 +306,7 @@ int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_atan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   if (!argv[0]->isNumeric())
+   if (!argv[0]->isNumeric() || !argv[1]->isNumeric())
       return NXSL_ERR_NOT_NUMBER;
 
    *result = vm->createValue(atan2(argv[0]->getValueAsReal(), argv[1]->getValueAsReal()));

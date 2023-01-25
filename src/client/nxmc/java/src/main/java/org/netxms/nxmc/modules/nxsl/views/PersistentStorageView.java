@@ -120,6 +120,7 @@ public class PersistentStorageView extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

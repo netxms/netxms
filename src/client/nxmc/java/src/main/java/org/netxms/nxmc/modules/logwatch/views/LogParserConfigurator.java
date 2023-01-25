@@ -91,6 +91,7 @@ public class LogParserConfigurator extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

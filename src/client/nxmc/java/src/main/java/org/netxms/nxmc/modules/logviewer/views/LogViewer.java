@@ -195,6 +195,7 @@ public class LogViewer extends View
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       new Job(String.format(i18n.tr("Opening server log \"%s\""), logName), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

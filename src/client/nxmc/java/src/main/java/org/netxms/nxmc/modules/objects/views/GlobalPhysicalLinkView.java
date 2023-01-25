@@ -61,6 +61,7 @@ public class GlobalPhysicalLinkView extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       manager.refresh();
    }
 

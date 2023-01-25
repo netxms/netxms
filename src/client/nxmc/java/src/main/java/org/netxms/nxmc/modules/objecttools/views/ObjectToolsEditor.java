@@ -163,6 +163,7 @@ public class ObjectToolsEditor extends ConfigurationView implements SessionListe
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

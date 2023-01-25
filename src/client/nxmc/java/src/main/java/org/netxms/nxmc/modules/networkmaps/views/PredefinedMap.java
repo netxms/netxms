@@ -173,7 +173,10 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          };
          job.setUser(false);
          job.start();
+         
+         syncObjects();
       }
+
    }
 
    /**
@@ -216,6 +219,10 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          {
             viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
          }
+      }
+      else
+      {
+         viewer.setBackgroundImage(null, false);
       }
 
       setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
@@ -1170,5 +1177,15 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    private NetworkMap getMapObject()
    {
       return (NetworkMap)getObject();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectUpdate(AbstractObject object)
+   {
+      super.onObjectUpdate(object);
+      onObjectChange(object);
    }
 }

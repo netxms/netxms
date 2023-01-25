@@ -199,6 +199,7 @@ public class ImageLibrary extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

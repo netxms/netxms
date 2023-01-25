@@ -20,6 +20,8 @@ package org.netxms.nxmc.modules.dashboards.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 
@@ -40,7 +42,7 @@ public abstract class AbstractDashboardView extends ObjectView
     */
    public AbstractDashboardView(String name, ImageDescriptor image, String id)
    {
-      super(name, image, id, false);
+      super(name, image, id, false); 
    }
 
    /**
@@ -51,4 +53,24 @@ public abstract class AbstractDashboardView extends ObjectView
    {
       viewArea = parent;
    }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void onObjectUpdate(AbstractObject object)
+   {
+      super.onObjectUpdate(object);
+      onObjectChange(object);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      setContext(Registry.getSession().findObjectById(getObjectId()));
+      super.refresh();
+   }   
 }

@@ -19,7 +19,11 @@
 package org.netxms.nxmc.modules.objects.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -31,6 +35,9 @@ public abstract class ObjectView extends ViewWithContext
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectView.class);
    
+   private SessionListener clientListener;
+   private NXCSession session;
+   
    /**
     * Create object view with specific ID.
     *
@@ -41,8 +48,9 @@ public abstract class ObjectView extends ViewWithContext
    public ObjectView(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
       super(name, image, id, hasFilter);
+      session = Registry.getSession();
    }
-
+   
    /**
     * @see org.netxms.nxmc.base.views.View#getGlobalId()
     */
@@ -51,6 +59,43 @@ public abstract class ObjectView extends ViewWithContext
    {
       AbstractObject object = getObject();
       return getBaseId() + "@" + ((object != null) ? Long.toString(object.getObjectId()) : "none");
+   }   
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      clientListener = new SessionListener() {         
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.OBJECT_CHANGED && getObjectId() == n.getSubCode())
+            {
+               getViewArea().getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     setContext(n.getObject(), false);
+                     onObjectUpdate((AbstractObject)n.getObject());
+                  }
+               });
+            }
+         }
+      };
+
+      session.addListener(clientListener);
+   }
+
+   /**
+    * Called when current object is updated 
+    *
+    * @param object updated object
+    */
+   protected void onObjectUpdate(AbstractObject object)
+   {
    }
 
    /**
@@ -119,5 +164,12 @@ public abstract class ObjectView extends ViewWithContext
    {
       AbstractObject object = (AbstractObject)getContext();
       return (object != null) ? object.getObjectName() : "";
+   }
+
+   @Override
+   public void dispose()
+   {
+      session.removeListener(clientListener);
+      super.dispose();
    }
 }

@@ -146,6 +146,7 @@ public class ServerVariables extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

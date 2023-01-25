@@ -89,9 +89,21 @@ public abstract class ViewWithContext extends View
     */
    protected void setContext(Object context)
    {
+      setContext(context, true);
+   }
+
+   /**
+    * Set context
+    * 
+    * @param context context new context
+    * @param update if update should be callled
+    */
+   protected void setContext(Object context, boolean update)
+   {
       Object oldContext = this.context;
       this.context = context;
-      contextChanged(oldContext, context);
+      if (update)
+         contextChanged(oldContext, context);
    }
 
    /**

@@ -137,6 +137,7 @@ public class StoredAgentConfigurationEditor extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

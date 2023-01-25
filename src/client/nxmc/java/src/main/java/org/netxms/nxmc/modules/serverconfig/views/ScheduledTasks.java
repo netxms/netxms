@@ -174,6 +174,7 @@ public class ScheduledTasks extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 

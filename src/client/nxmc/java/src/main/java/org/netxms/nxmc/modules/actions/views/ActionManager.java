@@ -173,6 +173,7 @@ public class ActionManager extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }   
 

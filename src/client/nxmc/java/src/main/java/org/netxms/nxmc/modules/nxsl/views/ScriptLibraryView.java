@@ -142,6 +142,7 @@ public class ScriptLibraryView extends ConfigurationView
    @Override
    protected void postContentCreate()
    {
+      super.postContentCreate();
       refresh();
    }
 
