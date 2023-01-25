@@ -1,0 +1,116 @@
+@font-face { 
+   font-family: LiberationSans; 
+   src: url('LiberationSans-Regular.ttf');
+} 
+
+@font-face { 
+   font-family: LiberationSansBold; 
+   src: url('LiberationSans-Bold.ttf');
+}
+
+body {
+   display: block;
+   margin: 0;
+   font-family: LiberationSans;
+}
+
+h1 {
+   font-size: 18px;
+   font-weight: 700;
+   font-family: LiberationSansBold;
+}
+
+.header-area {
+   padding: 15px;
+   background-color: rgb(14, 50, 78);
+}
+
+.content-area {
+   padding: 15px;
+   float: left;
+   width: 450px;
+}
+
+.button {
+   align-items: center;
+   vertical-align: middle;
+   text-align: center;
+   justify-content: center;
+   white-space: nowrap;
+
+   appearance: none;
+   user-select: none;
+
+   color: #0e324e;
+
+   border: 1px solid;
+   border-radius: 6px;
+   border-color: rgb(253, 41, 5);
+
+   display: inline-block;
+   max-width: 600px;
+   min-width: 350px;
+
+   line-height: 1.5;
+   padding: 10px 36px;
+   margin-bottom: 12px;
+
+   font-size: 15px;
+   font-weight: 600;
+   font-family: LiberationSansBold;
+
+   transition-delay: 0ms;
+   transition-duration: 200ms;
+   transition-property: all;
+   transition-timing-function: ease-in-out;
+}
+
+.button-primary {
+   background-color: rgb(224, 36, 4);
+   color: rgb(255, 252, 255);
+}
+
+.button, .button:focus, .button:hover {
+   text-decoration: none;
+}
+
+.button:focus, .button:hover {
+   color: rgb(255, 252, 255);
+   background-color: rgb(253, 41, 5);
+}
+
+.doc-links {
+   float: right;
+   padding: 15px;
+   margin: 15px;
+   border: 1px solid #d1d2d3;
+}
+
+.external-link {
+   margin-left: 20px;
+   margin-bottom: 6px;
+   text-decoration: none;
+   color: #0e324e;
+}
+
+.external-link:focus, .external-link:hover {
+   margin-left: 20px;
+   text-decoration: underline;
+   color: rgb(253, 41, 5);
+}
+
+.grid {
+   display: flex;
+   flex-wrap: wrap;
+}
+
+.v-grid > * {
+   display: block;
+}
+
+.copyright {
+   position: fixed;
+   bottom: 0%;
+   padding: 5px;
+   font-size: 14px;
+}

@@ -3,7 +3,7 @@
 #include "..\..\..\build\netxms-build-tag.iss"
 
 [Setup]
-AppId=NetXMS-WebUI
+AppId=NetXMS-WebUI-Jetty
 AppName=NetXMS WebUI
 AppVerName=NetXMS WebUI {#VersionString}
 AppVersion={#VersionString}
@@ -27,95 +27,66 @@ OutputBaseFilename=netxms-webui-{#VersionString}-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
-[Files]
-Source: ..\files\windows\x64\prunsrv.exe; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion; Components: webui
-Source: ..\files\windows\x64\prunmgr.exe; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
-Source: ..\files\java\jetty\jetty-runner.jar; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
-Source: ..\files\java\jetty\start.jar; DestDir: "{app}\bin"; Flags: ignoreversion; Components: webui
-Source: web\api.war; DestDir: "{app}\webapps"; Flags: ignoreversion; Components: api
-Source: web\logback.xml; DestDir: "{app}\lib"; Flags: ignoreversion; Components: webui
-Source: web\nxmc.war; DestDir: "{app}\webapps"; Flags: ignoreversion; Components: webui
-Source: web\nxmc.properties.sample; DestDir: "{app}\lib"; Flags: ignoreversion; Components: webui
-Source: web\server.xml; DestDir: "{app}\config"; Flags: ignoreversion; Components: webui
-Source: ..\files\windows\x64\jre\*; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
-
-[Dirs]
-Name: "{app}\base"
-Name: "{app}\logs"
-Name: "{app}\work"
-
 [Components]
 Name: "webui"; Description: "Web Interface"; Types: full compact custom; Flags: fixed
 Name: "api"; Description: "Web API"; Types: full
 Name: "jre"; Description: "Java Runtime Environment"; Types: full
 
+[Dirs]
+Name: "{app}\jetty-base"; Flags: uninsalwaysuninstall
+Name: "{app}\jetty-base\etc"; Flags: uninsalwaysuninstall
+Name: "{app}\jetty-base\resources"; Flags: uninsalwaysuninstall
+Name: "{app}\jetty-base\work"; Flags: uninsalwaysuninstall
+Name: "{app}\logs"; Flags: uninsalwaysuninstall
+
+[Files]
+Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\x64\Release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\..\x64\Release\nxweblauncher.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\java\jetty-home\*"; DestDir: "{app}\jetty-home"; Flags: ignoreversion recursesubdirs; Components: webui
+Source: "..\files\java\jetty-base\etc\keystore.p12"; DestDir: "{app}\jetty-base\etc"; Flags: onlyifdoesntexist; Components: webui
+Source: "..\files\java\jetty-base\lib\*"; DestDir: "{app}\jetty-base\lib"; Flags: ignoreversion recursesubdirs; Components: webui
+Source: "..\files\java\jetty-base\start.d\*"; DestDir: "{app}\jetty-base\start.d"; Flags: onlyifdoesntexist; Components: webui
+Source: "web\api.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: api
+Source: "web\frontpage\*"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion recursesubdirs; Components: webui
+Source: "web\logback.xml"; DestDir: "{app}\jetty-base\resources"; Flags: onlyifdoesntexist; Components: webui
+Source: "web\nxapisrv.properties"; DestDir: "{app}\jetty-base\resources"; Flags: onlyifdoesntexist; Components: api
+Source: "web\nxmc.properties"; DestDir: "{app}\jetty-base\resources"; Flags: onlyifdoesntexist; Components: webui
+Source: "web\nxmc.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
+Source: "web\nxmc-legacy.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
+Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
+Source: "web\readme.txt"; DestDir: "{app}"; Flags: isreadme; Components: webui
+
+[Registry]
+Root: HKLM; Subkey: "Software\NetXMS\WebUI"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: uninsdeletekey
+Root: HKLM; Subkey: "Software\NetXMS\WebUI"; ValueType: string; ValueName: "LauncherConfigFile"; ValueData: "{app}\etc\launcher.conf"; Flags: uninsdeletekey
+
 [Run]
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "delete nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Removing WebUI service..."; Flags: runhidden
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "install nxWebUI {code:GenerateInstallParameters}"; WorkingDir: "{app}\bin"; StatusMsg: "Installing WebUI service..."; Flags: runhidden
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "start nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Starting WebUI service..."; Flags: runhidden
+Filename: "{app}\bin\nxweblauncher.exe"; Parameters: "remove"; WorkingDir: "{app}\bin"; StatusMsg: "Removing WebUI service..."; Flags: runhidden
+Filename: "{app}\bin\nxweblauncher.exe"; Parameters: "install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing WebUI service..."; Flags: runhidden
+Filename: "net.exe"; Parameters: "start nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Starting WebUI service..."; Flags: runhidden
 
 [UninstallRun]
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "stop nxWebUI"; WorkingDir: "{app}\bin"; RunOnceId: "nxWebUIStopSvc"; Flags: runhidden
-Filename: "{app}\bin\prunsrv.exe"; Parameters: "delete nxWebUI"; WorkingDir: "{app}\bin"; RunOnceId: "nxWebUIDeleteSvc"; Flags: runhidden
+Filename: "net.exe"; Parameters: "stop nxWebUI"; WorkingDir: "{app}\bin"; RunOnceId: "nxWebUIStopSvc"; Flags: runhidden
+Filename: "{app}\bin\nxweblauncher.exe"; Parameters: "remove"; WorkingDir: "{app}\bin"; RunOnceId: "nxWebUIDeleteSvc"; Flags: runhidden
 
 [Code]
-var
-  DetailsPage : TInputQueryWizardPage;
-
 #include "firewall.iss"
 
 Function InitializeSetup: Boolean;
 Begin
-  Result := Not RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NetXMS WebUI_is1');
+  Result := Not RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NetXMS WebUI_is1') And Not RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\NetXMS-WebUI_is1');
   If Not Result Then
   Begin
     MsgBox('Older version of NetXMS web UI must be uninstalled before installation of this version.', mbError, MB_OK);
   End
-End;
-
-Procedure InitializeWizard;
-Begin
-  DetailsPage := CreateInputQueryPage(wpSelectComponents,
-      'Server Settings',
-      'Web interface server settings',
-      'Please check default settings and adjust them if required');
-  DetailsPage.Add('Port:', False);
-  DetailsPage.Values[0] := GetPreviousData('JettyPort', '8080');
-End;
-
-Function GetJettyPort: String;
-Begin
-  result := DetailsPage.Values[0];
-End;
-
-Procedure RegisterPreviousData(PreviousDataKey: Integer);
-Begin
-  SetPreviousData(PreviousDataKey, 'JettyPort', GetJettyPort());
-End;
-
-Function GenerateInstallParameters(Param: String): String;
-Var
-  strJvmArgument: String;
-Begin
-  strJvmArgument := ExpandConstant('--DisplayName="NetXMS WebUI" --Description="NetXMS Web Interface (jetty)" --Install="{app}\bin\prunsrv.exe" --Startup=auto --ServiceUser=LocalSystem --LogPath="{app}\logs" --LogLevel=Debug --StdOutput=auto --StdError=auto --StartMode=jvm --StopMode=jvm --Jvm=auto --Classpath="{app}\bin\jetty-runner.jar;{app}\bin\start.jar;{app}\bin\logback-classic-1.4.4.jar;{app}\bin\logback-core-1.4.4.jar;{app}\lib" --StartClass=org.eclipse.jetty.runner.Runner ++StartParams=--stop-port ++StartParams=17003 ++StartParams=--stop-key ++StartParams=nxmc$jetty$key');
-  strJvmArgument := strJvmArgument + ' ++StartParams=--port ++StartParams=' + GetJettyPort();
-  strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams=--config ++StartParams="{app}\config\server.xml" ++StartParams="--path" ++StartParams="/" ++StartParams="{app}\webapps\nxmc.war"');
-
-  If IsComponentSelected('api') Then
-  Begin
-    strJvmArgument := strJvmArgument + ExpandConstant(' ++StartParams="--path" ++StartParams="/api" ++StartParams="{app}\webapps\api.war"');
-  End;
-
-  strJvmArgument := strJvmArgument + ExpandConstant(' --StopClass=org.eclipse.jetty.start.Main ++StopParams=--stop ++StopParams=STOP.PORT=17003 ++StopParams=STOP.KEY=nxmc$jetty$key');
-
-  If IsComponentSelected('jre') Then
-  Begin
-    strJvmArgument := strJvmArgument + ExpandConstant(' --Jvm="{app}\jre\bin\server\jvm.dll"');
-  End;
-
-  strJvmArgument := strJvmArgument + ExpandConstant(' --JvmOptions=-Duser.dir="{app}\base";-Djava.io.tmpdir="{app}\work";-Djetty.home="{app}";-Djetty.base="{app}\base;-Dnxmc.logfile={app}\logs\jetty.log"');
-
-  Result := strJvmArgument;
 End;
 
 Procedure StopAllServices;
@@ -128,13 +99,17 @@ End;
 Procedure CurStepChanged(CurStep: TSetupStep);
 Begin
   If CurStep=ssPostInstall Then Begin
-     SetFirewallException('NetXMS WebUI', ExpandConstant('{app}')+'\bin\prunsrv.exe');
+     SetFirewallException('NetXMS WebUI', ExpandConstant('{app}')+'\bin\nxweblauncher.exe');
+     If WizardIsComponentSelected('jre') Then Begin
+        SetFirewallException('NetXMS WebUI', ExpandConstant('{app}')+'\jre\bin\java.exe');
+     End;
   End;
 End;
 
 Procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 Begin
   If CurUninstallStep=usPostUninstall Then Begin
-     RemoveFirewallException(ExpandConstant('{app}')+'\bin\prunsrv.exe');
+     RemoveFirewallException(ExpandConstant('{app}')+'\bin\nxweblauncher.exe');
+     RemoveFirewallException(ExpandConstant('{app}')+'\jre\bin\java.exe');
   End;
 End;

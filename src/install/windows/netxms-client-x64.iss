@@ -47,8 +47,8 @@ Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}"; Flags: ignoreversio
 Source: "..\files\windows\x64\libcurl.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
-Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
+Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}"; Flags: ignoreversion signonce
 ; Common files for Java based components
 Source: "..\..\..\x64\Release\libnxjava.dll"; DestDir: "{app}"; Flags: ignoreversion signonce; Components: nxmc or nxshell
 ; nxmc
