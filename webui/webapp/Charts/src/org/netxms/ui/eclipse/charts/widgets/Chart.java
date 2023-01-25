@@ -203,7 +203,7 @@ public class Chart extends Composite
       {
          return items.get(index);
       }
-      catch(ArrayIndexOutOfBoundsException e)
+      catch(IndexOutOfBoundsException e)
       {
          return null;
       }
@@ -537,6 +537,9 @@ public class Chart extends Composite
     */
    public void updateParameter(int index, DciData values, boolean updateChart)
    {
+      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
+         return;
+         
       dataSeries.set(index, new DataSeries(values));
       if (updateChart)
          refresh();
@@ -551,6 +554,9 @@ public class Chart extends Composite
     */
    public void updateParameter(int index, double value, boolean updateChart)
    {
+      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
+         return;
+         
       dataSeries.set(index, new DataSeries(value));
       if (updateChart)
          refresh();
@@ -566,6 +572,9 @@ public class Chart extends Composite
     */
    public void updateParameter(int index, DciDataRow value, DataType dataType, boolean updateChart)
    {
+      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
+         return;
+         
       dataSeries.set(index, new DataSeries(value, dataType));
       if (updateChart)
          refresh();
@@ -579,6 +588,9 @@ public class Chart extends Composite
     */
    public void updateParameterThresholds(int index, Threshold[] thresholds)
    {
+      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
+         return;
+         
       DataSeries series = dataSeries.get(index);
       if (series != null)
       {

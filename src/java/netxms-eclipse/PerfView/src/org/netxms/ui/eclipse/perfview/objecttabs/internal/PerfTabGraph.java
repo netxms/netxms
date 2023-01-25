@@ -343,7 +343,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 	{
 	   StringBuilder sb = new StringBuilder();
 	   
-	   for(int i = 0; i < items.size(); i++)
+	   for(int i = 0; i < items.size() && i < ChartConfiguration.MAX_GRAPH_ITEM_COUNT; i++)
 	   {
 	      sb.append("&");
          sb.append(Integer.toString(ChartDciConfig.ITEM));

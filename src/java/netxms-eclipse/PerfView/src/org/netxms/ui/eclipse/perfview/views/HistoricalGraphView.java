@@ -404,7 +404,8 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
                   for(ChartDciConfig dci : configuration.getDciList())
                   {
                      GraphItem item = chart.getItem(i);
-                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
+                     if (item != null)
+                        item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
                      i++;
                   }
                   chart.rebuild();

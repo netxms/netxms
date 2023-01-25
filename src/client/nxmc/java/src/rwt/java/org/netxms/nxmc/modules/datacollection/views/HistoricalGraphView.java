@@ -377,7 +377,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
                   for(ChartDciConfig dci : configuration.getDciList())
                   {
                      GraphItem item = chart.getItem(i);
-                     item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
+                     if (item != null)
+                        item.setMeasurementUnit(measurementUnits.get(dci.getDciId()));
                      i++;
                   }
                   chart.rebuild();
