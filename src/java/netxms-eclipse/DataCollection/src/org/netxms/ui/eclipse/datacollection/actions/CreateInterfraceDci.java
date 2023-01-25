@@ -243,7 +243,27 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 					dci.setName(".1.3.6.1.2.1.2.2.1.20" + getInterfaceInstance(iface)); //$NON-NLS-1$
 					break;
 			}
-		}
+		}     
+
+      switch(dciType)
+      {
+         case IFDCI_OUT_BYTES:
+         case IFDCI_IN_BYTES:
+            dci.setUnitName(dciInfo.delta ? "B/s" : "B"); //$NON-NLS-1$ //$NON-NLS-2$
+            break;
+         case IFDCI_OUT_BITS:
+         case IFDCI_IN_BITS:
+            dci.setUnitName(dciInfo.delta ? "b/s" : "b"); //$NON-NLS-1$ //$NON-NLS-2$
+            break;
+         case IFDCI_OUT_PACKETS:
+         case IFDCI_IN_PACKETS:
+            dci.setUnitName(dciInfo.delta ? "packets/s" : "packets"); //$NON-NLS-1$ //$NON-NLS-2$
+            break;
+         case IFDCI_OUT_ERRORS:
+         case IFDCI_IN_ERRORS:
+            dci.setUnitName(dciInfo.delta ? "errors/s" : "errors"); //$NON-NLS-1$ //$NON-NLS-2$
+            break;
+      }
 		
 		if ((dciType == IFDCI_IN_BITS) || (dciType == IFDCI_OUT_BITS))
 		{
