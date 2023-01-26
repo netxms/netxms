@@ -44,6 +44,7 @@ Name: "{app}\logs"; Flags: uninsalwaysuninstall
 Type: files; Name: "{app}\jetty-base\webapps\ROOT\nxmc-*.jar"
 
 [Files]
+; Launcher components
 Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\x64\Release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
@@ -54,7 +55,9 @@ Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignorevers
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+; Jetty binaries
 Source: "..\files\java\jetty-home\*"; DestDir: "{app}\jetty-home"; Flags: ignoreversion recursesubdirs; Components: webui
+; Web applications and configuration
 Source: "web\api.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: api
 Source: "web\frontpage\*"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion recursesubdirs; Components: webui
 Source: "web\jetty-base\*"; DestDir: "{app}\jetty-base"; Flags: onlyifdoesntexist recursesubdirs; Components: webui
@@ -64,13 +67,17 @@ Source: "web\nxmc.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversio
 Source: "web\nxmc-legacy.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
 Source: "web\nxmc-{#VersionString}-standalone.jar"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion; Components: webui
 Source: "web\readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: webui
+; Java Runtime
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
+; Install-time files
+Source: "..\files\windows\x64\vcredist_x64.exe"; DestDir: "{app}"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall
 
 [Registry]
 Root: HKLM; Subkey: "Software\NetXMS\WebUI"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\NetXMS\WebUI"; ValueType: string; ValueName: "LauncherConfigFile"; ValueData: "{app}\etc\launcher.conf"; Flags: uninsdeletekey
 
 [Run]
+Filename: "{app}\vcredist.exe"; Parameters: "/install /passive /norestart"; WorkingDir: "{app}"; StatusMsg: "Installing Visual C++ runtime..."; Flags: waituntilterminated
 Filename: "{app}\bin\nxweblauncher.exe"; Parameters: "remove"; WorkingDir: "{app}\bin"; StatusMsg: "Removing WebUI service..."; Flags: runhidden
 Filename: "{app}\bin\nxweblauncher.exe"; Parameters: "install"; WorkingDir: "{app}\bin"; StatusMsg: "Installing WebUI service..."; Flags: runhidden
 Filename: "net.exe"; Parameters: "start nxWebUI"; WorkingDir: "{app}\bin"; StatusMsg: "Starting WebUI service..."; Flags: runhidden
