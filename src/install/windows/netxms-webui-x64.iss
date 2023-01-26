@@ -18,6 +18,7 @@ DisableProgramGroupPage=auto
 AllowNoIcons=yes
 WizardStyle=modern
 LicenseFile=..\..\..\GPL.txt
+InfoAfterFile=web\readme.txt
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
@@ -39,8 +40,11 @@ Name: "{app}\jetty-base\resources"; Flags: uninsalwaysuninstall
 Name: "{app}\jetty-base\work"; Flags: uninsalwaysuninstall
 Name: "{app}\logs"; Flags: uninsalwaysuninstall
 
+[InstallDelete]
+Type: files; Name: "{app}\jetty-base\webapps\ROOT\nxmc-*.jar"
+
 [Files]
-Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
+Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; BeforeInstall: StopAllServices; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\x64\Release\libnetxms.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
 Source: "..\..\..\x64\Release\libexpat.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\..\x64\Release\nxweblauncher.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: webui
@@ -51,18 +55,16 @@ Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\files\windows\x64\openssl-3\libcrypto-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\files\windows\x64\openssl-3\libssl-3-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\files\java\jetty-home\*"; DestDir: "{app}\jetty-home"; Flags: ignoreversion recursesubdirs; Components: webui
-Source: "..\files\java\jetty-base\etc\keystore.p12"; DestDir: "{app}\jetty-base\etc"; Flags: onlyifdoesntexist; Components: webui
-Source: "..\files\java\jetty-base\lib\*"; DestDir: "{app}\jetty-base\lib"; Flags: ignoreversion recursesubdirs; Components: webui
-Source: "..\files\java\jetty-base\start.d\*"; DestDir: "{app}\jetty-base\start.d"; Flags: onlyifdoesntexist; Components: webui
 Source: "web\api.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: api
 Source: "web\frontpage\*"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion recursesubdirs; Components: webui
-Source: "web\logback.xml"; DestDir: "{app}\jetty-base\resources"; Flags: onlyifdoesntexist; Components: webui
-Source: "web\nxapisrv.properties"; DestDir: "{app}\jetty-base\resources"; Flags: onlyifdoesntexist; Components: api
-Source: "web\nxmc.properties"; DestDir: "{app}\jetty-base\resources"; Flags: onlyifdoesntexist; Components: webui
+Source: "web\jetty-base\*"; DestDir: "{app}\jetty-base"; Flags: onlyifdoesntexist recursesubdirs; Components: webui
+Source: "web\launcher.conf"; DestDir: "{app}\etc"; Flags: onlyifdoesntexist; Components: webui
+Source: "web\lib\*"; DestDir: "{app}\jetty-base\lib"; Flags: ignoreversion recursesubdirs; Components: webui
 Source: "web\nxmc.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
 Source: "web\nxmc-legacy.war"; DestDir: "{app}\jetty-base\webapps"; Flags: ignoreversion; Components: webui
+Source: "web\nxmc-{#VersionString}-standalone.jar"; DestDir: "{app}\jetty-base\webapps\ROOT"; Flags: ignoreversion; Components: webui
+Source: "web\readme.txt"; DestDir: "{app}"; Flags: ignoreversion; Components: webui
 Source: "..\files\windows\x64\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs; Components: jre
-Source: "web\readme.txt"; DestDir: "{app}"; Flags: isreadme; Components: webui
 
 [Registry]
 Root: HKLM; Subkey: "Software\NetXMS\WebUI"; ValueType: string; ValueName: "InstallDir"; ValueData: "{app}"; Flags: uninsdeletekey

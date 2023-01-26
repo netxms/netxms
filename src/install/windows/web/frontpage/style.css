@@ -3,11 +3,6 @@
    src: url('LiberationSans-Regular.ttf');
 } 
 
-@font-face { 
-   font-family: LiberationSansBold; 
-   src: url('LiberationSans-Bold.ttf');
-}
-
 body {
    display: block;
    margin: 0;
@@ -17,16 +12,18 @@ body {
 h1 {
    font-size: 18px;
    font-weight: 700;
-   font-family: LiberationSansBold;
+   font-family: LiberationSans;
 }
 
 .header-area {
-   padding: 15px;
+   padding: 35px;
+   padding-left: 45px;
    background-color: rgb(14, 50, 78);
 }
 
 .content-area {
-   padding: 15px;
+   padding: 35px;
+   padding-left: 45px;
    float: left;
    width: 450px;
 }
@@ -57,7 +54,7 @@ h1 {
 
    font-size: 15px;
    font-weight: 600;
-   font-family: LiberationSansBold;
+   font-family: LiberationSans;
 
    transition-delay: 0ms;
    transition-duration: 200ms;
@@ -79,10 +76,12 @@ h1 {
    background-color: rgb(253, 41, 5);
 }
 
-.doc-links {
+.product-links {
    float: right;
    padding: 15px;
-   margin: 15px;
+   margin: 35px;
+   margin-top: 70px;
+   margin-right: 45px;
    border: 1px solid #d1d2d3;
 }
 

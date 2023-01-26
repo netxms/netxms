@@ -5,20 +5,27 @@
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, viewport-fit=cover" />
       <link rel="stylesheet" href="style.css" type="text/css">
+      <script>
+         function update_link() {
+            fetch('/api')
+               .then(response => response.json())
+               .then(data => document.getElementById('client_download').href='/nxmc-' + data.version + '-standalone.jar');
+         }
+      </script>
    </head>
-   <body>
+   <body onload="update_link();">
       <div class="header-area">
          <a href="https://netxms.com">
-            <img src="logo-netxms-white.svg" alt="NetXMS logotype">
+            <img src="logo-netxms-white.svg" alt="NetXMS logotype" style="height: 28px;">
          </a>
       </div>
       <div class="content-area">
          <h1>Getting Started</h1>
          <a href="nxmc" class="button button-primary">Launch Web Client</a>
          <a href="nxmc-legacy" class="button">Launch Legacy Web Client</a>
-         <a href="https://netxms.org/download/releases/4.2/nxmc-4.2.461-standalone.jar" class="button">Download Desktop Client</a>
+         <a href="https://netxms.com/downloads" class="button" id="client_download">Download Portable Desktop Client</a>
       </div>
-      <div class="doc-links">
+      <div class="product-links">
          <div class="grid">
             <img src="user-guide.svg" alt="Documentation" style="height: 96px;">
             <div class="v-grid">
@@ -27,6 +34,18 @@
                <a href="https://netxms.org/documentation/userguide/" class="external-link">Online User Guide</a>
                <a href="https://netxms.org/documentation/netxms-admin.pdf" class="external-link">Administrator Guide in PDF</a>
                <a href="https://netxms.org/documentation/netxms-user.pdf" class="external-link">User Guide in PDF</a>
+            </div>
+         </div>
+      </div>
+      <div class="product-links">
+         <div class="grid">
+            <img src="support.svg" alt="Technical Support" style="height: 96px;">
+            <div class="v-grid">
+               <h1>Technical Support</h1>
+               <a href="https://netxms.com/commercial-support" class="external-link">Commercial Support</a>
+               <a href="https://netxms.com/professional-services" class="external-link">Professional Services</a>
+               <a href="https://www.netxms.org/forum" class="external-link">Community Forum</a>
+               <a href="https://netxms.com/training-and-certification" class="external-link">Training</a>
             </div>
          </div>
       </div>
