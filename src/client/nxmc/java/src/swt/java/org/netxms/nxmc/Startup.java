@@ -56,6 +56,7 @@ import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
+import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -145,6 +146,7 @@ public class Startup
          ObjectToolsCache.init();
          ObjectToolsCache.attachSession(session);
          SummaryTablesCache.attachSession(session);
+         GraphTemplateCache.attachSession(session);
 
          MainWindow w = new MainWindow(null);
          Registry.getInstance().setMainWindow(w);

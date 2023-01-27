@@ -404,6 +404,13 @@ public class ObjectContextMenuManager extends MenuManager
          add(new MenuContributionItem(i18n.tr("P&oll"), pollsMenu));
       }
 
+      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(selection, getMenu(), null, new ViewPlacement(view));
+      if (graphTemplatesMenu != null)
+      {
+         add(new Separator());
+         add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
+      }
+
       if (singleObject)
       {
          add(new Separator());

@@ -50,6 +50,7 @@ import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
+import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -124,6 +125,7 @@ public class Startup implements EntryPoint, StartupParameters
       ObjectToolsCache.init();
       ObjectToolsCache.attachSession(session);
       SummaryTablesCache.attachSession(display, session);
+      GraphTemplateCache.attachSession(session);
 
       ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
       exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));

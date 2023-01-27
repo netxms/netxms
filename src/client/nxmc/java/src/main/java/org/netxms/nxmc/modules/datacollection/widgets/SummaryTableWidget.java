@@ -233,6 +233,12 @@ public class SummaryTableWidget extends Composite
          manager.add(new Separator());
          manager.add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
       }
+      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(objectSelectionProvider.getStructuredSelection(), getMenu(), null, new ViewPlacement(view));
+      if (graphTemplatesMenu != null)
+      {
+         manager.add(new Separator());
+         manager.add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
+      }
       manager.add(new Separator());
       manager.add(actionShowObjectDetails);
       manager.add(new Separator());

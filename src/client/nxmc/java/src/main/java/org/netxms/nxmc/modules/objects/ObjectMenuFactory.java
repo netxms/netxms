@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
@@ -36,6 +37,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectPollType;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
@@ -48,9 +51,11 @@ import org.netxms.client.objects.Template;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.objects.views.ObjectPollerView;
 import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
@@ -243,6 +248,84 @@ public final class ObjectMenuFactory
 
       return toolsMenu;
    }
+   
+   public static Menu createGraphTemplatesMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   {
+      if (selection.size() != 1)
+         return null;
+      
+      final AbstractNode node = getNode(selection);      
+
+      if (node == null)
+         return null;
+      
+      final Menu graphMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);      
+      GraphDefinition[] templates = GraphTemplateCache.getInstance().getGraphTemplates(); //array should be already sorted
+      
+      Map<String, Menu> menus = new HashMap<String, Menu>();
+      int added = 0;
+      for(int i = 0; i < templates.length; i++)
+      {
+         if (templates[i].isApplicableForObject(node))
+         {
+            String[] path = templates[i].getName().split("\\-\\>"); //$NON-NLS-1$
+            
+            Menu rootMenu = graphMenu;
+            for(int j = 0; j < path.length - 1; j++)
+            {
+               final String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+               Menu currMenu = menus.get(key);
+               if (currMenu == null)
+               {
+                  currMenu = new Menu(rootMenu);
+                  MenuItem item = new MenuItem(rootMenu, SWT.CASCADE);
+                  item.setText(path[j]);
+                  item.setMenu(currMenu);
+                  menus.put(key, currMenu);
+               }
+               rootMenu = currMenu;
+            }
+            
+            NXCSession session = Registry.getSession();
+            final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
+            item.setText(path[path.length - 1]);
+            item.setData(templates[i]);
+            item.addSelectionListener(new SelectionAdapter() {
+               @Override
+               public void widgetSelected(SelectionEvent e)
+               {
+                  final GraphDefinition gs = (GraphDefinition)item.getData();
+                  Job job = new Job(String.format(i18n.tr("Display graph from template for node %s"), node.getObjectName()), null) {
+                     @Override
+                     protected String getErrorMessage()
+                     {
+                        return String.format(i18n.tr("Cannot create graph from template for node %s"), node.getObjectName());
+                     }
+
+                     @Override
+                     protected void run(IProgressMonitor monitor) throws Exception
+                     {
+                        final DciValue[] data = session.getLastValues(node.getObjectId());
+                        GraphTemplateCache.instantiate(node, gs, data, session, viewPlacement);
+                     }
+                  };
+                  job.setUser(false);
+                  job.start();
+               }
+            });
+
+            added++;
+         }
+      }
+
+      if (added == 0)
+      {
+         graphMenu.dispose();
+         return null;
+      }
+
+      return graphMenu;
+   }
 
    /**
     * Build node set from selection
@@ -281,5 +364,36 @@ public final class ObjectMenuFactory
          }
       }
       return nodes;
+   }
+
+   /**
+    * Build node set from selection
+    * 
+    * @param selection
+    * @return
+    */
+   private static AbstractNode getNode(IStructuredSelection selection)
+   {
+      AbstractNode node = null;
+      final NXCSession session = Registry.getSession();
+
+      for(Object o : selection.toList())
+      {
+         if (o instanceof AbstractNode)
+         {
+            node = (AbstractNode)o;
+         }
+         else if (o instanceof Alarm)
+         {
+            node = (AbstractNode)session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
+         }
+         else if (o instanceof ObjectWrapper)
+         {
+            AbstractObject n = ((ObjectWrapper)o).getObject();
+            if ((n != null) && (n instanceof AbstractNode))
+               node = (AbstractNode)n;
+         }
+      }
+      return node;
    }
 }
