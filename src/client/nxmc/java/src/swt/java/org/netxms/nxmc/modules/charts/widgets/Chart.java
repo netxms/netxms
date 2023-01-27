@@ -27,18 +27,25 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -760,7 +767,7 @@ public class Chart extends Composite
     *
     * @return image containing snapshot of this chart
     */
-   public Image takeSnapshot()
+   private Image takeSnapshot()
    {
       Rectangle rect = getClientArea();
       Image image = new Image(getDisplay(), rect.width, rect.height);
@@ -768,5 +775,44 @@ public class Chart extends Composite
       this.print(gc);
       gc.dispose();
       return image;
+   }
+
+   /**
+    * Copy to clipboard as an image
+    */
+   public void copyToClipboard()
+   {
+      Image image = takeSnapshot();
+      ImageTransfer imageTransfer = ImageTransfer.getInstance();
+      final Clipboard clipboard = new Clipboard(getDisplay());
+      clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+      image.dispose();
+   }
+
+   /**
+    * Save as image file
+    * 
+    * @param parentShellparent shell for file save dialog
+    */
+   public void saveAsImage(Shell parentShell)
+   {
+      Image image = takeSnapshot();
+
+      FileDialog fd = new FileDialog(parentShell, SWT.SAVE);
+      fd.setText("Save graph as image");
+      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+      fd.setFilterExtensions(filterExtensions);
+      String[] filterNames = { ".png" };
+      fd.setFilterNames(filterNames);
+      fd.setFileName("graph.png");
+      final String selected = fd.open();
+      if (selected == null)
+         return;
+
+      ImageLoader saver = new ImageLoader();
+      saver.data = new ImageData[] { image.getImageData() };
+      saver.save(selected, SWT.IMAGE_PNG);
+
+      image.dispose();
    }
 }

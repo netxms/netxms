@@ -54,6 +54,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartType;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -104,6 +105,8 @@ public class DataComparisonView extends ViewPart
 	private Action actionLegendRight;
 	private Action actionLegendTop;
 	private Action actionLegendBottom;
+	private Action actionCopyImage;
+	private Action actionSaveAsImage;
 	
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -455,6 +458,22 @@ public class DataComparisonView extends ViewPart
 		actionVertical.setChecked(!transposed);
 		actionVertical.setEnabled(chart.hasAxes());
 		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/chart-bar-vertical.png")); //$NON-NLS-1$
+
+      actionCopyImage = new Action(Messages.get().DataComparisonView_CopyToClipboard, SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            chart.copyToClipboard();
+         }
+      };
+
+		actionSaveAsImage = new Action("Save as image", SharedIcons.SAVE_AS_IMAGE) {
+			@Override
+			public void run()
+			{
+            chart.saveAsImage(getSite().getShell());
+			}
+		};
 	}
 	
 	/**
@@ -534,6 +553,9 @@ public class DataComparisonView extends ViewPart
 		manager.add(new Separator());
 		manager.add(actionVertical);
 		manager.add(actionHorizontal);
+		manager.add(new Separator());
+      manager.add(actionCopyImage);
+		manager.add(actionSaveAsImage);		
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

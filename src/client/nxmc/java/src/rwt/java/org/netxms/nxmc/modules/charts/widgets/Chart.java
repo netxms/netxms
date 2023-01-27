@@ -26,17 +26,20 @@ import java.util.Set;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -754,12 +757,36 @@ public class Chart extends Composite
    }
 
    /**
-    * Take snapshot of this chart.
-    *
-    * @return image containing snapshot of this chart
+    * Copy to clipboard as an image
     */
-   public Image takeSnapshot()
+   public void copyToClipboard()
    {
-      throw new UnsupportedOperationException("This method is not implemented");
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("RWTUtil_widgetToClipboard('");
+         js.append(WidgetUtil.getId(this));
+         js.append("', 'div', 'graph.png');");
+         executor.execute(js.toString());
+      }
+   }
+
+   /**
+    * Save as image file
+    * 
+    * @param parentShellparent shell for file save dialog
+    */
+   public void saveAsImage(Shell parentShell)
+   {
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("RWTUtil_widgetToImage('");
+         js.append(WidgetUtil.getId(this));
+         js.append("', 'div', 'graph.png');");
+         executor.execute(js.toString());
+      }
    }
 }

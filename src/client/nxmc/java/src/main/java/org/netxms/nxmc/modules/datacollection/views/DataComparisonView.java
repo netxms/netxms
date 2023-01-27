@@ -19,23 +19,16 @@
 package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.ArrayList;
-import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.ImageTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.NXCSession;
@@ -56,7 +49,6 @@ import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
-import org.netxms.nxmc.tools.PngTransfer;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.xnap.commons.i18n.I18n;
 
@@ -173,7 +165,7 @@ public class DataComparisonView extends AdHocObjectView
       chart.rebuild();
 
       createActions();
-		createPopupMenu();
+		createContextMenu();
 
 		updateChart();
 
@@ -187,26 +179,6 @@ public class DataComparisonView extends AdHocObjectView
 				updateChart();
 			}
 		});
-	}
-	
-	/**
-	 * Create pop-up menu for user list
-	 */
-	private void createPopupMenu()
-	{
-		// Create menu manager.
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
-
-		// Create menu.
-		Menu menu = menuMgr.createContextMenu((Control)chart);
-		((Control)chart).setMenu(menu);
 	}
 
 	/**
@@ -344,7 +316,7 @@ public class DataComparisonView extends AdHocObjectView
 		};
 		actionHorizontal.setChecked(transposed);
 		actionHorizontal.setEnabled(chart.hasAxes());
-		actionHorizontal.setImageDescriptor(ResourceManager.getImageDescriptor("icons/bar_horizontal.png")); 
+      actionHorizontal.setImageDescriptor(ResourceManager.getImageDescriptor("icons/object-views/chart-bar-horizontal.png"));
 		
 		actionVertical = new Action(i18n.tr("Show &vertically"), Action.AS_RADIO_BUTTON) {
 			@Override
@@ -357,27 +329,85 @@ public class DataComparisonView extends AdHocObjectView
 		};
 		actionVertical.setChecked(!transposed);
 		actionVertical.setEnabled(chart.hasAxes());
-		actionVertical.setImageDescriptor(ResourceManager.getImageDescriptor("icons/bar_vertical.png")); 
+      actionVertical.setImageDescriptor(ResourceManager.getImageDescriptor("icons/object-views/chart-bar.png"));
 
-      actionCopyImage = new Action(i18n.tr("Copy to clipboard"), SharedIcons.COPY) {
+      actionCopyImage = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
          @Override
          public void run()
          {
-            Image image = chart.takeSnapshot();
-            Transfer imageTransfer = SystemUtils.IS_OS_LINUX ? PngTransfer.getInstance() : ImageTransfer.getInstance();
-            final Clipboard clipboard = new Clipboard(getWindow().getShell().getDisplay());
-            clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+            chart.copyToClipboard();
          }
       };
+      addKeyBinding("M1+C", actionCopyImage);
 
-		actionSaveAsImage = new Action("Save as image", SharedIcons.SAVE_AS_IMAGE) {
+      actionSaveAsImage = new Action("Save as &image", SharedIcons.SAVE_AS_IMAGE) {
 			@Override
 			public void run()
 			{
-			   saveAsImage();
+            chart.saveAsImage(getWindow().getShell());
 			}
 		};
+      addKeyBinding("M1+I", actionSaveAsImage);
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionSaveAsImage);
+      manager.add(actionCopyImage);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      MenuManager legend = new MenuManager(i18n.tr("&Legend"));
+      legend.add(actionShowLegend);
+      legend.add(new Separator());
+      legend.add(actionLegendLeft);
+      legend.add(actionLegendRight);
+      legend.add(actionLegendTop);
+      legend.add(actionLegendBottom);
+
+      manager.add(actionShowBarChart);
+      manager.add(actionShowPieChart);
+      manager.add(new Separator());
+      manager.add(actionVertical);
+      manager.add(actionHorizontal);
+      manager.add(new Separator());
+      manager.add(actionShowTranslucent);
+      manager.add(actionUseLogScale);
+      manager.add(actionAutoRefresh);
+      manager.add(legend);
+      manager.add(new Separator());
+      manager.add(actionCopyImage);
+      manager.add(actionSaveAsImage);
+   }
+
+   /**
+    * Create pop-up menu for user list
+    */
+   private void createContextMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(chart);
+      chart.setMenu(menu);
+   }
 
 	/**
 	 * Fill context menu
@@ -495,32 +525,7 @@ public class DataComparisonView extends AdHocObjectView
 		job.setUser(false);
 		job.start();
 	}
-	
-	/**
-    * Copy graph as image
-    */
-   private void saveAsImage()
-   {
-      Image image = chart.takeSnapshot();
-      
-      FileDialog fd = new FileDialog(getWindow().getShell(), SWT.SAVE);
-      fd.setText("Save graph as image");
-      String[] filterExtensions = { "*.*" }; 
-      fd.setFilterExtensions(filterExtensions);
-      String[] filterNames = { ".png" };
-      fd.setFilterNames(filterNames);
-      fd.setFileName("graph.png");
-      final String selected = fd.open();
-      if (selected == null)
-         return;
-      
-      ImageLoader saver = new ImageLoader();
-      saver.data = new ImageData[] { image.getImageData() };
-      saver.save(selected, SWT.IMAGE_PNG);
 
-      image.dispose();
-   }
-	
 	/**
 	 * Set new data for chart items
 	 * 

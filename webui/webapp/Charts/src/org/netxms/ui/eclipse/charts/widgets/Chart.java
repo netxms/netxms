@@ -27,17 +27,20 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -63,6 +66,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Generic chart widget
  */
+@SuppressWarnings("restriction")
 public class Chart extends Composite
 {
    private ChartType type = ChartType.LINE;
@@ -791,12 +795,36 @@ public class Chart extends Composite
    }
 
    /**
-    * Take snapshot of this chart.
-    *
-    * @return image containing snapshot of this chart
+    * Copy to clipboard as an image
     */
-   public Image takeSnapshot()
+   public void copyToClipboard()
    {
-      return null;   // Not implemented in web UI
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("RWTUtil_widgetToClipboard('");
+         js.append(WidgetUtil.getId(this));
+         js.append("', 'div', 'graph.png');");
+         executor.execute(js.toString());
+      }
+   }
+
+   /**
+    * Save as image file
+    * 
+    * @param parentShellparent shell for file save dialog
+    */
+   public void saveAsImage(Shell parentShell)
+   {
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("RWTUtil_widgetToImage('");
+         js.append(WidgetUtil.getId(this));
+         js.append("', 'div', 'graph.png');");
+         executor.execute(js.toString());
+      }
    }
 }

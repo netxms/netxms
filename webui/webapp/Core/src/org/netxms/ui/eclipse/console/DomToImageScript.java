@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.rap.ui.resources.IResource;
 
 /**
- * Resource for canvas2image handler JavaScript
+ * Resource for long tap handler JavaScript
  */
-public class Canvas2Image implements IResource
+public class DomToImageScript implements IResource
 {
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.rap.ui.resources.IResource#getLoader()
     */
    @Override
@@ -34,16 +34,16 @@ public class Canvas2Image implements IResource
       return getClass().getClassLoader();
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.rap.ui.resources.IResource#getLocation()
     */
    @Override
    public String getLocation()
    {
-      return "js/canvas2image.js";
+      return "js/dom-to-image-more.js";
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.rap.ui.resources.IResource#isJSLibrary()
     */
    @Override
@@ -52,7 +52,7 @@ public class Canvas2Image implements IResource
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.rap.ui.resources.IResource#isExternal()
     */
    @Override

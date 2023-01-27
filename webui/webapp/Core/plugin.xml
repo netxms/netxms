@@ -466,12 +466,8 @@
             id="org.netxms.ui.eclipse.console.LongTapHandlerScript">
       </resource>
       <resource
-            class="org.netxms.ui.eclipse.console.CopyToClipboardHandlerScript"
-            id="org.netxms.ui.eclipse.console.CopyToClipboardHandlerScript">
-      </resource>
-      <resource
-            class="org.netxms.ui.eclipse.console.Canvas2Image"
-            id="org.netxms.ui.eclipse.console.Canvas2Image">
+            class="org.netxms.ui.eclipse.console.RWTUtilScript"
+            id="org.netxms.ui.eclipse.console.RWTUtilScript">
       </resource>
       <resource
             class="org.netxms.ui.eclipse.console.DownloadHandlerScript"
@@ -480,6 +476,10 @@
       <resource
             class="org.netxms.ui.eclipse.console.MsgProxyWidgetScript"
             id="org.netxms.ui.eclipse.console.MsgProxyWidgetScript">
+      </resource>
+      <resource
+            class="org.netxms.ui.eclipse.console.DomToImageScript"
+            id="org.netxms.ui.eclipse.console.DomToImageScript">
       </resource>
    </extension>
    <extension

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,10 +53,11 @@ public class WebApplicationConfiguration implements ApplicationConfiguration
    @Override
    public void configure(Application app)
    {
-      addJsLibrary("/js/canvas2image.js");
+      addJsLibrary("/js/dom-to-image-more.js");
       addJsLibrary("/js/download.js");
       addJsLibrary("/js/longpress.js");
       addJsLibrary("/js/msgproxy.js");
+      addJsLibrary("/js/rwt-util.js");
       app.addResource(SWT.getVersion() + "/nxmc-library.js", new ResourceLoader() {
          @Override
          public InputStream getResourceAsStream(String resourceName)

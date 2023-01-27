@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,18 +28,25 @@ import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -797,7 +804,7 @@ public class Chart extends Composite
     *
     * @return image containing snapshot of this chart
     */
-   public Image takeSnapshot()
+   private Image takeSnapshot()
    {
       Rectangle rect = getClientArea();
       Image image = new Image(getDisplay(), rect.width, rect.height);
@@ -805,5 +812,44 @@ public class Chart extends Composite
       this.print(gc);
       gc.dispose();
       return image;
+   }
+
+   /**
+    * Copy to clipboard as an image
+    */
+   public void copyToClipboard()
+   {
+      Image image = takeSnapshot();
+      ImageTransfer imageTransfer = ImageTransfer.getInstance();
+      final Clipboard clipboard = new Clipboard(getDisplay());
+      clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+      image.dispose();
+   }
+
+   /**
+    * Save as image file
+    * 
+    * @param parentShellparent shell for file save dialog
+    */
+   public void saveAsImage(Shell parentShell)
+   {
+      Image image = takeSnapshot();
+
+      FileDialog fd = new FileDialog(parentShell, SWT.SAVE);
+      fd.setText("Save graph as image");
+      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+      fd.setFilterExtensions(filterExtensions);
+      String[] filterNames = { ".png" };
+      fd.setFilterNames(filterNames);
+      fd.setFileName("graph.png");
+      final String selected = fd.open();
+      if (selected == null)
+         return;
+
+      ImageLoader saver = new ImageLoader();
+      saver.data = new ImageData[] { image.getImageData() };
+      saver.save(selected, SWT.IMAGE_PNG);
+
+      image.dispose();
    }
 }

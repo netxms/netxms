@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,9 +56,9 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -121,6 +121,8 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
    private Action actionSaveAs;
    private Action actionSaveAsTemplate;
    private Action[] presetActions;
+   private Action actionCopyImage;
+   private Action actionSaveAsImage;
 
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -762,6 +764,22 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
             updateChart();
          }
       });
+
+      actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            chart.copyToClipboard();
+         }
+      };
+      
+      actionSaveAsImage = new Action("Save as image...", SharedIcons.SAVE_AS_IMAGE) {
+          @Override
+          public void run()
+          {
+            chart.saveAsImage(getSite().getShell());
+          }
+       };
    }
    
    /**
@@ -894,6 +912,8 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);
+      manager.add(actionCopyImage);
+      manager.add(actionSaveAsImage);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }

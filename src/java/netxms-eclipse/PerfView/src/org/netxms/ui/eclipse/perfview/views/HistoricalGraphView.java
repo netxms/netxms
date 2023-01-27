@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,14 +38,7 @@ import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.ImageTransfer;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
@@ -63,9 +56,9 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartConfigurationChangeListener;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -772,25 +765,19 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          }
       });
 
-      if (!System.getProperty("os.name").toLowerCase().contains("linux"))
-      {
-         actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
-            @Override
-            public void run()
-            {
-               Image image = chart.takeSnapshot();
-               ImageTransfer imageTransfer = ImageTransfer.getInstance();
-               final Clipboard clipboard = new Clipboard(getSite().getShell().getDisplay());
-               clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
-            }
-         };
-      }
+      actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            chart.copyToClipboard();
+         }
+      };
       
       actionSaveAsImage = new Action("Save as image...", SharedIcons.SAVE_AS_IMAGE) {
           @Override
           public void run()
           {
-             saveAsImage();
+            chart.saveAsImage(getSite().getShell());
           }
        };
    }
@@ -925,8 +912,7 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
       manager.add(new Separator());
       manager.add(actionSave);
       manager.add(actionSaveAs);
-      if (actionCopyImage != null)
-         manager.add(actionCopyImage);
+      manager.add(actionCopyImage);
       manager.add(actionSaveAsImage);
       manager.add(new Separator());
       manager.add(actionRefresh);
@@ -961,31 +947,6 @@ public class HistoricalGraphView extends ViewPart implements ChartConfigurationC
          configuration.setTimeTo(new Date(System.currentTimeMillis()));
       }
       getDataFromServer();
-   }
-
-   /**
-    * Copy graph as image
-    */
-   private void saveAsImage()
-   {
-      Image image = chart.takeSnapshot();
-      
-      FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
-      fd.setText("Save graph as image");
-      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
-      fd.setFilterExtensions(filterExtensions);
-      String[] filterNames = { ".png" };
-      fd.setFilterNames(filterNames);
-      fd.setFileName("graph.png");
-      final String selected = fd.open();
-      if (selected == null)
-         return;
-
-      ImageLoader saver = new ImageLoader();
-      saver.data = new ImageData[] { image.getImageData() };
-      saver.save(selected, SWT.IMAGE_PNG);
-
-      image.dispose();
    }
 
    /**

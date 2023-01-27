@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -36,14 +35,7 @@ import org.eclipse.jface.preference.PreferenceManager;
 import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.dnd.ImageTransfer;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.client.AccessListElement;
@@ -76,7 +68,6 @@ import org.netxms.nxmc.modules.datacollection.propertypages.Graph;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
-import org.netxms.nxmc.tools.PngTransfer;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -749,21 +740,18 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          @Override
          public void run()
          {
-            Image image = chart.takeSnapshot();
-            Transfer imageTransfer = SystemUtils.IS_OS_LINUX ? PngTransfer.getInstance() : ImageTransfer.getInstance();
-            final Clipboard clipboard = new Clipboard(getWindow().getShell().getDisplay());
-            clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+            chart.copyToClipboard();
          }
       };
       addKeyBinding("M1+C", actionCopyImage);
 
       actionSaveAsImage = new Action(i18n.tr("Save as &image..."), SharedIcons.SAVE_AS_IMAGE) {
-          @Override
-          public void run()
-          {
-             saveAsImage();
-          }
-       };
+         @Override
+         public void run()
+         {
+            chart.saveAsImage(getWindow().getShell());
+         }
+      };
       addKeyBinding("M1+I", actionSaveAsImage);
    }
 
@@ -925,31 +913,6 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    public void refresh()
    {
       updateChart();
-   }
-
-   /**
-    * Copy graph as image
-    */
-   private void saveAsImage()
-   {
-      Image image = chart.takeSnapshot();
-      
-      FileDialog fd = new FileDialog(getWindow().getShell(), SWT.SAVE);
-      fd.setText("Save graph as image");
-      String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
-      fd.setFilterExtensions(filterExtensions);
-      String[] filterNames = { ".png" };
-      fd.setFilterNames(filterNames);
-      fd.setFileName("graph.png");
-      final String selected = fd.open();
-      if (selected == null)
-         return;
-
-      ImageLoader saver = new ImageLoader();
-      saver.data = new ImageData[] { image.getImageData() };
-      saver.save(selected, SWT.IMAGE_PNG);
-
-      image.dispose();
    }
 
    /**
