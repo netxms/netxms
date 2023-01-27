@@ -54,10 +54,10 @@ public class TimeFrameEditorDialog  extends Dialog
    private Button[] monthsButton;   
 
    /**
-    * Constructor 
+    * Constructor
     * 
     * @param parentShell parent shell
-    * @param cron CRON time to edit or null if new 
+    * @param timeFrame time frame to edit or <code>null</code> to create new one
     */
    public TimeFrameEditorDialog(Shell parentShell, TimeFrame timeFrame)
    {
@@ -269,15 +269,6 @@ public class TimeFrameEditorDialog  extends Dialog
       }
 
       return dialogArea;
-   }
-
-   /**
-    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-    */
-   @Override
-   protected void cancelPressed()
-   {
-      super.cancelPressed();
    }
 
    /**

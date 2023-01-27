@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.ClientLocalizationHelper;
 import org.netxms.client.events.TimeFrame;
 import org.netxms.client.events.TimeFrameFormatException;
-import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -41,20 +40,20 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 /**
  * Time frame create/edit dialog
  */
-public class TimeFrameEditorDialog  extends Dialog
+public class TimeFrameEditorDialog extends Dialog
 {
    private TimeFrame timeFrame;
    private DateTime timePickerFrom;
    private DateTime timePickerTo;
-   private Button[] daysOfWeekButton;   
+   private Button[] daysOfWeekButton;
    private LabeledText daysText;
-   private Button[] monthsButton;   
+   private Button[] monthsButton;
 
    /**
-    * Constructor 
+    * Constructor
     * 
     * @param parentShell parent shell
-    * @param cron CRON time to edit or null if new 
+    * @param timeFrame time frame to edit or <code>null</code> to create new one
     */
    public TimeFrameEditorDialog(Shell parentShell, TimeFrame timeFrame)
    {
@@ -109,7 +108,7 @@ public class TimeFrameEditorDialog  extends Dialog
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       anyTimeButton.setLayoutData(gd);
-      anyTimeButton.addSelectionListener(new SelectionAdapter() {         
+      anyTimeButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -133,7 +132,7 @@ public class TimeFrameEditorDialog  extends Dialog
       daySelector.setLayoutData(gd);
 
       daysOfWeekButton = new Button[7];
-      for (int i = 0; i < 7; i++)
+      for(int i = 0; i < 7; i++)
       {
          daysOfWeekButton[i] = new Button(daySelector, SWT.CHECK);
          daysOfWeekButton[i].setText(ClientLocalizationHelper.getText(TimeFrame.DAYS_OF_THE_WEEK[i]));
@@ -142,39 +141,39 @@ public class TimeFrameEditorDialog  extends Dialog
          gd.grabExcessHorizontalSpace = true;
          daysOfWeekButton[i].setLayoutData(gd);
       }
-      
+
       Button selectAll = new Button(daySelector, SWT.PUSH);
       selectAll.setText("Select all");
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      selectAll.setLayoutData(gd);      
-      selectAll.addSelectionListener(new SelectionAdapter() {         
+      selectAll.setLayoutData(gd);
+      selectAll.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            for (int i = 0; i < 7; i++)
+            for(int i = 0; i < 7; i++)
             {
                daysOfWeekButton[i].setSelection(true);
-            }          
+            }
          }
       });
-      
+
       Button resetWeekDays = new Button(daySelector, SWT.PUSH);
       resetWeekDays.setText("Clear all");
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      resetWeekDays.setLayoutData(gd);      
-      resetWeekDays.addSelectionListener(new SelectionAdapter() {         
+      resetWeekDays.setLayoutData(gd);
+      resetWeekDays.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            for (int i = 0; i < 7; i++)
+            for(int i = 0; i < 7; i++)
             {
                daysOfWeekButton[i].setSelection(false);
-            }          
+            }
          }
       });
-      
+
       new Label(dialogArea, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       daysText = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
@@ -197,7 +196,7 @@ public class TimeFrameEditorDialog  extends Dialog
       monthSelector.setLayoutData(gd);
 
       monthsButton = new Button[12];
-      for (int i = 0; i < 12; i++)
+      for(int i = 0; i < 12; i++)
       {
          monthsButton[i] = new Button(monthSelector, SWT.CHECK);
          monthsButton[i].setText(ClientLocalizationHelper.getText(TimeFrame.MONTHS[i]));
@@ -205,21 +204,21 @@ public class TimeFrameEditorDialog  extends Dialog
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          monthsButton[i].setLayoutData(gd);
-      }   
-      
+      }
+
       Button selectAllMonths = new Button(monthSelector, SWT.PUSH);
       selectAllMonths.setText("Select all");
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      selectAllMonths.setLayoutData(gd); 
-      selectAllMonths.addSelectionListener(new SelectionAdapter() {         
+      selectAllMonths.setLayoutData(gd);
+      selectAllMonths.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            for (int i = 0; i < 12; i++)
+            for(int i = 0; i < 12; i++)
             {
                monthsButton[i].setSelection(true);
-            }          
+            }
          }
       });
 
@@ -227,15 +226,15 @@ public class TimeFrameEditorDialog  extends Dialog
       resetMonths.setText("Clear all");
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      resetMonths.setLayoutData(gd); 
-      resetMonths.addSelectionListener(new SelectionAdapter() {         
+      resetMonths.setLayoutData(gd);
+      resetMonths.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            for (int i = 0; i < 12; i++)
+            for(int i = 0; i < 12; i++)
             {
                monthsButton[i].setSelection(false);
-            }          
+            }
          }
       });
 
@@ -246,16 +245,16 @@ public class TimeFrameEditorDialog  extends Dialog
          timePickerTo.setMinutes(timeFrame.getEndMinute());
          timePickerTo.setHours(timeFrame.getEndHour());
 
-         for (int i = 0; i < 7; i++)
+         for(int i = 0; i < 7; i++)
          {
             daysOfWeekButton[i].setSelection(timeFrame.getDaysOfWeek()[i]);
-         }   
+         }
          daysText.setText(timeFrame.getDaysOfMonth());
 
-         for (int i = 0; i < 12; i++)
+         for(int i = 0; i < 12; i++)
          {
             monthsButton[i].setSelection(timeFrame.getMonths()[i]);
-         }  
+         }
       }
       else
       {
@@ -269,51 +268,41 @@ public class TimeFrameEditorDialog  extends Dialog
    }
 
    /**
-    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-    */
-   @Override
-   protected void cancelPressed()
-   {
-      super.cancelPressed();
-   }
-
-   /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override
    protected void okPressed()
-   {      
+   {
       if (timeFrame == null)
       {
          timeFrame = new TimeFrame();
       }
 
       boolean[] daysOfWeek = new boolean[7];
-      for (int i = 0; i < 7; i++)
+      for(int i = 0; i < 7; i++)
       {
          daysOfWeek[i] = daysOfWeekButton[i].getSelection();
-      }  
+      }
 
       String days = daysText.getText();
       if (days.isBlank())
          days = "1-31";
 
       boolean[] months = new boolean[12];
-      for (int i = 0; i < 12; i++)
+      for(int i = 0; i < 12; i++)
       {
          months[i] = monthsButton[i].getSelection();
-      }  
+      }
       try
       {
-         timeFrame.update(timePickerFrom.getHours(), timePickerFrom.getMinutes(), timePickerTo.getHours(), timePickerTo.getMinutes(), 
-               daysOfWeek, days, months);
+         timeFrame.update(timePickerFrom.getHours(), timePickerFrom.getMinutes(), timePickerTo.getHours(), timePickerTo.getMinutes(), daysOfWeek, days, months);
       }
       catch(TimeFrameFormatException e)
       {
          MessageDialogHelper.openError(getShell(), "Error", e.getMessage());
          return;
       }
-      
+
       super.okPressed();
    }
 
@@ -325,5 +314,5 @@ public class TimeFrameEditorDialog  extends Dialog
    public TimeFrame getTimeFrame()
    {
       return timeFrame;
-   }   
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,7 +120,6 @@ public class TimePeriodCompactSelector extends Composite
    /**
     * Show selector window
     */
-   @SuppressWarnings("unused")
    private void showSelector()
    {
       selectorShell = new Shell(getShell(), SWT.NO_TRIM);
