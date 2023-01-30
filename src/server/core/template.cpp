@@ -943,10 +943,16 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
       {
          TCHAR key[64];
          _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
-         DeleteScheduledTaskByKey(key);
+         if (DeleteScheduledTaskByKey(key))
+         {
+            sendPollerMsg(_T("   Pending removal from \"%s\" cancelled\r\n"), object->getName());
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): pending removal of template \"%s\" [%u] from object \"%s\" [%u] cancelled"),
+                  m_name, m_id, object->getName(), object->getId());
+         }
+
          if (!isDirectChild(object->getId()))
          {
-            sendPollerMsg(_T("   Applying to %s\r\n"), object->getName());
+            sendPollerMsg(_T("   Applying to \"%s\"\r\n"), object->getName());
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): binding object \"%s\" [%u] to template \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
             applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
             PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
@@ -954,11 +960,11 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
       {
-         static_cast<DataCollectionTarget&>(*object).scheduleTemplateRemoval(this);
+         static_cast<DataCollectionTarget&>(*object).scheduleTemplateRemoval(this, this);
       }
    }
    delete cachedFilterVM;
 
    pollerUnlock();
-   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of template %s [%u])"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of template \"%s\" [%u])"), m_name, m_id);
 }

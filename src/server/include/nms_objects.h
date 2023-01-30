@@ -2472,8 +2472,8 @@ public:
 
    bool applyTemplateItem(uint32_t templateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);
-   void removeTemplate(Template *templateObject);
-   void scheduleTemplateRemoval(Template *templateObject);
+   void removeTemplate(Template *templateObject, NetObj *pollTarget);
+   void scheduleTemplateRemoval(Template *templateObject, NetObj *pollTarget);
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
 
    static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);

@@ -1956,9 +1956,9 @@ uint32_t DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
 /**
  * Remove template from this data collection target. Intended to be called only by template automatic removal code.
  */
-void DataCollectionTarget::removeTemplate(Template *templateObject)
+void DataCollectionTarget::removeTemplate(Template *templateObject, NetObj *pollTarget)
 {
-   sendPollerMsg(_T("   Removing template %s from %s\r\n"), templateObject->getName(), m_name);
+   pollTarget->sendPollerMsg(_T("   Removing template %s from %s\r\n"), templateObject->getName(), m_name);
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DataCollectionTarget::removeTemplate(): removing template %d \"%s\" from object %d \"%s\""),
                templateObject->getId(), templateObject->getName(), m_id, m_name);
    templateObject->deleteChild(*this);
@@ -1979,7 +1979,7 @@ void DataCollectionTarget::removeTemplate(const shared_ptr<ScheduledTaskParamete
       shared_ptr<Template> templateObject = static_pointer_cast<Template>(FindObjectByGUID(guid, OBJECT_TEMPLATE));
       if (templateObject != nullptr)
       {
-         static_cast<DataCollectionTarget&>(*target).removeTemplate(templateObject.get());
+         static_cast<DataCollectionTarget&>(*target).removeTemplate(templateObject.get(), target.get());
       }
    }
 }
@@ -1987,7 +1987,7 @@ void DataCollectionTarget::removeTemplate(const shared_ptr<ScheduledTaskParamete
 /**
  * Schedule template removal after grace period (will execute removeTemplate immediately if grace period is zero)
  */
-void DataCollectionTarget::scheduleTemplateRemoval(Template *templateObject)
+void DataCollectionTarget::scheduleTemplateRemoval(Template *templateObject, NetObj *pollTarget)
 {
    int gracePeriod = ConfigReadInt(_T("DataCollection.TemplateRemovalGracePeriod"), 0);
    if (gracePeriod > 0)
@@ -2000,18 +2000,18 @@ void DataCollectionTarget::scheduleTemplateRemoval(Template *templateObject)
                m_guid.toString(), nullptr, 0, m_id, SYSTEM_ACCESS_FULL, _T(""), key, true);
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DataCollectionTarget::scheduleTemplateRemoval(\"%s\" [%u]): scheduled removal of template \"%s\" [%u]"),
                m_name, m_id, templateObject->getName(), templateObject->getId());
-         sendPollerMsg(_T("   Scheduled removal of template %s from %s\r\n"), templateObject->getName(), m_name);
+         pollTarget->sendPollerMsg(_T("   Scheduled removal of template %s from %s\r\n"), templateObject->getName(), m_name);
       }
       else
       {
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DataCollectionTarget::scheduleTemplateRemoval(\"%s\" [%u]): removal of template \"%s\" [%u] already scheduled"),
                m_name, m_id, templateObject->getName(), templateObject->getId());
-         sendPollerMsg(_T("   Removal of template %s from %s already scheduled\r\n"), templateObject->getName(), m_name);
+         pollTarget->sendPollerMsg(_T("   Removal of template %s from %s already scheduled\r\n"), templateObject->getName(), m_name);
       }
    }
    else
    {
-      removeTemplate(templateObject);
+      removeTemplate(templateObject, pollTarget);
    }
 }
 
@@ -2042,19 +2042,25 @@ void DataCollectionTarget::applyTemplates()
       {
          TCHAR key[64];
          _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), templateObject->getId(), m_id);
-         DeleteScheduledTaskByKey(key);
+         if (DeleteScheduledTaskByKey(key))
+         {
+            sendPollerMsg(_T("   Pending removal from template \"%s\" cancelled\r\n"), templateObject->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): pending template \"%s\" [%u] removal from object \"%s\" [%u] cancelled"),
+                  templateObject->getName(), templateObject->getId(), m_name, m_id);
+         }
+
          if (!templateObject->isDirectChild(m_id))
          {
-            sendPollerMsg(_T("   Applying template %s\r\n"), templateObject->getName());
-            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyUserTemplates(): applying template %d \"%s\" to object %d \"%s\""),
-                      templateObject->getId(), templateObject->getName(), m_id, m_name);
+            sendPollerMsg(_T("   Applying template \"%s\"\r\n"), templateObject->getName());
+            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): applying template \"%s\" [%u] to object \"%s\" [%u]"),
+                  templateObject->getName(), templateObject->getId(), m_name, m_id);
             templateObject->applyToTarget(self());
             PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
          }
       }
       else if ((decision == AutoBindDecision_Unbind) && templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
       {
-         scheduleTemplateRemoval(templateObject);
+         scheduleTemplateRemoval(templateObject, this);
       }
       delete cachedFilterVM;
    }
