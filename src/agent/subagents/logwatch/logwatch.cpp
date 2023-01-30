@@ -203,6 +203,8 @@ static void ParserThreadTemplate(LogParser *parser)
    {
       StringList matchingFileList;
       StringList *previousWatchedFiles = currentWatchedFiles.keys();
+      TCHAR fname[MAX_PATH];
+      ExpandFileName(fileTemplate, fname, MAX_PATH, true);
 
       _TDIR *dir = _topendir(dirPath);
       if (dir != nullptr)
@@ -214,9 +216,9 @@ static void ParserThreadTemplate(LogParser *parser)
                continue;
 
 #if defined(__APPLE__) || defined(_WIN32) // Case insensitive
-            if (MatchString(fileTemplate, d->d_name, false))
+            if (MatchString(fname, d->d_name, false))
 #else
-            if (MatchString(fileTemplate, d->d_name, true))
+            if (MatchString(fname, d->d_name, true))
 #endif
             {
                matchingFileList.add(d->d_name);
