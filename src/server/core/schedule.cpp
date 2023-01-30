@@ -824,7 +824,7 @@ int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
       const TCHAR *k = s_oneTimeSchedules.get(i)->getTaskKey();
-      if ((k != NULL) && !_tcscmp(k, taskKey))
+      if ((k != nullptr) && !_tcscmp(k, taskKey))
       {
          count++;
       }
@@ -835,7 +835,7 @@ int NXCORE_EXPORTABLE CountScheduledTasksByKey(const TCHAR *taskKey)
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
       const TCHAR *k = s_cronSchedules.get(i)->getTaskKey();
-      if ((k != NULL) && !_tcscmp(k, taskKey))
+      if ((k != nullptr) && !_tcscmp(k, taskKey))
       {
          count++;
       }

@@ -1958,7 +1958,7 @@ uint32_t DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
  */
 void DataCollectionTarget::removeTemplate(Template *templateObject)
 {
-   sendPollerMsg(_T("   Removing from %s\r\n"), m_name);
+   sendPollerMsg(_T("   Removing template %s from %s\r\n"), templateObject->getName(), m_name);
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DataCollectionTarget::removeTemplate(): removing template %d \"%s\" from object %d \"%s\""),
                templateObject->getId(), templateObject->getName(), m_id, m_name);
    templateObject->deleteChild(*this);
@@ -1985,6 +1985,37 @@ void DataCollectionTarget::removeTemplate(const shared_ptr<ScheduledTaskParamete
 }
 
 /**
+ * Schedule template removal after grace period (will execute removeTemplate immediately if grace period is zero)
+ */
+void DataCollectionTarget::scheduleTemplateRemoval(Template *templateObject)
+{
+   int gracePeriod = ConfigReadInt(_T("DataCollection.TemplateRemovalGracePeriod"), 0);
+   if (gracePeriod > 0)
+   {
+      TCHAR key[64];
+      _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), templateObject->getId(), m_id);
+      if (CountScheduledTasksByKey(key) == 0)
+      {
+         AddOneTimeScheduledTask(_T("DataCollection.RemoveTemplate"), time(nullptr) + static_cast<time_t>(gracePeriod * 86400),
+               m_guid.toString(), nullptr, 0, m_id, SYSTEM_ACCESS_FULL, _T(""), key, true);
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DataCollectionTarget::scheduleTemplateRemoval(\"%s\" [%u]): scheduled removal of template \"%s\" [%u]"),
+               m_name, m_id, templateObject->getName(), templateObject->getId());
+         sendPollerMsg(_T("   Scheduled removal of template %s from %s\r\n"), templateObject->getName(), m_name);
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("DataCollectionTarget::scheduleTemplateRemoval(\"%s\" [%u]): removal of template \"%s\" [%u] already scheduled"),
+               m_name, m_id, templateObject->getName(), templateObject->getId());
+         sendPollerMsg(_T("   Removal of template %s from %s already scheduled\r\n"), templateObject->getName(), m_name);
+      }
+   }
+   else
+   {
+      removeTemplate(templateObject);
+   }
+}
+
+/**
  * Filter for selecting templates from objects
  */
 static bool TemplateSelectionFilter(NetObj *object, void *userData)
@@ -2000,7 +2031,7 @@ void DataCollectionTarget::applyTemplates()
    if (IsShutdownInProgress() || !(g_flags & AF_AUTOBIND_ON_CONF_POLL))
       return;
 
-   sendPollerMsg(_T("Processing template autoapply rules\r\n"));
+   sendPollerMsg(_T("Processing template automatic apply rules\r\n"));
    unique_ptr<SharedObjectArray<NetObj>> templates = g_idxObjectById.getObjects(TemplateSelectionFilter);
    for(int i = 0; i < templates->size(); i++)
    {
@@ -2009,6 +2040,9 @@ void DataCollectionTarget::applyTemplates()
       AutoBindDecision decision = templateObject->isApplicable(&cachedFilterVM, self());
       if (decision == AutoBindDecision_Bind)
       {
+         TCHAR key[64];
+         _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), templateObject->getId(), m_id);
+         DeleteScheduledTaskByKey(key);
          if (!templateObject->isDirectChild(m_id))
          {
             sendPollerMsg(_T("   Applying template %s\r\n"), templateObject->getName());
@@ -2018,18 +2052,9 @@ void DataCollectionTarget::applyTemplates()
             PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
          }
       }
-      else if (decision == AutoBindDecision_Unbind)
+      else if ((decision == AutoBindDecision_Unbind) && templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
       {
-         if (templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
-         {
-            sendPollerMsg(_T("   Removing template %s\r\n"), templateObject->getName());
-            nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyUserTemplates(): removing template %d \"%s\" from object %d \"%s\""),
-                      templateObject->getId(), templateObject->getName(), m_id, m_name);
-            templateObject->deleteChild(*this);
-            deleteParent(*templateObject);
-            templateObject->queueRemoveFromTarget(m_id, true);
-            PostSystemEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
-         }
+         scheduleTemplateRemoval(templateObject);
       }
       delete cachedFilterVM;
    }

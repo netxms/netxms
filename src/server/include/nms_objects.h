@@ -2473,8 +2473,10 @@ public:
    bool applyTemplateItem(uint32_t templateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(uint32_t templateId, const IntegerArray<uint32_t>& dciList);
    void removeTemplate(Template *templateObject);
-   static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
+   void scheduleTemplateRemoval(Template *templateObject);
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI);
+
+   static void removeTemplate(const shared_ptr<ScheduledTaskParameters>& parameters);
 };
 
 /**

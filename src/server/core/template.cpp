@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -923,8 +923,6 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
       return;
    }
 
-   int gracePeriod = ConfigReadInt(_T("DataCollection.TemplateRemovalGracePeriod"), 0);
-
    AutoBindClassFilterData filterData;
    filterData.processAccessPoints = ConfigReadBoolean(_T("Objects.AccessPoints.TemplateAutoApply"), false);
    filterData.processClusters = ConfigReadBoolean(_T("Objects.Clusters.TemplateAutoApply"), false);
@@ -943,8 +941,8 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
 
       if (decision == AutoBindDecision_Bind)
       {
-         TCHAR key[50];
-         _sntprintf(key, 50, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
+         TCHAR key[64];
+         _sntprintf(key, 64, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
          DeleteScheduledTaskByKey(key);
          if (!isDirectChild(object->getId()))
          {
@@ -956,19 +954,7 @@ void Template::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
       {
-         if (gracePeriod > 0)
-         {
-            TCHAR key[50];
-            _sntprintf(key, 50, _T("Delete.Template.%u.NetObj.%u"), m_id, object->getId());
-            AddOneTimeScheduledTask(_T("DataCollection.RemoveTemplate"), time(nullptr) + (time_t)(gracePeriod * 60 * 60 * 24),
-                     m_guid.toString(), nullptr, 0, object->getId(), SYSTEM_ACCESS_FULL, _T(""), key, true);
-            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Template::autobindPoll(): scheduled template \"%s\" [%u] removal from object \"%s\" [%u]"), m_name, m_id, object->getName(), object->getId());
-            sendPollerMsg(_T("   Scheduled removal from %s\r\n"), object->getName());
-         }
-         else
-         {
-            static_cast<DataCollectionTarget&>(*object).removeTemplate(this);
-         }
+         static_cast<DataCollectionTarget&>(*object).scheduleTemplateRemoval(this);
       }
    }
    delete cachedFilterVM;
