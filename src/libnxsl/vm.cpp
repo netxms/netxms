@@ -404,6 +404,7 @@ resume:
             {
                setGlobalVariable("$errorcode", createValue(m_errorCode));
                setGlobalVariable("$errorline", createValue(m_errorLine));
+               setGlobalVariable("$errormodule", createValue((m_errorModule != nullptr) ? m_errorModule->m_name : _T("")));
                setGlobalVariable("$errormsg", createValue(GetErrorMessage(m_errorCode)));
                setGlobalVariable("$errortext", createValue(m_errorText));
                goto resume;
@@ -3042,14 +3043,34 @@ void NXSL_VM::error(int errorCode, int sourceLine, const TCHAR *customMessage)
             (((m_cp == INVALID_ADDRESS) || (m_cp >= static_cast<uint32_t>(m_instructionSet.size()))) ?
                      0 : m_instructionSet.get(m_cp)->m_sourceLine) : sourceLine;
 
+   m_errorModule = nullptr;
+   if (m_cp < static_cast<uint32_t>(m_instructionSet.size()))
+   {
+      for(int i = 0; i < m_modules.size(); i++)
+      {
+         NXSL_Module *m = m_modules.get(i);
+         if ((m_cp >= m->m_codeStart) && (m_cp < m->m_codeStart + m->m_codeSize))
+         {
+            m_errorModule = m;
+            break;
+         }
+      }
+   }
+
    MemFree(m_errorText);
    if ((customMessage == nullptr) || (*customMessage == 0))
    {
-      TCHAR buffer[1024];
-      if ((errorCode == NXSL_ERR_ASSERTION_FAILED) && (m_assertMessage != nullptr) && (*m_assertMessage != 0))
-         _sntprintf(buffer, 1024, _T("Error %d in line %d: %s (%s)"), errorCode, m_errorLine, GetErrorMessage(errorCode), m_assertMessage);
+      TCHAR buffer[1024], moduleText[256];
+
+      if (m_errorModule != nullptr)
+         _sntprintf(moduleText, 256, _T("module %s "), m_errorModule->m_name);
       else
-         _sntprintf(buffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
+         moduleText[0] = 0;
+
+      if ((errorCode == NXSL_ERR_ASSERTION_FAILED) && (m_assertMessage != nullptr) && (*m_assertMessage != 0))
+         _sntprintf(buffer, 1024, _T("Error %d in %sline %d: %s (%s)"), errorCode, moduleText, m_errorLine, GetErrorMessage(errorCode), m_assertMessage);
+      else
+         _sntprintf(buffer, 1024, _T("Error %d in %sline %d: %s"), errorCode, moduleText, m_errorLine, GetErrorMessage(errorCode));
       m_errorText = MemCopyString(buffer);
    }
    else

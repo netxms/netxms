@@ -1276,6 +1276,7 @@ protected:
    NXSL_Value *m_pRetValue;
    int m_errorCode;
    int m_errorLine;
+   NXSL_Module *m_errorModule;
    TCHAR *m_errorText;
    TCHAR *m_assertMessage;
 
