@@ -22,7 +22,6 @@
 
 #include "nxdbmgr.h"
 
-
 /**
  * Upgrade from 43.6 to 43.7
  */
@@ -150,7 +149,7 @@ static bool H_UpgradeFromV3()
             _T("   6) Actual value\r\n")
             _T("   7) Current DCI value'")));
    }
-   else
+   else if (g_dbSyntax == DB_SYNTAX_MSSQL)
    {
       CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
             _T("description='Generated when threshold value reached for specific data collection item.\r\n")
@@ -164,7 +163,7 @@ static bool H_UpgradeFromV3()
             _T("   instance - Instance\r\n")
             _T("   isRepeatedEvent - Repeat flag\r\n")
             _T("   dciValue - Last collected DCI value'")
-            _T(" WHERE description='Generated when threshold value reached for specific data collection item.\r\n")
+            _T(" WHERE CAST(description AS varchar(max))='Generated when threshold value reached for specific data collection item.\r\n")
             _T("Parameters:\r\n")
             _T("   1) Parameter name\r\n")
             _T("   2) Item description\r\n")
@@ -186,7 +185,7 @@ static bool H_UpgradeFromV3()
             _T("   thresholdValue - Threshold value\r\n")
             _T("   currentValue - Actual value which is compared to threshold value\r\n")
             _T("   dciValue -  Last collected DCI value'")
-            _T(" WHERE description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+            _T(" WHERE CAST(description AS varchar(max))='Generated when threshold check is rearmed for specific data collection item.\r\n")
             _T("Parameters:\r\n")
             _T("   1) Parameter name\r\n")
             _T("   2) Item description\r\n")
@@ -195,6 +194,52 @@ static bool H_UpgradeFromV3()
             _T("   5) Threshold value\r\n")
             _T("   6) Actual value\r\n")
             _T("   7) Current DCI value'")));
+   }
+   else
+   {
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold value reached for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   dciName - Parameter name\r\n")
+      _T("   dciDescription - Item description\r\n")
+      _T("   thresholdValue - Threshold value\r\n")
+      _T("   currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   dciId - Data collection item ID\r\n")
+      _T("   instance - Instance\r\n")
+      _T("   isRepeatedEvent - Repeat flag\r\n")
+      _T("   dciValue - Last collected DCI value'")
+      _T(" WHERE description='Generated when threshold value reached for specific data collection item.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) Parameter name\r\n")
+      _T("   2) Item description\r\n")
+      _T("   3) Threshold value\r\n")
+      _T("   4) Actual value\r\n")
+      _T("   5) Data collection item ID\r\n")
+      _T("   6) Instance\r\n")
+      _T("   7) Repeat flag\r\n")
+      _T("   8) Current DCI value'")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   dciName - Parameter name\r\n")
+      _T("   dciDescription - Item description\r\n")
+      _T("   dciId - Data collection item ID\r\n")
+      _T("   instance - Instance\r\n")
+      _T("   thresholdValue - Threshold value\r\n")
+      _T("   currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   dciValue -  Last collected DCI value'")
+      _T(" WHERE description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) Parameter name\r\n")
+      _T("   2) Item description\r\n")
+      _T("   3) Data collection item ID\r\n")
+      _T("   4) Instance\r\n")
+      _T("   5) Threshold value\r\n")
+      _T("   6) Actual value\r\n")
+      _T("   7) Current DCI value'")));
    }
 
    CHK_EXEC(SetMinorSchemaVersion(4));
