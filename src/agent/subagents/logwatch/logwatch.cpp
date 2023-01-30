@@ -213,10 +213,10 @@ static void ParserThreadTemplate(LogParser *parser)
             if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
                continue;
 
-#if defined(__APPLE__) || defined(_WIN32) //Case insensitive
-            if(MatchString(fileTemplate, d->d_name, false))
+#if defined(__APPLE__) || defined(_WIN32) // Case insensitive
+            if (MatchString(fileTemplate, d->d_name, false))
 #else
-            if(MatchString(fileTemplate, d->d_name, true))
+            if (MatchString(fileTemplate, d->d_name, true))
 #endif
             {
                matchingFileList.add(d->d_name);
