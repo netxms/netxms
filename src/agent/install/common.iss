@@ -64,7 +64,7 @@ Var
   editServerName: TNewEdit;
   cbDownloadConfig, cbSetupTunnel: TNewCheckBox;
   SubagentSelectionPage: TInputOptionWizardPage;
-  serverName, sbECS, sbFileMgr, sbLogWatch, sbMQTT, sbNetSvc, sbPing, sbPortCheck, sbSSH,
+  serverName, sbBind9, sbFileMgr, sbLogWatch, sbMQTT, sbNetSvc, sbPing, sbSSH,
     sbWinEventSync, sbWinPerf, sbWMI, sbUPS, sbDownloadConfig, sbSetupTunnel, extraConfigValues: String;
   backupFileSuffix: String;
   logFile: String;
@@ -155,18 +155,17 @@ Begin
   serverName := GetPreviousData('MasterServer', serverName);
   sbDownloadConfig := GetPreviousData('DownloadConfig', sbDownloadConfig);
   sbSetupTunnel := GetPreviousData('SetupTunnel', sbSetupTunnel);
-  sbECS := GetPreviousData('Subagent_ECS', sbECS);
+  sbBind9 := GetPreviousData('Subagent_Bind9', sbBind9);
   sbFileMgr := GetPreviousData('Subagent_FILEMGR', sbFileMgr);
-  sbPing := GetPreviousData('Subagent_PING', sbPing);
   sbLogWatch := GetPreviousData('Subagent_LOGWATCH', sbLogWatch);
   sbMQTT := GetPreviousData('Subagent_MQTT', sbMQTT);
   sbNetSvc := GetPreviousData('Subagent_NETSVC', sbNetSvc);
-  sbPortCheck := GetPreviousData('Subagent_PORTCHECK', sbPortCheck);
+  sbPing := GetPreviousData('Subagent_PING', sbPing);
   sbSSH := GetPreviousData('Subagent_SSH', sbSSH);
+  sbUPS := GetPreviousData('Subagent_UPS', sbUPS);
   sbWinEventSync := GetPreviousData('Subagent_WINEVENTSYNC', sbWinEventSync);
   sbWinPerf := GetPreviousData('Subagent_WINPERF', sbWinPerf);
   sbWMI := GetPreviousData('Subagent_WMI', sbWMI);
-  sbUPS := GetPreviousData('Subagent_UPS', sbUPS);
 End;
 
 Function InitializeSetup(): Boolean;
@@ -190,13 +189,12 @@ Begin
   
   // Initial values for installation data
   serverName := '';
-  sbECS := 'FALSE';
+  sbBind9 := 'FALSE';
   sbFileMgr := 'FALSE';
   sbLogWatch := 'FALSE';
   sbMQTT := 'FALSE';
   sbNetSvc := 'FALSE';
   sbPing := 'FALSE';
-  sbPortCheck := 'FALSE';
   sbSSH := 'FALSE';
   sbWinEventSync := 'FALSE';
   sbWinPerf := 'TRUE';
@@ -253,8 +251,8 @@ Begin
     If Pos('/SUBAGENT=', param) = 1 Then Begin
       Delete(param, 1, 10);
       param := Uppercase(param);
-      If param = 'ECS' Then
-        sbECS := 'TRUE';
+      If param = 'BIND9' Then
+        sbBind9 := 'TRUE';
       If param = 'FILEMGR' Then
         sbFileMgr := 'TRUE';
       If param = 'LOGWATCH' Then
@@ -265,8 +263,6 @@ Begin
         sbNetSvc := 'TRUE';
       If param = 'PING' Then
         sbPing := 'TRUE';
-      If param = 'PORTCHECK' Then
-        sbPortCheck := 'TRUE';
       If param = 'SSH' Then
         sbSSH := 'TRUE';
       If param = 'WINEVENTSYNC' Then
@@ -282,8 +278,8 @@ Begin
     If Pos('/NOSUBAGENT=', param) = 1 Then Begin
       Delete(param, 1, 12);
       param := Uppercase(param);
-      If param = 'ECS' Then
-        sbECS := 'FALSE';
+      If param = 'BIND9' Then
+        sbBind9 := 'FALSE';
       If param = 'FILEMGR' Then
         sbFileMgr := 'FALSE';
       If param = 'LOGWATCH' Then
@@ -294,8 +290,6 @@ Begin
         sbNetSvc := 'FALSE';
       If param = 'PING' Then
         sbPing := 'FALSE';
-      If param = 'PORTCHECK' Then
-        sbPortCheck := 'FALSE';
       If param = 'SSH' Then
         sbSSH := 'FALSE';
       If param = 'WINEVENTSYNC' Then
@@ -375,30 +369,28 @@ Begin
   SubagentSelectionPage := CreateInputOptionPage(ServerSelectionPage.Id,
     'Subagent Selection', 'Select desired subagents.',
     'Please select additional subagents you wish to load.', False, False);
-  SubagentSelectionPage.Add('Extended Checksum Subagent - ecs.nsm');
-  SubagentSelectionPage.Add('File Manager Subagent - filemgr.nsm');
-  SubagentSelectionPage.Add('ICMP Pinger Subagent - ping.nsm');
-  SubagentSelectionPage.Add('Log Monitoring Subagent - logwatch.nsm');
-  SubagentSelectionPage.Add('MQTT Subagent - mqtt.nsm');
-  SubagentSelectionPage.Add('Network Service Checker Subagent - netsvc.nsm');
-  SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
-  SubagentSelectionPage.Add('SSH Subagent - ssh.nsm');
-  SubagentSelectionPage.Add('Windows Event Log Synchronization Subagent - wineventsync.nsm');
-  SubagentSelectionPage.Add('Windows Performance Subagent - winperf.nsm');
-  SubagentSelectionPage.Add('WMI Subagent - wmi.nsm');
-  SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
-  SubagentSelectionPage.Values[0] := StrToBool(sbECS);
+  SubagentSelectionPage.Add('BIND Monitoring Subagent (bind9)');
+  SubagentSelectionPage.Add('File Manager Subagent (filemgr)');
+  SubagentSelectionPage.Add('ICMP Pinger Subagent (ping)');
+  SubagentSelectionPage.Add('Log Monitoring Subagent (logwatch)');
+  SubagentSelectionPage.Add('MQTT Subagent (mqtt)');
+  SubagentSelectionPage.Add('Network Service Checker Subagent (netsvc)');
+  SubagentSelectionPage.Add('SSH Subagent (ssh)');
+  SubagentSelectionPage.Add('Windows Event Log Synchronization Subagent (wineventsync)');
+  SubagentSelectionPage.Add('Windows Performance Subagent (winperf)');
+  SubagentSelectionPage.Add('WMI Subagent (wmi)');
+  SubagentSelectionPage.Add('UPS Monitoring Subagent (ups)');
+  SubagentSelectionPage.Values[0] := StrToBool(sbBind9);
   SubagentSelectionPage.Values[1] := StrToBool(sbFileMgr);
   SubagentSelectionPage.Values[2] := StrToBool(sbPing);
   SubagentSelectionPage.Values[3] := StrToBool(sbLogWatch);
   SubagentSelectionPage.Values[4] := StrToBool(sbMQTT);
   SubagentSelectionPage.Values[5] := StrToBool(sbNetSvc);
-  SubagentSelectionPage.Values[6] := StrToBool(sbPortCheck);
-  SubagentSelectionPage.Values[7] := StrToBool(sbSSH);
-  SubagentSelectionPage.Values[8] := StrToBool(sbWinEventSync);
-  SubagentSelectionPage.Values[9] := StrToBool(sbWinPerf);
-  SubagentSelectionPage.Values[10] := StrToBool(sbWMI);
-  SubagentSelectionPage.Values[11] := StrToBool(sbUPS);
+  SubagentSelectionPage.Values[6] := StrToBool(sbSSH);
+  SubagentSelectionPage.Values[7] := StrToBool(sbWinEventSync);
+  SubagentSelectionPage.Values[8] := StrToBool(sbWinPerf);
+  SubagentSelectionPage.Values[9] := StrToBool(sbWMI);
+  SubagentSelectionPage.Values[10] := StrToBool(sbUPS);
 End;
 
 Function ShouldSkipPage(PageID: Integer): Boolean;
@@ -414,18 +406,17 @@ Begin
   SetPreviousData(PreviousDataKey, 'MasterServer', editServerName.Text);
   SetPreviousData(PreviousDataKey, 'DownloadConfig', BoolToStr(cbDownloadConfig.Checked));
   SetPreviousData(PreviousDataKey, 'SetupTunnel', BoolToStr(cbSetupTunnel.Checked));
-  SetPreviousData(PreviousDataKey, 'Subagent_ECS', BoolToStr(SubagentSelectionPage.Values[0]));
+  SetPreviousData(PreviousDataKey, 'Subagent_BIND9', BoolToStr(SubagentSelectionPage.Values[0]));
   SetPreviousData(PreviousDataKey, 'Subagent_FILEMGR', BoolToStr(SubagentSelectionPage.Values[1]));
   SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[2]));
   SetPreviousData(PreviousDataKey, 'Subagent_LOGWATCH', BoolToStr(SubagentSelectionPage.Values[3]));
   SetPreviousData(PreviousDataKey, 'Subagent_MQTT', BoolToStr(SubagentSelectionPage.Values[4]));
   SetPreviousData(PreviousDataKey, 'Subagent_NETSVC', BoolToStr(SubagentSelectionPage.Values[5]));
-  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[6]));
-  SetPreviousData(PreviousDataKey, 'Subagent_SSH', BoolToStr(SubagentSelectionPage.Values[7]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WINEVENTSYNC', BoolToStr(SubagentSelectionPage.Values[8]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[9]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[10]));
-  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[11]));
+  SetPreviousData(PreviousDataKey, 'Subagent_SSH', BoolToStr(SubagentSelectionPage.Values[6]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINEVENTSYNC', BoolToStr(SubagentSelectionPage.Values[7]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[8]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[9]));
+  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[10]));
 End;
 
 Function GetMasterServer(Param: String): String;
@@ -440,29 +431,27 @@ Function GetSubagentList(Param: String): String;
 Begin
   Result := '';
   If SubagentSelectionPage.Values[0] Then
-    Result := Result + 'ecs.nsm ';
+    Result := Result + 'bind9 ';
   If SubagentSelectionPage.Values[1] Then
-    Result := Result + 'filemgr.nsm ';
+    Result := Result + 'filemgr ';
   If SubagentSelectionPage.Values[2] Then
-    Result := Result + 'ping.nsm ';
+    Result := Result + 'ping ';
   If SubagentSelectionPage.Values[3] Then
-    Result := Result + 'logwatch.nsm ';
+    Result := Result + 'logwatch ';
   If SubagentSelectionPage.Values[4] Then
-    Result := Result + 'mqtt.nsm ';
+    Result := Result + 'mqtt ';
   If SubagentSelectionPage.Values[5] Then
-    Result := Result + 'netsvc.nsm ';
+    Result := Result + 'netsvc ';
   If SubagentSelectionPage.Values[6] Then
-    Result := Result + 'portcheck.nsm ';
+    Result := Result + 'ssh ';
   If SubagentSelectionPage.Values[7] Then
-    Result := Result + 'ssh.nsm ';
+    Result := Result + 'wineventsync ';
   If SubagentSelectionPage.Values[8] Then
-    Result := Result + 'wineventsync.nsm ';
+    Result := Result + 'winperf ';
   If SubagentSelectionPage.Values[9] Then
-    Result := Result + 'winperf.nsm ';
+    Result := Result + 'wmi ';
   If SubagentSelectionPage.Values[10] Then
-    Result := Result + 'wmi.nsm ';
-  If SubagentSelectionPage.Values[11] Then
-    Result := Result + 'ups.nsm ';
+    Result := Result + 'ups ';
 End;
 
 Function GetExtraConfigValues(Param: String): String;

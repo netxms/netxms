@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,7 +50,6 @@ bool DownloadConfig(const TCHAR *server)
 {
 #ifdef _WIN32
    WSADATA wsaData;
-
    if (WSAStartup(0x0202, &wsaData) != 0)
    {
       _tprintf(_T("ERROR: Unable to initialize Windows Sockets\n"));
@@ -73,12 +72,10 @@ bool DownloadConfig(const TCHAR *server)
       addr.fillSockAddr(&sa, 4701);
       if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
       {
-         TCHAR buffer[MAX_RESULT_LENGTH];
-
          // Prepare request
-         NXCPMessage msg(2);  // Server version is not known, use protocol version 2
-         msg.setCode(CMD_GET_MY_CONFIG);
-         msg.setId(1);
+         NXCPMessage msg(CMD_GET_MY_CONFIG, 1, 2);  // Server version is not known, use protocol version 2
+
+         TCHAR buffer[MAX_RESULT_LENGTH];
          if (H_PlatformName(nullptr, nullptr, buffer, nullptr) != SYSINFO_RC_SUCCESS)
             _tcscpy(buffer, _T("error"));
          msg.setField(VID_PLATFORM_NAME, buffer);
@@ -88,9 +85,9 @@ bool DownloadConfig(const TCHAR *server)
          msg.setField(VID_VERSION, NETXMS_VERSION_STRING);
 
          // Send request
-         NXCP_MESSAGE *pRawMsg = msg.serialize();
-         ssize_t nLen = ntohl(pRawMsg->size);
-         if (SendEx(hSocket, pRawMsg, nLen, 0, nullptr) == nLen)
+         NXCP_MESSAGE *rawMsg = msg.serialize();
+         ssize_t nLen = ntohl(rawMsg->size);
+         if (SendEx(hSocket, rawMsg, nLen, 0, nullptr) == nLen)
          {
             SocketMessageReceiver receiver(hSocket, 4096, MAX_MSG_SIZE);
             MessageReceiverResult result;
@@ -132,7 +129,7 @@ bool DownloadConfig(const TCHAR *server)
                _tprintf(_T("ERROR: No response from management server\n"));
             }
          }
-         MemFree(pRawMsg);
+         MemFree(rawMsg);
       }
       else
       {
