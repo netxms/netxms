@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,10 +42,8 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.TextOutputAdapter;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.TextConsole;
@@ -67,10 +65,6 @@ public class ScriptExecutorView extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ScriptExecutorView.class);
 
-   private NXCSession session;
-   private boolean modified = false;
-   private long objectId;
-
    private Label scriptName;
    private Combo scriptCombo;
    private ScriptEditor scriptEditor;
@@ -84,6 +78,7 @@ public class ScriptExecutorView extends AdHocObjectView
    private Action actionExecute;
    private List<Script> library;
    private int previousSelection = -1;
+   private boolean modified = false;
 
    /**
     * Create agent configuration editor for given node.
@@ -93,8 +88,6 @@ public class ScriptExecutorView extends AdHocObjectView
    public ScriptExecutorView(long objectId)
    {
       super(i18n.tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, false);
-      this.objectId = objectId;
-      session = Registry.getSession();
    }  
 
    /**
@@ -105,19 +98,7 @@ public class ScriptExecutorView extends AdHocObjectView
    protected ScriptExecutorView()
    {
       super(null, null, null, 0, false);  
-      session = Registry.getSession();
    }
-
-   /**
-    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
-    */
-   @Override
-   public View cloneView()
-   {
-      ScriptExecutorView view = (ScriptExecutorView)super.cloneView();
-      view.objectId = objectId;
-      return view;
-   }    
 
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
@@ -510,7 +491,7 @@ public class ScriptExecutorView extends AdHocObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.executeScript(objectId, script, parameters, new TextOutputAdapter() {
+            session.executeScript(getObjectId(), script, parameters, new TextOutputAdapter() {
                @Override
                public void messageReceived(final String text)
                {

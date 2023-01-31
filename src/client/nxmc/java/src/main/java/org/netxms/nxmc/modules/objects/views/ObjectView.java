@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,23 +34,25 @@ import org.xnap.commons.i18n.I18n;
 public abstract class ObjectView extends ViewWithContext
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectView.class);
-   
+
+   protected NXCSession session;
+
    private SessionListener clientListener;
-   private NXCSession session;
-   
+
    /**
     * Create object view with specific ID.
     *
     * @param name view name
     * @param image view image
     * @param id view ID
+    * @param hasFileter true if view should contain filter
     */
    public ObjectView(String name, ImageDescriptor image, String id, boolean hasFilter)
    {
       super(name, image, id, hasFilter);
       session = Registry.getSession();
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#getGlobalId()
     */

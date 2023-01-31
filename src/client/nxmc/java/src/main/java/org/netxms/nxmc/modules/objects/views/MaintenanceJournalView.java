@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,13 +37,11 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.MaintenanceJournalEntry;
-import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -74,7 +72,6 @@ public class MaintenanceJournalView extends ObjectView
    public static final int COL_CREATE_TIME = 5;
    public static final int COL_MODIFY_TIME = 6;
 
-   private NXCSession session;
    private SessionListener sessionListener;
    private SortableTableViewer viewer;
    private MaintenanceJournalFilter filter;
@@ -96,8 +93,6 @@ public class MaintenanceJournalView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      session = Registry.getSession();
-
       final int[] widths = { 50, 100, 100, 100, 500, 300, 300 };
       final String[] names = { i18n.tr("ID"), i18n.tr("Object"), i18n.tr("Author"), i18n.tr("Last edited by"), i18n.tr("Description"), i18n.tr("Creation time"), i18n.tr("Modification time") };
       viewer = new SortableTableViewer(parent, names, widths, COL_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);

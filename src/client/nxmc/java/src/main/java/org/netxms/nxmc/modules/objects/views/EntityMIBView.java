@@ -34,13 +34,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
 import org.netxms.client.PhysicalComponent;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.ComponentTreeContentProvider;
@@ -258,7 +256,6 @@ public class EntityMIBView extends ObjectView
       if (object == null)
          return;
 
-      final NXCSession session = Registry.getSession();
       Job job = new Job(i18n.tr("Get node components"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

@@ -58,13 +58,16 @@ public class CreateSnmpDci extends Action
 	private Shell shell;
 	private List<SnmpValue> objects = new ArrayList<SnmpValue>();
 	private ObjectView view;
-	
+
 	public CreateSnmpDci(ObjectView view)
 	{
 	   super(i18n.tr("Create data collection tiem..."));
 	   this.view = view;
 	}
 
+	/**
+	 * @see org.eclipse.jface.action.Action#run()
+	 */
 	@Override
 	public void run()
 	{

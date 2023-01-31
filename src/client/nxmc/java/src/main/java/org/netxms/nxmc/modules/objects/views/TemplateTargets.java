@@ -25,19 +25,17 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
-import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsLabelProvider;
 import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsFilter;
+import org.netxms.nxmc.modules.objects.views.helpers.TemplateTargetsLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -56,7 +54,6 @@ public class TemplateTargets extends ObjectView
    public static final int COLUMN_DESCRIPTION = 4;
    
    private SessionListener sessionListener;
-   private NXCSession session;
    private SortableTableViewer viewer; 
    private TemplateTargetsFilter filter;
    private TemplateTargetsLabelProvider labelProvider;
@@ -67,7 +64,6 @@ public class TemplateTargets extends ObjectView
    public TemplateTargets()
    {
       super("Targets", ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "Targets", true);
-      session = Registry.getSession();
    }
 
    /**
@@ -125,12 +121,12 @@ public class TemplateTargets extends ObjectView
             }
          }
       };
-      session = Registry.getSession();
       session.addListener(sessionListener);
    }
    
-
-   
+   /**
+    * Create context menu
+    */
    private void createContextMenu()
    {
       // Create menu manager
@@ -141,8 +137,8 @@ public class TemplateTargets extends ObjectView
       viewer.getControl().setMenu(menu);
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override
    public void refresh()

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,12 @@ package org.netxms.nxmc.modules.objects.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.View;
 
 /**
- * Ad-hoc views that intended to be shown only for specific object
+ * Ad-hoc views that intended to be shown only for specific object. Ad-hoc views are not dependent on context and always show data
+ * for object set during construction.
  */
 public abstract class AdHocObjectView extends ObjectView
 {
@@ -35,11 +38,23 @@ public abstract class AdHocObjectView extends ObjectView
     * @param image view image
     * @param baseId base view ID (actual ID will be derived from base and object ID)
     * @param objectId object ID this view is intended for
+    * @param hasFileter true if view should contain filter
     */
    public AdHocObjectView(String name, ImageDescriptor image, String baseId, long objectId, boolean hasFilter)
    {
       super(name, image, baseId + "#" + Long.toString(objectId), hasFilter);
       this.objectId = objectId;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      AdHocObjectView view = (AdHocObjectView)super.cloneView();
+      view.objectId = objectId;
+      return view;
    }
 
    /**
@@ -58,5 +73,34 @@ public abstract class AdHocObjectView extends ObjectView
    public boolean isCloseable()
    {
       return true;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#getObject()
+    */
+   @Override
+   public AbstractObject getObject()
+   {
+      AbstractObject object = super.getObject();
+      return ((object != null) && (object.getObjectId() == objectId)) ? object : Registry.getSession().findObjectById(objectId);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#getObjectId()
+    */
+   @Override
+   public long getObjectId()
+   {
+      return objectId;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#getObjectName()
+    */
+   @Override
+   public String getObjectName()
+   {
+      AbstractObject object = getObject();
+      return (object != null) ? object.getObjectName() : "";
    }
 }

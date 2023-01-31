@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
-import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -39,7 +38,6 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -60,7 +58,6 @@ public class DataComparisonView extends AdHocObjectView
    private static final I18n i18n = LocalizationHelper.getI18n(DataComparisonView.class);
 
    private Chart chart;
-	protected NXCSession session;
 	private boolean updateInProgress = false;
 	protected ArrayList<GraphItem> items = new ArrayList<GraphItem>(8);
 	private ViewRefreshController refreshController;
@@ -73,7 +70,6 @@ public class DataComparisonView extends AdHocObjectView
 	private int legendPosition = ChartConfiguration.POSITION_BOTTOM;
 	private boolean translucent = false;
    private Image[] titleImages = new Image[4];
-   private long objectId;
 
 	private RefreshAction actionRefresh;
 	private Action actionAutoRefresh;
@@ -114,24 +110,28 @@ public class DataComparisonView extends AdHocObjectView
       return sb.toString();
    }  
 
+   /**
+    * Create data comparison view.
+    *
+    * @param objectId context object ID
+    * @param items graph items
+    * @param chartType chart type
+    */
    public DataComparisonView(long objectId, ArrayList<GraphItem> items, ChartType chartType)
 	{      
       super(i18n.tr("Last Values Chart"),
             ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), objectId, false);
  
-      session = Registry.getSession();
       this.chartType = chartType;
       this.items = items;
-      this.objectId = objectId;
 	}
 
    /**
-    * Default constructor for view popout
+    * Default constructor for view clone
     */
    protected DataComparisonView()
    {      
       super(null, null, null, 0, false); 
-      session = Registry.getSession();
    }
 
    /**
@@ -143,7 +143,6 @@ public class DataComparisonView extends AdHocObjectView
       DataComparisonView view = (DataComparisonView)super.cloneView();
       view.chartType = chartType;
       view.items = items;
-      view.objectId = objectId;
       return view;
    }      
 

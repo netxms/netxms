@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,8 @@
 package org.netxms.nxmc.modules.objecttools.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -32,7 +30,6 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
  */
 public abstract class ObjectToolResultView extends ObjectView
 {
-   protected NXCSession session;
    protected ObjectTool tool;
    protected ObjectContext object;
 
@@ -73,7 +70,6 @@ public abstract class ObjectToolResultView extends ObjectView
       super(getViewName(object.object, tool), image, getViewId(object.object, tool), hasFilter);
       this.tool = tool;
       this.object = object;
-      session = Registry.getSession();
    }
 
    /**

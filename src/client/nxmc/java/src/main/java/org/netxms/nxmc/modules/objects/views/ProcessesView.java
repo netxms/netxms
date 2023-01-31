@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,12 +38,10 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -200,7 +198,6 @@ public class ProcessesView extends ObjectView
    public void refresh()
    {
       final long nodeId = getObjectId();
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Reading process list"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -281,7 +278,6 @@ public class ProcessesView extends ObjectView
          processes.add(((Process)o).data[COLUMN_PID]);
 
       final long nodeId = getObjectId();
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Terminating process"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

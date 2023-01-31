@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,6 @@ import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.interfaces.NodeItemPair;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -83,7 +82,6 @@ public class BusinessServiceChecksView extends ObjectView
    public static final int COLUMN_FAIL_REASON = 6;
    public static final int COLUMN_ORIGIN = 7;
 
-   private NXCSession session;
    private SessionListener sessionListener;
    private SortableTableViewer viewer;
    private BusinessServiceCheckLabelProvider labelProvider;
@@ -111,8 +109,6 @@ public class BusinessServiceChecksView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      session = Registry.getSession();
-      
       // Setup table columns
       final String[] names = { 
             i18n.tr("ID"), 

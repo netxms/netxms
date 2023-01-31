@@ -29,11 +29,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.OSPFInfo;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -68,7 +66,6 @@ public class OSPFView extends ObjectView
    public static final int COLUMN_NEIGHBOR_AREA_ID = 6;
    public static final int COLUMN_NEIGHBOR_STATE = 7;
 
-	private NXCSession session;
    private SortableTableViewer viewerAreas;
    private SortableTableViewer viewerNeighbors;
    private Action actionAreasExportToCsv;
@@ -84,7 +81,6 @@ public class OSPFView extends ObjectView
    public OSPFView()
    {
       super(i18n.tr("OSPF"), ResourceManager.getImageDescriptor("icons/object-views/ospf.png"), "OSPF", false);
-      session = Registry.getSession();
    }
 
    /**

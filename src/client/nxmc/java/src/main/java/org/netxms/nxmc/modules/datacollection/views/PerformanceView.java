@@ -33,11 +33,9 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.helpers.PerfTabGraphSettings;
@@ -129,7 +127,6 @@ public class PerformanceView extends ObjectView
 
       updateChartAreaLayout();
 
-      final NXCSession session = Registry.getSession();
       Job job = new Job(i18n.tr("Updating performance view"), this) {
          @Override
          protected void run(IProgressMonitor monitor)

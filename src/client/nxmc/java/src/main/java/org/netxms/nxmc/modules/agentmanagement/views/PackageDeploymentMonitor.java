@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Solutions
+ * Copyright (C) 2022-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,11 +59,11 @@ public class PackageDeploymentMonitor extends ObjectView
 {
    private static I18n i18n = LocalizationHelper.getI18n(PackageDeploymentMonitor.class);
 	public static final String ID = "PackageDeploymentMonitor"; //$NON-NLS-1$
-	
+
 	public static final int COLUMN_NODE = 0;
 	public static final int COLUMN_STATUS = 1;
 	public static final int COLUMN_ERROR = 2;
-	
+
 	private SortableTableViewer viewer;
 	private long packageId;
 	private Set<Long> applicableObjects;
@@ -94,9 +94,9 @@ public class PackageDeploymentMonitor extends ObjectView
       return view;
    }   
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    protected void createContent(Composite parent)
 	{

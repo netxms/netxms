@@ -32,11 +32,9 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.topology.WirelessStation;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -64,7 +62,6 @@ public class WirelessStations extends NodeSubObjectView
    public static final int COLUMN_RADIO = 5;
    public static final int COLUMN_SSID = 6;
 
-	private NXCSession session;
 	private SortableTableViewer viewer;
 	private Action actionCopyRecord;
 	private Action actionExportToCsv;
@@ -76,7 +73,6 @@ public class WirelessStations extends NodeSubObjectView
    public WirelessStations()
    {
       super("Wireless Stations", ResourceManager.getImageDescriptor("icons/object-views/wireless-stations.png"), "WirelessStations", true);
-      session = Registry.getSession();
    }
 
    /**

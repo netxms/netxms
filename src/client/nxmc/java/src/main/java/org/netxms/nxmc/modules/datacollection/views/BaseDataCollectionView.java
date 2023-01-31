@@ -41,7 +41,6 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.Pair;
-import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -49,7 +48,6 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
@@ -100,7 +98,6 @@ public abstract class BaseDataCollectionView extends ObjectView
    public static final int LV_COLUMN_TIMESTAMP = 4;
    public static final int LV_COLUMN_THRESHOLD = 5;
 
-   protected NXCSession session;
    protected SortableTableViewer viewer;
 
    private LastValuesLabelProvider labelProvider;
@@ -138,8 +135,6 @@ public abstract class BaseDataCollectionView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      session = Registry.getSession();
-
       VisibilityValidator validator = new VisibilityValidator() { 
          @Override
          public boolean isVisible()

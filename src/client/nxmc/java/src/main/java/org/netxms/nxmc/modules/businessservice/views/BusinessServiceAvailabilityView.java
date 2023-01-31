@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.netxms.client.NXCSession;
 import org.netxms.client.TimePeriod;
 import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.TimeFrameType;
@@ -43,7 +42,6 @@ import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.DateTimeSelector;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -75,7 +73,6 @@ public class BusinessServiceAvailabilityView extends ObjectView
    public static final int COLUMN_TERMINATION_TIME = 5;
    public static final int COLUMN_REASON = 6;
 
-   private NXCSession session;
    private DateTimeSelector startDateSelector;
    private DateTimeSelector endDateSelector;
    private Button buttonQuery;
@@ -97,8 +94,6 @@ public class BusinessServiceAvailabilityView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      session = Registry.getSession();   
-
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
       layout.marginWidth = 0;

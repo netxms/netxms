@@ -31,11 +31,9 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.MacAddress;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.topology.FdbEntry;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
@@ -63,7 +61,6 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	public static final int COLUMN_NODE = 5;
    public static final int COLUMN_TYPE = 6;
 	
-	private NXCSession session;
 	private SortableTableViewer viewer;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
@@ -76,7 +73,6 @@ public class SwitchForwardingDatabaseView extends ObjectView
    public SwitchForwardingDatabaseView()
    {
       super(i18n.tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "FDB", true);
-      session = Registry.getSession();
    }
 
    /**

@@ -56,7 +56,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.AgentFileData;
 import org.netxms.client.AgentFileFingerprint;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -103,7 +102,6 @@ public class AgentFileManager extends ObjectView
 
    private AgentFileFilter filter;
    private SortableTreeViewer viewer;
-   private NXCSession session;
    private Action actionUploadFile;
    private Action actionUploadFolder;
    private Action actionDelete;
@@ -124,7 +122,6 @@ public class AgentFileManager extends ObjectView
    public AgentFileManager()
    {
       super(i18n.tr("File Manager"), ResourceManager.getImageDescriptor("icons/object-views/filemgr.png"), "AgentFileManager", true);
-      session = Registry.getSession();
    }
    
    /**

@@ -31,11 +31,9 @@ import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
@@ -52,7 +50,6 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(PortView.class);
 
-   private NXCSession session = Registry.getSession();
 	private ScrolledComposite scroller;
    private DeviceViewWidget deviceView;
 	private ISelection selection = new StructuredSelection();

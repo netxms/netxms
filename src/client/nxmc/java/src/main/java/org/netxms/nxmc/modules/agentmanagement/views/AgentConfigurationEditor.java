@@ -27,9 +27,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Node;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -49,7 +47,6 @@ public class AgentConfigurationEditor extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(AgentConfigurationEditor.class);
 
-	private NXCSession session;
 	private AgentConfigEditor editor;
 	private boolean modified = false;
 	private Action actionSave;
@@ -63,18 +60,14 @@ public class AgentConfigurationEditor extends AdHocObjectView
    public AgentConfigurationEditor(Node node)
    {
       super(i18n.tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfigurationEditor", node.getObjectId(), false);
-      session = Registry.getSession();
    }
 
    /**
-    * Create agent configuration editor for given node.
-    *
-    * @param node node object
+    * Create agent configuration editor for cloning.
     */
    protected AgentConfigurationEditor()
    {
       super(null, null, null, 0, false); 
-      session = Registry.getSession(); 
    }
 
    /**
@@ -188,12 +181,11 @@ public class AgentConfigurationEditor extends AdHocObjectView
       }
 
       clearMessages();
-      final long nodeId = getObjectId();
       new Job(i18n.tr("Loading agent configuration"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final String config = session.readAgentConfigurationFile(nodeId);
+            final String config = session.readAgentConfigurationFile(getObjectId());
             runInUIThread(new Runnable() {
                @Override
                public void run()

@@ -231,7 +231,6 @@ public class ThresholdSummaryView extends ObjectView
          return;
       }
 
-      final NXCSession session = Registry.getSession();
       final long rootId = getObjectId();
       new Job(i18n.tr("Reading threshold summary"), this) {
          @Override
@@ -272,7 +271,6 @@ public class ThresholdSummaryView extends ObjectView
       if (!subscribed)
          return;
 
-      final NXCSession session = Registry.getSession();
       Job job = new Job(i18n.tr("Unsubscribing from threshold notifications"), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

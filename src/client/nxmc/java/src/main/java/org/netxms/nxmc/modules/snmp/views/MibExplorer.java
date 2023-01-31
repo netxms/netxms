@@ -44,13 +44,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -81,7 +79,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
 	private TableViewer viewer;
-	private NXCSession session;
 	private boolean walkActive = false;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
 	private Action actionWalk;
@@ -109,7 +106,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
    public MibExplorer()
    {
       super(i18n.tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), ID, true);
-      session = Registry.getSession();
    }
 
    /**

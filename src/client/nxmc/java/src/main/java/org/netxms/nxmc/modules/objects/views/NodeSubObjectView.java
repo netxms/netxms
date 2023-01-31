@@ -32,13 +32,11 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -51,7 +49,6 @@ public abstract class NodeSubObjectView extends ObjectView
    private I18n i18n = LocalizationHelper.getI18n(NodeSubObjectView.class);
 
    protected Composite mainArea;
-   protected NXCSession session;
    protected SessionListener sessionListener = null;
    protected boolean fullObjectSync;
 
@@ -72,8 +69,6 @@ public abstract class NodeSubObjectView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      session = Registry.getSession();
-
       PreferenceStore coreStore = PreferenceStore.getInstance();
       fullObjectSync = coreStore.getAsBoolean("ObjectBrowser.FullSync", false);
 

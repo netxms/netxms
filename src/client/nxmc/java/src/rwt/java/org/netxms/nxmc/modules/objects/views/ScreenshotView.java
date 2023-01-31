@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,11 +42,9 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.DownloadServiceHandler;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -61,7 +59,6 @@ public class ScreenshotView extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ScreenshotView.class);
 
-   private NXCSession session;
    private String userSession;
    private String userName;
    private Image image;
@@ -87,7 +84,40 @@ public class ScreenshotView extends AdHocObjectView
       super(i18n.tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), false);
       this.userSession = userSession;
       this.userName = userName;
-      session = Registry.getSession();
+   }
+
+   /**
+    * Create agent configuration editor for given node.
+    *
+    * @param node node object
+    */
+   protected ScreenshotView()
+   {
+      super(null, null, null, 0, false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ScreenshotView view = (ScreenshotView)super.cloneView();
+      userSession = view.userSession;
+      userName = view.userName;
+      image = view.image;
+      errorMessage = view.errorMessage;
+      imageInfo = view.imageInfo;
+      lastRequestTime = view.lastRequestTime;
+      return view;
+   }   
+
+   /**
+    * Post clone action
+    */
+   protected void postClone(View origin)
+   {      
+      canvas.redraw();
    }
 
    /**
@@ -97,9 +127,9 @@ public class ScreenshotView extends AdHocObjectView
    public void createContent(Composite parent)
    {
       parent.setLayout(new FillLayout());
-      
+
       scroller = new ScrolledComposite(parent, SWT.H_SCROLL | SWT.V_SCROLL);
-      
+
       canvas = new Canvas(scroller, SWT.NONE);
       canvas.addPaintListener(new PaintListener() {
          public void paintControl(PaintEvent e)
@@ -172,7 +202,6 @@ public class ScreenshotView extends AdHocObjectView
    @Override
    public void refresh()
    {
-      final long nodeId = getObjectId();
       Job job = new Job(i18n.tr("Taking screenshot"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -181,7 +210,7 @@ public class ScreenshotView extends AdHocObjectView
             {
                if (userSession == null)
                {
-                  Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents");
+                  Table sessions = session.queryAgentTable(getObjectId(), "Agent.SessionAgents");
                   if ((sessions != null) && (sessions.getRowCount() > 0))
                   {
                      int colIndexName = sessions.getColumnIndex("SESSION_NAME");
@@ -222,7 +251,7 @@ public class ScreenshotView extends AdHocObjectView
                         image = null;
                         errorMessage = i18n.tr("ERROR (No active sessions or session agent is not running)");
                         canvas.redraw();
-                        
+
                         actionSave.setEnabled(false);
                         
                         updateScrollerSize();
@@ -232,7 +261,7 @@ public class ScreenshotView extends AdHocObjectView
                }
 
                lastRequestTime = System.currentTimeMillis();
-               byteImage = session.takeScreenshot(nodeId, userSession);
+               byteImage = session.takeScreenshot(getObjectId(), userSession);
                final ImageData data = new ImageData(new ByteArrayInputStream(byteImage));
                runInUIThread(new Runnable() {
                   @Override

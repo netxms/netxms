@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.constants.RCC;
@@ -62,7 +61,6 @@ import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
 import org.netxms.nxmc.base.layout.DashboardLayoutData;
@@ -102,7 +100,7 @@ public class AlarmDetails extends AdHocObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(AlarmDetails.class);
 	public static final String ID = "AlarmDetails";
-	
+
 	public static final int EV_COLUMN_SEVERITY = 0;
 	public static final int EV_COLUMN_SOURCE = 1;
 	public static final int EV_COLUMN_NAME = 2;
@@ -115,7 +113,6 @@ public class AlarmDetails extends AdHocObjectView
 	      i18n.tr("Resolved"), 
 	      i18n.tr("Terminated")};
 
-	private NXCSession session;
 	private long alarmId;
 	private ImageCache imageCache;
    private BaseObjectLabelProvider objectLabelProvider;
@@ -142,7 +139,6 @@ public class AlarmDetails extends AdHocObjectView
 	private Control dataViewControl;
 	private long nodeId;
 	private long dciId;
-   private long rootObject;
 	private ViewRefreshController refreshController = null;
 	private boolean updateInProgress = false;
    private Image[] stateImages = new Image[5];
@@ -150,12 +146,10 @@ public class AlarmDetails extends AdHocObjectView
    /**
     * Create alarm view
     */
-   public AlarmDetails(long alarmId, long rootObject)
+   public AlarmDetails(long alarmId, long contextObject)
    {
-      super(String.format(i18n.tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", alarmId, true);
-      session = Registry.getSession();
+      super(String.format(i18n.tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", contextObject, true);
       this.alarmId = alarmId;
-      this.rootObject = rootObject;
       objectLabelProvider = new BaseObjectLabelProvider();
 
       stateImages[0] = ResourceManager.getImage("icons/alarms/outstanding.png");
@@ -168,7 +162,6 @@ public class AlarmDetails extends AdHocObjectView
    protected AlarmDetails()
    {
       super(null, null, null, 0, false); 
-      session = Registry.getSession();
       objectLabelProvider = new BaseObjectLabelProvider();
 
       stateImages[0] = ResourceManager.getImage("icons/alarms/outstanding.png");
@@ -186,7 +179,6 @@ public class AlarmDetails extends AdHocObjectView
    {
       AlarmDetails view = (AlarmDetails)super.cloneView();
       view.alarmId = alarmId;
-      view.rootObject = rootObject;
       return view;
    }  
 
@@ -884,14 +876,5 @@ public class AlarmDetails extends AdHocObjectView
    public String getFullName()
    {
       return getName();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == rootObject);
    }
 }

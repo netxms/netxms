@@ -60,7 +60,6 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.PreferenceStore;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -143,7 +142,6 @@ public class DataCollectionView extends BaseDataCollectionView
    protected void createContent(Composite parent)
    {
       this.parent = parent;
-      session = Registry.getSession();
 
       VisibilityValidator validator = new VisibilityValidator() { 
          @Override

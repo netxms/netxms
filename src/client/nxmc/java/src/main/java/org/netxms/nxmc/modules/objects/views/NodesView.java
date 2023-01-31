@@ -30,7 +30,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractNode;
@@ -40,7 +39,6 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -70,7 +68,6 @@ public class NodesView extends ObjectView
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
    private SessionListener sessionListener;
-   private NXCSession session;
 
    /**
     * Create "Services" view
@@ -135,7 +132,6 @@ public class NodesView extends ObjectView
             }
          }
       };
-      session = Registry.getSession();
       session.addListener(sessionListener);
 	}
 	
