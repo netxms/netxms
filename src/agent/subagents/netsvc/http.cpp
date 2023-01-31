@@ -131,7 +131,8 @@ int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool
 
    OptionList options(_T(""));
    char url[4096], ipAddrText[64];
-   snprintf(url, sizeof(url), "%s://%s:%u/%s", useTLS ? "https" : "http", (hostname != nullptr) ? hostname : addr.toStringA(ipAddrText), static_cast<uint32_t>(port), (uri[0] == '/') ? &uri[1] : uri);
+   snprintf(url, sizeof(url), "%s://%s:%u/%s", useTLS ? "https" : "http",
+         (hostHeader != nullptr) ? hostHeader : ((hostname != nullptr) ? hostname : addr.toStringA(ipAddrText)), static_cast<uint32_t>(port), (uri[0] == '/') ? &uri[1] : uri);
    CurlCommonSetup(curl, url, options, timeout);
 
    int result;
@@ -148,8 +149,17 @@ int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool
 #endif
    if (compiledPattern != nullptr)
    {
+      struct curl_slist *hosts = nullptr;
+      if ((hostname == nullptr) && (hostHeader != nullptr) && (*hostHeader != 0))
+      {
+         char resolverData[1024];
+         snprintf(resolverData, 1024, "%s:%d:%s", hostHeader, port, addr.toStringA(ipAddrText));
+         hosts = curl_slist_append(hosts, resolverData);
+         curl_easy_setopt(curl, CURLOPT_RESOLVE, hosts);
+      }
       NetworkServiceStatus_HTTP(curl, options, url, compiledPattern, &result);
       _pcre_free_t(compiledPattern);
+      curl_slist_free_all(hosts);
    }
    else
    {
