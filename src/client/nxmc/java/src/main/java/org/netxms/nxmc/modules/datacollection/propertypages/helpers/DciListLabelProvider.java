@@ -107,6 +107,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 					public void run()
 					{
 						dciNameCache = names;
+						completionHandler.run();
 					}
 				});
 			}
