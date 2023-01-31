@@ -34,7 +34,7 @@ public class AgentConfigTextAttributeProvider
 	private static final Color DEFAULT_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final Color COMMENT_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
    private static final Color DEPRECATED_KEYWORD_COLOR = new Color(Display.getCurrent(), 160, 0, 0);
-   private static final Color ENVVAR_COLOR = new Color(Display.getCurrent(), 65, 148, 0);
+   private static final Color ENVVAR_COLOR = new Color(Display.getCurrent(), 38, 127, 0);
 	private static final Color ERROR_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color ERROR_BK_COLOR = new Color(Display.getCurrent(), 255, 0, 0);
 	private static final Color KEYWORD_COLOR = new Color(Display.getCurrent(), 157, 0, 157);

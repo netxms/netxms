@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * NXSL script editor
+ * Agent configuration file editor
  */
 public class AgentConfigEditor extends Composite
 {
@@ -54,7 +54,7 @@ public class AgentConfigEditor extends Composite
    {
       return editor;
    }
-   
+
    /**
     * Set text for editing
     * @param text

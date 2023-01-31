@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package org.netxms.nxmc.modules.agentmanagement.widgets;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.LineStyleEvent;
@@ -38,11 +40,117 @@ public class AgentConfigEditor extends Composite
 {
    private static final Color ATTRIBUTE_COLOR = new Color(Display.getCurrent(), 157, 0, 157);
    private static final Color COMMENT_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
+   private static final Color DEPRECATED_ATTRIBUTE_COLOR = new Color(Display.getCurrent(), 160, 0, 0);
    private static final Color ENVVAR_COLOR = new Color(Display.getCurrent(), 38, 127, 0);
    private static final Color SECTION_COLOR = new Color(Display.getCurrent(), 128, 128, 0);
    private static final Color STRING_COLOR = new Color(Display.getCurrent(), 0, 0, 192);
 
+   private static final String[] CONFIG_KEYWORDS = {
+      "Action",
+      "AppAgent",
+      "BackgroundLogWriter",
+      "ConfigIncludeDir",
+      "ControlServers",
+      "CreateCrashDumps",
+      "CRL",
+      "CRLReloadInterval",
+      "DataCollectionMaxThreadPoolSize",
+      "DataCollectionMinThreadPoolSize",
+      "DataDirectory",
+      "DataReconciliationBlockSize",
+      "DataReconciliationTimeout",
+      "DataWriterFlushInterval",
+      "DataWriterMaxTransactionSize",
+      "DailyLogFileSuffix",
+      "DebugLevel",
+      "DebugTags",
+      "DefaultExecutionTimeout",
+      "DisableIPv4",
+      "DisableIPv6",
+      "DisableLocalDatabase",
+      "DumpDirectory",
+      "EnableActions",
+      "EnableArbitraryCommandExecution",
+      "EnabledCiphers",
+      "EnableControlConnector",
+      "EnableEventConnector",
+      "EnableProxy",
+      "EnablePushConnector",
+      "EnableSNMPProxy",
+      "EnableSNMPTrapProxy",
+      "EnableSSLTrace",
+      "EnableSyslogProxy",
+      "EnableSubagentAutoload",
+      "EnableTCPProxy",
+      "EnableTFTPProxy",
+      "EnableWatchdog",
+      "EnableWebServiceProxy",
+      "ExternalCommandTimeout",
+      "ExternalList",
+      "ExternalMasterAgent",
+      "ExternalMetric",
+      "ExternalMetricProvider",
+      "ExternalMetricProviderTimeout",
+      "ExternalMetricTimeout",
+      "ExternalSubAgent",
+      "ExternalTable",
+      "FatalExitOnCRTError",
+      "FileStore",
+      "FullCrashDumps",
+      "GroupId",
+      "ListenAddress",
+      "ListenPort",
+      "LogFile",
+      "LogHistorySize",
+      "LogRotationMode",
+      "LogUnresolvedSymbols",
+      "LongRunningQueryThreshold",
+      "MasterServers",
+      "MaxLogSize",
+      "MaxSessions",
+      "OfflineDataExpirationTime",
+      "PlatformSuffix",
+      "RequireAuthentication",
+      "RequireEncryption",
+      "Servers",
+      "SessionIdleTimeout",
+      "SharedSecret",
+      "SNMPTimeout",
+      "SNMPTrapListenAddress",
+      "SNMPTrapPort",
+      "StartupDelay",
+      "SubAgent",
+      "SyslogListenPort",
+      "SystemName",
+      "TrustedRootCertificate",
+      "TunnelKeepaliveInterval",
+      "VerifyServerCertificate",
+      "UserId",
+      "WaitForProcess",
+      "WebServiceCacheExpirationTime",
+      "WebServiceThreadPoolSize",
+      "WriteLogAsJson",
+      "ZoneUIN"
+   };
+
+   private static final String[] DEPRECATED_CONFIG_KEYWORDS = {
+      "ActionShellExec",
+      "DataCollectionThreadPoolSize",
+      "EncryptedSharedSecret",
+      "ExecTimeout",
+      "ExternalMetricShellExec",
+      "ExternalParameter",
+      "ExternalParameterShellExec",
+      "ExternalParameterProvider",
+      "ExternalParameterProviderTimeout",
+      "ExternalParameterTimeout",
+      "ExternalParametersProvider",
+      "ZoneId"
+   };
+   
    private StyledText editor;
+   private Set<String> keywords;
+   private Set<String> deprecatedKeywords;
 
    /**
     * @param parent
@@ -53,6 +161,13 @@ public class AgentConfigEditor extends Composite
    {
       super(parent, style);
       
+      keywords = new HashSet<>();
+      for(String s : CONFIG_KEYWORDS)
+         keywords.add(s.toLowerCase());
+      deprecatedKeywords = new HashSet<>();
+      for(String s : DEPRECATED_CONFIG_KEYWORDS)
+         deprecatedKeywords.add(s.toLowerCase());
+
       setLayout(new FillLayout());
       editor = new StyledText(this, editorStyle | SWT.MULTI);
       editor.setFont(JFaceResources.getTextFont());
@@ -66,6 +181,11 @@ public class AgentConfigEditor extends Composite
       });
    }
 
+   /**
+    * Apply line style to given line
+    *
+    * @param event style event
+    */
    private void applyLineStyle(LineStyleEvent event)
    {
       char[] line = event.lineText.toCharArray();
@@ -76,7 +196,7 @@ public class AgentConfigEditor extends Composite
       if (index == line.length)
          return;
 
-      StyleRange[] styles = new StyleRange[8];
+      StyleRange[] styles = new StyleRange[64];
       int styleCount = 0;
 
       // Find comment position
@@ -95,7 +215,7 @@ public class AgentConfigEditor extends Composite
          if (index != line.length)
             commentStart = index;
 
-         styles[styleCount++] = new StyleRange(event.lineOffset + startPos, endPos - startPos, SECTION_COLOR, null);
+         styles[styleCount++] = new StyleRange(event.lineOffset + startPos, endPos - startPos + 1, SECTION_COLOR, null, SWT.BOLD);
       }
       else if (line[index] == '*')
       {
@@ -103,7 +223,7 @@ public class AgentConfigEditor extends Composite
          int startPos = index;
          while((index < line.length) && (line[index] != '#'))
             index++;
-         styles[styleCount++] = new StyleRange(event.lineOffset + startPos, index - startPos, SECTION_COLOR, null);
+         styles[styleCount++] = new StyleRange(event.lineOffset + startPos, index - startPos, SECTION_COLOR, null, SWT.BOLD);
 
          if (index != line.length)
             commentStart = index;
@@ -120,8 +240,18 @@ public class AgentConfigEditor extends Composite
 
          if (line[index] == '=')
          {
+            String attr = event.lineText.substring(startPos, index).trim().toLowerCase();
+            Color c;
+            if (keywords.contains(attr))
+               c = ATTRIBUTE_COLOR;
+            else if (deprecatedKeywords.contains(attr))
+               c = DEPRECATED_ATTRIBUTE_COLOR;
+            else
+               c = null;
+            styles[styleCount++] = new StyleRange(event.lineOffset + startPos, index - startPos, c, null, SWT.BOLD);
+
+            styles[styleCount++] = new StyleRange(event.lineOffset + index, 1, null, null, SWT.BOLD);
             index++;
-            styles[styleCount++] = new StyleRange(event.lineOffset + startPos, index - startPos, ATTRIBUTE_COLOR, null);
 
             startPos = -1;
             boolean squotes = false, dquotes = false;
@@ -170,7 +300,7 @@ public class AgentConfigEditor extends Composite
                }
                else if ((ch == '}') && (startPos != -1) && !squotes)
                {
-                  styles[styleCount++] = new StyleRange(event.lineOffset + startPos, index - startPos + 1, ENVVAR_COLOR, null);
+                  styles[styleCount++] = new StyleRange(event.lineOffset + startPos, index - startPos + 1, ENVVAR_COLOR, null, SWT.BOLD);
                   startPos = dquotes ? index + 1 : -1;
                }
                index++;
