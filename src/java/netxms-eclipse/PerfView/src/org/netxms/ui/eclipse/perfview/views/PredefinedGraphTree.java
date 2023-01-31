@@ -229,6 +229,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
       settings.put("PredefinedGraphTree.showFilter", initShowFilter);
+      session.removeListener(this);
       super.dispose();
    }
 

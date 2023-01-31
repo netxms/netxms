@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -100,6 +100,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    private Composite chartParent = null;
    private GraphDefinition configuration = new GraphDefinition();
    private boolean multipleSourceNodes = false;
+   private boolean showDeleteAction = false;
 
    private Action actionRefresh;
    private Action actionAutoRefresh;
@@ -125,6 +126,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    private Action[] presetActions;
    private Action actionCopyImage;
    private Action actionSaveAsImage;
+   private Action actionDelete;
 
    /**
     * Build view ID
@@ -220,7 +222,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    public HistoricalGraphView()
    {
       super(i18n.tr("Graph"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), UUID.randomUUID().toString(), false); //TODO: is random id ok?
-
+      fullName = "Line Chart";
+      
       refreshController = new ViewRefreshController(this, -1, new Runnable() {
          @Override
          public void run()
@@ -516,7 +519,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          @Override
          public void run()
          {
-            showGraphPropertyPages(configuration);
+            showGraphPropertyPages(configuration, getWindow().getShell());
             configureGraphFromSettings(); // Always refresh graph (last action was cancel, but before could have been apply actions)
          }
       };
@@ -753,6 +756,14 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }
       };
       addKeyBinding("M1+I", actionSaveAsImage);
+      
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            deletePredefinedGraph();
+         }
+      };
    }
 
    /**
@@ -828,6 +839,11 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       manager.add(actionSaveAs);
       manager.add(actionSaveAsImage);
       manager.add(actionCopyImage);
+      if (showDeleteAction)
+      {
+         manager.add(new Separator());
+         manager.add(actionDelete);
+      }
    }
 
    /**
@@ -1057,6 +1073,30 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
          }.start();
       }
    }
+   
+   /**
+    * Delete predefined graph(s)
+    */
+   private void deletePredefinedGraph()
+   {      
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Predefined Graphs"), 
+            i18n.tr("Predefined graphs will be deleted. Are you sure?")))
+         return;
+         
+      new Job(String.format(i18n.tr("Delete predefined graph \"%s\""), configuration.getShortName()), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.deletePredefinedGraph(configuration.getId());
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot delete predefined graph");
+         }
+      }.start();
+   }
 
    /**
     * Create preset actions
@@ -1167,19 +1207,27 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    }
 
    /**
+    * @param showDeleteAction the showDeleteAction to set
+    */
+   public void setShowDeleteAction(boolean showDeleteAction)
+   {
+      this.showDeleteAction = showDeleteAction;
+   }
+
+   /**
     * Show Graph configuration dialog
     * 
     * @param trap Object tool details object
     * @return true if OK was pressed
     */
-   private boolean showGraphPropertyPages(final GraphDefinition settings)
+   public static boolean showGraphPropertyPages(final GraphDefinition settings, Shell parentShell)
    {
       PreferenceManager pm = new PreferenceManager();    
       pm.addToRoot(new PreferenceNode("graph", new Graph(settings, false)));
       pm.addToRoot(new PreferenceNode("general", new GeneralChart(settings, false)));
       pm.addToRoot(new PreferenceNode("source", new DataSources(settings, false)));
 
-      PreferenceDialog dlg = new PreferenceDialog(getWindow().getShell(), pm) {
+      PreferenceDialog dlg = new PreferenceDialog(parentShell, pm) {
          @Override
          protected void configureShell(Shell newShell)
          {

@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
+import org.netxms.nxmc.base.views.GraphPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinLocation;
@@ -172,6 +173,7 @@ public final class Registry
       perspectives.add(new MonitorPerspective());
       perspectives.add(new NetworkPerspective());
       perspectives.add(new PinboardPerspective());
+      perspectives.add(new GraphPerspective());
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ToolsPerspective());
       perspectives.add(new WorldMapPerspective());
