@@ -292,8 +292,8 @@ protected:
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
    uint32_t m_flags;             // user flags
    uint32_t m_stateFlags;        // runtime flags
-   uint32_t m_dwTemplateId;      // Related template's id
-   uint32_t m_dwTemplateItemId;  // Related template item's id
+   uint32_t m_templateId;        // Related template's id
+   uint32_t m_templateItemId;    // Related template item's id
    Mutex m_mutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
@@ -382,8 +382,8 @@ public:
    shared_ptr<DataCollectionOwner> getOwner() const { return m_owner.lock(); }
    uint32_t getOwnerId() const { return m_ownerId; }
    const TCHAR *getOwnerName() const;
-   uint32_t getTemplateId() const { return m_dwTemplateId; }
-   uint32_t getTemplateItemId() const { return m_dwTemplateItemId; }
+   uint32_t getTemplateId() const { return m_templateId; }
+   uint32_t getTemplateItemId() const { return m_templateItemId; }
    uint32_t getResourceId() const { return m_resourceId; }
    uint32_t getSourceNode() const { return m_sourceNode; }
 	time_t getLastPollTime() const { return m_lastPoll; }
@@ -415,14 +415,14 @@ public:
    void setStatus(int status, bool generateEvent, bool userChange = false);
    void setBusyFlag() { m_busy = 1; }
    void clearBusyFlag() { m_busy = 0; }
-   void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
+   void setTemplateId(uint32_t templateId, uint32_t dwItemId) { m_templateId = templateId; m_templateItemId = dwItemId; }
    void updateTimeIntervals() { lock(); updateTimeIntervalsInternal(); unlock(); }
    void fillSchedulingDataMessage(NXCPMessage *msg, uint32_t base) const;
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(const NXCPMessage& msg);
 
-   virtual void changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion);
+   virtual void changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion);
 
 	virtual bool deleteAllData();
 	virtual bool deleteEntry(time_t timestamp);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -94,10 +94,10 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
    m_status = (BYTE)DBGetFieldLong(hResult, row, 6);
    m_deltaCalculation = (BYTE)DBGetFieldLong(hResult, row, 7);
    setTransformationScript(DBGetField(hResult, row, 8, nullptr, 0));
-   m_dwTemplateId = DBGetFieldULong(hResult, row, 9);
+   m_templateId = DBGetFieldULong(hResult, row, 9);
    m_description = DBGetFieldAsSharedString(hResult, row, 10);
    m_instanceName = DBGetFieldAsSharedString(hResult, row, 11);
-   m_dwTemplateItemId = DBGetFieldULong(hResult, row, 12);
+   m_templateItemId = DBGetFieldULong(hResult, row, 12);
    m_thresholds = nullptr;
    m_cacheSize = 0;
    m_requiredCacheSize = 0;
@@ -314,7 +314,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
    lock();
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_ownerId);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_templateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_source);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_dataType);
@@ -325,7 +325,7 @@ bool DCItem::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING - 1);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instanceName, DB_BIND_STATIC, MAX_INSTANCE_LEN - 1);
-	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_templateItemId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_resourceId);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_sourceNode);
@@ -1417,7 +1417,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
 	msg->setField(baseId++, static_cast<uint16_t>(getType()));
 	msg->setField(baseId++, m_errorCount);
-	msg->setField(baseId++, m_dwTemplateItemId);
+	msg->setField(baseId++, m_templateItemId);
    msg->setField(baseId++, m_unitName);
    msg->setField(baseId++, m_multiplier);
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -162,8 +162,8 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, BYTE scheduleType, co
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataCollectionOwner>& owner, bool useStartupDelay) : DCObject(owner)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
-   m_dwTemplateId = DBGetFieldULong(hResult, row, 1);
-   m_dwTemplateItemId = DBGetFieldULong(hResult, row, 2);
+   m_templateId = DBGetFieldULong(hResult, row, 1);
+   m_templateItemId = DBGetFieldULong(hResult, row, 2);
 	m_name = DBGetFieldAsSharedString(hResult, row, 3);
    m_description = DBGetFieldAsSharedString(hResult, row, 4);
    m_flags = DBGetFieldLong(hResult, row, 5);
@@ -584,8 +584,8 @@ bool DCTable::saveToDatabase(DB_HANDLE hdb)
    lock();
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_ownerId);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
-	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_templateId);
+	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_templateItemId);
 	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC, MAX_ITEM_NAME - 1);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING - 1);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_flags);
@@ -879,7 +879,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, static_cast<uint16_t>(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
    msg->setField(fieldId++, static_cast<uint16_t>(getType()));
    msg->setField(fieldId++, m_errorCount);
-   msg->setField(fieldId++, m_dwTemplateItemId);
+   msg->setField(fieldId++, m_templateItemId);
    msg->setField(fieldId++, _T(""));
    msg->setField(fieldId++, 0);
 

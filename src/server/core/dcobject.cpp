@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,8 +70,8 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_id = 0;
    m_guid = uuid::generate();
    m_ownerId = (owner != nullptr) ? owner->getId() : 0;
-   m_dwTemplateId = 0;
-   m_dwTemplateItemId = 0;
+   m_templateId = 0;
+   m_templateItemId = 0;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
 	m_pollingScheduleType = DC_POLLING_SCHEDULE_DEFAULT;
@@ -120,8 +120,8 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
    m_id = src->m_id;
    m_guid = src->m_guid;
    m_ownerId = src->m_ownerId;
-   m_dwTemplateId = src->m_dwTemplateId;
-   m_dwTemplateItemId = src->m_dwTemplateItemId;
+   m_templateId = src->m_templateId;
+   m_templateItemId = src->m_templateItemId;
    m_busy = shadowCopy ? src->m_busy : 0;
 	m_scheduledForDeletion = 0;
 	m_pollingScheduleType = src->m_pollingScheduleType;
@@ -177,8 +177,8 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_id = id;
    m_guid = uuid::generate();
    m_ownerId = (owner != nullptr) ? owner->getId() : 0;
-   m_dwTemplateId = 0;
-   m_dwTemplateItemId = 0;
+   m_templateId = 0;
+   m_templateItemId = 0;
    m_source = source;
    m_pollingScheduleType = scheduleType;
    m_pollingIntervalSrc = MemCopyString(pollingInterval);
@@ -226,8 +226,8 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    if (m_guid.isNull())
       m_guid = uuid::generate();
    m_ownerId = (owner != nullptr) ? owner->getId() : 0;
-   m_dwTemplateId = 0;
-   m_dwTemplateItemId = 0;
+   m_templateId = 0;
+   m_templateItemId = 0;
    m_name = config->getSubEntryValue(_T("name"), 0, _T("unnamed"));
    m_description = config->getSubEntryValue(_T("description"), 0, m_name);
    m_systemTag = config->getSubEntryValue(_T("systemTag"), 0, nullptr);
@@ -508,7 +508,7 @@ bool DCObject::deleteEntry(time_t timestamp)
 /**
  * Set new ID and node/template association
  */
-void DCObject::changeBinding(UINT32 newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion)
+void DCObject::changeBinding(uint32_t newId, shared_ptr<DataCollectionOwner> newOwner, bool doMacroExpansion)
 {
    lock();
    m_owner = newOwner;
@@ -806,7 +806,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
 	lock();
    pMsg->setField(VID_DCI_ID, m_id);
 	pMsg->setField(VID_DCOBJECT_TYPE, (WORD)getType());
-   pMsg->setField(VID_TEMPLATE_ID, m_dwTemplateId);
+   pMsg->setField(VID_TEMPLATE_ID, m_templateId);
    pMsg->setField(VID_NAME, m_name);
    pMsg->setField(VID_DESCRIPTION, m_description);
    pMsg->setField(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
@@ -1085,7 +1085,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_instanceRetentionTime = src->m_instanceRetentionTime;
 
    if (((m_status != ITEM_STATUS_DISABLED) || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE)) &&
-       !((m_ownerId == m_dwTemplateId) && (m_instanceGracePeriodStart > 0))) // check if DCI is not disabled by instance discovery
+       !((m_ownerId == m_templateId) && (m_instanceGracePeriodStart > 0))) // check if DCI is not disabled by instance discovery
    {
       setStatus(src->m_status, true);
    }
@@ -1609,8 +1609,8 @@ json_t *DCObject::toJson()
    json_object_set_new(root, "busy", json_integer(m_busy));
    json_object_set_new(root, "scheduledForDeletion", json_integer(m_scheduledForDeletion));
    json_object_set_new(root, "flags", json_integer(m_flags));
-   json_object_set_new(root, "dwTemplateId", json_integer(m_dwTemplateId));
-   json_object_set_new(root, "dwTemplateItemId", json_integer(m_dwTemplateItemId));
+   json_object_set_new(root, "templateId", json_integer(m_templateId));
+   json_object_set_new(root, "templateItemId", json_integer(m_templateItemId));
    json_object_set_new(root, "schedules", (m_schedules != nullptr) ? m_schedules->toJson() : json_array());
    json_object_set_new(root, "lastCheck", json_integer(m_tLastCheck));
    json_object_set_new(root, "errorCount", json_integer(m_errorCount));
@@ -1806,8 +1806,8 @@ DCObjectInfo::DCObjectInfo(const DCObject& object)
 {
    m_id = object.m_id;
    m_ownerId = object.getOwnerId();
-   m_templateId = object.m_dwTemplateId;
-   m_templateItemId = object.m_dwTemplateItemId;
+   m_templateId = object.m_templateId;
+   m_templateItemId = object.m_templateItemId;
    m_flags = object.m_flags;
    m_type = object.getType();
    _tcslcpy(m_name, object.m_name, MAX_ITEM_NAME);
