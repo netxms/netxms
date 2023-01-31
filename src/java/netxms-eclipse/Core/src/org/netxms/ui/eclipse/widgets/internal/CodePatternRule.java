@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,10 +37,10 @@ public class CodePatternRule implements IPredicateRule
 	{
 		this.successToken = successToken;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text.rules.ICharacterScanner)
-	 */
+
+   /**
+    * @see org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text.rules.ICharacterScanner)
+    */
 	@Override
 	public IToken evaluate(ICharacterScanner scanner)
 	{
@@ -50,7 +50,7 @@ public class CodePatternRule implements IPredicateRule
 			int ch = scanner.read();
 			if (ch == ICharacterScanner.EOF)
 				break;
-			if ((ch == '#') || (ch == '"') || (ch == '*'))
+         if ((ch == '#') || (ch == '"') || (ch == '*') || (ch == '[') || (ch == '$'))
 			{
 				scanner.unread();
 				break;
@@ -60,18 +60,18 @@ public class CodePatternRule implements IPredicateRule
 		return (chars == 0) ? Token.UNDEFINED : successToken;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.rules.IPredicateRule#evaluate(org.eclipse.jface.text.rules.ICharacterScanner, boolean)
-	 */
+   /**
+    * @see org.eclipse.jface.text.rules.IPredicateRule#evaluate(org.eclipse.jface.text.rules.ICharacterScanner, boolean)
+    */
 	@Override
 	public IToken evaluate(ICharacterScanner scanner, boolean resume)
 	{
 		return evaluate(scanner);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.rules.IPredicateRule#getSuccessToken()
-	 */
+   /**
+    * @see org.eclipse.jface.text.rules.IPredicateRule#getSuccessToken()
+    */
 	@Override
 	public IToken getSuccessToken()
 	{

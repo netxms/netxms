@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IWordDetector;
 import org.eclipse.jface.text.rules.PatternRule;
 import org.eclipse.jface.text.rules.RuleBasedScanner;
+import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.SourceViewerConfiguration;
 
@@ -34,51 +35,72 @@ import org.eclipse.jface.text.source.SourceViewerConfiguration;
  */
 public class AgentConfigSourceViewerConfiguration extends SourceViewerConfiguration
 {
-	private static final IWordDetector configWordDetector = new IWordDetector() {
-		@Override
-		public boolean isWordPart(char c)
-		{
-			return Character.isLetterOrDigit(c) || (c == '$') || (c == '_');
-		}
+   private static final IWordDetector CONFIG_WORD_DETECTOR = new IWordDetector() {
+      @Override
+      public boolean isWordPart(char c)
+      {
+         return Character.isLetterOrDigit(c) || (c == '_');
+      }
 
-		@Override
-		public boolean isWordStart(char c)
-		{
-			return Character.isLetter(c) || (c == '$') || (c == '_');
-		}
-	};
-	
-	private static final String[] configKeywords = { 
+      @Override
+      public boolean isWordStart(char c)
+      {
+         return Character.isLetter(c) || (c == '_');
+      }
+   };
+
+	private static final String[] CONFIG_KEYWORDS = { 
 		"Action",  //$NON-NLS-1$
-		"ActionShellExec",  //$NON-NLS-1$
       "AppAgent",  //$NON-NLS-1$
       "BackgroundLogWriter",  //$NON-NLS-1$
-		"CodePage",  //$NON-NLS-1$
 		"ConfigIncludeDir",  //$NON-NLS-1$
 		"ControlServers",  //$NON-NLS-1$
 		"CreateCrashDumps",  //$NON-NLS-1$
-      "DataCollectionThreadPoolSize",  //$NON-NLS-1$
+      "CRL",  //$NON-NLS-1$
+      "CRLReloadInterval",  //$NON-NLS-1$
+      "DataCollectionMaxThreadPoolSize",  //$NON-NLS-1$
+      "DataCollectionMinThreadPoolSize",  //$NON-NLS-1$
       "DataDirectory",  //$NON-NLS-1$
       "DataReconciliationBlockSize",  //$NON-NLS-1$
       "DataReconciliationTimeout",  //$NON-NLS-1$
+      "DataWriterFlushInterval",  //$NON-NLS-1$
+      "DataWriterMaxTransactionSize",  //$NON-NLS-1$
       "DailyLogFileSuffix",  //$NON-NLS-1$
       "DebugLevel",  //$NON-NLS-1$
+      "DebugTags",  //$NON-NLS-1$
+      "DefaultExecutionTimeout",  //$NON-NLS-1$
       "DisableIPv4",  //$NON-NLS-1$
       "DisableIPv6",  //$NON-NLS-1$
+      "DisableLocalDatabase",  //$NON-NLS-1$
 		"DumpDirectory",  //$NON-NLS-1$
 		"EnableActions",  //$NON-NLS-1$
+      "EnableArbitraryCommandExecution", //$NON-NLS-1$
 		"EnabledCiphers", //$NON-NLS-1$
+      "EnableControlConnector", //$NON-NLS-1$
+      "EnableEventConnector", //$NON-NLS-1$
 		"EnableProxy", //$NON-NLS-1$
+      "EnablePushConnector", //$NON-NLS-1$
 		"EnableSNMPProxy", //$NON-NLS-1$
+      "EnableSNMPTrapProxy", //$NON-NLS-1$
+      "EnableSSLTrace", //$NON-NLS-1$
+      "EnableSyslogProxy", //$NON-NLS-1$
 		"EnableSubagentAutoload", //$NON-NLS-1$
-		"EnableWatchdog", //$NON-NLS-1$
-		"ExecTimeout", //$NON-NLS-1$
+		"EnableTCPProxy", //$NON-NLS-1$
+      "EnableTFTPProxy", //$NON-NLS-1$
+      "EnableWatchdog", //$NON-NLS-1$
+      "EnableWebServiceProxy", //$NON-NLS-1$
+      "ExternalCommandTimeout", //$NON-NLS-1$
       "ExternalList", //$NON-NLS-1$
       "ExternalMasterAgent", //$NON-NLS-1$
-		"ExternalParameter", //$NON-NLS-1$
-		"ExternalParameterShellExec", //$NON-NLS-1$
+      "ExternalMetric", //$NON-NLS-1$
+      "ExternalMetricProvider", //$NON-NLS-1$
+      "ExternalMetricProviderTimeout", //$NON-NLS-1$
+      "ExternalMetricTimeout", //$NON-NLS-1$
       "ExternalSubAgent", //$NON-NLS-1$
+      "ExternalTable", //$NON-NLS-1$
+      "FatalExitOnCRTError", //$NON-NLS-1$
 		"FileStore", //$NON-NLS-1$
+      "FullCrashDumps", //$NON-NLS-1$
       "GroupId", //$NON-NLS-1$
 		"ListenAddress", //$NON-NLS-1$
 		"ListenPort", //$NON-NLS-1$
@@ -90,6 +112,7 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		"MasterServers", //$NON-NLS-1$
 		"MaxLogSize", //$NON-NLS-1$
 		"MaxSessions", //$NON-NLS-1$
+      "OfflineDataExpirationTime", //$NON-NLS-1$
 		"PlatformSuffix", //$NON-NLS-1$
 		"RequireAuthentication", //$NON-NLS-1$
 		"RequireEncryption", //$NON-NLS-1$
@@ -102,15 +125,38 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		"StartupDelay", //$NON-NLS-1$
 		"SubAgent", //$NON-NLS-1$
       "SyslogListenPort", //$NON-NLS-1$
+      "SystemName", //$NON-NLS-1$
+      "TrustedRootCertificate", //$NON-NLS-1$
+      "TunnelKeepaliveInterval", //$NON-NLS-1$
+      "VerifyServerCertificate", //$NON-NLS-1$
       "UserId", //$NON-NLS-1$
 		"WaitForProcess", //$NON-NLS-1$
+      "WebServiceCacheExpirationTime", //$NON-NLS-1$
+      "WebServiceThreadPoolSize", //$NON-NLS-1$
+      "WriteLogAsJson", //$NON-NLS-1$
+      "ZoneUIN" //$NON-NLS-1$
+	};
+
+   private static final String[] DEPRECATED_CONFIG_KEYWORDS = {
+      "ActionShellExec",  //$NON-NLS-1$
+      "DataCollectionThreadPoolSize",  //$NON-NLS-1$
+      "EncryptedSharedSecret", //$NON-NLS-1$
+      "ExecTimeout", //$NON-NLS-1$
+      "ExternalMetricShellExec", //$NON-NLS-1$
+      "ExternalParameter", //$NON-NLS-1$
+      "ExternalParameterShellExec", //$NON-NLS-1$
+      "ExternalParameterProvider", //$NON-NLS-1$
+      "ExternalParameterProviderTimeout", //$NON-NLS-1$
+      "ExternalParameterTimeout", //$NON-NLS-1$
+      "ExternalParametersProvider", //$NON-NLS-1$
       "ZoneId" //$NON-NLS-1$
-	};
-	
-	private static final IRule[] codeRules = { 
-		new KeywordRule(configWordDetector, AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.KEYWORD),
-				AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.DEFAULT), configKeywords)
-	};
+   };
+
+	private static final IRule[] CODE_RULES = { 
+      new KeywordRule(CONFIG_WORD_DETECTOR, AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.KEYWORD), Token.UNDEFINED, CONFIG_KEYWORDS),
+      new KeywordRule(CONFIG_WORD_DETECTOR, AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.DEPRECATED_KEYWORD),
+            AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.DEFAULT), DEPRECATED_CONFIG_KEYWORDS)
+   };
 
 	/**
 	 * Creates source viewer configuration for agent config
@@ -120,34 +166,34 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		super();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getTabWidth(org.eclipse.jface.text.source.ISourceViewer)
-	 */
+   /**
+    * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getTabWidth(org.eclipse.jface.text.source.ISourceViewer)
+    */
 	@Override
 	public int getTabWidth(ISourceViewer sourceViewer)
 	{
 		return 8;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getConfiguredContentTypes(org.eclipse.jface.text.source.ISourceViewer)
-	 */
+   /**
+    * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getConfiguredContentTypes(org.eclipse.jface.text.source.ISourceViewer)
+    */
 	@Override
 	public String[] getConfiguredContentTypes(ISourceViewer sourceViewer)
 	{
 		return AgentConfigDocument.CONTENT_TYPES;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getPresentationReconciler(org.eclipse.jface.text.source.ISourceViewer)
-	 */
+   /**
+    * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getPresentationReconciler(org.eclipse.jface.text.source.ISourceViewer)
+    */
 	@Override
 	public IPresentationReconciler getPresentationReconciler(ISourceViewer sourceViewer)
 	{
 		PresentationReconciler reconciler = new PresentationReconciler();
 
 		RuleBasedScanner scanner = new RuleBasedScanner();
-		scanner.setRules(codeRules);
+		scanner.setRules(CODE_RULES);
 		scanner.setDefaultReturnToken(AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.DEFAULT));
 		DefaultDamagerRepairer dr = new DefaultDamagerRepairer(scanner);
 		reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE);
@@ -157,10 +203,20 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		reconciler.setDamager(dr, AgentConfigDocument.CONTENT_COMMENTS);
 		reconciler.setRepairer(dr, AgentConfigDocument.CONTENT_COMMENTS);
 	
-		dr = new DefaultDamagerRepairer(new SingleTokenScanner(AgentConfigTextAttributeProvider.getTextAttribute(AgentConfigTextAttributeProvider.SECTION)));
-		reconciler.setDamager(dr, AgentConfigDocument.CONTENT_SECTION);
-		reconciler.setRepairer(dr, AgentConfigDocument.CONTENT_SECTION);
-	
+      scanner = new RuleBasedScanner();
+      scanner.setRules(new IRule[] { new PatternRule("[", "\n", AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.ERROR), (char)0, false) }); //$NON-NLS-1$ //$NON-NLS-2$
+      scanner.setDefaultReturnToken(AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.SECTION));
+      dr = new DefaultDamagerRepairer(scanner);
+      reconciler.setDamager(dr, AgentConfigDocument.CONTENT_SECTION);
+      reconciler.setRepairer(dr, AgentConfigDocument.CONTENT_SECTION);
+
+      scanner = new RuleBasedScanner();
+      scanner.setRules(new IRule[] { new PatternRule("${", "\n", AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.ERROR), (char)0, false) }); //$NON-NLS-1$ //$NON-NLS-2$
+      scanner.setDefaultReturnToken(AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.ENVVAR));
+      dr = new DefaultDamagerRepairer(scanner);
+      reconciler.setDamager(dr, AgentConfigDocument.CONTENT_ENVVAR);
+      reconciler.setRepairer(dr, AgentConfigDocument.CONTENT_ENVVAR);
+
 		scanner = new RuleBasedScanner();
 		scanner.setRules(new IRule[] { new PatternRule("\"", "\n", AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.ERROR), (char)0, false) }); //$NON-NLS-1$ //$NON-NLS-2$
 		scanner.setDefaultReturnToken(AgentConfigTextAttributeProvider.getTextAttributeToken(AgentConfigTextAttributeProvider.STRING));

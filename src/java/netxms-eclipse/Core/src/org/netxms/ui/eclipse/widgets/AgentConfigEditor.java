@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ public class AgentConfigEditor extends Composite
 		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);
 		editor.setUndoManager(undoManager);
 		undoManager.connect(editor);
-		
+
 		findReplaceTarget = editor.getFindReplaceTarget();
 
 		editor.prependVerifyKeyListener(new VerifyKeyListener() {
@@ -78,7 +78,7 @@ public class AgentConfigEditor extends Composite
 			{
 				if (!event.doit)
 					return;
-				
+
 				if (event.stateMask == SWT.MOD1)
 				{
 					switch(event.character)

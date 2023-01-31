@@ -312,7 +312,6 @@ static pid_t s_pid;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("Action"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
-   { _T("ActionShellExec"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
    { _T("AppAgent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_appAgentsList, nullptr },
    { _T("BackgroundLogWriter"), CT_BOOLEAN_FLAG_32, 0, 0, SF_BACKGROUND_LOG_WRITER, 0, &s_startupFlags, nullptr },
    { _T("ControlServers"), CT_STRING_CONCAT, ',', 0, 0, 0, &m_pszControlServerList, nullptr },
@@ -321,7 +320,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("CRLReloadInterval"), CT_LONG, 0, 0, 0, 0, &s_crlReloadInterval, nullptr },
    { _T("DataCollectionMaxThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr },
    { _T("DataCollectionMinThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMinCollectorPoolSize, nullptr },
-   { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr }, // For compatibility, preferred is DataCollectionMaxThreadPoolSize
    { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, nullptr },
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, nullptr },
    { _T("DataWriterFlushInterval"), CT_LONG, 0, 0, 0, 0, &g_dcWriterFlushInterval, nullptr },
@@ -351,7 +349,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableTFTPProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_TFTP_PROXY, 0, &g_dwFlags, nullptr },
    { _T("EnableWatchdog"), CT_BOOLEAN_FLAG_32, 0, 0, SF_ENABLE_WATCHDOG, 0, &s_startupFlags, nullptr },
    { _T("EnableWebServiceProxy"), CT_BOOLEAN_FLAG_32, 0, 0, AF_ENABLE_WEBSVC_PROXY, 0, &g_dwFlags, nullptr },
-   { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
    { _T("ExternalCommandTimeout"), CT_LONG, 0, 0, 0, 0, &g_externalCommandTimeout, nullptr },
    { _T("ExternalList"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalListsConfig, nullptr },
    { _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, nullptr },
@@ -399,6 +396,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("WriteLogAsJson"), CT_BOOLEAN_FLAG_32, 0, 0, SF_JSON_LOG, 0, &s_startupFlags, nullptr },
    { _T("ZoneUIN"), CT_LONG, 0, 0, 0, 0, &g_zoneUIN, nullptr },
    /* Parameters below are deprecated and left for compatibility with older versions */
+   { _T("ActionShellExec"), CT_STRING_LIST, 0, 0, 0, 0, s_actionList, nullptr },
+   { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, nullptr }, // For compatibility, preferred is DataCollectionMaxThreadPoolSize
+   { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, nullptr },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &s_defaultExecutionTimeout, nullptr },
    { _T("ExternalMetricShellExec"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },
    { _T("ExternalParameter"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalMetrics, nullptr },

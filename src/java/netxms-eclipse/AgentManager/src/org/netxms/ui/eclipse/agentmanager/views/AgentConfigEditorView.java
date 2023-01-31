@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 {
 	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"; //$NON-NLS-1$
-	
+
 	private NXCSession session;
 	private long nodeId;
 	private AgentConfigEditor editor;
@@ -66,10 +66,10 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	private RefreshAction actionRefresh;
 	private Action actionSave;
 	private FindReplaceAction actionFindReplace;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
