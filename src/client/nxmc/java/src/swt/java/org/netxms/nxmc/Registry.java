@@ -29,7 +29,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
-import org.netxms.nxmc.base.views.GraphPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinLocation;
@@ -38,6 +37,7 @@ import org.netxms.nxmc.base.views.ToolsPerspective;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.modules.alarms.AlarmsPerspective;
 import org.netxms.nxmc.modules.businessservice.BusinessServicesPerspective;
+import org.netxms.nxmc.modules.datacollection.GraphsPerspective;
 import org.netxms.nxmc.modules.logviewer.views.LogViewerPerspective;
 import org.netxms.nxmc.modules.objects.DashboardsPerspective;
 import org.netxms.nxmc.modules.objects.InfrastructurePerspective;
@@ -167,7 +167,7 @@ public final class Registry
       perspectives.add(new BusinessServicesPerspective());
       perspectives.add(new ConfigurationPerspective());
       perspectives.add(new DashboardsPerspective());
-      perspectives.add(new GraphPerspective());
+      perspectives.add(new GraphsPerspective());
       perspectives.add(new InfrastructurePerspective());
       perspectives.add(new LogViewerPerspective());
       perspectives.add(new MapsPerspective());
@@ -177,7 +177,7 @@ public final class Registry
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ToolsPerspective());
       perspectives.add(new WorldMapPerspective());
-      
+
       pollManager = new PollManager();
    }
 

@@ -16,10 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.base.views;
+package org.netxms.nxmc.modules.datacollection;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.netxms.client.datacollection.GraphDefinition;
+import org.netxms.nxmc.base.views.NavigationView;
+import org.netxms.nxmc.base.views.Perspective;
+import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.GraphBrowser;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
@@ -27,18 +30,18 @@ import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Tools perspective
+ * Predefined graphs perspective
  */
-public class GraphPerspective extends Perspective
+public class GraphsPerspective extends Perspective
 {
-   static final I18n i18n = LocalizationHelper.getI18n(GraphPerspective.class);
+   static final I18n i18n = LocalizationHelper.getI18n(GraphsPerspective.class);
 
    private NavigationView navigationView;
    private Object previousSelectedElement = null;
    
-   public GraphPerspective()
+   public GraphsPerspective()
    {
-      super("Graphs", i18n.tr("Graphs"), ResourceManager.getImage("icons/perspective-tools.png")); //TODO: change icon
+      super("Graphs", i18n.tr("Graphs"), ResourceManager.getImage("icons/perspective-graphs.png"));
    }
 
    /**
@@ -52,7 +55,7 @@ public class GraphPerspective extends Perspective
       configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = false;
       configuration.hasSupplementalArea = false;
-      configuration.priority = 250;
+      configuration.priority = 140;
    }
 
    /**
@@ -74,9 +77,9 @@ public class GraphPerspective extends Perspective
       Object currentElement = selection.getFirstElement();
 
       if (previousSelectedElement == currentElement)
-         return; //do nothing for reselection
+         return; // do nothing for reselection
 
-      if (currentElement != null && currentElement instanceof GraphDefinition)
+      if ((currentElement != null) && (currentElement instanceof GraphDefinition))
       {
          HistoricalGraphView view = new HistoricalGraphView();
          view.setShowDeleteAction(true);
