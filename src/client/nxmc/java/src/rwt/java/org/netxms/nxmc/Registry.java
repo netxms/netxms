@@ -29,6 +29,7 @@ import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
+import org.netxms.nxmc.base.views.GraphPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinLocation;
@@ -220,6 +221,7 @@ public final class Registry
       perspectives.add(new BusinessServicesPerspective());
       perspectives.add(new ConfigurationPerspective());
       perspectives.add(new DashboardsPerspective());
+      perspectives.add(new GraphPerspective());
       perspectives.add(new InfrastructurePerspective());
       perspectives.add(new LogViewerPerspective());
       perspectives.add(new MapsPerspective());

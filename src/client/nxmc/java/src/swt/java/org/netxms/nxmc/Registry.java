@@ -167,13 +167,13 @@ public final class Registry
       perspectives.add(new BusinessServicesPerspective());
       perspectives.add(new ConfigurationPerspective());
       perspectives.add(new DashboardsPerspective());
+      perspectives.add(new GraphPerspective());
       perspectives.add(new InfrastructurePerspective());
       perspectives.add(new LogViewerPerspective());
       perspectives.add(new MapsPerspective());
       perspectives.add(new MonitorPerspective());
       perspectives.add(new NetworkPerspective());
       perspectives.add(new PinboardPerspective());
-      perspectives.add(new GraphPerspective());
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ToolsPerspective());
       perspectives.add(new WorldMapPerspective());
