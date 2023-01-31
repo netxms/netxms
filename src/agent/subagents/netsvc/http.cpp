@@ -36,6 +36,9 @@ LONG NetworkServiceStatus_HTTP(CURL *curl, const OptionList &options, char *url,
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, ByteStream::curlWriteFunction);
 
+   char errorText[CURL_ERROR_SIZE] = "";
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
+
    char *requestURL = url;
 
 retry:
@@ -104,13 +107,13 @@ retry:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): call to curl_easy_perform failed"), url);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
          *result = CURLCodeToCheckResult(rc);
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): cannot set URL with curl_easy_setopt"), url);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): cannot set URL with curl_easy_setopt (%hs)"), url, errorText);
       *result = CURLCodeToCheckResult(rc);
    }
 
@@ -299,6 +302,9 @@ LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstrac
    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &context);
    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HashUpdateCallback);
 
+   char errorText[CURL_ERROR_SIZE] = "";
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
+
    char *requestURL = url;
    bool success = false;
 
@@ -329,7 +335,7 @@ retry:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("H_HTTPChecksum(%hs): call to curl_easy_perform failed"), url);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("H_HTTPChecksum(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
       }
    }
 

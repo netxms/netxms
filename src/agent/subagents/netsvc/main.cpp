@@ -70,8 +70,8 @@ CURL *PrepareCurlHandle(const InetAddress& addr, uint16_t port, const char *sche
    if (curl == nullptr)
       return nullptr;
 
-   char url[1024], addrBuffer[64];
-   snprintf(url, 1024, "%s://%s:%u", schema, addr.toStringA(addrBuffer), static_cast<uint32_t>(port));
+   char url[NETSVC_MAX_URL_LENGTH], addrBuffer[64];
+   snprintf(url, NETSVC_MAX_URL_LENGTH, "%s://%s:%u", schema, addr.toStringA(addrBuffer), static_cast<uint32_t>(port));
    CurlCommonSetup(curl, url, OptionList(_T("")), timeout);
    return curl;
 }
@@ -206,11 +206,11 @@ static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR 
          }
          else if (!strcmp(scheme, "smtp") || !strcmp(scheme, "smtps"))
          {
-            rc = NetworkServiceStatus_SMTP(curl, options, &checkResult);
+            rc = NetworkServiceStatus_SMTP(curl, options, url, &checkResult);
          }
          else
          {
-            rc = NetworkServiceStatus_Other(curl, options, &checkResult);
+            rc = NetworkServiceStatus_Other(curl, options, url, &checkResult);
          }
          curl_easy_cleanup(curl);
       }

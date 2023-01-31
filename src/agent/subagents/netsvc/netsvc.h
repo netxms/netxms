@@ -42,6 +42,8 @@ enum
 #define NETSVC_AF_VERIFYPEER              0x0001
 #define NETSVC_AF_NEGATIVE_TIME_ON_ERROR  0x0002
 
+#define NETSVC_MAX_URL_LENGTH    1024
+
 /**
  * URL parser
  */
@@ -76,8 +78,8 @@ public:
 };
 
 LONG NetworkServiceStatus_HTTP(CURL *curl, const OptionList &options, char *url, PCRE *compiledPattern, int *result);
-LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, int *result);
-LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, int *result);
+LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, const char *url, int *result);
+LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, const char *url, int *result);
 LONG NetworkServiceStatus_SSH(const char *host, const char *port, const OptionList& options, int *result);
 LONG NetworkServiceStatus_TCP(const char *host, const char *port, const OptionList& options, int *result);
 LONG NetworkServiceStatus_Telnet(const char *host, const char *port, const OptionList& options, int *result);

@@ -23,13 +23,20 @@
 /**
  * Connect to given host
  */
-SOCKET NetConnectTCP(const char* hostname, const InetAddress& addr, uint16_t port, uint32_t timeout)
+SOCKET NetConnectTCP(const char *hostname, const InetAddress& addr, uint16_t port, uint32_t timeout)
 {
+   char addrText[64];
    InetAddress hostAddr = (hostname != nullptr) ? InetAddress::resolveHostName(hostname) : addr;
    if (!hostAddr.isValidUnicast() && !hostAddr.isLoopback())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetConnectTCP(%hs:%d): invalid address"), (hostname != nullptr) ? hostname : addr.toStringA(addrText), port);
       return INVALID_SOCKET;
+   }
 
-   return ConnectToHost(hostAddr, port, (timeout != 0) ? timeout : g_netsvcTimeout);
+   SOCKET s = ConnectToHost(hostAddr, port, (timeout != 0) ? timeout : g_netsvcTimeout);
+   if (s == INVALID_SOCKET)
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetConnectTCP(%hs:%d): connect failed (timeout %u ms)"), (hostname != nullptr) ? hostname : addr.toStringA(addrText), port, timeout);
+   return s;
 }
 
 /**

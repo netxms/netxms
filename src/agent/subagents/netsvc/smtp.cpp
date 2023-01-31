@@ -39,7 +39,16 @@ int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char
    struct curl_slist *recipients = curl_slist_append(nullptr, to);
    curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 
-   int result = CURLCodeToCheckResult(curl_easy_perform(curl));
+   char errorText[CURL_ERROR_SIZE] = "";
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
+
+   CURLcode rc = curl_easy_perform(curl);
+   if (rc != CURLE_OK)
+   {
+      TCHAR addrText[64];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("CheckSMTP(%s//%s:%d): call to curl_easy_perform failed (%hs)"), enableTLS ? _T("smtps") : _T("smtp"), addr.toString(addrText), port, errorText);
+   }
+   int result = CURLCodeToCheckResult(rc);
 
    curl_slist_free_all(recipients);
    return result;
@@ -48,7 +57,7 @@ int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char
 /**
  * Check SMTP service - metric sub-handler
  */
-LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, int *result)
+LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, const char *url, int *result)
 {
    char from[128], to[128];
    tchar_to_utf8(options.get(_T("from"), _T("")), -1, from, 128);
@@ -67,7 +76,15 @@ LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, int *resul
    struct curl_slist *recipients = curl_slist_append(nullptr, to);
    curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 
-   *result = CURLCodeToCheckResult(curl_easy_perform(curl));
+   char errorText[CURL_ERROR_SIZE] = "";
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
+
+   CURLcode rc = curl_easy_perform(curl);
+   if (rc != CURLE_OK)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_SMTP(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
+   }
+   *result = CURLCodeToCheckResult(rc);
 
    curl_slist_free_all(recipients);
    return SYSINFO_RC_SUCCESS;

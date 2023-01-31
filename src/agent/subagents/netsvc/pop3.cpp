@@ -31,7 +31,17 @@ int CheckPOP3(const InetAddress& addr, uint16_t port, bool enableTLS, const char
 
    curl_easy_setopt(curl, CURLOPT_USERNAME, username);
    curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
-   return CURLCodeToCheckResult(curl_easy_perform(curl));
+
+   char errorText[CURL_ERROR_SIZE] = "";
+   curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
+
+   CURLcode rc = curl_easy_perform(curl);
+   if (rc != CURLE_OK)
+   {
+      TCHAR addrText[64];
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("CheckPOP3(%s//%s:%d): call to curl_easy_perform failed (%hs)"), enableTLS ? _T("pop3s") : _T("pop3"), addr.toString(addrText), port, errorText);
+   }
+   return CURLCodeToCheckResult(rc);
 }
 
 /**

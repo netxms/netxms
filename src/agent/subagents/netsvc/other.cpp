@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Service check sub-handler - other protocols
  */
-LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, int *result)
+LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, const char *url, int *result)
 {
     // Receiving buffer
     ByteStream data(32768);
@@ -42,6 +42,15 @@ LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, int *resu
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
 
-    *result = CURLCodeToCheckResult(curl_easy_perform(curl));
+    char errorText[CURL_ERROR_SIZE] = "";
+    curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorText);
+
+    CURLcode rc = curl_easy_perform(curl);
+    if (rc != CURLE_OK)
+    {
+       nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_Other(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
+    }
+
+    *result = CURLCodeToCheckResult(rc);
    return SYSINFO_RC_SUCCESS;
 }
