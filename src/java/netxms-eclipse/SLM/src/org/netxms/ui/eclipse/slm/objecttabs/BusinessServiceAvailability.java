@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -129,7 +128,7 @@ public class BusinessServiceAvailability extends ObjectTab
 
       Composite buttonGroup = new Composite(queryGroup, SWT.NONE);
       layout = new GridLayout();
-      layout.numColumns = 6;
+      layout.numColumns = 8;
       layout.makeColumnsEqualWidth = true;
       layout.marginHeight = 0;
       layout.marginWidth = 0;
@@ -141,26 +140,23 @@ public class BusinessServiceAvailability extends ObjectTab
       createQuickSetButton(buttonGroup, "Today", new DateBuilder().setMidnight().create(), null);
       createQuickSetButton(buttonGroup, "Yesterday", new DateBuilder().setMidnight().add(Calendar.DATE, -1).create(),
             new DateBuilder().setMidnight().add(Calendar.SECOND, -1).create());
+      createQuickSetButton(buttonGroup, "This week", new DateBuilder().set(Calendar.DAY_OF_WEEK, Calendar.MONDAY).setMidnight().create(), null);
+      createQuickSetButton(buttonGroup, "Last week", new DateBuilder().add(Calendar.WEEK_OF_YEAR, -1).set(Calendar.DAY_OF_WEEK, Calendar.MONDAY).setMidnight().create(),
+            new DateBuilder().set(Calendar.DAY_OF_WEEK, Calendar.MONDAY).setMidnight().add(Calendar.SECOND, -1).create());
       createQuickSetButton(buttonGroup, "This month", new DateBuilder().set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(), null);
       createQuickSetButton(buttonGroup, "Last month", new DateBuilder().add(Calendar.MONTH, -1).set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(),
-            new DateBuilder().add(Calendar.MONTH, -1).setLastDayOfMonth().setMidnight().add(Calendar.SECOND, -1).create());
+            new DateBuilder().add(Calendar.MONTH, -1).setLastDayOfMonth().setMidnight().add(Calendar.SECOND, 86399).create());
       createQuickSetButton(buttonGroup, "This year", new DateBuilder().set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(), null);
       createQuickSetButton(buttonGroup, "Last year", new DateBuilder().add(Calendar.YEAR, -1).set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(),
             new DateBuilder().set(Calendar.DAY_OF_YEAR, 1).setMidnight().add(Calendar.SECOND, -1).create());
 
       buttonQuery = new Button(queryGroup, SWT.PUSH);
-      buttonQuery.setText("Query");
-      buttonQuery.addSelectionListener(new SelectionListener() {
+      buttonQuery.setText("&Query");
+      buttonQuery.addSelectionListener(new SelectionAdapter() {
          @Override
-         public void widgetSelected(SelectionEvent arg0)
+         public void widgetSelected(SelectionEvent e)
          {
             refresh();
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent arg0)
-         {
-            widgetSelected(arg0);
          }
       });
       gd = new GridData();
@@ -249,6 +245,7 @@ public class BusinessServiceAvailability extends ObjectTab
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       button.setLayoutData(gd);
    }
 
@@ -279,12 +276,11 @@ public class BusinessServiceAvailability extends ObjectTab
    public void refresh()
    {
       TimePeriod timePeriod = new TimePeriod(TimeFrameType.FIXED, 0, null, startDateSelector.getValue(), endDateSelector.getValue());
-      ConsoleJob availabilityJob = new ConsoleJob("Get business ervice availability", getViewPart(), Activator.PLUGIN_ID) {
+      ConsoleJob availabilityJob = new ConsoleJob("Get business service availability", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            double availability = session.getBusinessServiceAvailablity(getObject().getObjectId(), timePeriod);
-
+            final double availability = session.getBusinessServiceAvailablity(getObject().getObjectId(), timePeriod);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -305,12 +301,12 @@ public class BusinessServiceAvailability extends ObjectTab
       };
       availabilityJob.setUser(false);
       availabilityJob.start();
+
       ConsoleJob ticketJob = new ConsoleJob("Get business service tickets", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            List<BusinessServiceTicket> tickets = session.getBusinessServiceTickets(getObject().getObjectId(), timePeriod);
-
+            final List<BusinessServiceTicket> tickets = session.getBusinessServiceTickets(getObject().getObjectId(), timePeriod);
             runInUIThread(new Runnable() {
                @Override
                public void run()

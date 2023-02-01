@@ -28,7 +28,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -80,8 +79,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
    private SortableTableViewer ticketViewer;
 
    /**
-    * @param name
-    * @param image
+    * Create business service availability view
     */
    public BusinessServiceAvailabilityView()
    {
@@ -135,7 +133,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
 
       Composite buttonGroup = new Composite(queryGroup, SWT.NONE);
       layout = new GridLayout();
-      layout.numColumns = 6;
+      layout.numColumns = 8;
       layout.makeColumnsEqualWidth = true;
       layout.marginHeight = 0;
       layout.marginWidth = 0;
@@ -147,26 +145,23 @@ public class BusinessServiceAvailabilityView extends ObjectView
       createQuickSetButton(buttonGroup, i18n.tr("Today"), new DateBuilder().setMidnight().create(), null);
       createQuickSetButton(buttonGroup, i18n.tr("Yesterday"), new DateBuilder().setMidnight().add(Calendar.DATE, -1).create(),
             new DateBuilder().setMidnight().add(Calendar.SECOND, -1).create());
+      createQuickSetButton(buttonGroup, i18n.tr("This week"), new DateBuilder().set(Calendar.DAY_OF_WEEK, Calendar.MONDAY).setMidnight().create(), null);
+      createQuickSetButton(buttonGroup, i18n.tr("Last week"), new DateBuilder().add(Calendar.WEEK_OF_YEAR, -1).set(Calendar.DAY_OF_WEEK, Calendar.MONDAY).setMidnight().create(),
+            new DateBuilder().set(Calendar.DAY_OF_WEEK, Calendar.MONDAY).setMidnight().add(Calendar.SECOND, -1).create());
       createQuickSetButton(buttonGroup, i18n.tr("This month"), new DateBuilder().set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(), null);
       createQuickSetButton(buttonGroup, i18n.tr("Last month"), new DateBuilder().add(Calendar.MONTH, -1).set(Calendar.DAY_OF_MONTH, 1).setMidnight().create(),
-            new DateBuilder().add(Calendar.MONTH, -1).setLastDayOfMonth().setMidnight().add(Calendar.SECOND, -1).create());
+            new DateBuilder().add(Calendar.MONTH, -1).setLastDayOfMonth().setMidnight().add(Calendar.SECOND, 86399).create());
       createQuickSetButton(buttonGroup, i18n.tr("This year"), new DateBuilder().set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(), null);
       createQuickSetButton(buttonGroup, i18n.tr("Last year"), new DateBuilder().add(Calendar.YEAR, -1).set(Calendar.DAY_OF_YEAR, 1).setMidnight().create(),
             new DateBuilder().set(Calendar.DAY_OF_YEAR, 1).setMidnight().add(Calendar.SECOND, -1).create());
 
       buttonQuery = new Button(queryGroup, SWT.PUSH);
-      buttonQuery.setText(i18n.tr("Query"));
-      buttonQuery.addSelectionListener(new SelectionListener() {
+      buttonQuery.setText(i18n.tr("&Query"));
+      buttonQuery.addSelectionListener(new SelectionAdapter() {
          @Override
-         public void widgetSelected(SelectionEvent arg0)
+         public void widgetSelected(SelectionEvent e)
          {
             refresh();
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent arg0)
-         {
-            widgetSelected(arg0);
          }
       });
       gd = new GridData();
@@ -254,6 +249,7 @@ public class BusinessServiceAvailabilityView extends ObjectView
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       button.setLayoutData(gd);
    }
 
@@ -275,12 +271,11 @@ public class BusinessServiceAvailabilityView extends ObjectView
    public void refresh()
    {
       TimePeriod timePeriod = new TimePeriod(TimeFrameType.FIXED, 0, null, startDateSelector.getValue(), endDateSelector.getValue());
-      Job availabilityJob = new Job(i18n.tr("Get business ervice availability"), this) {
+      Job availabilityJob = new Job(i18n.tr("Getting business service availability"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            double availability = session.getBusinessServiceAvailablity(getObject().getObjectId(), timePeriod);
-
+            final double availability = session.getBusinessServiceAvailablity(getObject().getObjectId(), timePeriod);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -301,12 +296,12 @@ public class BusinessServiceAvailabilityView extends ObjectView
       };
       availabilityJob.setUser(false);
       availabilityJob.start();
-      Job ticketJob = new Job(i18n.tr("Get business service tickets"), this) {
+
+      Job ticketJob = new Job(i18n.tr("Reading business service tickets"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            List<BusinessServiceTicket> tickets = session.getBusinessServiceTickets(getObject().getObjectId(), timePeriod);
-
+            final List<BusinessServiceTicket> tickets = session.getBusinessServiceTickets(getObject().getObjectId(), timePeriod);
             runInUIThread(new Runnable() {
                @Override
                public void run()

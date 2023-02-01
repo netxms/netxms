@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,12 +34,12 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 
 /**
- * Line chart element
+ * Status chart element
  */
 public class ObjectStatusChartElement extends ComparisonChartElement
 {
 	private ObjectStatusChartConfig elementConfig;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -47,7 +47,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	public ObjectStatusChartElement(DashboardControl parent, DashboardElement element, IViewPart viewPart)
 	{
 		super(parent, element, viewPart);
-		
+
 		try
 		{
 			elementConfig = ObjectStatusChartConfig.createFromXml(element.getData());

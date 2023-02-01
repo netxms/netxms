@@ -91,7 +91,7 @@ public class AbstractChart extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
-		
+
 		legendPosition = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().AbstractChart_LegendPosition, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		legendPosition.add(Messages.get().AbstractChart_Left);
 		legendPosition.add(Messages.get().AbstractChart_Right);
@@ -288,7 +288,7 @@ public class AbstractChart extends PropertyPage
 	 * @param value
 	 * @return
 	 */
-	private int positionIndexFromValue(int value)
+   private static int positionIndexFromValue(int value)
 	{
 		switch(value)
 		{

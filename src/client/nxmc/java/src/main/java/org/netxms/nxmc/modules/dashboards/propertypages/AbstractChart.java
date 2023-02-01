@@ -328,7 +328,7 @@ public class AbstractChart extends DashboardElementPropertyPage
 	 * @param value
 	 * @return
 	 */
-	private int positionIndexFromValue(int value)
+   private static int positionIndexFromValue(int value)
 	{
 		switch(value)
 		{

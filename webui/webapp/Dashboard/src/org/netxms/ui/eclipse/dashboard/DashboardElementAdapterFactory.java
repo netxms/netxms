@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.dashboard;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.AvailabilityChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
@@ -88,16 +89,14 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 			{
 				switch(element.getType())
 				{
-				   case DashboardElement.SYSLOG_MONITOR:
-				      return SyslogMonitorConfig.createFromXml(element.getData());
-				   case DashboardElement.SNMP_TRAP_MONITOR:
-				      return SnmpTrapMonitorConfig.createFromXml(element.getData());
+               case DashboardElement.ALARM_VIEWER:
+                  return AlarmViewerConfig.createFromXml(element.getData());
+               case DashboardElement.AVAILABLITY_CHART:
+                  return AvailabilityChartConfig.createFromXml(element.getData());
 				   case DashboardElement.EVENT_MONITOR:
 				      return EventMonitorConfig.createFromXml(element.getData());
                case DashboardElement.FILE_MONITOR:
                   return FileMonitorConfig.createFromXml(element.getData());
-					case DashboardElement.ALARM_VIEWER:
-						return AlarmViewerConfig.createFromXml(element.getData());
 					case DashboardElement.BAR_CHART:
                case DashboardElement.TUBE_CHART:
 						return BarChartConfig.createFromXml(element.getData());
@@ -135,19 +134,23 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 						return SeparatorConfig.createFromXml(element.getData());
                case DashboardElement.SERVICE_COMPONENTS:
                   return ServiceComponentsConfig.createFromXml(element.getData());
+               case DashboardElement.SNMP_TRAP_MONITOR:
+                  return SnmpTrapMonitorConfig.createFromXml(element.getData());
 					case DashboardElement.STATUS_CHART:
 						return ObjectStatusChartConfig.createFromXml(element.getData());
 					case DashboardElement.STATUS_INDICATOR:
 						return StatusIndicatorConfig.createFromXml(element.getData());
 					case DashboardElement.STATUS_MAP:
 						return StatusMapConfig.createFromXml(element.getData());
-					case DashboardElement.TABLE_BAR_CHART:
+               case DashboardElement.SYSLOG_MONITOR:
+                  return SyslogMonitorConfig.createFromXml(element.getData());
+               case DashboardElement.TABLE_BAR_CHART:
                case DashboardElement.TABLE_TUBE_CHART:
-						return TableBarChartConfig.createFromXml(element.getData());
-					case DashboardElement.TABLE_PIE_CHART:
-						return TablePieChartConfig.createFromXml(element.getData());
-					case DashboardElement.TABLE_VALUE:
-						return TableValueConfig.createFromXml(element.getData());
+                  return TableBarChartConfig.createFromXml(element.getData());
+               case DashboardElement.TABLE_PIE_CHART:
+                  return TablePieChartConfig.createFromXml(element.getData());
+               case DashboardElement.TABLE_VALUE:
+                  return TableValueConfig.createFromXml(element.getData());
 					case DashboardElement.WEB_PAGE:
 						return WebPageConfig.createFromXml(element.getData());
 					default:

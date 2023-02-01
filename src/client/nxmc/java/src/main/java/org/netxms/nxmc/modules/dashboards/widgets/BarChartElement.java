@@ -26,14 +26,18 @@ import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.BarChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bar chart element
  */
 public class BarChartElement extends ComparisonChartElement
 {
+   private static final Logger logger = LoggerFactory.getLogger(BarChartElement.class);
+
 	private BarChartConfig elementConfig;
-	
+
    /**
     * @param parent parent composite
     * @param element dashboard element
@@ -49,7 +53,7 @@ public class BarChartElement extends ComparisonChartElement
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			elementConfig = new BarChartConfig();
 		}
 

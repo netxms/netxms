@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,14 +32,18 @@ import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.ObjectStatusChartConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Line chart element
+ * Status chart element
  */
 public class ObjectStatusChartElement extends ComparisonChartElement
 {
+   private static final Logger logger = LoggerFactory.getLogger(ObjectStatusChartElement.class);
+
 	private ObjectStatusChartConfig elementConfig;
-	
+
 	/**
 	 * @param parent
 	 * @param data
@@ -47,14 +51,14 @@ public class ObjectStatusChartElement extends ComparisonChartElement
    public ObjectStatusChartElement(DashboardControl parent, DashboardElement element, AbstractDashboardView view)
 	{
       super(parent, element, view);
-		
+
 		try
 		{
 			elementConfig = ObjectStatusChartConfig.createFromXml(element.getData());
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			elementConfig = new ObjectStatusChartConfig();
 		}
 
