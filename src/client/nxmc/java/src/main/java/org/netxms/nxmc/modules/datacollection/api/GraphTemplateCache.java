@@ -66,7 +66,6 @@ public class GraphTemplateCache
                   }
                   break;
                case SessionNotification.PREDEFINED_GRAPHS_CHANGED:
-                  System.out.println(n.getObject());
                   if ((n.getObject() instanceof GraphDefinition) && ((GraphDefinition)n.getObject()).isTemplate())
                   {                  
                      boolean objectUpdated = false;
@@ -83,7 +82,6 @@ public class GraphTemplateCache
                      {
                         templateList.add((GraphDefinition)n.getObject());
                      }
-                     System.out.println("Template graph updated");
                   }
                   break;
             }
