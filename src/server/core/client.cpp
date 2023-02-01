@@ -344,7 +344,7 @@ void NXCORE_EXPORTABLE NotifyClientsOnGraphUpdate(const NXCPMessage& msg, uint32
    while(it.hasNext())
    {
       ClientSession *session = it.next();
-      if (session->isAuthenticated() && !session->isTerminated() && (GetGraphAccessCheckResult(graphId, session->getUserId()) == RCC_SUCCESS))
+      if (session->isAuthenticated() && !session->isTerminated() && (GetGraphAccessCheckResult(graphId, session->getUserId(), NXGRAPH_ACCESS_READ) == RCC_SUCCESS))
          session->postMessage(msg);
    }
    s_sessionListLock.unlock();

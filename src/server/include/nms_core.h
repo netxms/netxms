@@ -1454,7 +1454,7 @@ void DumpProcess(CONSOLE_CTX console);
 GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
 GRAPH_ACL_ENTRY *LoadAllGraphACL(DB_HANDLE hdb, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
-UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
+UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId, int rightToCheck);
 void FillGraphListMsg(NXCPMessage *msg, UINT32 userId, bool templageGraphs, UINT32 graphId = 0);
 void SaveGraph(const NXCPMessage& request, uint32_t userId, NXCPMessage *response);
 UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);

@@ -116,7 +116,7 @@ BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT3
 /**
  * Check access to the graph
  */
-UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
+UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId, int rightToCheck)
 {
    // Check existence and access rights
    TCHAR szQuery[16384];
@@ -140,7 +140,7 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
          {
             if ((graphUserId == 0) ||
                 (graphUserId == dwOwner) ||
-                CheckGraphAccess(pACL, nACLSize, graphId, graphUserId, NXGRAPH_ACCESS_WRITE))
+                CheckGraphAccess(pACL, nACLSize, graphId, graphUserId, rightToCheck))
             {
                rcc = RCC_SUCCESS;
             }
@@ -336,7 +336,7 @@ void SaveGraph(const NXCPMessage& request, uint32_t userId, NXCPMessage *respons
 	}
 	else
 	{
-	   accessRightStatus = GetGraphAccessCheckResult(graphId, userId);
+	   accessRightStatus = GetGraphAccessCheckResult(graphId, userId, NXGRAPH_ACCESS_WRITE);
 		isNew = false;
 	}
 

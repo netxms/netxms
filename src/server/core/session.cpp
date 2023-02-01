@@ -10309,12 +10309,12 @@ void ClientSession::getDciMeasurementUnits(const NXCPMessage& request)
 }
 
 /**
- * Get graph list
+ * Get graph
  */
 void ClientSession::getGraph(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   uint32_t rcc = GetGraphAccessCheckResult(request.getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId);
+   uint32_t rcc = GetGraphAccessCheckResult(request.getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId, NXGRAPH_ACCESS_READ);
    if (rcc == RCC_SUCCESS)
    {
       FillGraphListMsg(&response, m_dwUserId, false, request.getFieldAsUInt32(VID_GRAPH_ID));
