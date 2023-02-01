@@ -46,6 +46,7 @@ import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
