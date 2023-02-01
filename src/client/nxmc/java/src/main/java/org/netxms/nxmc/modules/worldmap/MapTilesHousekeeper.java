@@ -41,7 +41,7 @@ public class MapTilesHousekeeper implements LoginListener
 	@Override
 	public void afterLogin(NXCSession session, Display display)
 	{
-		GeoLocationCache.getInstance().initialize(session);
+		GeoLocationCache.attachSession(display, session);
       Job housekeeper = new Job("Map tiles housekeeper", null, null, display) {
          @Override
          protected void run(IProgressMonitor monitor)

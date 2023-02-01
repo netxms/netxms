@@ -17,6 +17,7 @@ import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
@@ -32,10 +33,9 @@ import org.slf4j.LoggerFactory;
 public class GraphTemplateCache
 {
    private static final Logger logger = LoggerFactory.getLogger(GraphTemplateCache.class);
-   private static GraphTemplateCache instance = null;
 
    private NXCSession session = null;
-   private List<GraphDefinition> templateList= new ArrayList<GraphDefinition>();
+   private List<GraphDefinition> templateList = new ArrayList<GraphDefinition>();
    
    /**
     * GraphTemplateCache constructor
@@ -66,6 +66,7 @@ public class GraphTemplateCache
                   }
                   break;
                case SessionNotification.PREDEFINED_GRAPHS_CHANGED:
+                  System.out.println(n.getObject());
                   if ((n.getObject() instanceof GraphDefinition) && ((GraphDefinition)n.getObject()).isTemplate())
                   {                  
                      boolean objectUpdated = false;
@@ -82,6 +83,7 @@ public class GraphTemplateCache
                      {
                         templateList.add((GraphDefinition)n.getObject());
                      }
+                     System.out.println("Template graph updated");
                   }
                   break;
             }
@@ -94,9 +96,10 @@ public class GraphTemplateCache
     * 
     * @param session
     */
-   public static void attachSession(NXCSession session)
+   public static void attachSession(Display display,NXCSession session)
    {
-      instance = new GraphTemplateCache(session);
+      GraphTemplateCache instance = new GraphTemplateCache(session);
+      Registry.setProperty(display, "GraphTemplateCache", instance);
    }
 
    /**
@@ -106,7 +109,7 @@ public class GraphTemplateCache
     */
    public static GraphTemplateCache getInstance()
    {
-      return instance;
+      return (GraphTemplateCache)Registry.getProperty("GraphTemplateCache");
    }
    
    /**

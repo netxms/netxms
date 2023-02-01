@@ -35,6 +35,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.scripting.ClientListener;
@@ -1382,6 +1383,17 @@ public class WidgetHelper
          }
       });
       return imageContainer[0];
+   }
+
+   /**
+    * Create image descriptor from image data
+    *
+    * @param imageData image data
+    * @return image descriptor object
+    */
+   public static ImageDescriptor createImageDescriptor(ImageData imageData)
+   {
+      return ImageDescriptor.createFromImageData(imageData);
    }
 
    /**

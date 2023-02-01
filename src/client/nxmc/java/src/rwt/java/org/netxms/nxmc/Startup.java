@@ -123,9 +123,9 @@ public class Startup implements EntryPoint, StartupParameters
       DataCollectionDisplayInfo.init();
       MibCache.init(session, display);
       ObjectToolsCache.init();
-      ObjectToolsCache.attachSession(session);
+      ObjectToolsCache.attachSession(display, session);
       SummaryTablesCache.attachSession(display, session);
-      GraphTemplateCache.attachSession(session);
+      GraphTemplateCache.attachSession(display, session);
 
       ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
       exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));

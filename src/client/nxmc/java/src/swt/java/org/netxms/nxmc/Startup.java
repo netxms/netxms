@@ -144,9 +144,9 @@ public class Startup
          DataCollectionDisplayInfo.init();
          MibCache.init(session, display);
          ObjectToolsCache.init();
-         ObjectToolsCache.attachSession(session);
-         SummaryTablesCache.attachSession(session);
-         GraphTemplateCache.attachSession(session);
+         ObjectToolsCache.attachSession(display, session);
+         SummaryTablesCache.attachSession(display, session);
+         GraphTemplateCache.attachSession(display, session);
 
          MainWindow w = new MainWindow(null);
          Registry.getInstance().setMainWindow(w);

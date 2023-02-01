@@ -25,11 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.worldmap.tools.Area;
 import org.netxms.nxmc.modules.worldmap.tools.QuadTree;
 
@@ -43,8 +45,6 @@ public class GeoLocationCache implements SessionListener
 	public static final int BOTTOM_RIGHT = 2;
 	
 	private static final int TILE_SIZE = 256;
-	
-	private static GeoLocationCache instance = new GeoLocationCache();
 	
 	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
 	private QuadTree<Long> locationTree = new QuadTree<Long>();
@@ -66,12 +66,25 @@ public class GeoLocationCache implements SessionListener
 	/**
 	 * Initialize location cache
 	 */
-	void initialize(NXCSession session)
+	public static void attachSession(Display display, NXCSession session)
 	{
-		this.session = session;
-      internalInitialize();
-		session.addListener(this);
+      GeoLocationCache instance = new GeoLocationCache();
+      Registry.setProperty(display, "GeoLocationCache", instance);
+      
+      instance.session = session;
+      instance.internalInitialize();
+		session.addListener(instance);
 	}
+   
+   /**
+    * Get cache instance
+    * 
+    * @return
+    */
+   public static GeoLocationCache getInstance()
+   {
+      return (GeoLocationCache)Registry.getProperty("GeoLocationCache");
+   }
 	
 	/**
 	 * (Re)initialize location cache - actual initialization
@@ -282,13 +295,5 @@ public class GeoLocationCache implements SessionListener
 				throw new IllegalArgumentException("pointLocation=" + pointLocation); //$NON-NLS-1$
 		}	
 		return new Area(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
-	}
-
-	/**
-	 * @return the instance
-	 */
-	public static GeoLocationCache getInstance()
-	{
-		return instance;
 	}
 }

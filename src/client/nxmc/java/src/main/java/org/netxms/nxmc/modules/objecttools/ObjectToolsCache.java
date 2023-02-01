@@ -24,11 +24,13 @@ import java.util.List;
 import java.util.Map;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageDataProvider;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +41,6 @@ public class ObjectToolsCache
 {
    private static Logger logger = LoggerFactory.getLogger(ObjectToolsCache.class);
    private static Map<String, ObjectToolHandler> handlers = new HashMap<String, ObjectToolHandler>();
-   private static ObjectToolsCache instance = null;
    
    private Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
    private Map<Long, ImageDescriptor> icons = new HashMap<Long, ImageDescriptor>();
@@ -95,7 +96,7 @@ public class ObjectToolsCache
 	 */
 	public static ObjectToolsCache getInstance()
 	{
-	   return instance;
+      return (ObjectToolsCache)Registry.getProperty("ObjectToolsCache");
 	}
 
    /**
@@ -103,9 +104,10 @@ public class ObjectToolsCache
     * 
     * @param session
     */
-   public static void attachSession(NXCSession session)
+   public static void attachSession(Display display, NXCSession session)
    {
-      instance = new ObjectToolsCache(session);
+      ObjectToolsCache instance = new ObjectToolsCache(session);
+      Registry.setProperty(display, "ObjectToolsCache", instance);
    }
 
 	/**
@@ -121,7 +123,8 @@ public class ObjectToolsCache
 				objectTools.clear();
 				for(ObjectTool tool : list)
 				{
-					objectTools.put(tool.getId(), tool);
+				   if (!Registry.IS_WEB_CLIENT || (tool.getToolType() != ObjectTool.TYPE_LOCAL_COMMAND)) 
+				      objectTools.put(tool.getId(), tool);
 				}
 			}
 			synchronized(icons)
@@ -138,13 +141,7 @@ public class ObjectToolsCache
                try
                {
                   final ImageData imageData = new ImageData(input); 
-                  icons.put(tool.getId(), ImageDescriptor.createFromImageDataProvider(new ImageDataProvider() {
-                     @Override
-                     public ImageData getImageData(int zoom)
-                     {
-                        return imageData;
-                     }
-                  }));
+                  icons.put(tool.getId(), WidgetHelper.createImageDescriptor(imageData));
                }
                catch(Exception e)
                {

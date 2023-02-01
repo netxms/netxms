@@ -21,8 +21,10 @@ package org.netxms.nxmc;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import org.eclipse.swt.widgets.Display;
@@ -53,6 +55,7 @@ import org.netxms.nxmc.modules.worldmap.WorldMapPerspective;
 public final class Registry
 {
    public static final boolean IS_WEB_CLIENT = false;
+   Map<String, Object> caches = new HashMap<String, Object>();
 
    private static Registry instance = new Registry();
 
@@ -137,6 +140,51 @@ public final class Registry
    public static MainWindow getMainWindow()
    {
       return getInstance().mainWindow;
+   }
+
+   /**
+    * Get named property.
+    *
+    * @param name property name
+    * @return value of property or null
+    */
+   public static Object getProperty(String name)
+   {
+      return getInstance().caches.get(name);
+   }
+
+   /**
+    * Get named property using given display.
+    *
+    * @param name property name
+    * @param display display to use
+    * @return value of property or null
+    */
+   public static Object getProperty(String name, Display display)
+   {
+      return getInstance().caches.get(name);
+   }
+
+   /**
+    * Set named property.
+    *
+    * @param name property name
+    * @param value property vakue
+    */
+   public static void setProperty(String name, Object value)
+   {
+      getInstance().caches.put(name, value);
+   }
+
+   /**
+    * Set named property.
+    *
+    * @param name property name
+    * @param value property vakue
+    */
+   public static void setProperty(Display display, String name, Object value)
+   {
+      getInstance().caches.put(name, value);
    }
 
    /**

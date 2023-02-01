@@ -26,7 +26,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
-import org.netxms.nxmc.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class SummaryTablesCache
 {
    private static final Logger logger = LoggerFactory.getLogger(SummaryTablesCache.class);
+   private static SummaryTablesCache instance;
 
    private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
    private NXCSession session;
@@ -47,8 +47,7 @@ public class SummaryTablesCache
     */
    public static void attachSession(Display display, NXCSession session)
    {
-      SummaryTablesCache instance = new SummaryTablesCache(session);
-      Registry.setProperty(display, "SummaryTablesCache", instance);
+      instance = new SummaryTablesCache(session);
    }
 
    /**
@@ -58,7 +57,7 @@ public class SummaryTablesCache
     */
    public static SummaryTablesCache getInstance()
    {
-      return (SummaryTablesCache)Registry.getProperty("SummaryTablesCache");
+      return instance;
    }
 
    /**
