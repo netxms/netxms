@@ -46,7 +46,6 @@ public class SummaryTablesCache
 {
    private static final Logger logger = LoggerFactory.getLogger(SummaryTablesCache.class);
    private static final I18n i18n = LocalizationHelper.getI18n(SummaryTablesCache.class);
-   private static SummaryTablesCache instance;
 
    private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
    private NXCSession session;
@@ -58,7 +57,8 @@ public class SummaryTablesCache
     */
    public static void attachSession(Display display, NXCSession session)
    {
-      instance = new SummaryTablesCache(session);
+      SummaryTablesCache instance = new SummaryTablesCache(session);
+      Registry.setProperty(display, "SummaryTablesCache", instance);
    }
 
    /**
@@ -68,7 +68,7 @@ public class SummaryTablesCache
     */
    public static SummaryTablesCache getInstance()
    {
-      return instance;
+      return (SummaryTablesCache)Registry.getProperty("SummaryTablesCache");
    }
 
    /**
