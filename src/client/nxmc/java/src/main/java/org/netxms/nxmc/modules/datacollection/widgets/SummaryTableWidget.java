@@ -127,7 +127,7 @@ public class SummaryTableWidget extends Composite
             refresh();
          }
       });
-      
+
       addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -227,18 +227,21 @@ public class SummaryTableWidget extends Composite
       manager.add(actionUseMultipliers);
       manager.add(new Separator());
       manager.add(nodeMenuManager);
+
       final Menu toolsMenu = ObjectMenuFactory.createToolsMenu(objectSelectionProvider.getStructuredSelection(), ((MenuManager)manager).getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
       {
          manager.add(new Separator());
          manager.add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
       }
-      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(objectSelectionProvider.getStructuredSelection(), getMenu(), null, new ViewPlacement(view));
+
+      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(objectSelectionProvider.getStructuredSelection(), ((MenuManager)manager).getMenu(), null, new ViewPlacement(view));
       if (graphTemplatesMenu != null)
       {
          manager.add(new Separator());
          manager.add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
       }
+
       manager.add(new Separator());
       manager.add(actionShowObjectDetails);
       manager.add(new Separator());

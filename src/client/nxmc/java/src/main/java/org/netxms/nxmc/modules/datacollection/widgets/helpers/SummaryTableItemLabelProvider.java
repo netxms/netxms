@@ -60,7 +60,7 @@ public class SummaryTableItemLabelProvider extends LabelProvider implements ITab
 	public String getColumnText(Object element, int columnIndex)
 	{
 		TableRow row = (TableRow)element;
-		
+
 		if (columnIndex >= row.size())
 			return null;
 		return new DataFormatter(useMultipliers ? "%{m,u}s" : "%{u}s", columns[columnIndex].getDataType(), columns[columnIndex].getMeasurementUnit()).format(row.get(columnIndex).getValue(), DateFormatFactory.getTimeFormatter());

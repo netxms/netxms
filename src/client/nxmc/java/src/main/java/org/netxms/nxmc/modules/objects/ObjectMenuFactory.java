@@ -268,15 +268,14 @@ public final class ObjectMenuFactory
    {
       if (selection.size() != 1)
          return null;
-      
-      final AbstractNode node = getNode(selection);      
 
+      final AbstractNode node = getNode(selection);      
       if (node == null)
          return null;
-      
+
       final Menu graphMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);      
       GraphDefinition[] templates = GraphTemplateCache.getInstance().getGraphTemplates(); //array should be already sorted
-      
+
       Map<String, Menu> menus = new HashMap<String, Menu>();
       int added = 0;
       for(int i = 0; i < templates.length; i++)

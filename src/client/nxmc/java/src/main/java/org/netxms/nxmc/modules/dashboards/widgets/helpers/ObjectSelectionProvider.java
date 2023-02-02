@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,11 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.netxms.client.NXCSession;
+import org.netxms.client.TableRow;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.queries.ObjectQueryResult;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.helpers.TransformationSelectionProvider;
 
 /**
@@ -33,6 +36,8 @@ import org.netxms.nxmc.base.helpers.TransformationSelectionProvider;
  */
 public class ObjectSelectionProvider extends TransformationSelectionProvider
 {
+   private NXCSession session = Registry.getSession();
+
    /**
     * @param parent
     */
@@ -49,14 +54,22 @@ public class ObjectSelectionProvider extends TransformationSelectionProvider
    {
       if ((selection == null) || selection.isEmpty() || !(selection instanceof IStructuredSelection))
          return selection;
-      
+
       List<AbstractObject> objects = new ArrayList<AbstractObject>(((IStructuredSelection)selection).size());
       for(Object o : ((IStructuredSelection)selection).toList())
       {
          if (o instanceof ObjectQueryResult)
+         {
             objects.add(((ObjectQueryResult)o).getObject());
+         }
+         else if (o instanceof TableRow)
+         {
+            AbstractObject object = session.findObjectById(((TableRow)o).getObjectId());
+            if (object != null)
+               objects.add(object);
+         }
       }
-      
+
       return new StructuredSelection(objects);
    }
 }
