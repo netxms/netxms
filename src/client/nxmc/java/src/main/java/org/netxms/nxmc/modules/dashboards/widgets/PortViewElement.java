@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,9 +39,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -81,7 +78,6 @@ public class PortViewElement extends ElementWidget
 	private Map<Long, DeviceViewWidget> deviceViews = new HashMap<Long, DeviceViewWidget>();
 	private PortViewConfig config;
 	private NXCSession session;
-	private FocusListener focusListener;
 	private ISelectionProvider selectionProvider;
 	private ISelection selection = new StructuredSelection();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -135,14 +131,6 @@ public class PortViewElement extends ElementWidget
          public void addSelectionChangedListener(ISelectionChangedListener listener)
          {
             selectionListeners.add(listener);
-         }
-      };
-
-      focusListener = new FocusAdapter() {
-         @Override
-         public void focusGained(FocusEvent e)
-         {
-            setSelectionProviderDelegate(selectionProvider);
          }
       };
 
@@ -361,7 +349,6 @@ public class PortViewElement extends ElementWidget
       Menu menu = popupMenuManager.createContextMenu(d);
       d.setMenu(menu);
 
-      d.addFocusListener(focusListener);
       d.addSelectionListener(new PortSelectionListener() {
          @Override
          public void portSelected(PortInfo port)
@@ -382,9 +369,9 @@ public class PortViewElement extends ElementWidget
             {
                selection = new StructuredSelection();
             }
-            
+
             for(ISelectionChangedListener listener : selectionListeners)
-               listener.selectionChanged(new SelectionChangedEvent(getSelectionProvider(), selection));
+               listener.selectionChanged(new SelectionChangedEvent(selectionProvider, selection));
          }
       });
 

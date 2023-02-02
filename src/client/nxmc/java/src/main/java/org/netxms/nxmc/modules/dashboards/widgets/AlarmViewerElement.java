@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.alarms.widgets.AlarmList;
 import org.netxms.nxmc.modules.dashboards.config.AlarmViewerConfig;
@@ -66,12 +64,5 @@ public class AlarmViewerElement extends ElementWidget
       viewer.setSeverityFilter(config.getSeverityFilter());
       viewer.setStateFilter(config.getStateFilter());
       viewer.setIsLocalSoundEnabled(config.getIsLocalSoundEnabled());
-      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
-         @Override
-         public void focusGained(FocusEvent e)
-         {
-            setSelectionProviderDelegate(viewer.getSelectionProvider());
-         }
-      });
 	}
 }

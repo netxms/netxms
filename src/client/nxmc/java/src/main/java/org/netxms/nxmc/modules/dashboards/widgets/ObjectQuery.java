@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCSession;
@@ -146,19 +144,6 @@ public class ObjectQuery extends ElementWidget
 
       objectSelectionProvider = new ObjectSelectionProvider(viewer);
       createContextMenu();
-      
-      viewer.getControl().addFocusListener(new FocusListener() {
-         @Override
-         public void focusLost(FocusEvent e)
-         {
-         }
-         
-         @Override
-         public void focusGained(FocusEvent e)
-         {
-            setSelectionProviderDelegate(objectSelectionProvider);
-         }
-      });
 
       doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(view);
       viewer.addDoubleClickListener(new IDoubleClickListener() {

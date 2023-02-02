@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2016-2022 RadenSolutions
+ * Copyright (C) 2016-2023 RadenSolutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.Registry;
@@ -90,13 +88,6 @@ public class SyslogMonitorElement extends ElementWidget
 
       viewer = new SyslogTraceWidget(getContentArea(), SWT.NONE, view);
       viewer.setRootObject(getEffectiveObjectId(config.getObjectId()));
-      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
-         @Override
-         public void focusGained(FocusEvent e)
-         {
-            setSelectionProviderDelegate(viewer.getSelectionProvider());
-         }
-      });
 
       addDisposeListener(new DisposeListener() {
          @Override

@@ -46,7 +46,6 @@ import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
 import org.netxms.nxmc.modules.dashboards.dialogs.EditElementXmlDlg;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.resources.ThemeEngine;
-import org.netxms.nxmc.tools.IntermediateSelectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -83,7 +82,6 @@ public class DashboardControl extends Composite
 	private boolean modified = false;
 	private DashboardModifyListener modifyListener = null;
    private AbstractDashboardView view;
-	private IntermediateSelectionProvider selectionProvider;
 
    /**
     * Create new dashboard control.
@@ -93,10 +91,9 @@ public class DashboardControl extends Composite
     * @param dashboard dashboard object
     * @param context context for dashboard (can be null)
     * @param view owning view
-    * @param selectionProvider selection provider
     * @param embedded true if dashboard control is embedded into another dashboard
     */
-   public DashboardControl(Composite parent, int style, Dashboard dashboard, AbstractObject context, AbstractDashboardView view, IntermediateSelectionProvider selectionProvider, boolean embedded)
+   public DashboardControl(Composite parent, int style, Dashboard dashboard, AbstractObject context, AbstractDashboardView view, boolean embedded)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
@@ -105,7 +102,6 @@ public class DashboardControl extends Composite
 		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
       this.columnCount = dashboard.getNumColumns();
       this.view = view;
-		this.selectionProvider = selectionProvider;
 		createContent();
 	}
 
@@ -125,7 +121,6 @@ public class DashboardControl extends Composite
       this.elements = new ArrayList<DashboardElement>(originalControl.elements);
       this.columnCount = originalControl.columnCount;
       this.view = originalControl.view;
-      this.selectionProvider = originalControl.selectionProvider;
 		createContent();
 	}
 
@@ -707,14 +702,6 @@ public class DashboardControl extends Composite
 	{
 	   return new ArrayList<ElementWidget>(elementWidgets.values());
 	}
-
-   /**
-    * @return the selectionProvider
-    */
-   public IntermediateSelectionProvider getSelectionProvider()
-   {
-      return selectionProvider;
-   }
 
    /**
     * @return the dashboard

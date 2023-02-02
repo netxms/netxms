@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,6 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.nxmc.modules.dashboards.config.DciSummaryTableConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -61,13 +59,6 @@ public class DciSummaryTableElement extends ElementWidget
       viewer = new SummaryTableWidget(getContentArea(), SWT.NONE, view, config.getTableId(), getEffectiveObjectId(config.getBaseObjectId()));
       viewer.setShowNumLine(config.getNumRowShown());
 		viewer.setSortColumns(config.getSortingColumnList());
-      viewer.getViewer().getControl().addFocusListener(new FocusAdapter() {
-         @Override
-         public void focusGained(FocusEvent e)
-         {
-            setSelectionProviderDelegate(viewer.getObjectSelectionProvider());
-         }
-      });
 		viewer.refresh();
       viewer.setAutoRefresh(config.getRefreshInterval());
 	}

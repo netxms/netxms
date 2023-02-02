@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.dashboards.widgets;
 
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
@@ -49,7 +48,6 @@ import org.netxms.nxmc.modules.dashboards.config.DashboardElementLayout;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontTools;
-import org.netxms.nxmc.tools.IntermediateSelectionProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -397,26 +395,6 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 		}
 	}
 
-	/**
-	 * Set delegate selection provider
-	 * 
-	 * @param delegate
-	 */
-	protected void setSelectionProviderDelegate(ISelectionProvider delegate)
-	{
-	   dbc.getSelectionProvider().setSelectionProviderDelegate(delegate);
-	}
-
-	/**
-	 * Get intermediate selection provider
-	 * 
-	 * @return
-	 */
-	protected IntermediateSelectionProvider getSelectionProvider()
-	{
-	   return dbc.getSelectionProvider();
-	}
-	
 	/**
 	 * Request layout run for entire dashboard. Can be called by subclasses when complete dashboard layout re-run is needed. 
 	 */
