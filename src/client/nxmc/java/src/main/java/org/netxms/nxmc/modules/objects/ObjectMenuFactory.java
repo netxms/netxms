@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectPollType;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.events.Alarm;
@@ -46,15 +47,21 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Sensor;
+import org.netxms.client.objects.ServiceRoot;
+import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objects.Zone;
 import org.netxms.client.objects.interfaces.PollingTarget;
+import org.netxms.client.objects.queries.ObjectQueryResult;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.objects.views.ObjectPollerView;
 import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
@@ -179,7 +186,7 @@ public final class ObjectMenuFactory
     */
    public static Menu createToolsMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
-      final Set<ObjectContext> objects = buildObjectSet((IStructuredSelection)selection);
+      final Set<ObjectContext> objects = buildObjectSet(selection);
       final Menu toolsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 
       final ImageCache imageCache = new ImageCache();
@@ -248,7 +255,15 @@ public final class ObjectMenuFactory
 
       return toolsMenu;
    }
-   
+
+   /**
+    * Create graph template for given selection of objects
+    *
+    * @param selection selection of objects
+    * @param parentMenu parent menu
+    * @param viewPlacement view placement (can be used for displaying messages and selecting perspective for new views)
+    * @return newly constructed menu
+    */
    public static Menu createGraphTemplatesMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
       if (selection.size() != 1)
@@ -325,6 +340,89 @@ public final class ObjectMenuFactory
       }
 
       return graphMenu;
+   }
+
+   /**
+    * Create summary table for given selection of objects
+    *
+    * @param selection selection of objects
+    * @param parentMenu parent menu
+    * @param viewPlacement view placement (can be used for displaying messages and selecting perspective for new views)
+    * @return newly constructed menu
+    */
+   public static Menu createSummaryTableMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   {
+      if (selection.size() == 0)
+         return null;
+      
+      final Object selectedElement = selection.getFirstElement();
+      final AbstractObject baseObject = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
+      if (!(baseObject instanceof Container) && 
+          !(baseObject instanceof Cluster) && 
+          !(baseObject instanceof ServiceRoot) && 
+          !(baseObject instanceof Subnet) &&
+          !(baseObject instanceof Zone) &&
+          !(baseObject instanceof EntireNetwork))
+         return null;
+
+
+      final Menu tablesMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);  
+
+      DciSummaryTableDescriptor[] tables = SummaryTablesCache.getInstance().getTables();
+      Arrays.sort(tables, new Comparator<DciSummaryTableDescriptor>() {
+         @Override
+         public int compare(DciSummaryTableDescriptor d1, DciSummaryTableDescriptor d2)
+         {
+            return d1.getMenuPath().replace("&", "").compareToIgnoreCase(d2.getMenuPath().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+         }
+      });
+      
+      Map<String, Menu> menus = new HashMap<String, Menu>();
+      int added = 0;
+      for(int i = 0; i < tables.length; i++)
+      {
+         if (tables[i].getMenuPath().isEmpty())
+            continue;
+         
+         String[] path = tables[i].getMenuPath().split("\\-\\>"); //$NON-NLS-1$
+      
+         Menu rootMenu = tablesMenu;
+         for(int j = 0; j < path.length - 1; j++)
+         {
+            String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+            Menu currMenu = menus.get(key);
+            if (currMenu == null)
+            {
+               currMenu = new Menu(rootMenu);
+               MenuItem item = new MenuItem(rootMenu, SWT.CASCADE);
+               item.setText(path[j]);
+               item.setMenu(currMenu);
+               menus.put(key, currMenu);
+            }
+            rootMenu = currMenu;
+         }
+         
+         final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
+         item.setText(path[path.length - 1]);
+         item.setData(tables[i]);
+         item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               SummaryTablesCache.queryTable(baseObject.getObjectId(), ((DciSummaryTableDescriptor)item.getData()).getId(), viewPlacement);
+            }
+         });
+         
+         added++;
+      }
+
+      if (added == 0)
+      {
+         tablesMenu.dispose();
+         return null;
+      }
+      
+      return tablesMenu;
    }
 
    /**

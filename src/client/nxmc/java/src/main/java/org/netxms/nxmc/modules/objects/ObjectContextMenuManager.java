@@ -411,6 +411,13 @@ public class ObjectContextMenuManager extends MenuManager
          add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
       }
 
+      final Menu summaryTableMenu = ObjectMenuFactory.createSummaryTableMenu(selection, getMenu(), null, new ViewPlacement(view));
+      if (summaryTableMenu != null)
+      {
+         add(new Separator());
+         add(new MenuContributionItem(i18n.tr("S&ummary tables"), summaryTableMenu));
+      }
+
       if (singleObject)
       {
          add(new Separator());

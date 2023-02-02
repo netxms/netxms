@@ -354,6 +354,7 @@ public abstract class ObjectsPerspective extends Perspective
       addObjectMenu(i18n.tr("Tools"), ObjectMenuFactory.createToolsMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Graphs"), ObjectMenuFactory.createGraphTemplatesMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("S&ummary tables"), ObjectMenuFactory.createSummaryTableMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Create"), new ObjectCreateMenuManager(getWindow().getShell(), null, object));
    }
 

@@ -21,13 +21,23 @@ package org.netxms.nxmc.modules.datacollection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.Table;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.Perspective;
+import org.netxms.nxmc.base.views.ViewPlacement;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.datacollection.views.SummaryTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Cache for DCI summary tables
@@ -35,6 +45,7 @@ import org.slf4j.LoggerFactory;
 public class SummaryTablesCache
 {
    private static final Logger logger = LoggerFactory.getLogger(SummaryTablesCache.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(SummaryTablesCache.class);
    private static SummaryTablesCache instance;
 
    private Map<Integer, DciSummaryTableDescriptor> tables = new HashMap<Integer, DciSummaryTableDescriptor>();
@@ -169,4 +180,49 @@ public class SummaryTablesCache
          return tables.isEmpty();
       }
 	}
+   
+
+   
+   /**
+    * Query table using selected base object
+    * 
+    * @param baseObjectId
+    * @param tableId
+    */
+   public static void queryTable(final long baseObjectId, final int tableId, ViewPlacement viewPlacement)
+   {
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Query DCI summary table"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            final Table results = session.queryDciSummaryTable(tableId, baseObjectId);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  Perspective p = viewPlacement.getPerspective();   
+                  
+                  SummaryTable view = new SummaryTable(tableId, baseObjectId);
+                  if (p != null)
+                  {
+                     p.addMainView(view, true, false);
+                  }
+                  else
+                  {
+                     PopOutViewWindow window = new PopOutViewWindow(view);
+                     window.open();
+                  }
+                  view.setTable(results);
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot read data for DCI summary table");
+         }
+      }.start();
+   }
 }
