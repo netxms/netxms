@@ -118,6 +118,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_snmpCodepage[0] = 0;
    m_ospfRouterId = 0;
    m_downSince = 0;
+   m_savedDownSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
@@ -237,6 +238,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_snmpCodepage[0] = 0;
    m_ospfRouterId = 0;
    m_downSince = 0;
+   m_savedDownSince = 0;
    m_bootTime = 0;
    m_agentUpTime = 0;
    m_proxyConnections = new ProxyAgentConnection[MAX_PROXY_TYPE];
@@ -472,7 +474,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    if (value != nullptr)
       StrToBin(value, m_baseBridgeAddress, MAC_ADDR_LENGTH);
 
-   m_downSince = DBGetFieldLong(hResult, 0, 22);
+   m_savedDownSince = m_downSince = DBGetFieldLong(hResult, 0, 22);
    m_bootTime = DBGetFieldLong(hResult, 0, 23);
 
    // Setup driver
@@ -1133,6 +1135,11 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
 
+         if (success)
+         {
+            m_savedDownSince = m_downSince;
+         }
+
          unlockProperties();
       }
       else
@@ -1329,12 +1336,16 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
          return false;
       }
    }
+
+   if ((m_lastAgentCommTime == TIMESTAMP_NEVER) && (m_syslogMessageCount == 0) && (m_snmpTrapCount == 0) && (m_snmpSecurity == nullptr) && (m_downSince == m_savedDownSince))
+   {
+      unlockProperties();
+      return true;
+   }
+
    unlockProperties();
 
-   if ((m_lastAgentCommTime == TIMESTAMP_NEVER) && (m_syslogMessageCount == 0) && (m_snmpTrapCount == 0))
-      return true;
-
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=?,snmp_engine_id=? WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=?,snmp_engine_id=?,down_since=? WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -1346,11 +1357,14 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
    else
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+   m_savedDownSince = m_downSince;
    unlockProperties();
 
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
+
    return success;
 }
 

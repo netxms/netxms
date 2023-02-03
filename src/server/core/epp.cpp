@@ -833,7 +833,6 @@ bool EPRule::processEvent(Event *event) const
    if ((event->getRootId() != 0) && !(m_flags & RF_ACCEPT_CORRELATED))
       return false;
 
-
    time_t now = time(nullptr);
    struct tm currLocal;
 #if HAVE_LOCALTIME_R
