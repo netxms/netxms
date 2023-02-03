@@ -224,7 +224,7 @@ public class ViewFolder extends ViewContainer
                }
                else
                {
-                  pinActiveView(Registry.getInstance().getLastViewPinLocation());
+                  pinActiveView(Registry.getLastViewPinLocation());
                }
             }
          });
@@ -232,7 +232,7 @@ public class ViewFolder extends ViewContainer
             @Override
             public void run()
             {
-               pinActiveView(Registry.getInstance().getLastViewPinLocation());
+               pinActiveView(Registry.getLastViewPinLocation());
             }
          });
       }
@@ -288,7 +288,7 @@ public class ViewFolder extends ViewContainer
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            Registry.getInstance().setLastViewPinLocation(location);
+            Registry.setLastViewPinLocation(location);
             pinActiveView(location);
          }
       });

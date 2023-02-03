@@ -55,161 +55,19 @@ import org.netxms.nxmc.modules.worldmap.WorldMapPerspective;
 public final class Registry
 {
    public static final boolean IS_WEB_CLIENT = false;
-   Map<String, Object> caches = new HashMap<String, Object>();
 
-   private static Registry instance = new Registry();
+   private static Set<Perspective> perspectives = new HashSet<Perspective>();
+   private static NXCSession session = null;
+   private static TimeZone timeZone = null;
+   private static File stateDir = null;
+   private static MainWindow mainWindow = null;
+   private static TrayItem trayIcon = null;
+   private static PollManager pollManager = new PollManager();
+   private static PinLocation lastViewPinLocation = PinLocation.PINBOARD;
+   private static Map<Class<?>, Object> singletons = new HashMap<>();
+   private static Map<String, Object> properties = new HashMap<>();
 
-   /**
-    * Get registry instance.
-    *
-    * @return registry instance
-    */
-   public static Registry getInstance()
-   {
-      return instance;
-   }
-
-   /**
-    * Get registry instance.
-    *
-    * @param display display to use for registry access
-    * @return registry instance
-    */
-   public static Registry getInstance(Display display)
-   {
-      return instance;
-   }
-
-   /**
-    * Get current NetXMS client library session
-    * 
-    * @return Current session
-    */
-   public static NXCSession getSession()
-   {
-      return getInstance().session;
-   }
-
-   /**
-    * Get current NetXMS client library session
-    *
-    * @param display display to use
-    * @return Current session
-    */
-   public static NXCSession getSession(Display display)
-   {
-      return getInstance(display).session;
-   }
-
-   /**
-    * Get client timezone
-    * 
-    * @return
-    */
-   public static TimeZone getTimeZone()
-   {
-      return getInstance().timeZone;
-   }
-
-   /**
-    * Get application's state directory.
-    * 
-    * @return application's state directory
-    */
-   public static File getStateDir()
-   {
-      return getInstance().stateDir;
-   }
-
-   /**
-    * Get application's state directory.
-    * 
-    * @param display display to use
-    * @return application's state directory
-    */
-   public static File getStateDir(Display display)
-   {
-      return getInstance(display).stateDir;
-   }
-
-   /**
-    * Get application's main window.
-    * 
-    * @return application's main window
-    */
-   public static MainWindow getMainWindow()
-   {
-      return getInstance().mainWindow;
-   }
-
-   /**
-    * Get named property.
-    *
-    * @param name property name
-    * @return value of property or null
-    */
-   public static Object getProperty(String name)
-   {
-      return getInstance().caches.get(name);
-   }
-
-   /**
-    * Get named property using given display.
-    *
-    * @param name property name
-    * @param display display to use
-    * @return value of property or null
-    */
-   public static Object getProperty(String name, Display display)
-   {
-      return getInstance().caches.get(name);
-   }
-
-   /**
-    * Set named property.
-    *
-    * @param name property name
-    * @param value property vakue
-    */
-   public static void setProperty(String name, Object value)
-   {
-      getInstance().caches.put(name, value);
-   }
-
-   /**
-    * Set named property.
-    *
-    * @param name property name
-    * @param value property vakue
-    */
-   public static void setProperty(Display display, String name, Object value)
-   {
-      getInstance().caches.put(name, value);
-   }
-
-   /**
-    * Get application's main window.
-    * 
-    * @return application's main window
-    */
-   public static PollManager getPollManager()
-   {
-      return getInstance().pollManager;
-   }
-
-   private Set<Perspective> perspectives = new HashSet<Perspective>();
-   private NXCSession session = null;
-   private TimeZone timeZone = null;
-   private File stateDir = null;
-   private MainWindow mainWindow = null;
-   private TrayItem trayIcon = null;
-   private PollManager pollManager = null;
-   private PinLocation lastViewPinLocation = PinLocation.PINBOARD;
-
-   /**
-    * Default constructor
-    */
-   private Registry()
+   static
    {
       perspectives.add(new AlarmsPerspective());
       perspectives.add(new BusinessServicesPerspective());
@@ -225,8 +83,183 @@ public final class Registry
       perspectives.add(new TemplatesPerspective());
       perspectives.add(new ToolsPerspective());
       perspectives.add(new WorldMapPerspective());
+   }
 
-      pollManager = new PollManager();
+   /**
+    * Get current NetXMS client library session
+    * 
+    * @return Current session
+    */
+   public static NXCSession getSession()
+   {
+      return session;
+   }
+
+   /**
+    * Get current NetXMS client library session
+    *
+    * @param display display to use
+    * @return Current session
+    */
+   public static NXCSession getSession(Display display)
+   {
+      return session;
+   }
+
+   /**
+    * Get client timezone
+    * 
+    * @return
+    */
+   public static TimeZone getTimeZone()
+   {
+      return timeZone;
+   }
+
+   /**
+    * Get application's state directory.
+    * 
+    * @return application's state directory
+    */
+   public static File getStateDir()
+   {
+      return stateDir;
+   }
+
+   /**
+    * Get application's state directory.
+    * 
+    * @param display display to use
+    * @return application's state directory
+    */
+   public static File getStateDir(Display display)
+   {
+      return stateDir;
+   }
+
+   /**
+    * Get application's main window.
+    * 
+    * @return application's main window
+    */
+   public static MainWindow getMainWindow()
+   {
+      return mainWindow;
+   }
+
+   /**
+    * Get singleton object of given class.
+    *
+    * @param singletonClass class of singleton object
+    * @return singleton object or null
+    */
+   @SuppressWarnings("unchecked")
+   public static <T> T getSingleton(Class<T> singletonClass)
+   {
+      return (T)singletons.get(singletonClass);
+   }
+
+   /**
+    * Get singleton object of given class.
+    *
+    * @param singletonClass class of singleton object
+    * @param display display object
+    * @return singleton object or null
+    */
+   @SuppressWarnings("unchecked")
+   public static <T> T getSingleton(Class<T> singletonClass, Display display)
+   {
+      return (T)singletons.get(singletonClass);
+   }
+
+   /**
+    * Set singleton object of given class.
+    *
+    * @param singletonClass class of singleton object
+    * @param singleton singleton object
+    */
+   public static void setSingleton(Class<?> singletonClass, Object singleton)
+   {
+      singletons.put(singletonClass, singleton);
+   }
+
+   /**
+    * Set singleton object of given class using specific display.
+    *
+    * @param display display
+    * @param singletonClass class of singleton object
+    * @param singleton singleton object
+    */
+   public static void setSingleton(Display display, Class<?> singletonClass, Object singleton)
+   {
+      singletons.put(singletonClass, singleton);
+   }
+
+   /**
+    * Get named property.
+    *
+    * @param name property name
+    * @return value of property or null
+    */
+   public static Object getProperty(String name)
+   {
+      synchronized(properties)
+      {
+         return properties.get(name);
+      }
+   }
+
+   /**
+    * Get named property using given display.
+    *
+    * @param name property name
+    * @param display display to use
+    * @return value of property or null
+    */
+   public static Object getProperty(String name, Display display)
+   {
+      synchronized(properties)
+      {
+         return properties.get(name);
+      }
+   }
+
+   /**
+    * Set named property.
+    *
+    * @param name property name
+    * @param value property vakue
+    */
+   public static void setProperty(String name, Object value)
+   {
+      synchronized(properties)
+      {
+         properties.put(name, value);
+      }
+   }
+
+   /**
+    * Set named property.
+    *
+    * @param name property name
+    * @param value property vakue
+    */
+   public static void setProperty(Display display, String name, Object value)
+   {
+      synchronized(properties)
+      {
+         properties.put(name, value);
+      }
+   }
+
+   /**
+    * Get poll manager
+    * 
+    * @return poll manager
+    */
+   public static PollManager getPollManager()
+   {
+      return pollManager;
    }
 
    /**
@@ -234,7 +267,7 @@ public final class Registry
     *
     * @return the perspectives
     */
-   public List<Perspective> getPerspectives()
+   public static List<Perspective> getPerspectives()
    {
       List<Perspective> result = new ArrayList<Perspective>(perspectives);
       result.sort(new Comparator<Perspective>() {
@@ -252,27 +285,27 @@ public final class Registry
     * 
     * @param session Current session
     */
-   public void setSession(NXCSession session)
+   public static void setSession(NXCSession s)
    {
-      this.session = session;
+      session = s;
    }
 
    /**
     * Set server time zone
     */
-   public void setServerTimeZone()
+   public static void setServerTimeZone()
    {
       if (session != null)
       {
          String tz = session.getServerTimeZone();
-         timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1")); //$NON-NLS-1$ //$NON-NLS-2$
+         timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1"));
       }
    }
 
    /**
     * Reset time zone to default
     */
-   public void resetTimeZone()
+   public static void resetTimeZone()
    {
       timeZone = null;
    }
@@ -280,12 +313,12 @@ public final class Registry
    /**
     * Set application state directory (should be called only by startup code).
     *
-    * @param stateDir application state directory
+    * @param newStateDir application state directory
     */
-   public void setStateDir(File stateDir)
+   protected static void setStateDir(File newStateDir)
    {
-      if (this.stateDir == null)
-         this.stateDir = stateDir;
+      if (stateDir == null)
+         stateDir = newStateDir;
    }
 
    /**
@@ -293,10 +326,10 @@ public final class Registry
     *
     * @param window application's main window
     */
-   public void setMainWindow(MainWindow window)
+   protected static void setMainWindow(MainWindow window)
    {
-      if (this.mainWindow == null)
-         this.mainWindow = window;
+      if (mainWindow == null)
+         mainWindow = window;
    }
 
    /**
@@ -304,7 +337,7 @@ public final class Registry
     *
     * @return current tray icon or null
     */
-   public TrayItem getTrayIcon()
+   public static TrayItem getTrayIcon()
    {
       return trayIcon;
    }
@@ -314,9 +347,9 @@ public final class Registry
     * 
     * @param trayIcon new tray icon
     */
-   public void setTrayIcon(TrayItem trayIcon)
+   public static void setTrayIcon(TrayItem icon)
    {
-      this.trayIcon = trayIcon;
+      trayIcon = icon;
    }
 
    /**
@@ -324,7 +357,7 @@ public final class Registry
     *
     * @return last used view pin location
     */
-   public PinLocation getLastViewPinLocation()
+   public static PinLocation getLastViewPinLocation()
    {
       return lastViewPinLocation;
    }
@@ -332,10 +365,10 @@ public final class Registry
    /**
     * Set last used view pin location
     * 
-    * @param lastViewPinLocation last used view pin location
+    * @param location last used view pin location
     */
-   public void setLastViewPinLocation(PinLocation lastViewPinLocation)
+   public static void setLastViewPinLocation(PinLocation location)
    {
-      this.lastViewPinLocation = lastViewPinLocation;
+      lastViewPinLocation = location;
    }
 }

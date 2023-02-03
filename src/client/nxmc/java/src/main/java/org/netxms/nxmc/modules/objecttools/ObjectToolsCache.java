@@ -96,7 +96,7 @@ public class ObjectToolsCache
 	 */
 	public static ObjectToolsCache getInstance()
 	{
-      return (ObjectToolsCache)Registry.getProperty("ObjectToolsCache");
+      return Registry.getSingleton(ObjectToolsCache.class);
 	}
 
    /**
@@ -107,7 +107,7 @@ public class ObjectToolsCache
    public static void attachSession(Display display, NXCSession session)
    {
       ObjectToolsCache instance = new ObjectToolsCache(session);
-      Registry.setProperty(display, "ObjectToolsCache", instance);
+      Registry.setSingleton(display, ObjectToolsCache.class, instance);
    }
 
 	/**

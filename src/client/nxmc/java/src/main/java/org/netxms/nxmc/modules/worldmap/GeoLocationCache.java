@@ -69,8 +69,8 @@ public class GeoLocationCache implements SessionListener
 	public static void attachSession(Display display, NXCSession session)
 	{
       GeoLocationCache instance = new GeoLocationCache();
-      Registry.setProperty(display, "GeoLocationCache", instance);
-      
+      Registry.setSingleton(display, GeoLocationCache.class, instance);
+
       instance.session = session;
       instance.internalInitialize();
 		session.addListener(instance);
@@ -83,9 +83,9 @@ public class GeoLocationCache implements SessionListener
     */
    public static GeoLocationCache getInstance()
    {
-      return (GeoLocationCache)Registry.getProperty("GeoLocationCache");
+      return Registry.getSingleton(GeoLocationCache.class);
    }
-	
+
 	/**
 	 * (Re)initialize location cache - actual initialization
 	 */

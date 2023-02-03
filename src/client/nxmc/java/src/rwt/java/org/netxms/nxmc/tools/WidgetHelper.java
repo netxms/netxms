@@ -1199,7 +1199,7 @@ public class WidgetHelper
          if (script == null)
             return;
          clientListener = new ClientListener(script);
-         Registry.getInstance().setProperty("MouseHoverListener", clientListener);
+         Registry.setProperty("MouseHoverListener", clientListener);
       }
       control.addListener(SWT.MouseEnter, clientListener);
       control.addListener(SWT.MouseMove, clientListener);

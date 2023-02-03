@@ -93,7 +93,7 @@ public class Startup
       {
          stateDir.mkdir();
       }
-      Registry.getInstance().setStateDir(stateDir);
+      Registry.setStateDir(stateDir);
 
       logger.info("NetXMS Management Console version " + VersionInfo.version() + " starting");
       logger.info("State directory: " + stateDir.getAbsolutePath());
@@ -149,7 +149,7 @@ public class Startup
          GraphTemplateCache.attachSession(display, session);
 
          MainWindow w = new MainWindow(null);
-         Registry.getInstance().setMainWindow(w);
+         Registry.setMainWindow(w);
          w.setBlockOnOpen(true);
          w.open();
       }

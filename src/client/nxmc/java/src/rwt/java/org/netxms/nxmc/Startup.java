@@ -89,7 +89,7 @@ public class Startup implements EntryPoint, StartupParameters
       {
          stateDir.mkdir();
       }
-      Registry.getInstance().setStateDir(stateDir);
+      Registry.setStateDir(stateDir);
 
       logger.info("NetXMS Management Console version " + VersionInfo.version() + " starting");
       logger.info("State directory: " + stateDir.getAbsolutePath());
@@ -131,7 +131,7 @@ public class Startup implements EntryPoint, StartupParameters
       exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
 
       MainWindow w = new MainWindow(shell);
-      Registry.getInstance().setMainWindow(w);
+      Registry.setMainWindow(w);
       w.setBlockOnOpen(true);
       w.open();
 

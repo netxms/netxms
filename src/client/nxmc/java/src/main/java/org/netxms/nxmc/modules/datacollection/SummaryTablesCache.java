@@ -58,7 +58,7 @@ public class SummaryTablesCache
    public static void attachSession(Display display, NXCSession session)
    {
       SummaryTablesCache instance = new SummaryTablesCache(session);
-      Registry.setProperty(display, "SummaryTablesCache", instance);
+      Registry.setSingleton(display, SummaryTablesCache.class, instance);
    }
 
    /**
@@ -68,7 +68,7 @@ public class SummaryTablesCache
     */
    public static SummaryTablesCache getInstance()
    {
-      return (SummaryTablesCache)Registry.getProperty("SummaryTablesCache");
+      return (SummaryTablesCache)Registry.getSingleton(SummaryTablesCache.class);
    }
 
    /**

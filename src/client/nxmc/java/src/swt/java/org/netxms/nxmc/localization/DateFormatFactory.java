@@ -71,9 +71,9 @@ public class DateFormatFactory
       timeFormatString = ps.getAsString("DateFormatFactory.Format.Time"); //$NON-NLS-1$
       shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime"); //$NON-NLS-1$
       if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false)) //$NON-NLS-1$
-         Registry.getInstance().setServerTimeZone();
+         Registry.setServerTimeZone();
       else
-         Registry.getInstance().resetTimeZone();
+         Registry.resetTimeZone();
    }
 
    /**

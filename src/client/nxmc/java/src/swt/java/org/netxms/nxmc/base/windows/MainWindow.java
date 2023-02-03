@@ -469,7 +469,7 @@ public class MainWindow extends Window implements MessageAreaHolder
     */
    private void setupPerspectiveSwitcher()
    {
-      perspectives = Registry.getInstance().getPerspectives();
+      perspectives = Registry.getPerspectives();
       for(final Perspective p : perspectives)
       {
          p.bindToWindow(this);

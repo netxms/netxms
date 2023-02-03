@@ -378,7 +378,7 @@ public class AlarmNotifier
       if ((trayPopupError.get() > 0) || !ps.getAsBoolean("TrayIcon.ShowAlarmPopups", true)) //$NON-NLS-1$
          return;
 
-      final TrayItem trayIcon = Registry.getInstance().getTrayIcon();
+      final TrayItem trayIcon = Registry.getTrayIcon();
       if (trayIcon == null)
          return;
 

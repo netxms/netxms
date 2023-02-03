@@ -74,9 +74,9 @@ public class DateFormatFactory
       instance.shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime"); //$NON-NLS-1$
       RWT.getUISession().setAttribute("netxms.dateFormatFactory", instance);
       if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false)) //$NON-NLS-1$
-         Registry.getInstance().setServerTimeZone();
+         Registry.setServerTimeZone();
       else
-         Registry.getInstance().resetTimeZone();
+         Registry.resetTimeZone();
    }
 
    /**

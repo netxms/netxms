@@ -97,7 +97,7 @@ public class GraphTemplateCache
    public static void attachSession(Display display,NXCSession session)
    {
       GraphTemplateCache instance = new GraphTemplateCache(session);
-      Registry.setProperty(display, "GraphTemplateCache", instance);
+      Registry.setSingleton(display, GraphTemplateCache.class, instance);
    }
 
    /**
@@ -107,9 +107,9 @@ public class GraphTemplateCache
     */
    public static GraphTemplateCache getInstance()
    {
-      return (GraphTemplateCache)Registry.getProperty("GraphTemplateCache");
+      return Registry.getSingleton(GraphTemplateCache.class);
    }
-   
+
    /**
     * Reload graph templates from server
     */

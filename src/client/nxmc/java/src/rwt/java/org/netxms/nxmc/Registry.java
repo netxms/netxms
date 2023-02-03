@@ -53,21 +53,35 @@ import org.netxms.nxmc.modules.worldmap.WorldMapPerspective;
 public final class Registry
 {
    public static final boolean IS_WEB_CLIENT = true;
-   
+
+   private static Set<Perspective> perspectives = new HashSet<Perspective>();
+
+   static
+   {
+      perspectives.add(new AlarmsPerspective());
+      perspectives.add(new BusinessServicesPerspective());
+      perspectives.add(new ConfigurationPerspective());
+      perspectives.add(new DashboardsPerspective());
+      perspectives.add(new GraphsPerspective());
+      perspectives.add(new InfrastructurePerspective());
+      perspectives.add(new LogViewerPerspective());
+      perspectives.add(new MapsPerspective());
+      perspectives.add(new MonitorPerspective());
+      perspectives.add(new NetworkPerspective());
+      perspectives.add(new PinboardPerspective());
+      perspectives.add(new TemplatesPerspective());
+      perspectives.add(new ToolsPerspective());
+      perspectives.add(new WorldMapPerspective());
+   }
+
    /**
     * Get registry instance.
     *
     * @return registry instance
     */
-   public static Registry getInstance()
+   private static Registry getInstance()
    {
-      Registry instance = (Registry)RWT.getUISession().getAttribute("netxms.registry");
-      if (instance == null)
-      {
-         instance = new Registry();
-         RWT.getUISession().setAttribute("netxms.registry", instance);
-      }
-      return instance;
+      return getInstance(Display.getCurrent());
    }
 
    /**
@@ -76,7 +90,7 @@ public final class Registry
     * @param display display to use for registry access
     * @return registry instance
     */
-   public static Registry getInstance(Display display)
+   private static Registry getInstance(Display display)
    {
       Registry instance = (Registry)RWT.getUISession(display).getAttribute("netxms.registry");
       if (instance == null)
@@ -150,6 +164,54 @@ public final class Registry
    }
 
    /**
+    * Get singleton object of given class.
+    *
+    * @param singletonClass class of singleton object
+    * @return singleton object or null
+    */
+   @SuppressWarnings("unchecked")
+   public static <T> T getSingleton(Class<T> singletonClass)
+   {
+      return (T)RWT.getUISession().getAttribute("netxms.singleton." + singletonClass.getName());
+   }
+
+   /**
+    * Get singleton object of given class.
+    *
+    * @param singletonClass class of singleton object
+    * @param display display object
+    * @return singleton object or null
+    */
+   @SuppressWarnings("unchecked")
+   public static <T> T getSingleton(Class<T> singletonClass, Display display)
+   {
+      return (T)RWT.getUISession(display).getAttribute("netxms.singleton." + singletonClass.getName());
+   }
+
+   /**
+    * Set singleton object of given class.
+    *
+    * @param singletonClass class of singleton object
+    * @param singleton singleton object
+    */
+   public static void setSingleton(Class<?> singletonClass, Object singleton)
+   {
+      RWT.getUISession().setAttribute("netxms.singleton." + singletonClass.getName(), singleton);
+   }
+
+   /**
+    * Set singleton object of given class using specific display.
+    *
+    * @param display display
+    * @param singletonClass class of singleton object
+    * @param singleton singleton object
+    */
+   public static void setSingleton(Display display, Class<?> singletonClass, Object singleton)
+   {
+      RWT.getUISession(display).setAttribute("netxms.singleton." + singletonClass.getName(), singleton);
+   }
+
+   /**
     * Get named property.
     *
     * @param name property name
@@ -204,7 +266,6 @@ public final class Registry
       return getInstance().pollManager;
    }
 
-   private Set<Perspective> perspectives = new HashSet<Perspective>();
    private NXCSession session = null;
    private TimeZone timeZone = null;
    private File stateDir = null;
@@ -217,21 +278,6 @@ public final class Registry
     */
    private Registry()
    {
-      perspectives.add(new AlarmsPerspective());
-      perspectives.add(new BusinessServicesPerspective());
-      perspectives.add(new ConfigurationPerspective());
-      perspectives.add(new DashboardsPerspective());
-      perspectives.add(new GraphsPerspective());
-      perspectives.add(new InfrastructurePerspective());
-      perspectives.add(new LogViewerPerspective());
-      perspectives.add(new MapsPerspective());
-      perspectives.add(new MonitorPerspective());
-      perspectives.add(new NetworkPerspective());
-      perspectives.add(new PinboardPerspective());
-      perspectives.add(new TemplatesPerspective());
-      perspectives.add(new ToolsPerspective());
-      perspectives.add(new WorldMapPerspective());
-      
       pollManager = new PollManager();
    }
 
@@ -240,7 +286,7 @@ public final class Registry
     *
     * @return the perspectives
     */
-   public List<Perspective> getPerspectives()
+   public static List<Perspective> getPerspectives()
    {
       List<Perspective> result = new ArrayList<Perspective>(perspectives);
       result.sort(new Comparator<Perspective>() {
@@ -258,29 +304,30 @@ public final class Registry
     * 
     * @param session Current session
     */
-   public void setSession(NXCSession session)
+   public static void setSession(NXCSession session)
    {
-      this.session = session;
+      getInstance().session = session;
    }
 
    /**
     * Set server time zone
     */
-   public void setServerTimeZone()
+   public static void setServerTimeZone()
    {
-      if (session != null)
+      Registry instance = getInstance();
+      if (instance.session != null)
       {
-         String tz = session.getServerTimeZone();
-         timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1")); //$NON-NLS-1$ //$NON-NLS-2$
+         String tz = instance.session.getServerTimeZone();
+         instance.timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1"));
       }
    }
 
    /**
     * Reset time zone to default
     */
-   public void resetTimeZone()
+   public static void resetTimeZone()
    {
-      timeZone = null;
+      getInstance().timeZone = null;
    }
 
    /**
@@ -288,10 +335,11 @@ public final class Registry
     *
     * @param stateDir application state directory
     */
-   public void setStateDir(File stateDir)
+   protected static void setStateDir(File stateDir)
    {
-      if (this.stateDir == null)
-         this.stateDir = stateDir;
+      Registry instance = getInstance();
+      if (instance.stateDir == null)
+         instance.stateDir = stateDir;
    }
 
    /**
@@ -299,10 +347,11 @@ public final class Registry
     *
     * @param window application's main window
     */
-   public void setMainWindow(MainWindow window)
+   protected static void setMainWindow(MainWindow window)
    {
-      if (this.mainWindow == null)
-         this.mainWindow = window;
+      Registry instance = getInstance();
+      if (instance.mainWindow == null)
+         instance.mainWindow = window;
    }
 
    /**
@@ -310,9 +359,9 @@ public final class Registry
     *
     * @return last used view pin location
     */
-   public PinLocation getLastViewPinLocation()
+   public static PinLocation getLastViewPinLocation()
    {
-      return lastViewPinLocation;
+      return getInstance().lastViewPinLocation;
    }
 
    /**
@@ -320,8 +369,8 @@ public final class Registry
     * 
     * @param lastViewPinLocation last used view pin location
     */
-   public void setLastViewPinLocation(PinLocation lastViewPinLocation)
+   public static void setLastViewPinLocation(PinLocation lastViewPinLocation)
    {
-      this.lastViewPinLocation = lastViewPinLocation;
+      getInstance().lastViewPinLocation = lastViewPinLocation;
    }
 }
