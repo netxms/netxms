@@ -302,11 +302,12 @@ public final class Registry
    /**
     * Set current NetXMS client library session
     * 
-    * @param session Current session
+    * @param display current display
+    * @param session current session
     */
-   public static void setSession(NXCSession session)
+   public static void setSession(Display display, NXCSession session)
    {
-      getInstance().session = session;
+      getInstance(display).session = session;
    }
 
    /**

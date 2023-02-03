@@ -195,7 +195,7 @@ public class LoginJob implements IRunnableWithProgress
          session.subscribe(NXCSession.CHANNEL_ALARMS);
          monitor.worked(1);
 
-         Registry.setSession(session);
+         Registry.setSession(display, session);
 
          callLoginListeners(session);
          monitor.worked(1);

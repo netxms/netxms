@@ -285,9 +285,9 @@ public final class Registry
     * 
     * @param session Current session
     */
-   public static void setSession(NXCSession s)
+   public static void setSession(Display display, NXCSession session)
    {
-      session = s;
+      Registry.session = session;
    }
 
    /**
@@ -313,12 +313,12 @@ public final class Registry
    /**
     * Set application state directory (should be called only by startup code).
     *
-    * @param newStateDir application state directory
+    * @param stateDir application state directory
     */
-   protected static void setStateDir(File newStateDir)
+   protected static void setStateDir(File stateDir)
    {
-      if (stateDir == null)
-         stateDir = newStateDir;
+      if (Registry.stateDir == null)
+         Registry.stateDir = stateDir;
    }
 
    /**
@@ -347,9 +347,9 @@ public final class Registry
     * 
     * @param trayIcon new tray icon
     */
-   public static void setTrayIcon(TrayItem icon)
+   public static void setTrayIcon(TrayItem trayIcon)
    {
-      trayIcon = icon;
+      Registry.trayIcon = trayIcon;
    }
 
    /**
@@ -365,10 +365,10 @@ public final class Registry
    /**
     * Set last used view pin location
     * 
-    * @param location last used view pin location
+    * @param lastViewPinLocation last used view pin location
     */
-   public static void setLastViewPinLocation(PinLocation location)
+   public static void setLastViewPinLocation(PinLocation lastViewPinLocation)
    {
-      lastViewPinLocation = location;
+      Registry.lastViewPinLocation = lastViewPinLocation;
    }
 }

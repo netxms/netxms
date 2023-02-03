@@ -34,9 +34,9 @@ import org.netxms.nxmc.resources.SharedIcons;
  */
 public class BaseObjectLabelProvider extends LabelProvider
 {
-   private static Map<Integer, Image> images;
+   private Map<Integer, Image> images;
 
-   static
+   public BaseObjectLabelProvider()
    {
       images = new HashMap<Integer, Image>();
       images.put(AbstractObject.OBJECT_ACCESSPOINT, ResourceManager.getImageDescriptor("icons/objects/access_point.png").createImage());
@@ -108,5 +108,16 @@ public class BaseObjectLabelProvider extends LabelProvider
    public Image getObjectClassImage(int objectClass)
    {
       return images.get(objectClass);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      for(Image i : images.values())
+         i.dispose();
+      super.dispose();
    }
 }
