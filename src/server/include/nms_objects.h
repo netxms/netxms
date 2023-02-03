@@ -3173,6 +3173,7 @@ protected:
    time_t m_failTimeEtherNetIP;
    time_t m_recoveryTime;
    time_t m_downSince;
+   time_t m_savedDownSince;
    time_t m_bootTime;
    time_t m_agentUpTime;
    time_t m_lastAgentCommTime;
