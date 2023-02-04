@@ -464,9 +464,16 @@
               id="org.netxms.ui.eclipse.objectmanager.propertypages.WebServices"
               name="Web Services">
            <enabledWhen>
-              <instanceof
-                    value="org.netxms.client.objects.DataCollectionTarget">
-              </instanceof>
+              <and>
+                 <instanceof
+                       value="org.netxms.client.objects.DataCollectionTarget">
+                 </instanceof>
+                 <not>
+                    <instanceof
+                          value="org.netxms.client.objects.Cluster">
+                    </instanceof>
+                 </not>
+              </and>
            </enabledWhen>
         </page>
         <page
