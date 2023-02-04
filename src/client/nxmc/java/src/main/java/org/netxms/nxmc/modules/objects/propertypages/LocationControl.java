@@ -100,6 +100,15 @@ public class LocationControl extends ObjectPropertyPage
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#getParentId()
+    */
+   @Override
+   public String getParentId()
+   {
+      return "location";
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
     */
    @Override

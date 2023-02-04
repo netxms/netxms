@@ -108,13 +108,13 @@
            <enabledWhen>
               <or>
                  <instanceof
-                       value="org.netxms.client.objects.Node">
+                       value="org.netxms.client.objects.DataCollectionTarget">
                  </instanceof>
                  <instanceof
                        value="org.netxms.client.objects.Container">
                  </instanceof>
                  <instanceof
-                       value="org.netxms.client.objects.Cluster">
+                       value="org.netxms.client.objects.Zone">
                  </instanceof>
                  <instanceof
                        value="org.netxms.client.objects.Rack">
@@ -434,9 +434,17 @@
               id="org.netxms.ui.eclipse.objectmanager.propertypages.LocationControl"
               name="Location Control">
            <enabledWhen>
-              <instanceof
-                    value="org.netxms.client.objects.DataCollectionTarget">
-              </instanceof>
+              <or>
+                 <instanceof
+                       value="org.netxms.client.objects.AbstractNode">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.MobileDevice">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Sensor">
+                 </instanceof>
+              </or>
            </enabledWhen>
         </page>
         <page

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,15 +33,11 @@ import org.netxms.base.GeoLocationFormatException;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.Chassis;
-import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Rack;
-import org.netxms.client.objects.Sensor;
+import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.LabeledText;
@@ -94,8 +90,7 @@ public class Location extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof AbstractNode) || (object instanceof AccessPoint) || (object instanceof Chassis) || (object instanceof Cluster) ||
-             (object instanceof Container) || (object instanceof MobileDevice) || (object instanceof Rack) || (object instanceof Sensor);
+      return (object instanceof DataCollectionTarget) || (object instanceof Container) || (object instanceof Rack) || (object instanceof Zone);
    }
 
    /**
