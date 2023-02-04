@@ -52,6 +52,7 @@ import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
+import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -106,7 +107,8 @@ public class Startup implements EntryPoint, StartupParameters
       PreferenceStore.open(stateDir.getAbsolutePath());
       DateFormatFactory.createInstance();
       SharedIcons.init();
-      StatusDisplayInfo.init();
+      StatusDisplayInfo.init(display);
+      ObjectIcons.init(display);
 
       Shell shell = new Shell(display, SWT.NO_TRIM);
       shell.setMaximized(true);

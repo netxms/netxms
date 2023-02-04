@@ -22,6 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.nxmc.PreferenceStore;
@@ -43,11 +44,13 @@ public final class StatusDisplayInfo
    private Color statusColor[] = new Color[9];
 
 	/**
-	 * Initialize static members. Intended to be called once by library activator.
-	 */
-   public static void init()
+    * Initialize static members. Intended to be called once by library activator.
+    * 
+    * @param display current display
+    */
+   public static void init(Display display)
 	{
-      StatusDisplayInfo instance = new StatusDisplayInfo();
+      final StatusDisplayInfo instance = new StatusDisplayInfo();
 
       instance.statusText[ObjectStatus.NORMAL.getValue()] = instance.i18n.tr("Normal");
       instance.statusText[ObjectStatus.WARNING.getValue()] = instance.i18n.tr("Warning");
@@ -70,7 +73,7 @@ public final class StatusDisplayInfo
       instance.statusImageDescriptors[ObjectStatus.TESTING.getValue()] = ResourceManager.getImageDescriptor("icons/status/testing.png");
 
       for(int i = 0; i < instance.statusImageDescriptors.length; i++)
-         instance.statusImages[i] = instance.statusImageDescriptors[i].createImage();
+         instance.statusImages[i] = instance.statusImageDescriptors[i].createImage(display);
 
       instance.overlayImageDescriptors[ObjectStatus.WARNING.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/warning.png");
       instance.overlayImageDescriptors[ObjectStatus.MINOR.getValue()] = ResourceManager.getImageDescriptor("icons/status/overlay/minor.png");
@@ -83,6 +86,15 @@ public final class StatusDisplayInfo
 
       instance.colorCache = new ColorCache();
       instance.updateStatusColors();
+
+      display.disposeExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            for(int i = 0; i < instance.statusImageDescriptors.length; i++)
+               instance.statusImages[i].dispose();
+         }
+      });
 
       RWT.getUISession().setAttribute("netxms.statusDisplayInfo", instance);
 	}

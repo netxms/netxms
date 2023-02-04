@@ -58,6 +58,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
+import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -112,6 +113,7 @@ public class Startup
       DateFormatFactory.updateFromPreferences();
       SharedIcons.init();
       StatusDisplayInfo.init(display);
+      ObjectIcons.init(display);
 
       Window.setExceptionHandler(new IExceptionHandler() {
          @Override

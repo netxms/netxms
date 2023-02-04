@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,10 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.dialogs.IdMatchingDialog;
-import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
+import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.xnap.commons.i18n.I18n;
@@ -37,7 +38,7 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 {
    private I18n i18n = LocalizationHelper.getI18n(IdMatchingLabelProvider.class);
    private Image dciImage = ResourceManager.getImage("icons/dci/dc-object.png");
-   private BaseObjectLabelProvider objectLabelProvider = new BaseObjectLabelProvider();
+   private ObjectIcons objectIcons = Registry.getSingleton(ObjectIcons.class);
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -49,7 +50,7 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 			return null;
 
 		if (element instanceof ObjectIdMatchingData)
-         return objectLabelProvider.getObjectClassImage(((ObjectIdMatchingData)element).objectClass);
+         return objectIcons.getImage(((ObjectIdMatchingData)element).objectClass);
 
 		if (element instanceof DciIdMatchingData)
          return dciImage;
@@ -103,7 +104,6 @@ public class IdMatchingLabelProvider extends LabelProvider implements ITableLabe
 	public void dispose()
 	{
       dciImage.dispose();
-      objectLabelProvider.dispose();
 		super.dispose();
 	}
 }

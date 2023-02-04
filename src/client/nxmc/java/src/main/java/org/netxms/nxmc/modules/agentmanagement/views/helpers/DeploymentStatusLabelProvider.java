@@ -36,28 +36,28 @@ public class DeploymentStatusLabelProvider extends LabelProvider implements ITab
 {
    private static I18n i18n = LocalizationHelper.getI18n(DeploymentStatusLabelProvider.class);
 	private static final String[] statusText = { i18n.tr("Pending"), i18n.tr("Uploading file"), i18n.tr("Installing"), i18n.tr("Completed"), i18n.tr("Failed"), i18n.tr("Initializing") }; 
-			
+
 	private BaseObjectLabelProvider objectLabelProvider;
 	private Image imageActive;
 	private Image imagePending;
 	private Image imageCompleted;
 	private Image imageFailed;
-	
+
 	/**
 	 * Default constructor
 	 */
 	public DeploymentStatusLabelProvider()
 	{
 	   objectLabelProvider = new BaseObjectLabelProvider();
-		imageActive = ResourceManager.getImageDescriptor("icons/deployStatus/active.png").createImage();
-		imagePending = ResourceManager.getImageDescriptor("icons/deployStatus/pending.png").createImage();
-		imageCompleted = ResourceManager.getImageDescriptor("icons/deployStatus/complete.png").createImage();
-		imageFailed = ResourceManager.getImageDescriptor("icons/deployStatus/failed.png").createImage();
+      imageActive = ResourceManager.getImage("icons/deployStatus/active.png");
+      imagePending = ResourceManager.getImage("icons/deployStatus/pending.png");
+      imageCompleted = ResourceManager.getImage("icons/deployStatus/complete.png");
+      imageFailed = ResourceManager.getImage("icons/deployStatus/failed.png");
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
