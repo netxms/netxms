@@ -976,22 +976,6 @@ void Cluster::removeNode(const shared_ptr<Node>& node)
 }
 
 /**
- * Lock template for autobind poll
- */
-bool Cluster::lockForAutobindPoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated && (m_status != STATUS_UNMANAGED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.AutobindPollingInterval"), g_autobindPollingInterval)))
-   {
-      success = m_autobindPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
  * Perform automatic object binding
  */
 void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId)

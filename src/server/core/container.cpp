@@ -313,22 +313,6 @@ NXSL_Value *Container::createNXSLObject(NXSL_VM *vm)
 }
 
 /**
- * Lock container for autobind poll
- */
-bool Container::lockForAutobindPoll()
-{
-   bool success = false;
-   lockProperties();
-   if (!m_isDeleted && !m_isDeleteInitiated && (m_status != STATUS_UNMANAGED) &&
-       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > getCustomAttributeAsUInt32(_T("SysConfig:Objects.AutobindPollingInterval"), g_autobindPollingInterval)))
-   {
-      success = m_autobindPollState.schedule();
-   }
-   unlockProperties();
-   return success;
-}
-
-/**
  * Class filter data for object selection
  */
 struct AutoBindClassFilterData

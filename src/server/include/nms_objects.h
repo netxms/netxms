@@ -1487,6 +1487,14 @@ protected:
    virtual void icmpPoll(PollerInfo *poller) {}
    virtual void autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) {}
 
+   virtual void startForcedStatusPoll() { m_statusPollState.manualStart(); }
+   virtual void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
+   virtual void startForcedInstanceDiscoveryPoll() { m_instancePollState.manualStart(); }
+   virtual void startForcedTopologyPoll() { m_topologyPollState.manualStart(); }
+   virtual void startForcedRoutingTablePoll() { m_routingPollState.manualStart(); }
+   virtual void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
+   virtual void startForcedAutobindPoll() { m_autobindPollState.manualStart(); }
+
    void _pollerLock() { m_pollerMutex.lock(); }
    void _pollerUnlock() { m_pollerMutex.unlock(); }
 
@@ -1502,7 +1510,6 @@ public:
    void doForcedStatusPoll(PollerInfo *poller) { doForcedStatusPoll(poller, nullptr, 0); }
    void doStatusPoll(PollerInfo *parentPoller, ClientSession *session, uint32_t rqId);
    void doStatusPoll(PollerInfo *poller);
-   virtual void startForcedStatusPoll() { m_statusPollState.manualStart(); }
    virtual bool lockForStatusPoll();
 
    // Configuration poll
@@ -1510,7 +1517,6 @@ public:
    void doForcedConfigurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedConfigurationPoll(PollerInfo *poller) { doForcedConfigurationPoll(poller, nullptr, 0); }
    void doConfigurationPoll(PollerInfo *poller);
-   virtual void startForcedConfigurationPoll() { m_configurationPollState.manualStart(); }
    virtual bool lockForConfigurationPoll();
 
    // Instance Discovery
@@ -1518,7 +1524,6 @@ public:
    void doForcedInstanceDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedInstanceDiscoveryPoll(PollerInfo *poller) { doForcedInstanceDiscoveryPoll(poller, nullptr, 0); }
    void doInstanceDiscoveryPoll(PollerInfo *poller);
-   virtual void startForcedInstanceDiscoveryPoll() { m_instancePollState.manualStart(); }
    virtual bool lockForInstanceDiscoveryPoll() { return false; }
 
    // Topology
@@ -1526,7 +1531,6 @@ public:
    void doForcedTopologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedTopologyPoll(PollerInfo *poller) { doForcedTopologyPoll(poller, nullptr, 0); }
    void doTopologyPoll(PollerInfo *poller);
-   virtual void startForcedTopologyPoll() { m_topologyPollState.manualStart(); }
    virtual bool lockForTopologyPoll() { return false; }
 
    // Routing Table
@@ -1534,7 +1538,6 @@ public:
    void doForcedRoutingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedRoutingTablePoll(PollerInfo *poller) { doForcedRoutingTablePoll(poller, nullptr, 0); }
    void doRoutingTablePoll(PollerInfo *poller);
-   virtual void startForcedRoutingTablePoll() { m_routingPollState.manualStart(); }
    virtual bool lockForRoutingTablePoll() { return false; }
 
    // Network discovery
@@ -1542,7 +1545,6 @@ public:
    void doForcedDiscoveryPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedDiscoveryPoll(PollerInfo *poller) { doForcedDiscoveryPoll(poller, nullptr, 0); }
    void doDiscoveryPoll(PollerInfo *poller);
-   virtual void startForcedDiscoveryPoll() { m_discoveryPollState.manualStart(); }
    virtual bool lockForDiscoveryPoll() { return false; }
 
    // ICMP
@@ -1555,8 +1557,7 @@ public:
    void doForcedAutobindPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId);
    void doForcedAutobindPoll(PollerInfo *poller) { doForcedAutobindPoll(poller, nullptr, 0); }
    void doAutobindPoll(PollerInfo *poller);
-   virtual void startForcedAutobindPoll() { m_autobindPollState.manualStart(); }
-   virtual bool lockForAutobindPoll() { return false; }
+   virtual bool lockForAutobindPoll();
 
    void resetPollTimers();
    DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
@@ -1949,8 +1950,6 @@ public:
 
    void createExportRecord(StringBuffer &xml);
    virtual HashSet<uint32_t> *getRelatedEventsList() const override;
-
-   virtual bool lockForAutobindPoll() override;
 
    bool hasPolicy(const uuid& guid) const;
    void fillPolicyListMessage(NXCPMessage *pMsg) const;
@@ -2699,8 +2698,6 @@ public:
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
    virtual json_t *toJson() override;
 
-   virtual bool lockForAutobindPoll() override;
-
    bool isSyncAddr(const InetAddress& addr);
    bool isVirtualAddr(const InetAddress& addr);
    bool isResourceOnNode(uint32_t resourceId, uint32_t nodeId);
@@ -3262,6 +3259,14 @@ protected:
 
    virtual bool getObjectAttribute(const TCHAR *name, TCHAR **value, bool *isAllocated) const override;
 
+   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
+   virtual void icmpPoll(PollerInfo *poller) override;
+
+   virtual void startForcedConfigurationPoll() override;
+
    void agentLock() { m_agentMutex.lock(); }
    void agentUnlock() { m_agentMutex.unlock(); }
 
@@ -3326,12 +3331,6 @@ protected:
    bool checkProxyAndLink(NetworkMapObjectList *topology, uint32_t seedNode, uint32_t proxyId, uint32_t linkType, const TCHAR *linkName, bool checkAllProxies);
 
    void updateClusterMembership();
-
-   virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
-   virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
-   virtual void topologyPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
-   virtual void routingTablePoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
-   virtual void icmpPoll(PollerInfo *poller) override;
 
 public:
    Node();
@@ -3540,7 +3539,6 @@ public:
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport, const ObjectArray<RadioInterfaceInfo> *radioInterfaces);
 
    void forceConfigurationPoll() { lockProperties(); m_runtimeFlags |= ODF_FORCE_CONFIGURATION_POLL; unlockProperties(); }
-   virtual void startForcedConfigurationPoll() override;
 
    virtual bool setMgmtStatus(bool isManaged) override;
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
@@ -3818,8 +3816,6 @@ public:
    virtual bool showThresholdSummary() const override;
 
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
-
-   virtual bool lockForAutobindPoll() override;
 };
 
 /**
@@ -4370,8 +4366,6 @@ public:
    virtual json_t *toJson() override;
 
    virtual bool showThresholdSummary() const override;
-
-   virtual bool lockForAutobindPoll() override;
 };
 
 /**

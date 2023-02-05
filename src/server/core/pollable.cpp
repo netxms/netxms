@@ -259,6 +259,23 @@ void Pollable::doAutobindPoll(PollerInfo *poller)
 }
 
 /**
+ * Lock object for autobind poll
+ */
+bool Pollable::lockForAutobindPoll()
+{
+   bool success = false;
+   m_this->lockProperties();
+   if (!m_this->m_isDeleted && !m_this->m_isDeleteInitiated &&
+       (m_this->m_status != STATUS_UNMANAGED) &&
+       (static_cast<uint32_t>(time(nullptr) - m_autobindPollState.getLastCompleted()) > m_this->getCustomAttributeAsUInt32(_T("SysConfig:Objects.AutobindPollingInterval"), g_autobindPollingInterval)))
+   {
+      success = m_autobindPollState.schedule();
+   }
+   m_this->unlockProperties();
+   return success;
+}
+
+/**
  * Reset poll timers
  */
 void Pollable::resetPollTimers()
