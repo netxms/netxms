@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -3290,21 +3290,21 @@ static inline void MoveFlag(uint32_t oldVar, uint32_t *newVar, uint32_t oldFlag,
  */
 static void MoveNodeFlags(uint32_t oldFlag, uint32_t *flags, bool withSnmpConfLock)
 {
-   MoveFlag(oldFlag, flags, 0x10000000, DCF_DISABLE_STATUS_POLL);
-   MoveFlag(oldFlag, flags, 0x20000000, DCF_DISABLE_CONF_POLL);
-   MoveFlag(oldFlag, flags, 0x80000000, DCF_DISABLE_DATA_COLLECT);
-   MoveFlag(oldFlag, flags, 0x00000080, NF_EXTERNAL_GATEWAY);
+   MoveFlag(oldFlag, flags, 0x10000000, 0x00000001);  // disable status poll
+   MoveFlag(oldFlag, flags, 0x20000000, 0x00000002);  // disable configuration poll
+   MoveFlag(oldFlag, flags, 0x80000000, 0x00000004);  // disable data collection
+   MoveFlag(oldFlag, flags, 0x00000080, 0x00010000);  // external gateway
    if (withSnmpConfLock)
    {
-      MoveFlag(oldFlag, flags, 0x00200000, NF_SNMP_SETTINGS_LOCKED);
+      MoveFlag(oldFlag, flags, 0x00200000, 0x02000000);  // SNMP settings locked
    }
-   MoveFlag(oldFlag, flags, 0x00400000, NF_DISABLE_DISCOVERY_POLL);
-   MoveFlag(oldFlag, flags, 0x00800000, NF_DISABLE_TOPOLOGY_POLL);
-   MoveFlag(oldFlag, flags, 0x01000000, NF_DISABLE_SNMP);
-   MoveFlag(oldFlag, flags, 0x02000000, NF_DISABLE_NXCP);
-   MoveFlag(oldFlag, flags, 0x04000000, NF_DISABLE_ICMP);
-   MoveFlag(oldFlag, flags, 0x08000000, NF_FORCE_ENCRYPTION);
-   MoveFlag(oldFlag, flags, 0x40000000, NF_DISABLE_ROUTE_POLL);
+   MoveFlag(oldFlag, flags, 0x00400000, 0x00020000);  // disable discovery poll
+   MoveFlag(oldFlag, flags, 0x00800000, 0x00040000);  // disable topology poll
+   MoveFlag(oldFlag, flags, 0x01000000, 0x00080000);  // disable SNMP
+   MoveFlag(oldFlag, flags, 0x02000000, 0x00100000);  // disable NXCP
+   MoveFlag(oldFlag, flags, 0x04000000, 0x00200000);  // disable ICMP
+   MoveFlag(oldFlag, flags, 0x08000000, 0x00400000);  // force encryption
+   MoveFlag(oldFlag, flags, 0x40000000, 0x00800000);  // disable routing poll
 }
 
 /**
