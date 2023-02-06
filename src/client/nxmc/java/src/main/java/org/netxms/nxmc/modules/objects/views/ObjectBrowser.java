@@ -22,10 +22,21 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.ICellEditorListener;
+import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
@@ -106,11 +117,93 @@ public class ObjectBrowser extends NavigationView
    {
       objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), this, true, false);
 
-      Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider()).createContextMenu(objectTree.getTreeControl());
+      Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
-      
+
       objectTree.enableDropSupport(this);
       objectTree.enableDragSupport();
+
+      final TreeViewer treeViewer = objectTree.getTreeViewer();
+      TreeViewerEditor.create(treeViewer, new ColumnViewerEditorActivationStrategy(treeViewer) {
+         @Override
+         protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event)
+         {
+            return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
+         }
+      }, ColumnViewerEditor.DEFAULT);
+
+      TextCellEditor editor = new TextCellEditor(treeViewer.getTree(), SWT.BORDER) {
+         @Override
+         protected Control createControl(Composite parent)
+         {
+            objectTree.disableRefresh();
+            return super.createControl(parent);
+         }
+      };
+      editor.addListener(new ICellEditorListener() {
+         @Override
+         public void editorValueChanged(boolean oldValidState, boolean newValidState)
+         {
+         }
+
+         @Override
+         public void cancelEditor()
+         {
+            objectTree.enableRefresh();
+         }
+
+         @Override
+         public void applyEditorValue()
+         {
+         }
+      });
+
+      treeViewer.setCellEditors(new CellEditor[] { editor });
+      treeViewer.setColumnProperties(new String[] { "name" });
+      treeViewer.setCellModifier(new ICellModifier() {
+         @Override
+         public void modify(Object element, String property, Object value)
+         {
+            final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
+            if (property.equals("name") && (data instanceof AbstractObject))
+            {
+               final NXCSession session = Registry.getSession();
+               final String newName = value.toString();
+               new Job(i18n.tr("Renaming object"), ObjectBrowser.this) {
+                  @Override
+                  protected void run(IProgressMonitor monitor) throws Exception
+                  {
+                     session.setObjectName(((AbstractObject)data).getObjectId(), newName);
+                  }
+
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return String.format(i18n.tr("Cannot rename object %s"), ((AbstractObject)data).getObjectName());
+                  }
+               }.start();
+            }
+            objectTree.enableRefresh();
+         }
+
+         @Override
+         public Object getValue(Object element, String property)
+         {
+            if (property.equals("name") && (element instanceof AbstractObject))
+               return ((AbstractObject)element).getObjectName();
+            return null;
+         }
+
+         @Override
+         public boolean canModify(Object element, String property)
+         {
+            if (!property.equals("name"))
+               return false;
+
+            objectTree.disableRefresh();
+            return true;
+         }
+      });
 
       objectTree.getTreeViewer().expandToLevel(2);
    }

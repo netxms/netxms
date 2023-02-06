@@ -155,7 +155,7 @@ public class ChassisView extends ObjectView implements ISelectionProvider
     */
    private void createPopupMenu()
    {
-      MenuManager menuMgr = new ObjectContextMenuManager(this, this);
+      MenuManager menuMgr = new ObjectContextMenuManager(this, this, null);
 
       Menu menu = menuMgr.createContextMenu(chassisFrontWidget);
       chassisFrontWidget.setMenu(menu);

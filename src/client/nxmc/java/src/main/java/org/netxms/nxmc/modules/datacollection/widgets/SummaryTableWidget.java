@@ -195,7 +195,7 @@ public class SummaryTableWidget extends Composite
    private void createContextMenu()
    {
       // Create menu manager for underlying node object
-      final MenuManager nodeMenuManager = new ObjectContextMenuManager(view, objectSelectionProvider) {
+      final MenuManager nodeMenuManager = new ObjectContextMenuManager(view, objectSelectionProvider, null) {
          @Override
          public String getMenuText()
          {

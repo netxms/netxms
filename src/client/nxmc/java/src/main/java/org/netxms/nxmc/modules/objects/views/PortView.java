@@ -168,7 +168,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
 	private void createContextMenu()
 	{
 		// Create menu manager.
-      MenuManager menuMgr = new ObjectContextMenuManager(this, this);
+      MenuManager menuMgr = new ObjectContextMenuManager(this, this, null);
       deviceView.setMenu(menuMgr.createContextMenu(deviceView));
 	}
 

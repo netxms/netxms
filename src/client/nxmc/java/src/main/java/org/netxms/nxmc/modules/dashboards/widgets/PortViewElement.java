@@ -134,7 +134,7 @@ public class PortViewElement extends ElementWidget
          }
       };
 
-      popupMenuManager = new ObjectContextMenuManager(view, selectionProvider);
+      popupMenuManager = new ObjectContextMenuManager(view, selectionProvider, null);
 
       scroller = new ScrolledComposite(getContentArea(), SWT.H_SCROLL | SWT.V_SCROLL);
       scroller.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));

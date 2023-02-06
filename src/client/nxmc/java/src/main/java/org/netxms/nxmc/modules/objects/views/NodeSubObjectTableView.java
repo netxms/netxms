@@ -94,7 +94,7 @@ public abstract class NodeSubObjectTableView extends NodeSubObjectView
     */
    protected void createPopupMenu()
    {
-      ObjectContextMenuManager menuMgr = new ObjectContextMenuManager(this, viewer) {
+      ObjectContextMenuManager menuMgr = new ObjectContextMenuManager(this, viewer, null) {
          @Override
          protected void fillContextMenu()
          {

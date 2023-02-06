@@ -124,7 +124,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
       });
       WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 30);
 
-      menuManager = new ObjectContextMenuManager(view, this);
+      menuManager = new ObjectContextMenuManager(view, this, null);
 
       content = createContent(scroller); 
       scroller.setContent(content);

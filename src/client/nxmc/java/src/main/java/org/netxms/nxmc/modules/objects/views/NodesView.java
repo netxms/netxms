@@ -149,7 +149,7 @@ public class NodesView extends ObjectView
    private void createContextMenu()
    {
       // Create menu manager
-      MenuManager menuMgr = new ObjectContextMenuManager(this, viewer) {
+      MenuManager menuMgr = new ObjectContextMenuManager(this, viewer, null) {
          @Override
          protected void fillContextMenu()
          {

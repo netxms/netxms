@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,11 +29,17 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
@@ -79,10 +85,12 @@ public class ObjectContextMenuManager extends MenuManager
 
    private View view;
    private ISelectionProvider selectionProvider;
+   private ColumnViewer objectViewer;
    private Action actionManage;
    private Action actionUnmanage;
-   private Action actionDeployPackage;
+   private Action actionRename;
    private Action actionDelete;
+   private Action actionDeployPackage;
    private Action actionEnterMaintenance;
    private Action actionLeaveMaintenance;
    private Action actionScheduleMaintenance;
@@ -98,7 +106,6 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemove;
    private Action actionAddNode;
    private Action actionRemoveNode;
-   
 
    /**
     * Create new object context menu manager.
@@ -106,10 +113,11 @@ public class ObjectContextMenuManager extends MenuManager
     * @param view owning view
     * @param selectionProvider selection provider
     */
-   public ObjectContextMenuManager(View view, ISelectionProvider selectionProvider)
+   public ObjectContextMenuManager(View view, ISelectionProvider selectionProvider, ColumnViewer objectViewer)
    {
       this.view = view;
       this.selectionProvider = selectionProvider;
+      this.objectViewer = objectViewer;
       setRemoveAllWhenShown(true);
       addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
@@ -148,7 +156,34 @@ public class ObjectContextMenuManager extends MenuManager
             deployPackage();
          }
       };
-      
+
+      actionRename = new Action(i18n.tr("Rename")) {
+         @Override
+         public void run()
+         {
+            Object element = null;
+            Control control = objectViewer.getControl();
+            if (control instanceof Tree)
+            {
+               TreeItem[] selection = ((Tree)control).getSelection();
+               if (selection.length != 1)
+                  return;
+               element = selection[0].getData();
+            }
+            else if (control instanceof Table)
+            {
+               TableItem[] selection = ((Table)control).getSelection();
+               if (selection.length != 1)
+                  return;
+               element = selection[0].getData();
+            }
+            if (element != null)
+            {
+               objectViewer.editElement(element, 0);
+            }
+         }
+      };
+
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
@@ -334,6 +369,11 @@ public class ObjectContextMenuManager extends MenuManager
       }
       add(actionManage);
       add(actionUnmanage);
+      if (singleObject && (objectViewer != null))
+      {
+         add(actionRename);
+         view.addKeyBinding("F2", actionRename);
+      }
       add(actionDelete);
       add(new Separator());
 
@@ -936,9 +976,6 @@ public class ObjectContextMenuManager extends MenuManager
             return i18n.tr("Cannot add node to cluster");
          }
       }.start();
-      
-      
-      
    }
 
    /**

@@ -138,7 +138,7 @@ public class WorldMap extends View
     */
    private void createPopupMenu()
    {
-      MenuManager menuMgr = new ObjectContextMenuManager(this, map) {
+      MenuManager menuMgr = new ObjectContextMenuManager(this, map, null) {
          @Override
          protected void fillContextMenu()
          {

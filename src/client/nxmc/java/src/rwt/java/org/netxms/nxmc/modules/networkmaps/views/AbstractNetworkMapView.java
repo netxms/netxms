@@ -919,7 +919,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	private void createContextMenu()
 	{
 		// Create menu manager.
-      MenuManager menuMgr = new ObjectContextMenuManager(this, this) {
+      MenuManager menuMgr = new ObjectContextMenuManager(this, this, null) {
          @Override
          protected void fillContextMenu()
          {

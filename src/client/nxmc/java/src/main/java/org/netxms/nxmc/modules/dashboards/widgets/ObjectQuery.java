@@ -219,7 +219,7 @@ public class ObjectQuery extends ElementWidget
    private void createContextMenu()
    {
       // Create menu manager for underlying node object
-      final MenuManager menuManager = new ObjectContextMenuManager(view, objectSelectionProvider) {
+      final MenuManager menuManager = new ObjectContextMenuManager(view, objectSelectionProvider, null) {
          @Override
          protected void fillContextMenu()
          {

@@ -195,7 +195,7 @@ public class RackDiagramElement extends ElementWidget implements ISelectionProvi
     */
    private void createPopupMenu()
    {
-      MenuManager menuMgr = new ObjectContextMenuManager(view, this);
+      MenuManager menuMgr = new ObjectContextMenuManager(view, this, null);
 
       if (rackFrontWidget != null)
          rackFrontWidget.setMenu(menuMgr.createContextMenu(rackFrontWidget));

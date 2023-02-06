@@ -56,6 +56,7 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
@@ -220,11 +221,11 @@ public class ObjectBrowser extends ViewPart
 		createMenu();
 		createToolBar();
 		createPopupMenu();
-		
+
       objectTree.enableDropSupport(this);
 		objectTree.enableDragSupport();
 		getSite().setSelectionProvider(objectTree.getTreeViewer());
-		
+
 		objectTree.setFilterCloseAction(new Action() {
          @Override
          public void run()
@@ -233,65 +234,68 @@ public class ObjectBrowser extends ViewPart
             objectTree.enableFilter(false);
          }
       });
-		
-		final TreeViewer tree = objectTree.getTreeViewer();		
-		TreeViewerEditor.create(tree, new ColumnViewerEditorActivationStrategy(tree) {
+
+		final TreeViewer treeViewer = objectTree.getTreeViewer();		
+		TreeViewerEditor.create(treeViewer, new ColumnViewerEditorActivationStrategy(treeViewer) {
          @Override
          protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event)
          {
             return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
          }
       }, ColumnViewerEditor.DEFAULT);
-		
-		TextCellEditor editor =  new TextCellEditor(tree.getTree(), SWT.BORDER);		
+
+      TextCellEditor editor = new TextCellEditor(treeViewer.getTree(), SWT.BORDER) {
+         @Override
+         protected Control createControl(Composite parent)
+         {
+            objectTree.disableRefresh();
+            return super.createControl(parent);
+         }
+
+      };
 		editor.addListener(new ICellEditorListener() {
          @Override
          public void editorValueChanged(boolean oldValidState, boolean newValidState)
          {
          }
-         
+
          @Override
          public void cancelEditor()
          {
             objectTree.enableRefresh();
          }
-         
+
          @Override
          public void applyEditorValue()
          {
          }
       });
-		
-		//TODO: override editor method that creates control to disable refresh
-		
-		tree.setCellEditors(new CellEditor[] { editor });
-		tree.setColumnProperties(new String[] { "name" }); //$NON-NLS-1$
-		tree.setCellModifier(new ICellModifier() {
+
+		treeViewer.setCellEditors(new CellEditor[] { editor });
+		treeViewer.setColumnProperties(new String[] { "name" }); //$NON-NLS-1$
+		treeViewer.setCellModifier(new ICellModifier() {
          @Override
          public void modify(Object element, String property, Object value)
          {
             final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
 
-            if (property.equals("name")) //$NON-NLS-1$
+            if (property.equals("name") && (data instanceof AbstractObject)) //$NON-NLS-1$
             {
-               if (data instanceof AbstractObject)
-               {
-                  final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-                  final String newName = value.toString();
-                  new ConsoleJob(Messages.get().ObjectBrowser_RenameJobName, null, Activator.PLUGIN_ID, null) {
-                     @Override
-                     protected void runInternal(IProgressMonitor monitor) throws Exception
-                     {
-                        session.setObjectName(((AbstractObject)data).getObjectId(), newName);
-                     }
-            
-                     @Override
-                     protected String getErrorMessage()
-                     {
-                        return String.format(Messages.get().ObjectBrowser_RenameJobError, ((AbstractObject)data).getObjectName());
-                     }
-                  }.start();
-               }
+               final NXCSession session = ConsoleSharedData.getSession();
+               final String newName = value.toString();
+               new ConsoleJob(Messages.get().ObjectBrowser_RenameJobName, null, Activator.PLUGIN_ID, null) {
+                  @Override
+                  protected void runInternal(IProgressMonitor monitor) throws Exception
+                  {
+                     session.setObjectName(((AbstractObject)data).getObjectId(), newName);
+                  }
+
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return String.format(Messages.get().ObjectBrowser_RenameJobError, ((AbstractObject)data).getObjectName());
+                  }
+               }.start();
             }
             objectTree.enableRefresh();
          }
@@ -299,25 +303,19 @@ public class ObjectBrowser extends ViewPart
          @Override
          public Object getValue(Object element, String property)
          {
-            if (property.equals("name")) //$NON-NLS-1$
-            {
-               if (element instanceof AbstractObject)
-               {
-                  return ((AbstractObject)element).getObjectName();
-               }
-            }
+            if (property.equals("name") && (element instanceof AbstractObject)) //$NON-NLS-1$
+               return ((AbstractObject)element).getObjectName();
             return null;
          }
 
          @Override
          public boolean canModify(Object element, String property)
          {
-            if (property.equals("name")) //$NON-NLS-1$
-            {
-               objectTree.disableRefresh();               
-               return true;
-            }
-            return false; //$NON-NLS-1$
+            if (!property.equals("name")) //$NON-NLS-1$
+               return false;
+
+            objectTree.disableRefresh();
+            return true;
          }
       });
 		
@@ -537,7 +535,7 @@ public class ObjectBrowser extends ViewPart
       actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"); //$NON-NLS-1$
 		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
 		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
-		
+
       actionRenameObject = new Action(Messages.get().ObjectBrowser_Rename) {
 		   @Override
 		   public void run()
