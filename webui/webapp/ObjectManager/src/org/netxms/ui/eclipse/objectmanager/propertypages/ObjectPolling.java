@@ -34,6 +34,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -76,7 +77,7 @@ public class ObjectPolling extends PropertyPage
 		layout.marginHeight = 0;
       dialogArea.setLayout(layout);
       GridData gd = new GridData();
-      
+
       /* poller node */
       if (object.canHavePollerNode())
       {
@@ -128,7 +129,9 @@ public class ObjectPolling extends PropertyPage
 		optionsGroup.setLayoutData(gd);
 
       if (object.canHaveAgent())
+      {
 		   addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, Messages.get().NodePolling_OptDisableAgent);
+      }
       if (object.canHaveInterfaces())
 		{
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, Messages.get().NodePolling_OptDisableSNMP);
@@ -136,10 +139,14 @@ public class ObjectPolling extends PropertyPage
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, "Disable SS&H usage for all polls");
 		}
       if (object.canUseEtherNetIP())
+      {
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, Messages.get().NodePolling_OptDisableEtherNetIP);
+      }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_STATUS_POLL, Messages.get().NodePolling_OptDisableStatusPoll);
       if (object.canHaveInterfaces())
+      {
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_8021X_STATUS_POLL, "Disable &802.1x port state checking during status poll");
+      }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_CONF_POLL, Messages.get().NodePolling_OptDisableConfigPoll);
       if (object.canHaveInterfaces())
       {
@@ -147,9 +154,14 @@ public class ObjectPolling extends PropertyPage
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, Messages.get().NodePolling_OptDisableTopoPoll);
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, Messages.get().NodePolling_OptDisableDiscoveryPoll);
       }
-		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
+      if (object instanceof DataCollectionTarget)
+      {
+         addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, Messages.get().NodePolling_OptDisableDataCollection);
+      }
       if (object.canHaveAgent())
+      {
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of &Windows performance counters metadata");
+      }
 
 		/* use ifXTable */
       if (object.canHaveInterfaces())

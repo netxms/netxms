@@ -209,9 +209,31 @@
               id="org.netxms.ui.eclipse.objectmanager.propertypages.NodePolling#20"
               name="%page.name.Polling">
            <enabledWhen>
-              <instanceof
-                    value="org.netxms.client.objects.interfaces.PollingTarget">
-              </instanceof>
+              <and>
+                 <instanceof
+                       value="org.netxms.client.objects.interfaces.PollingTarget">
+                 </instanceof>
+                 <not>
+                    <instanceof
+                          value="org.netxms.client.objects.BusinessServicePrototype">
+                    </instanceof>
+                 </not>
+                 <not>
+                    <instanceof
+                          value="org.netxms.client.objects.Dashboard">
+                    </instanceof>
+                 </not>
+                 <not>
+                    <instanceof
+                          value="org.netxms.client.objects.Template">
+                    </instanceof>
+                 </not>
+                 <not>
+                    <instanceof
+                          value="org.netxms.client.objects.Container">
+                    </instanceof>
+                 </not>
+              </and>
            </enabledWhen>
         </page>
         <page

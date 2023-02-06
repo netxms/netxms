@@ -34,8 +34,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.Template;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -98,7 +101,7 @@ public class Polling extends ObjectPropertyPage
    @Override
    public boolean isVisible()
    {
-      return (object instanceof PollingTarget) && !(object instanceof Container) && !(object instanceof Dashboard);
+      return (object instanceof PollingTarget) && !(object instanceof Container) && !(object instanceof Dashboard) && !(object instanceof Template) && !(object instanceof BusinessServicePrototype);
    }
 
    /**
@@ -169,7 +172,9 @@ public class Polling extends ObjectPropertyPage
 		optionsGroup.setLayoutData(gd);
 
       if (pollingTarget.canHaveAgent())
+      {
 		   addFlag(optionsGroup, AbstractNode.NF_DISABLE_NXCP, i18n.tr("Disable usage of NetXMS &agent for all polls"));
+      }
       if (pollingTarget.canHaveInterfaces())
 		{
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_SNMP, i18n.tr("Disable usage of &SNMP for all polls"));
@@ -177,10 +182,14 @@ public class Polling extends ObjectPropertyPage
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_SSH, i18n.tr("Disable SS&H usage for all polls"));
 		}
       if (pollingTarget.canUseEtherNetIP())
+      {
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_ETHERNET_IP, i18n.tr("Disable usage of &EtherNet/IP for all polls"));
+      }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_STATUS_POLL, i18n.tr("Disable s&tatus polling"));
       if (pollingTarget.canHaveInterfaces())
+      {
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_8021X_STATUS_POLL, "Disable &802.1x port state checking during status poll");
+      }
 		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_CONF_POLL, i18n.tr("Disable &configuration polling"));
       if (pollingTarget.canHaveInterfaces())
       {
@@ -188,9 +197,14 @@ public class Polling extends ObjectPropertyPage
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_TOPOLOGY_POLL, i18n.tr("Disable to&pology polling"));
    		addFlag(optionsGroup, AbstractNode.NF_DISABLE_DISCOVERY_POLL, i18n.tr("Disable network &discovery polling"));
       }
-		addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, i18n.tr("Disable data c&ollection"));
+      if (pollingTarget instanceof DataCollectionTarget)
+      {
+         addFlag(optionsGroup, AbstractNode.DCF_DISABLE_DATA_COLLECT, i18n.tr("Disable data c&ollection"));
+      }
       if (pollingTarget.canHaveAgent())
+      {
          addFlag(optionsGroup, AbstractNode.NF_DISABLE_PERF_COUNT, "Disable reading of &Windows performance counters metadata");
+      }
 
 		/* use ifXTable */
       if (pollingTarget.canHaveInterfaces())
