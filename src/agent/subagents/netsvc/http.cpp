@@ -150,6 +150,7 @@ int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool
    if (compiledPattern != nullptr)
    {
       struct curl_slist *hosts = nullptr;
+#if HAVE_DECL_CURLOPT_RESOLVE
       if ((hostname == nullptr) && (hostHeader != nullptr) && (*hostHeader != 0))
       {
          char resolverData[1024];
@@ -157,6 +158,7 @@ int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool
          hosts = curl_slist_append(hosts, resolverData);
          curl_easy_setopt(curl, CURLOPT_RESOLVE, hosts);
       }
+#endif
       NetworkServiceStatus_HTTP(curl, options, url, compiledPattern, &result);
       _pcre_free_t(compiledPattern);
       curl_slist_free_all(hosts);
