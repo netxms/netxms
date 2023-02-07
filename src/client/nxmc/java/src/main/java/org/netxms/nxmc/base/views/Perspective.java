@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.nxmc.base.views.helpers.NavigationHistory;
+import org.netxms.nxmc.base.widgets.CompositeWithMessageArea;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.tools.ImageCache;
 import org.slf4j.Logger;
@@ -59,6 +61,7 @@ public abstract class Perspective
    private ViewStack navigationArea;
    private ViewStack mainArea;
    private Composite supplementalArea;
+   private MessageAreaHolder messageArea;
    private ISelectionProvider navigationSelectionProvider;
    private ISelectionChangedListener navigationSelectionListener;
    private ImageCache imageCache;
@@ -227,15 +230,15 @@ public abstract class Perspective
          horizontalSpliter = new SashForm(configuration.hasNavigationArea ? verticalSplitter : content, SWT.VERTICAL);
       }
 
-      Composite mainAreaHolder = new Composite(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content), SWT.NONE);
+      CompositeWithMessageArea mainAreaHolder = new CompositeWithMessageArea(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content), SWT.NONE);
       if (configuration.hasHeaderArea)
       {
          GridLayout layout = new GridLayout();
          layout.marginHeight = 0;
          layout.marginWidth = 0;
-         mainAreaHolder.setLayout(layout);
+         mainAreaHolder.getContent().setLayout(layout);
 
-         headerArea = new Composite(mainAreaHolder, SWT.NONE);
+         headerArea = new Composite(mainAreaHolder.getContent(), SWT.NONE);
          GridData gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.verticalAlignment = SWT.CENTER;
@@ -245,14 +248,11 @@ public abstract class Perspective
 
          createHeaderArea(headerArea);
       }
-      else
-      {
-         mainAreaHolder.setLayout(new FillLayout());
-      }
+      messageArea = mainAreaHolder;
 
       if (configuration.multiViewMainArea)
       {
-         mainFolder = new ViewFolder(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
+         mainFolder = new ViewFolder(window, this, mainAreaHolder.getContent(), configuration.enableViewExtraction, configuration.enableViewPinning, false);
          mainFolder.setAllViewsAsCloseable(configuration.allViewsAreCloseable);
          mainFolder.setUseGlobalViewId(configuration.useGlobalViewId);
          if (configuration.hasHeaderArea)
@@ -260,7 +260,7 @@ public abstract class Perspective
       }
       else
       {
-         mainArea = new ViewStack(window, this, mainAreaHolder, configuration.enableViewExtraction, configuration.enableViewPinning, false);
+         mainArea = new ViewStack(window, this, mainAreaHolder.getContent(), configuration.enableViewExtraction, configuration.enableViewPinning, false);
          if (configuration.hasHeaderArea)
             mainArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       }
@@ -379,6 +379,16 @@ public abstract class Perspective
    public Window getWindow()
    {
       return window;
+   }
+
+   /**
+    * Get perspective-level message area.
+    * 
+    * @return perspective-level message area.
+    */
+   public MessageAreaHolder getMessageArea()
+   {
+      return messageArea;
    }
 
    /**

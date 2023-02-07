@@ -297,25 +297,23 @@ public abstract class ObjectsPerspective extends Perspective
          public void run()
          {
             String question = String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), object.getObjectName());
-            boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"), question);
-            
-            if (confirmed)
-            {
-               final NXCSession session =  Registry.getSession();
-               new Job(i18n.tr("Delete objects"), null) {
-                  @Override
-                  protected void run(IProgressMonitor monitor) throws Exception
-                  {
-                     session.deleteObject(object.getObjectId());
-                  }
-                  
-                  @Override
-                  protected String getErrorMessage()
-                  {
-                     return i18n.tr("Cannot delete object");
-                  }
-               }.start();
-            }
+            if (!MessageDialogHelper.openConfirm(getWindow().getShell(), i18n.tr("Confirm Delete"), question))
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Delete objects"), null, ObjectsPerspective.this.getMessageArea()) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  session.deleteObject(object.getObjectId());
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return i18n.tr("Cannot delete object");
+               }
+            }.start();
          }
       });
    }

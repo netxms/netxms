@@ -703,45 +703,34 @@ public class ObjectContextMenuManager extends MenuManager
       job.setUser(false);
       job.start();
    }
-   
+
    /**
     * Delete selected objects
     */
    private void deleteObject()
    {
       final Object[] objects = ((IStructuredSelection)selectionProvider.getSelection()).toArray();  
-      String question = null;
-      if (objects.length == 1)
-      {
-         question = String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), ((AbstractObject)objects[0]).getObjectName());
-      }
-      else
-      {
-         question = String.format(i18n.tr("Are you sure you want to delete %d objects?"), objects.length);
-         
-      }
-      boolean confirmed = MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("Confirm Delete"), question);
-      
-      if (confirmed)
-      {
-         final NXCSession session =  Registry.getSession();
-         new Job(i18n.tr("Delete objects"), null) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               for (int i = 0; i < objects.length; i++)
-               {
-                  session.deleteObject(((AbstractObject)objects[i]).getObjectId());
-               }
-            }
-            
-            @Override
-            protected String getErrorMessage()
-            {
-               return i18n.tr("Cannot delete object");
-            }
-         }.start();
-      }
+      String question = (objects.length == 1) ?
+         String.format(i18n.tr("Are you sure you want to delete \"%s\"?"), ((AbstractObject)objects[0]).getObjectName()) :
+         String.format(i18n.tr("Are you sure you want to delete %d objects?"), objects.length);
+      if (!MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("Confirm Delete"), question))
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Delete objects"), view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            for(int i = 0; i < objects.length; i++)
+               session.deleteObject(((AbstractObject)objects[i]).getObjectId());
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot delete object");
+         }
+      }.start();
    }
 
    /**
