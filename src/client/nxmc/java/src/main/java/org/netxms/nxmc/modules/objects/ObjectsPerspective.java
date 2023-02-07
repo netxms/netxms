@@ -120,10 +120,10 @@ public abstract class ObjectsPerspective extends Perspective
    /**
     * Create new object perspective
     *
-    * @param id
-    * @param name
-    * @param image
-    * @param subtreeType
+    * @param id perspective ID
+    * @param name perspective name
+    * @param image perspective icon
+    * @param subtreeType object subtree type
     */
    protected ObjectsPerspective(String id, String name, Image image, SubtreeType subtreeType)
    {
@@ -352,9 +352,9 @@ public abstract class ObjectsPerspective extends Perspective
          item.dispose();
 
       addObjectMenu(i18n.tr("Tools"), ObjectMenuFactory.createToolsMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
-      addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Graphs"), ObjectMenuFactory.createGraphTemplatesMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
-      addObjectMenu(i18n.tr("S&ummary tables"), ObjectMenuFactory.createSummaryTableMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Summary Tables"), ObjectMenuFactory.createSummaryTableMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Create"), new ObjectCreateMenuManager(getWindow().getShell(), null, object));
    }
 
