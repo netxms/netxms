@@ -47,6 +47,7 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
@@ -99,10 +100,10 @@ public final class ObjectMenuFactory
     */
    public static Menu createPollMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
 	{
-      if (((IStructuredSelection)selection).size() > 1)
+      if (selection.size() > 1)
          return null;
 
-		final AbstractObject object = (AbstractObject)((IStructuredSelection)selection).getFirstElement();
+      final AbstractObject object = (AbstractObject)selection.getFirstElement();
       if (!(object instanceof PollingTarget))
          return null;
 
@@ -120,12 +121,12 @@ public final class ObjectMenuFactory
       {
          addPollMenuItem(menu, object, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
-      else if (object instanceof BusinessService || object instanceof Cluster)
+      else if ((object instanceof BusinessService) || (object instanceof Cluster))
 		{
          addPollMenuItem(menu, object, ObjectPollType.STATUS, viewPlacement);
          addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
 		}
-      else if ((object instanceof Container) || (object instanceof Template))
+      else if ((object instanceof Container) || (object instanceof Dashboard) || (object instanceof Template))
       {
          addPollMenuItem(menu, object, ObjectPollType.AUTOBIND, viewPlacement);
       }
