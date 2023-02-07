@@ -157,32 +157,36 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionRename = new Action(i18n.tr("Rename")) {
-         @Override
-         public void run()
-         {
-            Object element = null;
-            Control control = objectViewer.getControl();
-            if (control instanceof Tree)
+      if (objectViewer != null)
+      {
+         actionRename = new Action(i18n.tr("Rename")) {
+            @Override
+            public void run()
             {
-               TreeItem[] selection = ((Tree)control).getSelection();
-               if (selection.length != 1)
-                  return;
-               element = selection[0].getData();
+               Object element = null;
+               Control control = objectViewer.getControl();
+               if (control instanceof Tree)
+               {
+                  TreeItem[] selection = ((Tree)control).getSelection();
+                  if (selection.length != 1)
+                     return;
+                  element = selection[0].getData();
+               }
+               else if (control instanceof Table)
+               {
+                  TableItem[] selection = ((Table)control).getSelection();
+                  if (selection.length != 1)
+                     return;
+                  element = selection[0].getData();
+               }
+               if (element != null)
+               {
+                  objectViewer.editElement(element, 0);
+               }
             }
-            else if (control instanceof Table)
-            {
-               TableItem[] selection = ((Table)control).getSelection();
-               if (selection.length != 1)
-                  return;
-               element = selection[0].getData();
-            }
-            if (element != null)
-            {
-               objectViewer.editElement(element, 0);
-            }
-         }
-      };
+         };
+         view.addKeyBinding("F2", actionRename);
+      }
 
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
@@ -372,7 +376,6 @@ public class ObjectContextMenuManager extends MenuManager
       if (singleObject && (objectViewer != null))
       {
          add(actionRename);
-         view.addKeyBinding("F2", actionRename);
       }
       add(actionDelete);
       add(new Separator());
