@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Juniper Networks switches
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -221,7 +221,7 @@ VlanList *JuniperDriver::getVlans(SNMP_Transport *snmp, NObject *node, DriverDat
    const SNMP_Variable *v;
    while((v = vlanTable->getNext(oid)) != nullptr)
    {
-      VlanInfo *vlan = new VlanInfo(v->getValueAsInt(), VLAN_PRM_IFINDEX);
+      VlanInfo *vlan = new VlanInfo(v->getValueAsInt(), VLAN_PRM_BPORT);
       vlans->add(vlan);
 
       oid = v->getName();
