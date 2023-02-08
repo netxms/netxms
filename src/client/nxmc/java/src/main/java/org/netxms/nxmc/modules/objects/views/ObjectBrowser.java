@@ -35,7 +35,6 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
@@ -76,7 +75,7 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectBrowser extends NavigationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectBrowser.class);
-   
+
    private SubtreeType subtreeType;
    private ObjectTree objectTree;
 
@@ -132,14 +131,7 @@ public class ObjectBrowser extends NavigationView
          }
       }, ColumnViewerEditor.DEFAULT);
 
-      TextCellEditor editor = new TextCellEditor(treeViewer.getTree(), SWT.BORDER) {
-         @Override
-         protected Control createControl(Composite parent)
-         {
-            objectTree.disableRefresh();
-            return super.createControl(parent);
-         }
-      };
+      TextCellEditor editor = new TextCellEditor(treeViewer.getTree(), SWT.BORDER);
       editor.addListener(new ICellEditorListener() {
          @Override
          public void editorValueChanged(boolean oldValidState, boolean newValidState)
@@ -164,6 +156,8 @@ public class ObjectBrowser extends NavigationView
          @Override
          public void modify(Object element, String property, Object value)
          {
+            objectTree.enableRefresh();
+
             final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
             if (property.equals("name") && (data instanceof AbstractObject))
             {
@@ -183,7 +177,6 @@ public class ObjectBrowser extends NavigationView
                   }
                }.start();
             }
-            objectTree.enableRefresh();
          }
 
          @Override

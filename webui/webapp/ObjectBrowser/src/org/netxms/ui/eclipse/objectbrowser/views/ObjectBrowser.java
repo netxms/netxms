@@ -56,7 +56,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
@@ -244,15 +243,7 @@ public class ObjectBrowser extends ViewPart
          }
       }, ColumnViewerEditor.DEFAULT);
 
-      TextCellEditor editor = new TextCellEditor(treeViewer.getTree(), SWT.BORDER) {
-         @Override
-         protected Control createControl(Composite parent)
-         {
-            objectTree.disableRefresh();
-            return super.createControl(parent);
-         }
-
-      };
+      TextCellEditor editor = new TextCellEditor(treeViewer.getTree(), SWT.BORDER);
 		editor.addListener(new ICellEditorListener() {
          @Override
          public void editorValueChanged(boolean oldValidState, boolean newValidState)
@@ -277,8 +268,9 @@ public class ObjectBrowser extends ViewPart
          @Override
          public void modify(Object element, String property, Object value)
          {
-            final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
+            objectTree.enableRefresh();
 
+            final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
             if (property.equals("name") && (data instanceof AbstractObject)) //$NON-NLS-1$
             {
                final NXCSession session = ConsoleSharedData.getSession();
@@ -297,7 +289,6 @@ public class ObjectBrowser extends ViewPart
                   }
                }.start();
             }
-            objectTree.enableRefresh();
          }
 
          @Override
@@ -318,7 +309,7 @@ public class ObjectBrowser extends ViewPart
             return true;
          }
       });
-		
+
 		activateContext();
 		restoreSelection();
 	}
