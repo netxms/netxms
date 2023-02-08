@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -412,9 +412,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       radioActiveDiscoveryInterval = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoveryInterval.setText(i18n.tr("Interval"));
       radioActiveDiscoveryInterval.addSelectionListener(listener);
-      gd = new GridData();
-      radioActiveDiscoveryInterval.setLayoutData(gd);
-      
+
       radioActiveDiscoverySchedule = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoverySchedule.setText(i18n.tr("Schedule"));
       radioActiveDiscoverySchedule.addSelectionListener(listener);
@@ -436,7 +434,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             setModified();
          }
       });
-      
+
       activeDiscoverySchedule = new LabeledText(clientArea, SWT.NONE, SWT.SINGLE | SWT.BORDER);
       activeDiscoverySchedule.setLabel(i18n.tr("Active discovery schedule"));
       activeDiscoverySchedule.setBackground(clientArea.getBackground());
@@ -519,7 +517,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.verticalSpan = 3;
-      gd.heightHint = 200;
+      gd.heightHint = 300;
       filterAddressList.getTable().setLayoutData(gd);
       filterAddressList.getTable().setSortDirection(SWT.UP);
       filterAddressList.setContentProvider(new ArrayContentProvider());
@@ -646,6 +644,8 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
       section.setLayoutData(gd);
 
       Composite clientArea = section.getClient();

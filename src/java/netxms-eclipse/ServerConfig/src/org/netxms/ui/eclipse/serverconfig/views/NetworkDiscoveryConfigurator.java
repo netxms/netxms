@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -298,7 +298,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       });
       gd = new GridData();
       gd.verticalIndent = 10;
-      checkEnableTCPProbing.setLayoutData(gd);     
+      checkEnableTCPProbing.setLayoutData(gd);
 
       checkUseSnmpTraps = new Button(clientArea, SWT.CHECK);
       checkUseSnmpTraps.setText(Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery);
@@ -428,9 +428,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioActiveDiscoveryInterval = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoveryInterval.setText("Interval");
       radioActiveDiscoveryInterval.addSelectionListener(listener);
-      gd = new GridData();
-      radioActiveDiscoveryInterval.setLayoutData(gd);
-      
+
       radioActiveDiscoverySchedule = new Button(clientArea, SWT.RADIO);
       radioActiveDiscoverySchedule.setText("Schedule");
       radioActiveDiscoverySchedule.addSelectionListener(listener);
@@ -452,7 +450,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             setModified();
          }
       });
-      
+
       activeDiscoverySchedule = new LabeledText(clientArea, SWT.NONE, SWT.SINGLE | SWT.BORDER);
       activeDiscoverySchedule.setLabel("Active discovery schedule");
       activeDiscoverySchedule.setBackground(clientArea.getBackground());
@@ -535,7 +533,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.verticalSpan = 3;
-      gd.heightHint = 200;
+      gd.heightHint = 300;
       filterAddressList.getTable().setLayoutData(gd);
       filterAddressList.getTable().setSortDirection(SWT.UP);
       filterAddressList.setContentProvider(new ArrayContentProvider());
@@ -662,6 +660,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
       section.setLayoutData(gd);
 
       Composite clientArea = section.getClient();
