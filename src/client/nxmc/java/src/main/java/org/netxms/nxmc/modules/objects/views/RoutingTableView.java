@@ -164,6 +164,7 @@ public class RoutingTableView extends ObjectView
    @Override
    public void refresh()
    {
+      final String objectName = session.getObjectName(getObjectId());
 	   new Job(i18n.tr("Read routing table"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -181,7 +182,7 @@ public class RoutingTableView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot get routing table for node %s"), session.getObjectName(getObjectId()));
+            return String.format(i18n.tr("Cannot get routing table for node %s"), objectName);
          }
       }.start();
 	}
