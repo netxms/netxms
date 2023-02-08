@@ -16,14 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.dialogs;
+package org.netxms.nxmc.modules.objects.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -36,41 +34,44 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.Interface;
-import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.dialogs.helpers.InterfaceDciInfo;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.dialogs.helpers.InterfaceDciInfo;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for creating DCIs for network interface
  */
 public class CreateInterfaceDciDialog extends Dialog
 {
-	private static final String[] names = 
+   private static final boolean[] DEFAULT_ENABLED = { true, true, false, false, false, false, false, false };
+
+   private final I18n i18n = LocalizationHelper.getI18n(CreateInterfaceDciDialog.class);
+   private final String[] names =
 		{ 
-			Messages.get().CreateInterfaceDciDialog_InBytes,
-			Messages.get().CreateInterfaceDciDialog_OutBytes,
-			Messages.get().CreateInterfaceDciDialog_InBits,
-			Messages.get().CreateInterfaceDciDialog_OutBits,
-			Messages.get().CreateInterfaceDciDialog_InPackets, 
-			Messages.get().CreateInterfaceDciDialog_OutPackets,
-			Messages.get().CreateInterfaceDciDialog_InErrors,
-			Messages.get().CreateInterfaceDciDialog_OutErrors
+		   i18n.tr("Inbound traffic (bytes)"),
+         i18n.tr("Outbound traffic (bytes)"),
+         i18n.tr("Inbound traffic (bits)"),
+         i18n.tr("Outbound traffic (bits)"),
+         i18n.tr("Inbound traffic (packets)"),
+         i18n.tr("Outbound traffic (packets)"),
+         i18n.tr("Input errors"),
+         i18n.tr("Output errors")
 		};
-	private static final String[] descriptions = 
+   private final String[] descriptions = 
 		{ 
-			Messages.get().CreateInterfaceDciDialog_InBytesDescr,
-			Messages.get().CreateInterfaceDciDialog_OutBytesDescr,
-			Messages.get().CreateInterfaceDciDialog_InBitsDescr,
-			Messages.get().CreateInterfaceDciDialog_OutBitsDescr,
-			Messages.get().CreateInterfaceDciDialog_InPacketsDescr, 
-			Messages.get().CreateInterfaceDciDialog_OutPacketsDescr,
-			Messages.get().CreateInterfaceDciDialog_InErrorsDescr,
-			Messages.get().CreateInterfaceDciDialog_OutErrorsDescr
+			i18n.tr("Inbound traffic on @@ifName@@"),
+         i18n.tr("Outbound traffic on @@ifName@@"),
+         i18n.tr("Inbound traffic on @@ifName@@"),
+         i18n.tr("Outbound traffic on @@ifName@@"),
+         i18n.tr("Inbound traffic on @@ifName@@"),
+         i18n.tr("Outbound traffic on @@ifName@@"),
+         i18n.tr("Input error rate on @@ifName@@"),
+         i18n.tr("Output error rate on @@ifName@@")
 		};
-	private static final boolean[] DEFAULT_ENABLED = { true, true, false, false, false, false, false, false };
 
 	private Interface object;
 	private InterfaceDciForm[] forms = new InterfaceDciForm[names.length];
@@ -101,7 +102,7 @@ public class CreateInterfaceDciDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(Messages.get().CreateInterfaceDciDialog_Title);
+      newShell.setText(i18n.tr("Create Interface DCI"));
    }
 
    /**
@@ -112,37 +113,20 @@ public class CreateInterfaceDciDialog extends Dialog
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
 
-		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      final PreferenceStore settings = PreferenceStore.getInstance();
 		final boolean enabled[] = new boolean[DEFAULT_ENABLED.length];
       final boolean delta[] = new boolean[DEFAULT_ENABLED.length];
 		for(int i = 0; i < enabled.length; i++)
 		{
-		   String v = settings.get("CreateInterfaceDciDialog.enabled_" + i); //$NON-NLS-1$
-		   if (v != null)
-		   {
-		      enabled[i] = Boolean.parseBoolean(v);
-		   }
-		   else
-		   {
-		      enabled[i] = DEFAULT_ENABLED[i];
-		   }
-
-         v = settings.get("CreateInterfaceDciDialog.delta_" + i); //$NON-NLS-1$
-         if (v != null)
-         {
-            delta[i] = Boolean.parseBoolean(v);
-         }
-         else
-         {
-            delta[i] = true;
-         }
+         enabled[i] = settings.getAsBoolean("CreateInterfaceDciDialog.enabled_" + i, DEFAULT_ENABLED[i]);
+         delta[i] = settings.getAsBoolean("CreateInterfaceDciDialog.delta_" + i, true);
 		}
 
 		GridLayout layout = new GridLayout();
 		dialogArea.setLayout(layout);
 
 		Group dataGroup = new Group(dialogArea, SWT.NONE);
-		dataGroup.setText(Messages.get().CreateInterfaceDciDialog_Data);
+      dataGroup.setText(i18n.tr("Data"));
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -162,7 +146,7 @@ public class CreateInterfaceDciDialog extends Dialog
          }
 
 			forms[i] = new InterfaceDciForm(dataGroup, names[i], 
-               (object != null) ? descriptions[i].replaceAll("@@ifName@@", object.getObjectName()) : descriptions[i], enabled[i], delta[i]); //$NON-NLS-1$
+               (object != null) ? descriptions[i].replaceAll("@@ifName@@", object.getObjectName()) : descriptions[i], enabled[i], delta[i]);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
@@ -170,7 +154,7 @@ public class CreateInterfaceDciDialog extends Dialog
 		}
 
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText(Messages.get().CreateInterfaceDciDialog_Options);
+      optionsGroup.setText(i18n.tr("Options"));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -179,21 +163,11 @@ public class CreateInterfaceDciDialog extends Dialog
 		layout.numColumns = 2;
 		layout.makeColumnsEqualWidth = true;
 		optionsGroup.setLayout(layout);
-		
-		int savedPollingScheduleType;
-		try
-		{
-         savedPollingScheduleType = settings.getInt("CreateInterfaceDciDialog.pollingScheduleType");
-		}
-      catch(NumberFormatException e)
-      {
-         savedPollingScheduleType = DataCollectionObject.POLLING_SCHEDULE_DEFAULT;
-      }
 
-      pollingScheduleTypeSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, "Polling interval", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      pollingScheduleTypeSelector.add("Default");
-      pollingScheduleTypeSelector.add("Custom");
-      pollingScheduleTypeSelector.select(savedPollingScheduleType);
+      pollingScheduleTypeSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Polling interval"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      pollingScheduleTypeSelector.add(i18n.tr("Default"));
+      pollingScheduleTypeSelector.add(i18n.tr("Custom"));
+      pollingScheduleTypeSelector.select(settings.getAsInteger("CreateInterfaceDciDialog.pollingScheduleType", DataCollectionObject.POLLING_SCHEDULE_DEFAULT));
       pollingScheduleTypeSelector.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -202,21 +176,11 @@ public class CreateInterfaceDciDialog extends Dialog
          }
       });
 
-      int savedRetentionType;
-      try
-      {
-         savedRetentionType = settings.getInt("CreateInterfaceDciDialog.retentionType");
-      }
-      catch(NumberFormatException e)
-      {
-         savedRetentionType = DataCollectionObject.RETENTION_DEFAULT;
-      }
-
-      retentionTypeSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, "Retention time", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      retentionTypeSelector.add(Messages.get().General_UseDefaultRetention);
-      retentionTypeSelector.add(Messages.get().General_UseCustomRetention);
-      retentionTypeSelector.add(Messages.get().General_NoStorage);
-      retentionTypeSelector.select(savedRetentionType);
+      retentionTypeSelector = WidgetHelper.createLabeledCombo(optionsGroup, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Retention time"), WidgetHelper.DEFAULT_LAYOUT_DATA);
+      retentionTypeSelector.add(i18n.tr("Use default retention time"));
+      retentionTypeSelector.add(i18n.tr("Use custom retention time"));
+      retentionTypeSelector.add(i18n.tr("Do not save collected data to database"));
+      retentionTypeSelector.select(settings.getAsInteger("CreateInterfaceDciDialog.retentionType", DataCollectionObject.RETENTION_DEFAULT));
       retentionTypeSelector.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -226,9 +190,8 @@ public class CreateInterfaceDciDialog extends Dialog
       });
 
       textInterval = new LabeledText(optionsGroup, SWT.NONE);
-      textInterval.setLabel("Custom polling interval (seconds)");
-      String v = settings.get("CreateInterfaceDciDialog.pollingInterval"); //$NON-NLS-1$
-      textInterval.setText((v != null) ? v : "60"); //$NON-NLS-1$
+      textInterval.setLabel(i18n.tr("Custom polling interval (seconds)"));
+      textInterval.setText(Integer.toString(settings.getAsInteger("CreateInterfaceDciDialog.pollingInterval", 60)));
       textInterval.getTextControl().setTextLimit(5);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -237,9 +200,8 @@ public class CreateInterfaceDciDialog extends Dialog
       textInterval.setEnabled(false);
 
       textRetention = new LabeledText(optionsGroup, SWT.NONE);
-      textRetention.setLabel("Custom retention time (days)");
-      v = settings.get("CreateInterfaceDciDialog.retentionTime"); //$NON-NLS-1$
-      textRetention.setText((v != null) ? v : "30"); //$NON-NLS-1$
+      textRetention.setLabel(i18n.tr("Custom retention time (days)"));
+      textRetention.setText(Integer.toString(settings.getAsInteger("CreateInterfaceDciDialog.retentionTime", 30)));
       textRetention.getTextControl().setTextLimit(5);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -256,7 +218,7 @@ public class CreateInterfaceDciDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-      final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      final PreferenceStore settings = PreferenceStore.getInstance();
 
       pollingScheduleType = pollingScheduleTypeSelector.getSelectionIndex();
       try
@@ -268,7 +230,7 @@ public class CreateInterfaceDciDialog extends Dialog
       catch(NumberFormatException e)
       {
          if (pollingScheduleType == DataCollectionObject.POLLING_SCHEDULE_CUSTOM)
-            MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDciDialog_Error, Messages.get().CreateInterfaceDciDialog_BadPollingInterval);
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Please enter polling pollingInterval as integer in range 2 .. 10000"));
          else
             pollingInterval = 60;
       }
@@ -283,23 +245,23 @@ public class CreateInterfaceDciDialog extends Dialog
       catch(NumberFormatException e)
       {
          if (retentionType == DataCollectionObject.RETENTION_CUSTOM)
-            MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDciDialog_Error, Messages.get().CreateInterfaceDciDialog_BadRetentionTime);
+            MessageDialogHelper.openError(getShell(), i18n.tr("Error"), i18n.tr("Please enter retention time as integer in range 1 .. 10000"));
          else
             retentionTime = 30;
       }
 
-      settings.put("CreateInterfaceDciDialog.pollingScheduleType", pollingScheduleType); //$NON-NLS-1$
-		settings.put("CreateInterfaceDciDialog.pollingInterval", pollingInterval); //$NON-NLS-1$
-      settings.put("CreateInterfaceDciDialog.retentionType", retentionType); //$NON-NLS-1$
-      settings.put("CreateInterfaceDciDialog.retentionTime", retentionTime); //$NON-NLS-1$
+      settings.set("CreateInterfaceDciDialog.pollingScheduleType", pollingScheduleType);
+      settings.set("CreateInterfaceDciDialog.pollingInterval", pollingInterval);
+      settings.set("CreateInterfaceDciDialog.retentionType", retentionType);
+      settings.set("CreateInterfaceDciDialog.retentionTime", retentionTime);
 
 		dciInfo = new InterfaceDciInfo[forms.length];
 		for(int i = 0; i < forms.length; i++)
 		{
          dciInfo[i] = new InterfaceDciInfo(forms[i].isDciEnabled(), forms[i].isDelta(), forms[i].getDescription());
-			settings.put("CreateInterfaceDciDialog.enabled_" + i, forms[i].isDciEnabled()); //$NON-NLS-1$
-         settings.put("CreateInterfaceDciDialog.delta_" + i, forms[i].isDelta()); //$NON-NLS-1$
-         settings.put("CreateInterfaceDciDialog.description_" + i, forms[i].getDescription()); //$NON-NLS-1$
+         settings.set("CreateInterfaceDciDialog.enabled_" + i, forms[i].isDciEnabled());
+         settings.set("CreateInterfaceDciDialog.delta_" + i, forms[i].isDelta());
+         settings.set("CreateInterfaceDciDialog.description_" + i, forms[i].getDescription());
 		}
 
 		super.okPressed();
@@ -378,7 +340,7 @@ public class CreateInterfaceDciDialog extends Dialog
 			checkEnable.setSelection(enabled);
 			
 			checkDelta = new Button(buttonRow, SWT.CHECK);
-			checkDelta.setText(Messages.get().CreateInterfaceDciDialog_Delta);
+         checkDelta.setText(i18n.tr("Delta value (average per second)"));
          checkDelta.setSelection(delta);
 			checkDelta.setEnabled(enabled);
 			gd = new GridData();
@@ -395,9 +357,9 @@ public class CreateInterfaceDciDialog extends Dialog
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			textRow.setLayoutData(gd);
-			
-			new Label(textRow, SWT.NONE).setText(Messages.get().CreateInterfaceDciDialog_Description);
-			
+
+         new Label(textRow, SWT.NONE).setText(i18n.tr("Description:"));
+
 			description = new Text(textRow, SWT.BORDER);
 			description.setText(defaultDescription);
 			description.setTextLimit(255);
@@ -406,8 +368,8 @@ public class CreateInterfaceDciDialog extends Dialog
 			gd.grabExcessHorizontalSpace = true;
 			description.setLayoutData(gd);
 			description.setEnabled(enabled);
-			
-			checkEnable.addSelectionListener(new SelectionListener() {
+
+         checkEnable.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
@@ -415,15 +377,9 @@ public class CreateInterfaceDciDialog extends Dialog
 					checkDelta.setEnabled(enabled);
 					description.setEnabled(enabled);
 				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
-				}
 			});
 		}
-		
+
 		/**
 		 * @return
 		 */

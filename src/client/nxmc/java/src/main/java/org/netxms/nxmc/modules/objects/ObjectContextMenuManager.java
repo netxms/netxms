@@ -49,6 +49,7 @@ import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -67,6 +68,7 @@ import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
+import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
@@ -106,6 +108,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemove;
    private Action actionAddNode;
    private Action actionRemoveNode;
+   private Action actionCreateInterfaceDCI;
 
    /**
     * Create new object context menu manager.
@@ -315,6 +318,8 @@ public class ObjectContextMenuManager extends MenuManager
             removeNodeFromCluster();
          }
       };
+
+      actionCreateInterfaceDCI = new CreateInterfaceDciAction(i18n.tr("Create data collection items..."), view, selectionProvider);
    }
 
    /**
@@ -459,6 +464,29 @@ public class ObjectContextMenuManager extends MenuManager
       {
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("S&ummary tables"), summaryTableMenu));
+      }
+
+      if (singleObject && (getObjectFromSelection() instanceof Interface))
+      {
+         add(new Separator());
+         add(actionCreateInterfaceDCI);
+      }
+      else
+      {
+         boolean onlyInterfaces = true;
+         for(Object o : selection.toList())
+         {
+            if (!(o instanceof Interface))
+            {
+               onlyInterfaces = false;
+               break;
+            }
+         }
+         if (onlyInterfaces)
+         {
+            add(new Separator());
+            add(actionCreateInterfaceDCI);
+         }
       }
 
       if (singleObject)
@@ -859,7 +887,7 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
-    * Bind selected object to another object
+    * Bind selected objects to another object
     */
    private void bindToObject()
    {

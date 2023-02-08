@@ -19,10 +19,8 @@
 package org.netxms.ui.eclipse.datacollection.actions;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
@@ -32,10 +30,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IViewReference;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -44,14 +39,12 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
-import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.dialogs.CreateInterfaceDciDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.helpers.InterfaceDciInfo;
-import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -88,88 +81,81 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 	public void run(IAction action)
 	{
 		final CreateInterfaceDciDialog dlg = new CreateInterfaceDciDialog(shell, (objects.size() == 1) ? objects.get(0) : null);
-		if (dlg.open() == Window.OK)
-		{
-			final List<Interface> ifaces = new ArrayList<Interface>(objects);
-			
-			// Get set of nodes
-			final Set<AbstractNode> nodes = new HashSet<AbstractNode>();
-			for(Interface iface : ifaces)
-			{
-				AbstractNode node = iface.getParentNode();
-				if (node != null)
-				{
-					nodes.add(node);
-				}
-			}
-			
-			// Check what nodes requires DCI list lock
-			final Map<Long, Boolean> lockRequired = new HashMap<Long, Boolean>(nodes.size());
-			final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-			for(AbstractNode n : nodes)
-			{
-				IViewReference ref = page.findViewReference(DataCollectionEditor.ID, Long.toString(n.getObjectId()));
-				lockRequired.put(n.getObjectId(), !((ref != null) && (ref.getView(false) != null)));
-			}
-			
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.get().CreateInterfraceDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().CreateInterfraceDci_JobError;
-				}
+		if (dlg.open() != Window.OK)
+		   return;
 
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					InterfaceDciInfo[] dciInfo = dlg.getDciInfo();
-					monitor.beginTask(Messages.get().CreateInterfraceDci_TaskName, ifaces.size() * dciInfo.length);
-					for(int i = 0; i < ifaces.size(); i++)
-					{
-						for(int j = 0; j < dciInfo.length; j++)
-						{
-							if (dciInfo[j].enabled)
-							{
-								createInterfaceDci(session, ifaces.get(i), j, dciInfo[j], dlg.getPollingInterval(), 
-										dlg.getRetentionTime(), ifaces.size() > 1, lockRequired);
-							}
-							monitor.worked(1);
-						}
-					}
-					monitor.done();
-				}
-			}.start();
+		final List<Interface> ifaces = new ArrayList<Interface>(objects);
+
+		// Get set of nodes
+		final Set<AbstractNode> nodes = new HashSet<AbstractNode>();
+		for(Interface iface : ifaces)
+		{
+			AbstractNode node = iface.getParentNode();
+			if (node != null)
+			{
+				nodes.add(node);
+			}
 		}
+
+      final NXCSession session = ConsoleSharedData.getSession();
+      final String taskName = Messages.get().CreateInterfraceDci_TaskName;
+		new ConsoleJob(Messages.get().CreateInterfraceDci_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
+			@Override
+			protected void runInternal(IProgressMonitor monitor) throws Exception
+			{
+				InterfaceDciInfo[] dciInfo = dlg.getDciInfo();
+            monitor.beginTask(taskName, ifaces.size() * dciInfo.length);
+				for(int i = 0; i < ifaces.size(); i++)
+				{
+					for(int j = 0; j < dciInfo.length; j++)
+					{
+						if (dciInfo[j].enabled)
+						{
+							createInterfaceDci(session, ifaces.get(i), j, dciInfo[j], dlg.getPollingScheduleType(), dlg.getPollingInterval(), 
+                           dlg.getRetentionType(), dlg.getRetentionTime(), ifaces.size() > 1);
+						}
+						monitor.worked(1);
+					}
+				}
+				monitor.done();
+			}
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().CreateInterfraceDci_JobError;
+         }
+		}.start();
 	}
 
-	/**
-	 * @param iface
-	 * @param dciType
-	 * @param dciInfo
-	 * @throws Exception
-	 */
-	private static void createInterfaceDci(NXCSession session, Interface iface, int dciType, InterfaceDciInfo dciInfo, int pollingInterval,
-			int retentionTime, boolean updateDescription, Map<Long, Boolean> lockRequired) throws Exception
+   /**
+    * Create interface DCI
+    *
+    * @param session client session
+    * @param iface interface object
+    * @param dciType DCI type
+    * @param dciInfo DCI information
+    * @param pollingScheduleType polling schedule type
+    * @param pollingInterval
+    * @param retentionType
+    * @param retentionTime
+    * @param updateDescription
+    * @param lockRequired
+    * @throws Exception
+    */
+   private static void createInterfaceDci(NXCSession session, Interface iface, int dciType, InterfaceDciInfo dciInfo, int pollingScheduleType, int pollingInterval, int retentionType,
+         int retentionTime, boolean updateDescription) throws Exception
 	{
 		AbstractNode node = iface.getParentNode();
 		if (node == null)
 			throw new NXCException(RCC.INTERNAL_ERROR);		
-		
-		DataCollectionConfiguration dcc;
-		if (lockRequired.get(node.getObjectId()))
-		{
-			dcc = session.openDataCollectionConfiguration(node.getObjectId());
-		}
-		else
-		{
-			dcc = new DataCollectionConfiguration(session, node.getObjectId());
-		}
+
+      DataCollectionConfiguration dcc = new DataCollectionConfiguration(session, node.getObjectId());
 
 		final DataCollectionItem dci = new DataCollectionItem(dcc, 0);
-		dci.setPollingScheduleType(DataCollectionObject.POLLING_SCHEDULE_CUSTOM);
+      dci.setPollingScheduleType(pollingScheduleType);
 		dci.setPollingInterval(Integer.toString(pollingInterval));
-		dci.setRetentionType(DataCollectionObject.RETENTION_CUSTOM);
+      dci.setRetentionType(retentionType);
 		dci.setRetentionTime(Integer.toString(retentionTime));
 		if (node.hasAgent())
 		{
@@ -191,7 +177,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		dci.setDescription(updateDescription ? dciInfo.description.replaceAll("@@ifName@@", iface.getObjectName()) : dciInfo.description); //$NON-NLS-1$
 		dci.setDeltaCalculation(dciInfo.delta ? DataCollectionItem.DELTA_AVERAGE_PER_SECOND : DataCollectionItem.DELTA_NONE);
 		dci.setRelatedObject(iface.getObjectId());
-		
+
       if (dci.getOrigin() == DataOrigin.AGENT)
 		{
 			switch(dciType)
@@ -249,11 +235,11 @@ public class CreateInterfraceDci implements IObjectActionDelegate
       {
          case IFDCI_OUT_BYTES:
          case IFDCI_IN_BYTES:
-            dci.setUnitName(dciInfo.delta ? "B/s" : "B"); //$NON-NLS-1$ //$NON-NLS-2$
+            dci.setUnitName(dciInfo.delta ? "B/s" : "B (Metric)"); //$NON-NLS-1$ //$NON-NLS-2$
             break;
          case IFDCI_OUT_BITS:
          case IFDCI_IN_BITS:
-            dci.setUnitName(dciInfo.delta ? "b/s" : "b"); //$NON-NLS-1$ //$NON-NLS-2$
+            dci.setUnitName(dciInfo.delta ? "b/s" : "b (Metric)"); //$NON-NLS-1$ //$NON-NLS-2$
             break;
          case IFDCI_OUT_PACKETS:
          case IFDCI_IN_PACKETS:
@@ -264,20 +250,15 @@ public class CreateInterfraceDci implements IObjectActionDelegate
             dci.setUnitName(dciInfo.delta ? "errors/s" : "errors"); //$NON-NLS-1$ //$NON-NLS-2$
             break;
       }
-		
+
 		if ((dciType == IFDCI_IN_BITS) || (dciType == IFDCI_OUT_BITS))
 		{
 		   dci.setTransformationScript("return $1 * 8;"); //$NON-NLS-1$
 		}
-		
+
 		dcc.modifyObject(dci);
-			
-		if (lockRequired.get(node.getObjectId()))
-		{
-			dcc.close();
-		}
 	}
-	
+
 	/**
 	 * @param iface
 	 * @return
