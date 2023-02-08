@@ -202,7 +202,7 @@ static void AddMetrics(StructArray<NETXMS_SUBAGENT_PARAM> *metrics, StructArray<
 	{
 		for(int i = 0; i < configurableQueries->getValueCount(); i++)
 		{
-         const TCHAR *queryConfig = queries->getValue(i);
+         const TCHAR *queryConfig = configurableQueries->getValue(i);
          Query *query;
 			if (AddConfigurableQueryFromConfig(queryConfig, &query))
 			{
