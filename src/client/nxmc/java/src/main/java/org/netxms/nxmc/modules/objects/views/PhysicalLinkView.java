@@ -63,7 +63,7 @@ public class PhysicalLinkView extends ObjectView
    @Override
    public int getPriority()
    {
-      return 55;
+      return 210;
    }
 
    /**

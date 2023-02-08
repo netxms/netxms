@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -81,6 +81,24 @@ public class OSPFView extends ObjectView
    public OSPFView()
    {
       super(i18n.tr("OSPF"), ResourceManager.getImageDescriptor("icons/object-views/ospf.png"), "OSPF", false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof Node) && ((Node)context).isOSPF();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 190;
    }
 
    /**
@@ -220,15 +238,6 @@ public class OSPFView extends ObjectView
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node) && ((Node)context).isOSPF();
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -246,14 +255,5 @@ public class OSPFView extends ObjectView
    {
       super.activate();
       refresh();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 190;
    }
 }

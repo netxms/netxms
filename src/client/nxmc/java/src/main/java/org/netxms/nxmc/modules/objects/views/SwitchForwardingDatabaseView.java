@@ -76,6 +76,24 @@ public class SwitchForwardingDatabaseView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof Node) && ((Node)context).isBridge();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 150;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -202,15 +220,6 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node) && ((Node)context).isBridge();
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -218,14 +227,5 @@ public class SwitchForwardingDatabaseView extends ObjectView
    {
       if (isActive())
          refresh();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 200;
    }
 }

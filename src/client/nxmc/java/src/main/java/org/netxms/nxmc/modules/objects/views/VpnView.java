@@ -58,6 +58,29 @@ public class VpnView extends NodeSubObjectTableView
    {
       super(i18n.tr("VPNs"), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), "VPNs", true);
    }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      if ((context != null) && (context instanceof AbstractNode))
+      {
+         return ((AbstractNode)context).hasVpnConnectors();
+      }
+      return false;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 60;
+   }
+
 	/**
 	 * Fill context menu
 	 * @param mgr Menu manager
@@ -110,33 +133,11 @@ public class VpnView extends NodeSubObjectTableView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 90;
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectView#needRefreshOnObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
       return (object instanceof VPNConnector) && object.isChildOf(getObjectId());
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {      
-      if ((context != null) && (context instanceof AbstractNode))
-      {
-         return ((AbstractNode)context).hasVpnConnectors();
-      }
-      return false;
    }
 }

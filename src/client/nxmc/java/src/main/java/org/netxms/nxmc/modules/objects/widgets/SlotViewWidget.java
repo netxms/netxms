@@ -139,7 +139,7 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	public void paintControl(PaintEvent e)
 	{
 		e.gc.drawText(slotName, HORIZONTAL_MARGIN, (getSize().y - nameSize.y) / 2);
-		
+
 		PortCalculator portCalculator = null;
 		switch(numberingScheme)
 		{
@@ -160,13 +160,13 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
             portCalculator = new PortCalculatorUpDownLeftRight(nameSize.x, rowCount);
             break;
 		}
-		
+
 		for(PortInfo p : ports)
 		{
 			drawPort(p, portCalculator.calculateNextPos(), e.gc);
 		}
 	}
-	
+
 	/**
 	 * Draw single port
 	 * 
@@ -178,9 +178,9 @@ public class SlotViewWidget extends Canvas implements PaintListener, MouseListen
 	{
 		final String label = Integer.toString(p.getPort());
 		Rectangle rect = new Rectangle(point.x, point.y, PORT_WIDTH, PORT_HEIGHT);
-		
+
 		finder.addPortLocation(rect, p);
-		
+
 		if (p.isHighlighted())
 		{
          gc.setBackground(colors.create(colorHighlight));

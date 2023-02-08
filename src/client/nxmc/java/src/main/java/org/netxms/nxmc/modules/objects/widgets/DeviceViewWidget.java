@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -231,7 +231,7 @@ public class DeviceViewWidget extends DashboardComposite
 	public void setHighlight(Port[] ports)
 	{
 		clearHighlight(false);
-		
+
 		for(Port p : ports)
 		{
 		   // Some devices has slots and ports numbering started at 0, so
@@ -256,7 +256,7 @@ public class DeviceViewWidget extends DashboardComposite
 				sv.addHighlight(p);
 			}
 		}
-		
+
 		for(SlotViewWidget sv : slots.values())
 			sv.redraw();
 	}
@@ -296,7 +296,7 @@ public class DeviceViewWidget extends DashboardComposite
 	{
 		selectionListeners.add(listener);
 	}
-	
+
 	/**
 	 * Remove selection listener
 	 * 

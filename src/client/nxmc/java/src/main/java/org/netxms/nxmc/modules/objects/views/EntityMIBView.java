@@ -83,6 +83,28 @@ public class EntityMIBView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      if ((context != null) && (context instanceof Node))
+      {
+         return (((Node)context).getCapabilities() & Node.NC_HAS_ENTITY_MIB) != 0;
+      }
+      return false;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 80;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -310,27 +332,5 @@ public class EntityMIBView extends ObjectView
       };
       job.setUser(false);
       job.start();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      if ((context != null) && (context instanceof Node))
-      {
-         return (((Node)context).getCapabilities() & Node.NC_HAS_ENTITY_MIB) != 0;
-      }
-      return false;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 60;
    }
 }

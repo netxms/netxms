@@ -79,7 +79,7 @@ public class ThresholdSummaryView extends ObjectView
     */
    public ThresholdSummaryView()
    {
-      super(i18n.tr("Thresholds"), ResourceManager.getImageDescriptor("icons/object-views/thresholds.gif"), "ThresholdSummary", true);
+      super(i18n.tr("Thresholds"), ResourceManager.getImageDescriptor("icons/object-views/thresholds.png"), "ThresholdSummary", true);
    }
 
    /**

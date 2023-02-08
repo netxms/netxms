@@ -78,7 +78,7 @@ public class PortView extends NodeSubObjectView implements ISelectionProvider
    @Override
    public int getPriority()
    {
-      return 70;
+      return 90;
    }
 
    /**

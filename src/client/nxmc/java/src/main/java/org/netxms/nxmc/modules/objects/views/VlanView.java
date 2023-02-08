@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.networkmaps.views.VlanMap;
 import org.netxms.nxmc.modules.objects.views.helpers.VlanLabelProvider;
-import org.netxms.nxmc.modules.objects.widgets.DeviceView;
+import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortSelectionListener;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -78,23 +78,39 @@ public class VlanView extends ObjectView
 	private NXCSession session;
 	private SortableTableViewer vlanList;
 	private ScrolledComposite scroller;
-	private DeviceView deviceView;
+   private DeviceViewWidget deviceView;
    private boolean objectsFullySync;
-
 	private Action actionShowVlanMap;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
-   
 
    /**
     * Create "Ports" view
     */
    public VlanView()
    {
-      super(i18n.tr("VLAN View"), ResourceManager.getImageDescriptor("icons/object-views/vlanview.gif"), "VLANView", false);
+      super(i18n.tr("VLANs"), ResourceManager.getImageDescriptor("icons/object-views/vlans.gif"), "VLANView", false);
       session = Registry.getSession();
       PreferenceStore store = PreferenceStore.getInstance();
       objectsFullySync = store.getAsBoolean("ObjectBrowser.FullSync", false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof Node) && ((Node)context).isBridge();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 160;
    }
 
    /**
@@ -127,7 +143,7 @@ public class VlanView extends ObjectView
 		   {
             IStructuredSelection selection = vlanList.getStructuredSelection();
 
-		      VlanInfo vlan = (VlanInfo)selection.getFirstElement();
+            VlanInfo vlan = (VlanInfo)selection.getFirstElement();
 		      if (vlan != null)
 		      {
 		         deviceView.setHighlight(vlan.getPorts());
@@ -138,7 +154,7 @@ public class VlanView extends ObjectView
 		         deviceView.clearHighlight(true);
 		         actionShowVlanMap.setEnabled(false);
 		      }
-            
+
 		      if (labelProvider.setSelectedPort(null))
             {
                vlanList.refresh();
@@ -168,7 +184,7 @@ public class VlanView extends ObjectView
 
 		scroller = new ScrolledComposite(deviceViewArea, SWT.H_SCROLL | SWT.V_SCROLL);
       scroller.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		deviceView = new DeviceView(scroller, SWT.NONE);
+      deviceView = new DeviceViewWidget(scroller, SWT.NONE);
 		deviceView.setPortStatusVisible(false);
 		deviceView.setNodeId(getObjectId());
 		deviceView.addSelectionListener(new PortSelectionListener() {
@@ -205,14 +221,14 @@ public class VlanView extends ObjectView
 	 */
 	private void createActions()
 	{		
-		actionShowVlanMap = new Action(i18n.tr("Show VLAN map")) {
+      actionShowVlanMap = new Action(i18n.tr("Show VLAN &map")) {
 			@Override
 			public void run()
 			{
 				showVlanMap();
 			}
 		};
-		
+
 		actionExportToCsv = new ExportToCsvAction(this, vlanList, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, vlanList, false);
 	}
@@ -223,7 +239,6 @@ public class VlanView extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
 	{
-		manager.add(actionShowVlanMap);
 		manager.add(actionExportAllToCsv);
 	}
 
@@ -335,24 +350,6 @@ public class VlanView extends ObjectView
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node) && ((Node)context).isBridge();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 200;
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -360,6 +357,9 @@ public class VlanView extends ObjectView
    {
       setVlans(new ArrayList<VlanInfo>());
       if (object != null)
+      {
+         deviceView.setNodeId(object.getObjectId());
          refresh();
+      }
    }
 }

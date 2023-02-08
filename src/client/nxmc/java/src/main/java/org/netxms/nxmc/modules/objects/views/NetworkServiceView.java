@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,28 @@ public class NetworkServiceView extends NodeSubObjectTableView
       super(i18n.tr("Network Services"), ResourceManager.getImageDescriptor("icons/object-views/network_service.png"), "Network Services", true);
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      if ((context != null) && (context instanceof AbstractNode))
+      {
+         return ((AbstractNode)context).hasNetworkServices();
+      }
+      return false;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 70;
+   }
+
 	/**
 	 * Fill context menu
 	 * @param mgr Menu manager
@@ -114,33 +136,11 @@ public class NetworkServiceView extends NodeSubObjectTableView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 90;
-   }
-
-   /**
     * @see org.netxms.nxmc.modules.objects.views.NodeSubObjectView#needRefreshOnObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    public boolean needRefreshOnObjectChange(AbstractObject object)
    {
       return (object instanceof NetworkService) && object.isChildOf(getObjectId());
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {      
-      if ((context != null) && (context instanceof AbstractNode))
-      {
-         return ((AbstractNode)context).hasNetworkServices();
-      }
-      return false;
    }
 }
