@@ -157,7 +157,7 @@ bool NetworkMapLink::update(const ObjLink& src)
 
    if (_tcscmp(CHECK_NULL_EX(m_connectorName2), src.port2))
    {
-      setConnector2Name(src.port1);
+      setConnector2Name(src.port2);
       modified = true;
    }
 
