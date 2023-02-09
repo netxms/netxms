@@ -1484,8 +1484,8 @@ InterfaceList *Node::getInterfaceList()
          }
 
          int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useAliases=%d, useIfXTable=%d)"),
-                  m_name, m_id, useAliases, useIfXTable);
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useAliases=%d, useIfXTable=%s)"),
+                  m_name, m_id, useAliases, useIfXTable ? _T("true") : _T("false"));
          pIfList = m_driver->getInterfaces(pTransport, this, m_driverData, useAliases, useIfXTable);
 
          if ((pIfList != nullptr) && (m_capabilities & NC_IS_BRIDGE))

@@ -542,7 +542,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          TCHAR buffer[256];
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
          if (!useIfXTable ||
-				 (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, buffer, sizeof(buffer), 0) != SNMP_ERR_SUCCESS))
+				 (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, sizeof(buffer), 0) != SNMP_ERR_SUCCESS))
          {
 		      _tcslcpy(buffer, iface->description, 256);
 		   }
@@ -569,7 +569,6 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 						else
 						{
 							TCHAR temp[MAX_DB_STRING];
-
 							_tcscpy(temp, iface->name);
 							_tcslcpy(iface->name, buffer, MAX_DB_STRING);
          				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
@@ -591,14 +590,14 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
          // Interface type
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->index);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &iface->type, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &iface->type, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->type = IFTYPE_OTHER;
 			}
 
          // Interface MTU
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%d"), iface->index);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &iface->mtu, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &iface->mtu, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->mtu = 0;
 			}

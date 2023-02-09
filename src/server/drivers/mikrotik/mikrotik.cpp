@@ -168,7 +168,7 @@ bool MikrotikDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node,
 InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
 {
     // Get interface list from standard MIB
-    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
+    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
     if (ifList == nullptr)
         return nullptr;
 
@@ -183,7 +183,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
          iface->bridgePort = iface->index;
       }
    }
-    return ifList;
+   return ifList;
 }
 
 /**
