@@ -839,7 +839,7 @@ bool AddExternalTable(ConfigEntry *config)
    td->cmdLine = MemCopyString(config->getSubEntryValue(_T("Command"), 0, _T("echo no command specified")));
    td->instanceColumns = SplitString(config->getSubEntryValue(_T("InstanceColumns"), 0, _T("")), _T(','), &td->instanceColumnCount);
    unique_ptr<ObjectArray<ConfigEntry>> columnTypes = config->getSubEntries(_T("ColumnType"));
-   if (columnTypes != NULL && columnTypes->size() > 0)
+   if ((columnTypes != nullptr) && !columnTypes->isEmpty())
    {
       ConfigEntry *configEntry = columnTypes->get(0);
       for (int i = 0; i < configEntry->getValueCount(); i++)
@@ -855,7 +855,7 @@ bool AddExternalTable(ConfigEntry *config)
             if ((*line != 0) && (*textDataType != 0))
             {
                int dataType = TextToDataType(textDataType);
-               td->columnDataTypes.set(line, dataType == -1 ? DCI_DT_INT : dataType);
+               td->columnDataTypes.set(line, (dataType == -1) ? DCI_DT_INT : dataType);
             }
          }
          MemFree(line);
@@ -867,8 +867,7 @@ bool AddExternalTable(ConfigEntry *config)
    }
    else
    {
-      AddTable(config->getName(), H_ExternalTable, reinterpret_cast<const TCHAR *>(td), *td->instanceColumns,
-               config->getSubEntryValue(_T("Description"), 0, _T("")), 0, nullptr);
+      AddTable(config->getName(), H_ExternalTable, reinterpret_cast<const TCHAR *>(td), *td->instanceColumns, config->getSubEntryValue(_T("Description"), 0, _T("")), 0, nullptr);
    }
    return true;
 }

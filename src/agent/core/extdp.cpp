@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -296,7 +296,7 @@ public:
  * Table provider constructor
  */
 TableProvider::TableProvider(const TCHAR *name, ExternalTableDefinition *definition, uint32_t pollingInterval, const TCHAR *description) :
-         ExternalDataProvider(&definition->cmdLine[1], pollingInterval)
+         ExternalDataProvider(definition->cmdLine, pollingInterval)
 {
    m_name = MemCopyString(name);
    m_description = MemCopyString(description);
@@ -320,7 +320,7 @@ TableProvider::~TableProvider()
  */
 ProcessExecutor *TableProvider::createExecutor()
 {
-   return new LineOutputProcessExecutor(m_command, m_definition->cmdLine[0] == 'S');
+   return new LineOutputProcessExecutor(m_command, true);
 }
 
 /**
