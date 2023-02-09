@@ -551,16 +551,31 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 		return requiredPollCount;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
-	 */
+   /**
+    * @see org.netxms.client.objects.AbstractObject#getNameWithAlias()
+    */
+   @Override
+   public String getNameWithAlias()
+   {
+      if ((alias == null) || alias.isEmpty())
+         return objectName;
+
+      // Interface name may already be concatenated with alias retrieved from network device
+      // If it is the same as alias configured in object avoid duplicating it in object name (issue NX-2222)
+      String aliasInBrackets = " (" + alias + ")";
+      return objectName.endsWith(aliasInBrackets) ? objectName : objectName + aliasInBrackets;
+   }
+
+   /**
+    * @see org.netxms.client.objects.GenericObject#getObjectClassName()
+    */
 	@Override
 	public String getObjectClassName()
 	{
 		return "Interface";
 	}
 
-	/* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
     */
    @Override
@@ -627,7 +642,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 		return peerInterfaceId;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.ZoneMember#getZoneId()
     */
    @Override
@@ -636,7 +651,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
       return zoneId;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.ZoneMember#getZoneName()
     */
    @Override
