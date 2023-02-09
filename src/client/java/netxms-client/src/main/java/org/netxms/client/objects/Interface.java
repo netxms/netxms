@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -643,7 +643,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	}
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneId()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneId()
     */
    @Override
    public int getZoneId()
@@ -652,7 +652,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
    }
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneName()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneName()
     */
    @Override
    public String getZoneName()
