@@ -11898,7 +11898,7 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
    if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
    {
 	   msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      sendMessage(&msg);
+      sendMessage(msg);
       return;
    }
 
@@ -11951,7 +11951,7 @@ void ClientSession::deleteLibraryImage(const NXCPMessage& request)
    DBConnectionPoolReleaseConnection(hdb);
 
 	msg.setField(VID_RCC, rcc);
-	sendMessage(&msg);
+	sendMessage(msg);
 
 	if (rcc == RCC_SUCCESS)
 	{
@@ -12030,10 +12030,7 @@ void ClientSession::listLibraryImages(const NXCPMessage& request)
  */
 void ClientSession::executeServerCommand(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+	NXCPMessage response(request.getId(), CMD_REQUEST_COMPLETED);
 
 	uint32_t nodeId = request.getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(nodeId);
@@ -12041,41 +12038,42 @@ void ClientSession::executeServerCommand(const NXCPMessage& request)
 	{
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
 		{
-			if (object->getObjectClass() == OBJECT_NODE || OBJECT_CONTAINER || OBJECT_SERVICEROOT|| OBJECT_SUBNET || OBJECT_CLUSTER || OBJECT_ZONE )
+			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_CONTAINER) || (object->getObjectClass() == OBJECT_SERVICEROOT) ||
+			    (object->getObjectClass() == OBJECT_SUBNET) || (object->getObjectClass() == OBJECT_CLUSTER) || (object->getObjectClass() == OBJECT_ZONE))
 			{
-			   shared_ptr<ServerCommandExecutor> cmd = make_shared<ServerCommandExecutor>(request, this);
-            uint32_t taskId = cmd->getId();
-			   m_serverCommands.put(taskId, cmd);
-			   if (cmd->execute())
+			   shared_ptr<ServerCommandExecutor> commandExecutor = ServerCommandExecutor::createFromMessage(request, this);
+            uint32_t taskId = commandExecutor->getId();
+			   m_serverCommands.put(taskId, commandExecutor);
+			   if (commandExecutor->execute())
 			   {
-			      debugPrintf(5, _T("Started process executor %u for command %s, node id %d"), taskId, cmd->getMaskedCommand(), nodeId);
-               writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s"), cmd->getMaskedCommand());
-               msg.setField(VID_COMMAND_ID, taskId);
-               msg.setField(VID_RCC, RCC_SUCCESS);
+			      debugPrintf(5, _T("Started process executor %u for command %s, node id %d"), taskId, commandExecutor->getMaskedCommand(), nodeId);
+               writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("Server command executed: %s"), commandExecutor->getMaskedCommand());
+               response.setField(VID_COMMAND_ID, taskId);
+               response.setField(VID_RCC, RCC_SUCCESS);
 			   }
 			   else
 			   {
 	            m_serverCommands.remove(taskId);
-               msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+               response.setField(VID_RCC, RCC_INTERNAL_ERROR);
 			   }
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			writeAuditLog(AUDIT_OBJECTS, false, nodeId, _T("Access denied on server command execution"));
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -12083,20 +12081,20 @@ void ClientSession::executeServerCommand(const NXCPMessage& request)
  */
 void ClientSession::stopServerCommand(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    shared_ptr<ProcessExecutor> cmd = m_serverCommands.get(static_cast<pid_t>(request.getFieldAsUInt64(VID_COMMAND_ID)));
    if (cmd != nullptr)
    {
       cmd->stop();
-      msg.setField(VID_RCC, RCC_SUCCESS);
-      sendMessage(&msg);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_REQUEST);
-      sendMessage(&msg);
+      response.setField(VID_RCC, RCC_INVALID_REQUEST);
    }
+
+   sendMessage(response);
 }
 
 /**
@@ -12126,7 +12124,7 @@ void ClientSession::unregisterServerCommand(pid_t taskId)
  */
 void ClientSession::uploadFileToAgent(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	uint32_t nodeId = request.getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(nodeId);
@@ -12144,39 +12142,39 @@ void ClientSession::uploadFileToAgent(const NXCPMessage& request)
 					if (AddJob(job))
 					{
 						writeAuditLog(AUDIT_OBJECTS, true, nodeId, _T("File upload to node %s initiated, local=\"%s\", remote=\"%s\""), object->getName(), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
-						msg.setField(VID_JOB_ID, job->getId());
-						msg.setField(VID_RCC, RCC_SUCCESS);
+						response.setField(VID_JOB_ID, job->getId());
+						response.setField(VID_RCC, RCC_SUCCESS);
 					}
 					else
 					{
-						msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+						response.setField(VID_RCC, RCC_INTERNAL_ERROR);
 						delete job;
 					}
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+					response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
 				}
 				MemFree(localFile);
 				MemFree(remoteFile);
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			writeAuditLog(AUDIT_OBJECTS, false, nodeId, _T("Access denied on upload file to node %s"), object->getName());
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**

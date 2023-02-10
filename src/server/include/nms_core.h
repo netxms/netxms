@@ -1026,14 +1026,17 @@ private:
    ClientSession *m_session;
    StringBuffer m_maskedCommand;
 
+   ServerCommandExecutor(const TCHAR *command, const TCHAR *maskedCommand, bool sendOutput, ClientSession *session, uint32_t requestId);
+
    virtual void onOutput(const char *text, size_t length) override;
    virtual void endOfOutput() override;
 
 public:
-   ServerCommandExecutor(const NXCPMessage& request, ClientSession *session);
-   ~ServerCommandExecutor();
+   virtual ~ServerCommandExecutor();
 
    const TCHAR *getMaskedCommand() const { return m_maskedCommand.cstr(); }
+
+   static shared_ptr<ServerCommandExecutor> createFromMessage(const NXCPMessage& request, ClientSession *session);
 };
 
 /**

@@ -1540,10 +1540,12 @@ cleanup:
 }
 
 /**
- * Command execution data constructor
+ * Create command executor from message
  */
-ServerCommandExecutor::ServerCommandExecutor(const NXCPMessage& request, ClientSession *session) : ProcessExecutor(nullptr)
+shared_ptr<ServerCommandExecutor> ServerCommandExecutor::createFromMessage(const NXCPMessage& request, ClientSession *session)
 {
+   StringBuffer command, maskedCommand;
+
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
@@ -1566,7 +1568,7 @@ ServerCommandExecutor::ServerCommandExecutor(const NXCPMessage& request, ClientS
       }
 
       TCHAR *cmd = request.getFieldAsString(VID_COMMAND);
-      m_cmd = MemCopyString(object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr));
+      command = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr);
 
       if (request.getFieldAsInt32(VID_NUM_MASKED_FIELDS) > 0)
       {
@@ -1575,20 +1577,28 @@ ServerCommandExecutor::ServerCommandExecutor(const NXCPMessage& request, ClientS
          {
             inputFields->set(list.get(i), _T("******"));
          }
-         m_maskedCommand = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr);
+         maskedCommand = object->expandText(cmd, nullptr, nullptr, shared_ptr<DCObjectInfo>(), session->getLoginName(), nullptr, nullptr, inputFields, nullptr);
       }
       else
       {
-         m_maskedCommand = StringBuffer(m_cmd);
+         maskedCommand = command;
       }
       delete inputFields;
       MemFree(cmd);
    }
 
-   m_sendOutput = request.getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+   return shared_ptr<ServerCommandExecutor>(new ServerCommandExecutor(command, maskedCommand, request.getFieldAsBoolean(VID_RECEIVE_OUTPUT), session, request.getId()));
+}
+
+/**
+ * Command execution constructor
+ */
+ServerCommandExecutor::ServerCommandExecutor(const TCHAR *command, const TCHAR *maskedCommand, bool sendOutput, ClientSession *session, uint32_t requestId) : ProcessExecutor(command), m_maskedCommand(maskedCommand)
+{
+   m_sendOutput = sendOutput;
    if (m_sendOutput)
    {
-      m_requestId = request.getId();
+      m_requestId = requestId;
       m_session = session;
       m_session->incRefCount();
    }
@@ -1600,7 +1610,7 @@ ServerCommandExecutor::ServerCommandExecutor(const NXCPMessage& request, ClientS
 }
 
 /**
- * Command execution data destructor
+ * Command execution destructor
  */
 ServerCommandExecutor::~ServerCommandExecutor()
 {
