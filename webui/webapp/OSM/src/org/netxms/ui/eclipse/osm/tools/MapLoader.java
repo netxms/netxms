@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class MapLoader
 	public static final int CENTER = GeoLocationCache.CENTER;
 	public static final int TOP_LEFT = GeoLocationCache.TOP_LEFT;
 	public static final int BOTTOM_RIGHT = GeoLocationCache.BOTTOM_RIGHT;
-	
+
 	private static Object CACHE_MUTEX = new Object();
 
 	private Display display;
@@ -61,7 +61,7 @@ public class MapLoader
 	private Image missingTile = null; 
 	private Image loadingTile = null; 
 	private Image borderTile = null;
-	
+
 	/**
 	 * Create map loader
 	 * 
@@ -70,10 +70,10 @@ public class MapLoader
 	public MapLoader(Display display)
 	{
 		this.display = display;
-		session = (NXCSession)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		workers = Executors.newFixedThreadPool(16);
 	}
-	
+
 	/**
 	 * @param location
 	 * @param zoom
@@ -81,12 +81,11 @@ public class MapLoader
 	 */
 	private static Point tileFromLocation(double lat, double lon, int zoom)
 	{		
-	   int x = (int)Math.floor( (lon + 180) / 360 * (1<<zoom) ) ;
-	   int y = (int)Math.floor( (1 - Math.log(Math.tan(Math.toRadians(lat)) + 1 / Math.cos(Math.toRadians(lat))) / Math.PI) / 2 * (1<<zoom) ) ;
-
+      int x = (int)Math.floor((lon + 180) / 360 * (1 << zoom));
+      int y = (int)Math.floor((1 - Math.log(Math.tan(Math.toRadians(lat)) + 1 / Math.cos(Math.toRadians(lat))) / Math.PI) / 2 * (1 << zoom));
 		return new Point(x, y);
 	}
-	
+
 	/**
 	 * @param x
 	 * @param z
@@ -178,11 +177,6 @@ public class MapLoader
 	 */
 	private Image loadTile(int zoom, int x, int y)
 	{
-		// check x and y for validity
-		int maxTileNum = (1 << zoom) - 1;
-		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
-			return getBorderTileImage();
-
 		final String tileServerURL = session.getTileServerURL();
 		URL url = null;
 		try
@@ -240,7 +234,7 @@ public class MapLoader
          {
          }
       }
-		
+
 		if (image != null)
 		{
 			// save to cache
@@ -256,10 +250,10 @@ public class MapLoader
             imageLoader.save(imageFile.getAbsolutePath(), SWT.IMAGE_PNG);
          }
 		}
-		
+
 		return image;
 	}
-	
+
 	/**
 	 * @param zoom
 	 * @param x
@@ -325,7 +319,7 @@ public class MapLoader
 		}
 		return null;
 	}
-	
+
 	/**
 	 * @param zoom
 	 * @param x
@@ -336,9 +330,14 @@ public class MapLoader
 	{
 		// check x and y for validity
 		int maxTileNum = (1 << zoom) - 1;
-		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
-			return new Tile(x, y, getBorderTileImage(), true, true);
-		
+      if ((y < 0) || (y > maxTileNum))
+         return new Tile(x, y, getBorderTileImage(), true, true);
+
+      if (x < 0)
+         x = (maxTileNum + 1) - (-x) % (maxTileNum + 1);
+      else if (x > maxTileNum)
+         x = x % (maxTileNum + 1);
+
 		Image tileImage = loadTileFromCache(zoom, x, y);
 		if (tileImage == null)
 		{
@@ -348,7 +347,7 @@ public class MapLoader
 		}
 		return (tileImage != null) ? new Tile(x, y, tileImage, true, false) : new Tile(x, y, getMissingTileImage(), true, true);
 	}
-	
+
 	/**
 	 * @param mapSize
 	 * @param centerPoint
@@ -374,11 +373,11 @@ public class MapLoader
 	{
 		if ((mapSize.x < 32) || (mapSize.y < 32) || (basePoint == null))
 			return null;
-		
+
 		Area coverage = GeoLocationCache.calculateCoverage(mapSize, basePoint, pointLocation, zoom);
 		Point bottomLeft = tileFromLocation(coverage.getxLow(), coverage.getyLow(), zoom);
 		Point topRight = tileFromLocation(coverage.getxHigh(), coverage.getyHigh(), zoom);
-		
+
 		Tile[][] tiles = new Tile[bottomLeft.y - topRight.y + 1][topRight.x - bottomLeft.x + 1];
 
 		int x = bottomLeft.x;
@@ -394,15 +393,15 @@ public class MapLoader
 				y++;
 			}
 		}
-		
+
 		double lat = latitudeFromTile(topRight.y, zoom);
 		double lon = longitudeFromTile(bottomLeft.x, zoom);
 		Point realTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(lat, lon), zoom);
 		Point reqTopLeft = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), zoom);
-		
+
 		return new TileSet(tiles, realTopLeft.x - reqTopLeft.x, realTopLeft.y - reqTopLeft.y, zoom);
 	}
-	
+
 	/**
 	 * Load missing tiles in tile set
 	 * 
@@ -488,7 +487,7 @@ public class MapLoader
 	{
 		return (image == missingTile) || (image == borderTile) || (image == loadingTile);
 	}
-	
+
 	/**
 	 * Dispose map loader
 	 */

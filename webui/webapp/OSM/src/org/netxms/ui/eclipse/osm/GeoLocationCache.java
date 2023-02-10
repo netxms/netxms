@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,10 +50,10 @@ public class GeoLocationCache implements SessionListener
 	private QuadTree<Long> locationTree = new QuadTree<Long>();
 	private NXCSession session;
 	private Set<GeoLocationCacheListener> listeners = new HashSet<GeoLocationCacheListener>();
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-	 */
+
+   /**
+    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+    */
 	@Override
 	public void notificationHandler(SessionNotification n)
 	{
@@ -72,7 +72,7 @@ public class GeoLocationCache implements SessionListener
       internalInitialize();
 		session.addListener(this);
 	}
-	
+
 	/**
 	 * (Re)initialize location cache - actual initialization
 	 */
@@ -233,15 +233,23 @@ public class GeoLocationCache implements SessionListener
 	}
 
 	/**
-	 * Convert abstract display coordinates (coordinates on virtual map covering entire world) to location
-	 * 
-	 * @param point display coordinates
-	 * @param zoom zoom level
-	 * @return location for given point
-	 */
-	public static GeoLocation displayToCoordinates(Point point, int zoom)
+    * Convert abstract display coordinates (coordinates on virtual map covering entire world) to location
+    * 
+    * @param point display coordinates
+    * @param zoom zoom level
+    * @param normalizeLongitude if true, longitude will be normalized (placed within -180 .. 180 range)
+    * @return location for given point
+    */
+   public static GeoLocation displayToCoordinates(Point point, int zoom, boolean normalizeLongitude)
 	{
 	   double longitude = (point.x * (360 / (Math.pow(2, zoom) * 256))) - 180;
+      if (normalizeLongitude)
+      {
+         if (longitude > 180)
+            longitude = longitude % 180 - 180;
+         else if (longitude < -180)
+            longitude = longitude % 180 + 180;
+      }
 		double latitude = (1 - (point.y * (2 / (Math.pow(2, zoom) * 256)))) * Math.PI;
 		latitude = Math.toDegrees(Math.atan(Math.sinh(latitude)));
 		if (latitude <= (-89.998))
@@ -266,16 +274,16 @@ public class GeoLocationCache implements SessionListener
 		switch(pointLocation)
 		{
 			case CENTER:
-				topLeft = displayToCoordinates(new Point(bp.x - mapSize.x / 2, bp.y - mapSize.y / 2), zoom);
-				bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x / 2, bp.y + mapSize.y / 2), zoom);
+            topLeft = displayToCoordinates(new Point(bp.x - mapSize.x / 2, bp.y - mapSize.y / 2), zoom, false);
+            bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x / 2, bp.y + mapSize.y / 2), zoom, false);
 				break;
 			case TOP_LEFT:
-				topLeft = displayToCoordinates(new Point(bp.x, bp.y), zoom);
-				bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x, bp.y + mapSize.y), zoom);
+            topLeft = displayToCoordinates(new Point(bp.x, bp.y), zoom, false);
+            bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x, bp.y + mapSize.y), zoom, false);
 				break;
 			case BOTTOM_RIGHT:
-				topLeft = displayToCoordinates(new Point(bp.x - mapSize.x, bp.y - mapSize.y), zoom);
-				bottomRight = displayToCoordinates(new Point(bp.x, bp.y), zoom);
+            topLeft = displayToCoordinates(new Point(bp.x - mapSize.x, bp.y - mapSize.y), zoom, false);
+            bottomRight = displayToCoordinates(new Point(bp.x, bp.y), zoom, false);
 				break;
 			default:
 				throw new IllegalArgumentException("pointLocation=" + pointLocation); //$NON-NLS-1$

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -97,12 +97,11 @@ public class MapLoader
 	 */
 	private static Point tileFromLocation(double lat, double lon, int zoom)
 	{		
-	   int x = (int)Math.floor( (lon + 180) / 360 * (1<<zoom) ) ;
-	   int y = (int)Math.floor( (1 - Math.log(Math.tan(Math.toRadians(lat)) + 1 / Math.cos(Math.toRadians(lat))) / Math.PI) / 2 * (1<<zoom) ) ;
-
+      int x = (int)Math.floor((lon + 180) / 360 * (1 << zoom));
+      int y = (int)Math.floor((1 - Math.log(Math.tan(Math.toRadians(lat)) + 1 / Math.cos(Math.toRadians(lat))) / Math.PI) / 2 * (1 << zoom));
 		return new Point(x, y);
 	}
-	
+
 	/**
 	 * @param x
 	 * @param z
@@ -134,11 +133,6 @@ public class MapLoader
 	 */
 	private Image loadTile(int zoom, int x, int y)
 	{
-		// check x and y for validity
-		int maxTileNum = (1 << zoom) - 1;
-		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
-         return borderTile;
-
 		final String tileServerURL = session.getTileServerURL();
 		URL url = null;
 		try
@@ -256,8 +250,13 @@ public class MapLoader
 	{
 		// check x and y for validity
 		int maxTileNum = (1 << zoom) - 1;
-		if ((x < 0) || (y < 0) || (x > maxTileNum) || (y > maxTileNum))
+      if ((y < 0) || (y > maxTileNum))
          return new Tile(x, y, borderTile, true, true);
+
+      if (x < 0)
+         x = (maxTileNum + 1) - (-x) % (maxTileNum + 1);
+      else if (x > maxTileNum)
+         x = x % (maxTileNum + 1);
 
 		Image tileImage = loadTileFromCache(zoom, x, y);
 		if (tileImage == null)

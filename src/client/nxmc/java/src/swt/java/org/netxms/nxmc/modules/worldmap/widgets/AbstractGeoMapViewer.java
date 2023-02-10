@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -299,7 +299,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 								tiles.dispose();
 							}
 						}
-						
+
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
                   coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
                   onMapLoad();
@@ -442,8 +442,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		   Point cp = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
 		   cp.x += offsetX;
 		   cp.y += offsetY;
-		   currentLocation = GeoLocationCache.displayToCoordinates(cp, accessor.getZoom());
-		   
+         currentLocation = GeoLocationCache.displayToCoordinates(cp, accessor.getZoom(), true);
+
 	      Point size = getSize();
 		   TileSet tileSet = mapLoader.getAllTiles(size, currentLocation, MapLoader.CENTER, accessor.getZoom(), true);
 	      int x = tileSet.xOffset;
@@ -464,7 +464,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	      }
 	      tileSet.dispose();
 		}
-		
+
 		// Draw selection rectangle
 		if ((selectionStartPoint != null) && (selectionEndPoint != null))
 		{
@@ -480,7 +480,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 			gc.setLineWidth(2);
 			gc.drawRectangle(x, y, w, h);
 		}
-		
+
 		// Draw current location info
       String text = currentLocation.toString();
       Point textSize = gc.textExtent(text);
@@ -498,7 +498,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
       gc.setForeground(INFO_BLOCK_TEXT);
       gc.drawText(text, rect.x + 5, rect.y + 4, true);
-		
+
 		// Draw title
 		if ((title != null) && !title.isEmpty())
 		{
@@ -508,7 +508,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
          gc.setForeground(ThemeEngine.getForegroundColor("GeoMap.Title"));
 			gc.drawText(title, x, 10, true);
 		}
-		
+
 		// Draw zoom control
       if (enableControls)
       {
@@ -602,7 +602,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
          Point mapSize = new Point(accessor.getMapWidth(), accessor.getMapHeight());
          Area newCoverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, zoom);
          Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(newCoverage.getxHigh(), newCoverage.getyLow()), zoom);
-         GeoLocation newLocation = GeoLocationCache.displayToCoordinates(new Point(cp.x + pt.x, cp.y + pt.y), zoom);
+         GeoLocation newLocation = GeoLocationCache.displayToCoordinates(new Point(cp.x + pt.x, cp.y + pt.y), zoom, true);
 
          accessor.setLatitude(accessor.getLatitude() - (newLocation.getLatitude() - oldLocation.getLatitude()));
          accessor.setLongitude(accessor.getLongitude() - (newLocation.getLongitude() - oldLocation.getLongitude()));
@@ -703,7 +703,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 				final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
 				centerXY.x += offsetX;
 				centerXY.y += offsetY;
-				final GeoLocation geoLocation = GeoLocationCache.displayToCoordinates(centerXY, accessor.getZoom());
+            final GeoLocation geoLocation = GeoLocationCache.displayToCoordinates(centerXY, accessor.getZoom(), true);
 				accessor.setLatitude(geoLocation.getLatitude());
 				accessor.setLongitude(geoLocation.getLongitude());
 				reloadMap();
@@ -802,7 +802,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	public GeoLocation getLocationAtPoint(Point p)
 	{
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
-		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
+      return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom(), true);
 	}
 
 	/**

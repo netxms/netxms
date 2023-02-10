@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,7 +198,7 @@ public class GeoLocationCache implements SessionListener
 		}
 		return list;
 	}
-	
+
 	/**
 	 * Add cache listener
 	 * 
@@ -224,7 +224,7 @@ public class GeoLocationCache implements SessionListener
 			listeners.remove(listener);
 		}
 	}
-	
+
 	/**
 	 * Convert location to abstract display coordinates (coordinates on virtual map covering entire world)
 	 * 
@@ -244,25 +244,32 @@ public class GeoLocationCache implements SessionListener
 		y = y / 2 * (numberOfTiles * TILE_SIZE);
 		return new Point((int)x, (int)y);
 	}
-	
+
 	/**
-	 * Convert abstract display coordinates (coordinates on virtual map covering entire world) to location
-	 * 
-	 * @param point display coordinates
-	 * @param zoom zoom level
-	 * @return location for given point
-	 */
-	public static GeoLocation displayToCoordinates(Point point, int zoom)
+    * Convert abstract display coordinates (coordinates on virtual map covering entire world) to location
+    * 
+    * @param point display coordinates
+    * @param zoom zoom level
+    * @param normalizeLongitude if true, longitude will be normalized (placed within -180 .. 180 range)
+    * @return location for given point
+    */
+   public static GeoLocation displayToCoordinates(Point point, int zoom, boolean normalizeLongitude)
 	{
 	   double longitude = (point.x * (360 / (Math.pow(2, zoom) * 256))) - 180;
+      if (normalizeLongitude)
+      {
+         if (longitude > 180)
+            longitude = longitude % 180 - 180;
+         else if (longitude < -180)
+            longitude = longitude % 180 + 180;
+      }
 		double latitude = (1 - (point.y * (2 / (Math.pow(2, zoom) * 256)))) * Math.PI;
 		latitude = Math.toDegrees(Math.atan(Math.sinh(latitude)));
 		if (latitude <= (-89.998))
 		   latitude = -89.997; // Needed because tan() is undefined for angles of 90 degrees
-		
 		return new GeoLocation(latitude, longitude);
 	}
-	
+
 	/**
 	 * Calculate map coverage.
 	 * 
@@ -280,19 +287,19 @@ public class GeoLocationCache implements SessionListener
 		switch(pointLocation)
 		{
 			case CENTER:
-				topLeft = displayToCoordinates(new Point(bp.x - mapSize.x / 2, bp.y - mapSize.y / 2), zoom);
-				bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x / 2, bp.y + mapSize.y / 2), zoom);
+            topLeft = displayToCoordinates(new Point(bp.x - mapSize.x / 2, bp.y - mapSize.y / 2), zoom, false);
+            bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x / 2, bp.y + mapSize.y / 2), zoom, false);
 				break;
 			case TOP_LEFT:
-				topLeft = displayToCoordinates(new Point(bp.x, bp.y), zoom);
-				bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x, bp.y + mapSize.y), zoom);
+            topLeft = displayToCoordinates(new Point(bp.x, bp.y), zoom, false);
+            bottomRight = displayToCoordinates(new Point(bp.x + mapSize.x, bp.y + mapSize.y), zoom, false);
 				break;
 			case BOTTOM_RIGHT:
-				topLeft = displayToCoordinates(new Point(bp.x - mapSize.x, bp.y - mapSize.y), zoom);
-				bottomRight = displayToCoordinates(new Point(bp.x, bp.y), zoom);
+            topLeft = displayToCoordinates(new Point(bp.x - mapSize.x, bp.y - mapSize.y), zoom, false);
+            bottomRight = displayToCoordinates(new Point(bp.x, bp.y), zoom, false);
 				break;
 			default:
-				throw new IllegalArgumentException("pointLocation=" + pointLocation); //$NON-NLS-1$
+            throw new IllegalArgumentException("pointLocation=" + pointLocation);
 		}	
 		return new Area(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
 	}
