@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,10 +85,11 @@ public class GeoAreaViewer extends AbstractGeoMapViewer
    }
 
    /**
-    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC, org.netxms.base.GeoLocation, int, int)
+    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC,
+    *      org.netxms.base.GeoLocation, int, int, int)
     */
    @Override
-   protected void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH)
+   protected void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH, int verticalOffset)
    {
       if (area == null)
          return;
@@ -105,7 +106,7 @@ public class GeoAreaViewer extends AbstractGeoMapViewer
          final int dx = virtualXY.x - centerXY.x;
          final int dy = virtualXY.y - centerXY.y;
          points[i++] = imgW / 2 + dx;
-         points[i++] = imgH / 2 + dy;
+         points[i++] = imgH / 2 + dy + verticalOffset;
       }
       gc.setAlpha(40);
       gc.fillPolygon(points);

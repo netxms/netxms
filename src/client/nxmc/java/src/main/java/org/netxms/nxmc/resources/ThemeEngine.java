@@ -219,7 +219,6 @@ public class ThemeEngine
          elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));
          elements.put("DeviceView.Port", new ThemeElement(new RGB(64, 64, 64), null));
          elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(39, 96, 138), null));
-         elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
          elements.put("List.DisabledItem", new ThemeElement(null, new RGB(96, 96, 96)));
          elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
          elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
@@ -262,7 +261,6 @@ public class ThemeEngine
          elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));
          elements.put("DeviceView.Port", new ThemeElement(new RGB(224, 224, 224), null));
          elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(64, 156, 224), null));
-         elements.put("GeoMap.Title", new ThemeElement(null, new RGB(0, 0, 0)));
          elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
          elements.put("List.DisabledItem", new ThemeElement(null, new RGB(172, 172, 172)));
          elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));

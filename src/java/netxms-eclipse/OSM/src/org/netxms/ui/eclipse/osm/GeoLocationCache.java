@@ -42,6 +42,8 @@ public class GeoLocationCache implements SessionListener
 	public static final int TOP_LEFT = 1;
 	public static final int BOTTOM_RIGHT = 2;
 	
+   public static final double MAX_LATTITUDE = 85.0511;
+
 	private static final int TILE_SIZE = 256;
 	
 	private static GeoLocationCache instance = new GeoLocationCache();
@@ -159,7 +161,7 @@ public class GeoLocationCache implements SessionListener
 					l.geoLocationCacheChanged(object, prevLocation);
 			}
 	}
-	
+
 	/**
     * Get all objects in given area. If parent ID is set, only objects under given parent will be included.
     * 
@@ -212,6 +214,18 @@ public class GeoLocationCache implements SessionListener
 		}
 	}
 
+   /**
+    * Get size of virtual map in pixels for given zoom level
+    *
+    * @param zoom zoom level
+    * @return virtual map size in pixels
+    */
+   public static Point getVirtualMapSize(int zoom)
+   {
+      final int numberOfTiles = (int)Math.pow(2, zoom);
+      return new Point(numberOfTiles * TILE_SIZE, numberOfTiles * TILE_SIZE);
+   }
+
 	/**
 	 * Convert location to abstract display coordinates (coordinates on virtual map covering entire world)
 	 * 
@@ -222,10 +236,10 @@ public class GeoLocationCache implements SessionListener
 	public static Point coordinateToDisplay(GeoLocation location, int zoom)
 	{
 		final double numberOfTiles = Math.pow(2, zoom);
-		
+
 		// LonToX
 		double x = (location.getLongitude() + 180) * (numberOfTiles * TILE_SIZE) / 360.0;
-	    
+
 		// LatToY
 		double y = 1 - (Math.log(Math.tan(Math.PI / 4 + Math.toRadians(location.getLatitude()) / 2)) / Math.PI);
 		y = y / 2 * (numberOfTiles * TILE_SIZE);
@@ -252,8 +266,10 @@ public class GeoLocationCache implements SessionListener
       }
 		double latitude = (1 - (point.y * (2 / (Math.pow(2, zoom) * 256)))) * Math.PI;
 		latitude = Math.toDegrees(Math.atan(Math.sinh(latitude)));
-		if (latitude <= (-89.998))
-		   latitude = -89.997; // Needed because tan() is undefined for angles of 90 degrees
+      if (latitude < (-MAX_LATTITUDE))
+         latitude = -MAX_LATTITUDE;
+      else if (latitude > MAX_LATTITUDE)
+         latitude = MAX_LATTITUDE;
 		return new GeoLocation(latitude, longitude);
 	}
 

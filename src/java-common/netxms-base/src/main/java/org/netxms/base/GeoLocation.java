@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ public class GeoLocation
 	public static final int MANUAL = 1;
 	public static final int GPS = 2;
 	public static final int NETWORK = 3;
-	
+
 	private int type;
 	private double latitude;
 	private double longitude;
@@ -252,23 +252,23 @@ public class GeoLocation
 	{
 		if ((pos < -180.0) || (pos > 180.0))
 			return "<invalid>";
-		
+
 		StringBuilder sb = new StringBuilder();
 
 		NumberFormat nf = NumberFormat.getIntegerInstance();
 		nf.setMinimumIntegerDigits(2);
 		sb.append(nf.format(getIntegerDegree(pos)));
-		sb.append("\u00b0 ");
+      sb.append('\u00b0');
 		sb.append(nf.format(getIntegerMinutes(pos)));
-		sb.append("' ");
+      sb.append('\'');
 
 		nf = NumberFormat.getNumberInstance();
 		nf.setMinimumIntegerDigits(2);
 		nf.setMinimumFractionDigits(3);
 		nf.setMaximumFractionDigits(3);
 		sb.append(nf.format(getDecimalSeconds(pos)));
-      sb.append("\" ");
-		
+      sb.append('"');
+
       // Encode hemisphere
       if (isLat)
       {
@@ -278,7 +278,7 @@ public class GeoLocation
       {
          sb.append((pos < 0) ? 'W' : 'E');
       }
-      
+
 		return sb.toString();
 	}
 
@@ -343,7 +343,7 @@ public class GeoLocation
 	{
 		double value;
 		String in = str.trim();
-		
+
 		// Try to parse as simple double value first
 		try
 		{
@@ -355,7 +355,7 @@ public class GeoLocation
 		catch(NumberFormatException e)
 		{
 		}
-		
+
 		Pattern p = Pattern.compile((isLat ? "([NS]*)" : "([EW]*)") + "\\s*([0-9]+(?:[.,][0-9]+)*)\u00b0?\\s*([0-9]+(?:[.,][0-9]+)*)?\\'?\\s*([0-9]+(?:[.,][0-9]+)*)?\\\"?\\s*" + (isLat ? "([NS]*)" : "([EW]*)"));
 		Matcher m = p.matcher(in);
 		if (m.matches())
@@ -375,11 +375,11 @@ public class GeoLocation
 				double deg = Double.parseDouble(m.group(2).replace(',', '.'));
 				double min = (m.group(3) != null) ? Double.parseDouble(m.group(3).replace(',', '.')) : 0.0;
 				double sec = (m.group(4) != null) ? Double.parseDouble(m.group(4).replace(',', '.')) : 0.0;
-				
+
 				value = sign * (deg + min / 60.0 + sec / 3600.0);
 				if ((value < -180.0) || (value > 180.0))
 					throw new GeoLocationFormatException();
-				
+
 				return value;
 			}
 			catch(NumberFormatException e)
@@ -392,7 +392,7 @@ public class GeoLocation
 			throw new GeoLocationFormatException();
 		}
 	}
-	
+
 	/**
 	 * Parse geolocation string. Latitude and longitude must be given either
 	 * as numeric values or in DMS form.
@@ -490,7 +490,7 @@ public class GeoLocation
       return result;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#equals(java.lang.Object)
     */
    @Override
@@ -527,7 +527,7 @@ public class GeoLocation
          return false;
       return true;
    }
-   
+
    /**
     * Calculates distance between two location points
     * 

@@ -57,8 +57,6 @@ import org.netxms.nxmc.modules.worldmap.tools.MapAccessor;
 import org.netxms.nxmc.modules.worldmap.tools.MapLoader;
 import org.netxms.nxmc.modules.worldmap.tools.Tile;
 import org.netxms.nxmc.modules.worldmap.tools.TileSet;
-import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorCache;
 import org.netxms.nxmc.tools.FontTools;
 import org.xnap.commons.i18n.I18n;
@@ -70,8 +68,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 {
    private static final I18n i18n = LocalizationHelper.getI18n(AbstractGeoMapViewer.class);
 
-   protected static final String[] TITLE_FONTS = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
-
    protected static final Color BORDER_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
 
    protected static final int LABEL_ARROW_HEIGHT = 20;
@@ -79,12 +75,14 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
    protected static final int LABEL_Y_MARGIN = 12;
    protected static final int LABEL_SPACING = 4;
 
-   protected static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
-   protected static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
-   protected static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
    protected static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
-   
+
 	private static final int DRAG_JITTER = 8;
+
+   private static final int BUTTON_MARGIN_WIDTH = 10;
+   private static final int BUTTON_MARGIN_HEIGHT = 5;
+   private static final int BUTTON_BLOCK_MARGIN_WIDTH = 10;
+   private static final int BUTTON_BLOCK_MARGIN_HEIGHT = 15;
 
    protected ColorCache colorCache;
 	protected ILabelProvider labelProvider;
@@ -103,12 +101,13 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	private String title = null;
 	private int offsetX;
 	private int offsetY;
+   private int contentVerticalOffset = 0; // Vertical offset for drawing map content
 	private TileSet currentTileSet = null;
-	private Image imageZoomIn;
-	private Image imageZoomOut;
 	private Rectangle zoomControlRect = null;
-   private Font mapTitleFont;
+   private Rectangle titleRect = null;
+   private Font controlFont;
    private boolean enableControls = true;
+   private boolean fullVerticalCoverage = false;
 
    /**
     * Create abstract geo map viewer.
@@ -124,15 +123,11 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 
 		colorCache = new ColorCache(this);
 
-      imageZoomIn = ResourceManager.getImage("icons/worldmap/zoom_in.png");
-      imageZoomOut = ResourceManager.getImage("icons/worldmap/zoom_out.png");
-
-      mapTitleFont = FontTools.createFont(TITLE_FONTS, 2, SWT.BOLD);
+      controlFont = FontTools.createAdjustedFont(JFaceResources.getTextFont(), 12, SWT.BOLD);
 
       labelProvider = new DecoratingObjectLabelProvider();
 		mapLoader = new MapLoader(getDisplay());
 
-		setBackground(MAP_BACKGROUND);
 		addPaintListener(this);
 
 		final Runnable timer = new Runnable() {
@@ -157,6 +152,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 					bufferImage.dispose();
 				Rectangle rect = getClientArea();
 				bufferImage = new Image(getDisplay(), rect.width, rect.height);
+
+            checkVerticalCoverage();
 			}
 		});
 
@@ -171,9 +168,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 				if (currentImage != null)
 					currentImage.dispose();
 				mapLoader.dispose();
-				imageZoomIn.dispose();
-				imageZoomOut.dispose();
-				mapTitleFont.dispose();
+            controlFont.dispose();
 			}
 		});
 
@@ -181,7 +176,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		addMouseMoveListener(this);
 		addMouseWheelListener(this);
 
-		GeoLocationCache.getInstance().addListener(this);
+      GeoLocationCache.getInstance().addListener(this);
 	}
 
    /**
@@ -259,9 +254,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	 */
 	public void reloadMap()
 	{
-		Rectangle rect = this.getClientArea();
-		accessor.setMapWidth(rect.width);
-		accessor.setMapHeight(rect.height);
+      Point size = getSize();
+      Point virtualMapSize = GeoLocationCache.getVirtualMapSize(accessor.getZoom());
+      if (virtualMapSize.y < size.y)
+         size.y = virtualMapSize.y;
+      accessor.setMapWidth(size.x);
+      accessor.setMapHeight(size.y);
 
 		if (currentImage != null)
 			currentImage.dispose();
@@ -283,7 +281,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 					{
                   if (isDisposed())
                      return;
-                  
+
 						currentTileSet = null;
 						if (tiles != null)
 						{
@@ -379,6 +377,12 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		final Tile[][] tiles = tileSet.tiles;
 
 		Point size = getSize();
+      Point virtualMapSize = GeoLocationCache.getVirtualMapSize(accessor.getZoom());
+      if (size.y > virtualMapSize.y)
+      {
+         contentVerticalOffset = (size.y - virtualMapSize.y) / 2;
+         size.y = virtualMapSize.y;
+      }
 		currentImage = new Image(getDisplay(), size.x, size.y);
 		GC gc = new GC(currentImage);
 
@@ -408,12 +412,28 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	public void paintControl(PaintEvent e)
 	{
       if (bufferImage == null)
+      {
+         e.gc.fillRectangle(getClientArea());
          return;
+      }
 
-		final GC gc = new GC(bufferImage);
+      final GC gc = new GC(bufferImage);
       gc.setAntialias(SWT.ON);
       gc.setTextAntialias(SWT.ON);
-      
+
+      if (contentVerticalOffset > 0)
+      {
+         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+
+         Rectangle rect = getClientArea();
+         rect.y = rect.height - contentVerticalOffset - 1;
+         rect.height = contentVerticalOffset + 1;
+         gc.fillRectangle(rect);
+
+         rect.y = 0;
+         gc.fillRectangle(rect);
+      }
+
 		GeoLocation currentLocation;
 
 		// Draw objects and decorations if user is not dragging map
@@ -421,11 +441,11 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		if (dragStartPoint == null)
 		{
          currentLocation = accessor.getCenterPoint();
-         
+
 	      int imgW, imgH;
 	      if (currentImage != null)
 	      {
-	         gc.drawImage(currentImage, -offsetX, -offsetY);
+            gc.drawImage(currentImage, -offsetX, contentVerticalOffset - offsetY);
 	         imgW = currentImage.getImageData().width;
 	         imgH = currentImage.getImageData().height;
 	      }
@@ -435,7 +455,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	         imgH = -1;
 	      }
 
-	      drawContent(gc, currentLocation, imgW, imgH);
+         drawContent(gc, currentLocation, imgW, imgH, contentVerticalOffset);
 		}
 		else
 		{
@@ -453,7 +473,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	      {
 	         for(int j = 0; j < tiles[i].length; j++)
 	         {
-	            gc.drawImage(tiles[i][j].getImage(), x, y);
+               gc.drawImage(tiles[i][j].getImage(), x, y + contentVerticalOffset);
 	            x += 256;
 	            if (x >= size.x)
 	            {
@@ -482,55 +502,74 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		}
 
 		// Draw current location info
-      String text = currentLocation.toString();
-      Point textSize = gc.textExtent(text);
+      gc.setFont(null);
+      String text = "Map data \u00a9 OpenStreetMap contributors\tZoom level " + accessor.getZoom() + "\tCentered at " + currentLocation.toString();
+      Point infoTextSize = gc.textExtent(text);
 
-      Rectangle rect = getClientArea();
-      rect.x = rect.width - textSize.x - 20;
-      rect.y += 10;
-      rect.width = textSize.x + 10;
-      rect.height = textSize.y + 8;
+      Rectangle infoTextRectangle = getClientArea();
+      infoTextRectangle.x = infoTextRectangle.width - infoTextSize.x - 10;
+      infoTextRectangle.y = infoTextRectangle.height - infoTextSize.y - 8;
+      infoTextRectangle.width = infoTextSize.x + 11;
+      infoTextRectangle.height = infoTextSize.y + 9;
 
-      gc.setBackground(INFO_BLOCK_BACKGROUND);
-      gc.setAlpha(128);
-      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-      gc.setAlpha(255);
+      gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+      gc.fillRectangle(infoTextRectangle.x, infoTextRectangle.y, infoTextRectangle.width, infoTextRectangle.height);
 
-      gc.setForeground(INFO_BLOCK_TEXT);
-      gc.drawText(text, rect.x + 5, rect.y + 4, true);
+      gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_FOREGROUND));
+      gc.drawText(text, infoTextRectangle.x + 5, infoTextRectangle.y + 4, true);
 
 		// Draw title
 		if ((title != null) && !title.isEmpty())
 		{
-			gc.setFont(mapTitleFont);
-			rect = getClientArea();
-			int x = (rect.width - gc.textExtent(title).x) / 2;
-         gc.setForeground(ThemeEngine.getForegroundColor("GeoMap.Title"));
-			gc.drawText(title, x, 10, true);
+         gc.setFont(JFaceResources.getBannerFont());
+         Point size = gc.textExtent(title);
+         Rectangle rect = getClientArea();
+         rect.x = rect.width / 2 - size.x / 2 - 8;
+         rect.y = 10;
+         rect.width = size.x + 16;
+         rect.height = size.y + 10;
+
+         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+         gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+
+         gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BORDER));
+         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+
+         gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+         gc.drawText(title, rect.x + 8, rect.y + 6);
+
+         titleRect = rect;
+      }
+      else
+      {
+         titleRect = null;
 		}
 
 		// Draw zoom control
       if (enableControls)
       {
-         gc.setFont(JFaceResources.getHeaderFont());
-         text = Integer.toString(accessor.getZoom());
-         textSize = gc.textExtent(text);
+         gc.setFont(controlFont);
 
-         rect = getClientArea();
-         rect.x = 10;
-         rect.y = 10;
-         rect.width = 80;
-         rect.height = 47 + textSize.y;
+         Point buttonSize = gc.textExtent("+");
+         buttonSize.x += BUTTON_MARGIN_WIDTH * 2;
+         buttonSize.y += BUTTON_MARGIN_HEIGHT * 2;
 
-         gc.setBackground(INFO_BLOCK_BACKGROUND);
-         gc.setForeground(INFO_BLOCK_TEXT);
-         gc.setAlpha(128);
+         Rectangle rect = getClientArea();
+         rect.x = rect.width - buttonSize.x - BUTTON_BLOCK_MARGIN_WIDTH;
+         rect.y = rect.height - buttonSize.y * 2 - infoTextRectangle.height - BUTTON_BLOCK_MARGIN_HEIGHT;
+         rect.width = buttonSize.x;
+         rect.height = buttonSize.y * 2 + 1;
+
+         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
          gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-         gc.setAlpha(255);
 
-         gc.drawText(text, rect.x + rect.width / 2 - textSize.x / 2, rect.y + 5, true);
-         gc.drawImage(imageZoomIn, rect.x + 5, rect.y + rect.height - 37);
-         gc.drawImage(imageZoomOut, rect.x + 42, rect.y + rect.height - 37);
+         gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_WIDGET_BORDER));
+         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+         gc.drawLine(rect.x, rect.y + buttonSize.y + 1, rect.x + rect.width, rect.y + buttonSize.y + 1);
+
+         gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+         gc.drawText("+", rect.x + 10, rect.y + 5, true);
+         gc.drawText("-", rect.x + 10, rect.y + buttonSize.y + 5, true);
 
          zoomControlRect = rect;
       }
@@ -540,14 +579,15 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	}
 
 	/**
-	 * Draw content over map
-	 * 
-	 * @param gc
-	 * @param currentLocation current location (map center)
-	 * @param imgW map image width
-	 * @param imgH map image height
-	 */
-	protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH);
+    * Draw content over map
+    * 
+    * @param gc
+    * @param currentLocation current location (map center)
+    * @param imgW map image width
+    * @param imgH map image height
+    * @param verticalOffset offset from control's top border
+    */
+   protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH, int verticalOffset);
 
 	/**
 	 * @see org.netxms.nxmc.modules.worldmap.GeoLocationCacheListener#geoLocationCacheChanged(org.netxms.client.objects.AbstractObject, org.netxms.base.GeoLocation)
@@ -589,8 +629,13 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		}
 		else
 		{
-			if (zoom > 1)
-				zoom--;
+         if (zoom > 1)
+         {
+            Point virtualMapSize = GeoLocationCache.getVirtualMapSize(zoom);
+            Point widgetSize = getSize();
+            if ((widgetSize.x < virtualMapSize.x) || (widgetSize.y < virtualMapSize.y))
+               zoom--;
+         }
 		}
 
 		if (zoom != accessor.getZoom())
@@ -608,6 +653,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
          accessor.setLongitude(accessor.getLongitude() - (newLocation.getLongitude() - oldLocation.getLongitude()));
          accessor.setZoom(zoom);
 
+         checkVerticalCoverage();
 			reloadMap();
 			notifyOnZoomChange();
 		}
@@ -632,6 +678,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
          accessor.setZoom(zoom);
          accessor.setLatitude(geoLocation.getLatitude());
          accessor.setLongitude(geoLocation.getLongitude());
+         checkVerticalCoverage();
          reloadMap();
          notifyOnZoomChange();
          notifyOnPositionChange();
@@ -651,7 +698,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		{
 		   if (zoomControlRect.contains(e.x, e.y))
 		   {
-		      Rectangle r = new Rectangle(zoomControlRect.x + 5, zoomControlRect.y + zoomControlRect.height - 37, 32, 32);
+            Rectangle r = new Rectangle(zoomControlRect.x, zoomControlRect.y, zoomControlRect.width, zoomControlRect.height / 2);
 		      int zoom = accessor.getZoom();
 		      if (r.contains(e.x, e.y))
 		      {
@@ -660,21 +707,28 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		      }
 		      else
 		      {
-		         r.x += 37;
-               if (r.contains(e.x, e.y))
+               r.y += zoomControlRect.height / 2 + 1;
+               if (r.contains(e.x, e.y) && (zoom > 1))
                {
-                  if (zoom > 1)
+                  Point virtualMapSize = GeoLocationCache.getVirtualMapSize(zoom);
+                  Point widgetSize = getSize();
+                  if ((widgetSize.x < virtualMapSize.x) || (widgetSize.y < virtualMapSize.y))
                      zoom--;
                }
 		      }
-		      
+
 		      if (zoom != accessor.getZoom())
 		      {
 		         accessor.setZoom(zoom);
+               checkVerticalCoverage();
 		         reloadMap();
 		         notifyOnZoomChange();
 		      }
 		   }
+         else if ((titleRect != null) && titleRect.contains(e.x, e.y))
+         {
+            // Click on title, do nothing
+         }
 		   else if ((e.stateMask & SWT.SHIFT) != 0)
 			{
 				if (accessor.getZoom() < MapAccessor.MAX_MAP_ZOOM)
@@ -745,6 +799,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 					accessor.setZoom(zoom);
 					accessor.setLatitude(lc.getLatitude());
 					accessor.setLongitude(lc.getLongitude());
+               checkVerticalCoverage();
 					reloadMap();
 					notifyOnPositionChange();
 					notifyOnZoomChange();
@@ -765,7 +820,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		if (dragStartPoint != null)
 		{
 			int deltaX = dragStartPoint.x - e.x;
-			int deltaY = dragStartPoint.y - e.y;
+         int deltaY = fullVerticalCoverage ? 0 : dragStartPoint.y - e.y; // Forbid vertical drag if widget shows entire map height
 			if (Math.abs(deltaX) > DRAG_JITTER || Math.abs(deltaY) > DRAG_JITTER)
 			{
 				offsetX = deltaX;
@@ -802,7 +857,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	public GeoLocation getLocationAtPoint(Point p)
 	{
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
-      return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom(), true);
+      return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y - contentVerticalOffset), accessor.getZoom(), true);
 	}
 
 	/**
@@ -828,4 +883,24 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
     * @return object at given point or null
     */
    public abstract AbstractObject getObjectAtPoint(Point p);
+
+   /**
+    * Check map vertical coverage
+    */
+   private void checkVerticalCoverage()
+   {
+      Point size = getSize();
+      Point virtualMapSize = GeoLocationCache.getVirtualMapSize(accessor.getZoom());
+      if (size.y >= virtualMapSize.y)
+      {
+         fullVerticalCoverage = true;
+         contentVerticalOffset = (size.y - virtualMapSize.y) / 2;
+         accessor.setLatitude(0); // center map vertically
+      }
+      else
+      {
+         fullVerticalCoverage = false;
+         contentVerticalOffset = 0;
+      }
+   }
 }

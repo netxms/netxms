@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,8 +84,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       super(parent, style);
       WidgetHelper.attachMouseTrackListener(this, this);
 
-      objectToolTipHeaderFont = FontTools.createFont(TITLE_FONTS, 1, SWT.BOLD);
-      objectLabelFont = FontTools.createFont(TITLE_FONTS, -1, SWT.BOLD);
+      objectToolTipHeaderFont = FontTools.createAdjustedFont(JFaceResources.getDefaultFont(), 1, SWT.BOLD);
+      objectLabelFont = FontTools.createAdjustedFont(JFaceResources.getDefaultFont(), 0, SWT.BOLD);
 
       final SessionListener listener = new SessionListener() {
          @Override
@@ -315,20 +315,21 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
    }
 
    /**
-    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC, org.netxms.base.GeoLocation, int, int)
+    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC,
+    *      org.netxms.base.GeoLocation, int, int, int)
     */
    @Override
-   protected void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH)
+   protected void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH, int verticalOffset)
    {
       objectIcons.clear();
-      
+
       final Point centerXY = GeoLocationCache.coordinateToDisplay(currentLocation, accessor.getZoom());
       for(AbstractObject object : objects)
       {
          final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
          final int dx = virtualXY.x - centerXY.x;
          final int dy = virtualXY.y - centerXY.y;
-         drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, object);
+         drawObject(gc, imgW / 2 + dx, imgH / 2 + dy + verticalOffset, object);
       }
       if (objectToolTipLocation != null)
          drawObjectToolTip(gc);
@@ -380,10 +381,10 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          Point textSize = gc.textExtent(text);
 
          gc.setAlpha(128);
-         gc.setBackground(INFO_BLOCK_BACKGROUND);
+         gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
          gc.fillRoundRectangle(rect.x + rect.width + 3, rect.y + rect.height / 2 - textSize.y / 2 - 2, textSize.x + 6, textSize.y + 4, 4, 4);
          gc.setAlpha(255);
-         
+
          Color textColor = ColorConverter.adjustColor(selected ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(255, 255, 255), 0.6f, colorCache);
          gc.setForeground(textColor);
          gc.drawText(text, rect.x + rect.width + 6, rect.y + rect.height / 2 - textSize.y / 2, true);
@@ -406,13 +407,13 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       // Calculate width and height
       int width = Math.max(titleSize.x + 12, 128);
       int height = OBJECT_TOOLTIP_Y_MARGIN * 2 + titleSize.y + 2 + OBJECT_TOOLTIP_SPACING;
-      
+
       final String location = currentObject.getGeolocation().toString();
       Point pt = gc.textExtent(location);
       if (width < pt.x)
          width = pt.x;
       height += pt.y;
-      
+
       String locationDetails;
       if ((currentObject.getGeolocation().getTimestamp().getTime() > 0) && currentObject.getGeolocation().isAutomatic())
       {

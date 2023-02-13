@@ -206,4 +206,18 @@ public class FontTools
       FontData fd = font.getFontData()[0];
       return new Font(Display.getCurrent(), fd.getName(), fd.getHeight() + heightAdjustment, fd.getStyle());
    }
+
+   /**
+    * Create font with same style and typeface as given, but with adjusted height and style.
+    *
+    * @param font existing font
+    * @param heightAdjustment height adjustment
+    * @param style style for new font
+    * @return new font
+    */
+   public static Font createAdjustedFont(Font font, int heightAdjustment, int style)
+   {
+      FontData fd = font.getFontData()[0];
+      return new Font(Display.getCurrent(), fd.getName(), fd.getHeight() + heightAdjustment, style);
+   }
 }

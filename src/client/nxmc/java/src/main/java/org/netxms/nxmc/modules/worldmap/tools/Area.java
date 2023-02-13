@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ public class Area
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder("Area={"); //$NON-NLS-1$
+      StringBuilder sb = new StringBuilder("Area={");
 		sb.append(xLow);
 		sb.append(',');
 		sb.append(yLow);

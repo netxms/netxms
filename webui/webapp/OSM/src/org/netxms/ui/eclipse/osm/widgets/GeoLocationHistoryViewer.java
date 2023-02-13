@@ -189,7 +189,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
    {
       Point p = new Point(x, y);
       final GeoLocation center = getLocationAtPoint(p);
-      
+
       p.x -= 5;
       p.y -= 5;
       GeoLocation topLeft = getLocationAtPoint(p);
@@ -208,7 +208,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
             return (int)Math.signum(d1 - d2);
          }
       });
-      
+
       return locations;
    }
 
@@ -276,10 +276,11 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
    }
 
    /**
-    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC, org.netxms.base.GeoLocation, int, int)
+    * @see org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer#drawContent(org.eclipse.swt.graphics.GC,
+    *      org.netxms.base.GeoLocation, int, int, int)
     */
    @Override
-   protected void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH)
+   protected void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH, int verticalOffset)
    {
       final Point centerXY = GeoLocationCache.coordinateToDisplay(currentLocation, accessor.getZoom());
       int nextX = 0;
@@ -288,15 +289,15 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
       {
          final Point virtualXY = GeoLocationCache.coordinateToDisplay(points.get(i), accessor.getZoom());
          final int dx = virtualXY.x - centerXY.x;
-         final int dy = virtualXY.y - centerXY.y;
-         
+         final int dy = virtualXY.y - centerXY.y + verticalOffset;
+
          if (i != points.size() - 1)
          { 
             final Point virtualXY2 = GeoLocationCache.coordinateToDisplay(points.get(i + 1), accessor.getZoom());
             nextX = imgW / 2 + (virtualXY2.x - centerXY.x);
-            nextY = imgH / 2 + (virtualXY2.y - centerXY.y);
+            nextY = imgH / 2 + (virtualXY2.y - centerXY.y) + verticalOffset;
          }
-         
+
          int color = SWT.COLOR_RED;
          if (i == selectedPoint)
          {
@@ -306,7 +307,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
                   points.get(i), df.format(points.get(i).getTimestamp()), df.format(points.get(i).getEndTimestamp())));
             pointToolTip.setVisible(true);
          }
-            
+
          if (i == 0)
          {
             if (i == points.size() - 1)
@@ -317,13 +318,13 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
             drawPoint(gc, imgW / 2 + dx, imgH / 2 + dy, START, nextX, nextY, color);                  
             continue;
          } 
-         
+
          if (i == points.size() - 1)
          {    
             drawPoint(gc, imgW / 2 + dx, imgH / 2 + dy, END, nextX, nextY, color);
             continue;
          }
-         
+
          drawPoint(gc, imgW / 2 + dx, imgH / 2 + dy, 0, nextX, nextY, color);
       }
    }
@@ -349,7 +350,7 @@ public class GeoLocationHistoryViewer extends AbstractGeoMapViewer implements Mo
 
          gc.setBackground(getDisplay().getSystemColor(color)); 
          gc.fillOval(x - 5, y -5, 10, 10);
-         
+
          Image image = (flag == START) ? imageStart : imageFinish;
          if (image == null)
             image = SharedIcons.IMG_EMPTY;
