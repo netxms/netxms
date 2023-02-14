@@ -11,10 +11,10 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Display;
 import org.swtchart.Chart;
+import org.swtchart.IAxis.Direction;
 import org.swtchart.ILineSeries;
 import org.swtchart.LineStyle;
 import org.swtchart.Range;
-import org.swtchart.IAxis.Direction;
 import org.swtchart.internal.Util;
 import org.swtchart.internal.axis.Axis;
 import org.swtchart.internal.compress.CompressLineSeries;
@@ -76,15 +76,13 @@ public class LineSeries extends Series implements ILineSeries
 	/** the margin in pixels attached at the minimum/maximum plot */
 	//private static final int MARGIN_AT_MIN_MAX_PLOT = 6;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param chart
-	 *           the chart
-	 * @param id
-	 *           the series id
-	 */
-	protected LineSeries(Chart chart, String id)
+   /**
+    * Constructor.
+    *
+    * @param chart the chart
+    * @param id the series id
+    */
+   protected LineSeries(Chart chart, String id)
 	{
 		super(chart, id);
 

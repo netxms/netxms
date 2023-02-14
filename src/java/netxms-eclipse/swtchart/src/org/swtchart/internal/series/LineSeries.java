@@ -76,15 +76,13 @@ public class LineSeries extends Series implements ILineSeries
 	/** the margin in pixels attached at the minimum/maximum plot */
 	//private static final int MARGIN_AT_MIN_MAX_PLOT = 6;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param chart
-	 *           the chart
-	 * @param id
-	 *           the series id
-	 */
-	protected LineSeries(Chart chart, String id)
+   /**
+    * Constructor.
+    *
+    * @param chart the chart
+    * @param id the series id
+    */
+   protected LineSeries(Chart chart, String id)
 	{
 		super(chart, id);
 

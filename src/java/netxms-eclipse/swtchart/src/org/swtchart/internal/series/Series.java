@@ -193,7 +193,7 @@ abstract public class Series implements ISeries
       this.inverted = inverted;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.swtchart.ISeries#isInverted()
     */
    @Override
@@ -202,9 +202,9 @@ abstract public class Series implements ISeries
       return inverted;
    }
 
-   /* (non-Javadoc)
-	 * @see org.swtchart.ISeries#enableStack(boolean, boolean)
-	 */
+   /**
+    * @see org.swtchart.ISeries#enableStack(boolean, boolean)
+    */
 	@Override
 	public void enableStack(boolean enabled, boolean update)
 	{
@@ -224,12 +224,11 @@ abstract public class Series implements ISeries
 		   ((SeriesSet)chart.getSeriesSet()).updateStackAndRiserData();
 	}
 
-	/*
-	 * @see ISeries#setXSeries(double[])
-	 */
+   /**
+    * @see ISeries#setXSeries(double[])
+    */
 	public void setXSeries(double[] series)
 	{
-
 		if (series == null)
 		{
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);

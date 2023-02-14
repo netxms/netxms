@@ -545,7 +545,7 @@ public class SeriesSet implements ISeriesSet
     * @param stackSeries the stack series
     * @param series the series
     */
-   private void setStackSeries(double[] stackSeries, ISeries series)
+   private static void setStackSeries(double[] stackSeries, ISeries series)
    {
       double[] ySeries = series.getYSeries();
       if (ySeries == null || stackSeries == null)
