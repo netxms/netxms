@@ -1,0 +1,20 @@
+name: Validate default templates
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Build-and-Run-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Update apt cache
+        run: sudo apt-get update
+      - name: Install dependencies
+        run: sudo apt-get install -y libxml2-utils
+      - name: Run tests
+        run: |
+          find contrib/templates -name '*.xml' -print0 | xargs -0 xmllint --noout
