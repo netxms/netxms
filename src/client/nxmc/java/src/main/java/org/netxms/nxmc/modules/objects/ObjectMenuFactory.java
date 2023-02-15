@@ -98,7 +98,7 @@ public final class ObjectMenuFactory
     * @param viewPlacement view placement information (can be used for displaying messages and creating new views)
     * @return newly constructed menu
     */
-   public static Menu createPollMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   public static Menu createPollMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
 	{
       if (selection.size() > 1)
          return null;
@@ -110,31 +110,31 @@ public final class ObjectMenuFactory
       final Menu menu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 		if (object instanceof AbstractNode)
 		{
-         addPollMenuItem(menu, object, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_FULL, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.INTERFACES, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.TOPOLOGY, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_FULL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INTERFACES, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.TOPOLOGY, viewPlacement);
 		}
       else if (object instanceof BusinessServicePrototype)
       {
-         addPollMenuItem(menu, object, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
       else if ((object instanceof BusinessService) || (object instanceof Cluster))
 		{
-         addPollMenuItem(menu, object, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
 		}
       else if ((object instanceof Container) || (object instanceof Dashboard) || (object instanceof Template))
       {
-         addPollMenuItem(menu, object, ObjectPollType.AUTOBIND, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.AUTOBIND, viewPlacement);
       }
       else if (object instanceof Sensor)
       {
-         addPollMenuItem(menu, object, ObjectPollType.STATUS, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
-         addPollMenuItem(menu, object, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.STATUS, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.CONFIGURATION_NORMAL, viewPlacement);
+         addPollMenuItem(menu, object, contextId, ObjectPollType.INSTANCE_DISCOVERY, viewPlacement);
       }
 
       if (menu.getItemCount() == 0)
@@ -154,7 +154,7 @@ public final class ObjectMenuFactory
     * @param type poll type
     * @param viewPlacement view placement information (can be used for displaying messages and creating new views)
     */
-   public static void addPollMenuItem(final Menu menu, AbstractObject object, ObjectPollType type, ViewPlacement viewPlacement)
+   public static void addPollMenuItem(final Menu menu, AbstractObject object, long contextId, ObjectPollType type, ViewPlacement viewPlacement)
    {
       final MenuItem item = new MenuItem(menu, SWT.PUSH);
       item.setText(POLL_NAME[type.getValue()]);
@@ -162,7 +162,7 @@ public final class ObjectMenuFactory
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            ObjectPollerView view = new ObjectPollerView(object, type);
+            ObjectPollerView view = new ObjectPollerView(object, type, contextId);
             if (viewPlacement.getPerspective() != null)
             {
                viewPlacement.getPerspective().addMainView(view, true, false);
@@ -185,9 +185,9 @@ public final class ObjectMenuFactory
     * @param viewPlacement view placement (can be used for displaying messages and selecting perspective for new views)
     * @return newly constructed menu
     */
-   public static Menu createToolsMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   public static Menu createToolsMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
-      final Set<ObjectContext> objects = buildObjectSet(selection);
+      final Set<ObjectContext> objects = buildObjectSet(selection, contextId);
       final Menu toolsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
 
       final ImageCache imageCache = new ImageCache();
@@ -265,7 +265,7 @@ public final class ObjectMenuFactory
     * @param viewPlacement view placement (can be used for displaying messages and selecting perspective for new views)
     * @return newly constructed menu
     */
-   public static Menu createGraphTemplatesMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   public static Menu createGraphTemplatesMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
       if (selection.size() != 1)
          return null;
@@ -321,7 +321,7 @@ public final class ObjectMenuFactory
                      protected void run(IProgressMonitor monitor) throws Exception
                      {
                         final DciValue[] data = session.getLastValues(node.getObjectId());
-                        GraphTemplateCache.instantiate(node, gs, data, session, viewPlacement);
+                        GraphTemplateCache.instantiate(node, contextId, gs, data, session, viewPlacement);
                      }
                   };
                   job.setUser(false);
@@ -350,7 +350,7 @@ public final class ObjectMenuFactory
     * @param viewPlacement view placement (can be used for displaying messages and selecting perspective for new views)
     * @return newly constructed menu
     */
-   public static Menu createSummaryTableMenu(IStructuredSelection selection, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   public static Menu createSummaryTableMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
    {
       if (selection.size() == 0)
          return null;
@@ -409,7 +409,7 @@ public final class ObjectMenuFactory
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-               SummaryTablesCache.queryTable(baseObject.getObjectId(), ((DciSummaryTableDescriptor)item.getData()).getId(), viewPlacement);
+               SummaryTablesCache.queryTable(baseObject.getObjectId(), contextId, ((DciSummaryTableDescriptor)item.getData()).getId(), viewPlacement);
             }
          });
          
@@ -431,7 +431,7 @@ public final class ObjectMenuFactory
     * @param selection
     * @return
     */
-   private static Set<ObjectContext> buildObjectSet(IStructuredSelection selection)
+   private static Set<ObjectContext> buildObjectSet(IStructuredSelection selection, long contextId)
    {
       final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
       final NXCSession session = Registry.getSession();
@@ -440,25 +440,25 @@ public final class ObjectMenuFactory
       {
          if (o instanceof AbstractNode)
          {
-            nodes.add(new ObjectContext((AbstractNode)o, null));
+            nodes.add(new ObjectContext((AbstractNode)o, null, contextId));
          }
          else if ((o instanceof AbstractObject) && ObjectTool.isContainerObject((AbstractObject)o))
          {
-            nodes.add(new ObjectContext((AbstractObject)o, null));
+            nodes.add(new ObjectContext((AbstractObject)o, null, contextId));
             for(AbstractObject n : ((AbstractObject)o).getAllChildren(AbstractObject.OBJECT_NODE))
-               nodes.add(new ObjectContext(n, null));
+               nodes.add(new ObjectContext(n, null, contextId));
          }
          else if (o instanceof Alarm)
          {
             AbstractNode n = (AbstractNode)session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
             if (n != null)
-               nodes.add(new ObjectContext(n, (Alarm)o));
+               nodes.add(new ObjectContext(n, (Alarm)o, contextId));
          }
          else if (o instanceof ObjectWrapper)
          {
             AbstractObject n = ((ObjectWrapper)o).getObject();
             if ((n != null) && (n instanceof AbstractNode))
-               nodes.add(new ObjectContext((AbstractNode)n, null));
+               nodes.add(new ObjectContext((AbstractNode)n, null, contextId));
          }
       }
       return nodes;

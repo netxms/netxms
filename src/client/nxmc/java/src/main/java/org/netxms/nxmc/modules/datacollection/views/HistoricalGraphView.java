@@ -92,6 +92,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
            i18n.tr("Last 5 days"), i18n.tr("Last week"), i18n.tr("Last month"), i18n.tr("Last year") };
 
    private long objectId;
+   private long contextId;
    private String fullName;
    private NXCSession session = Registry.getSession();
    private Chart chart = null;
@@ -159,10 +160,11 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
     * @param contextObject context object
     * @param items DCI list
     */
-   public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items)
+   public HistoricalGraphView(AbstractObject contextObject, List<ChartDciConfig> items, long contextId)
    {
       super(i18n.tr("Line Chart"), ResourceManager.getImageDescriptor("icons/object-views/chart-line.png"), buildId(contextObject, items), false);
       objectId = contextObject.getObjectId();
+      this.contextId = contextId;
       fullName = "Line Chart";
 
       refreshController = new ViewRefreshController(this, -1, new Runnable() {
@@ -265,7 +267,8 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == objectId);
+      return (context != null) && (context instanceof AbstractObject) && 
+            ((((AbstractObject)context).getObjectId() == objectId) || (((AbstractObject)context).getObjectId() == contextId));
    }
 
    /**
@@ -334,7 +337,7 @@ public class HistoricalGraphView extends ViewWithContext implements ChartConfigu
       chartConfiguration.setModifyYBase(configuration.isModifyYBase());
       chartConfiguration.setMinYScaleValue(configuration.getMinYScaleValue());
       chartConfiguration.setMaxYScaleValue(configuration.getMaxYScaleValue());
-
+     
       chart = new Chart(chartParent, SWT.NONE, ChartType.LINE, chartConfiguration);
       createPopupMenu();
 

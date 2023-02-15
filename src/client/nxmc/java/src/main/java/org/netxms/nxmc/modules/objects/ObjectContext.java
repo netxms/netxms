@@ -32,14 +32,16 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectContext extends ObjectContextBase
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ObjectContext.class);
+   public long contextId;
 
    /**
     * @param object
     * @param alarm
     */
-   public ObjectContext(AbstractObject object, Alarm alarm)
+   public ObjectContext(AbstractObject object, Alarm alarm, long contextId)
    {
       super(object, alarm);
+      this.contextId = contextId;
    }
 
    /**

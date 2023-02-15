@@ -159,11 +159,11 @@ public class GraphTemplateCache
     * @throws IOException
     * @throws NXCException
     */
-   public static void instantiate(final AbstractNode node, GraphDefinition template, final DciValue[] dciList, NXCSession session, ViewPlacement viewPlacement) throws IOException, NXCException
+   public static void instantiate(final AbstractNode node, long contextId, GraphDefinition template, final DciValue[] dciList, NXCSession session, ViewPlacement viewPlacement) throws IOException, NXCException
    {
       List<String> textsToExpand = new ArrayList<String>();
       textsToExpand.add(template.getTitle());
-      String name = session.substituteMacros(new ObjectContext(node, null), textsToExpand, new HashMap<String, String>()).get(0);
+      String name = session.substituteMacros(new ObjectContext(node, null, contextId), textsToExpand, new HashMap<String, String>()).get(0);
       final GraphDefinition graphDefinition = new GraphDefinition(template, name);
 
       final HashSet<ChartDciConfig> chartMetrics = new HashSet<ChartDciConfig>();
@@ -190,7 +190,7 @@ public class GraphTemplateCache
             public void run()
             {
                graphDefinition.setDciList(chartMetrics.toArray(new ChartDciConfig[chartMetrics.size()]));
-               showPredefinedGraph(graphDefinition, node, viewPlacement);               
+               showPredefinedGraph(graphDefinition, node, contextId, viewPlacement);               
             }
          });
       }
@@ -212,11 +212,10 @@ public class GraphTemplateCache
     * @param graphDefinition graph definition
     * @param viewPlacement 
     */
-   private static void showPredefinedGraph(GraphDefinition graphDefinition, AbstractNode node, ViewPlacement viewPlacement)
-   {
-      Perspective p = viewPlacement.getPerspective();   
-      
-      HistoricalGraphView view = new HistoricalGraphView(node, Arrays.asList(graphDefinition.getDciList()));
+   private static void showPredefinedGraph(GraphDefinition graphDefinition, AbstractNode node, long contextId, ViewPlacement viewPlacement)
+   {      
+      Perspective p = viewPlacement.getPerspective();         
+      HistoricalGraphView view = new HistoricalGraphView(node, Arrays.asList(graphDefinition.getDciList()), contextId);
       if (p != null)
       {
          p.addMainView(view, true, false);

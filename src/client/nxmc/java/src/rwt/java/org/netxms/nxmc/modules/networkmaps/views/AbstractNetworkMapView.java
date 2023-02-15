@@ -1289,11 +1289,11 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                   Perspective p = getPerspective();
                   if (p != null)
                   {
-                     p.addMainView(new HistoricalGraphView(object, items), true, false);
+                     p.addMainView(new HistoricalGraphView(object, items, getObjectId()), true, false);
                   }
                   else
                   {
-                     PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items));
+                     PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items, getObjectId()));
                      window.open();
                   }
                }

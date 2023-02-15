@@ -148,7 +148,7 @@ public class AlarmDetails extends AdHocObjectView
     */
    public AlarmDetails(long alarmId, long contextObject)
    {
-      super(String.format(i18n.tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", contextObject, true);
+      super(String.format(i18n.tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", contextObject, contextObject, true);
       this.alarmId = alarmId;
       objectLabelProvider = new BaseObjectLabelProvider();
 
@@ -161,7 +161,7 @@ public class AlarmDetails extends AdHocObjectView
    
    protected AlarmDetails()
    {
-      super(null, null, null, 0, false); 
+      super(null, null, null, 0, 0, false); 
       objectLabelProvider = new BaseObjectLabelProvider();
 
       stateImages[0] = ResourceManager.getImage("icons/alarms/outstanding.png");

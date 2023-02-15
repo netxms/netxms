@@ -117,10 +117,10 @@ public class DataComparisonView extends AdHocObjectView
     * @param items graph items
     * @param chartType chart type
     */
-   public DataComparisonView(long objectId, ArrayList<GraphItem> items, ChartType chartType)
+   public DataComparisonView(long objectId, ArrayList<GraphItem> items, ChartType chartType, long contextId)
 	{      
       super(i18n.tr("Last Values Chart"),
-            ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), objectId, false);
+            ResourceManager.getImageDescriptor((chartType == ChartType.PIE) ? "icons/object-views/chart-pie.png" : "icons/object-views/chart-bar.png"), buildId(items, chartType), objectId, contextId, false);
  
       this.chartType = chartType;
       this.items = items;
@@ -131,7 +131,7 @@ public class DataComparisonView extends AdHocObjectView
     */
    protected DataComparisonView()
    {      
-      super(null, null, null, 0, false); 
+      super(null, null, null, 0, 0, false); 
    }
 
    /**

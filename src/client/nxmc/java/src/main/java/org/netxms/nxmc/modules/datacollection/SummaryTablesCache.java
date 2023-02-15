@@ -189,7 +189,7 @@ public class SummaryTablesCache
     * @param baseObjectId
     * @param tableId
     */
-   public static void queryTable(final long baseObjectId, final int tableId, ViewPlacement viewPlacement)
+   public static void queryTable(final long baseObjectId, long contextId, final int tableId, ViewPlacement viewPlacement)
    {
       final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Query DCI summary table"), null) {
@@ -203,7 +203,7 @@ public class SummaryTablesCache
                {
                   Perspective p = viewPlacement.getPerspective();   
                   
-                  SummaryTable view = new SummaryTable(tableId, baseObjectId);
+                  SummaryTable view = new SummaryTable(tableId, baseObjectId, contextId);
                   if (p != null)
                   {
                      p.addMainView(view, true, false);

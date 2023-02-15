@@ -38,6 +38,7 @@ import org.netxms.nxmc.modules.datacollection.views.DataComparisonView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalDataView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.datacollection.views.TableLastValuesView;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -221,7 +222,8 @@ public class ShowHistoricalDataMenuItems
          items.add(config);
       }
 
-      view.openView(new HistoricalGraphView(parent, items));
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new HistoricalGraphView(parent, items, contextId));
    }
 
    /**
@@ -238,7 +240,8 @@ public class ShowHistoricalDataMenuItems
       {
          items.add(new GraphItem((DciValue)o, null));
       }
-      
-      view.openView(new DataComparisonView(parent.getObjectId(), items, chartType));
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new DataComparisonView(parent.getObjectId(), items, chartType, contextId));
    }   
 }

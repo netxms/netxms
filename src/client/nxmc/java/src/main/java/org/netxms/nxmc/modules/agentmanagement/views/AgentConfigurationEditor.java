@@ -57,9 +57,9 @@ public class AgentConfigurationEditor extends AdHocObjectView
     *
     * @param node node object
     */
-   public AgentConfigurationEditor(Node node)
+   public AgentConfigurationEditor(Node node, long contextId)
    {
-      super(i18n.tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfigurationEditor", node.getObjectId(), false);
+      super(i18n.tr("Agent Configuration"), ResourceManager.getImageDescriptor("icons/object-views/agent-config.png"), "AgentConfigurationEditor", node.getObjectId(), contextId, false);
    }
 
    /**
@@ -67,7 +67,7 @@ public class AgentConfigurationEditor extends AdHocObjectView
     */
    protected AgentConfigurationEditor()
    {
-      super(null, null, null, 0, false); 
+      super(null, null, null, 0, 0, false); 
    }
 
    /**

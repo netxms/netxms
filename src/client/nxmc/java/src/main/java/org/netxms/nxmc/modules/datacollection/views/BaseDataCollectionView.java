@@ -690,7 +690,7 @@ public abstract class BaseDataCollectionView extends ObjectView
       {
          List<ChartDciConfig> items = new ArrayList<ChartDciConfig>(1);
          items.add(getConfigFromObject(dcObject));
-         openView(new HistoricalGraphView(getObject(), items));
+         openView(new HistoricalGraphView(getObject(), items, 0));
       }
    }
 

@@ -218,11 +218,11 @@ public class TableValueViewer extends BaseTableValueViewer
       Perspective p = view.getPerspective();
       if (p != null)
       {
-         p.addMainView(new HistoricalGraphView(object, items), true, false);
+         p.addMainView(new HistoricalGraphView(object, items, 0), true, false);
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items));
+         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items, 0));
          window.open();
       }
    }
@@ -250,11 +250,11 @@ public class TableValueViewer extends BaseTableValueViewer
       Perspective p = view.getPerspective();
       if (p != null)
       {
-         p.addMainView(new DataComparisonView(objectId, items, chartType), true, false);
+         p.addMainView(new DataComparisonView(objectId, items, chartType, objectId), true, false);
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(new DataComparisonView(objectId, items, chartType));
+         PopOutViewWindow window = new PopOutViewWindow(new DataComparisonView(objectId, items, chartType, objectId));
          window.open();
       }
    }

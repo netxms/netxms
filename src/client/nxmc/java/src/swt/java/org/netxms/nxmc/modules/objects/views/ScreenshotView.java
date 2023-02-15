@@ -89,9 +89,9 @@ public class ScreenshotView extends AdHocObjectView
     * @param userSession name of user session to get screenshot from or null to select first available
     * @param userName user name to display (can be null)
     */
-   public ScreenshotView(AbstractNode node, String userSession, String userName)
+   public ScreenshotView(AbstractNode node, String userSession, String userName, long contextId)
    {
-      super(i18n.tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), false);
+      super(i18n.tr("Screenshot"), ResourceManager.getImageDescriptor("icons/screenshot.png"), "Screenshot", node.getObjectId(), contextId, false);
       this.userSession = userSession;
       this.userName = userName;
    }
@@ -103,7 +103,7 @@ public class ScreenshotView extends AdHocObjectView
     */
    protected ScreenshotView()
    {
-      super(null, null, null, 0, false);
+      super(null, null, null, 0, 0, false);
    }
 
    /**

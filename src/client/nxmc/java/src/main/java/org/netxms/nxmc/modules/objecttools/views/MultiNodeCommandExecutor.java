@@ -78,6 +78,7 @@ public class MultiNodeCommandExecutor extends ObjectView
    private List<String> maskedFields;
    private List<String> expandedText;
 
+
    /**
     * @param id
     * @param image
@@ -314,13 +315,15 @@ public class MultiNodeCommandExecutor extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      if (context != null && context instanceof AbstractObject)
+      if (context != null && context instanceof AbstractObject && (sourceObjects.size() > 0))
       {
          for (ObjectContext object : sourceObjects)
          {
             if (((AbstractObject)context).getObjectId() == object.object.getObjectId())
                return true;
          }
+         if (((AbstractObject)context).getObjectId() == sourceObjects.iterator().next().contextId)
+            return true;
       }
       return false;
    }

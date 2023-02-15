@@ -119,7 +119,7 @@ public class Commands extends OverviewPageElement
 		         continue;
 
             final Set<ObjectContext> nodes = new HashSet<ObjectContext>(1);
-            nodes.add(new ObjectContext((AbstractNode)getObject(), null));
+            nodes.add(new ObjectContext((AbstractNode)getObject(), null, getObject().getObjectId()));
             if (!ObjectToolExecutor.isToolAllowed(tool, nodes))
                continue;
 		      

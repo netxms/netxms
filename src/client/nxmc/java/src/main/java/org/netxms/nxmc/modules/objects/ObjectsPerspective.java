@@ -281,7 +281,7 @@ public abstract class ObjectsPerspective extends Perspective
          @Override
          public void run()
          {
-            addMainView(new ScriptExecutorView(object.getObjectId()), true, false);
+            addMainView(new ScriptExecutorView(object.getObjectId(), object.getObjectId()), true, false);
          }
       });
 
@@ -291,7 +291,7 @@ public abstract class ObjectsPerspective extends Perspective
             @Override
             public void run()
             {
-               addMainView(new AgentConfigurationEditor((Node)object), true, false);
+               addMainView(new AgentConfigurationEditor((Node)object, object.getObjectId()), true, false);
             }
          });
       }
@@ -353,10 +353,10 @@ public abstract class ObjectsPerspective extends Perspective
       for(ToolItem item : objectMenuBar.getItems())
          item.dispose();
 
-      addObjectMenu(i18n.tr("Tools"), ObjectMenuFactory.createToolsMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
-      addObjectMenu(i18n.tr("Graphs"), ObjectMenuFactory.createGraphTemplatesMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
-      addObjectMenu(i18n.tr("Summary Tables"), ObjectMenuFactory.createSummaryTableMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
-      addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Tools"), ObjectMenuFactory.createToolsMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Graphs"), ObjectMenuFactory.createGraphTemplatesMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Summary Tables"), ObjectMenuFactory.createSummaryTableMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Create"), new ObjectCreateMenuManager(getWindow().getShell(), null, object));
    }
 

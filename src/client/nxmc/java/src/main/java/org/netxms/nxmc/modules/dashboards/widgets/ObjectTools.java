@@ -127,7 +127,7 @@ public class ObjectTools extends ElementWidget
       Set<ObjectContext> nodes = new HashSet<ObjectContext>();
       if (object instanceof AbstractNode)
       {
-         ObjectContext oc = new ObjectContext((AbstractNode)object, null);
+         ObjectContext oc = new ObjectContext((AbstractNode)object, null, getDashboardObjectId());
          nodes.add(oc);
          allObjects.add(oc);
       }
@@ -135,10 +135,10 @@ public class ObjectTools extends ElementWidget
       {
          for(AbstractObject n : object.getAllChildren(AbstractObject.OBJECT_NODE))
          {
-            ObjectContext oc = new ObjectContext((AbstractNode)n, null);
+            ObjectContext oc = new ObjectContext((AbstractNode)n, null, getDashboardObjectId());
             nodes.add(oc);
             allObjects.add(oc);
-            allObjects.add(new ObjectContext((AbstractNode)object, null));
+            allObjects.add(new ObjectContext((AbstractNode)object, null, getDashboardObjectId()));
          }
       }
       ObjectToolExecutor.execute(allObjects, nodes, tool, new ViewPlacement(view));

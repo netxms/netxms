@@ -769,7 +769,7 @@ public class AgentFileManager extends ObjectView
                @Override
                public void run()
                {
-                  AgentFileViewer.createView(AgentFileManager.this, getObjectId(), file, followChanges);
+                  AgentFileViewer.createView(AgentFileManager.this, getObjectId(), file, followChanges, getObjectId());
                }
             });
          }

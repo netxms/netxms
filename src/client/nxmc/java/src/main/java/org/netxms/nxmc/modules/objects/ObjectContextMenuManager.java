@@ -72,6 +72,7 @@ import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -438,28 +439,29 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionExecuteScript);
       }
 
-      final Menu toolsMenu = ObjectMenuFactory.createToolsMenu(selection, getMenu(), null, new ViewPlacement(view));
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      final Menu toolsMenu = ObjectMenuFactory.createToolsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
       if (toolsMenu != null)
       {
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("&Tools"), toolsMenu));
       }
 
-      final Menu pollsMenu = ObjectMenuFactory.createPollMenu(selection, getMenu(), null, new ViewPlacement(view));
+      final Menu pollsMenu = ObjectMenuFactory.createPollMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
       if (pollsMenu != null)
       {
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("P&oll"), pollsMenu));
       }
 
-      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(selection, getMenu(), null, new ViewPlacement(view));
+      final Menu graphTemplatesMenu = ObjectMenuFactory.createGraphTemplatesMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
       if (graphTemplatesMenu != null)
       {
          add(new Separator());
          add(new MenuContributionItem(i18n.tr("&Graphs"), graphTemplatesMenu));
       }
 
-      final Menu summaryTableMenu = ObjectMenuFactory.createSummaryTableMenu(selection, getMenu(), null, new ViewPlacement(view));
+      final Menu summaryTableMenu = ObjectMenuFactory.createSummaryTableMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
       if (summaryTableMenu != null)
       {
          add(new Separator());
@@ -773,7 +775,8 @@ public class ObjectContextMenuManager extends MenuManager
       if (!(object instanceof Node))
          return;
 
-      ScreenshotView screenshotView = new ScreenshotView((Node)object, null, null);
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      ScreenshotView screenshotView = new ScreenshotView((Node)object, null, null, contextId);
       if (view.getPerspective() != null)
       {
          view.getPerspective().addMainView(screenshotView, true, false);
@@ -794,7 +797,8 @@ public class ObjectContextMenuManager extends MenuManager
       if (!(object instanceof Node))
          return;
 
-      AgentConfigurationEditor editor = new AgentConfigurationEditor((Node)object);
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      AgentConfigurationEditor editor = new AgentConfigurationEditor((Node)object, contextId);
       if (view.getPerspective() != null)
       {
          view.getPerspective().addMainView(editor, true, false);
@@ -812,7 +816,8 @@ public class ObjectContextMenuManager extends MenuManager
    private void executeScript()
    {
       AbstractObject object = getObjectFromSelection();
-      ScriptExecutorView executor = new ScriptExecutorView(object.getObjectId());
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      ScriptExecutorView executor = new ScriptExecutorView(object.getObjectId(), contextId);
       if (view.getPerspective() != null)
       {
          view.getPerspective().addMainView(executor, true, false);

@@ -77,9 +77,9 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
     * @param object object to poll
     * @param type poll type
     */
-   public ObjectPollerView(AbstractObject object, ObjectPollType type)
+   public ObjectPollerView(AbstractObject object, ObjectPollType type, long contextId)
    {
-      super(POLL_NAME[type.getValue()], ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), false);
+      super(POLL_NAME[type.getValue()], ResourceManager.getImageDescriptor("icons/object-views/poller_view.png"), "ObjectPoll." + type, object.getObjectId(), contextId, false);
       display = Display.getCurrent();
 
       target = (PollingTarget)object;
@@ -91,7 +91,7 @@ public class ObjectPollerView extends AdHocObjectView implements TextOutputListe
     */
    protected ObjectPollerView()
    {
-      super(null, null, null, 0, false);
+      super(null, null, null, 0, 0, false);
       display = Display.getCurrent();
    }
 

@@ -23,12 +23,12 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.objects.ObjectContext;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objects.views.AdHocObjectView;
 
 /**
  * Base Object tool result view class
  */
-public abstract class ObjectToolResultView extends ObjectView
+public abstract class ObjectToolResultView extends AdHocObjectView
 {
    protected ObjectTool tool;
    protected ObjectContext object;
@@ -67,7 +67,7 @@ public abstract class ObjectToolResultView extends ObjectView
     */
    public ObjectToolResultView(ObjectContext object, ObjectTool tool, ImageDescriptor image, boolean hasFilter)
    {
-      super(getViewName(object.object, tool), image, getViewId(object.object, tool), hasFilter);
+      super(getViewName(object.object, tool), image, getViewId(object.object, tool), object.object.getObjectId(), object.contextId, hasFilter);
       this.tool = tool;
       this.object = object;
    }
@@ -82,28 +82,5 @@ public abstract class ObjectToolResultView extends ObjectView
       view.tool = tool;
       view.object = object;
       return view;
-   } 
-   
-   /**
-    * @see org.netxms.nxmc.base.views.View#isCloseable()
-    */
-   @Override
-   public boolean isCloseable()
-   {
-      return true;
-   }  
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      if (context != null && context instanceof AbstractObject)
-      {
-         if (((AbstractObject)context).getObjectId() == object.object.getObjectId())
-            return true;
-      }
-      return false;
    } 
 }

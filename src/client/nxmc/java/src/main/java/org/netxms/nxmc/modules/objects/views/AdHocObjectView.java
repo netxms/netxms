@@ -30,6 +30,7 @@ import org.netxms.nxmc.base.views.View;
 public abstract class AdHocObjectView extends ObjectView
 {
    private long objectId;
+   private long contextId;
 
    /**
     * Create ad-hoc object view.
@@ -40,10 +41,11 @@ public abstract class AdHocObjectView extends ObjectView
     * @param objectId object ID this view is intended for
     * @param hasFileter true if view should contain filter
     */
-   public AdHocObjectView(String name, ImageDescriptor image, String baseId, long objectId, boolean hasFilter)
+   public AdHocObjectView(String name, ImageDescriptor image, String baseId, long objectId, long contextId, boolean hasFilter)
    {
       super(name, image, baseId + "#" + Long.toString(objectId), hasFilter);
       this.objectId = objectId;
+      this.contextId = contextId;
    }
 
    /**
@@ -54,6 +56,7 @@ public abstract class AdHocObjectView extends ObjectView
    {
       AdHocObjectView view = (AdHocObjectView)super.cloneView();
       view.objectId = objectId;
+      view.contextId = contextId;
       return view;
    }
 
@@ -63,7 +66,8 @@ public abstract class AdHocObjectView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == objectId);
+      return (context != null) && (context instanceof AbstractObject) && 
+            ((((AbstractObject)context).getObjectId() == objectId) || (((AbstractObject)context).getObjectId() == contextId));
    }
 
    /**
@@ -103,4 +107,12 @@ public abstract class AdHocObjectView extends ObjectView
       AbstractObject object = getObject();
       return (object != null) ? object.getObjectName() : "";
    }
+
+   /**
+    * @return the contextId
+    */
+   public long getContextId()
+   {
+      return contextId;
+   }  
 }

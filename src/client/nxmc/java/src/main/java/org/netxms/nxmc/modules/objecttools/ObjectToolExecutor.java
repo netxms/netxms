@@ -775,7 +775,7 @@ public final class ObjectToolExecutor
                public void run()
                {
                   Perspective p = viewPlacement.getPerspective();   
-                  AgentFileViewer view = new AgentFileViewer(node.object.getObjectId(), file, follow);
+                  AgentFileViewer view = new AgentFileViewer(node.object.getObjectId(), file, follow, node.contextId);
                   if (p != null)
                   {
                      p.addMainView(view, true, false);

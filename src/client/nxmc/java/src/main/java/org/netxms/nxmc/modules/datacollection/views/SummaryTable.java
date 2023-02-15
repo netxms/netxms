@@ -53,9 +53,9 @@ public class SummaryTable extends AdHocObjectView
     * @param name
     * @param image
     */
-   public SummaryTable(int tableId, long baseObjectId)
+   public SummaryTable(int tableId, long baseObjectId, long contextId)
    {
-      super(i18n.tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "SummaryTable", baseObjectId, false);
+      super(i18n.tr("Summary Table"), ResourceManager.getImageDescriptor("icons/config-views/summary_table.png"), "SummaryTable", baseObjectId, contextId,  false);
       session = Registry.getSession();
       this.baseObjectId = baseObjectId;
       this.tableId = tableId;
@@ -66,7 +66,7 @@ public class SummaryTable extends AdHocObjectView
     */
    protected SummaryTable()
    {
-      super(null, null, null, 0, false); 
+      super(null, null, null, 0, 0, false); 
    }
 
    /**

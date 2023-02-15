@@ -337,11 +337,11 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       Perspective p = view.getPerspective();
       if (p != null)
       {
-         p.addMainView(new HistoricalGraphView(object, graphItems), true, false);
+         p.addMainView(new HistoricalGraphView(object, graphItems, 0), true, false);
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, graphItems));
+         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, graphItems, 0));
          window.open();
       }
 	}

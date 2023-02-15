@@ -70,9 +70,9 @@ public class AgentFileViewer extends AdHocObjectView
     * @param file
     * @param followChanges
     */
-   public AgentFileViewer(long objectId, AgentFileData file, boolean followChanges)
+   public AgentFileViewer(long objectId, AgentFileData file, boolean followChanges, long contextId)
    {
-      super(i18n.tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), file.getRemoteName(), objectId, false);
+      super(i18n.tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), file.getRemoteName(), objectId, contextId, false);
       remoteFileName = file.getRemoteName();
       this.followChanges = followChanges;
       setName(remoteFileName);
@@ -240,16 +240,16 @@ public class AgentFileViewer extends AdHocObjectView
     * In case if file is too large asks if it should be opened partly. 
     * @throws PartInitException 
     */
-   public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges) 
+   public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges, long contextId) 
    {
-      return createView(view, nodeId, file, followChanges, false, null);
+      return createView(view, nodeId, file, followChanges, false, contextId, null);
    }
 
 	/**
     * Create new file viewer view with custom line styler. Checks that file does not exceed allowed size.
 	 * In case if file is too large asks if it should be opened partly. 
 	 */
-   public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, BaseFileViewer.LineStyler lineStyler)
+   public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, BaseFileViewer.LineStyler lineStyler)
 	{
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
 	   if (exceedSize && 
@@ -280,7 +280,7 @@ public class AgentFileViewer extends AdHocObjectView
       }
 
       Perspective p = view.getPerspective();   
-      AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges);
+      AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges, contextId);
       if (p != null)
       {
          p.addMainView(fileView, true, ignoreContext);

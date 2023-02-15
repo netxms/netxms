@@ -85,9 +85,9 @@ public class ScriptExecutorView extends AdHocObjectView
     *
     * @param node node object
     */
-   public ScriptExecutorView(long objectId)
+   public ScriptExecutorView(long objectId, long context)
    {
-      super(i18n.tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, false);
+      super(i18n.tr("Execute Script"), ResourceManager.getImageDescriptor("icons/object-views/script-executor.png"), "ScriptExecutor", objectId, context, false);
    }  
 
    /**
@@ -97,7 +97,7 @@ public class ScriptExecutorView extends AdHocObjectView
     */
    protected ScriptExecutorView()
    {
-      super(null, null, null, 0, false);  
+      super(null, null, null, 0, 0, false);  
    }
 
    /**
