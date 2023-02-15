@@ -55,7 +55,7 @@
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
-			<message>Low free virtual memory (%<{multipliers, units}currentValue&gt;)</message>
+			<message>Low free virtual memory (%&lt;{multipliers, units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
 	</events>
