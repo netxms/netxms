@@ -12,9 +12,7 @@ jobs:
   Build-and-Run-Tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v3
       - name: Update apt cache
         run: sudo apt-get update
       - name: Install dependencies
