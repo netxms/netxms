@@ -28,7 +28,7 @@
 #endif
 
 uint32_t g_netsvcFlags = NETSVC_AF_VERIFYPEER;
-uint32_t g_netsvcTimeout = 30;
+uint32_t g_netsvcTimeout = 30000;
 char g_netsvcDomainName[128] = "netxms.com";
 
 /**
@@ -42,7 +42,7 @@ static char s_certBundle[1024] = "";
 void CurlCommonSetup(CURL *curl, const char *url, const OptionList& options, uint32_t timeout)
 {
    curl_easy_setopt(curl, CURLOPT_URL, url);
-   curl_easy_setopt(curl, CURLOPT_TIMEOUT, (timeout != 0) ? timeout : g_netsvcTimeout);
+   curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, (timeout != 0) ? timeout : g_netsvcTimeout);
 
 #if HAVE_DECL_CURLOPT_NOSIGNAL
    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, static_cast<long>(1)); // do not install signal handlers or send signals
