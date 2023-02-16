@@ -63,6 +63,7 @@ import org.netxms.client.server.AgentFile;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.jobs.JobCallingServerJob;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -769,7 +770,7 @@ public class AgentFileManager extends ObjectView
                @Override
                public void run()
                {
-                  AgentFileViewer.createView(AgentFileManager.this, getObjectId(), file, followChanges, getObjectId());
+                  AgentFileViewer.createView(new ViewPlacement(AgentFileManager.this), getObjectId(), file, followChanges, getObjectId());
                }
             });
          }

@@ -36,6 +36,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.widgets.BaseFileViewer;
@@ -70,7 +71,7 @@ public class AgentFileViewer extends AdHocObjectView
     * @param file
     * @param followChanges
     */
-   public AgentFileViewer(long objectId, AgentFileData file, boolean followChanges, long contextId)
+   protected AgentFileViewer(long objectId, AgentFileData file, boolean followChanges, long contextId)
    {
       super(i18n.tr("Remote File"), ResourceManager.getImageDescriptor("icons/object-views/file-view.png"), file.getRemoteName(), objectId, contextId, false);
       remoteFileName = file.getRemoteName();
@@ -240,7 +241,7 @@ public class AgentFileViewer extends AdHocObjectView
     * In case if file is too large asks if it should be opened partly. 
     * @throws PartInitException 
     */
-   public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges, long contextId) 
+   public static boolean createView(ViewPlacement view, final long nodeId, final AgentFileData file, boolean followChanges, long contextId) 
    {
       return createView(view, nodeId, file, followChanges, false, contextId, null);
    }
@@ -249,7 +250,7 @@ public class AgentFileViewer extends AdHocObjectView
     * Create new file viewer view with custom line styler. Checks that file does not exceed allowed size.
 	 * In case if file is too large asks if it should be opened partly. 
 	 */
-   public static boolean createView(View view, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, BaseFileViewer.LineStyler lineStyler)
+   public static boolean createView(ViewPlacement view, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, BaseFileViewer.LineStyler lineStyler)
 	{
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
 	   if (exceedSize && 
