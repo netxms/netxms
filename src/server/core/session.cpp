@@ -218,6 +218,8 @@ ClientSession::ClientSession(SOCKET hSocket, const InetAddress& addr) : m_downlo
    m_objectNotificationScheduled = false;
    m_objectNotificationBatchSize = 500;
    m_objectNotificationDelay = 200;
+   m_lastScreenshotObject = 0;
+   m_lastScreenshotTime = 0;
 }
 
 /**
@@ -13606,12 +13608,14 @@ void ClientSession::getLocationHistory(const NXCPMessage& request)
  */
 void ClientSession::getScreenshot(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   TCHAR* sessionName = request.getFieldAsString(VID_NAME);
-   if(sessionName == nullptr)
-      sessionName = _tcsdup(_T("Console"));
-   UINT32 objectId = request.getFieldAsUInt32(VID_NODE_ID);
+   TCHAR sessionName[256] = _T("");
+   request.getFieldAsString(VID_NAME, sessionName, 256);
+   if (sessionName[0] == 0)
+      _tcscpy(sessionName, _T("Console"));
+
+   uint32_t objectId = request.getFieldAsUInt32(VID_NODE_ID);
 	shared_ptr<NetObj> object = FindObjectById(objectId);
 	if (object != nullptr)
 	{
@@ -13627,39 +13631,47 @@ void ClientSession::getScreenshot(const NXCPMessage& request)
 
                BYTE *data = nullptr;
                size_t size;
-               UINT32 dwError = conn->takeScreenshot(sessionName, &data, &size);
-               if (dwError == ERR_SUCCESS)
+               uint32_t rc = conn->takeScreenshot(sessionName, &data, &size);
+               if (rc == ERR_SUCCESS)
                {
-                  msg.setField(VID_FILE_DATA, data, size);
+                  // Avoid writing screenshot audit records for same object too fast
+                  if ((m_lastScreenshotObject != objectId) || (time(nullptr) - m_lastScreenshotTime > 3600))
+                  {
+                     writeAuditLog(AUDIT_OBJECTS, true, objectId, _T("Screenshot taken for session \"%s\""), sessionName);
+                     m_lastScreenshotObject = objectId;
+                     m_lastScreenshotTime = time(nullptr);
+                  }
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  response.setField(VID_FILE_DATA, data, size);
                }
                else
                {
-                  msg.setField(VID_RCC, AgentErrorToRCC(dwError));
+                  response.setField(VID_RCC, AgentErrorToRCC(rc));
                }
                MemFree(data);
             }
             else
             {
-               msg.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
+               response.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
             }
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		   writeAuditLog(AUDIT_OBJECTS, false, objectId, _T("Access denied on screenshot for session \"%s\""), sessionName);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
-   MemFree(sessionName);
-   // Send response
-   sendMessage(&msg);
+
+   sendMessage(response);
 }
 
 /**
