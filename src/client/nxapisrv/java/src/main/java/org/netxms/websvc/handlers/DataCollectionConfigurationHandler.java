@@ -44,7 +44,7 @@ public class DataCollectionConfigurationHandler extends AbstractObjectHandler
    {
       DataCollectionConfiguration dc = getSession().openDataCollectionConfiguration(getObjectId());
       List<DataCollectionObject> dcObjects = Arrays.asList(dc.getItems());
-      
+
       String dciName = query.containsKey("dciName") ? query.get("dciName").toUpperCase() : null;
       String dciNameRegexp = query.get("dciNameRegexp");
       String dciDescription = query.containsKey("dciDescription") ? query.get("dciDescription").toUpperCase() : null;

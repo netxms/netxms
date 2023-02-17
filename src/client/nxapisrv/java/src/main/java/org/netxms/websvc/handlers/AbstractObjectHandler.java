@@ -40,7 +40,7 @@ public class AbstractObjectHandler extends AbstractHandler
       NXCSession session = getSession();
       if (!session.areObjectsSynchronized())
          session.syncObjects();
-      
+
       String entityId = (String)getRequest().getAttributes().get("object-id");
       AbstractObject object;
       try

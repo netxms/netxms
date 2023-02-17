@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,16 +136,16 @@ public class JsonTools
    {
       if (object == null)
          return "{ }"; 
-               
+
       if ((object instanceof JsonObject) || 
           (object instanceof JsonArray) ||
           (object instanceof JSONObject) ||
           (object instanceof JSONArray))
          return JsonFilter.createFilter(object, fields).filter().toString();
-      
+
       if (object instanceof ResponseContainer)
          return ((ResponseContainer)object).toJson(fields);
-      
+
       Gson gson = createGsonInstance();
       if ((fields != null) && !fields.isEmpty())
       {
@@ -164,8 +164,7 @@ public class JsonTools
    {
       try
       {
-         JsonParser parser = new JsonParser();
-         return parser.parse(json).getAsJsonObject();
+         return JsonParser.parseString(json).getAsJsonObject();
       }
       catch(Exception e)
       {

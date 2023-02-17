@@ -100,7 +100,7 @@ public abstract class AbstractHandler extends ServerResource
          log.warn("No POST data in call");
          return new StringRepresentation(createErrorResponse(RCC.INVALID_ARGUMENT).toString(), MediaType.APPLICATION_JSON);
       }
-      
+
       JSONObject data = new JsonRepresentation(entity).getJsonObject();
       log.debug("POST: data = " + data);
       if (attachToSession())
@@ -231,7 +231,7 @@ public abstract class AbstractHandler extends ServerResource
       }
       return session != null;
    }
-   
+
    /**
     * Find session token for this session
     * 
@@ -246,7 +246,7 @@ public abstract class AbstractHandler extends ServerResource
          UUID guid = UUID.fromString(cookie);
          return SessionStore.getInstance(getServletContext()).getSessionToken(guid);
       }
-      
+
       String sid = getHeader("Session-Id");
       if (sid != null && !sid.equals("0"))
       {
@@ -268,7 +268,7 @@ public abstract class AbstractHandler extends ServerResource
    {
       return session;
    }
-   
+
    /**
     * Get token of attached session
     * 

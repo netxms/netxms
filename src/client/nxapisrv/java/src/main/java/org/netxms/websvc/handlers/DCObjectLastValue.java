@@ -57,7 +57,7 @@ public class DCObjectLastValue extends AbstractObjectHandler
 
       JsonArray rows = new JsonArray();
       tableValue.add("data", rows);
-      
+
       if (Boolean.parseBoolean(query.getOrDefault("rowsAsObjects", "false")))
       {
          for(TableRow r : value.getTableValue().getAllRows())

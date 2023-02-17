@@ -37,7 +37,7 @@ public class Polls extends AbstractObjectHandler
    protected Object create(JSONObject data) throws Exception
    {
       String type = JsonTools.getStringFromJson(data, "type", "");
-      
+
       final ObjectPollType pollType;
       if (type.equals("autobind"))
       {
@@ -71,7 +71,7 @@ public class Polls extends AbstractObjectHandler
       {
          pollType = ObjectPollType.UNKNOWN;
       }
-      
+
       final ServerOutputListener listener = new ServerOutputListener();
       UUID uuid = UUID.randomUUID();
       PollsOutputHandler.addListener(uuid, listener);
@@ -88,7 +88,7 @@ public class Polls extends AbstractObjectHandler
       });
       pollingThread.setDaemon(true);
       pollingThread.start();
-      
+
       JSONObject response = new JSONObject();
       response.put("UUID", uuid);
       response.put("type", type);
