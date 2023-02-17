@@ -1,6 +1,6 @@
 /**
  * Web services API for NetXMS
- * Copyright (c) 2017-2020 Raden Solutions
+ * Copyright (c) 2017-2023 Raden Solutions
  */
 package org.netxms.websvc;
 
@@ -40,12 +40,12 @@ public class WebSvcStatusService extends StatusService
 
          if (throwable instanceof WebSvcException)
          {
-            log.info("Request processing error: " + throwable.getMessage());
+            log.info("Request processing error: " + throwable.getMessage(), throwable);
             return new Status(getStatusFromRCC(((WebSvcException)throwable).getErrorCode()), throwable);
          }
          if (throwable instanceof NXCException)
          {
-            log.info("Request processing error: " + throwable.getMessage());
+            log.info("Request processing error: " + throwable.getMessage(), throwable);
             return new Status(getStatusFromRCC(((NXCException)throwable).getErrorCode()), throwable);
          }
          log.error("Exception in request handler", throwable);
@@ -66,12 +66,12 @@ public class WebSvcStatusService extends StatusService
 
          if (throwable instanceof WebSvcException)
          {
-            log.info("Request processing error: " + throwable.getMessage());
+            log.info("Request processing error: " + throwable.getMessage(), throwable);
             return new Status(getStatusFromRCC(((WebSvcException)throwable).getErrorCode()), throwable);
          }
          if (throwable instanceof NXCException)
          {
-            log.info("Request processing error: " + throwable.getMessage());
+            log.info("Request processing error: " + throwable.getMessage(), throwable);
             return new Status(getStatusFromRCC(((NXCException)throwable).getErrorCode()), throwable);
          }
          log.error("Exception in request handler", throwable);
@@ -144,7 +144,7 @@ public class WebSvcStatusService extends StatusService
       return RCC.getText(rcc, "en", null);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.restlet.service.StatusService#getRepresentation(org.restlet.data.Status, org.restlet.Request, org.restlet.Response)
     */
    @Override

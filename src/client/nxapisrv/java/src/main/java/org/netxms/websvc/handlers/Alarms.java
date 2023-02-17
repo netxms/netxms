@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ public class Alarms extends AbstractHandler
    private static final int ACKNOWLEDGE = 1;
    private static final int STICKY_ACKNOWLEDGE = 2;
    private static final int RESOLVE = 3;
-   
+
    /**
     * @see org.netxms.websvc.handlers.AbstractHandler#getCollection(java.util.Map)
     */
@@ -64,7 +64,7 @@ public class Alarms extends AbstractHandler
    {
       NXCSession session = getSession();
       Collection<Alarm> alarms = session.getAlarms().values();
-      
+
       AbstractObject rootObject = getObjectFromQuery(query);
 
       final boolean[] stateMask;
@@ -165,11 +165,11 @@ public class Alarms extends AbstractHandler
       if (!session.areObjectsSynchronized())
          session.syncObjects();
       if (!session.isUserDatabaseSynchronized())
-         session.syncUserDatabase();
+         executeIfAllowed(() -> session.syncUserDatabase());
       if (!session.isAlarmCategoriesSynchronized())
-         session.syncAlarmCategories();
+         executeIfAllowed(() -> session.syncAlarmCategories());
       if (!session.isEventObjectsSynchronized())
-         session.syncEventTemplates();
+         executeIfAllowed(() -> session.syncEventTemplates());
 
       List<JsonObject> serializedAlarms = new ArrayList<JsonObject>();
       Map<Long, DciValue[]> cachedValues = null;
@@ -197,7 +197,7 @@ public class Alarms extends AbstractHandler
                      break;
                   }
                }
-               
+
                if (cachedValues == null)
                   cachedValues = new HashMap<Long, DciValue[]>();
                cachedValues.put(object.getObjectId(), values);
@@ -235,7 +235,7 @@ public class Alarms extends AbstractHandler
       }
       return new ResponseContainer("alarms", serializedAlarms);
    }
-   
+
    /**
     * Add user name for given user to JSON object as property
     *
@@ -322,12 +322,12 @@ public class Alarms extends AbstractHandler
       if (!session.areObjectsSynchronized())
          session.syncObjects();
       if (!session.isUserDatabaseSynchronized())
-         session.syncUserDatabase();
+         executeIfAllowed(() -> session.syncUserDatabase());
       if (!session.isAlarmCategoriesSynchronized())
-         session.syncAlarmCategories();
+         executeIfAllowed(() -> session.syncAlarmCategories());
       if (!session.isEventObjectsSynchronized())
-         session.syncEventTemplates();
-      
+         executeIfAllowed(() -> session.syncEventTemplates());
+
       Alarm alarm;
       try
       {
@@ -338,7 +338,7 @@ public class Alarms extends AbstractHandler
       {
          throw new NXCException(RCC.INVALID_ALARM_ID); 
       }
-      
+
       if (alarm == null)
          throw new NXCException(RCC.INVALID_ALARM_ID);      
 

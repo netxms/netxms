@@ -502,6 +502,25 @@ public abstract class AbstractHandler extends ServerResource
    }
    
    /**
+    * Execute given operation and ignore NXCException with error code "access denied"
+    * 
+    * @param f function to execute
+    */
+   protected void executeIfAllowed(Function f) throws Exception
+   {
+      try
+      {
+         f.run();
+      }
+      catch(Exception e)
+      {
+         if (!(e instanceof NXCException) || ((NXCException)e).getErrorCode() != RCC.ACCESS_DENIED)
+            throw e;
+         log.debug("Ignored \"access denied\" server response");
+      }
+   }
+
+   /**
     * Parse string as Integer value
     * 
     * @param value input string
@@ -564,5 +583,11 @@ public abstract class AbstractHandler extends ServerResource
       {
          return null;
       }
+   }
+
+   @FunctionalInterface
+   public interface Function
+   {
+      void run() throws Exception;
    }
 }
