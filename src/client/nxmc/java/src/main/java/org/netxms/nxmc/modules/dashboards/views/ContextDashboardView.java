@@ -19,6 +19,8 @@
 package org.netxms.nxmc.modules.dashboards.views;
 
 import org.eclipse.swt.SWT;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
@@ -30,6 +32,7 @@ import org.netxms.nxmc.resources.ResourceManager;
 public class ContextDashboardView extends AbstractDashboardView
 {
    private Dashboard dashboard;
+   private SessionListener clientListener;
 
    /**
     * @param name
@@ -53,6 +56,34 @@ public class ContextDashboardView extends AbstractDashboardView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      clientListener = new SessionListener() {         
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.OBJECT_CHANGED && dashboard.getObjectId() == n.getSubCode())
+            {
+               getViewArea().getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     dashboard = (Dashboard)n.getObject();
+                     onObjectChange(ContextDashboardView.this.getObject());
+                  }
+               });
+            }
+         }
+      };
+
+      session.addListener(clientListener);
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -71,5 +102,12 @@ public class ContextDashboardView extends AbstractDashboardView
    public int getPriority()
    {
       return (dashboard.getDisplayPriority() > 0) ? dashboard.getDisplayPriority() : super.getPriority();
+   }
+
+   @Override
+   public void dispose()
+   {
+      session.removeListener(clientListener);
+      super.dispose();
    }
 }

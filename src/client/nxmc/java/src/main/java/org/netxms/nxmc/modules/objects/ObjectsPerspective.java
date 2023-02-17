@@ -423,7 +423,11 @@ public abstract class ObjectsPerspective extends Perspective
       for(AbstractObject d : object.getDashboards(true))
       {
          if ((((Dashboard)d).getFlags() & Dashboard.SHOW_AS_OBJECT_VIEW) == 0)
+         {
+            String viewId = "ContextDashboard." + d.getObjectId();
+            removeMainView(viewId);
             continue;
+         }
 
          String viewId = "ContextDashboard." + d.getObjectId();
          if (findMainView(viewId) == null)
