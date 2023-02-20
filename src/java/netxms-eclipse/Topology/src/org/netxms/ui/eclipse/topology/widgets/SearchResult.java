@@ -275,10 +275,12 @@ public class SearchResult extends CompositeWithMessageBar
     * 
     * @param cp connection point information
     */
-   private void clearResults()
+   private void retireResults()
    {
-      results.clear();
-      viewer.setInput(new Object[0]);
+      for (ConnectionPoint r : results)
+      {
+         r.setHistorical(true);
+      }
       hideMessage();
    }
 
@@ -289,7 +291,7 @@ public class SearchResult extends CompositeWithMessageBar
     */
    public void showConnection(final ConnectionPoint cp)
    {
-      clearResults();
+      retireResults();
       if (cp == null)
       {
          showMessage(MessageBar.WARNING, Messages.get().HostSearchResults_NotFound);
@@ -428,7 +430,7 @@ public class SearchResult extends CompositeWithMessageBar
     */
    public void showConnection(final List<ConnectionPoint> cps)
    {
-      clearResults();
+      retireResults();
       final NXCSession session = ConsoleSharedData.getSession();
       if (session.areObjectsSynchronized())
       {

@@ -141,7 +141,7 @@ public class FindByMacAddressView extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		serachResultWidget.setFocus();
+	   queryEditor.setFocus();
 	}
 
    /**

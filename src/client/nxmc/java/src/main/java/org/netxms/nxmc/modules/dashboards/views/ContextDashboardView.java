@@ -73,6 +73,7 @@ public class ContextDashboardView extends AbstractDashboardView
                   public void run()
                   {
                      dashboard = (Dashboard)n.getObject();
+                     setName(dashboard.getObjectName());
                      onObjectChange(ContextDashboardView.this.getObject());
                   }
                });
@@ -104,6 +105,9 @@ public class ContextDashboardView extends AbstractDashboardView
       return (dashboard.getDisplayPriority() > 0) ? dashboard.getDisplayPriority() : super.getPriority();
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#dispose()
+    */
    @Override
    public void dispose()
    {

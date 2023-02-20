@@ -39,6 +39,7 @@ public class ConnectionPoint
 	private ConnectionPointType type; 
 	private Object data;
 	private boolean hasConnection = true;
+	private boolean historical = false;
 
 	/**
 	 * Create connection point information from NXCP message
@@ -214,6 +215,22 @@ public class ConnectionPoint
    public void setConnection(boolean hasConnection)
    {
       this.hasConnection = hasConnection;
+   }
+
+   /**
+    * @return the historical
+    */
+   public boolean isHistorical()
+   {
+      return historical;
+   }
+
+   /**
+    * @param historical the historical to set
+    */
+   public void setHistorical(boolean historical)
+   {
+      this.historical = historical;
    }
 
    /* (non-Javadoc)

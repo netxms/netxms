@@ -33,6 +33,7 @@ import org.netxms.client.constants.ConnectionPointType;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.console.ViewerElementUpdater;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.topology.Messages;
@@ -52,6 +53,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	private static final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkSlateBlue"));
    private static final Color COLOR_FOUND_MAC_WIRELESS = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("SteelBlue"));
 	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), ColorConverter.parseColorDefinition("DarkRed"));
+   private static final Color COLOR_HISTORICAL = ThemeEngine.getForegroundColor("List.DisabledItem");
 
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
    private NXCSession session = ConsoleSharedData.getSession();
@@ -176,6 +178,9 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 	@Override
 	public Color getBackground(Object element)
 	{
-		return null;
+      ConnectionPoint cp = (ConnectionPoint)element;
+      if (cp.isHistorical())
+         return COLOR_HISTORICAL;
+      return null;
 	}
 }

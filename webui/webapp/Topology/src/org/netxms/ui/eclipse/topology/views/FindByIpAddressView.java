@@ -168,7 +168,7 @@ public class FindByIpAddressView extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		serachResultWidget.setFocus();
+      queryEditor.setFocus();
 	}
 
    /**
