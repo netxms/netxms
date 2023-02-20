@@ -196,7 +196,7 @@ public final class BrandingManager
          if (url != null)
             return url;
       }
-      return "https://netxms.org/documentation/adminguide/";
+      return "https://go.netxms.com/adminguide-online";
    }
 
    /**

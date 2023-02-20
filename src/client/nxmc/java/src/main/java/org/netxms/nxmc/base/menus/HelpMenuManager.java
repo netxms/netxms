@@ -72,7 +72,7 @@ public class HelpMenuManager extends MenuManager
          @Override
          public void run()
          {
-            ExternalWebBrowser.open("https://netxms.com/ss-commercial-support.html");
+            ExternalWebBrowser.open("https://go.netxms.com/commercial-support");
          }
       };
    }
