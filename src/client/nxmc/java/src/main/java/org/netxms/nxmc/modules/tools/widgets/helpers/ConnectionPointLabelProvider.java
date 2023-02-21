@@ -159,25 +159,29 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		ConnectionPoint cp = (ConnectionPoint)element;
 		if (!cp.hasConnection())
 			return COLOR_NOT_FOUND;
-		
+
 		if (cp.getLocalNodeId() == 0)
 			return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_MAC_DIRECT : 
 			   ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_MAC_WIRELESS : COLOR_FOUND_MAC_INDIRECT);
 
-		switch(cp.getType())
-		{
-		   case DIRECT: return COLOR_FOUND_OBJECT_DIRECT; 
-         case INDIRECT: return COLOR_FOUND_OBJECT_INDIRECT; 
-         case WIRELESS: return COLOR_FOUND_OBJECT_WIRELESS; 
-         case UNKNOWN: return COLOR_FOUND_OBJECT_UNKNOWN; 
-		}
-		
+      switch(cp.getType())
+      {
+         case DIRECT:
+            return COLOR_FOUND_OBJECT_DIRECT;
+         case INDIRECT:
+            return COLOR_FOUND_OBJECT_INDIRECT;
+         case WIRELESS:
+            return COLOR_FOUND_OBJECT_WIRELESS;
+         case UNKNOWN:
+            return COLOR_FOUND_OBJECT_UNKNOWN;
+      }
+
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
 	@Override
 	public Color getBackground(Object element)
 	{

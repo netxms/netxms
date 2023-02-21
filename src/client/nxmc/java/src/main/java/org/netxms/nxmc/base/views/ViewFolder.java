@@ -608,6 +608,15 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.ViewContainer#isViewActive(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   public boolean isViewActive(View view)
+   {
+      return !tabFolder.isDisposed() && (activeView == view);
+   }
+
+   /**
     * Add selection listener.
     *
     * @param listener listener to add.

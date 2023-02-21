@@ -76,7 +76,6 @@ public abstract class View implements MessageAreaHolder
    private KeyBindingManager keyBindingManager = new KeyBindingManager();
    private View originalView;
 
-
    /**
     * Create new view with specific base ID. Actual view ID will be derived from base ID, possibly by classes derived from base view
     * class. This will not create actual widgets that composes view - creation can be delayed by framework until view actually has
@@ -322,7 +321,8 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
-    * Activate view. Called by framework when view is activated.
+    * Activate view. Called by framework when view is activated. Derived classes should always call parent class method when
+    * overriding.
     */
    public void activate()
    {
@@ -332,7 +332,8 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
-    * Deactivate view. Called by framework when view is deactivated.
+    * Deactivate view. Called by framework when view is deactivated. Derived classes should always call parent class method when
+    * overriding.
     */
    public void deactivate()
    {
@@ -540,7 +541,7 @@ public abstract class View implements MessageAreaHolder
     */
    public boolean isActive()
    {
-      return isVisible(); // FIXME: check owning stack
+      return viewContainer.isViewActive(this);
    }
 
    /**

@@ -121,12 +121,20 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       });
 
       final Display display = parent.getDisplay();
-      display.addFilter(SWT.KeyDown, new Listener() {
+      Listener keyFilter = new Listener() {
          @Override
          public void handleEvent(Event e)
          {
             if (getShell() == display.getActiveShell()) // Only process keystrokes directed to this window
                processKeyDownEvent(e.stateMask, e.keyCode);
+         }
+      };
+      display.addFilter(SWT.KeyDown, keyFilter);
+      getShell().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            display.removeFilter(SWT.KeyDown, keyFilter);
          }
       });
 

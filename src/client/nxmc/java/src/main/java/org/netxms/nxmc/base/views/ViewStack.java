@@ -413,6 +413,15 @@ public class ViewStack extends ViewContainer
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.ViewContainer#isViewActive(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   public boolean isViewActive(View view)
+   {
+      return !views.empty() && (views.peek() == view);
+   }
+
+   /**
     * Set context for containing view
     *
     * @param context

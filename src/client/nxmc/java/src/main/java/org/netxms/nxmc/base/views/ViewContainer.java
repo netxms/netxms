@@ -62,6 +62,14 @@ public abstract class ViewContainer extends Composite
    protected Runnable onFilterCloseCallback = null;
    protected KeyBindingManager keyBindingManager = new KeyBindingManager();
 
+   /**
+    * Create new view container.
+    *
+    * @param window owning window
+    * @param perspective owning perspective (can be null)
+    * @param parent parent composite for container control
+    * @param style container control style
+    */
    public ViewContainer(Window window, Perspective perspective, Composite parent, int style)
    {
       super(parent, style);
@@ -291,6 +299,14 @@ public abstract class ViewContainer extends Composite
     * @return active view
     */
    protected abstract View getActiveView();
+
+   /**
+    * Check if given view is an active view in this container.
+    *
+    * @param view view to check
+    * @return true if given view is an active view in this container
+    */
+   public abstract boolean isViewActive(View view);
 
    /**
     * Get owning window.

@@ -71,6 +71,7 @@ public class ThresholdSummaryView extends ObjectView
    public static final int COLUMN_TIMESTAMP = 5;
 
    private SortableTreeViewer viewer;
+   private SessionListener sessionListener;
    private boolean subscribed = false;
    private boolean refreshScheduled = false;
 
@@ -80,6 +81,24 @@ public class ThresholdSummaryView extends ObjectView
    public ThresholdSummaryView()
    {
       super(i18n.tr("Thresholds"), ResourceManager.getImageDescriptor("icons/object-views/thresholds.png"), "ThresholdSummary", true);
+
+      sessionListener = new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() == SessionNotification.THRESHOLD_STATE_CHANGED)
+            {
+               final ThresholdStateChange stateChange = (ThresholdStateChange)n.getObject();
+               getDisplay().asyncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     processNotification(stateChange);
+                  }
+               });
+            }
+         }
+      };
    }
 
    /**
@@ -111,23 +130,7 @@ public class ThresholdSummaryView extends ObjectView
 
       createContextMenu();
 
-      Registry.getSession().addListener(new SessionListener() {
-         @Override
-         public void notificationHandler(SessionNotification n)
-         {
-            if (n.getCode() == SessionNotification.THRESHOLD_STATE_CHANGED)
-            {
-               final ThresholdStateChange stateChange = (ThresholdStateChange)n.getObject();
-               getDisplay().asyncExec(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     processNotification(stateChange);
-                  }
-               });
-            }
-         }
-      });
+      Registry.getSession().addListener(sessionListener);
    }
 
    /**
@@ -208,6 +211,16 @@ public class ThresholdSummaryView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
+   @Override
+   public void activate()
+   {
+      super.activate();
+      refresh();
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -225,13 +238,13 @@ public class ThresholdSummaryView extends ObjectView
       if (!isActive())
          return;
 
-      if (getObject() == null)
+      final long rootId = getObjectId();
+      if (rootId == 0)
       {
          viewer.setInput(new Object[0]);
          return;
       }
 
-      final long rootId = getObjectId();
       new Job(i18n.tr("Reading threshold summary"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -268,25 +281,27 @@ public class ThresholdSummaryView extends ObjectView
    @Override
    public void dispose()
    {
-      if (!subscribed)
-         return;
+      session.removeListener(sessionListener);
 
-      Job job = new Job(i18n.tr("Unsubscribing from threshold notifications"), null) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            session.unsubscribe(NXCSession.CHANNEL_DC_THRESHOLDS);
-         }
+      if (subscribed)
+      {
+         Job job = new Job(i18n.tr("Unsubscribing from threshold notifications"), null) {
+            @Override
+            protected void run(IProgressMonitor monitor) throws Exception
+            {
+               session.unsubscribe(NXCSession.CHANNEL_DC_THRESHOLDS);
+            }
 
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Cannot change event subscription");
-         }
-      };
-      job.setUser(false);
-      job.setSystem(true);
-      job.start();
+            @Override
+            protected String getErrorMessage()
+            {
+               return i18n.tr("Cannot change event subscription");
+            }
+         };
+         job.setUser(false);
+         job.setSystem(true);
+         job.start();
+      }
 
       super.dispose();
    }
