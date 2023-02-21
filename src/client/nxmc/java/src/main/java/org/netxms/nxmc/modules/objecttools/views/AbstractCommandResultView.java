@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.TextOutputAdapter;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.TextConsole;
 import org.netxms.nxmc.base.widgets.TextConsole.IOConsoleOutputStream;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -103,6 +104,60 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
    }
 
    /**
+    * Clone constructor
+    */
+   protected AbstractCommandResultView()
+   {
+      super();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      AbstractCommandResultView view = (AbstractCommandResultView)super.cloneView();
+      view.inputValues = inputValues;
+      view.maskedFields = maskedFields;
+      view.executionString = executionString;
+
+      view.outputListener = new TextOutputAdapter() {
+         @Override
+         public void messageReceived(String text)
+         {
+            try
+            {
+               if (view.out != null)
+                  view.out.write(text.replace("\r", ""));
+            }
+            catch(IOException e)
+            {
+            }
+         }
+
+         @Override
+         public void setStreamId(long streamId)
+         {
+            view.streamId = streamId;
+         }
+      };
+      return view;
+   } 
+   
+   
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      AbstractCommandResultView origin = (AbstractCommandResultView)view;
+      console.setText(origin.console.getText());
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -119,10 +174,19 @@ public abstract class AbstractCommandResultView extends ObjectToolResultView
 
 		createActions();
 		createPopupMenu();
-		execute();
-	}
-
+	}   
+   
 	/**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      execute();
+   }
+
+   /**
 	 * Create actions
 	 */
 	protected void createActions()

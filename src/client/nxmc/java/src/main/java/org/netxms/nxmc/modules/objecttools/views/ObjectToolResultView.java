@@ -73,12 +73,20 @@ public abstract class ObjectToolResultView extends AdHocObjectView
    }
 
    /**
+    * Clone constructor
+    */
+   protected ObjectToolResultView()
+   {
+      super(null, null, null, 0, 0, false);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
     */
    @Override
    public View cloneView()
    {
-      TableToolResults view = (TableToolResults)super.cloneView();
+      ObjectToolResultView view = (ObjectToolResultView)super.cloneView();
       view.tool = tool;
       view.object = object;
       return view;

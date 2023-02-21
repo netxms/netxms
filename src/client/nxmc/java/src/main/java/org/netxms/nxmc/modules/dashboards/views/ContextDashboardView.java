@@ -23,6 +23,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.netxms.nxmc.resources.ResourceManager;
 
@@ -44,6 +45,27 @@ public class ContextDashboardView extends AbstractDashboardView
    {
       super(dashboard.getObjectName(), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "ContextDashboard." + dashboard.getObjectId());
       this.dashboard = dashboard;
+   }
+   
+   /**
+    * Clone constructor
+    */
+   protected ContextDashboardView()
+   {
+      super(null, null, null);
+   } 
+
+   
+   
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ContextDashboardView view = (ContextDashboardView)super.cloneView();
+      view.dashboard = dashboard;
+      return view;
    }
 
    /**

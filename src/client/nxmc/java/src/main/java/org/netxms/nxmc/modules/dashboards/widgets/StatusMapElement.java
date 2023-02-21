@@ -69,7 +69,7 @@ public class StatusMapElement extends ElementWidget
       map.setHideObjectsInMaintenance(config.isHideObjectsInMaintenance());
       map.setSeverityFilter(config.getSeverityFilter());
       enableFilter(config.isShowTextFilter());
-      map.setRootObject(getEffectiveObjectId(config.getObjectId()));
+      map.refresh();
 
 		map.addRefreshListener(new Runnable() {
          @Override

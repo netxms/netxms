@@ -56,6 +56,24 @@ public class AgentActionResults extends AbstractCommandResultView
    }
 
    /**
+    * Clone constructor
+    */
+   protected AgentActionResults()
+   {
+      super();
+   }
+   
+   /**
+    * @see org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      actionRestart.setEnabled(true);
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
     */
    @Override

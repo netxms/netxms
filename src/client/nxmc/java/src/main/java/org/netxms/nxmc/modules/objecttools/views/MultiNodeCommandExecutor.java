@@ -80,8 +80,13 @@ public class MultiNodeCommandExecutor extends ObjectView
 
 
    /**
-    * @param id
-    * @param image
+    * 
+    * @param tool
+    * @param sourceObjects
+    * @param nodes
+    * @param inputValues
+    * @param maskedFields
+    * @param expandedText
     */
    public MultiNodeCommandExecutor(ObjectTool tool, Set<ObjectContext> sourceObjects, Set<ObjectContext> nodes, Map<String, String> inputValues, List<String> maskedFields,
          List<String> expandedText)
@@ -93,7 +98,7 @@ public class MultiNodeCommandExecutor extends ObjectView
       this.maskedFields = maskedFields;
       this.expandedText = expandedText;
       this.sourceObjects = sourceObjects;
-   } 
+   }    
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -160,8 +165,19 @@ public class MultiNodeCommandExecutor extends ObjectView
       });
 
       createActions();
-      execute();
 	}
+   
+   
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      execute();
+      super.postContentCreate();
+   }
 
    /**
     * Create actions

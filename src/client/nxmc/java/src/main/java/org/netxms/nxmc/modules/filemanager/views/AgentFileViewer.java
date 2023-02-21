@@ -80,6 +80,14 @@ public class AgentFileViewer extends AdHocObjectView
    }
 
    /**
+    * Clone constructor
+    */
+   protected AgentFileViewer()
+   {
+      super(null, null, null, 0, 0, false);
+   } 
+
+   /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
     */
    @Override
@@ -91,6 +99,19 @@ public class AgentFileViewer extends AdHocObjectView
       return view;
    }
    
+   
+   
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      AgentFileViewer origin = (AgentFileViewer)view;
+      viewer.copyContent(origin.viewer);
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
@@ -233,7 +254,8 @@ public class AgentFileViewer extends AdHocObjectView
    @Override
    public void setFocus()
    {
-      viewer.setFocus();
+      if (!viewer.isDisposed())
+         viewer.setFocus();
    }
 
    /**

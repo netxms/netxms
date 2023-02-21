@@ -191,7 +191,7 @@ public class StatusMapView extends ObjectView
       else
          map = new FlatObjectStatusMap(this, clientArea, SWT.NONE);
 
-      map.setRootObject(getObjectId());
+      map.refresh();
       map.setFitToScreen(fitToScreen);
 
       clientArea.layout();
@@ -245,7 +245,7 @@ public class StatusMapView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      map.setRootObject(object.getObjectId());
+      map.refresh();
    }
 
    /**

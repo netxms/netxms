@@ -40,10 +40,10 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwareInventoryContentProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwareInventoryNode;
 import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwarePackageComparator;
@@ -68,8 +68,7 @@ public class SoftwareInventory extends Composite
 	private static final String[] names = { i18n.tr("Name"), i18n.tr("Version"), i18n.tr("Vendor"), i18n.tr("Install Date"), i18n.tr("Description"), i18n.tr("URL") };
 	private static final int[] widths = { 200, 100, 200, 100, 300, 200 };
 	
-	private View viewPart;
-	private long rootObjectId;
+	private ObjectView viewPart;
 	private ColumnViewer viewer;
 	private String configPrefix;
 	private MenuManager menuManager = null;
@@ -78,7 +77,7 @@ public class SoftwareInventory extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public SoftwareInventory(Composite parent, int style, View viewPart, String configPrefix)
+	public SoftwareInventory(Composite parent, int style, ObjectView viewPart, String configPrefix)
 	{
 		super(parent, style);
 		this.viewPart = viewPart;
@@ -148,10 +147,10 @@ public class SoftwareInventory extends Composite
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				AbstractObject object = session.findObjectById(rootObjectId);
+				AbstractObject object = session.findObjectById(viewPart.getObjectId());
 				if (object instanceof AbstractNode)
 				{
-					final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(rootObjectId);
+					final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(viewPart.getObjectId());
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
@@ -195,19 +194,10 @@ public class SoftwareInventory extends Composite
 	}
 
 	/**
-	 * @return the rootObjectId
-	 */
-	public long getRootObjectId()
-	{
-		return rootObjectId;
-	}
-
-	/**
 	 * @param rootObjectId the rootObjectId to set
 	 */
 	public void setRootObjectId(long rootObjectId)
 	{
-		this.rootObjectId = rootObjectId;
 		AbstractObject object = Registry.getSession().findObjectById(rootObjectId);
 		if (object instanceof Node)
 		{

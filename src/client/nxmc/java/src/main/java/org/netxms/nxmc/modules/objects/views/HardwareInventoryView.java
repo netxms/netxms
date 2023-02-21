@@ -150,8 +150,7 @@ public class HardwareInventoryView extends ObjectView
       inventoryWidget.clear();
       if (object == null)
          return;
-
-      inventoryWidget.setRootObjectId(object.getObjectId());
+      
       inventoryWidget.refresh();
    }
 

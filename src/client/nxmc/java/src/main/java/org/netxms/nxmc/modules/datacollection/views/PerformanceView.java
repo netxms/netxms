@@ -161,6 +161,49 @@ public class PerformanceView extends ObjectView
       job.setSystem(true);
       job.start();
    }
+   
+   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      Job job = new Job(i18n.tr("Updating performance view"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor)
+         {
+            try
+            {
+               final List<PerfTabDci> items = session.getPerfTabItems(getObjectId());
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (!getViewArea().isDisposed() && (PerformanceView.this.getObject() != null) &&
+                         (PerformanceView.this.getObject().getObjectId() == getObjectId()))
+                     {
+                        update(items);
+                     }
+                  }
+               });
+            }
+            catch(Exception e)
+            {
+               logger.error("Exception in performance tab loading job", e);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot update performance view";
+         }
+      };
+      job.setSystem(true);
+      job.start();
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#getPriority()

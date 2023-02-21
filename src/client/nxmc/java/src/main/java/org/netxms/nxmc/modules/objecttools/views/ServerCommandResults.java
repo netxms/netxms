@@ -29,6 +29,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -57,6 +58,26 @@ public class ServerCommandResults extends AbstractCommandResultView
    public ServerCommandResults(ObjectContext node, ObjectTool tool, Map<String, String> inputValues, List<String> maskedFields)
    {
       super(node, tool, inputValues, maskedFields);
+   }
+
+   /**
+    * Clone constructor
+    */
+   protected ServerCommandResults()
+   {
+      super();
+   }   
+
+   /**
+    * @see org.netxms.nxmc.modules.objecttools.views.AbstractCommandResultView#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      actionRestart.setEnabled(true);
+      actionStop.setEnabled(false);
+      isRunning = false;
    }
 
    /**

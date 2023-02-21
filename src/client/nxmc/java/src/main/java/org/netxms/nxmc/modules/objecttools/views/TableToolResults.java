@@ -62,6 +62,14 @@ public class TableToolResults extends ObjectToolResultView
    {
       super(node, tool, ResourceManager.getImageDescriptor("icons/object-tools/table.gif"), false);
 	} 
+
+   /**
+    * Clone constructor
+    */
+   protected TableToolResults()
+   {
+      super();
+   }
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)

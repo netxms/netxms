@@ -33,8 +33,8 @@ import org.netxms.client.HardwareComponent;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.HardwareComponentComparator;
 import org.netxms.nxmc.modules.objects.widgets.helpers.HardwareComponentLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -58,8 +58,7 @@ public class HardwareInventory extends Composite
    private static final String[] names = { "Category", "Index", "Type", "Vendor", "Model", "Capacity", "Part number", "Serial number", "Location", "Description" };
    private static final int[] widths = { 100, 70, 100, 200, 200, 90, 130, 130, 200, 300 };
    
-   private View view;
-   private long rootObjectId;
+   private ObjectView view;
    private ColumnViewer viewer;
    private String configPrefix;
    private MenuManager menuManager = null;
@@ -72,7 +71,7 @@ public class HardwareInventory extends Composite
     * @param view owning view
     * @param configPrefix configuration prefix
     */
-   public HardwareInventory(Composite parent, int style, View view, String configPrefix)
+   public HardwareInventory(Composite parent, int style, ObjectView view, String configPrefix)
    {
       super(parent, style);
       this.view = view;
@@ -117,7 +116,7 @@ public class HardwareInventory extends Composite
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<HardwareComponent> components = session.getNodeHardwareComponents(rootObjectId);
+            final List<HardwareComponent> components = session.getNodeHardwareComponents(view.getObjectId());
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -141,22 +140,6 @@ public class HardwareInventory extends Composite
    public ColumnViewer getViewer()
    {
       return viewer;
-   }
-
-   /**
-    * @return the rootObjectId
-    */
-   public long getRootObjectId()
-   {
-      return rootObjectId;
-   }
-
-   /**
-    * @param rootObjectId the rootObjectId to set
-    */
-   public void setRootObjectId(long rootObjectId)
-   {
-      this.rootObjectId = rootObjectId;
    }
    
    /**

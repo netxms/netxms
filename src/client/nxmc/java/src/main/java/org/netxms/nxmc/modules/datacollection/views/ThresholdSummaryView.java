@@ -227,7 +227,7 @@ public class ThresholdSummaryView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       refresh();
-	}
+	}   
 
    /**
     * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#refresh()
