@@ -307,6 +307,7 @@ public class NXCSession
    private boolean connected = false;
    private boolean disconnected = false;
    private boolean serverConsoleConnected = false;
+   private Integer serverConsoleConnectionCount = 0;
    private boolean allowCompression = false;
    private EncryptionContext encryptionContext = null;
    private Throwable receiverStopCause = null;
@@ -10722,10 +10723,17 @@ public class NXCSession
     */
    public void openConsole() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_CONSOLE);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-      serverConsoleConnected = true;
+      synchronized(serverConsoleConnectionCount)
+      {
+         if (serverConsoleConnectionCount == 0)
+         {
+            final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_CONSOLE);
+            sendMessage(msg);
+            waitForRCC(msg.getMessageId());
+            serverConsoleConnected = true;
+         }
+         serverConsoleConnectionCount++;
+      }
    }
 
    /**
@@ -10736,10 +10744,17 @@ public class NXCSession
     */
    public void closeConsole() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_CONSOLE);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-      serverConsoleConnected = false;
+      synchronized(serverConsoleConnectionCount)
+      {
+         if (serverConsoleConnectionCount == 1)
+         {
+            final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_CONSOLE);
+            sendMessage(msg);
+            waitForRCC(msg.getMessageId());
+            serverConsoleConnected = false;
+         }
+         serverConsoleConnectionCount--;
+      }
    }
 
    /**

@@ -1,1 +1,3 @@
+org.netxms.nxmc.modules.tools.FindByIpAddressDescriptor
+org.netxms.nxmc.modules.tools.FindByMacAddressDescriptor
 org.netxms.nxmc.modules.tools.ServerConsoleDescriptor

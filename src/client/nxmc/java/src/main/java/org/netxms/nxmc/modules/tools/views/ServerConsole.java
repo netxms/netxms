@@ -87,6 +87,19 @@ public class ServerConsole extends View
          }
       };
    }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View origin)
+   {
+      super.postClone(origin);
+      ServerConsole view = (ServerConsole)origin;
+      console.setText(view.console.getText());      
+   }
+
+
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
