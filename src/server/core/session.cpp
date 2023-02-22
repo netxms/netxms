@@ -319,7 +319,7 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 /**
  * Write audit log
  */
-void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...)
+void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -330,7 +330,7 @@ void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, UINT32 obje
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)
+void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -341,7 +341,7 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, U
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)
+void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
@@ -12663,11 +12663,11 @@ void ClientSession::getThresholdSummary(const NXCPMessage& request)
 			{
 				auto targets = new SharedObjectArray<DataCollectionTarget>();
 				object->addChildDCTargetsToList(targets, m_dwUserId);
-				UINT32 varId = VID_THRESHOLD_BASE;
+				uint32_t fieldId = VID_THRESHOLD_BASE;
 				for(int i = 0; i < targets->size(); i++)
 				{
 					if (targets->get(i)->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-						varId = targets->get(i)->getThresholdSummary(&response, varId, m_dwUserId);
+						fieldId = targets->get(i)->getThresholdSummary(&response, fieldId, m_dwUserId);
 				}
 				delete targets;
 			}
@@ -12686,8 +12686,7 @@ void ClientSession::getThresholdSummary(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -12695,19 +12694,17 @@ void ClientSession::getThresholdSummary(const NXCPMessage& request)
  */
 void ClientSession::listMappingTables(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
-		msg.setField(VID_RCC, ListMappingTables(&msg));
+		response.setField(VID_RCC, ListMappingTables(&response));
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
+		writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on reading mapping table list"));
 	}
-
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12726,18 +12723,17 @@ void ClientSession::getMappingTable(const NXCPMessage& request)
 void ClientSession::updateMappingTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
 		LONG id;
-		response.setField(VID_RCC, UpdateMappingTable(request, &id));
+		response.setField(VID_RCC, UpdateMappingTable(request, &id, this));
 		response.setField(VID_MAPPING_TABLE_ID, (UINT32)id);
 	}
 	else
 	{
 		response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating mapping table [%d]"), request.getFieldAsInt32(VID_MAPPING_TABLE_ID));
 	}
-
    sendMessage(response);
 }
 
@@ -12747,16 +12743,15 @@ void ClientSession::updateMappingTable(const NXCPMessage& request)
 void ClientSession::deleteMappingTable(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
-		response.setField(VID_RCC, DeleteMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID)));
+		response.setField(VID_RCC, DeleteMappingTable(request.getFieldAsInt32(VID_MAPPING_TABLE_ID), this));
 	}
 	else
 	{
 		response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting mapping table [%d]"), request.getFieldAsInt32(VID_MAPPING_TABLE_ID));
 	}
-
    sendMessage(response);
 }
 

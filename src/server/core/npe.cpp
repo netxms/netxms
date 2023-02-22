@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -211,10 +211,9 @@ void ShutdownPredictionEngines()
 /**
  * Callback for ShowPredictionEngines
  */
-static EnumerationCallbackResult ShowEngineDetails(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult ShowEngineDetails(const TCHAR *key, const PredictionEngine *p, ServerConsole *console)
 {
-   const PredictionEngine *p = (const PredictionEngine *)value;
-   ConsolePrintf((CONSOLE_CTX)data, _T("%-16s | %-24s | %s\n"), key, p->getVersion(), p->getVendor());
+   ConsolePrintf(console, _T("%-16s | %-24s | %s\n"), key, p->getVersion(), p->getVendor());
    return _CONTINUE;
 }
 

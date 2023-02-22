@@ -251,7 +251,7 @@ public class InterfacesView extends NodeSubObjectTableView
          {
             if (i > 0)
                sb.append(newLine);
-            
+
             MacAddress addr = null;
             if (peerMacAddress)
             {

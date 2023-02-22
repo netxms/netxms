@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -51,40 +51,48 @@ public:
 class NXCORE_EXPORTABLE MappingTable
 {
 private:
-	LONG m_id;
+	int32_t m_id;
 	TCHAR *m_name;
 	uint32_t m_flags;
 	TCHAR *m_description;
 	StringObjectMap<MappingTableElement> *m_data;
 
-	MappingTable(LONG id, TCHAR *name, UINT32 flags, TCHAR *description);
+	MappingTable(int32_t id, TCHAR *name, uint32_t flags, TCHAR *description);
 
 public:
 	~MappingTable();
 
 	static MappingTable *createFromMessage(const NXCPMessage& msg);
-	static MappingTable *createFromDatabase(DB_HANDLE hdb, LONG id);
+	static MappingTable *createFromDatabase(DB_HANDLE hdb, int32_t id);
 
-	bool saveToDatabase();
+   void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }
+
+   void fillMessage(NXCPMessage *msg) const;
+
+	bool saveToDatabase() const;
 	bool deleteFromDatabase();
-	void fillMessage(NXCPMessage *msg);
 
-	void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }
+	const TCHAR *get(const TCHAR *key) const
+	{
+	   MappingTableElement *e = m_data->get(key);
+	   return (e != nullptr) ? e->getValue() : nullptr;
+	}
 
-	const TCHAR *get(const TCHAR *key);
-	LONG getId() { return m_id; }
-	const TCHAR *getName() { return CHECK_NULL(m_name); }
-	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
-	uint32_t getFlags() { return m_flags; }
+	int32_t getId() const { return m_id; }
+	const TCHAR *getName() const { return CHECK_NULL(m_name); }
+	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
+	uint32_t getFlags() const { return m_flags; }
+
+	json_t *toJson() const;
 };
 
 /**
  * Mapping tables API
  */
 void InitMappingTables();
-uint32_t UpdateMappingTable(const NXCPMessage& msg, LONG *newId);
-uint32_t DeleteMappingTable(LONG id);
-uint32_t GetMappingTable(LONG id, NXCPMessage *msg);
+uint32_t UpdateMappingTable(const NXCPMessage& msg, int32_t *newId, ClientSession *session);
+uint32_t DeleteMappingTable(int32_t id, ClientSession *session);
+uint32_t GetMappingTable(int32_t id, NXCPMessage *msg);
 uint32_t ListMappingTables(NXCPMessage *msg);
 
 #endif

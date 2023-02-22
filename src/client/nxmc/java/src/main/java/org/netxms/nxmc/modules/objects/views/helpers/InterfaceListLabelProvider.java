@@ -74,8 +74,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	public String getColumnText(Object element, int columnIndex)
 	{
 		if (node == null)
-			return null;
-		
+         return "";
+
 		Interface iface = (Interface)element;
       MacAddress macAddr;
 		switch(columnIndex)

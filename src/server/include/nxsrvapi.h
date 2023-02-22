@@ -650,10 +650,18 @@ public:
    int getCustomAttributeSize() const { return m_customAttributes.size(); }
 
    template <typename C>
-   EnumerationCallbackResult forEachCustomAttribute(EnumerationCallbackResult (*cb)(const TCHAR *, const CustomAttribute *, C *), C *context) const
+   EnumerationCallbackResult forEachCustomAttribute(EnumerationCallbackResult (*cb)(const TCHAR*, const CustomAttribute*, C*), C *context) const
    {
       lockCustomAttributes();
-      EnumerationCallbackResult result =  m_customAttributes.forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
+      EnumerationCallbackResult result = m_customAttributes.forEach(cb, context);
+      unlockCustomAttributes();
+      return result;
+   }
+
+   EnumerationCallbackResult forEachCustomAttribute(std::function<EnumerationCallbackResult (const TCHAR*, const CustomAttribute*)> cb) const
+   {
+      lockCustomAttributes();
+      EnumerationCallbackResult result = m_customAttributes.forEach(cb);
       unlockCustomAttributes();
       return result;
    }

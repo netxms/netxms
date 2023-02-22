@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014-2021 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -130,10 +130,9 @@ bool TuxedoGetLocalMachineID(char *lmid)
 /**
  * Update local machine ID
  */
-static EnumerationCallbackResult UpdateLocalMachineId(const TCHAR *key, const void *value, void *arg)
+static EnumerationCallbackResult UpdateLocalMachineId(const TCHAR *key, const TuxedoMachine *m, char *nodename)
 {
-   const TuxedoMachine *m = static_cast<const TuxedoMachine*>(value);
-   if (!stricmp(m->m_pmid, static_cast<char*>(arg)))
+   if (!stricmp(m->m_pmid, nodename))
    {
 #ifdef UNICODE
       wchar_to_mb(m->m_id, -1, s_localMachineId, 64);
@@ -216,7 +215,7 @@ void TuxedoQueryMachines()
    tpfree((char *)rsp);
    tpfree((char *)fb);
 
-   if ((s_localMachineId[0] == 0) && (machines != NULL))
+   if ((s_localMachineId[0] == 0) && (machines != nullptr))
    {
 #ifdef _WIN32
    char nodename[MAX_COMPUTERNAME_LENGTH + 1];

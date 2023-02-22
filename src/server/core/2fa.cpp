@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -476,15 +476,17 @@ void Get2FAMethods(NXCPMessage *msg)
 {
    uint32_t fieldId = VID_2FA_METHOD_LIST_BASE;
    s_authMethodListLock.lock();
-   s_methods.forEach([msg, &fieldId](const TCHAR *name, const void *method) -> EnumerationCallbackResult {
-      msg->setField(fieldId++, name);
-      msg->setField(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->getDescription());
-      msg->setField(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->getDriverName());
-      msg->setFieldFromUtf8String(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->getConfiguration());
-      msg->setField(fieldId++, static_cast<const TwoFactorAuthenticationMethod*>(method)->isValid());
-      fieldId += 5;
-      return _CONTINUE;
-   });
+   s_methods.forEach(
+      [msg, &fieldId](const TCHAR *name, const TwoFactorAuthenticationMethod *method) -> EnumerationCallbackResult
+      {
+         msg->setField(fieldId++, name);
+         msg->setField(fieldId++, method->getDescription());
+         msg->setField(fieldId++, method->getDriverName());
+         msg->setFieldFromUtf8String(fieldId++, method->getConfiguration());
+         msg->setField(fieldId++, method->isValid());
+         fieldId += 5;
+         return _CONTINUE;
+      });
    msg->setField(VID_2FA_METHOD_COUNT, s_methods.size());
    s_authMethodListLock.unlock();
 }
