@@ -660,7 +660,7 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	@Override
 	public void mouseDoubleClick(MouseEvent e)
 	{
-      if (!enableControls)
+      if (!enableControls || (e.button != 1) || zoomControlRect.contains(e.x, e.y) || ((titleRect != null) && titleRect.contains(e.x, e.y)))
          return;
 
       int zoom = accessor.getZoom();
