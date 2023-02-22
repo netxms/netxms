@@ -40,6 +40,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
@@ -75,6 +76,16 @@ public class NodesView extends ObjectView
    public NodesView()
    {
       super(i18n.tr("Nodes"), ResourceManager.getImageDescriptor("icons/object-views/nodes.png"), "Nodes", false);
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
    }
 
    /**

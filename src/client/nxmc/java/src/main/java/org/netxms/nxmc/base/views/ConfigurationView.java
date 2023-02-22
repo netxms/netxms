@@ -36,6 +36,16 @@ public abstract class ConfigurationView extends View
    {
       super();
    }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
+   }   
 
    /**
     * Create new view with specific ID. This will not create actual widgets that composes view - creation can be delayed by

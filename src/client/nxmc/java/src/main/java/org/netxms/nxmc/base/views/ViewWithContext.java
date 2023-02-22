@@ -49,17 +49,16 @@ public abstract class ViewWithContext extends View
       ViewWithContext view = (ViewWithContext)super.cloneView();
       view.context = context;
       return view;
-   }
+   }   
 
    /**
-    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
    @Override
-   protected void postContentCreate()
+   protected void postClone(View view)
    {
-      super.postContentCreate();
-      if (context != null) // Cloned view will have context set at creation
-         contextChanged(null, context);
+      super.postClone(view);
+      contextChanged(null, context);
    }
 
    /**

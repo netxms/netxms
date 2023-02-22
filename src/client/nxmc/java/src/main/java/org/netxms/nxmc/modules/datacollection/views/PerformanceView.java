@@ -37,6 +37,7 @@ import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.helpers.PerfTabGraphSettings;
 import org.netxms.nxmc.modules.datacollection.widgets.PerfTabGraph;
@@ -68,6 +69,16 @@ public class PerformanceView extends ObjectView
    public PerformanceView()
    {
       super(i18n.tr("Performance"), ResourceManager.getImageDescriptor("icons/object-views/performance.png"), "PerformanceView", false);
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
    }
 
    /**

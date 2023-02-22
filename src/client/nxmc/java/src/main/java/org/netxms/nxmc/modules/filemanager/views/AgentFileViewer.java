@@ -254,8 +254,7 @@ public class AgentFileViewer extends AdHocObjectView
    @Override
    public void setFocus()
    {
-      if (!viewer.isDisposed())
-         viewer.setFocus();
+      viewer.setFocus();
    }
 
    /**

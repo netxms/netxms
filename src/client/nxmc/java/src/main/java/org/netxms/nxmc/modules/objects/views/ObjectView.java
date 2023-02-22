@@ -24,7 +24,6 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -52,16 +51,6 @@ public abstract class ObjectView extends ViewWithContext
    {
       super(name, image, id, hasFilter);
       session = Registry.getSession();
-   }
-   
-   /**
-    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
-    */
-   @Override
-   protected void postClone(View view)
-   {
-      super.postClone(view);
-      refresh();
    }
 
    /**

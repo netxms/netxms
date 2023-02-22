@@ -497,8 +497,7 @@ public class SSHKeys extends ConfigurationView
    @Override
    public void setFocus()
    {
-      if (!viewer.getTable().isDisposed())
-         viewer.getTable().setFocus();
+      viewer.getTable().setFocus();
    }
 
    /**

@@ -39,6 +39,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RoutingTableComparator;
@@ -73,6 +74,16 @@ public class RoutingTableView extends ObjectView
    {
       super(i18n.tr("Routing Table"), ResourceManager.getImageDescriptor("icons/object-views/routing_table.gif"), "RoutingTable", false);
       session = Registry.getSession();
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
    }
 
    /**

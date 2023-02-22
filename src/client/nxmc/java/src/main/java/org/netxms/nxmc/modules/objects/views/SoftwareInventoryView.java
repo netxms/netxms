@@ -32,6 +32,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Node;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.actions.ViewerProvider;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.SoftwareInventory;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -57,6 +58,16 @@ public class SoftwareInventoryView extends ObjectView
    public SoftwareInventoryView()
    {
       super(i18n.tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "SoftwareInventory", false);
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
    }
 
    /**

@@ -43,6 +43,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -85,6 +86,16 @@ public class MaintenanceJournalView extends ObjectView
    public MaintenanceJournalView()
    {
       super(i18n.tr("Maintenance journal"), ResourceManager.getImageDescriptor("icons/object-views/maintenance_journal.png"), "MaintenanceJournal", true);
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
    }
 
    /**

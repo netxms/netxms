@@ -23,6 +23,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.PhysicalLinkManager;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -46,6 +47,16 @@ public class PhysicalLinkView extends ObjectView
    public PhysicalLinkView()
    {
       super(i18n.tr("Physical links"), ResourceManager.getImageDescriptor("icons/object-views/physical_links.png"), "PhysicalLink", true);
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      refresh();
    }
 
    /**

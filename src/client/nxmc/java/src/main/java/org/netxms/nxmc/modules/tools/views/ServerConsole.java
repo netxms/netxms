@@ -267,8 +267,7 @@ public class ServerConsole extends View
    @Override
    public void setFocus()
    {
-      if (!commandInput.isDisposed())
-         commandInput.setFocus();
+      commandInput.setFocus();
    }
 
    /**
