@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,17 +23,19 @@
 #include "nxcore.h"
 #include <netxms_mt.h>
 
+#define DEBUG_TAG _T("mtables")
+
 /**
  * Create mapping table object from NXCP message
  */
 MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 {
-	MappingTable *mt = new MappingTable((LONG)msg.getFieldAsUInt32(VID_MAPPING_TABLE_ID),
+	MappingTable *mt = new MappingTable(msg.getFieldAsInt32(VID_MAPPING_TABLE_ID),
 	                                    msg.getFieldAsString(VID_NAME),
 													msg.getFieldAsUInt32(VID_FLAGS),
 													msg.getFieldAsString(VID_DESCRIPTION));
 
-	int count = (int)msg.getFieldAsUInt32(VID_NUM_ELEMENTS);
+	int count = msg.getFieldAsInt32(VID_NUM_ELEMENTS);
 	uint32_t fieldId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < count; i++)
 	{
@@ -41,7 +43,7 @@ MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 		msg.getFieldAsString(fieldId++, key, 64);
 		if (mt->m_flags & MTF_NUMERIC_KEYS)
 		{
-			long n = _tcstol(key, NULL, 0);
+			int32_t n = _tcstol(key, nullptr, 0);
 			_sntprintf(key, 64, _T("%ld"), n);
 		}
 		TCHAR *value = msg.getFieldAsString(fieldId++);
@@ -56,7 +58,7 @@ MappingTable *MappingTable::createFromMessage(const NXCPMessage& msg)
 /**
  * Create mapping table object from database
  */
-MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, LONG id)
+MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, int32_t id)
 {
 	MappingTable *mt = nullptr;
 
@@ -95,7 +97,7 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, LONG id)
 					DBGetField(hResult, i, 0, key, 64);
 					if (mt->m_flags & MTF_NUMERIC_KEYS)
 					{
-						long n = _tcstol(key, NULL, 0);
+						int32_t n = _tcstol(key, NULL, 0);
 						_sntprintf(key, 64, _T("%ld"), n);
 					}
 					mt->m_data->set(key, new MappingTableElement(DBGetField(hResult, i, 1, nullptr, 0), DBGetField(hResult, i, 2, nullptr, 0)));
@@ -112,7 +114,7 @@ MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, LONG id)
 /**
  * Internal constructor
  */
-MappingTable::MappingTable(LONG id, TCHAR *name, UINT32 flags, TCHAR *description)
+MappingTable::MappingTable(int32_t id, TCHAR *name, uint32_t flags, TCHAR *description)
 {
 	m_id = id;
 	m_name = name;
@@ -132,48 +134,32 @@ MappingTable::~MappingTable()
 }
 
 /**
- * Callback for setting mapping table elements in NXCP message
- */
-static EnumerationCallbackResult FillMessageCallback(const TCHAR *key,
-         const MappingTableElement *value, std::pair<NXCPMessage*, UINT32> *context)
-{
-	context->first->setField(context->second, key);
-	context->first->setField(context->second + 1, value->getValue());
-	context->first->setField(context->second + 2, value->getDescription());
-	context->second += 10;
-   return _CONTINUE;
-}
-
-/**
  * Fill NXCP message with mapping table's data
  */
-void MappingTable::fillMessage(NXCPMessage *msg)
+void MappingTable::fillMessage(NXCPMessage *msg) const
 {
-	msg->setField(VID_MAPPING_TABLE_ID, (UINT32)m_id);
+	msg->setField(VID_MAPPING_TABLE_ID, m_id);
 	msg->setField(VID_NAME, CHECK_NULL_EX(m_name));
 	msg->setField(VID_FLAGS, m_flags);
 	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
-	
-	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_data->size());
-   std::pair<NXCPMessage*, UINT32> data(msg, VID_ELEMENT_LIST_BASE);
-   m_data->forEach(FillMessageCallback, &data);
-}
 
-/**
- * Callback for saving elements into database
- */
-static EnumerationCallbackResult SaveElementCallback(const TCHAR *key, const MappingTableElement *value, db_statement_t *hStmt)
-{
-	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
-	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value->getValue(), DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, value->getDescription(), DB_BIND_STATIC);
-   return DBExecute(hStmt) ? _CONTINUE : _STOP;
+	msg->setField(VID_NUM_ELEMENTS, m_data->size());
+   uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+   m_data->forEach(
+      [msg, &fieldId] (const TCHAR *key, const MappingTableElement *value) -> EnumerationCallbackResult
+      {
+         msg->setField(fieldId, key);
+         msg->setField(fieldId + 1, value->getValue());
+         msg->setField(fieldId + 2, value->getDescription());
+         fieldId += 10;
+         return _CONTINUE;
+      });
 }
 
 /**
  * Save mapping table to database
  */
-bool MappingTable::saveToDatabase()
+bool MappingTable::saveToDatabase() const
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -184,7 +170,7 @@ bool MappingTable::saveToDatabase()
 	}
 
 	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("mapping_tables"), _T("id"), (UINT32)m_id))
+	if (IsDatabaseRecordExist(hdb, _T("mapping_tables"), _T("id"), static_cast<uint32_t>(m_id)))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE mapping_tables SET name=?,flags=?,description=? WHERE id=?"));
 	}
@@ -192,7 +178,7 @@ bool MappingTable::saveToDatabase()
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO mapping_tables (name,flags,description,id) VALUES (?,?,?,?)"));
 	}
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		goto failure2;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
@@ -204,22 +190,25 @@ bool MappingTable::saveToDatabase()
 		goto failure;
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(hdb, _T("DELETE FROM mapping_data WHERE table_id=?"));
-	if (hStmt == NULL)
+	if (!ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM mapping_data WHERE table_id=?")))
 		goto failure2;
-
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	if (!DBExecute(hStmt))
-		goto failure;
-	DBFreeStatement(hStmt);
 
 	hStmt = DBPrepare(hdb, _T("INSERT INTO mapping_data (table_id,md_key,md_value,description) VALUES (?,?,?,?)"));
-	if (hStmt == NULL)
+	if (hStmt == nullptr)
 		goto failure2;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-   if (m_data->forEach(SaveElementCallback, hStmt) == _STOP)
+	if (m_data->forEach(
+      [hStmt] (const TCHAR *key, const MappingTableElement *value) -> EnumerationCallbackResult
+      {
+         DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, value->getValue(), DB_BIND_STATIC);
+         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, value->getDescription(), DB_BIND_STATIC);
+         return DBExecute(hStmt) ? _CONTINUE : _STOP;
+      }) == _STOP)
+	{
       goto failure;
+	}
 	DBFreeStatement(hStmt);
 
 	DBCommit(hdb);
@@ -248,27 +237,9 @@ bool MappingTable::deleteFromDatabase()
 		return false;
 	}
 
-	BOOL success = FALSE;
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM mapping_tables WHERE id=?"));
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		success = DBExecute(hStmt);
-		DBFreeStatement(hStmt);
-	}
-
+	bool success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM mapping_tables WHERE id=?"));
 	if (success)
-	{
-		success = FALSE;
-		DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM mapping_data WHERE table_id=?"));
-		if (hStmt != NULL)
-		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-			success = DBExecute(hStmt);
-			DBFreeStatement(hStmt);
-		}
-	}
+	   success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM mapping_data WHERE table_id=?"));
 
 	if (success)
 		DBCommit(hdb);
@@ -276,16 +247,34 @@ bool MappingTable::deleteFromDatabase()
 		DBRollback(hdb);
 
 	DBConnectionPoolReleaseConnection(hdb);
-	return success ? true : false;
+	return success;
 }
 
 /**
- * Get value by key
+ * Convert to JSON format
  */
-const TCHAR *MappingTable::get(const TCHAR *key)
+json_t *MappingTable::toJson() const
 {
-	MappingTableElement *e = m_data->get(key);
-	return (e != nullptr) ? e->getValue() : nullptr;
+   json_t *root = json_object();
+
+   json_object_set_new(root, "name", json_string_t(m_name));
+   json_object_set_new(root, "description", json_string_t(m_description));
+   json_object_set_new(root, "flags", json_integer(m_flags));
+
+   json_t *elements = json_array();
+   m_data->forEach(
+      [elements] (const TCHAR *key, const MappingTableElement *value) -> EnumerationCallbackResult
+      {
+         json_t *e = json_object();
+         json_object_set_new(e, "key", json_string_t(key));
+         json_object_set_new(e, "value", json_string_t(value->getValue()));
+         json_object_set_new(e, "description", json_string_t(value->getDescription()));
+         json_array_append_new(elements, e);
+         return _CONTINUE;
+      });
+   json_object_set_new(root, "elements", elements);
+
+   return root;
 }
 
 /**
@@ -316,7 +305,7 @@ void InitMappingTables()
 	}
 	DBFreeResult(hResult);
 	DBConnectionPoolReleaseConnection(hdb);
-	DbgPrintf(2, _T("%d mapping tables loaded"), s_mappingTables.size());
+	nxlog_debug_tag(DEBUG_TAG, 2, _T("%d mapping tables loaded"), s_mappingTables.size());
 }
 
 /**
@@ -328,13 +317,13 @@ static void NotifyClients(ClientSession *session, std::pair<uint32_t, uint32_t> 
 }
 
 /**
- * Create/update mapping table. If table ID is 0, new table will be craeted, 
+ * Create/update mapping table. If table ID is 0, new table will be created,
  * otherwise existing table with same ID updated.
  *
  * @param msg NXCP message with table's data
  * @return RCC
  */
-uint32_t UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
+uint32_t UpdateMappingTable(const NXCPMessage& msg, int32_t *newId, ClientSession *session)
 {
 	uint32_t rcc;
 	MappingTable *mt = MappingTable::createFromMessage(msg);
@@ -348,10 +337,17 @@ uint32_t UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
 			{
 				if (mt->saveToDatabase())
 				{
+				   json_t *oldValue = s_mappingTables.get(i)->toJson();
+				   json_t *newValue = mt->toJson();
+               session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, _T("Mapping table %s [%u] updated"), mt->getName(), mt->getId());
+               json_decref(oldValue);
+               json_decref(newValue);
+
 					s_mappingTables.set(i, mt);
 					*newId = mt->getId();
 					rcc = RCC_SUCCESS;
-					DbgPrintf(4, _T("Mapping table updated, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+
+					nxlog_debug_tag(DEBUG_TAG, 4, _T("Mapping table \"%s\" [%d] updated"), mt->getName(), mt->getId());
 				}
 				else
 				{
@@ -369,7 +365,12 @@ uint32_t UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
 			s_mappingTables.add(mt);
 			*newId = mt->getId();
 			rcc = RCC_SUCCESS;
-			DbgPrintf(4, _T("New mapping table added, name=\"%s\", id=%d"), mt->getName(), mt->getId());
+
+         json_t *newValue = mt->toJson();
+         session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, nullptr, newValue, _T("Mapping table %s [%u] created"), mt->getName(), mt->getId());
+         json_decref(newValue);
+
+			nxlog_debug_tag(DEBUG_TAG, 4, _T("Created new mapping table \"%s\" [%d]"), mt->getName(), mt->getId());
 		}
 		else
 		{
@@ -399,7 +400,7 @@ uint32_t UpdateMappingTable(const NXCPMessage& msg, LONG *newId)
  * @param id mapping table ID
  * @return RCC
  */
-uint32_t DeleteMappingTable(LONG id)
+uint32_t DeleteMappingTable(int32_t id, ClientSession *session)
 {
    uint32_t rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	s_mappingTablesLock.writeLock();
@@ -410,9 +411,15 @@ uint32_t DeleteMappingTable(LONG id)
 		{
 			if (mt->deleteFromDatabase())
 			{
+			   json_t *json = mt->toJson();
+			   session->writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, json, nullptr, _T("Mapping table \"%s\" [%d] deleted"), mt->getName(), id);
+			   json_decref(json);
+
+			   TCHAR username[MAX_USER_NAME];
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Mapping table \"%s\" [%d] deleted by user %s"), mt->getName(), id, ResolveUserId(session->getUserId(), username, true));
+
 				s_mappingTables.remove(i);
 				rcc = RCC_SUCCESS;
-				DbgPrintf(4, _T("Mapping table deleted, id=%d"), id);
 			}
 			else
 			{
@@ -437,7 +444,7 @@ uint32_t DeleteMappingTable(LONG id)
  * @param msg NXCP message to fill
  * @return RCC
  */
-uint32_t GetMappingTable(LONG id, NXCPMessage *msg)
+uint32_t GetMappingTable(int32_t id, NXCPMessage *msg)
 {
    uint32_t rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	s_mappingTablesLock.readLock();
@@ -492,7 +499,7 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 	if (!argv[0]->isString() || !argv[1]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+	int32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
 	const TCHAR *value = nullptr;
 	s_mappingTablesLock.readLock();
 	for(int i = 0; i < s_mappingTables.size(); i++)
@@ -530,7 +537,7 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
    int count;
    TCHAR **strings = SplitString(argv[1]->getValueAsCString(), argv[2]->getValueAsCString()[0], &count);
 
-   LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+   int32_t tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
    MappingTable *mt = nullptr;
    s_mappingTablesLock.readLock();
    for(int i = 0; i < s_mappingTables.size(); i++)

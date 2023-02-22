@@ -928,9 +928,9 @@ public:
    void sendPollerMsg(uint32_t requestIf, const TCHAR *text);
 	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
 
-   void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, UINT32 objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...);
+   void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...);
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...);
 
    session_id_t getId() const { return m_id; }
    void setId(session_id_t id) { if (m_id == -1) m_id = id; }

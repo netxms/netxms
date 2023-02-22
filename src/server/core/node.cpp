@@ -11987,10 +11987,12 @@ void Node::updateIcmpStatisticPeriod(uint32_t period)
    lockProperties();
    if (m_icmpStatCollectors != nullptr)
    {
-      m_icmpStatCollectors->forEach([](const TCHAR *key, const void *collector, void *context) -> EnumerationCallbackResult {
-         ((IcmpStatCollector*)collector)->resize(CAST_FROM_POINTER(context, int));
-         return _CONTINUE;
-      }, CAST_TO_POINTER(period, void*));
+      m_icmpStatCollectors->forEach(
+         [period](const TCHAR *key, const IcmpStatCollector *collector) -> EnumerationCallbackResult
+         {
+            const_cast<IcmpStatCollector*>(collector)->resize(period);
+            return _CONTINUE;
+         });
    }
    unlockProperties();
 }

@@ -2122,11 +2122,15 @@ public:
       return reinterpret_cast<StructArray<KeyValuePair<T>>*>(StringMapBase::toArray(nullptr, nullptr));
    }
 
-   using StringMapBase::forEach;
    template <typename C>
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const T *, C *), C *context) const
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR*, const T*, C*), C *context) const
    {
       return StringMapBase::forEach(reinterpret_cast<EnumerationCallbackResult (*)(const TCHAR*, const void*, void*)>(cb), (void *)context);
+   }
+
+   EnumerationCallbackResult forEach(std::function<EnumerationCallbackResult (const TCHAR*, const T*)> cb) const
+   {
+      return StringMapBase::forEach([&cb] (const TCHAR *key, const void *value) { return cb(key, static_cast<const T*>(value)); });
    }
 
    Iterator<KeyValuePair<T>> begin()

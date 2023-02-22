@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -471,9 +471,9 @@ void NXCSession::receiverThread()
 /**
  * Message handler callback
  */
-static EnumerationCallbackResult HandleMessageCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult HandleMessageCallback(const TCHAR *key, const Controller *value, NXCPMessage *msg)
 {
-   return ((Controller *)value)->handleMessage((NXCPMessage *)data) ? _STOP : _CONTINUE;
+   return const_cast<Controller*>(value)->handleMessage(msg) ? _STOP : _CONTINUE;
 }
 
 /**

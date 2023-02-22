@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -578,15 +578,14 @@ struct SaveThresholdInstancesCallbackData
 /**
  * Enumeration callback for saving threshold instances
  */
-static EnumerationCallbackResult SaveThresholdInstancesCallback(const TCHAR *key, const void *value, void *arg)
+static EnumerationCallbackResult SaveThresholdInstancesCallback(const TCHAR *key, const DCTableThresholdInstance *instance, SaveThresholdInstancesCallbackData *context)
 {
-   DB_STATEMENT hStmt = static_cast<SaveThresholdInstancesCallbackData*>(arg)->hStmt;
-   const DCTableThresholdInstance *i = (const DCTableThresholdInstance *)value;
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<SaveThresholdInstancesCallbackData*>(arg)->instanceId++);
-   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, i->getName(), DB_BIND_STATIC);
-   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, i->getMatchCount());
-   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, i->isActive() ? _T("1") : _T("0"), DB_BIND_STATIC);
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, i->getRow());
+   DB_STATEMENT hStmt = context->hStmt;
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, context->instanceId++);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, instance->getName(), DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, instance->getMatchCount());
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, instance->isActive() ? _T("1") : _T("0"), DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, instance->getRow());
    DBExecute(hStmt);
    return _CONTINUE;
 }
