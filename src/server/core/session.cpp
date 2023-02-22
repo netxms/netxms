@@ -3178,7 +3178,7 @@ void ClientSession::deleteConfigurationVariable(const NXCPMessage& request)
  */
 void ClientSession::setConfigCLOB(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR name[MAX_OBJECT_NAME];
    request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
@@ -3190,29 +3190,29 @@ void ClientSession::setConfigCLOB(const NXCPMessage& request)
 		   TCHAR *oldValue = ConfigReadCLOB(name, _T(""));
 			if (ConfigWriteCLOB(name, newValue, TRUE))
 			{
-				msg.setField(VID_RCC, RCC_SUCCESS);
+				response.setField(VID_RCC, RCC_SUCCESS);
 				writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldValue, newValue, 'T',
 								            _T("Server configuration variable (long) \"%s\" changed"), name);
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_DB_FAILURE);
+				response.setField(VID_RCC, RCC_DB_FAILURE);
 			}
-			free(oldValue);
-			free(newValue);
+			MemFree(oldValue);
+			MemFree(newValue);
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_INVALID_REQUEST);
+			response.setField(VID_RCC, RCC_INVALID_REQUEST);
 		}
 	}
 	else
 	{
 	   writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting server configuration variable \"%s\""), name);
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -3220,33 +3220,30 @@ void ClientSession::setConfigCLOB(const NXCPMessage& request)
  */
 void ClientSession::getConfigCLOB(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   TCHAR name[MAX_OBJECT_NAME], *value;
-
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
+	   TCHAR name[MAX_OBJECT_NAME];
       request.getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
-		value = ConfigReadCLOB(name, nullptr);
+		TCHAR *value = ConfigReadCLOB(name, nullptr);
 		if (value != nullptr)
 		{
-			msg.setField(VID_VALUE, value);
-			msg.setField(VID_RCC, RCC_SUCCESS);
-			free(value);
+			response.setField(VID_VALUE, value);
+			response.setField(VID_RCC, RCC_SUCCESS);
+			MemFree(value);
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_UNKNOWN_VARIABLE);
+			response.setField(VID_RCC, RCC_UNKNOWN_VARIABLE);
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -3665,56 +3662,48 @@ void ClientSession::detachLdapUser(const NXCPMessage& request)
  */
 void ClientSession::deleteUser(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   UINT32 dwUserId;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check user rights
-   if (!(m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS))
+   if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS)
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-
-      dwUserId = request.getFieldAsUInt32(VID_USER_ID);
-      TCHAR name[MAX_USER_NAME];
-      ResolveUserId(dwUserId, name, true);
-      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on delete %s %s [%d]"), (dwUserId & GROUP_FLAG) ? _T("group") : _T("user"), name, dwUserId);
-   }
-   else
-   {
-      // Get Id of user to be deleted
-      dwUserId = request.getFieldAsUInt32(VID_USER_ID);
-
-      if ((dwUserId != 0) && (dwUserId != GROUP_EVERYONE))
+      uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
+      if ((userId != 0) && (userId != GROUP_EVERYONE))
       {
-         if (!IsLoggedIn(dwUserId))
+         if (!IsLoggedIn(userId))
          {
             TCHAR name[MAX_USER_NAME];
-            ResolveUserId(dwUserId, name, true);
-            UINT32 rcc =  DeleteUserDatabaseObject(dwUserId);
-            msg.setField(VID_RCC, rcc);
+            ResolveUserId(userId, name, true);
+            UINT32 rcc =  DeleteUserDatabaseObject(userId);
+            response.setField(VID_RCC, rcc);
             if (rcc == RCC_SUCCESS)
             {
-               writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s [%d] deleted"), (dwUserId & GROUP_FLAG) ? _T("Group") : _T("User"), name, dwUserId);
+               writeAuditLog(AUDIT_SECURITY, true, 0, _T("%s %s [%d] deleted"), (userId & GROUP_FLAG) ? _T("Group") : _T("User"), name, userId);
             }
          }
          else
          {
             // logger in users cannot be deleted
-            msg.setField(VID_RCC, RCC_USER_LOGGED_IN);
+            response.setField(VID_RCC, RCC_USER_LOGGED_IN);
          }
       }
       else
       {
          // System administrator account and everyone group cannot be deleted
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
 
-   // Send response
-   sendMessage(&msg);
+      uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
+      TCHAR name[MAX_USER_NAME];
+      ResolveUserId(userId, name, true);
+      writeAuditLog(AUDIT_SECURITY, false, 0, _T("Access denied on delete %s %s [%d]"), (userId & GROUP_FLAG) ? _T("group") : _T("user"), name, userId);
+   }
+
+   sendMessage(response);
 }
 
 /**
@@ -3889,11 +3878,9 @@ void ClientSession::validatePassword(const NXCPMessage& request)
  */
 void ClientSession::setPassword(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   UINT32 userId = request.getFieldAsUInt32(VID_USER_ID);
+   uint32_t userId = request.getFieldAsUInt32(VID_USER_ID);
    if ((m_systemAccessRights & SYSTEM_ACCESS_MANAGE_USERS) || (userId == m_dwUserId))     // User can change password for itself
    {
       TCHAR newPassword[1024], oldPassword[1024];
@@ -3910,23 +3897,22 @@ void ClientSession::setPassword(const NXCPMessage& request)
 			oldPassword[0] = 0;
 
       uint32_t rcc = SetUserPassword(userId, newPassword, oldPassword, userId == m_dwUserId);
-      msg.setField(VID_RCC, rcc);
+      response.setField(VID_RCC, rcc);
 
       if (rcc == RCC_SUCCESS)
       {
          TCHAR userName[MAX_USER_NAME];
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
-                  _T("Changed password for user %s"), ResolveUserId(userId, userName, true));
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Changed password for user %s"), ResolveUserId(userId, userName, true));
       }
    }
    else
    {
       // Current user has no rights to change password for specific user
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -3934,7 +3920,7 @@ void ClientSession::setPassword(const NXCPMessage& request)
  */
 void ClientSession::openNodeDCIList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    bool success = false;
 
    // Get node id and check object class and access rights
@@ -3947,7 +3933,7 @@ void ClientSession::openNodeDCIList(const NXCPMessage& request)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             success = true;
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_RCC, RCC_SUCCESS);
             if (!request.getFieldAsBoolean(VID_IS_REFRESH))
             {
                m_openDataCollectionConfigurations.put(objectId);
@@ -3955,21 +3941,20 @@ void ClientSession::openNodeDCIList(const NXCPMessage& request)
          }
          else
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 
    // If DCI list was successfully locked, send it to client
    if (success)
@@ -3981,7 +3966,7 @@ void ClientSession::openNodeDCIList(const NXCPMessage& request)
  */
 void ClientSession::closeNodeDCIList(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get node id and check object class and access rights
    uint32_t objectId = request.getFieldAsUInt32(VID_OBJECT_ID);
@@ -3995,25 +3980,24 @@ void ClientSession::closeNodeDCIList(const NXCPMessage& request)
             static_cast<DataCollectionOwner&>(*object).applyDCIChanges(false);
             if (!request.getFieldAsBoolean(VID_COMMIT_ONLY))
                m_openDataCollectionConfigurations.remove(objectId);
-            msg.setField(VID_RCC, RCC_SUCCESS);
+            response.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -8038,11 +8022,7 @@ void ClientSession::copyUserVariable(const NXCPMessage& request)
  */
 void ClientSession::changeObjectZone(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check prerequisites
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -8062,35 +8042,34 @@ void ClientSession::changeObjectZone(const NXCPMessage& request)
 						  (FindSubnetByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr)))
 					{
 					   static_cast<Node&>(*object).changeZone(zoneUIN);
-						msg.setField(VID_RCC, RCC_SUCCESS);
+						response.setField(VID_RCC, RCC_SUCCESS);
 					}
 					else
 					{
-						msg.setField(VID_RCC, RCC_ADDRESS_IN_USE);
+						response.setField(VID_RCC, RCC_ADDRESS_IN_USE);
 					}
 				}
 				else
 				{
-		         msg.setField(VID_RCC, RCC_INVALID_ZONE_ID);
+		         response.setField(VID_RCC, RCC_INVALID_ZONE_ID);
 				}
          }
          else
          {
-	         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+	         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -8542,7 +8521,7 @@ void ClientSession::generateObjectToolId(const NXCPMessage& request)
  */
 void ClientSession::execTableTool(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Check if tool exist and has correct type
    uint32_t dwToolId = request.getFieldAsUInt32(VID_TOOL_ID);
@@ -8556,32 +8535,31 @@ void ClientSession::execTableTool(const NXCPMessage& request)
          {
             if (object->getObjectClass() == OBJECT_NODE)
             {
-               msg.setField(VID_RCC,
+               response.setField(VID_RCC,
                                ExecuteTableTool(dwToolId, static_pointer_cast<Node>(object),
                                                 request.getId(), this));
             }
             else
             {
-               msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
             }
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_TOOL_ID);
+      response.setField(VID_RCC, RCC_INVALID_TOOL_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -8589,9 +8567,7 @@ void ClientSession::execTableTool(const NXCPMessage& request)
  */
 void ClientSession::changeSubscription(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    TCHAR channel[64];
    request.getFieldAsString(VID_NAME, channel, 64);
@@ -8627,14 +8603,14 @@ void ClientSession::changeSubscription(const NXCPMessage& request)
          }
       }
       m_subscriptionLock.unlock();
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+      response.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -8768,10 +8744,7 @@ void ClientSession::updateScript(const NXCPMessage& request)
  */
 void ClientSession::renameScript(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
       uint32_t scriptId = request.getFieldAsUInt32(VID_SCRIPT_ID);
@@ -8781,7 +8754,7 @@ void ClientSession::renameScript(const NXCPMessage& request)
          TCHAR newName[MAX_DB_STRING];
          request.getFieldAsString(VID_NAME, newName, MAX_DB_STRING);
          uint32_t rcc = RenameScript(scriptId, newName);
-         msg.setField(VID_RCC, rcc);
+         response.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
          {
             writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Library script with ID %u renamed from %s to %s"), scriptId, oldName, newName);
@@ -8789,17 +8762,17 @@ void ClientSession::renameScript(const NXCPMessage& request)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
+         response.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       TCHAR newName[MAX_DB_STRING];
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on renaming library script with ID %u to %s"),
                request.getFieldAsUInt32(VID_SCRIPT_ID), request.getFieldAsString(VID_NAME, newName, MAX_DB_STRING));
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -8807,7 +8780,7 @@ void ClientSession::renameScript(const NXCPMessage& request)
  */
 void ClientSession::deleteScript(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    uint32_t scriptId = request.getFieldAsUInt32(VID_SCRIPT_ID);
    if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
@@ -8815,7 +8788,7 @@ void ClientSession::deleteScript(const NXCPMessage& request)
       if (GetScriptName(scriptId, scriptName, MAX_DB_STRING))
       {
          uint32_t rcc = DeleteScript(scriptId);
-         msg.setField(VID_RCC, rcc);
+         response.setField(VID_RCC, rcc);
          if (rcc == RCC_SUCCESS)
          {
             writeAuditLog(AUDIT_SYSCFG, true, 0, _T("Library script [%u] deleted"), scriptId);
@@ -8823,18 +8796,18 @@ void ClientSession::deleteScript(const NXCPMessage& request)
       }
       else
       {
-         msg.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
+         response.setField(VID_RCC, RCC_INVALID_SCRIPT_ID);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
       TCHAR scriptName[MAX_DB_STRING];
       if (!GetScriptName(scriptId, scriptName, MAX_DB_STRING))
          _tcscpy(scriptName, _T("<unknown>"));
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting library script %s [%u]"), scriptName, scriptId);
    }
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -9697,37 +9670,35 @@ void ClientSession::pushDCIData(const NXCPMessage& request)
  */
 void ClientSession::getAddrList(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    if (m_systemAccessRights & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       ObjectArray<InetAddressListElement> *list = LoadServerAddressList(request.getFieldAsInt32(VID_ADDR_LIST_TYPE));
       if (list != nullptr)
       {
-         msg.setField(VID_NUM_RECORDS, (INT32)list->size());
+         response.setField(VID_NUM_RECORDS, (INT32)list->size());
 
          UINT32 fieldId = VID_ADDR_LIST_BASE;
          for(int i = 0; i < list->size(); i++)
          {
-            list->get(i)->fillMessage(&msg, fieldId);
+            list->get(i)->fillMessage(&response, fieldId);
             fieldId += 10;
          }
-         msg.setField(VID_RCC, RCC_SUCCESS);
+         response.setField(VID_RCC, RCC_SUCCESS);
          delete list;
       }
       else
       {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
+         response.setField(VID_RCC, RCC_DB_FAILURE);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -10577,37 +10548,34 @@ void ClientSession::getDependentNodes(const NXCPMessage& request)
  */
 void ClientSession::sendNotification(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-	TCHAR channelName[MAX_OBJECT_NAME], *phone, *message, *subject;
-
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if ((m_systemAccessRights & SYSTEM_ACCESS_SEND_NOTIFICATION))
 	{
+	   TCHAR channelName[MAX_OBJECT_NAME];
 	   request.getFieldAsString(VID_CHANNEL_NAME, channelName, MAX_OBJECT_NAME);
 	   if (IsNotificationChannelExists(channelName))
 	   {
-	      phone = request.getFieldAsString(VID_RCPT_ADDR);
-	      subject = request.getFieldAsString(VID_EMAIL_SUBJECT);
-	      message = request.getFieldAsString(VID_MESSAGE);
+	      TCHAR *phone = request.getFieldAsString(VID_RCPT_ADDR);
+	      TCHAR *subject = request.getFieldAsString(VID_EMAIL_SUBJECT);
+	      TCHAR *message = request.getFieldAsString(VID_MESSAGE);
 	      SendNotification(channelName, phone, subject, message);
-	      msg.setField(VID_RCC, RCC_SUCCESS);
+	      response.setField(VID_RCC, RCC_SUCCESS);
 	      MemFree(phone);
 	      MemFree(subject);
 	      MemFree(message);
 	   }
 	   else
 	   {
-         msg.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
+         response.setField(VID_RCC, RCC_NO_CHANNEL_NAME);
 	   }
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -10632,10 +10600,7 @@ void ClientSession::getPersistantStorage(const NXCPMessage& request)
  */
 void ClientSession::setPstorageValue(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
@@ -10644,14 +10609,14 @@ void ClientSession::setPstorageValue(const NXCPMessage& request)
 		value = request.getFieldAsString(VID_PSTORAGE_VALUE);
 		SetPersistentStorageValue(key, value);
 		free(value);
-      msg.setField(VID_RCC, RCC_SUCCESS);
+      response.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -10659,10 +10624,7 @@ void ClientSession::setPstorageValue(const NXCPMessage& request)
  */
 void ClientSession::deletePstorageValue(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-	msg.setId(request.getId());
-	msg.setCode(CMD_REQUEST_COMPLETED);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_PERSISTENT_STORAGE)
 	{
@@ -10670,14 +10632,14 @@ void ClientSession::deletePstorageValue(const NXCPMessage& request)
       //key[0]=0;
 		request.getFieldAsString(VID_PSTORAGE_KEY, key, 256);
 		bool success = DeletePersistentStorageValue(key);
-		msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_PSTORAGE_KEY);
+		response.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INVALID_PSTORAGE_KEY);
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+	   response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-	sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12032,7 +11994,7 @@ void ClientSession::listLibraryImages(const NXCPMessage& request)
  */
 void ClientSession::executeServerCommand(const NXCPMessage& request)
 {
-	NXCPMessage response(request.getId(), CMD_REQUEST_COMPLETED);
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	uint32_t nodeId = request.getFieldAsUInt32(VID_OBJECT_ID);
 	shared_ptr<NetObj> object = FindObjectById(nodeId);
@@ -12363,10 +12325,7 @@ void ClientSession::processConsoleCommand(const NXCPMessage& request)
  */
 void ClientSession::getVlans(const NXCPMessage& request)
 {
-	NXCPMessage msg;
-
-	msg.setCode(CMD_REQUEST_COMPLETED);
-	msg.setId(request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
 	if (object != nullptr)
@@ -12378,32 +12337,32 @@ void ClientSession::getVlans(const NXCPMessage& request)
 				shared_ptr<VlanList> vlans = static_cast<Node&>(*object).getVlans();
 				if (vlans != nullptr)
 				{
-					vlans->fillMessage(&msg);
-					msg.setField(VID_RCC, RCC_SUCCESS);
+					vlans->fillMessage(&response);
+					response.setField(VID_RCC, RCC_SUCCESS);
 		         writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("VLAN information read"));
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
+					response.setField(VID_RCC, RCC_RESOURCE_NOT_AVAILABLE);
 				}
 			}
 			else
 			{
-				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+				response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 		}
 		else
 		{
-			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+			response.setField(VID_RCC, RCC_ACCESS_DENIED);
 			writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on reading VLAN information"));
 		}
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+		response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -12756,15 +12715,9 @@ void ClientSession::listMappingTables(const NXCPMessage& request)
  */
 void ClientSession::getMappingTable(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
-	msg.setField(VID_RCC, GetMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID), &msg));
-
-   // Send response
-   sendMessage(&msg);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+	response.setField(VID_RCC, GetMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID), &response));
+   sendMessage(response);
 }
 
 /**
@@ -12772,25 +12725,20 @@ void ClientSession::getMappingTable(const NXCPMessage& request)
  */
 void ClientSession::updateMappingTable(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
 		LONG id;
-		msg.setField(VID_RCC, UpdateMappingTable(request, &id));
-		msg.setField(VID_MAPPING_TABLE_ID, (UINT32)id);
+		response.setField(VID_RCC, UpdateMappingTable(request, &id));
+		response.setField(VID_MAPPING_TABLE_ID, (UINT32)id);
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12798,23 +12746,18 @@ void ClientSession::updateMappingTable(const NXCPMessage& request)
  */
 void ClientSession::deleteMappingTable(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
-   // Prepare response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
-		msg.setField(VID_RCC, DeleteMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID)));
+		response.setField(VID_RCC, DeleteMappingTable((LONG)request.getFieldAsUInt32(VID_MAPPING_TABLE_ID)));
 	}
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12822,7 +12765,7 @@ void ClientSession::deleteMappingTable(const NXCPMessage& request)
  */
 void ClientSession::getWirelessStations(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    // Get object id and check object class and access rights
 	shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
@@ -12832,26 +12775,25 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
       {
 			if (static_cast<Node&>(*node).isWirelessController())
 			{
-			   static_cast<Node&>(*node).writeWsListToMessage(&msg);
-	         msg.setField(VID_RCC, RCC_SUCCESS);
+			   static_cast<Node&>(*node).writeWsListToMessage(&response);
+	         response.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-	         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+	         response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else  // No object with given ID
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**
@@ -12859,7 +12801,7 @@ void ClientSession::getWirelessStations(const NXCPMessage& request)
  */
 void ClientSession::getSummaryTables(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags,guid FROM dci_summary_tables"));
@@ -12867,17 +12809,17 @@ void ClientSession::getSummaryTables(const NXCPMessage& request)
    {
       TCHAR buffer[256];
       int count = DBGetNumRows(hResult);
-      msg.setField(VID_NUM_ELEMENTS, (UINT32)count);
-      UINT32 varId = VID_ELEMENT_LIST_BASE;
+      response.setField(VID_NUM_ELEMENTS, (UINT32)count);
+      uint32_t varId = VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         msg.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 0));
-         msg.setField(varId++, DBGetField(hResult, i, 1, buffer, 256));
-         msg.setField(varId++, DBGetField(hResult, i, 2, buffer, 256));
-         msg.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 3));
+         response.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 0));
+         response.setField(varId++, DBGetField(hResult, i, 1, buffer, 256));
+         response.setField(varId++, DBGetField(hResult, i, 2, buffer, 256));
+         response.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 3));
 
          uuid guid = DBGetFieldGUID(hResult, i, 4);
-         msg.setField(varId++, guid);
+         response.setField(varId++, guid);
 
          varId += 5;
       }
@@ -12885,12 +12827,11 @@ void ClientSession::getSummaryTables(const NXCPMessage& request)
    }
 	else
 	{
-		msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		response.setField(VID_RCC, RCC_ACCESS_DENIED);
 	}
    DBConnectionPoolReleaseConnection(hdb);
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(response);
 }
 
 /**

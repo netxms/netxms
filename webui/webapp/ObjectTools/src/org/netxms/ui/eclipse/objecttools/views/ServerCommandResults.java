@@ -73,7 +73,7 @@ public class ServerCommandResults extends AbstractCommandResults implements ISav
       };
       actionStop.setEnabled(false);
    }
-   
+
    /**
     * Fill local pull-down menu
     * 
