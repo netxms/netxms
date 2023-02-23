@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -190,6 +190,7 @@ public class ChartLegend extends Composite
          headerLabels[0] = new Label(this, SWT.NONE);
          headerLabels[0].setText("Curr");
          headerLabels[0].setFont(headerFont);
+         headerLabels[0].setBackground(getBackground());
          GridData gd = new GridData();
          gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
          headerLabels[0].setLayoutData(gd);
@@ -197,14 +198,17 @@ public class ChartLegend extends Composite
          headerLabels[1] = new Label(this, SWT.NONE);
          headerLabels[1].setText("Min");
          headerLabels[1].setFont(headerFont);
+         headerLabels[1].setBackground(getBackground());
 
          headerLabels[2] = new Label(this, SWT.NONE);
          headerLabels[2].setText("Max");
          headerLabels[2].setFont(headerFont);
+         headerLabels[2].setBackground(getBackground());
 
          headerLabels[3] = new Label(this, SWT.NONE);
          headerLabels[3].setText("Avg");
          headerLabels[3].setFont(headerFont);
+         headerLabels[3].setBackground(getBackground());
 
          List<GraphItem> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
@@ -214,6 +218,7 @@ public class ChartLegend extends Composite
             for(int j = 0; j < 4; j++)
             {
                dataLabels[i][j] = new Label(this, SWT.NONE);
+               dataLabels[i][j].setBackground(getBackground());
                if (j == 0)
                {
                   gd = new GridData();
@@ -240,6 +245,7 @@ public class ChartLegend extends Composite
          headerLabels[0] = new Label(this, SWT.NONE);
          headerLabels[0].setText("Value");
          headerLabels[0].setFont(headerFont);
+         headerLabels[0].setBackground(getBackground());
          GridData gd = new GridData();
          gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
          headerLabels[0].setLayoutData(gd);
@@ -247,6 +253,7 @@ public class ChartLegend extends Composite
          headerLabels[1] = new Label(this, SWT.NONE);
          headerLabels[1].setText("Pct");
          headerLabels[1].setFont(headerFont);
+         headerLabels[1].setBackground(getBackground());
 
          List<GraphItem> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
@@ -256,6 +263,7 @@ public class ChartLegend extends Composite
             for(int j = 0; j < 2; j++)
             {
                dataLabels[i][j] = new Label(this, SWT.NONE);
+               dataLabels[i][j].setBackground(getBackground());
                if (j == 0)
                {
                   gd = new GridData();
