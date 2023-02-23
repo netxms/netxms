@@ -117,6 +117,7 @@ public class EventProcessingPolicyRule
       sourceExclusions = new ArrayList<Long>(src.sourceExclusions);
       events = new ArrayList<Long>(src.events);
       filterScript = src.filterScript;
+      timeFrames = new ArrayList<TimeFrame>(src.timeFrames.size());
       for(TimeFrame d : src.timeFrames)
          timeFrames.add(new TimeFrame(d));
       flags = src.flags;
