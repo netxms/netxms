@@ -12725,7 +12725,7 @@ void ClientSession::updateMappingTable(const NXCPMessage& request)
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 	if (m_systemAccessRights & SYSTEM_ACCESS_MANAGE_MAPPING_TBLS)
 	{
-		LONG id;
+		int32_t id;
 		response.setField(VID_RCC, UpdateMappingTable(request, &id, this));
 		response.setField(VID_MAPPING_TABLE_ID, (UINT32)id);
 	}
