@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,8 +80,8 @@ void InitLocalNetInfo()
       s_hSubAgent = DLOpen(subagentName, errorText);
       if (s_hSubAgent != nullptr)
       {
-         imp_NxSubAgentGetIfList = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetIfList", NULL);
-         imp_NxSubAgentGetArpCache = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetArpCache", NULL);
+         imp_NxSubAgentGetIfList = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetIfList", nullptr);
+         imp_NxSubAgentGetArpCache = (BOOL (*)(StringList *))DLGetSymbolAddr(s_hSubAgent, "__NxSubAgentGetArpCache", nullptr);
          if ((imp_NxSubAgentGetIfList == nullptr) && (imp_NxSubAgentGetArpCache == nullptr))
          {
             DLClose(s_hSubAgent);
@@ -106,15 +106,15 @@ void InitLocalNetInfo()
  */
 static ArpCache *SysGetLocalArpCache()
 {
-   ArpCache *arpCache = NULL;
+   ArpCache *arpCache = nullptr;
 
 #ifdef _WIN32
    MIB_IPNETTABLE *sysArpCache;
    DWORD i, dwError, dwSize;
 
    sysArpCache = (MIB_IPNETTABLE *)MemAlloc(SIZEOF_IPNETTABLE(4096));
-   if (sysArpCache == NULL)
-      return NULL;
+   if (sysArpCache == nullptr)
+      return nullptr;
 
    dwSize = SIZEOF_IPNETTABLE(4096);
    dwError = GetIpNetTable(sysArpCache, &dwSize, FALSE);
@@ -123,7 +123,7 @@ static ArpCache *SysGetLocalArpCache()
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Call to GetIpNetTable() failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       MemFree(sysArpCache);
-      return NULL;
+      return nullptr;
    }
 
    arpCache = new ArpCache();
@@ -135,11 +135,11 @@ static ArpCache *SysGetLocalArpCache()
          arpCache->addEntry(ntohl(sysArpCache->table[i].dwAddr), MacAddress(sysArpCache->table[i].bPhysAddr, 6), sysArpCache->table[i].dwIndex);
       }
 
-   free(sysArpCache);
+   MemFree(sysArpCache);
 #else
 	TCHAR szByte[4], *pChar;
 
-	if (imp_NxSubAgentGetArpCache != NULL)
+	if (imp_NxSubAgentGetArpCache != nullptr)
 	{
 		StringList list;
 
@@ -196,26 +196,23 @@ static ArpCache *SysGetLocalArpCache()
  */
 static InterfaceList *SysGetLocalIfList()
 {
-   InterfaceList *pIfList = NULL;
+   InterfaceList *pIfList = nullptr;
 
 #ifdef _WIN32
-   DWORD dwSize;
-   IP_ADAPTER_INFO *pBuffer, *pInfo;
    TCHAR szAdapterName[MAX_OBJECT_NAME];
    TCHAR szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
    IP_ADDR_STRING *pAddr;
 
-   if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
-   {
-      return NULL;
-   }
+   DWORD dwSize;
+   if (GetAdaptersInfo(nullptr, &dwSize) != ERROR_BUFFER_OVERFLOW)
+      return nullptr;
 
-   pBuffer = (IP_ADAPTER_INFO *)MemAlloc(dwSize);
+   IP_ADAPTER_INFO *pBuffer = (IP_ADAPTER_INFO *)MemAlloc(dwSize);
    if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
    {
       pIfList = new InterfaceList;
 
-      for(pInfo = pBuffer; pInfo != nullptr; pInfo = pInfo->Next)
+      for(IP_ADAPTER_INFO *pInfo = pBuffer; pInfo != nullptr; pInfo = pInfo->Next)
       {
          // Get network connection name from adapter name, if possible
          if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
@@ -285,7 +282,7 @@ static InterfaceList *SysGetLocalIfList()
 #else
    TCHAR *pChar;
 
-   if (imp_NxSubAgentGetIfList != NULL)
+   if (imp_NxSubAgentGetIfList != nullptr)
    {
 		StringList list;
       if (imp_NxSubAgentGetIfList(&list))
@@ -298,18 +295,18 @@ static InterfaceList *SysGetLocalIfList()
             TCHAR *pBuf = temp;
 
             // Index
-            UINT32 ifIndex = 0;
+            uint32_t ifIndex = 0;
             pChar = _tcschr(pBuf, ' ');
             if (pChar != NULL)
             {
                *pChar = 0;
-               ifIndex = _tcstoul(pBuf, NULL, 10);
+               ifIndex = _tcstoul(pBuf, nullptr, 10);
                pBuf = pChar + 1;
             }
 
             bool newInterface = false;
             InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
-            if (iface == NULL)
+            if (iface == nullptr)
             {
                iface = new InterfaceInfo(ifIndex);
                newInterface = true;
@@ -317,14 +314,14 @@ static InterfaceList *SysGetLocalIfList()
 
             // Address and mask
             pChar = _tcschr(pBuf, _T(' '));
-            if (pChar != NULL)
+            if (pChar != nullptr)
             {
                TCHAR *pSlash;
                static TCHAR defaultMask[] = _T("24");
 
                *pChar = 0;
                pSlash = _tcschr(pBuf, _T('/'));
-               if (pSlash != NULL)
+               if (pSlash != nullptr)
                {
                   *pSlash = 0;
                   pSlash++;
@@ -334,8 +331,13 @@ static InterfaceList *SysGetLocalIfList()
                   pSlash = defaultMask;
                }
                InetAddress addr = InetAddress::parse(pBuf);
-               addr.setMaskBits(_tcstol(pSlash, NULL, 10));
-               iface->ipAddrList.add(addr);
+               if (addr.isValid())
+               {
+                  addr.setMaskBits(_tcstol(pSlash, nullptr, 10));
+                  // Agent may return 0.0.0.0/0 for interfaces without IP address
+                  if ((addr.getFamily() != AF_INET) || (addr.getAddressV4() != 0))
+                     iface->ipAddrList.add(addr);
+               }
                pBuf = pChar + 1;
             }
 
@@ -343,23 +345,38 @@ static InterfaceList *SysGetLocalIfList()
             {
                // Interface type
                pChar = _tcschr(pBuf, ' ');
-               if (pChar != NULL)
+               if (pChar != nullptr)
                {
                   *pChar = 0;
-                  iface->type = _tcstoul(pBuf, NULL, 10);
+
+                  TCHAR *eptr;
+                  iface->type = _tcstoul(pBuf, &eptr, 10);
+
+                  // newer agents can return if_type(mtu)
+                  if (*eptr == _T('('))
+                  {
+                     pBuf = eptr + 1;
+                     eptr = _tcschr(pBuf, _T(')'));
+                     if (eptr != nullptr)
+                     {
+                        *eptr = 0;
+                        iface->mtu = _tcstol(pBuf, nullptr, 10);
+                     }
+                  }
+
                   pBuf = pChar + 1;
                }
 
                // MAC address
                pChar = _tcschr(pBuf, ' ');
-               if (pChar != NULL)
+               if (pChar != nullptr)
                {
                   *pChar = 0;
                   StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
                   pBuf = pChar + 1;
                }
 
-               // Name
+               // Name (set description to name)
                _tcslcpy(iface->name, pBuf, MAX_DB_STRING);
                _tcslcpy(iface->description, pBuf, MAX_DB_STRING);
 

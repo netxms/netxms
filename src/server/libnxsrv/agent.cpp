@@ -925,7 +925,7 @@ InterfaceList *AgentConnection::getInterfaceList()
    {
       TCHAR *line = MemCopyString(data->get(i));
       TCHAR *pBuf = line;
-      UINT32 ifIndex = 0;
+      uint32_t ifIndex = 0;
 
       // Index
       TCHAR *pChar = _tcschr(pBuf, ' ');
