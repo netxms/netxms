@@ -1706,18 +1706,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if ((sourceNodeId != 0) && (destNodeId != 0))
       {
          shared_ptr<NetObj> sourceNode = FindObjectById(sourceNodeId);
-         if (sourceNode == nullptr)
-         {
-            ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), sourceNodeId);
-         }
-         else
+         if (sourceNode != nullptr)
          {
             shared_ptr<NetObj> destNode = FindObjectById(destNodeId);
-            if (destNode == nullptr)
-            {
-               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), destNodeId);
-            }
-            else
+            if (destNode != nullptr)
             {
                if ((sourceNode->getObjectClass() == OBJECT_NODE) && (destNode->getObjectClass() == OBJECT_NODE))
                {
@@ -1742,6 +1734,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
                }
             }
+            else
+            {
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), destNodeId);
+            }
+         }
+         else
+         {
+            ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), sourceNodeId);
          }
       }
       else

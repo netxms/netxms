@@ -737,7 +737,7 @@ const InetAddress& InetAddressList::findSameSubnetAddress(const InetAddress& add
    for(int i = 0; i < m_list.size(); i++)
    {
       InetAddress *a = m_list.get(i);
-      if (a->sameSubnet(addr))
+      if (!a->isAnyLocal() && !a->isBroadcast() && !a->isMulticast() && a->sameSubnet(addr))
          return *a;
    }
    return InetAddress::INVALID;

@@ -9187,10 +9187,9 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
       NetObj *object = getChildList().get(i);
       if (object->getObjectClass() == OBJECT_VPNCONNECTOR)
       {
-         if (((VPNConnector *)object)->isRemoteAddr(destAddr) &&
-             ((VPNConnector *)object)->isLocalAddr(srcAddr))
+         if (static_cast<VPNConnector*>(object)->isRemoteAddr(destAddr) && static_cast<VPNConnector*>(object)->isLocalAddr(srcAddr))
          {
-            *nextHop = ((VPNConnector *)object)->getPeerGatewayAddr();
+            *nextHop = static_cast<VPNConnector*>(object)->getPeerGatewayAddr();
             *route = InetAddress::INVALID;
             *ifIndex = object->getId();
             *isVpn = true;
@@ -9200,15 +9199,14 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
          }
       }
       else if ((object->getObjectClass() == OBJECT_INTERFACE) &&
-               ((Interface *)object)->getIpAddressList()->findSameSubnetAddress(destAddr).isValid())
+               static_cast<Interface*>(object)->getIpAddressList()->findSameSubnetAddress(destAddr).isValid())
       {
          *nextHop = destAddr;
          *route = InetAddress::INVALID;
-         *ifIndex = ((Interface *)object)->getIfIndex();
+         *ifIndex = static_cast<Interface*>(object)->getIfIndex();
          *isVpn = false;
          _tcslcpy(name, object->getName(), MAX_OBJECT_NAME);
-         if ((((Interface *)object)->getAdminState() == IF_ADMIN_STATE_UP) &&
-             (((Interface *)object)->getOperState() == IF_OPER_STATE_UP))
+         if ((static_cast<Interface*>(object)->getAdminState() == IF_ADMIN_STATE_UP) && (static_cast<Interface*>(object)->getOperState() == IF_OPER_STATE_UP))
          {
             // found operational interface
             nextHopFound = true;
