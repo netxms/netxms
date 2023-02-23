@@ -1,8 +1,8 @@
 openapi: 3.0.1
 info:
   title: NetXMS REST API
-  description: Documnetation for NetXMS REST API
-  version: '0.1'
+  description: Documentation for NetXMS REST API
+  version: "0.1"
 servers:
   - url: http://127.0.0.1:8000
 security:
