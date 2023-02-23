@@ -310,7 +310,7 @@ paths:
           application/json:
             schema:
               type: object
-              $ref: '#/components/schemas/objectCreation'
+              $ref: '#/components/schemas/objectCreationAndModification'
             examples:
               CreateNode:
                 summary: 'Minimal JSON for node creation under "Infrastructure Services" object'
@@ -1062,9 +1062,8 @@ components:
           description: >
             VPN networks IP address. localNetworks should be provided in the same request.
         postalAddress:
-          description: >
-            :ref:`PostalAddress<postal-address-fields>`
-
+          type: object
+          $ref: '#/components/schemas/PostalAddress'
         agentCacheMode:
           type: string
           description: >
@@ -1093,7 +1092,6 @@ components:
                 * FLOOR_PLAN
         physicalContainerObjectId:
           type: integer
-
         rackImageFront:
           type: string
           description: >
@@ -1128,80 +1126,62 @@ components:
           type: array
           items:
             type: integer
-
         rackNumberingTopBottom:
           type: boolean
-
         controllerId:
           type: integer
-
         chassisId:
           type: integer
-
         sshProxy:
           type: integer
-
         sshLogin:
           type: string
-
         sshPassword:
           type: string
-
         sshPort:
           type: integer
-
         sshKeyId:
           type: integer
-
         zoneProxies:
           type: array
           items:
             type: integer
-
         urls:
+          type: array
+          items:
+            type: string
           description: >
-            ObjectUrl[]
-
+            Object Urls
         seedObjectIds:
           type: array
           items:
             type: integer
-
         macAddress:
           type: string
           description: >
             Sensor mac address
         deviceClass:
           type: integer
-
         vendor:
           type: string
-
         serialNumber:
           type: string
-
         deviceAddress:
           type: string
-
         metaType:
           type: string
-
         sensorProxy:
           type: integer
-
         xmlConfig:
           type: string
-
         snmpPorts:
           type: array
           items:
               type: string
-
         responsibleUsers:
           type: array
           items:
             type: integer
-
         icmpStatCollectionMode:
           type: string
           description: >
@@ -1218,13 +1198,10 @@ components:
             ICMP ping targets IP addresses 
         chassisPlacement:
           type: string
-
         etherNetIPPort:
           type: integer
-
         etherNetIPProxy:
           type: integer
-
         certificateMappingMethod:
           type: string
           description: >
@@ -1384,4 +1361,20 @@ components:
           type: integer
           description: >
             UNIX timestamp
+    PostalAddress:
+      title: Postal address fields
+      type: object
+      properties:
+        country:
+          type: string
+        city:
+          type: string
+        streetAddress:
+          type: string
+        postcode: 
+          type: string
+    objectCreationAndModification:
+       allOf:
+        - $ref: '#/components/schemas/objectCreation'
+        - $ref: '#/components/schemas/objectModification'
 
