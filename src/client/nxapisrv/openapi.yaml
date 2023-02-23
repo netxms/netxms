@@ -1,0 +1,1387 @@
+openapi: 3.0.2
+info:
+  title: NetXMS REST API
+  description: Documnetation for NetXMS REST API
+  version: '0.1'
+servers:
+  - url: http://127.0.0.1:8000
+security:
+  - BasicAuth: []
+  - CookieAuth: [] 
+paths:
+  /:
+    get:
+      summary: Check connection
+      description: Service is working
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "description": "NetXMS web service API version 4.3.0-rc223",
+                  "version": "4.3.0-rc223",
+                  "build": "4.3-223-g20c122be56"
+                }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Authentication
+    servers:
+      - url: http://127.0.0.1:8000
+  /sessions:
+    post:
+      summary: Creating Rest API session
+      description: On success server will set cookie session_handle and json with session GUID and server version.
+                   When performing subsequent requests, session GUID should be provided in `Session-Id:` field of request's header
+                   or the cookie should be passed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login: 
+                  type: string
+                  example: admin
+                password: 
+                  type: string
+                  example: netxms
+      responses:
+        '200':
+          description: OK
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: string
+                example: session_handle=f89b60cd-e6b7-4cc6-9b06-292405f09b17; Path=/
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "sessionHandle": "fcb60ade-6c5e-4625-aeff-74193d1d28fc",
+                  "session": {
+                    "server": {
+                      "address": "127.0.0.1",
+                      "serverName": "127.0.0.1",
+                      "version": "4.3.0-rc223",
+                      "color": "",
+                      "id": 3523187130265618400,
+                      "timeZone": "EET+02EEST"
+                    },
+                    "user": {
+                      "name": "admin",
+                      "id": 1,
+                      "globalAccessRights": 562743794990847
+                    },
+                    "encrypted": false,
+                    "objectsSynchronized": false,
+                    "passwordExpired": false,
+                    "zoningEnabled": true
+                  }
+                }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Authentication
+    servers:
+      - url: http://127.0.0.1:8000
+  /authenticate:
+    post:
+      summary: Performing external authentication
+      description: The API will return a 200 response if the credentials are correct, a 400 response if
+                   either login or password is not provided or 401 if the provided credentials are incorrect.
+
+                   Authentication used to gain Rest API session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login: 
+                  type: string
+                  example: admin
+                password: 
+                  type: string
+                  example: netxms
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "error": 0,
+                  "description": "Request completed successfully"
+                }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Authentication
+    servers:
+      - url: http://127.0.0.1:8000
+  /sessions/{sid}:
+    delete:
+      summary: Logout
+      description: To log out request with given session ID.
+      parameters:
+        - name: sid
+          in: path
+          required: true
+          description: Session id to logout as. 
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "description": "NetXMS web service API version 4.3.0-rc223",
+                  "version": "4.3.0-rc223",
+                  "build": "4.3-223-g20c122be56"
+                }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Authentication
+    servers:
+      - url: http://127.0.0.1:8000
+
+# Objects tag
+  /objects:
+    get:
+      summary: Get multiple objects with filters
+      description: Request to get all objects available to this user or to get objects that fulfill
+                  filter requirements and are available to this user.
+      parameters:
+        - name: area
+          in: query
+          description: geographical area
+          schema:
+            type: string
+        - name: class
+          in: query
+          description: comma-separated class list
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: pattern or regex, if useRegex=true
+          schema:
+            type: string
+        - name: parent
+          in: query
+          description: parent object id
+          schema:
+            type: string
+        - name: topLevelOnly
+          in: query
+          description: select top level objects only. false by default
+          schema:
+            type: boolean
+        - name: useRegex
+          in: query
+          description:  treat name and custom attribute value as regex. false by default
+          schema:
+            type: boolean
+        - name: zone
+          in: query
+          description: comma-separated list of zone UINs
+          schema:
+            type: string
+        - name: '@custom_attribute_name'
+          in: query
+          description: pattern or regex, if useRegex=true
+          schema:
+            type: object
+            #propertyName:
+            #  pattern: '^@[A-Za-z0-9]+$'  # Parameter names work only in 3.1
+            additionalProperties: false
+            example:
+              '@custAttrName1': '@custAttrValue1'
+              '@custAttrName2': '@custAttrValue2'
+      responses:
+        '200':
+          description: Will return filtered objects or all objects available to user.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "objects": [
+                      {
+                          "objectId": 1,
+                          "guid": "102a86aa-f987-4fd5-843c-d85017a79eb3",
+                          "objectName": "Entire Network",
+                          "alias": "",
+                          "nameOnMap": "",
+                          "objectClass": 4,
+                          "categoryId": 0,
+                          "flags": 0,
+                          "status": "CRITICAL",
+                          "isDeleted": false,
+                          "inMaintenanceMode": false,
+                          "maintenanceInitiatorId": 0,
+                          "primaryZoneProxyId": 0,
+                          "backupZoneProxyId": 0,
+                          "comments": "",
+                          "commentsSource": "",
+                          "geolocation": {
+                              "type": 0,
+                              "latitude": 0.0,
+                              "longitude": 0.0,
+                              "accuracy": 0,
+                              "timestamp": 0
+                          },
+                          "postalAddress": {
+                              "country": "",
+                              "region": "",
+                              "city": "",
+                              "district": "",
+                              "streetAddress": "",
+                              "postcode": ""
+                          },
+                          "mapImage": "00000000-0000-0000-0000-000000000000",
+                          "drillDownObjectId": 0,
+                          "trustedObjects": [],
+                          "inheritAccessRights": true,
+                          "accessList": [
+                              {
+                                  "inherited": false,
+                                  "userId": 1073741825,
+                                  "accessRights": 1048575
+                              }
+                          ],
+                          "statusCalculationMethod": 0,
+                          "statusPropagationMethod": 0,
+                          "fixedPropagatedStatus": "WARNING",
+                          "statusShift": 0,
+                          "statusTransformation": [
+                              "WARNING",
+                              "MINOR",
+                              "MAJOR",
+                              "CRITICAL"
+                          ],
+                          "statusSingleThreshold": 75,
+                          "statusThresholds": [
+                              80,
+                              60,
+                              40,
+                              20
+                          ],
+                          "creationTime": 0,
+                          "parents": [],
+                          "children": [
+                              4
+                          ],
+                          "dashboards": [],
+                          "customAttributes": {},
+                          "urls": [],
+                          "responsibleUsers": [],
+                          "objectClassName": "Network"
+                      }
+                  ]
+                }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Objects
+    post:
+      summary: Create object
+      description: Request to create new object
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/objectCreation'
+            examples:
+              CreateNode:
+                summary: 'Minimal JSON for node creation under "Infrastructure Services" object'
+                value: {"objectType": 2, "name":"testNode", "parentId": 2, "primaryName":"10.5.0.12" }
+              CreateContainer:
+                summary: 'Minimal JSON for container creation under "Infrastructure Services" object'
+                value: {"objectType": 5, "name":"New container", "parentId": 2}
+      responses:
+        '200':
+          description: New object ID.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                { "id": 15130 }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Objects
+    servers:
+      - url: http://127.0.0.1:8000
+  /objects/{object-id}:
+    get:
+      summary: Get object by id
+      description: Request to get exact object identified by ID or GUID.
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      responses:
+        '200':
+          description: Object information identified by provided ID or GUID.
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "objectId": 1,
+                  "guid": "102a86aa-f987-4fd5-843c-d85017a79eb3",
+                  "objectName": "Entire Network",
+                  "alias": "",
+                  "nameOnMap": "",
+                  "objectClass": 4,
+                  "categoryId": 0,
+                  "flags": 0,
+                  "status": "CRITICAL",
+                  "isDeleted": false,
+                  "inMaintenanceMode": false,
+                  "maintenanceInitiatorId": 0,
+                  "primaryZoneProxyId": 0,
+                  "backupZoneProxyId": 0,
+                  "comments": "",
+                  "commentsSource": "",
+                  "geolocation": {
+                      "type": 0,
+                      "latitude": 0.0,
+                      "longitude": 0.0,
+                      "accuracy": 0,
+                      "timestamp": 0
+                  },
+                  "postalAddress": {
+                      "country": "",
+                      "region": "",
+                      "city": "",
+                      "district": "",
+                      "streetAddress": "",
+                      "postcode": ""
+                  },
+                  "mapImage": "00000000-0000-0000-0000-000000000000",
+                  "drillDownObjectId": 0,
+                  "trustedObjects": [],
+                  "inheritAccessRights": true,
+                  "accessList": [
+                      {
+                          "inherited": false,
+                          "userId": 1073741825,
+                          "accessRights": 1048575
+                      }
+                  ],
+                  "statusCalculationMethod": 0,
+                  "statusPropagationMethod": 0,
+                  "fixedPropagatedStatus": "WARNING",
+                  "statusShift": 0,
+                  "statusTransformation": [
+                      "WARNING",
+                      "MINOR",
+                      "MAJOR",
+                      "CRITICAL"
+                  ],
+                  "statusSingleThreshold": 75,
+                  "statusThresholds": [
+                      80,
+                      60,
+                      40,
+                      20
+                  ],
+                  "creationTime": 0,
+                  "parents": [],
+                  "children": [
+                      4
+                  ],
+                  "dashboards": [],
+                  "customAttributes": {},
+                  "urls": [],
+                  "responsibleUsers": [],
+                  "objectClassName": "Network"
+              }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Objects
+    patch:
+      summary: Update object
+      description: Request to update object.                  
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      requestBody:
+        required: true
+        description: Fields that are not set will not be updated. Array elements will be replaced fully (if new array does not contain old elements - they will be deleted).
+                     Json to update object's custom attributes (json should contain all custom attributes, attributes that are not part of JSON will be deleted)
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/objectModification'
+            example:
+                    {
+                        "customAttributes": {
+                            "test attr2": {
+                                "value": "new value"
+                            },
+                            "test attr": {
+                                "value": "new value"
+                            }
+                        }
+                      }
+      responses:
+        '200':
+          description: If object was updated successfully. 
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Objects    
+    delete:
+      summary: Delete object
+      description: Request to delete object.           
+      parameters:
+        - $ref: '#/components/parameters/objectId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "description": "NetXMS web service API version 4.3.0-rc223",
+                  "version": "4.3.0-rc223",
+                  "build": "4.3-223-g20c122be56"
+                }
+      servers:
+        - url: http://127.0.0.1:8000
+      tags:
+        - Objects
+    servers:
+      - url: http://127.0.0.1:8000
+
+#Data collecton tag  
+  /objects/{object-id}/data-collection/{dci-id}/force-poll:
+    post:
+      summary: Force poll DCI
+      description: Request to delete object.     
+      parameters: 
+        - $ref: '#/components/parameters/objectId'
+        - $ref: '#/components/parameters/dciId'
+        - name: dci-id
+          in: path
+          required: true
+          description: DCI ID to forace poll
+          schema:
+            type: integer
+      requestBody:
+        description: Request should contain empty JSON object.
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+              example:
+                      { }
+      responses:
+        '200':
+          description: OK
+      tags:
+        - Data collection 
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
+
+#Component definition
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    CookieAuth:      
+      type: apiKey
+      in: cookie
+      name: session_handle  
+  parameters:
+    objectId:
+      name: object-id
+      in: path
+      required: true
+      description: Object information identified by provided ID or GUID.
+      schema:
+        type: string
+    dciId:
+      name: dci-id
+      in: path
+      required: true
+      description: DCI ID to forace poll
+      schema:
+        type: integer
+  schemas:
+    objectCreation:
+      title: Object creation fields
+      type: object
+      properties:
+        objectType:
+          type: integer
+          description: >
+            Possible options:
+          
+                * SUBNET: 1
+                * NODE: 2
+                * INTERFACE: 3
+                * NETWORK: 4
+                * CONTAINER: 5
+                * ZONE: 6
+                * SERVICEROOT: 7
+                * TEMPLATE: 8
+                * TEMPLATEGROUP: 9
+                * TEMPLATEROOT: 10
+                * NETWORKSERVICE: 11
+                * VPNCONNECTOR: 12
+                * CONDITION: 13
+                * CLUSTER: 14
+                * OBJECT_BUSINESSSERVICE_PROTOTYPE: 15
+                * NETWORKMAPROOT: 19
+                * NETWORKMAPGROUP: 20
+                * NETWORKMAP: 21
+                * DASHBOARDROOT: 22
+                * DASHBOARD: 23
+                * BUSINESSSERVICEROOT: 27
+                * BUSINESSSERVICE: 28
+                * NODELINK: 29
+                * SLMCHECK: 30
+                * MOBILEDEVICE: 31
+                * RACK: 32
+                * ACCESSPOINT: 33
+                * CHASSIS: 35
+                * DASHBOARDGROUP: 36
+                * SENSOR: 37  
+
+        name:
+          type: string
+          description: >
+            Object name
+        parentId:
+          type: integer
+          description: >
+            Parent object id this object to be created under
+        comments:
+          type: string
+          description: >
+            Object comment
+        creationFlags:
+          type: integer
+          description: >
+            Bit flags for object creation. Possible options:
+
+                * DISABLE ICMP: 0x0001
+                * DISABLE NXCP: 0x0002
+                * DISABLE SNMP: 0x0004
+                * CREATE UNMANAGED: 0x0008
+                * ENTER MAINTENANCE: 0x0010
+                * AS ZONE PROXY: 0x0020
+                * DISABLE ETHERNET IP: 0x0040
+                * SNMP SETTINGS LOCKED: 0x0080
+                * EXTERNAL GATEWAY: 0x0100
+
+        primaryName:
+          type: string
+          description: >
+            Node primary name (IP address or dns name)
+        agentPort:
+          type: integer
+          description: >
+            Node agent port
+        snmpPort:
+          type: integer
+          description: >
+            Node SNMP port
+        etherNetIpPort:
+          type: integer
+          description: >
+            Node ethernetIP port
+        sshPort:
+          type: integer
+          description: >
+            Node ssh port
+        ipAddress:
+          type: string
+          description: >
+            Interface IP address
+        agentProxyId:
+          type: integer
+          description: >
+            Node agent proxy id
+        snmpProxyId:
+          type: integer
+          description: >
+            Node SNMP proxy id
+        etherNetIpProxyId:
+          type: integer
+          description: >
+            Node ethernetIP proxy id
+        icmpProxyId:
+          type: integer
+          description: >
+            Node ICMP proxy id
+        sshProxyId:
+          type: integer
+          description: >
+            Node ssh proxy id
+        mapType:
+          type: integer
+          description: >
+            Network map type
+        seedObjectIds:
+          type: array
+          items:
+            type: integer
+          description: >
+            Network map seed objects
+        zoneUIN:
+          type: integer
+          description: >
+            Subnet/Node/Zone zone UIN
+        serviceType:
+          type: integer
+          description: >
+            Network service types: 
+              
+                * CUSTOM - 0
+                * SSH - 1
+                * POP3 - 2
+                * SMTP - 3
+                * FTP - 4
+                * HTTP - 5
+                * HTTPS - 6
+                * TELNET - 7
+
+        ipPort:
+          type: integer
+          description: >
+            Network Service IP port
+        request:
+          type: string
+          description: >
+            Network Service request
+        response:
+          type: string
+          description: >
+            Network Service response
+        linkedNodeId:
+          type: integer
+          description: >
+            Linked object for Node Link object
+        template:
+          type: boolean
+          description: >
+            If service check object is template 
+        macAddress:
+          type: string
+          description: >
+            Interface or sensor MAC address
+        ifIndex:
+          type: integer
+          description: >
+            Interface index
+        ifType:
+          type: integer
+          description: >
+            Interface type
+        module:
+          type: integer
+          description: >
+            Interface module number
+        port:
+          type: integer
+          description: >
+            Interface port
+        physicalPort:
+          type: boolean
+          description: >
+            IF interface has physical port
+        createStatusDci:
+          type: boolean
+          description: >
+            IF status DCI should be created for network service
+        deviceId:
+          type: string
+          description: >
+            Mobile device ID
+        height:
+          type: integer
+          description: >
+            Rack height
+        controllerId:
+          type: integer
+          description: >
+            Chassis controller node id
+        sshLogin:
+          type: string
+          description: >
+            Node ssh login
+        sshPassword:
+          type: string
+          description: >
+            Node password
+        deviceClass:
+          type: integer
+          description: >
+            Sensor device class
+        vendor:
+          type: string
+          description: >
+            Sensor vendor
+        commProtocol:
+          type: integer
+          description: >
+            Sensor communication protocol
+        xmlConfig:
+          type: string
+          description: >
+            Sensor XML config
+        xmlRegConfig:
+          type: string
+          description: >
+            Sensor XML registration config
+        serialNumber:
+          type: string
+          description: >
+            Sensor serial number
+        deviceAddress:
+          type: string
+          description: >
+            Sensor device address
+        metaType:
+          type: string
+          description: >
+            Sensor meta type
+        description:
+          type: string
+          description: >
+            Sensor description
+        sensorProxy:
+          type: integer
+          description: >
+            Sensor proxy node id
+        instanceDiscoveryMethod:
+          type: integer
+          description: >
+            Business service instance discovery method   
+            
+            Possible values:
+              
+                * IDM_AGENT_LIST - 1
+                * IDM_AGENT_TABLE - 2
+                * IDM_SCRIPT - 5
+    objectModification:
+      title: Object modification fields
+      type: object
+      properties:
+        name:
+          type: string
+        primaryName:
+          type: string
+        alias:
+          type: string
+        nameOnMap:
+          type: string
+        acl:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/AccessListElement'
+          description: >
+            inheritAccessRights should be provided in the same request
+        inheritAccessRights:
+          type: boolean
+          description: >
+            acl should be provided in the same request
+        customAttributes: 
+          type: object
+          $ref: '#/components/schemas/CustomAttribute'
+          additionalProperties:
+            type: string
+            description: >
+              Custom attribute name
+          description: >
+            JSON object {String: :ref:`CustomAttribute<custom-attribute-element-fields>`}
+            Object name is custom attribute name and value is in :ref:`CustomAttribute<custom-attribute-element-fields>` object
+        autoBindFilter:
+          type: string
+        version:
+          type: integer
+        description:
+          type: string
+        agentPort:
+          type: integer
+        agentSecret:
+          type: string
+        agentProxy:
+          type: integer
+        snmpPort:
+          type: integer
+        snmpVersion:
+          type: string
+          description: >
+            Node SNMP version:
+              
+                * V1
+                * V2C
+                * V3
+                * DEFAULT
+        snmpAuthMethod:
+          type: integer
+          description: >
+            snmpAuthName, snmpAuthPassword, snmpPrivPassword, snmpPrivMethod should be provided in the same request
+        snmpPrivMethod:
+          type: integer
+          description: >
+            snmpAuthName, snmpAuthPassword, snmpPrivPassword, snmpAuthMethod should be provided in the same request
+        snmpAuthName:
+          type: string
+          description: >
+            snmpAuthPassword, snmpPrivPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
+        snmpAuthPassword:
+          type: string
+          description: >
+            snmpAuthName, snmpPrivPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
+        snmpPrivPassword:
+          type: string
+          description: >
+            snmpAuthName, snmpAuthPassword, snmpAuthMethod, snmpPrivMethod should be provided in the same request
+        snmpProxy:
+          type: integer
+
+        icmpProxy:
+          type: integer
+
+        trustedNodes:
+          type: array
+          items:
+            type: integer
+
+        geolocation:
+          $ref: '#/components/schemas/Geolocation'
+
+        mapBackground:
+          type: string
+          description: >
+            UUID.
+              
+              mapBackgroundLocation, mapBackgroundLocation, mapBackgroundZoom, mapBackgroundColor should be provided in the same request.
+        mapBackgroundLocation:
+          type: object
+          $ref: '#/components/schemas/Geolocation'
+          description: >
+            mapBackground, mapBackgroundLocation, mapBackgroundZoom, mapBackgroundColor should be provided in the same request.
+        mapBackgroundZoom:
+          type: integer
+          description: >
+            mapBackground, mapBackgroundLocation, mapBackgroundLocation, mapBackgroundColor should be provided in the same request.
+        mapBackgroundColor:
+          type: integer
+          description: >
+            mapBackground, mapBackgroundLocation, mapBackgroundLocation, mapBackgroundZoom should be provided in the same request.
+        mapImage:
+          type: string
+          description: >
+            UUID
+        columnCount:
+          type: integer
+
+        script:
+          type: string
+
+        activationEvent:
+          type: integer
+
+        deactivationEvent:
+          type: integer
+
+        sourceObject:
+          type: integer
+
+        activeStatus:
+          type: integer
+
+        inactiveStatus:
+          type: integer
+
+        drillDownObjectId:
+          type: integer
+
+        pollerNode:
+          type: integer
+
+        requiredPolls:
+          type: integer
+
+        serviceType:
+          type: integer
+
+        ipProtocol:
+          type: integer
+
+        ipPort:
+          type: integer
+
+        ipAddress:
+          type: string
+          description: >
+            Network service IP address
+        request:
+          type: string
+          description: >
+            Network service IP request
+        response:
+          type: string
+          description: >
+            Network service IP response
+        objectFlags:
+          type: integer
+          description: >
+            Object flags specific for each object. Possible values can be found in NXSL documentation under each object. (Example: `Node flags https://www.netxms.org/documentation/nxsl-latest/#_constants_6`) 
+              
+              objectFlagsMask should be provided in the same request. 
+        objectFlagsMask:
+          type: integer
+          description: >
+            Bitmask that defines which bits in objectFlags will have effect. objectFlags should be provided in the same request.
+        ifXTablePolicy:
+          type: integer
+
+        reportDefinition:
+          type: string
+
+        networkList:
+          type: array
+          items:
+              type: string
+          description: >
+            IP address list
+        statusCalculationMethod:
+          type: integer
+
+        statusPropagationMethod:
+          type: integer
+
+        fixedPropagatedStatus:
+          type: string
+          description: >
+            Object status: 
+              
+                * NORMAL
+                * WARNING
+                * MINOR
+                * MAJOR
+                * CRITICAL
+                * UNKNOWN
+                * UNMANAGED
+                * DISABLED
+                * TESTING
+        statusShift:
+          type: integer
+
+        statusTransformation:
+          type: array
+          description: >
+            ObjectStatus[]
+
+            Object status mapping list. Possible values:
+              
+                * NORMAL
+                * WARNING
+                * MINOR
+                * MAJOR
+                * CRITICAL
+                * UNKNOWN
+                * UNMANAGED
+                * DISABLED
+                * TESTING
+        statusSingleThreshold:
+          type: integer
+
+        statusThresholds:
+          type: array
+          items:
+            type: integer
+
+        expectedState:
+          type: integer
+
+        linkColor:
+          type: integer
+
+        connectionRouting:
+          type: integer
+
+        discoveryRadius:
+          type: integer
+
+        height:
+          type: integer
+
+        filter:
+          type: string
+
+        peerGatewayId:
+          type: integer
+
+        localNetworks:
+          type: array
+          items:
+              type: string
+          description: >
+            VPN networks IP address. remoteNetworks should be provided in the same request.
+        remoteNetworks:
+          type: array
+          items:
+              type: string
+          description: >
+            VPN networks IP address. localNetworks should be provided in the same request.
+        postalAddress:
+          description: >
+            :ref:`PostalAddress<postal-address-fields>`
+
+        agentCacheMode:
+          type: string
+          description: >
+            Possible values:
+              
+                * DEFAULT
+                * ON
+                * OFF
+        agentCompressionMode:
+          type: string
+          description: >
+            Possible values:
+              
+                * DEFAULT
+                * ENABLED
+                * DISABLED
+        mapObjectDisplayMode:
+          type: string
+          description: >
+            Possible values:
+              
+                * ICON
+                * SMALL_LABEL
+                * LARGE_LABEL
+                * STATUS
+                * FLOOR_PLAN
+        physicalContainerObjectId:
+          type: integer
+
+        rackImageFront:
+          type: string
+          description: >
+            UUID. 
+              
+              rackImageRear, rackPosition, rackHeight, rackOrientation should be provided in the same request.
+        rackImageRear:
+          type: string
+          description: >
+            UUID. 
+              
+              rackImageFront, rackPosition, rackHeight, rackOrientation should be provided in the same request.
+        rackPosition:
+          type: integer
+          description: >
+            rackImageFront, rackImageRear, rackHeight, rackOrientation should be provided in the same request.
+        rackHeight:
+          type: integer
+          description: >
+            rackImageFront, rackImageRear, rackPosition, rackOrientation should be provided in the same request.
+        rackOrientation:
+          type: string
+          description: >
+            Possible values:
+              
+                * FILL
+                * FRONT
+                * REAR
+
+              rackImageFront, rackImageRear, rackPosition, rackHeight should be provided in the same request.
+        dashboards:
+          type: array
+          items:
+            type: integer
+
+        rackNumberingTopBottom:
+          type: boolean
+
+        controllerId:
+          type: integer
+
+        chassisId:
+          type: integer
+
+        sshProxy:
+          type: integer
+
+        sshLogin:
+          type: string
+
+        sshPassword:
+          type: string
+
+        sshPort:
+          type: integer
+
+        sshKeyId:
+          type: integer
+
+        zoneProxies:
+          type: array
+          items:
+            type: integer
+
+        urls:
+          description: >
+            ObjectUrl[]
+
+        seedObjectIds:
+          type: array
+          items:
+            type: integer
+
+        macAddress:
+          type: string
+          description: >
+            Sensor mac address
+        deviceClass:
+          type: integer
+
+        vendor:
+          type: string
+
+        serialNumber:
+          type: string
+
+        deviceAddress:
+          type: string
+
+        metaType:
+          type: string
+
+        sensorProxy:
+          type: integer
+
+        xmlConfig:
+          type: string
+
+        snmpPorts:
+          type: array
+          items:
+              type: string
+
+        responsibleUsers:
+          type: array
+          items:
+            type: integer
+
+        icmpStatCollectionMode:
+          type: string
+          description: >
+            Possible values:
+              
+                * DEFAULT
+                * ON
+                * OFF
+        icmpTargets:
+          type: array
+          items:
+              type: string
+          description: >
+            ICMP ping targets IP addresses 
+        chassisPlacement:
+          type: string
+
+        etherNetIPPort:
+          type: integer
+
+        etherNetIPProxy:
+          type: integer
+
+        certificateMappingMethod:
+          type: string
+          description: >
+            Possible values:
+              
+                * SUBJECT
+                * PUBLIC_KEY
+                * COMMON_NAME
+                * TEMPLATE_ID
+
+              certificateMappingData should be provided in the same request. 
+        certificateMappingData:
+          type: string
+          description: >
+            certificateMappingMethod should be provided in the same request. 
+        categoryId:
+          type: integer
+        geoLocationControlMode:
+          description: >
+            GeoLocationControlMode
+            
+            Possible values:
+              
+                * NO_CONTROL
+                * RESTRICTED_AREAS
+                * ALLOWED_AREAS
+        geoAreas:
+          type: array
+          items:
+            type: integer
+
+        instanceDiscoveryMethod:
+          type: integer
+          description: >
+            Business service instance discovery method     
+            
+            Possible values:
+              
+                * IDM_AGENT_LIST - 1
+                * IDM_AGENT_TABLE - 2
+                * IDM_SCRIPT - 5
+        instanceDiscoveryData:
+          type: string
+          description: >
+            Business service instance discovery data    
+        instanceDiscoveryFilter:
+          type: string
+          description: >
+            Business service instance discovery data filtering script                 
+        autoBindFilter2:
+          type: integer
+          description: >
+            Second binding script used for DCI binding. Currently used in business service            
+        autoBindFlags:
+          type: integer
+          description: >
+            Auto bind bit flags     
+            
+            First script is currently used for object bind/unbind, second for dci bind/unbind. Possible values:
+              
+                * First script for auto bind is enabled - 0x0001
+                * First script for auto unbind is enabled - 0x0002
+                * Second script for auto bind is enabled - 0x0004
+                * Second script for auto unbind is enabled - 0x0008
+        objectStatusThreshold:
+          type: integer
+          description: >
+            Business service default threshold for auto created object checks  
+            
+            Possible values:
+              
+                * Default - 0
+                * Warning - 1 
+                * Minor - 2 
+                * Major - 3 
+                * Critical - 4 
+        dciStatusThreshold:
+          type: integer
+          description: >
+            Business service default threshold for auto created DCI checks   
+            
+            Possible values:
+              
+                * Default - 0
+                * Warning - 1 
+                * Minor - 2 
+                * Major - 3 
+                * Critical - 4 
+        sourceNode:
+          type: integer
+          description: >
+            Id of source node for business service instance discovery methods    
+    AccessListElement:
+      title: Access list element fields
+      type: object
+      properties:
+        userId:
+          type: integer
+        accessRights:
+          type: integer
+          description: >
+            Bit flag field. Available options:
+            
+              * OBJECT ACCESS READ: 0x00000001
+              * OBJECT ACCESS MODIFY: 0x00000002
+              * OBJECT ACCESS CREATE: 0x00000004
+              * OBJECT ACCESS DELETE: 0x00000008
+              * OBJECT ACCESS READ ALARMS: 0x00000010
+              * OBJECT ACCESS ACL: 0x00000020
+              * OBJECT ACCESS UPDATE ALARMS: 0x00000040
+              * OBJECT ACCESS SEND EVENTS: 0x00000080
+              * OBJECT ACCESS CONTROL: 0x00000100
+              * OBJECT ACCESS TERM ALARMS: 0x00000200
+              * OBJECT ACCESS PUSH DATA: 0x00000400
+              * OBJECT ACCESS CREATE ISSUE: 0x00000800
+              * OBJECT ACCESS DOWNLOAD: 0x00001000
+              * OBJECT ACCESS UPLOAD: 0x00002000
+              * OBJECT ACCESS MANAGE FILES: 0x00004000
+              * OBJECT ACCESS MAINTENANCE: 0x00008000
+              * OBJECT ACCESS READ AGENT: 0x00010000
+              * OBJECT ACCESS READ SNMP: 0x00020000
+              * OBJECT ACCESS SCREENSHOT: 0x00040000
+    CustomAttribute:
+      title: Custom attribute fields
+      type: object
+      properties:
+        value:
+          type: string
+        flags: 
+          type: integer
+          description: >
+            Available options:
+     
+                * INHERITABLE: 1
+    Geolocation:
+      title: Geolocation fields
+      type: object
+      properties:
+        type:
+          type: integer
+          description: >
+              Available options:
+            
+              * UNSET: 0
+              * MANUAL: 1
+              * GPS: 2
+              * NETWORK: 3
+        latitude:
+          type: number
+        longitude:
+          type: number
+        accuracy:
+          type: integer
+          description: >
+            Location accuracy in meters
+        timestamp:
+          type: integer
+          description: >
+            UNIX timestamp
+
