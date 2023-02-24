@@ -84,6 +84,7 @@ import org.netxms.nxmc.modules.objects.views.PhysicalLinkView;
 import org.netxms.nxmc.modules.objects.views.PortView;
 import org.netxms.nxmc.modules.objects.views.ProcessesView;
 import org.netxms.nxmc.modules.objects.views.RackView;
+import org.netxms.nxmc.modules.objects.views.RadioInterfaces;
 import org.netxms.nxmc.modules.objects.views.ResourcesView;
 import org.netxms.nxmc.modules.objects.views.RoutingTableView;
 import org.netxms.nxmc.modules.objects.views.ServicesView;
@@ -186,6 +187,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new PredefinedMap());
       addMainView(new ProcessesView());
       addMainView(new RackView());
+      addMainView(new RadioInterfaces());
       addMainView(new ResourcesView());
       addMainView(new RoutingTableView());
       addMainView(new ServicesView());

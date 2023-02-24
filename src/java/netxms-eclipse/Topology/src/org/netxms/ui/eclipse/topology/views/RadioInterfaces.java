@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.topology.views;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -45,6 +46,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.topology.RadioInterface;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
@@ -127,6 +129,7 @@ public class RadioInterfaces extends ViewPart
 		createPopupMenu();
 		
 		refresh();
+		refreshRedioIntefaceList();
 	}
 	/**
 	 * Create actions
@@ -245,4 +248,35 @@ public class RadioInterfaces extends ViewPart
 		
 		viewer.setInput(list.toArray());
 	}
+
+   /**
+    * Reload list of radio interfaces from server and update table view
+    */
+   private void refreshRedioIntefaceList()
+   {
+      final boolean syncChildren = !ConsoleSharedData.getSettings().getBoolean("ObjectsFullSync") && !session.areChildrenSynchronized(rootObject);
+      new ConsoleJob("Synchronize missing children", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            if (syncChildren)
+            {
+               AbstractObject nodeObject = session.findObjectById(rootObject);
+               if (nodeObject != null)
+               {
+                  session.syncChildren(nodeObject);
+                  runInUIThread(() -> {
+                     refresh();
+                  });
+               }
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error synchronizing radio interface list";
+         }
+      }.start();
+   }
 }
