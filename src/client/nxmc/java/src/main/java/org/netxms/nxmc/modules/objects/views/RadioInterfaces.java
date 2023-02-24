@@ -25,6 +25,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
@@ -62,7 +63,7 @@ public class RadioInterfaces extends NodeSubObjectTableView
     */
    public RadioInterfaces()
    {
-      super(i18n.tr("Radio Interfaces"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "RadioInterfaces", false);
+      super(i18n.tr("Radios"), ResourceManager.getImageDescriptor("icons/object-views/radio_interfaces.png"), "Radios", false);
    }
 
    /**
@@ -71,7 +72,16 @@ public class RadioInterfaces extends NodeSubObjectTableView
    @Override
    public int getPriority()
    {
-      return 80;
+      return 53;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (((context instanceof AbstractNode) && ((AbstractNode)context).isWirelessController()) || (context instanceof AccessPoint));
    }
 
    /**
@@ -110,18 +120,22 @@ public class RadioInterfaces extends NodeSubObjectTableView
          viewer.setInput(new Interface[0]);
          return;
       }
-      
+
       List<RadioInterface> list = new ArrayList<RadioInterface>();
-      for(AbstractObject o : getObject().getAllChildren(AbstractObject.OBJECT_ACCESSPOINT))
+      if (getObject() instanceof AccessPoint)
       {
-         if (o instanceof AccessPoint)
+         for(RadioInterface rif : ((AccessPoint)getObject()).getRadios())
+            list.add(rif);
+      }
+      else
+      {
+         for(AbstractObject o : getObject().getAllChildren(AbstractObject.OBJECT_ACCESSPOINT))
          {
             for(RadioInterface rif : ((AccessPoint)o).getRadios())
                list.add(rif);
          }
       }
-      
-      viewer.setInput(list.toArray());
+      viewer.setInput(list);
    }
 
    /**

@@ -64,7 +64,7 @@ public class GrafanaAlarms extends AbstractHandler
          
          return result;
       }
-      
+
       JsonObject root = new JsonObject();
 
       JsonArray columns = new JsonArray();
@@ -78,19 +78,18 @@ public class GrafanaAlarms extends AbstractHandler
       columns.add(createColumn("Created", true, false));
       columns.add(createColumn("Last Change", true, false));
       root.add("columns", columns);
-      
+
       JsonArray rows = new JsonArray();
-      
+
       JsonArray r = new JsonArray();
       DateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
       AbstractObject object = null;
       AbstractUserObject user = null;
-      
-      JsonParser parser = new JsonParser();
-      JsonElement element = parser.parse(query.get("targets"));
+
+      JsonElement element = JsonParser.parseString(query.get("targets"));
       if (!element.isJsonArray())
          return new JsonArray();
-      
+
       JsonArray targets = element.getAsJsonArray();
       JsonObject alarmSource;
       long sourceId = 0;
