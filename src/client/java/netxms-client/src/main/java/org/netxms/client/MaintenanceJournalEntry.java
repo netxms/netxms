@@ -98,9 +98,11 @@ public class MaintenanceJournalEntry
     */
    public String getDescriptionShort()
    {
-      int firstLineEnd = description.indexOf('\n');
+      String trimmedDescription = description.replaceAll("(?m)^[ \t]*\r?\n", "");
+      trimmedDescription = trimmedDescription.trim();
+      int firstLineEnd = trimmedDescription.indexOf('\n');
       int shortLineEnd = firstLineEnd < 0 ? 64 : (firstLineEnd >= 64 ? 64 : firstLineEnd);
-      return shortLineEnd >= description.length() ? description : (description.substring(0, shortLineEnd) + "...");
+      return shortLineEnd >= trimmedDescription.length() ? trimmedDescription : (trimmedDescription.substring(0, shortLineEnd) + "...");
    }
 
    /**

@@ -99,6 +99,7 @@ public class MaintenanceJournalEditDialog extends Dialog
       descriptionText.setLabel(i18n.tr("Description"));
       descriptionText.setText(description);
       descriptionText.setLayoutData(gd);
+      descriptionText.setFocus();
 
       return dialogArea;
    }
