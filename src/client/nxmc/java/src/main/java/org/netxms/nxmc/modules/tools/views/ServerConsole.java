@@ -99,8 +99,6 @@ public class ServerConsole extends View
       console.setText(view.console.getText());      
    }
 
-
-
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
