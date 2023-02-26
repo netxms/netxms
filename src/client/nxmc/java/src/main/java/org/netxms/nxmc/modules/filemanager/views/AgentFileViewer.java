@@ -98,9 +98,7 @@ public class AgentFileViewer extends AdHocObjectView
       followChanges = view.followChanges;
       return view;
    }
-   
-   
-   
+
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -109,7 +107,7 @@ public class AgentFileViewer extends AdHocObjectView
    {
       super.postClone(view);
       AgentFileViewer origin = (AgentFileViewer)view;
-      viewer.copyContent(origin.viewer);
+      viewer.replaceContent(origin.viewer);
    }
 
    /**

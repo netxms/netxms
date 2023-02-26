@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -456,6 +456,16 @@ public class BaseFileViewer extends Composite
    }
 
    /**
+    * Replace content (including all styling) with one from given source file viewer
+    *
+    * @param source source file viewer
+    */
+   public void replaceContent(BaseFileViewer source)
+   {
+      text.replaceContent(source.text);
+   }
+
+   /**
     * @param s
     */
    protected void setContent(String s)
@@ -506,7 +516,6 @@ public class BaseFileViewer extends Composite
     */
    private String filterText(String text)
    {
-      logger.debug("NEW TEXT: '" + text + "'");
       if (appendFilter == null)
          return text;
 
@@ -529,11 +538,8 @@ public class BaseFileViewer extends Composite
             break;
          }
          String line = sb.substring(offset, nextOffset + 1);
-         logger.debug("matching line '" + line + "'");
          if (appendFilter.matcher(line).find())
             output.append(line);
-         else
-            logger.debug("NO MATCH " + appendFilter.pattern());
          offset = nextOffset + 1;
       }
       return output.toString();
@@ -594,9 +600,9 @@ public class BaseFileViewer extends Composite
     */
    protected static String removeEscapeSequences(String s)
    {
-      //Convert to right new line symbol
+      // Convert to correct new line symbol
       s = s.replaceAll("\r(?!\n)", "\n");
-      
+
       StringBuilder sb = new StringBuilder();
       for(int i = 0; i < s.length(); i++)
       {

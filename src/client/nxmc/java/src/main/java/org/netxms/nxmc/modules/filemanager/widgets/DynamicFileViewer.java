@@ -302,9 +302,4 @@ public class DynamicFileViewer extends BaseFileViewer
          return i18n.tr("Cannot start monitor for file {0} on node {1}", remoteFileName, session.getObjectName(nodeId));
       }
    }
-
-   public void copyContent(DynamicFileViewer viewer)
-   {
-      text.setContent(viewer.text.getContent());      
-   }
 }

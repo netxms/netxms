@@ -359,14 +359,14 @@ public class ObjectFinder extends View
 
       Composite searchArea = new Composite(splitter, SWT.NONE);
       searchArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      
+
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
       layout.marginHeight = 0;
       searchArea.setLayout(layout);
 
       tabFolder = new CTabFolder(searchArea, SWT.TOP | SWT.FLAT | SWT.MULTI);
-      tabFolder.setSelectionBarThickness(0);
+      WidgetHelper.disableTabFolderSelectionBar(tabFolder);
       tabFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       CTabItem filterTab = new CTabItem(tabFolder, SWT.NONE);
       filterTab.setText("Filter");

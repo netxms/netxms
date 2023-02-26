@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -458,6 +458,17 @@ public class BaseFileViewer extends Composite
    public void removeSelectionListener(SelectionListener listener)
    {
       text.removeSelectionListener(listener);
+   }
+
+   /**
+    * Replace content (including all styling) with one from given source file viewer
+    *
+    * @param source source file viewer
+    */
+   public void replaceContent(BaseFileViewer source)
+   {
+      // Setting text will fire line style listener - so no need to copy style ranges
+      text.setText(source.text.getText());
    }
 
    /**
