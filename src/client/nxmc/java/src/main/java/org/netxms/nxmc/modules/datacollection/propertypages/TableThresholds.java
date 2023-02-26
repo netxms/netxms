@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -181,7 +181,7 @@ public class TableThresholds extends AbstractDCIPropertyPage
 		});
 
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(i18n.tr("Do&wn"));
+      downButton.setText(i18n.tr("Dow&n"));
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);

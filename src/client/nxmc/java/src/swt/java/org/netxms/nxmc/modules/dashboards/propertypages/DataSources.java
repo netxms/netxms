@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -193,7 +193,7 @@ public class DataSources extends DashboardElementPropertyPage
       upButton.setEnabled(false);
 
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText(i18n.tr("Do&wn"));
+      downButton.setText(i18n.tr("Dow&n"));
       gd = new GridData();
       gd.minimumWidth = WidgetHelper.BUTTON_WIDTH_HINT;
       gd.grabExcessHorizontalSpace = true;

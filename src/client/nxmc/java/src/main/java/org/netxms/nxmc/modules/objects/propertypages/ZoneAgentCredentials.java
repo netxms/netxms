@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
@@ -179,13 +179,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       secretMoveUpButton.setLayoutData(rd);
-      secretMoveUpButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      secretMoveUpButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -194,17 +188,11 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       });
       
       secretMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      secretMoveDownButton.setText("&Down");
+      secretMoveDownButton.setText("Dow&n");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       secretMoveDownButton.setLayoutData(rd);
-      secretMoveDownButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      secretMoveDownButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -224,17 +212,11 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       buttonsRight.setLayoutData(gridData);
 
       secretAddButton = new Button(buttonsRight, SWT.PUSH);
-      secretAddButton.setText("Add");
+      secretAddButton.setText("&Add...");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       secretAddButton.setLayoutData(rd);
-      secretAddButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      secretAddButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -243,17 +225,11 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       });
       
       secretDeleteButton = new Button(buttonsRight, SWT.PUSH);
-      secretDeleteButton.setText("Delete");
+      secretDeleteButton.setText("&Delete");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       secretDeleteButton.setLayoutData(rd);
-      secretDeleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      secretDeleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -265,7 +241,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)secretList.getSelection();
+            IStructuredSelection selection = secretList.getStructuredSelection();
             secretMoveUpButton.setEnabled(selection.size() == 1);
             secretMoveDownButton.setEnabled(selection.size() == 1);
             secretDeleteButton.setEnabled(selection.size() > 0);
@@ -402,13 +378,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portMoveUpButton.setLayoutData(rd);
-      portMoveUpButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      portMoveUpButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -417,17 +387,11 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       });
 
       portMoveDownButton = new Button(buttonsLeft, SWT.PUSH);
-      portMoveDownButton.setText("&Down");
+      portMoveDownButton.setText("Dow&n");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portMoveDownButton.setLayoutData(rd);
-      portMoveDownButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      portMoveDownButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -447,17 +411,11 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       buttonsRight.setLayoutData(gd);
 
       portAddButton = new Button(buttonsRight, SWT.PUSH);
-      portAddButton.setText("Add");
+      portAddButton.setText("&Add...");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portAddButton.setLayoutData(rd);
-      portAddButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      portAddButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -466,17 +424,11 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
       });
 
       portDeleteButton = new Button(buttonsRight, SWT.PUSH);
-      portDeleteButton.setText("Delete");
+      portDeleteButton.setText("&Delete");
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       portDeleteButton.setLayoutData(rd);
-      portDeleteButton.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      portDeleteButton.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -488,7 +440,7 @@ public class ZoneAgentCredentials extends ObjectPropertyPage
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)portList.getSelection();
+            IStructuredSelection selection = portList.getStructuredSelection();
             portMoveUpButton.setEnabled(selection.size() == 1);
             portMoveDownButton.setEnabled(selection.size() == 1);
             portDeleteButton.setEnabled(selection.size() > 0);
