@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,14 @@ package org.netxms.ui.eclipse.datacollection.widgets.internal;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -34,10 +37,11 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class LastValuesComparator extends ViewerComparator
 {
    private boolean showErrors = true;
+   private NXCSession session = ConsoleSharedData.getSession();
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -57,6 +61,9 @@ public class LastValuesComparator extends ViewerComparator
 			case LastValuesWidget.COLUMN_VALUE:
 				result = compareValue(v1, v2);
 				break;
+         case LastValuesWidget.COLUMN_EVENT:
+            result = getEventName(v1).compareToIgnoreCase(getEventName(v2));
+            break;
 			case LastValuesWidget.COLUMN_TIMESTAMP:
 				result = v1.getTimestamp().compareTo(v2.getTimestamp());
 				break;
@@ -66,7 +73,21 @@ public class LastValuesComparator extends ViewerComparator
 		}
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
-	
+
+   /**
+    * Get threshold activation event name.
+    *
+    * @param value DCI value
+    * @return threshold activation event name or empty string
+    */
+   public String getEventName(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      if (threshold == null)
+         return "";
+      return session.getEventName(threshold.getFireEvent());
+   }
+
 	/**
 	 * Compare DCI values taking data type into consideration
 	 * 

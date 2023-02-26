@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class LastValues extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.datacollection.view.last_values"; //$NON-NLS-1$
-	
+
 	private NXCSession session;
 	private DataCollectionTarget dcTarget;
 	private LastValuesWidget dataView;
@@ -60,10 +60,10 @@ public class LastValues extends ViewPart
 	private Action actionShowFilter;
 	private boolean initShowFilter = true;
 	private IDialogSettings settings;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -86,31 +86,30 @@ public class LastValues extends ViewPart
    {
       return (s != null) ? b : defval;
    }
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
 		parent.setLayout(new FillLayout());
-		
+
 		dataView = new LastValuesWidget(this, parent, SWT.NONE, dcTarget, "LastValuesWidget", null); //$NON-NLS-1$
-		
+
 		createActions();
 		contributeToActionBars();
-		
+
 		dataView.setFilterCloseAction(actionShowFilter);
 		dataView.enableFilter(initShowFilter);
 		dataView.addDisposeListener(new DisposeListener() {
-
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             settings.put("LastValuesView", dataView.isFilterEnabled());            
          }
       });
-		
+
 		activateContext();
 	}
 
@@ -125,10 +124,10 @@ public class LastValues extends ViewPart
 			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues"); //$NON-NLS-1$
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{

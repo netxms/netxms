@@ -102,6 +102,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 				return RegionalSettings.getDateTimeFormat().format(dciValue.getTimestamp());
 			case LastValuesWidget.COLUMN_THRESHOLD:
             return formatThreshold(dciValue);
+         case LastValuesWidget.COLUMN_EVENT:
+            return getEventName(dciValue);
 		}
 		return null;
 	}
@@ -121,6 +123,20 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
          return threshold.getValue(); // For table DCIs server sends pre-formatted condition in "value" field
       return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
 	}
+
+   /**
+    * Get threshold activation event name.
+    *
+    * @param value DCI value
+    * @return threshold activation event name or empty string
+    */
+   public String getEventName(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      if (threshold == null)
+         return "";
+      return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_EVENT);
+   }
 
    /**
     * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()

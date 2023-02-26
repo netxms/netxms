@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import org.eclipse.jface.viewers.IColorProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
@@ -48,11 +48,11 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Label provider for user manager
  */
-public class DciLabelProvider implements ITableLabelProvider, IColorProvider
+public class DciLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
    private I18n i18n = LocalizationHelper.getI18n(DciLabelProvider.class);
    private static final Color FONT_COLOR = new Color(Display.getDefault(), new RGB(126, 137, 185));
-   
+
 	private NXCSession session;
 	private Image statusImages[];
    private HashMap<DataOrigin, String> originTexts = new HashMap<DataOrigin, String>();
@@ -64,12 +64,12 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 	public DciLabelProvider()
 	{
 		session = Registry.getSession();
-		
+
 		statusImages = new Image[3];
 		statusImages[DataCollectionItem.ACTIVE] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage(); //$NON-NLS-1$
 		statusImages[DataCollectionItem.DISABLED] = ResourceManager.getImageDescriptor("icons/dci/disabled.gif").createImage(); //$NON-NLS-1$
 		statusImages[DataCollectionItem.NOT_SUPPORTED] = ResourceManager.getImageDescriptor("icons/dci/unsupported.gif").createImage(); //$NON-NLS-1$
-		
+
       originTexts.put(DataOrigin.AGENT, i18n.tr("NetXMS Agent"));
       originTexts.put(DataOrigin.DEVICE_DRIVER, i18n.tr("Network Device Driver"));
       originTexts.put(DataOrigin.INTERNAL, i18n.tr("Internal"));
@@ -81,15 +81,15 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
       originTexts.put(DataOrigin.SSH, i18n.tr("SSH"));
       originTexts.put(DataOrigin.WEB_SERVICE, i18n.tr("Web Service"));
       originTexts.put(DataOrigin.WINPERF, i18n.tr("Windows Performance Counters"));
-		
+
 		statusTexts.put(DataCollectionItem.ACTIVE, i18n.tr("Active"));
 		statusTexts.put(DataCollectionItem.DISABLED, i18n.tr("Disabled"));
 		statusTexts.put(DataCollectionItem.NOT_SUPPORTED, i18n.tr("Not supported"));
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
@@ -99,9 +99,9 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		return ((status >= 0) && (status < statusImages.length)) ? statusImages[status] : null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
@@ -206,45 +206,19 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
 		}
 		return null;
 	}
-	
-	
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+    */
 	@Override
 	public void dispose()
 	{
 		for(int i = 0; i < statusImages.length; i++)
 			statusImages[i].dispose();
+      super.dispose();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
-	}
-
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
    @Override
@@ -257,7 +231,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
     */
    @Override

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,10 +44,10 @@ public class Threshold
 	public static final int OP_NE       = 5;
 	public static final int OP_LIKE     = 6;
 	public static final int OP_NOTLIKE  = 7;
-	
+
    public static final String[] FUNCTION_NAMES = { "last(", "average(", "mean-deviation(", "diff(", "error(", "sum(", "script(", "abs-deviation(" };
    public static final String[] OPERATION_NAMES = { "<", "<=", "==", ">=", ">", "!=", "like", "not like" };
-	
+
 	private long id;
 	private int fireEvent;
 	private int rearmEvent;
@@ -60,7 +60,7 @@ public class Threshold
 	private boolean active;
 	private Severity currentSeverity;
 	private Date lastEventTimestamp;
-	
+
 	/**
 	 * Create DCI threshold object from NXCP message
 	 * @param msg NXCP message
@@ -68,22 +68,21 @@ public class Threshold
 	 */
 	public Threshold(final NXCPMessage msg, final long baseId)
 	{
-		long varId = baseId;
-		
-		id = msg.getFieldAsInt64(varId++);
-		fireEvent = msg.getFieldAsInt32(varId++);
-		rearmEvent = msg.getFieldAsInt32(varId++);
-		function = msg.getFieldAsInt32(varId++);
-		operation = msg.getFieldAsInt32(varId++);
-		sampleCount = msg.getFieldAsInt32(varId++);
-		script = msg.getFieldAsString(varId++);
-		repeatInterval = msg.getFieldAsInt32(varId++);
-		value = msg.getFieldAsString(varId++);
-		active = msg.getFieldAsBoolean(varId++);
-		currentSeverity = Severity.getByValue(msg.getFieldAsInt32(varId++));
-		lastEventTimestamp = msg.getFieldAsDate(varId);
+		long fieldId = baseId;
+		id = msg.getFieldAsInt64(fieldId++);
+		fireEvent = msg.getFieldAsInt32(fieldId++);
+		rearmEvent = msg.getFieldAsInt32(fieldId++);
+		function = msg.getFieldAsInt32(fieldId++);
+		operation = msg.getFieldAsInt32(fieldId++);
+		sampleCount = msg.getFieldAsInt32(fieldId++);
+		script = msg.getFieldAsString(fieldId++);
+		repeatInterval = msg.getFieldAsInt32(fieldId++);
+		value = msg.getFieldAsString(fieldId++);
+		active = msg.getFieldAsBoolean(fieldId++);
+		currentSeverity = Severity.getByValue(msg.getFieldAsInt32(fieldId++));
+		lastEventTimestamp = msg.getFieldAsDate(fieldId);
 	}
-	
+
 	/**
 	 * Create new threshold object
 	 */
@@ -102,7 +101,7 @@ public class Threshold
 		currentSeverity = Severity.NORMAL;
 		lastEventTimestamp = new Date(0);
 	}
-	
+
 	/**
 	 * Copy constructor
 	 * 
@@ -123,7 +122,7 @@ public class Threshold
 		currentSeverity = src.currentSeverity;
 		lastEventTimestamp = src.lastEventTimestamp;
 	}
-	
+
 	/**
 	 * Fill NXCP message with threshold's data. Operational data maintained by server
 	 * will not be put into message.
@@ -133,16 +132,16 @@ public class Threshold
 	 */
 	protected void fillMessage(final NXCPMessage msg, final long baseId)
 	{
-		long varId = baseId;
-		msg.setFieldInt32(varId++, (int)id);
-		msg.setFieldInt32(varId++, fireEvent);
-		msg.setFieldInt32(varId++, rearmEvent);
-		msg.setFieldInt16(varId++, function);
-		msg.setFieldInt16(varId++, operation);
-		msg.setFieldInt32(varId++, sampleCount);
-		msg.setField(varId++, script);
-		msg.setFieldInt32(varId++, repeatInterval);
-		msg.setField(varId++, value);
+		long fieldId = baseId;
+		msg.setFieldInt32(fieldId++, (int)id);
+		msg.setFieldInt32(fieldId++, fireEvent);
+		msg.setFieldInt32(fieldId++, rearmEvent);
+		msg.setFieldInt16(fieldId++, function);
+		msg.setFieldInt16(fieldId++, operation);
+		msg.setFieldInt32(fieldId++, sampleCount);
+		msg.setField(fieldId++, script);
+		msg.setFieldInt32(fieldId++, repeatInterval);
+		msg.setField(fieldId++, value);
 	}
 
 	/**

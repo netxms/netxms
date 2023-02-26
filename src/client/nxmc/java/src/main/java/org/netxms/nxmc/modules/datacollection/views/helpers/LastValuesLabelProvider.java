@@ -104,8 +104,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
          case BaseDataCollectionView.LV_COLUMN_OWNER:
-            AbstractObject object = session.findObjectById(dciValue.getNodeId());
-            return (object != null) ? object.getObjectName() : ("[" + Long.toString(dciValue.getNodeId()) + "]");
+            return session.getObjectNameWithAlias(dciValue.getNodeId());
 			case BaseDataCollectionView.LV_COLUMN_ID:
 				return Long.toString(dciValue.getId());
 			case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
@@ -122,6 +121,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
             return DateFormatFactory.getDateTimeFormat().format(dciValue.getTimestamp());
 			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
             return formatThreshold(dciValue);
+         case BaseDataCollectionView.LV_COLUMN_EVENT:
+            return getEventName(dciValue);
 		}
 		return null;
 	}
@@ -141,6 +142,20 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
          return threshold.getValue(); // For table DCIs server sends pre-formatted condition in "value" field
       return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_OPERATION);
 	}
+
+   /**
+    * Get threshold activation event name.
+    *
+    * @param value DCI value
+    * @return threshold activation event name or empty string
+    */
+   public String getEventName(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      if (threshold == null)
+         return "";
+      return session.getEventName(threshold.getFireEvent());
+   }
 
    /**
     * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()

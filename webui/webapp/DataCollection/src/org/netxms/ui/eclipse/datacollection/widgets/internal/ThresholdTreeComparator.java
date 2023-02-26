@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,11 +34,11 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
  */
 public class ThresholdTreeComparator extends ViewerComparator
 {
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   private NXCSession session = ConsoleSharedData.getSession();
+
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
@@ -73,6 +73,9 @@ public class ThresholdTreeComparator extends ViewerComparator
 				case ThresholdSummaryWidget.COLUMN_VALUE:
 					result = ((DciValue)e1).getValue().compareToIgnoreCase(((DciValue)e2).getValue());
 					break;
+            case ThresholdSummaryWidget.COLUMN_EVENT:
+               result = session.getEventName(((DciValue)e1).getActiveThreshold().getFireEvent()).compareToIgnoreCase(session.getEventName(((DciValue)e2).getActiveThreshold().getFireEvent()));
+               break;
 				case ThresholdSummaryWidget.COLUMN_TIMESTAMP:
 					Date t1 = ((DciValue)e1).getActiveThreshold().getLastEventTimestamp();
 					Date t2 = ((DciValue)e2).getActiveThreshold().getLastEventTimestamp();

@@ -97,6 +97,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    public static final int LV_COLUMN_VALUE = 3;
    public static final int LV_COLUMN_TIMESTAMP = 4;
    public static final int LV_COLUMN_THRESHOLD = 5;
+   public static final int LV_COLUMN_EVENT = 6;
 
    protected SortableTableViewer viewer;
 
@@ -155,8 +156,8 @@ public abstract class BaseDataCollectionView extends ObjectView
       parent.setLayout(new FillLayout());
 
       // Setup table columns
-      final String[] names = { i18n.tr("Owner"),  i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold") };
-      final int[] widths = { 250, 70, 250, 150, 120, 150 };
+      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold"), i18n.tr("Event") };
+      final int[] widths = { 250, 70, 250, 150, 120, 150, 250 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 
       labelProvider = new LastValuesLabelProvider(viewer);

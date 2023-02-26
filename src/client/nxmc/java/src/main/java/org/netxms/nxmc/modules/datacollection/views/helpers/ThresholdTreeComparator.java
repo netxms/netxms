@@ -73,6 +73,9 @@ public class ThresholdTreeComparator extends ViewerComparator
             case ThresholdSummaryView.COLUMN_VALUE:
 					result = ((DciValue)e1).getValue().compareToIgnoreCase(((DciValue)e2).getValue());
 					break;
+            case ThresholdSummaryView.COLUMN_EVENT:
+               result = session.getEventName(((DciValue)e1).getActiveThreshold().getFireEvent()).compareToIgnoreCase(session.getEventName(((DciValue)e2).getActiveThreshold().getFireEvent()));
+               break;
             case ThresholdSummaryView.COLUMN_TIMESTAMP:
 					Date t1 = ((DciValue)e1).getActiveThreshold().getLastEventTimestamp();
 					Date t2 = ((DciValue)e2).getActiveThreshold().getLastEventTimestamp();

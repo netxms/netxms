@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,9 @@ public class DciFilter extends ViewerFilter implements AbstractViewerFilter
 	private String filterString = null;
    private boolean hideTemplateItems = false;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
@@ -43,8 +43,10 @@ public class DciFilter extends ViewerFilter implements AbstractViewerFilter
 
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
-		
-		return dci.getDescription().toLowerCase().contains(filterString) || dci.getName().toLowerCase().contains(filterString) || Long.toString(dci.getId()).contains(filterString);
+
+		return dci.getDescription().toLowerCase().contains(filterString) || 
+		      dci.getName().toLowerCase().contains(filterString) ||
+		      Long.toString(dci.getId()).contains(filterString);
 	}
 
 	/**

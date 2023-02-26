@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,11 @@ package org.netxms.nxmc.modules.datacollection.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -29,6 +32,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
  */
 public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilter
 {
+   private NXCSession session = Registry.getSession();
 	private String filterString = null;
 	private boolean showDisabled = false;
 	private boolean showUnsupported = false;
@@ -54,8 +58,24 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 
-		return value.getDescription().toLowerCase().contains(filterString);
+      return value.getDescription().toLowerCase().contains(filterString) || matchEventName(value);
 	}
+
+   /**
+    * Match threshold activation event name against filter string.
+    *
+    * @param value DCI value
+    * @return true if matched
+    */
+   private boolean matchEventName(DciValue value)
+   {
+      Threshold t = value.getActiveThreshold();
+      if (t == null)
+         return false;
+      
+      String eventName = session.getEventName(t.getFireEvent());
+      return eventName.toLowerCase().contains(filterString);
+   }
 
 	/**
 	 * @return the filterString

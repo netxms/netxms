@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,15 +59,16 @@ public class ThresholdSummaryWidget extends CompositeWithMessageBar
 	public static final int COLUMN_PARAMETER = 2;
 	public static final int COLUMN_VALUE = 3;
 	public static final int COLUMN_CONDITION = 4;
-	public static final int COLUMN_TIMESTAMP = 5;
-	
+   public static final int COLUMN_EVENT = 5;
+   public static final int COLUMN_TIMESTAMP = 6;
+
 	private AbstractObject object;
 	private IViewPart viewPart;
 	private SortableTreeViewer viewer;
 	private VisibilityValidator visibilityValidator;
 	private boolean subscribed = false;
 	private boolean refreshScheduled = false;
-	
+
 	/**
 	 * @param parent
 	 * @param style
@@ -78,22 +79,23 @@ public class ThresholdSummaryWidget extends CompositeWithMessageBar
 		this.viewPart = viewPart;
 		this.visibilityValidator = visibilityValidator;
 
-		final String[] names = { Messages.get().ThresholdSummaryWidget_Node,  Messages.get().ThresholdSummaryWidget_Status, Messages.get().ThresholdSummaryWidget_Parameter, Messages.get().ThresholdSummaryWidget_Value, Messages.get().ThresholdSummaryWidget_Condition, Messages.get().ThresholdSummaryWidget_Since };
-		final int[] widths = { 200, 100, 250, 100, 100, 140 };
+      final String[] names = { Messages.get().ThresholdSummaryWidget_Node, Messages.get().ThresholdSummaryWidget_Status, Messages.get().ThresholdSummaryWidget_Parameter,
+            Messages.get().ThresholdSummaryWidget_Value, Messages.get().ThresholdSummaryWidget_Condition, "Event", Messages.get().ThresholdSummaryWidget_Since };
+      final int[] widths = { 200, 100, 250, 100, 100, 250, 140 };
 		viewer = new SortableTreeViewer(getContent(), names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
 		viewer.setContentProvider(new ThresholdTreeContentProvider());
 		viewer.setLabelProvider(new ThresholdTreeLabelProvider());		
 		viewer.setComparator(new ThresholdTreeComparator());
 
 		createPopupMenu();
-		
+
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
             if (!subscribed)
                return;
-            
+
             final NXCSession session = ConsoleSharedData.getSession();
             ConsoleJob job = new ConsoleJob("Unsubscribe from threshold notifications", null, Activator.PLUGIN_ID) {
                @Override
@@ -101,7 +103,7 @@ public class ThresholdSummaryWidget extends CompositeWithMessageBar
                {
                   session.unsubscribe(NXCSession.CHANNEL_DC_THRESHOLDS);
                }
-               
+
                @Override
                protected String getErrorMessage()
                {
@@ -113,7 +115,7 @@ public class ThresholdSummaryWidget extends CompositeWithMessageBar
             job.start();
          }
       });
-		
+
 		ConsoleSharedData.getSession().addListener(new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)

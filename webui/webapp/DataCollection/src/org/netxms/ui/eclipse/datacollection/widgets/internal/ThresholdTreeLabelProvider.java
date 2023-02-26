@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,6 +95,8 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 					return ((DciValue)element).getValue();
 				case ThresholdSummaryWidget.COLUMN_CONDITION:
 					return thresholdLabelProvider.getColumnText(((DciValue)element).getActiveThreshold(), Thresholds.COLUMN_OPERATION);
+            case ThresholdSummaryWidget.COLUMN_EVENT:
+               return thresholdLabelProvider.getColumnText(((DciValue)element).getActiveThreshold(), Thresholds.COLUMN_EVENT);
 				case ThresholdSummaryWidget.COLUMN_TIMESTAMP:
 					return RegionalSettings.getDateTimeFormat().format(((DciValue)element).getActiveThreshold().getLastEventTimestamp());
 				default:

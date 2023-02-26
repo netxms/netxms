@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,7 +85,8 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	public static final int COLUMN_VALUE = 2;
 	public static final int COLUMN_TIMESTAMP = 3;
 	public static final int COLUMN_THRESHOLD = 4;
-	
+   public static final int COLUMN_EVENT = 5;
+
 	private final ViewPart viewPart;
 	private DataCollectionTarget dcTarget;
 	private NXCSession session;
@@ -166,8 +167,8 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		});
 
 		// Setup table columns
-		final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime, Messages.get().LastValuesWidget_ColThreshold };
-		final int[] widths = { 70, 250, 150, 120, 150 };
+		final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime, Messages.get().LastValuesWidget_ColThreshold, "Event" };
+		final int[] widths = { 70, 250, 150, 120, 150, 250 };
 		dataViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 
 		labelProvider = new LastValuesLabelProvider();

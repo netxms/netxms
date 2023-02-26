@@ -68,7 +68,8 @@ public class ThresholdSummaryView extends ObjectView
    public static final int COLUMN_PARAMETER = 2;
    public static final int COLUMN_VALUE = 3;
    public static final int COLUMN_CONDITION = 4;
-   public static final int COLUMN_TIMESTAMP = 5;
+   public static final int COLUMN_EVENT = 5;
+   public static final int COLUMN_TIMESTAMP = 6;
 
    private SortableTreeViewer viewer;
    private SessionListener sessionListener;
@@ -117,8 +118,8 @@ public class ThresholdSummaryView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      final String[] names = { i18n.tr("Node"), i18n.tr("Status"), i18n.tr("Metric"), i18n.tr("Value"), i18n.tr("Condition"), i18n.tr("Since") };
-      final int[] widths = { 200, 100, 250, 100, 100, 140 };
+      final String[] names = { i18n.tr("Node"), i18n.tr("Status"), i18n.tr("Metric"), i18n.tr("Value"), i18n.tr("Condition"), i18n.tr("Event"), i18n.tr("Since") };
+      final int[] widths = { 200, 100, 250, 100, 100, 250, 140 };
       viewer = new SortableTreeViewer(parent, names, widths, COLUMN_NODE, SWT.UP, SWT.FULL_SELECTION);
       viewer.setContentProvider(new ThresholdTreeContentProvider());
       viewer.setLabelProvider(new ThresholdTreeLabelProvider());

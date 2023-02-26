@@ -94,6 +94,8 @@ public class ThresholdTreeLabelProvider extends LabelProvider implements ITableL
 					return ((DciValue)element).getValue();
             case ThresholdSummaryView.COLUMN_CONDITION:
 					return thresholdLabelProvider.getColumnText(((DciValue)element).getActiveThreshold(), Thresholds.COLUMN_OPERATION);
+            case ThresholdSummaryView.COLUMN_EVENT:
+               return thresholdLabelProvider.getColumnText(((DciValue)element).getActiveThreshold(), Thresholds.COLUMN_EVENT);
             case ThresholdSummaryView.COLUMN_TIMESTAMP:
 					return DateFormatFactory.getDateTimeFormat().format(((DciValue)element).getActiveThreshold().getLastEventTimestamp());
 				default:

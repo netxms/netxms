@@ -22,9 +22,11 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.DataType;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
@@ -39,6 +41,7 @@ public class LastValuesComparator extends ViewerComparator
 {
    private static I18n i18n = LocalizationHelper.getI18n(LastValuesComparator.class);
 
+   private NXCSession session = Registry.getSession();
    private boolean showErrors = true;
 
    /**
@@ -50,10 +53,10 @@ public class LastValuesComparator extends ViewerComparator
 	   TableColumn sortColumn = ((SortableTableViewer)viewer).getTable().getSortColumn();
       if (sortColumn == null)
          return 0;
-      
+
       DciValue v1 = (DciValue)e1;
       DciValue v2 = (DciValue)e2;
-      
+
       int result = 0;
       switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
       {
@@ -73,6 +76,9 @@ public class LastValuesComparator extends ViewerComparator
          case BaseDataCollectionView.LV_COLUMN_VALUE:
             result = compareValue(v1, v2);
             break;
+         case BaseDataCollectionView.LV_COLUMN_EVENT:
+            result = getEventName(v1).compareToIgnoreCase(getEventName(v2));
+            break;
          case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
             result = v1.getTimestamp().compareTo(v2.getTimestamp());
             break;
@@ -82,7 +88,21 @@ public class LastValuesComparator extends ViewerComparator
       }
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
-	
+
+   /**
+    * Get threshold activation event name.
+    *
+    * @param value DCI value
+    * @return threshold activation event name or empty string
+    */
+   public String getEventName(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      if (threshold == null)
+         return "";
+      return session.getEventName(threshold.getFireEvent());
+   }
+
 	/**
 	 * Compare DCI values taking data type into consideration
 	 * 
