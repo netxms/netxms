@@ -266,15 +266,24 @@ public class AgentFileViewer extends AdHocObjectView
    }
 
 	/**
-    * Create new file viewer view with custom line styler. Checks that file does not exceed allowed size.
-	 * In case if file is too large asks if it should be opened partly. 
-	 */
-   public static boolean createView(ViewPlacement view, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, BaseFileViewer.LineStyler lineStyler)
+    * Create new file viewer view with custom line styler. Will check that file does not exceed maximum allowed size, and ask user
+    * to show only part of the file if file is too large.
+    *
+    * @param viewPlacement placement information for new view
+    * @param nodeId owning node ID
+    * @param file file information
+    * @param followChanges true to follow file changes
+    * @param ignoreContext true to ignore context
+    * @param contextId additional context ID
+    * @param lineStyler line styler
+    * @return true if view was created successfully
+    */
+   public static boolean createView(ViewPlacement viewPlacement, final long nodeId, final AgentFileData file, boolean followChanges, boolean ignoreContext, long contextId, BaseFileViewer.LineStyler lineStyler)
 	{
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
-	   if (exceedSize && 
-	         !MessageDialogHelper.openConfirm(view.getWindow().getShell(), i18n.tr("File is too large"),
-                  i18n.tr("File is too large to be displayed in full. Click OK to see beginning of the file.")))
+	   if (exceedSize &&
+          !MessageDialogHelper.openConfirm(viewPlacement.getWindow().getShell(), i18n.tr("Large File"),
+                i18n.tr("File is too large to be displayed in full. Click OK to see beginning of the file.")))
       {
 	      if (followChanges)
 	      {
@@ -285,7 +294,7 @@ public class AgentFileViewer extends AdHocObjectView
                {
                   session.cancelFileMonitoring(file.getMonitorId());
                }
-               
+
                @Override
                protected String getErrorMessage()
                {
@@ -299,7 +308,7 @@ public class AgentFileViewer extends AdHocObjectView
          return false;
       }
 
-      Perspective p = view.getPerspective();   
+      Perspective p = viewPlacement.getPerspective();
       AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges, contextId);
       if (p != null)
       {
