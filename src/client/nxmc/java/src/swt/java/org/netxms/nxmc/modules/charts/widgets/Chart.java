@@ -108,7 +108,7 @@ public class Chart extends Composite
       colorCache = new ColorCache(this);
 
       createDefaultPalette();
-      setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
+      setBackground(getColorFromPreferences("Chart.Colors.Background"));
 
       this.type = type;
       this.configuration = configuration;

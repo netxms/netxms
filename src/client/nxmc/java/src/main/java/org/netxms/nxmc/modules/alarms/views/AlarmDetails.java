@@ -33,6 +33,7 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
@@ -61,6 +62,7 @@ import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.EventInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.layout.DashboardLayout;
 import org.netxms.nxmc.base.layout.DashboardLayoutData;
@@ -148,7 +150,7 @@ public class AlarmDetails extends AdHocObjectView
     */
    public AlarmDetails(long alarmId, long contextObject)
    {
-      super(String.format(i18n.tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", contextObject, contextObject, true);
+      super(String.format(i18n.tr("Alarm Details [%d]"), alarmId), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarm Details", contextObject, contextObject, false);
       this.alarmId = alarmId;
       objectLabelProvider = new BaseObjectLabelProvider();
 
@@ -282,6 +284,7 @@ public class AlarmDetails extends AdHocObjectView
 
       alarmText = new Text(textContainer, SWT.MULTI);
 		alarmText.setEditable(false);
+      alarmText.setBackground(clientArea.getBackground());
 		textContainer.setContent(alarmText);
 
 		alarmState = new CLabel(clientArea, SWT.NONE);
@@ -433,8 +436,17 @@ public class AlarmDetails extends AdHocObjectView
 
       dataArea = new Composite(dataSection.getClient(), SWT.NONE);
       dataArea.setLayout(new GridLayout());
-	}
 
+      final Color chartBackground = new Color(parent.getDisplay(), PreferenceStore.getInstance().getAsColor("Chart.Colors.Background"));
+      dataArea.setBackground(chartBackground);
+      dataArea.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            chartBackground.dispose();
+         }
+      });
+	}
 
    /**
     * @see org.netxms.nxmc.base.views.View#refresh()
