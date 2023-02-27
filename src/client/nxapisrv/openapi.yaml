@@ -506,6 +506,49 @@ paths:
     servers:
       - url: http://127.0.0.1:8000   
 
+#Alarms
+
+  /alarms:
+    post:
+      summary: Change state of alarm
+      description: Change state of alarm     
+      parameters:       
+        - name: command
+          in: query
+          description: 'One of: terminate, acknowledge, sticky_acknowledge + timeout=int, resolve'
+          schema:
+            type: string
+        - name: timeout
+          in: query
+          description: 'Additianal configuration for sticky_acknowledge command'
+          schema:
+            type: integer
+      requestBody:
+        description: Request should contain empty JSON object.
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alarms: 
+                    type: array
+                    items:
+                      type: integer
+              example:
+                      { 
+                         "alarms":[345383, 345384]
+                      }
+      responses:
+        '200':
+          description: OK
+      tags:
+        - Alarms
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
+
 #Component definition
 components:
   securitySchemes:
