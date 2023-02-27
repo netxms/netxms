@@ -44,6 +44,7 @@ import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttribute;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryContentProposalProvider;
@@ -83,7 +84,20 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
    {
       super("SummaryDataCollection", false);
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      SummaryDataCollectionView origin = (SummaryDataCollectionView)view;
+      queryEditor.setText(origin.queryEditor.getText());
+      searchFilter = origin.searchFilter;
+      viewer.setInput(origin.viewer.getInput()); 
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
