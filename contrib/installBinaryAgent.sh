@@ -79,6 +79,9 @@ if test "x$platform" = "xAIX"; then
 	echo Running slibclean >>$log
 	slibclean
 fi
+
+rm -rf $prefix/lib # remove old libraries
+
 tar cf - . | ( cd $prefix ; tar xf - )
 if test $? != 0; then
 	echo unable to copy new files to $prefix >>$log
