@@ -825,7 +825,7 @@ static const TCHAR *storagePoolState[] =
 /**
  * Callback that fills table with VM information
  */
-EnumerationCallbackResult FillStorageData(const TCHAR *key, const void *obj, void *userData)
+static EnumerationCallbackResult FillStorageData(const TCHAR *key, const NXvirStoragePool *obj, VMDataStr *userData)
 {
    NXvirStoragePool *storage = (NXvirStoragePool *)obj;
    Table *value = ((VMDataStr *)userData)->value;

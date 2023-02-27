@@ -348,7 +348,7 @@ bool AsteriskSystem::sendLoginRequest()
 /**
  * Callback for starting registration tests
  */
-static EnumerationCallbackResult StartRegistrationTest(const TCHAR *name, const void *test, void *arg)
+static EnumerationCallbackResult StartRegistrationTest(const TCHAR *name, const SIPRegistrationTest *test)
 {
    ((SIPRegistrationTest*)test)->start();
    return _CONTINUE;
@@ -360,13 +360,13 @@ static EnumerationCallbackResult StartRegistrationTest(const TCHAR *name, const 
 void AsteriskSystem::start()
 {
    m_connectorThread = ThreadCreateEx(this, &AsteriskSystem::connectorThread);
-   m_registrationTests.forEach(StartRegistrationTest, nullptr);
+   m_registrationTests.forEach(StartRegistrationTest);
 }
 
 /**
  * Callback for stopping registration tests
  */
-static EnumerationCallbackResult StopRegistrationTest(const TCHAR *name, const void *test, void *arg)
+static EnumerationCallbackResult StopRegistrationTest(const TCHAR *name, const SIPRegistrationTest *test)
 {
    ((SIPRegistrationTest*)test)->stop();
    return _CONTINUE;
@@ -377,7 +377,7 @@ static EnumerationCallbackResult StopRegistrationTest(const TCHAR *name, const v
  */
 void AsteriskSystem::stop()
 {
-   m_registrationTests.forEach(StopRegistrationTest, NULL);
+   m_registrationTests.forEach(StopRegistrationTest);
 
    if (m_socket != INVALID_SOCKET)
       shutdown(m_socket, SHUT_RDWR);
