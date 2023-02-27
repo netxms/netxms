@@ -64,6 +64,8 @@ public class ServerConsole extends View
    private Action actionScrollLock;
    private Action actionCopy;
    private Action actionSave;
+   private Action actionConnect;
+   private Action actionDisconnect;
 
    /**
     * Create server console view
@@ -191,6 +193,23 @@ public class ServerConsole extends View
          }
       };
       addKeyBinding("M1+S", actionSave);
+
+      actionConnect = new Action(i18n.tr("&Connect"), ResourceManager.getImageDescriptor("icons/connect.png")) {
+         @Override
+         public void run()
+         {
+            connect();
+         }
+      };
+
+      actionDisconnect = new Action(i18n.tr("&Disconnect"), ResourceManager.getImageDescriptor("icons/disconnect.png")) {
+         @Override
+         public void run()
+         {
+            disconnect();
+         }
+      };
+      actionDisconnect.setEnabled(false);
    }
 
    /**
@@ -199,6 +218,9 @@ public class ServerConsole extends View
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionConnect);
+      manager.add(actionDisconnect);
+      manager.add(new Separator());
       manager.add(actionCopy);
       manager.add(actionSave);
       manager.add(new Separator());
@@ -212,6 +234,9 @@ public class ServerConsole extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionConnect);
+      manager.add(actionDisconnect);
+      manager.add(new Separator());
       manager.add(actionCopy);
       manager.add(actionSave);
       manager.add(new Separator());
@@ -225,20 +250,9 @@ public class ServerConsole extends View
    @Override
    public void refresh()
    {
-      if (!connected)
-         connect();
+      //Do nothing
    }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#activate()
-    */
-   @Override
-   public void activate()
-   {
-      super.activate();
-      connect();
-   }
-
+   
    /**
     * @see org.netxms.nxmc.base.views.View#deactivate()
     */
@@ -280,6 +294,8 @@ public class ServerConsole extends View
             session.openConsole();
             session.addConsoleListener(listener);
             connected = true;
+            actionConnect.setEnabled(!connected);
+            actionDisconnect.setEnabled(connected);
             outputStream.safeWrite("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
          }
 
@@ -297,6 +313,8 @@ public class ServerConsole extends View
    private void disconnect()
    {
       connected = false;
+      actionConnect.setEnabled(!connected);
+      actionDisconnect.setEnabled(connected);
       session.removeConsoleListener(listener);
       new Job(i18n.tr("Disconnecting from server debug console"), this) {
          @Override

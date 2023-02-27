@@ -545,6 +545,7 @@ public class ObjectFinder extends View
          @Override
          public void widgetSelected(SelectionEvent e)
          {
+            clearMessages();
             startSearch();
          }
 
@@ -618,7 +619,7 @@ public class ObjectFinder extends View
             if (selection.isEmpty())
                return;
 
-            if (queryModified)
+            if (queryModified && !queryEditor.getText().isEmpty())
             {
                if (!MessageDialogHelper.openQuestion(getWindow().getShell(), "Warning", "You are about to replace current query source which is not saved. All changes will be lost. Are you sure?"))
                   return;
@@ -640,6 +641,7 @@ public class ObjectFinder extends View
          @Override
          public void widgetSelected(SelectionEvent e)
          {
+            clearMessages();
             startQuery();
          }
          
@@ -753,6 +755,7 @@ public class ObjectFinder extends View
          @Override
          public void run()
          {
+            clearMessages();
             int i = tabFolder.getSelectionIndex();
             if (i == 0)
                startSearch();
@@ -762,7 +765,7 @@ public class ObjectFinder extends View
       };
       actionStartSearch.setId("org.netxms.ui.eclipse.objectbrowser.actions.startSearch");
       actionStartSearch.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.start_search");
-      addKeyBinding("F2", actionStartSearch);
+      addKeyBinding("F9", actionStartSearch);
 
       actionShowObjectDetails = new Action("Show object details") {
          @Override
@@ -818,7 +821,7 @@ public class ObjectFinder extends View
          @Override
          public String getMenuText()
          {
-            return i18n.tr("&Node");
+            return i18n.tr("&Object");
          }
       };
 
@@ -890,7 +893,6 @@ public class ObjectFinder extends View
                   @Override
                   public void run()
                   {
-                     clearMessages();
                      updateResultTable(objects);
                      queryEditor.setFocus();
                   }
