@@ -98,7 +98,19 @@ public class ServerConsole extends View
    {
       super.postClone(origin);
       ServerConsole view = (ServerConsole)origin;
-      console.setText(view.console.getText());      
+      console.setText(view.console.getText());   
+      if (view.connected)
+      {
+         connect();
+      }
+   }
+   
+   private void onConnectionChange(boolean connected)
+   {
+      this.connected = connected;
+      actionConnect.setEnabled(!connected);
+      actionDisconnect.setEnabled(connected);
+      commandInput.setEnabled(connected);
    }
 
    /**
@@ -148,6 +160,7 @@ public class ServerConsole extends View
       });
 
       createActions();
+      onConnectionChange(false);
    }
 
    /**
@@ -209,7 +222,6 @@ public class ServerConsole extends View
             disconnect();
          }
       };
-      actionDisconnect.setEnabled(false);
    }
 
    /**
@@ -293,9 +305,13 @@ public class ServerConsole extends View
          {
             session.openConsole();
             session.addConsoleListener(listener);
-            connected = true;
-            actionConnect.setEnabled(!connected);
-            actionDisconnect.setEnabled(connected);
+            runInUIThread(new Runnable() {               
+               @Override
+               public void run()
+               {
+                  onConnectionChange(true);
+               }
+            });
             outputStream.safeWrite("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
          }
 
@@ -312,10 +328,7 @@ public class ServerConsole extends View
     */
    private void disconnect()
    {
-      connected = false;
-      actionConnect.setEnabled(!connected);
-      actionDisconnect.setEnabled(connected);
-      session.removeConsoleListener(listener);
+      onConnectionChange(false);
       new Job(i18n.tr("Disconnecting from server debug console"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -351,7 +364,13 @@ public class ServerConsole extends View
             {
                if (session.processConsoleCommand(command))
                {
-                  connected = false;
+                  runInUIThread(new Runnable() {               
+                     @Override
+                     public void run()
+                     {
+                        onConnectionChange(false);
+                     }
+                  });
                   session.closeConsole();
                   outputStream.safeWrite("\r\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m\r\n");
                }
