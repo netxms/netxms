@@ -31,9 +31,9 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.nxmc.Registry;
@@ -57,7 +57,7 @@ public class ServerConsole extends View
    private NXCSession session;
    private ServerConsoleListener listener;
    private TextConsole console;
-   private Text commandInput;
+   private Combo commandInput;
    private IOConsoleOutputStream outputStream = null;
    private boolean connected = false;
    private Action actionClearOutput;
@@ -103,6 +103,9 @@ public class ServerConsole extends View
       {
          connect();
       }
+      for (String s: view.commandInput.getItems())
+         commandInput.add(s);
+      commandInput.select(commandInput.getItems().length - 1);
    }
    
    private void onConnectionChange(boolean connected)
@@ -111,6 +114,19 @@ public class ServerConsole extends View
       actionConnect.setEnabled(!connected);
       actionDisconnect.setEnabled(connected);
       commandInput.setEnabled(connected);
+   }
+   
+   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      commandInput.add("");
+      commandInput.select(0);
    }
 
    /**
@@ -143,7 +159,7 @@ public class ServerConsole extends View
       label.setText(i18n.tr("Command:"));
       label.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
 
-      commandInput = new Text(commandArea, SWT.BORDER);
+      commandInput = new Combo(commandArea, SWT.BORDER);
       commandInput.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       commandInput.addKeyListener(new KeyListener() {
          @Override
@@ -310,6 +326,7 @@ public class ServerConsole extends View
                public void run()
                {
                   onConnectionChange(true);
+                  commandInput.setFocus();
                }
             });
             outputStream.safeWrite("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
@@ -351,9 +368,16 @@ public class ServerConsole extends View
    private void sendCommand()
    {
       final String command = commandInput.getText().trim();
-      commandInput.setText("");
       if (command.isEmpty())
+      {
+         outputStream.safeWrite("\r\n");
+         commandInput.select(commandInput.getItems().length - 1);
          return;
+      }
+      String[] items = commandInput.getItems();
+      if (items.length == 1 || items[items.length - 2].compareToIgnoreCase(command) != 0)
+         commandInput.add(command, items.length - 1);
+      commandInput.select(commandInput.getItems().length - 1);
 
       outputStream.safeWrite("\u001b[33;1;7m " + command + " \u001b[0m\r\n");
       if (connected)
