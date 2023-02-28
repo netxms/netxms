@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,6 +99,7 @@ public class EditThresholdDialog extends Dialog
 
 		GridLayout condLayout = new GridLayout();
 		condLayout.numColumns = 2;
+      condLayout.makeColumnsEqualWidth = true;
 		conditionGroup.setLayout(condLayout);
 
 		function = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditThresholdDialog_Function, WidgetHelper.DEFAULT_LAYOUT_DATA);
