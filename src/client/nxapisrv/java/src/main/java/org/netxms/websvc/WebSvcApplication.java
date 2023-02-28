@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.ServiceLoader;
 import org.netxms.client.services.ServiceManager;
 import org.netxms.websvc.handlers.AccessIntegrationTools;
+import org.netxms.websvc.handlers.AlarmComments;
 import org.netxms.websvc.handlers.Alarms;
 import org.netxms.websvc.handlers.BindHandler;
 import org.netxms.websvc.handlers.BindToHandler;
@@ -100,6 +101,8 @@ public class WebSvcApplication extends Application
       router.attach("/", RootHandler.class);
       router.attach("/alarms", Alarms.class);
       router.attach("/alarms/{id}", Alarms.class);
+      router.attach("/alarms/{alarm-id}/comments", AlarmComments.class);
+      router.attach("/alarms/{alarm-id}/comments/{id}", AlarmComments.class);
       router.attach("/authenticate", AccessIntegrationTools.class);
       router.attach("/events", Events.class);
       router.attach("/grafana/alarms", GrafanaAlarms.class);

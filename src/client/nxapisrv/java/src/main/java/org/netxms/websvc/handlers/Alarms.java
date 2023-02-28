@@ -282,12 +282,12 @@ public class Alarms extends AbstractHandler
       {
          action = RESOLVE;
       }
-      
+
       if (!data.has("alarms") || (action == UNDEFINED))
          return createErrorResponse(RCC.INVALID_ARGUMENT);
- 
+
       NXCSession session = getSession();
-      
+
       JSONArray alarmList = data.getJSONArray("alarms");
       for(int i = 0; i < alarmList.length(); i++)
       {
