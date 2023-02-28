@@ -188,6 +188,7 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage) : NXSL_ValueManag
    m_errorCode = 0;
    m_errorLine = 0;
    m_errorText = nullptr;
+   m_errorModule = nullptr;
    m_assertMessage = nullptr;
    m_constants = nullptr;
    m_globalVariables = new NXSL_VariableSystem(this, NXSL_VariableSystemType::GLOBAL);
