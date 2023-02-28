@@ -48,6 +48,7 @@ public class TcpPortForwarder
    private int remotePort;
    private ServerSocket listener;
    private int sessionId = 0;
+   private int messageId = 0;
    private Map<Integer, Session> sessions = new HashMap<>();
    private IOConsoleOutputStream consoleOutputStream = null;
 
@@ -99,13 +100,22 @@ public class TcpPortForwarder
                      {
                         sessions.put(session.getId(), session);
                      }
+                     if (messageId != 0)
+                     {
+                        display.asyncExec(() -> {
+                           messageArea.deleteMessage(messageId);
+                           messageId = 0;
+                        });
+                     }
                   }
                   catch(Exception e)
                   {
-                     logger.error("TCP port forwarder session setup error", e);
+                     String nodeName = session.getObjectName(nodeId);
+                     logger.error("TCP port forwarder for node " + nodeName + " remote port " + remotePort + " session setup error", e);
 
                      String emsg = e.getLocalizedMessage();
-                     String msg = String.format("TCP port forwarder session setup error (%s)", (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
+                     String msg = String.format("TCP port forwarder for node %s remote port %d session setup error (%s)",
+                           nodeName, remotePort, (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
 
                      if (consoleOutputStream != null)
                      {
@@ -114,7 +124,9 @@ public class TcpPortForwarder
                      else if ((display != null) && (messageArea != null))
                      {
                         display.asyncExec(() -> {
-                           messageArea.addMessage(MessageArea.ERROR, msg);
+                           if (messageId != 0)
+                              messageArea.deleteMessage(messageId);
+                           messageId = messageArea.addMessage(MessageArea.ERROR, msg);
                         });
                      }
 

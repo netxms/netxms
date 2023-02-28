@@ -102,10 +102,12 @@ public class TcpPortForwarder
                   }
                   catch(Exception e)
                   {
-                     logger.error("TCP port forwarder session setup error", e);
+                     String nodeName = session.getObjectName(nodeId);
+                     logger.error("TCP port forwarder for node " + nodeName + " remote port " + remotePort + " session setup error", e);
 
                      String emsg = e.getLocalizedMessage();
-                     String msg = String.format("TCP port forwarder session setup error (%s)", (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
+                     String msg = String.format("TCP port forwarder for node %s remote port %d session setup error (%s)",
+                           nodeName, remotePort, (emsg != null) && !emsg.isEmpty() ? emsg : e.getClass().getCanonicalName());
 
                      if (consoleOutputStream != null)
                      {
