@@ -1,6 +1,6 @@
 /*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2022 Raden Solutions
+** Copyright (C) 2004-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -423,7 +423,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *serverKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA_KEY serverKey)
 {
    int exitCode = 3, pos;
 

@@ -1,6 +1,6 @@
 /* 
 ** nxdownload - command line tool used to download files from NetXMS agent
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ static int GetFileFingerprints(AgentConnection *conn, const TCHAR *file)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA_KEY serverKey)
 {
    if (s_fingerprintMode)
       return GetFileFingerprints(conn, argv[optind + 1]);

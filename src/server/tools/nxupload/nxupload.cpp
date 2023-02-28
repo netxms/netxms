@@ -1,6 +1,6 @@
 /* 
 ** nxupload - command line tool used to upload files to NetXMS agent
-** Copyright (C) 2004-2022 Raden Solutions
+** Copyright (C) 2004-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ static NXCPStreamCompressionMethod s_compression = NXCP_STREAM_COMPRESSION_NONE;
 /**
  * Do agent upgrade
  */
-static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA *serverKey)
+static int UpgradeAgent(AgentConnection *conn, const TCHAR *pszPkgName, RSA_KEY serverKey)
 {
    bool connected = false;
    uint32_t rcc = conn->startUpgrade(pszPkgName);
@@ -181,7 +181,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *serverKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA_KEY serverKey)
 {
    int64_t elapsedTime = GetCurrentTimeMs();
    if (s_verbose)

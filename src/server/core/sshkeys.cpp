@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -134,11 +134,11 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
 {
    shared_ptr<SshKeyPair> data = make_shared<SshKeyPair>();
    _tcslcpy(data->m_name, name, MAX_SSH_KEY_NAME);
-   RSA *key = RSAGenerateKey(4056);
+   RSA_KEY key = RSAGenerateKey(4056);
    if (key == nullptr)
    {
       nxlog_write(NXLOG_ERROR, _T("SshKeyData::generateNewKeys: failed to generate RSA key"));
-      RSA_free(key);
+      RSAFree(key);
       return shared_ptr<SshKeyPair>();
    }
 
@@ -147,7 +147,11 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    privateKey.append(_T("-----BEGIN RSA PRIVATE KEY-----\n"));
    char buf[4096];
    BYTE *pBufPos = reinterpret_cast<BYTE*>(buf);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+   uint32_t privateLen = i2d_PrivateKey(key, &pBufPos);
+#else
    uint32_t privateLen = i2d_RSAPrivateKey(key, &pBufPos);
+#endif
    base64_encode_alloc(buf, privateLen, &data->m_privateKey);
    privateKey.appendUtf8String(data->m_privateKey);
    privateKey.append(_T("\n-----END RSA PRIVATE KEY-----"));
@@ -155,18 +159,27 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    data->m_privateKey = privateKey.getUTF8String();
 
    // Format public key
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+   BIGNUM *n = nullptr, *e = nullptr;
+   EVP_PKEY_get_bn_param(key, OSSL_PKEY_PARAM_RSA_N, &n);
+   EVP_PKEY_get_bn_param(key, OSSL_PKEY_PARAM_RSA_E, &e);
+#elif OPENSSL_VERSION_NUMBER >= 0x10100000L
+   const BIGNUM *n, *e, *d;
+   RSA_get0_key(key, &n, &e, &d);
+#else
    const BIGNUM *n, *e;
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
    n = key->n;
    e = key->e;
-#else
-   const BIGNUM *d;
-   RSA_get0_key(key, &n, &e, &d);
 #endif
-   if (n == nullptr || e == nullptr)
+   if ((n == nullptr) || (e == nullptr))
    {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+      // One can be allocated
+      BN_free(n);
+      BN_free(e);
+#endif
       nxlog_write(NXLOG_ERROR, _T("SshKeyData::generateNewKeys: failed to generate RSA key components"));
-      RSA_free(key);
+      RSAFree(key);
       return shared_ptr<SshKeyPair>();
    }
 
@@ -207,7 +220,12 @@ shared_ptr<SshKeyPair> SshKeyPair::generate(const TCHAR *name)
    publicKey.append(name);
    data->m_publicKey = MemCopyString(publicKey.getBuffer());
 
-   RSA_free(key);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+      BN_free(n);
+      BN_free(e);
+#endif
+
+   RSAFree(key);
    return data;
 }
 

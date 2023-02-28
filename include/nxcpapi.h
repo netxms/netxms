@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NXCP API
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -294,7 +294,7 @@ private:
    bool initCipher(int cipher);
 
 public:
-	static NXCPEncryptionContext *create(NXCPMessage *msg, RSA *privateKey);
+	static NXCPEncryptionContext *create(NXCPMessage *msg, RSA_KEY privateKey);
 	static NXCPEncryptionContext *create(uint32_t ciphers);
 
 	virtual ~NXCPEncryptionContext();
@@ -611,18 +611,26 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t vode, TCHAR *buffer);
 void LIBNETXMS_EXPORTABLE NXCPRegisterMessageNameResolver(NXCPMessageNameResolver r);
 void LIBNETXMS_EXPORTABLE NXCPUnregisterMessageNameResolver(NXCPMessageNameResolver r);
 
-bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers);
-UINT32 LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers();
+uint32_t LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers();
 String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText();
-NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionContext *pCtx, NXCP_MESSAGE *pMsg);
-bool LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *pCtx,
-                                             NXCP_ENCRYPTED_MESSAGE *pMsg,
-                                             BYTE *pDecryptionBuffer);
-UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *pMsg,
-                                                  NXCPEncryptionContext **ppCtx,
-                                                  NXCPMessage **ppResponse,
-                                                  RSA *pPrivateKey, int nNXCPVersion);
-void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *pMsg, RSA *pServerKey, bool useX509Format);
+uint32_t LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg, NXCPEncryptionContext **ppCtx, NXCPMessage **ppResponse, RSA_KEY privateKey, int nNXCPVersion);
+void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *msg, RSA_KEY serverKey, bool useX509Format);
+
+/**
+ * Encrypt message
+ */
+static inline NXCP_ENCRYPTED_MESSAGE *NXCPEncryptMessage(NXCPEncryptionContext *ctx, NXCP_MESSAGE *msg)
+{
+   return (ctx != nullptr) ? ctx->encryptMessage(msg) : nullptr;
+}
+
+/**
+ * Decrypt message
+ */
+static inline bool NXCPDecryptMessage(NXCPEncryptionContext *ctx, NXCP_ENCRYPTED_MESSAGE *msg, BYTE *pDecryptionBuffer)
+{
+   return (ctx != nullptr) ? ctx->decryptMessage(msg, pDecryptionBuffer) : false;
+}
 
 #endif   /* __cplusplus */
 

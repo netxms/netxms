@@ -238,7 +238,10 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
    // Calculate HMAC
    if (g_auditLogKey[0] != 0)
    {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+      EVP_MAC *mac = EVP_MAC_fetch(nullptr, "HMAC", nullptr);
+      EVP_MAC_CTX *ctx = EVP_MAC_CTX_new(mac);
+#elif OPENSSL_VERSION_NUMBER >= 0x10100000
       HMAC_CTX *ctx = HMAC_CTX_new();
 #else
       HMAC_CTX _ctx;
@@ -246,7 +249,11 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 #endif
       if (ctx != nullptr)
       {
-#if OPENSSL_VERSION_NUMBER >= 0x10000000
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+         char digest[] = "SHA256";
+         const OSSL_PARAM params[2] = { OSSL_PARAM_utf8_ptr("digest", digest, 0), OSSL_PARAM_END };
+         if (EVP_MAC_init(ctx, reinterpret_cast<BYTE*>(g_auditLogKey), static_cast<int>(strlen(g_auditLogKey)), params))
+#elif OPENSSL_VERSION_NUMBER >= 0x10000000
          if (HMAC_Init_ex(ctx, g_auditLogKey, static_cast<int>(strlen(g_auditLogKey)), EVP_sha256(), nullptr))
 #else
          HMAC_Init_ex(ctx, g_auditLogKey, static_cast<int>(strlen(g_auditLogKey)), EVP_sha256(), nullptr);
@@ -258,17 +265,30 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
                if (_tcslen(values[i]) < 1024)
                {
                   tchar_to_utf8(values[i], -1, localBuffer, 4096);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+                  EVP_MAC_update(ctx, reinterpret_cast<BYTE*>(localBuffer), strlen(localBuffer));
+#else
                   HMAC_Update(ctx, reinterpret_cast<BYTE*>(localBuffer), strlen(localBuffer));
+#endif
                }
                else
                {
                   char *v = UTF8StringFromTString(values[i]);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+                  EVP_MAC_update(ctx, reinterpret_cast<BYTE*>(v), strlen(v));
+#else
                   HMAC_Update(ctx, reinterpret_cast<BYTE*>(v), strlen(v));
+#endif
                   MemFree(v);
                }
             }
             BYTE hmac[SHA256_DIGEST_SIZE];
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+            size_t s;
+            EVP_MAC_final(ctx, hmac, &s, SHA256_DIGEST_SIZE);
+#else
             HMAC_Final(ctx, hmac, nullptr);
+#endif
 
             BinToStr(hmac, SHA256_DIGEST_SIZE, _hmac);
             query.append(_T(",hmac"));
@@ -276,7 +296,10 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
             sqlTypes[bindCount] = DB_SQLTYPE_VARCHAR;
             bindCount++;
          }
-#if OPENSSL_VERSION_NUMBER >= 0x10100000
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+         EVP_MAC_CTX_free(ctx);
+         EVP_MAC_free(mac);
+#elif OPENSSL_VERSION_NUMBER >= 0x10100000
          HMAC_CTX_free(ctx);
 #else
          HMAC_CTX_cleanup(ctx);

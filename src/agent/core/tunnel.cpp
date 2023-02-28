@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1240,30 +1240,12 @@ void Tunnel::checkConnection()
  */
 X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org, const char *cn, EVP_PKEY **pkey)
 {
-   RSA *key = RSA_new();
+   RSA_KEY key = RSAGenerateKey(NETXMS_RSA_KEYLEN);
    if (key == nullptr)
    {
-      debugPrintf(4, _T("call to RSA_new() failed"));
+      debugPrintf(4, _T("call to RSAGenerateKey() failed"));
       return nullptr;
    }
-
-   BIGNUM *bn = BN_new();
-   if (bn == nullptr)
-   {
-      debugPrintf(4, _T("call to BN_new() failed"));
-      RSA_free(key);
-      return nullptr;
-   }
-
-   BN_set_word(bn, RSA_F4);
-   if (RSA_generate_key_ex(key, NETXMS_RSA_KEYLEN, bn, NULL) == -1)
-   {
-      debugPrintf(4, _T("call to RSA_generate_key_ex() failed"));
-      RSA_free(key);
-      BN_free(bn);
-      return nullptr;
-   }
-   BN_free(bn);
 
    X509_REQ *req = X509_REQ_new();
    if (req != nullptr)
@@ -1277,10 +1259,9 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
          X509_NAME_add_entry_by_txt(subject, "O", MBSTRING_UTF8, (const BYTE *)((org != NULL) ? org : "netxms.org"), -1, -1, 0);
          X509_NAME_add_entry_by_txt(subject, "CN", MBSTRING_UTF8, (const BYTE *)cn, -1, -1, 0);
 
-         EVP_PKEY *ekey = EVP_PKEY_new();
+         EVP_PKEY *ekey = EVP_PKEY_from_RSA_KEY(key);
          if (ekey != nullptr)
          {
-            EVP_PKEY_assign_RSA(ekey, key);
             key = nullptr; // will be freed by EVP_PKEY_free
             X509_REQ_set_pubkey(req, ekey);
             if (X509_REQ_sign(req, ekey, EVP_sha256()) > 0)
@@ -1297,7 +1278,7 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
          }
          else
          {
-            debugPrintf(4, _T("call to EVP_PKEY_new() failed"));
+            debugPrintf(4, _T("call to EVP_PKEY_from_RSA_KEY() failed"));
             X509_REQ_free(req);
             req = nullptr;
          }
@@ -1314,8 +1295,7 @@ X509_REQ *Tunnel::createCertificateRequest(const char *country, const char *org,
       debugPrintf(4, _T("call to X509_REQ_new() failed"));
    }
 
-   if (key != nullptr)
-      RSA_free(key);
+   RSAFree(key);
    return req;
 }
 

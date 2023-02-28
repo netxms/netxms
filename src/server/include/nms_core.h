@@ -1595,7 +1595,7 @@ extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdDataDir[]);
 extern NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[]);
 extern NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask);
 extern uint64_t g_serverId;
-extern RSA *g_pServerKey;
+extern RSA_KEY g_pServerKey;
 extern uint32_t g_icmpPingSize;
 extern uint32_t g_icmpPingTimeout;
 extern uint32_t g_auditFlags;

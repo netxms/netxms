@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -649,7 +649,7 @@ shared_ptr<NXCPEncryptionContext> AgentConnection::acquireEncryptionContext()
 /**
  * Connect to agent
  */
-bool AgentConnection::connect(RSA *serverKey, uint32_t *error, uint32_t *socketError, uint64_t serverId)
+bool AgentConnection::connect(RSA_KEY serverKey, uint32_t *error, uint32_t *socketError, uint64_t serverId)
 {
    TCHAR szBuffer[256];
    bool success = false;
@@ -2217,13 +2217,13 @@ uint32_t AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefin
 /**
  * Setup encryption
  */
-uint32_t AgentConnection::setupEncryption(RSA *pServerKey)
+uint32_t AgentConnection::setupEncryption(RSA_KEY serverKey)
 {
 #ifdef _WITH_ENCRYPTION
    uint32_t requestId = generateRequestId();
    NXCPMessage msg(m_nProtocolVersion);
    msg.setId(requestId);
-   PrepareKeyRequestMsg(&msg, pServerKey, false);
+   PrepareKeyRequestMsg(&msg, serverKey, false);
 
    uint32_t result;
    if (sendMessage(&msg))
@@ -2232,7 +2232,7 @@ uint32_t AgentConnection::setupEncryption(RSA *pServerKey)
       if (response != nullptr)
       {
          NXCPEncryptionContext *encryptionContext = nullptr;
-         uint32_t rcc = SetupEncryptionContext(response, &encryptionContext, nullptr, pServerKey, m_nProtocolVersion);
+         uint32_t rcc = SetupEncryptionContext(response, &encryptionContext, nullptr, serverKey, m_nProtocolVersion);
          switch(rcc)
          {
             case RCC_SUCCESS:

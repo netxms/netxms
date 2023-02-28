@@ -62,7 +62,7 @@ extern Config g_serverConfig;
 void InitClientListeners();
 void InitMobileDeviceListeners();
 void InitCertificates();
-bool LoadServerCertificate(RSA **serverKey);
+bool LoadServerCertificate(RSA_KEY *serverKey);
 bool LoadInternalCACertificate();
 void InitUsers();
 void CleanupUsers();
@@ -163,7 +163,7 @@ NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
 NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
 uint64_t g_serverId = 0;
-RSA *g_pServerKey = nullptr;
+RSA_KEY g_pServerKey = nullptr;
 time_t g_serverStartTime = 0;
 uint32_t g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 uint32_t g_agentRestartWaitTime = 0;   // Wait time for agent restart in seconds
@@ -573,37 +573,20 @@ static bool InitCryptography()
       TCHAR szKeyFile[MAX_PATH];
       _tcscpy(szKeyFile, g_netxmsdDataDir);
       _tcscat(szKeyFile, DFILE_KEYS);
-      g_pServerKey = LoadRSAKeys(szKeyFile);
-      if (g_pServerKey == NULL)
+      g_pServerKey = RSALoadKey(szKeyFile);
+      if (g_pServerKey == nullptr)
       {
          nxlog_debug_tag(_T("crypto"), 1, _T("Generating RSA key pair..."));
          g_pServerKey = RSAGenerateKey(NETXMS_RSA_KEYLEN);
-         if (g_pServerKey != NULL)
+         if (g_pServerKey != nullptr)
          {
-            int fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
-            if (fd != -1)
+            if (RSASaveKey(g_pServerKey, szKeyFile))
             {
-               UINT32 dwLen = i2d_RSAPublicKey(g_pServerKey, NULL);
-               dwLen += i2d_RSAPrivateKey(g_pServerKey, NULL);
-               BYTE *pKeyBuffer = (BYTE *)malloc(dwLen);
-
-               BYTE *pBufPos = pKeyBuffer;
-               i2d_RSAPublicKey(g_pServerKey, &pBufPos);
-               i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
-               _write(fd, &dwLen, sizeof(UINT32));
-               _write(fd, pKeyBuffer, dwLen);
-
-               BYTE hash[SHA1_DIGEST_SIZE];
-               CalculateSHA1Hash(pKeyBuffer, dwLen, hash);
-               _write(fd, hash, SHA1_DIGEST_SIZE);
-
-               _close(fd);
-               free(pKeyBuffer);
                success = true;
             }
             else
             {
-               nxlog_write_tag(NXLOG_ERROR, _T("crypto"), _T("Failed to open key file %s for writing"), szKeyFile);
+               nxlog_write_tag(NXLOG_ERROR, _T("crypto"), _T("Cannot save server key to file \"%s\""), szKeyFile);
             }
          }
          else
@@ -665,7 +648,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
    TCHAR keyFile[MAX_PATH];
    _tcscpy(keyFile, g_netxmsdDataDir);
    _tcscat(keyFile, DFILE_KEYS);
-   RSA *key = LoadRSAKeys(keyFile);
+   RSA_KEY key = RSALoadKey(keyFile);
 
    shared_ptr<AgentConnection> ac = make_shared<AgentConnection>(addr);
    if (ac->connect(key))
@@ -677,7 +660,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
       uint32_t rcc = ac->getParameter(_T("Process.Count(netxmsd)"), result, MAX_RESULT_LENGTH);
 #endif
       if (key != nullptr)
-         RSA_free(key);
+         RSAFree(key);
       if (rcc == ERR_SUCCESS)
       {
          return _tcstol(result, nullptr, 10) > 0;
@@ -686,7 +669,7 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
    else
    {
       if (key != nullptr)
-         RSA_free(key);
+         RSAFree(key);
    }
 
    uint16_t port = static_cast<uint16_t>(ConfigReadInt(_T("Client.ListenerPort"), SERVER_LISTEN_PORT_FOR_CLIENTS));

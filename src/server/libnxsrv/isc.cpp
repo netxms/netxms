@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -190,10 +190,10 @@ void ISC::receiverThread()
 /**
  * Connect to ISC peer
  */
-UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
+uint32_t ISC::connect(uint32_t service, RSA_KEY serverKey, bool requireEncryption)
 {
    TCHAR szBuffer[256];
-   UINT32 rcc = ISC_ERR_INTERNAL_ERROR;
+   uint32_t rcc = ISC_ERR_INTERNAL_ERROR;
 
    // Check if already connected
    if (m_flags & ISCF_IS_CONNECTED)
@@ -257,9 +257,9 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
 
    // Setup encryption
 setup_encryption:
-   if (pServerKey != NULL)
+   if (serverKey != nullptr)
    {
-      rcc = setupEncryption(pServerKey);
+      rcc = setupEncryption(serverKey);
       if ((rcc != ERR_SUCCESS) &&
 			 (m_flags & ISCF_REQUIRE_ENCRYPTION))
 		{
@@ -393,15 +393,15 @@ UINT32 ISC::waitForRCC(UINT32 rqId, UINT32 timeOut)
 /**
  * Setup encryption
  */
-UINT32 ISC::setupEncryption(RSA *pServerKey)
+uint32_t ISC::setupEncryption(RSA_KEY serverKey)
 {
 #ifdef _WITH_ENCRYPTION
    NXCPMessage msg(m_protocolVersion), *pResp;
-   UINT32 dwRqId, dwError, dwResult;
+   uint32_t dwRqId, dwError, dwResult;
 
    dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
 
-   PrepareKeyRequestMsg(&msg, pServerKey, false);
+   PrepareKeyRequestMsg(&msg, serverKey, false);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
    {
@@ -409,7 +409,7 @@ UINT32 ISC::setupEncryption(RSA *pServerKey)
       if (pResp != nullptr)
       {
          NXCPEncryptionContext *ctx = nullptr;
-         dwResult = SetupEncryptionContext(pResp, &ctx, nullptr, pServerKey, m_protocolVersion);
+         dwResult = SetupEncryptionContext(pResp, &ctx, nullptr, serverKey, m_protocolVersion);
          switch(dwResult)
          {
             case RCC_SUCCESS:

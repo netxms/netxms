@@ -1,6 +1,6 @@
 /*
 ** nxap - command line tool used to manage agent policies
-** Copyright (C) 2010-2021 Raden Solutions
+** Copyright (C) 2010-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA_KEY serverKey)
 {
    int exitCode;
    if (s_action == 0)

@@ -1,7 +1,7 @@
 /* 
 ** nxaction - command line tool used to execute preconfigured actions 
 **            on NetXMS agent
-** Copyright (C) 2004-2021 Raden Solutions
+** Copyright (C) 2004-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,21 +70,18 @@ static bool IsArgMissingCb(int currentCount)
 /**
  * Execute command callback
  */
-static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA *pServerKey)
+static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int optind, RSA_KEY serverKey)
 {
-   UINT32 dwError;
-   int i, k;
    StringList list;
    int count = std::min(argc - optind - 2, 256);
-   for(i = 0, k = optind + 2; i < count; i++, k++)
+   for(int i = 0, k = optind + 2; i < count; i++, k++)
       list.add(argv[k]);
-   dwError = conn->executeCommand(argv[optind + 1], list, s_showOutput, OutputCallback);
-   if (dwError == ERR_SUCCESS)
+   uint32_t rcc = conn->executeCommand(argv[optind + 1], list, s_showOutput, OutputCallback);
+   if (rcc == ERR_SUCCESS)
       _tprintf(_T("Action executed successfully\n"));
    else
-      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
-
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
+      _tprintf(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
 /**

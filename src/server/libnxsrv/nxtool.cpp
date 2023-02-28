@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -62,7 +62,7 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
    uint32_t dwTimeout = 5000, dwConnTimeout = 30000, dwError;
    TCHAR szProxy[MAX_OBJECT_NAME] = _T("");
    TCHAR *proxySecret = nullptr;
-   RSA *serverKey = nullptr;
+   RSA_KEY serverKey = nullptr;
 
 #if defined(UNICODE) && !defined(_WIN32)
    WCHAR **wargv = MemAllocArray<WCHAR*>(tool->argc);
@@ -225,11 +225,11 @@ int ExecuteServerCommandLineTool(ServerCommandLineTool *tool)
       {
          if (InitCryptoLib(0xFFFF))
          {
-            serverKey = LoadRSAKeys(keyFile);
-            if (serverKey == NULL)
+            serverKey = RSALoadKey(keyFile);
+            if (serverKey == nullptr)
             {
                serverKey = RSAGenerateKey(2048);
-               if (serverKey == NULL)
+               if (serverKey == nullptr)
                {
                   _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), keyFile);
                   if (iEncryptionPolicy == ENCRYPTION_REQUIRED)

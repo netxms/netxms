@@ -922,7 +922,7 @@ private:
 	bool m_allowCompression;
 	VolatileCounter m_bulkDataProcessing;
 
-   uint32_t setupEncryption(RSA *pServerKey);
+   uint32_t setupEncryption(RSA_KEY serverKey);
    uint32_t authenticate(BOOL bProxyData);
    uint32_t setupProxyConnection();
    uint32_t prepareFileDownload(const TCHAR *fileName, uint32_t rqId, bool append, std::function<void (size_t)> downloadProgressCallback, std::function<void (NXCPMessage*)> fileResendCallback);
@@ -974,7 +974,7 @@ public:
    shared_ptr<AgentConnection> self() { return shared_from_this(); }
    shared_ptr<const AgentConnection> self() const { return shared_from_this(); }
 
-   bool connect(RSA *serverKey = nullptr, uint32_t *error = nullptr, uint32_t *socketError = nullptr, uint64_t serverId = 0);
+   bool connect(RSA_KEY serverKey = nullptr, uint32_t *error = nullptr, uint32_t *socketError = nullptr, uint64_t serverId = 0);
    void disconnect();
    bool isConnected() const { return m_isConnected; }
    bool isProxyMode() { return m_useProxy; }
@@ -1117,7 +1117,7 @@ private:
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
 
 protected:
-   UINT32 setupEncryption(RSA *pServerKey);
+   uint32_t setupEncryption(RSA_KEY serverKey);
 	UINT32 connectToService(UINT32 service);
 
    void lock() { m_mutexDataLock.lock(); }
@@ -1131,7 +1131,7 @@ public:
    ISC(const InetAddress& addr, uint16_t port = NETXMS_ISC_PORT);
    virtual ~ISC();
 
-   UINT32 connect(UINT32 service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
+   uint32_t connect(uint32_t service, RSA_KEY serverKey = nullptr, bool requireEncryption = false);
 	void disconnect();
    bool connected() { return m_flags & ISCF_IS_CONNECTED; };
 
@@ -1159,7 +1159,7 @@ struct ServerCommandLineTool
    const char *additionalOptions;
    bool (*parseAdditionalOptionCb)(const char, const TCHAR*);
    bool (*isArgMissingCb)(int);
-   int (*executeCommandCb)(AgentConnection*, int, TCHAR**, int, RSA*);
+   int (*executeCommandCb)(AgentConnection*, int, TCHAR**, int, RSA_KEY);
 };
 
 /**

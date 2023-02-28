@@ -250,15 +250,13 @@ static void random_vector(unsigned char *vector)
 #endif
 }
 
-
-//
-// Encode password.
-//
-// Assume that "pwd_out" points to a buffer of at least AUTH_PASS_LEN bytes.
-//
-// Returns new length.
-//
-
+/**
+ * Encode password.
+ *
+ * Assume that "pwd_out" points to a buffer of at least AUTH_PASS_LEN bytes.
+ *
+ * Returns new length.
+ */
 static int rad_pwencode(const char *pwd_in, char *pwd_out, const char *secret, const char *vector)
 {
 	int passLen = (int)strlen(pwd_in);
@@ -295,7 +293,6 @@ static int rad_pwencode(const char *pwd_in, char *pwd_out, const char *secret, c
 
 	return outLen;
 }
-
 
 /*
  * Encrypt/decrypt string attributes, style 1.
@@ -448,7 +445,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 	char digest[16];
 	int vendorpec;
 	int len;
-	UINT32 lvalue;
+	uint32_t lvalue;
 
 	total_length = AUTH_HDR_LEN;
 

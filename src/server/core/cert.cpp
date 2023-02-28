@@ -338,8 +338,6 @@ static bool CheckTemplateId(X509 *cert, const TCHAR *userTemplateId)
  */
 bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challenge, const BYTE *signature, size_t sigLen, CertificateMappingMethod mappingMethod, const TCHAR *mappingData)
 {
-   bool bValid = false;
-
    String certSubject = GetCertificateSubjectString(cert);
 
    nxlog_debug_tag(DEBUG_TAG, 3, _T("Validating certificate \"%s\" for user %s"), certSubject.cstr(), login);
@@ -353,6 +351,7 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 	}
 
 	// Validate signature
+   bool isValid = false;
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
    EVP_PKEY *pKey = X509_get0_pubkey(cert);
 #else
@@ -362,56 +361,63 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 	{
       BYTE hash[SHA1_DIGEST_SIZE];
 		CalculateSHA1Hash(challenge, CLIENT_CHALLENGE_SIZE, hash);
-		switch(EVP_PKEY_id(pKey))
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+		EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pKey, nullptr);
+		if (ctx != nullptr)
 		{
-			case EVP_PKEY_RSA:
-				bValid = (RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), EVP_PKEY_get1_RSA(pKey)) != 0);
-				break;
-			default:
-			   nxlog_debug_tag(DEBUG_TAG, 3, _T("Unknown key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject.cstr(), login);
-				break;
+		   EVP_PKEY_verify_init(ctx);
+		   EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING);
+		   EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha1());
+		   isValid = (EVP_PKEY_verify(ctx, hash, SHA1_DIGEST_SIZE, signature, sigLen) != 0);
+		   EVP_PKEY_CTX_free(ctx);
 		}
+#else
+		if (EVP_PKEY_id(pKey) == EVP_PKEY_RSA)
+         isValid = (RSA_verify(NID_sha1, hash, SHA1_DIGEST_SIZE, const_cast<unsigned char*>(signature), static_cast<unsigned int>(sigLen), EVP_PKEY_get1_RSA(pKey)) != 0);
+		else
+         nxlog_debug_tag(DEBUG_TAG, 3, _T("Unsupported key type %d in certificate \"%s\" for user %s"), EVP_PKEY_id(pKey), certSubject.cstr(), login);
+#endif
 	}
 
 	// Validate certificate
-	if (bValid)
+	if (isValid)
 	{
 		X509_STORE_CTX *pStore = X509_STORE_CTX_new();
 		if (pStore != nullptr)
 		{
 			X509_STORE_CTX_init(pStore, s_trustedCertificateStore, cert, nullptr);
-			bValid = (X509_verify_cert(pStore) != 0);
+			isValid = (X509_verify_cert(pStore) != 0);
 			X509_STORE_CTX_free(pStore);
-			nxlog_debug_tag(DEBUG_TAG, 3, _T("Certificate \"%s\" for user %s - validation %s"), certSubject.cstr(), login, bValid ? _T("successful") : _T("failed"));
+			nxlog_debug_tag(DEBUG_TAG, 3, _T("Certificate \"%s\" for user %s - validation %s"), certSubject.cstr(), login, isValid ? _T("successful") : _T("failed"));
 		}
 		else
 		{
 			TCHAR szBuffer[256];
 			nxlog_debug_tag(DEBUG_TAG, 3, _T("X509_STORE_CTX_new() failed: %s"), _ERR_error_tstring(ERR_get_error(), szBuffer));
-			bValid = false;
+			isValid = false;
 		}
 	}
 
 	// Check user mapping
-	if (bValid)
+	if (isValid)
 	{
 		switch(mappingMethod)
 		{
 			case MAP_CERTIFICATE_BY_SUBJECT:
-				bValid = (_tcsicmp(certSubject, CHECK_NULL_EX(mappingData)) == 0);
+				isValid = (_tcsicmp(certSubject, CHECK_NULL_EX(mappingData)) == 0);
 				break;
 			case MAP_CERTIFICATE_BY_PUBKEY:
-				bValid = CheckPublicKey(pKey, CHECK_NULL_EX(mappingData));
+				isValid = CheckPublicKey(pKey, CHECK_NULL_EX(mappingData));
 				break;
 			case MAP_CERTIFICATE_BY_CN:
-            bValid = CheckCommonName(cert, ((mappingData != nullptr) && (*mappingData != 0)) ? mappingData : login);
+            isValid = CheckCommonName(cert, ((mappingData != nullptr) && (*mappingData != 0)) ? mappingData : login);
 				break;
          case MAP_CERTIFICATE_BY_TEMPLATE_ID:
-            bValid = CheckTemplateId(cert, CHECK_NULL_EX(mappingData));;
+            isValid = CheckTemplateId(cert, CHECK_NULL_EX(mappingData));;
             break;
 			default:
 			   nxlog_debug_tag(DEBUG_TAG, 3, _T("Invalid certificate mapping method %d for user %s"), mappingMethod, login);
-				bValid = false;
+				isValid = false;
 				break;
 		}
 	}
@@ -422,7 +428,7 @@ bool ValidateUserCertificate(X509 *cert, const TCHAR *login, const BYTE *challen
 #endif
 
 	s_certificateStoreLock.unlock();
-	return bValid;
+	return isValid;
 }
 
 /**
@@ -492,7 +498,7 @@ void InitCertificates()
 /**
  * Load certificate
  */
-static bool LoadCertificate(RSA **serverKey, const TCHAR *certificatePath, const TCHAR *certificateKeyPath, char *certificatePassword, X509 **certificate, EVP_PKEY **certificateKey, const TCHAR *certType)
+static bool LoadCertificate(RSA_KEY *serverKey, const TCHAR *certificatePath, const TCHAR *certificateKeyPath, char *certificatePassword, X509 **certificate, EVP_PKEY **certificateKey, const TCHAR *certType)
 {
    if (certificatePath[0] == 0)
    {
@@ -534,6 +540,9 @@ static bool LoadCertificate(RSA **serverKey, const TCHAR *certificatePath, const
 
    if (serverKey != nullptr)
    {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000
+      *serverKey = EVP_PKEY_dup(*certificateKey);
+#else
       RSA *privKey = EVP_PKEY_get1_RSA(*certificateKey);
       RSA *pubKey = EVP_PKEY_get1_RSA(X509_get_pubkey(*certificate));
       if ((privKey != nullptr) && (pubKey != nullptr))
@@ -550,6 +559,7 @@ static bool LoadCertificate(RSA **serverKey, const TCHAR *certificatePath, const
          *serverKey = RSAKeyFromData(buffer, len, true);
          MemFree(buffer);
       }
+#endif
    }
 
    return true;
@@ -558,7 +568,7 @@ static bool LoadCertificate(RSA **serverKey, const TCHAR *certificatePath, const
 /**
  * Load server certificate
  */
-bool LoadServerCertificate(RSA **serverKey)
+bool LoadServerCertificate(RSA_KEY *serverKey)
 {
    return LoadCertificate(serverKey, g_serverCertificatePath, g_serverCertificateKeyPath, g_serverCertificatePassword, &s_serverCertificate, &s_serverCertificateKey, _T("Server"));
 }

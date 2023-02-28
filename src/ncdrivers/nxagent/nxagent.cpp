@@ -1,6 +1,6 @@
 /* 
 ** SMS Driver for sending SMS via NetXMS agent
-** Copyright (C) 2007-2021 Raden Solutions
+** Copyright (C) 2007-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,14 +31,14 @@ class NXAgentDriver : public NCDriver
 {
 private:
    TCHAR m_hostName[256];
-   UINT16 m_port;
+   uint16_t m_port;
    TCHAR m_secret[256];
-   UINT32 m_timeout;	// Default timeout is 30 seconds
-   UINT16 m_encryptionType;
+   uint32_t m_timeout;	// Default timeout is 30 seconds
    TCHAR m_keyFile[MAX_PATH];
 
 public:
    NXAgentDriver(Config *config);
+
    virtual int send(const TCHAR* recipient, const TCHAR* subject, const TCHAR* body) override;
 };
 
@@ -51,23 +51,17 @@ NXAgentDriver::NXAgentDriver(Config *config)
    _tcscpy(m_secret, _T(""));
    m_port = 4700;
    m_timeout = 30;	
-#ifdef _WITH_ENCRYPTION
-   m_encryptionType = ENCRYPTION_PREFERRED;
-#else
-   m_encryptionType = ENCRYPTION_DISABLED;
-#endif   
    GetNetXMSDirectory(nxDirData, m_keyFile);
    _tcslcat(m_keyFile, DFILE_KEYS, MAX_PATH);
 
    NX_CFG_TEMPLATE configTemplate[] = 
 	{
-		{ _T("hostname"), CT_STRING, 0, 0, sizeof(m_hostName)/sizeof(TCHAR), 0, m_hostName },	
-		{ _T("port"), CT_LONG, 0, 0, 0, 0, &m_port },	
-		{ _T("timeout"), CT_LONG, 0, 0, 0, 0,	&m_timeout },	
-		{ _T("secret"), CT_STRING, 0, 0, sizeof(m_secret)/sizeof(TCHAR), 0,	m_secret },
-		{ _T("encryption"), CT_STRING, 0, 0,0, 0, &m_encryptionType },
-		{ _T("keyFile"), CT_STRING, 0, 0, sizeof(m_keyFile)/sizeof(TCHAR), 0, m_keyFile },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+		{ _T("Hostname"), CT_STRING, 0, 0, sizeof(m_hostName) / sizeof(TCHAR), 0, m_hostName },
+		{ _T("Port"), CT_WORD, 0, 0, 0, 0, &m_port },
+		{ _T("Timeout"), CT_LONG, 0, 0, 0, 0, &m_timeout },
+		{ _T("Secret"), CT_STRING, 0, 0, sizeof(m_secret) / sizeof(TCHAR), 0, m_secret },
+		{ _T("KeyFile"), CT_STRING, 0, 0, sizeof(m_keyFile) / sizeof(TCHAR), 0, m_keyFile },
+		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
 
 	config->parseTemplate(_T("NXAgent"), configTemplate);
@@ -84,32 +78,28 @@ int NXAgentDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHA
    InetAddress addr = InetAddress::resolveHostName(m_hostName);
    if (addr.isValid())
 	{
-      RSA *serverKey = NULL;
+      RSA_KEY serverKey = nullptr;
       bool start = true;
       // Load server key if requested
 #ifdef _WITH_ENCRYPTION
-      if ((m_encryptionType != ENCRYPTION_DISABLED))
+      serverKey = RSALoadKey(m_keyFile);
+      if (serverKey == nullptr)
       {
-         serverKey = LoadRSAKeys(m_keyFile);
-         if (serverKey == NULL)
+         serverKey = RSAGenerateKey(2048);
+         if (serverKey == nullptr)
          {
-            serverKey = RSAGenerateKey(2048);
-            if (serverKey == NULL)
-            {
-               nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot load server RSA key from \"%s\" or generate new key"), m_keyFile);
-               _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), m_keyFile);
-               if (m_encryptionType == ENCRYPTION_REQUIRED)
-                  start = false;
-            }
+            nxlog_debug_tag(DEBUG_TAG, 2, _T("Cannot load server RSA key from \"%s\" or generate new key"), m_keyFile);
+            _tprintf(_T("Cannot load server RSA key from \"%s\" or generate new key\n"), m_keyFile);
+            start = false;
          }
       }
 #endif
 
-      if(start)
+      if (start)
       {
          auto conn = make_shared<AgentConnection>(addr, m_port, m_secret);
          conn->setCommandTimeout(m_timeout);
-         conn->setEncryptionPolicy(m_encryptionType);
+         conn->setEncryptionPolicy(ENCRYPTION_REQUIRED);
          uint32_t rcc;
          if (conn->connect(serverKey, &rcc))
          {
@@ -142,7 +132,7 @@ int NXAgentDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHA
 /**
  * Driver entry point
  */
-DECLARE_NCD_ENTRY_POINT(NXAgent, NULL)
+DECLARE_NCD_ENTRY_POINT(NXAgent, nullptr)
 {
    return new NXAgentDriver(config);
 }
