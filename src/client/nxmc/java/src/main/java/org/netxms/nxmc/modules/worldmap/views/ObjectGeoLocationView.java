@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.worldmap.views;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -27,8 +28,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -55,6 +60,7 @@ public class ObjectGeoLocationView extends ObjectView
    private Action actionZoomIn;
    private Action actionZoomOut;
    private Action actionHideOtherObjects;
+   private Action actionUpdateObjectLocation;
 
    /**
     * @param name
@@ -203,6 +209,14 @@ public class ObjectGeoLocationView extends ObjectView
          }
       };
       actionHideOtherObjects.setChecked(hideOtherObjects);
+
+      actionUpdateObjectLocation = new Action(i18n.tr("&Set new location here")) {
+         @Override
+         public void run()
+         {
+            updateObjectLocation();
+         }
+      };
    }
 
    /**
@@ -239,6 +253,8 @@ public class ObjectGeoLocationView extends ObjectView
       manager.add(actionZoomOut);
       manager.add(new Separator());
       manager.add(actionHideOtherObjects);
+      manager.add(new Separator());
+      manager.add(actionUpdateObjectLocation);
    }
 
    /**
@@ -246,6 +262,18 @@ public class ObjectGeoLocationView extends ObjectView
     */
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
+      manager.add(new Separator());
+      manager.add(actionHideOtherObjects);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
    {
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
@@ -280,5 +308,28 @@ public class ObjectGeoLocationView extends ObjectView
 
       actionZoomIn.setEnabled(zoomLevel < MapAccessor.MAX_MAP_ZOOM);
       actionZoomOut.setEnabled(zoomLevel > MapAccessor.MIN_MAP_ZOOM);
+   }
+
+   /**
+    * Set object location to the point currently under mouse cursor
+    */
+   private void updateObjectLocation()
+   {
+      final NXCObjectModificationData md = new NXCObjectModificationData(getObjectId());
+      md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
+      final NXCSession session = Registry.getSession();
+      new Job(i18n.tr("Update object's geolocation"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObject(md);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot update object's geolocation");
+         }
+      }.start();
    }
 }

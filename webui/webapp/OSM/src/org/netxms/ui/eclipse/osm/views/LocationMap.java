@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.osm.views;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -26,7 +27,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer;
@@ -43,6 +47,7 @@ public class LocationMap extends AbstractGeolocationView
 	private AbstractObject object;
    private Action actionHideOtherObjects;
    private Action actionShowObjectNames;
+   private Action actionUpdateObjectLocation;
 
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -133,6 +138,14 @@ public class LocationMap extends AbstractGeolocationView
       };
       actionShowObjectNames.setImageDescriptor(Activator.getImageDescriptor("icons/show_names.png"));
       actionShowObjectNames.setChecked(!Activator.getDefault().getDialogSettings().getBoolean("LocationMap.HideObjectNames"));
+
+      actionUpdateObjectLocation = new Action("&Set new location here") {
+         @Override
+         public void run()
+         {
+            updateObjectLocation();
+         }
+      };
    }
 
    /**
@@ -141,10 +154,10 @@ public class LocationMap extends AbstractGeolocationView
    @Override
    protected void fillLocalPullDown(IMenuManager manager)
    {
+      super.fillLocalPullDown(manager);
+      manager.add(new Separator());
       manager.add(actionHideOtherObjects);
       manager.add(actionShowObjectNames);
-      manager.add(new Separator());
-      super.fillLocalPullDown(manager);
    }
 
    /**
@@ -153,9 +166,46 @@ public class LocationMap extends AbstractGeolocationView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      super.fillLocalToolBar(manager);
+      manager.add(new Separator());
+      manager.add(actionHideOtherObjects);
+      manager.add(actionShowObjectNames);
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#fillContextMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      super.fillContextMenu(manager);
+      manager.add(new Separator());
       manager.add(actionHideOtherObjects);
       manager.add(actionShowObjectNames);
       manager.add(new Separator());
-      super.fillLocalToolBar(manager);
+      manager.add(actionUpdateObjectLocation);
+   }
+
+   /**
+    * Set object location to the point currently under mouse cursor
+    */
+   private void updateObjectLocation()
+   {
+      final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
+      md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Update object's geolocation", this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyObject(md);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot update object's geolocation";
+         }
+      }.start();
    }
 }
