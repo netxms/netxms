@@ -154,7 +154,7 @@ public class MessageArea extends Canvas implements MessageAreaHolder
             if (messages.size() >= MAX_ROWS)
             {
                m = messages.get(MAX_ROWS - 1);
-               m.control = new MessageComposite(messages.get(MAX_ROWS - 1));
+               m.control = new MessageComposite(m);
                m.control.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
             }
 

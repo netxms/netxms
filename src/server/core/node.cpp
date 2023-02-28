@@ -4334,10 +4334,11 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
             sendPollerMsg(_T("Node name is an IP address and need to be resolved\r\n"));
             poller->setStatus(_T("resolving name"));
-            if (resolveName(false))
+            const TCHAR *facility;
+            if (resolveName(false, &facility))
             {
-               sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
-               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
+               sendPollerMsg(POLLER_INFO _T("Node name resolved to %s using %s\r\n"), m_name, facility);
+               nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved using %s"), m_name, m_id, facility);
                modified |= MODIFY_COMMON_PROPERTIES;
             }
             else
@@ -4357,7 +4358,8 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          sendPollerMsg(_T("Synchronizing node name with DNS\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): synchronizing node name with DNS"), m_name, m_id);
          poller->setStatus(_T("resolving name"));
-         if (resolveName(TRUE))
+         const TCHAR *facility;
+         if (resolveName(true, &facility))
          {
             sendPollerMsg(POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("ConfPoll(%s [%u]): node name resolved"), m_name, m_id);
@@ -9621,7 +9623,7 @@ SNMP_SecurityContext *Node::getSnmpSecurityContext() const
 /**
  * Resolve node's name
  */
-bool Node::resolveName(bool useOnlyDNS)
+bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
 {
    bool resolved = false;
    bool truncated = false;
@@ -9636,14 +9638,24 @@ bool Node::resolveName(bool useOnlyDNS)
       if (conn != nullptr)
       {
          resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
+         *facility = _T("proxy agent");
       }
    }
    else
    {
       resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr);
+      *facility = _T("system resolver");
    }
 
-   // Try to resolve primary IP
+   // Check for systemd synthetic record
+   if (resolved && (name[0] == '_'))
+   {
+      TCHAR buffer[64];
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("IP address %s was resolved to \"%s\" which looks like systemd synthetic record and therefore ignored"), m_ipAddress.toString(buffer), name);
+      resolved = false;
+   }
+
+   // Use primary IP if resolved successfully
    if (resolved)
    {
       _tcslcpy(m_name, name, MAX_OBJECT_NAME);
@@ -9674,6 +9686,7 @@ bool Node::resolveName(bool useOnlyDNS)
                {
                   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
                   resolved = true;
+                  *facility = _T("system resolver");
                   break;
                }
             }
@@ -9693,6 +9706,7 @@ bool Node::resolveName(bool useOnlyDNS)
             {
                _tcslcpy(m_name, buffer, MAX_OBJECT_NAME);
                resolved = true;
+               *facility = _T("agent");
             }
          }
       }
@@ -9709,13 +9723,14 @@ bool Node::resolveName(bool useOnlyDNS)
             {
                _tcslcpy(m_name, buffer, MAX_OBJECT_NAME);
                resolved = true;
+               *facility = _T("SNMP");
             }
          }
       }
    }
 
    if (resolved)
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Name for node [%u] was resolved to %s%s"), m_id, m_name, truncated ? _T(" (truncated to host part)") : _T(""));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Name for node [%u] was resolved to %s%s using %s"), m_id, m_name, truncated ? _T(" (truncated to host part)") : _T(""), *facility);
    else
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Name for node [%u] was not resolved"), m_id);
    return resolved;

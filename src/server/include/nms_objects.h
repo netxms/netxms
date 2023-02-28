@@ -3278,7 +3278,7 @@ protected:
 
    void checkOSPFSupport(SNMP_Transport *snmp);
    void addVrrpInterfaces(InterfaceList *ifList);
-   bool resolveName(bool useOnlyDNS);
+   bool resolveName(bool useOnlyDNS, const TCHAR* *const facility);
    void setPrimaryIPAddress(const InetAddress& addr);
 
    bool setAgentProxy(AgentConnectionEx *conn);
