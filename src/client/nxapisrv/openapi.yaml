@@ -678,7 +678,7 @@ paths:
       summary: Get all comments of given alarm
       description: Get all comments of given alarm   
       parameters:
-        - $ref: '#components/parameters/alarmId'
+        - $ref: '#/components/parameters/alarmId'
       responses:
         '200':
           description: Will return list with all alarm comments
@@ -719,7 +719,7 @@ paths:
       summary: Create new comment for alarm
       description: Create new comment for alarm  
       parameters:
-        - $ref: '#components/parameters/alarmId'
+        - $ref: '#/components/parameters/alarmId'
       requestBody:
         description: Request should contain JSON with text.
         required: true
@@ -756,8 +756,8 @@ paths:
       summary: Get exact alarm's comment
       description: Will provide information about comment with given id form given alarm
       parameters:
-        - $ref: '#components/parameters/alarmId'
-        - $ref: '#components/parameters/alarmCommentId'
+        - $ref: '#/components/parameters/alarmId'
+        - $ref: '#/components/parameters/alarmCommentId'
       responses:
         '200':
           description: OK
@@ -781,8 +781,8 @@ paths:
       summary: Delete alarm's comment
       description: Will delete comment by id form given alarm
       parameters:
-        - $ref: '#components/parameters/alarmId'
-        - $ref: '#components/parameters/alarmCommentId'
+        - $ref: '#/components/parameters/alarmId'
+        - $ref: '#/components/parameters/alarmCommentId'
       responses:
         '200':
           description: OK
