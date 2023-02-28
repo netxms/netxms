@@ -165,7 +165,7 @@ static inline EVP_PKEY *EVP_PKEY_from_RSA_KEY(RSA_KEY k)
    if (ek == nullptr)
       return nullptr;
    EVP_PKEY_assign_RSA(ek, k);
-   return ekey;
+   return ek;
 }
 #endif
 
