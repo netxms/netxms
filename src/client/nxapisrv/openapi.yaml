@@ -3,6 +3,9 @@ info:
   title: NetXMS REST API
   description: Documnetation for NetXMS REST API
   version: '4.3.2'
+  license: 
+    name: GNU Free Documentation License
+    url: https://www.gnu.org/licenses/fdl-1.3.html
 servers:
   - url: http://127.0.0.1:8000
 security:
@@ -11,6 +14,7 @@ security:
 paths:
   /:
     get:
+      operationId: getServerInfo
       summary: Check connection
       description: Service is working
       responses:
@@ -34,6 +38,7 @@ paths:
       - url: http://127.0.0.1:8000
   /sessions:
     post:
+      operationId: createSession
       summary: Creating Rest API session
       description: On success server will set cookie session_handle and json with session GUID and server version.
                    When performing subsequent requests, session GUID should be provided in `Session-Id:` field of request's header
@@ -86,6 +91,17 @@ paths:
                     "zoningEnabled": true
                   }
                 }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
@@ -94,6 +110,7 @@ paths:
       - url: http://127.0.0.1:8000
   /authenticate:
     post:
+      operationId: externalAuthentication
       summary: Performing external authentication
       description: The API will return a 200 response if the credentials are correct, a 400 response if
                    either login or password is not provided or 401 if the provided credentials are incorrect.
@@ -124,6 +141,17 @@ paths:
                   "error": 0,
                   "description": "Request completed successfully"
                 }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
@@ -132,6 +160,7 @@ paths:
       - url: http://127.0.0.1:8000
   /sessions/{sid}:
     delete:
+      operationId: logout
       summary: Logout
       description: To log out request with given session ID.
       parameters:
@@ -154,6 +183,17 @@ paths:
                   "version": "4.3.0-rc223",
                   "build": "4.3-223-g20c122be56"
                 }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
@@ -164,6 +204,7 @@ paths:
 # Objects tag
   /objects:
     get:
+      operationId: getObjects
       summary: Get multiple objects with filters
       description: Request to get all objects available to this user or to get objects that fulfill
                   filter requirements and are available to this user.
@@ -297,11 +338,23 @@ paths:
                       }
                   ]
                 }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
         - Objects
     post:
+      operationId: createObject
       summary: Create object
       description: Request to create new object
       requestBody:
@@ -327,6 +380,17 @@ paths:
                 type: object
               example:
                 { "id": 15130 }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
@@ -335,6 +399,7 @@ paths:
       - url: http://127.0.0.1:8000
   /objects/{object-id}:
     get:
+      operationId: getObject
       summary: Get object by id
       description: Request to get exact object identified by ID or GUID.
       parameters:
@@ -418,11 +483,23 @@ paths:
                   "responsibleUsers": [],
                   "objectClassName": "Network"
               }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
         - Objects
     patch:
+      operationId: updateObject
       summary: Update object
       description: Request to update object.                  
       parameters:
@@ -450,11 +527,23 @@ paths:
       responses:
         '200':
           description: If object was updated successfully. 
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
         - Objects    
     delete:
+      operationId: deleteObject
       summary: Delete object
       description: Request to delete object.           
       parameters:
@@ -472,6 +561,17 @@ paths:
                   "version": "4.3.0-rc223",
                   "build": "4.3-223-g20c122be56"
                 }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       servers:
         - url: http://127.0.0.1:8000
       tags:
@@ -482,6 +582,7 @@ paths:
 #Data collecton tag  
   /objects/{object-id}/data-collection/{dci-id}/force-poll:
     post:
+      operationId: forecPollDci
       summary: Force poll DCI
       description: Request to delete object.     
       parameters: 
@@ -499,6 +600,17 @@ paths:
       responses:
         '200':
           description: OK
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       tags:
         - Data collection 
       servers:
@@ -510,6 +622,7 @@ paths:
 
   /alarms:
     post:
+      operationId: changeAlarmState
       summary: Change state of alarm
       description: Change state of alarm     
       parameters:       
@@ -542,12 +655,155 @@ paths:
       responses:
         '200':
           description: OK
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
       tags:
         - Alarms
       servers:
         - url: http://127.0.0.1:8000
     servers:
       - url: http://127.0.0.1:8000   
+  /alarms/{alarm-id}/comments:
+    get:
+      operationId: getAlarmComments
+      summary: Get all comments of given alarm
+      description: Get all comments of given alarm   
+      parameters:
+        - $ref: '#components/parameters/alarmId'
+      responses:
+        '200':
+          description: Will return list with all alarm comments
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                  "comments": [
+                      {
+                          "id": 1,
+                          "alarmId": 346802,
+                          "userId": 1,
+                          "userName": "admin",
+                          "lastChangeTime": 1677587409,
+                          "text": "comment text"
+                      }
+                  ]
+              }
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
+      tags:
+        - Alarms
+      servers:
+        - url: http://127.0.0.1:8000
+    post:
+      operationId: CreateCommentForAlarm
+      summary: Create new comment for alarm
+      description: Create new comment for alarm  
+      parameters:
+        - $ref: '#components/parameters/alarmId'
+      requestBody:
+        description: Request should contain JSON with text.
+        required: true
+        content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
+      tags:
+        - Alarms
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
+  /alarms/{alarm-id}/comments/{comment-id}:
+    get:
+      operationId: getAlarmComment
+      summary: Get exact alarm's comment
+      description: Will provide information about comment with given id form given alarm
+      parameters:
+        - $ref: '#components/parameters/alarmId'
+        - $ref: '#components/parameters/alarmCommentId'
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
+      tags:
+        - Alarms
+      servers:
+        - url: http://127.0.0.1:8000
+    delete:
+      operationId: deleteAlarmComment
+      summary: Delete alarm's comment
+      description: Will delete comment by id form given alarm
+      parameters:
+        - $ref: '#components/parameters/alarmId'
+        - $ref: '#components/parameters/alarmCommentId'
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Access denied 
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                {
+                    "description": "Access denied",
+                    "error": 2
+                }
+      tags:
+        - Alarms
+      servers:
+        - url: http://127.0.0.1:8000
+    servers:
+      - url: http://127.0.0.1:8000   
+
 
 #Component definition
 components:
@@ -572,6 +828,20 @@ components:
       in: path
       required: true
       description: DCI ID to forace poll
+      schema:
+        type: integer
+    alarmId:
+      name: alarm-id
+      in: path
+      required: true
+      description: Id of the alarm
+      schema:
+        type: integer
+    alarmCommentId:
+      name: comment-id
+      in: path
+      required: true
+      description: id of the alarm comment 
       schema:
         type: integer
   schemas:
