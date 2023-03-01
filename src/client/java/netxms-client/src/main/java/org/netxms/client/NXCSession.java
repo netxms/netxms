@@ -10746,14 +10746,17 @@ public class NXCSession
    {
       synchronized(serverConsoleConnectionCount)
       {
-         if (serverConsoleConnectionCount == 1)
+         if (serverConsoleConnectionCount > 0)
          {
-            final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_CONSOLE);
-            sendMessage(msg);
-            waitForRCC(msg.getMessageId());
-            serverConsoleConnected = false;
+            if (serverConsoleConnectionCount == 1)
+            {
+               final NXCPMessage msg = newMessage(NXCPCodes.CMD_CLOSE_CONSOLE);
+               sendMessage(msg);
+               waitForRCC(msg.getMessageId());
+               serverConsoleConnected = false;
+            }
+            serverConsoleConnectionCount--;
          }
-         serverConsoleConnectionCount--;
       }
    }
 
