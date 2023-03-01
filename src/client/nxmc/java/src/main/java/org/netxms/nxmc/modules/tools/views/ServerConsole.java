@@ -78,18 +78,12 @@ public class ServerConsole extends View
          @Override
          public void onConsoleOutput(String text)
          {
-            if (console.isDisposed())
-            {
-               session.removeConsoleListener(listener);
-            }
-            else if (connected)
-            {
+            if (connected && !console.isDisposed())
                outputStream.safeWrite(text.replaceAll("\n", "\r\n"));
-            }
          }
       };
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -99,24 +93,12 @@ public class ServerConsole extends View
       super.postClone(origin);
       ServerConsole view = (ServerConsole)origin;
       console.setText(view.console.getText());   
-      if (view.connected)
-      {
-         connect();
-      }
-      for (String s: view.commandInput.getItems())
+      for(String s : view.commandInput.getItems())
          commandInput.add(s);
       commandInput.select(commandInput.getItems().length - 1);
+      if (view.connected)
+         connect();
    }
-   
-   private void onConnectionChange(boolean connected)
-   {
-      this.connected = connected;
-      actionConnect.setEnabled(!connected);
-      actionDisconnect.setEnabled(connected);
-      commandInput.setEnabled(connected);
-   }
-   
-   
 
    /**
     * @see org.netxms.nxmc.base.views.View#postContentCreate()
@@ -127,6 +109,7 @@ public class ServerConsole extends View
       super.postContentCreate();
       commandInput.add("");
       commandInput.select(0);
+      outputStream.safeWrite("\r\n\r\n\u001b[34;1m*** Press ENTER to connect ***\u001b[0m\r\n");
    }
 
    /**
@@ -176,7 +159,7 @@ public class ServerConsole extends View
       });
 
       createActions();
-      onConnectionChange(false);
+      setConnectionState(false);
    }
 
    /**
@@ -223,13 +206,14 @@ public class ServerConsole extends View
       };
       addKeyBinding("M1+S", actionSave);
 
-      actionConnect = new Action(i18n.tr("&Connect"), ResourceManager.getImageDescriptor("icons/connect.png")) {
+      actionConnect = new Action(i18n.tr("Co&nnect"), ResourceManager.getImageDescriptor("icons/connect.png")) {
          @Override
          public void run()
          {
             connect();
          }
       };
+      addKeyBinding("ENTER", actionConnect);
 
       actionDisconnect = new Action(i18n.tr("&Disconnect"), ResourceManager.getImageDescriptor("icons/disconnect.png")) {
          @Override
@@ -238,6 +222,7 @@ public class ServerConsole extends View
             disconnect();
          }
       };
+      addKeyBinding("M1+D", actionDisconnect);
    }
 
    /**
@@ -273,30 +258,12 @@ public class ServerConsole extends View
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#refresh()
-    */
-   @Override
-   public void refresh()
-   {
-      //Do nothing
-   }
-   
-   /**
-    * @see org.netxms.nxmc.base.views.View#deactivate()
-    */
-   @Override
-   public void deactivate()
-   {
-      disconnect();
-      super.deactivate();
-   }
-
-   /**
     * @see org.netxms.nxmc.base.views.View#dispose()
     */
    @Override
    public void dispose()
    {
+      session.removeConsoleListener(listener);
       disconnect();
       super.dispose();
    }
@@ -325,11 +292,11 @@ public class ServerConsole extends View
                @Override
                public void run()
                {
-                  onConnectionChange(true);
+                  setConnectionState(true);
                   commandInput.setFocus();
                }
             });
-            outputStream.safeWrite("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
+            outputStream.safeWrite("\r\n\r\n\u001b[32;1m*** CONNECTED ***\u001b[0m\r\n\r\n\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m");
          }
 
          @Override
@@ -345,13 +312,17 @@ public class ServerConsole extends View
     */
    private void disconnect()
    {
-      onConnectionChange(false);
+      if (!connected)
+         return;
+
+      setConnectionState(false);
       new Job(i18n.tr("Disconnecting from server debug console"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.closeConsole();
             outputStream.safeWrite("\r\n\u001b[31;1m*** DISCONNECTED ***\u001b[0m\r\n");
+            outputStream.safeWrite("\r\n\r\n\u001b[34;1m*** Press ENTER to connect ***\u001b[0m\r\n");
          }
 
          @Override
@@ -360,6 +331,19 @@ public class ServerConsole extends View
             return i18n.tr("Cannot disconnect from server debug console");
          }
       }.start();
+   }
+
+   /**
+    * Set new connection state.
+    *
+    * @param connected new connection state
+    */
+   private void setConnectionState(boolean connected)
+   {
+      this.connected = connected;
+      actionConnect.setEnabled(!connected);
+      actionDisconnect.setEnabled(connected);
+      commandInput.setEnabled(connected);
    }
 
    /**
@@ -392,7 +376,7 @@ public class ServerConsole extends View
                      @Override
                      public void run()
                      {
-                        onConnectionChange(false);
+                        setConnectionState(false);
                      }
                   });
                   session.closeConsole();
