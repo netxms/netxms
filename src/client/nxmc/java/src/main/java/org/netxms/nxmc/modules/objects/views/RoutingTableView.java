@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RoutingTableComparator;
@@ -54,18 +53,18 @@ import org.xnap.commons.i18n.I18n;
 public class RoutingTableView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(RoutingTableView.class);
-	
+
 	public static final int COLUMN_DESTINATION = 0;
 	public static final int COLUMN_NEXT_HOP = 1;
 	public static final int COLUMN_INTERFACE = 2;
 	public static final int COLUMN_TYPE = 3;
-	
+
 	private NXCSession session;
-	private SortableTableViewer viewer;
+   private SortableTableViewer viewer;
+   private boolean refreshPending = true;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
    private Action actionCopyRowToClipboard;
-   
 
    /**
     * Create "Ports" view
@@ -76,16 +75,6 @@ public class RoutingTableView extends ObjectView
       session = Registry.getSession();
    }
    
-   /**
-    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
-    */
-   @Override
-   protected void postClone(View view)
-   {
-      super.postClone(view);
-      refresh();
-   }
-
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
     */
@@ -116,7 +105,7 @@ public class RoutingTableView extends ObjectView
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new RoutingTableLabelProvider());
 		viewer.setComparator(new RoutingTableComparator());
-		
+
 		WidgetHelper.restoreTableViewerSettings(viewer, "RoutingTable"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -194,7 +183,8 @@ public class RoutingTableView extends ObjectView
    public void refresh()
    {
       final String objectName = session.getObjectName(getObjectId());
-	   new Job(i18n.tr("Read routing table"), this) {
+      clearMessages();
+      new Job(i18n.tr("Reading routing table"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -207,7 +197,7 @@ public class RoutingTableView extends ObjectView
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -217,6 +207,20 @@ public class RoutingTableView extends ObjectView
 	}
 
    /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
+   @Override
+   public void activate()
+   {
+      super.activate();
+      if (refreshPending)
+      {
+         refreshPending = false;
+         refresh();
+      }
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -224,6 +228,11 @@ public class RoutingTableView extends ObjectView
    {
       viewer.setInput(new Route[0]);
       if (object != null)
-         refresh();
+      {
+         if (isActive())
+            refresh();
+         else
+            refreshPending = true;
+      }
    }
 }

@@ -27,14 +27,11 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.netxms.base.MacAddress;
 import org.netxms.base.MacAddressFormatException;
 import org.netxms.client.NXCSession;
@@ -51,24 +48,22 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Search results for MAC address search
+ * MAC address search view
  */
-public class FindByMacAddressView extends View
+public class MACAddressSearchView extends View
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(FindByMacAddressView.class);
+   private final static I18n i18n = LocalizationHelper.getI18n(MACAddressSearchView.class);
    
-	private static final String TABLE_CONFIG_PREFIX = "FindByMacAddressView";
-
-	private SearchResult serachResultWidget;
+	private SearchResult searchResultWidget;
    private Button startButton;
    private LabeledText queryEditor; 
 
    /**
     * Create find by MAC address view
     */
-   public FindByMacAddressView()
+   public MACAddressSearchView()
    {
-      super(i18n.tr("MAC Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "FindByMacAddress", false);
+      super(i18n.tr("MAC Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "MACAddressSearch", false);
    }
 
    /**
@@ -77,9 +72,9 @@ public class FindByMacAddressView extends View
    protected void postClone(View origin)
    {    
       super.postClone(origin);
-      FindByMacAddressView view = (FindByMacAddressView)origin;
+      MACAddressSearchView view = (MACAddressSearchView)origin;
       queryEditor.setText(view.queryEditor.getText());
-      serachResultWidget.copyResults(view.serachResultWidget);
+      searchResultWidget.copyResults(view.searchResultWidget);
    }   
 
    /**
@@ -88,18 +83,17 @@ public class FindByMacAddressView extends View
    @Override
    protected void createContent(Composite parent)
    {      
-      parent.setLayout(new FormLayout());
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      parent.setLayout(layout);
 
       final Composite searchBar = new Composite(parent, SWT.NONE);
       GridLayout gridLayout = new GridLayout();
       gridLayout.numColumns = 2;
       searchBar.setLayout(gridLayout);
-
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      searchBar.setLayoutData(fd);
+      searchBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
       queryEditor = new LabeledText(searchBar, SWT.NONE);
       queryEditor.setLabel("Search string");
@@ -133,16 +127,10 @@ public class FindByMacAddressView extends View
       });
       startButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
 
-      final Composite mainContent = new Composite(parent, SWT.NONE);
-      mainContent.setLayout(new FillLayout());
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(searchBar);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      mainContent.setLayoutData(fd);
+      new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
-      serachResultWidget = new SearchResult(this, mainContent, SWT.NONE, TABLE_CONFIG_PREFIX);
+      searchResultWidget = new SearchResult(this, parent, SWT.NONE, getBaseId());
+      searchResultWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 	}
 
    /**
@@ -151,7 +139,7 @@ public class FindByMacAddressView extends View
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      serachResultWidget.fillLocalToolBar(manager);
+      searchResultWidget.fillLocalToolBar(manager);
    }
 
    /**
@@ -160,19 +148,18 @@ public class FindByMacAddressView extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      serachResultWidget.fillLocalPullDown(manager);
+      searchResultWidget.fillLocalPullDown(manager);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
-      if (!serachResultWidget.isDisposed())
-	      queryEditor.setFocus();
+      queryEditor.setFocus();
 	}
-   
+
    /**
     * Search for MAC address
     */
@@ -186,7 +173,7 @@ public class FindByMacAddressView extends View
       }
       catch(MacAddressFormatException e)
       {
-         MessageDialogHelper.openError(serachResultWidget.getShell(), i18n.tr("Error"), i18n.tr("MAC address entered is incorrect. Please enter correct MAC address."));
+         MessageDialogHelper.openError(searchResultWidget.getShell(), i18n.tr("Error"), i18n.tr("MAC address entered is incorrect. Please enter correct MAC address."));
          return;
       }
 
@@ -201,7 +188,7 @@ public class FindByMacAddressView extends View
                @Override
                public void run()
                {
-                  serachResultWidget.showConnection(cp);
+                  searchResultWidget.showConnection(cp);
                   startButton.setEnabled(true);
                }
             });

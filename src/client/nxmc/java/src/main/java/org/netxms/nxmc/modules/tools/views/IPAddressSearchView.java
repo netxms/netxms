@@ -28,14 +28,11 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.nxmc.PreferenceStore;
@@ -52,16 +49,13 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Search results for host connection searches
- *
+ * IP address search view
  */
-public class FindByIpAddressView extends View
+public class IPAddressSearchView extends View
 {
-   private final static I18n i18n = LocalizationHelper.getI18n(FindByIpAddressView.class);
-   
-	private static final String TABLE_CONFIG_PREFIX = "FindByIpAddressView";
-	
-	private SearchResult serachResultWidget;
+   private final static I18n i18n = LocalizationHelper.getI18n(IPAddressSearchView.class);
+
+	private SearchResult searchResultWidget;
    private Button startButton;
    private LabeledText queryEditor; 
    private ZoneSelector zoneSelector;
@@ -70,9 +64,9 @@ public class FindByIpAddressView extends View
    /**
     * Create find by IP address view
     */
-   public FindByIpAddressView()
+   public IPAddressSearchView()
    {
-      super(i18n.tr("IP Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "FindByIpAddress", false);
+      super(i18n.tr("IP Address Search"), ResourceManager.getImageDescriptor("icons/tool-views/search_history.png"), "IPAddressSearch", false);
    }
 
    /**
@@ -81,10 +75,10 @@ public class FindByIpAddressView extends View
    protected void postClone(View origin)
    {    
       super.postClone(origin);
-      FindByIpAddressView view = (FindByIpAddressView)origin;
+      IPAddressSearchView view = (IPAddressSearchView)origin;
       zoneSelector.setZoneUIN(view.zoneSelector.getZoneUIN());
       queryEditor.setText(view.queryEditor.getText());
-      serachResultWidget.copyResults(view.serachResultWidget);
+      searchResultWidget.copyResults(view.searchResultWidget);
    }   
 
    /**
@@ -92,18 +86,25 @@ public class FindByIpAddressView extends View
     */
    @Override
    protected void createContent(Composite parent)
-   {     
-	   parent.setLayout(new FormLayout());
+   {
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.verticalSpacing = 0;
+      parent.setLayout(layout);
+
+      final Composite searchBar = new Composite(parent, SWT.NONE);
+      GridLayout gridLayout = new GridLayout();
+      gridLayout.numColumns = 2;
+      searchBar.setLayout(gridLayout);
+      searchBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
       zoningEnabled = Registry.getSession().isZoningEnabled();
       if (zoningEnabled)
       {
-         zoneSelector = new ZoneSelector(parent, SWT.NONE, false);
-         zoneSelector.setLabel(i18n.tr("Zone"));         
-         FormData fd = new FormData();
-         fd.left = new FormAttachment(0, 0);
-         fd.top = new FormAttachment(0, 0);
-         fd.right = new FormAttachment(100, 0);
-         zoneSelector.setLayoutData(fd);
+         zoneSelector = new ZoneSelector(searchBar, SWT.NONE, false);
+         zoneSelector.setLabel(i18n.tr("Zone"));
+         zoneSelector.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
          PreferenceStore settings = PreferenceStore.getInstance();
          try
@@ -117,18 +118,7 @@ public class FindByIpAddressView extends View
             zoneSelector.setZoneUIN(0);
          }
       }
-      
-      final Composite searchBar = new Composite(parent, SWT.NONE);
-      GridLayout gridLayout = new GridLayout();
-      gridLayout.numColumns = 2;
-      searchBar.setLayout(gridLayout);
-      
-      FormData fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = zoningEnabled ? new FormAttachment(zoneSelector) : new FormAttachment(0, 0);
-      fd.right = new FormAttachment(100, 0);
-      searchBar.setLayoutData(fd);
-      
+
       queryEditor = new LabeledText(searchBar, SWT.NONE);
       queryEditor.setLabel("Search string");
       queryEditor.getTextControl().addKeyListener(new KeyListener() {
@@ -142,7 +132,7 @@ public class FindByIpAddressView extends View
          {
             if (e.stateMask == 0 && e.keyCode == 13)
             {
-               search();
+               doSearch();
             }
          }
       });
@@ -156,21 +146,15 @@ public class FindByIpAddressView extends View
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            search();
+            doSearch();
          }
       });
       startButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
-      
-      final Composite mainContent = new Composite(parent, SWT.NONE);
-      mainContent.setLayout(new FillLayout());
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(searchBar);
-      fd.right = new FormAttachment(100, 0);
-      fd.bottom = new FormAttachment(100, 0);
-      mainContent.setLayoutData(fd);
-      
-	   serachResultWidget = new SearchResult(this, mainContent, SWT.NONE, TABLE_CONFIG_PREFIX);
+
+      new Label(parent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+
+      searchResultWidget = new SearchResult(this, parent, SWT.NONE, getBaseId());
+      searchResultWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
 	}
 
    /**
@@ -179,7 +163,7 @@ public class FindByIpAddressView extends View
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      serachResultWidget.fillLocalToolBar(manager);
+      searchResultWidget.fillLocalToolBar(manager);
    }
 
    /**
@@ -188,20 +172,22 @@ public class FindByIpAddressView extends View
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      serachResultWidget.fillLocalPullDown(manager);
+      searchResultWidget.fillLocalPullDown(manager);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
-      if (!serachResultWidget.isDisposed())
-         queryEditor.setFocus();
+      queryEditor.setFocus();
 	}
-	
-	void search()
+
+   /**
+    * Do address search
+    */
+   private void doSearch()
 	{
 	   final InetAddress ipAddress;
       try
@@ -210,7 +196,7 @@ public class FindByIpAddressView extends View
       }
       catch(UnknownHostException e)
       {
-         MessageDialogHelper.openWarning(serachResultWidget.getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid IP address!"));
+         MessageDialogHelper.openWarning(searchResultWidget.getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid IP address!"));
          return;
       }
 
@@ -232,7 +218,7 @@ public class FindByIpAddressView extends View
                @Override
                public void run()
                {
-                  serachResultWidget.showConnection(cp);
+                  searchResultWidget.showConnection(cp);
                   startButton.setEnabled(true);
                }
             });

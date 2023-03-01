@@ -62,20 +62,28 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 	private boolean scrollLock = false;
 	private Action actionClear;
 	private Action actionScrollLock;
+   private ServerConsoleListener consoleListener;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
+      consoleListener = new ServerConsoleListener() {
+         @Override
+         public void onConsoleOutput(String text)
+         {
+            writeToTerminal(text.replaceAll("\n", "\r\n")); //$NON-NLS-1$ //$NON-NLS-2$
+         }
+      };
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
@@ -86,7 +94,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		terminal.setConnector(connector);
 		terminal.connectTerminal();
 		terminal.setInvertedColors(true);
-		
+
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
@@ -96,7 +104,7 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		else
 			connectToServer();
 	}
-	
+
 	/**
 	 * Connect to server
 	 */
@@ -106,7 +114,6 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 				session.openConsole();
 				setConnected();
 			}
@@ -125,21 +132,15 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			}
 		}.start();
 	}
-	
+
 	/**
 	 * Inform view that server console is connected
 	 */
 	private void setConnected()
 	{
 		writeToTerminal("\u001b[1mNetXMS Server Remote Console V" + session.getServerVersion() + " Ready\r\n\r\n\u001b[0m"); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		session.addConsoleListener(new ServerConsoleListener() {
-			@Override
-			public void onConsoleOutput(String text)
-			{
-				writeToTerminal(text.replaceAll("\n", "\r\n")); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
+
+      session.addConsoleListener(consoleListener);
 
 		// Read console input and send to server
 		Thread inputReader = new Thread() {
@@ -195,16 +196,16 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 			// should never happen!
 			e.printStackTrace();
 		}
-		catch(IOException e)
+      catch(IOException e)
 		{
 			// should never happen!
 			e.printStackTrace();
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
@@ -303,28 +304,29 @@ public class ServerConsole extends ViewPart implements ITerminalListener
 		manager.add(actionScrollLock);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.tm.internal.terminal.control.ITerminalListener#setState(org.eclipse.tm.internal.terminal.provisional.api.TerminalState)
-	 */
+   /**
+    * @see org.eclipse.tm.internal.terminal.control.ITerminalListener#setState(org.eclipse.tm.internal.terminal.provisional.api.TerminalState)
+    */
 	@Override
 	public void setState(TerminalState state)
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.tm.internal.terminal.control.ITerminalListener#setTerminalTitle(java.lang.String)
-	 */
+   /**
+    * @see org.eclipse.tm.internal.terminal.control.ITerminalListener#setTerminalTitle(java.lang.String)
+    */
 	@Override
 	public void setTerminalTitle(String title)
 	{
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
+      session.removeConsoleListener(consoleListener);
 		terminal.disposeTerminal();
 		super.dispose();
 	}
