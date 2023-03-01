@@ -161,7 +161,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
 
       agentConnection->setCommandTimeout(g_agentCommandTimeout);
       uint32_t rcc;
-      if (!agentConnection->connect(g_pServerKey, &rcc))
+      if (!agentConnection->connect(g_serverKey, &rcc))
       {
          // If there are authentication problem, try default shared secret
          if ((rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
@@ -188,7 +188,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, int32_t zoneUIN, bool ful
             for (int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
             {
                agentConnection->setSharedSecret(secrets.get(i));
-               if (agentConnection->connect(g_pServerKey, &rcc))
+               if (agentConnection->connect(g_serverKey, &rcc))
                {
                   break;
                }

@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="crypto.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="nxcp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

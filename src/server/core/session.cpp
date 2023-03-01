@@ -492,7 +492,7 @@ MessageReceiverResult ClientSession::readMessage(bool allowSocketRead)
       {
          debugPrintf(6, _T("Received message CMD_SESSION_KEY"));
          NXCPEncryptionContext *encryptionContext = nullptr;
-         m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_pServerKey, NXCP_VERSION);
+         m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_serverKey, NXCP_VERSION);
          m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
          m_messageReceiver->setEncryptionContext(m_encryptionContext);
          m_condEncryptionSetup.set();
@@ -8084,7 +8084,7 @@ void ClientSession::setupEncryption(const NXCPMessage& request)
    m_encryptionResult = RCC_TIMEOUT;
 
    // Send request for session key
-	PrepareKeyRequestMsg(&msg, g_pServerKey, request.getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
+	PrepareKeyRequestMsg(&msg, g_serverKey, request.getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
 	msg.setId(request.getId());
    sendMessage(msg);
    msg.deleteAllFields();

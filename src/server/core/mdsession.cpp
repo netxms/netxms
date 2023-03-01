@@ -138,7 +138,7 @@ void MobileDeviceSession::readThread()
       if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_encryptionRqId))
       {
          NXCPEncryptionContext *encryptionContext = nullptr;
-         m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_pServerKey, NXCP_VERSION);
+         m_encryptionResult = SetupEncryptionContext(msg, &encryptionContext, nullptr, g_serverKey, NXCP_VERSION);
          m_encryptionContext = shared_ptr<NXCPEncryptionContext>(encryptionContext);
          receiver.setEncryptionContext(m_encryptionContext);
          m_condEncryptionSetup.set();
@@ -456,7 +456,7 @@ void MobileDeviceSession::setupEncryption(NXCPMessage *request)
    m_encryptionResult = RCC_TIMEOUT;
 
    // Send request for session key
-	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsUInt16(VID_USE_X509_KEY_FORMAT) != 0);
+	PrepareKeyRequestMsg(&msg, g_serverKey, request->getFieldAsUInt16(VID_USE_X509_KEY_FORMAT) != 0);
 	msg.setId(request->getId());
    sendMessage(msg);
    msg.deleteAllFields();

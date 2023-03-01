@@ -163,7 +163,7 @@ NXCORE_EXPORTABLE_VAR(TCHAR g_netxmsdLibDir[MAX_PATH]) = _T("");
 NXCORE_EXPORTABLE_VAR(int g_dbSyntax) = DB_SYNTAX_UNKNOWN;
 NXCORE_EXPORTABLE_VAR(UINT32 g_processAffinityMask) = DEFAULT_AFFINITY_MASK;
 uint64_t g_serverId = 0;
-RSA_KEY g_pServerKey = nullptr;
+RSA_KEY g_serverKey = nullptr;
 time_t g_serverStartTime = 0;
 uint32_t g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 uint32_t g_agentRestartWaitTime = 0;   // Wait time for agent restart in seconds
@@ -558,12 +558,12 @@ static bool InitCryptography()
 #endif
 
    bool success = false;
-   if (LoadServerCertificate(&g_pServerKey))
+   if (LoadServerCertificate(&g_serverKey))
    {
       nxlog_debug_tag(_T("crypto"), 1, _T("Server certificate loaded"));
    }
    LoadInternalCACertificate();
-   if (g_pServerKey != nullptr)
+   if (g_serverKey != nullptr)
    {
       nxlog_debug_tag(_T("crypto"), 1, _T("Using server certificate key"));
       success = true;
@@ -573,14 +573,14 @@ static bool InitCryptography()
       TCHAR szKeyFile[MAX_PATH];
       _tcscpy(szKeyFile, g_netxmsdDataDir);
       _tcscat(szKeyFile, DFILE_KEYS);
-      g_pServerKey = RSALoadKey(szKeyFile);
-      if (g_pServerKey == nullptr)
+      g_serverKey = RSALoadKey(szKeyFile);
+      if (g_serverKey == nullptr)
       {
          nxlog_debug_tag(_T("crypto"), 1, _T("Generating RSA key pair..."));
-         g_pServerKey = RSAGenerateKey(NETXMS_RSA_KEYLEN);
-         if (g_pServerKey != nullptr)
+         g_serverKey = RSAGenerateKey(NETXMS_RSA_KEYLEN);
+         if (g_serverKey != nullptr)
          {
-            if (RSASaveKey(g_pServerKey, szKeyFile))
+            if (RSASaveKey(g_serverKey, szKeyFile))
             {
                success = true;
             }

@@ -36,7 +36,7 @@ Action::Action(const TCHAR *name)
    type = ServerActionType::LOCAL_COMMAND;
    emailSubject[0] = 0;
    rcptAddr[0] = 0;
-   data = NULL;
+   data = nullptr;
    channelName[0] = 0;
 }
 
@@ -244,7 +244,7 @@ static bool ExecuteRemoteAction(const TCHAR *pszTarget, const TCHAR *pszAction)
          // Target node is not in our database, try default communication settings
          conn = make_shared<AgentConnection>(addr, AGENT_LISTEN_PORT, nullptr);
          conn->setCommandTimeout(g_agentCommandTimeout);
-         if (!conn->connect(g_pServerKey))
+         if (!conn->connect(g_serverKey))
             return false;
       }
    }

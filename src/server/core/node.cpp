@@ -4753,7 +4753,7 @@ bool Node::confPollAgent(UINT32 rqId)
 
    // Try to connect to agent
    uint32_t rcc;
-   if (!pAgentConn->connect(g_pServerKey, &rcc))
+   if (!pAgentConn->connect(g_serverKey, &rcc))
    {
       //if given port is wrong, try to check all port list
       if (rcc == ERR_CONNECT_FAILED)
@@ -4765,7 +4765,7 @@ bool Node::confPollAgent(UINT32 rqId)
             uint16_t port = knownPorts.get(i);
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPollAgent(%s): re-checking connection on port %d"), m_name, port);
             pAgentConn->setPort(port);
-            bool portSuccess = pAgentConn->connect(g_pServerKey, &rcc);
+            bool portSuccess = pAgentConn->connect(g_serverKey, &rcc);
             if (portSuccess || (rcc == ERR_AUTH_REQUIRED) || (rcc == ERR_AUTH_FAILED))
             {
                m_agentPort = port;
@@ -4806,7 +4806,7 @@ bool Node::confPollAgent(UINT32 rqId)
          for(int i = 0; (i < secrets.size()) && !IsShutdownInProgress(); i++)
          {
             pAgentConn->setSharedSecret(secrets.get(i));
-            if (pAgentConn->connect(g_pServerKey, &rcc))
+            if (pAgentConn->connect(g_serverKey, &rcc))
             {
                _tcslcpy(m_agentSecret, secrets.get(i), MAX_SECRET_LENGTH);
                nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
@@ -6398,7 +6398,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       setAgentProxy(m_agentConnection.get());
    m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
    DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   bool success = m_agentConnection->connect(g_pServerKey, error, socketError, g_serverId);
+   bool success = m_agentConnection->connect(g_serverKey, error, socketError, g_serverId);
    if (success)
    {
       uint32_t rcc = m_agentConnection->setServerId(g_serverId);
@@ -8795,7 +8795,7 @@ shared_ptr<AgentConnectionEx> Node::createAgentConnection(bool sendServerId)
       }
    }
    conn->setCommandTimeout(g_agentCommandTimeout);
-   if (!conn->connect(g_pServerKey, nullptr, nullptr, sendServerId ? g_serverId : 0))
+   if (!conn->connect(g_serverKey, nullptr, nullptr, sendServerId ? g_serverId : 0))
    {
       conn.reset();
    }

@@ -245,9 +245,9 @@ bool LIBNETXMS_EXPORTABLE RSASaveKey(RSA_KEY key, const TCHAR *keyFile)
 }
 
 /**
- * Serialize RSA key
+ * Serialize RSA public key
  */
-BYTE LIBNETXMS_EXPORTABLE *RSASerializeKey(RSA_KEY key, bool useX509Format, size_t *size)
+BYTE LIBNETXMS_EXPORTABLE *RSASerializePublicKey(RSA_KEY key, bool useX509Format, size_t *size)
 {
    BYTE *serializedKey;
    size_t len;
@@ -471,14 +471,14 @@ uint32_t LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg, NXCPEncry
             {
                (*ppResponse)->setField(VID_RCC, RCC_SUCCESS);
 
-               size = RSAPublicEncrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+               size = RSAPublicEncrypt((*ppCtx)->getSessionKey(), (*ppCtx)->getKeyLength(), ucKeyBuffer, sizeof(ucKeyBuffer), pServerKey, RSA_PKCS1_OAEP_PADDING);
                (*ppResponse)->setField(VID_SESSION_KEY, ucKeyBuffer, (UINT32)size);
                (*ppResponse)->setField(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
 
                int ivLength = EVP_CIPHER_iv_length(s_ciphers[(*ppCtx)->getCipher()]());
                if ((ivLength <= 0) || (ivLength > EVP_MAX_IV_LENGTH))
                   ivLength = EVP_MAX_IV_LENGTH;
-               size = RSAPublicEncrypt(ivLength, (*ppCtx)->getIV(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+               size = RSAPublicEncrypt((*ppCtx)->getIV(), ivLength, ucKeyBuffer, sizeof(ucKeyBuffer), pServerKey, RSA_PKCS1_OAEP_PADDING);
                (*ppResponse)->setField(VID_SESSION_IV, ucKeyBuffer, (UINT32)size);
                (*ppResponse)->setField(VID_IV_LENGTH, (WORD)ivLength);
 
@@ -540,7 +540,7 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *msg, RSA_KEY serverK
    msg->setCode(CMD_REQUEST_SESSION_KEY);
    msg->setField(VID_SUPPORTED_ENCRYPTION, s_supportedCiphers);
    size_t keyLen;
-   BYTE *keyData = RSASerializeKey(serverKey, useX509Format, &keyLen);
+   BYTE *keyData = RSASerializePublicKey(serverKey, useX509Format, &keyLen);
 	msg->setField(VID_PUBLIC_KEY, keyData, keyLen);
    MemFree(keyData);
 #endif
@@ -698,7 +698,7 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY p
 
          // Decrypt session key
          int keySize = (int)msg->getFieldAsBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
-         nSize = RSAPrivateDecrypt(keySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
+         nSize = RSAPrivateDecrypt(ucKeyBuffer, keySize, ucSessionKey, sizeof(ucSessionKey), privateKey, RSA_PKCS1_OAEP_PADDING);
          if (nSize == ctx->m_keyLength)
          {
             memcpy(ctx->m_sessionKey, ucSessionKey, nSize);
@@ -708,9 +708,8 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY p
             if (nIVLen == 0)  // Versions prior to 0.2.13 don't send IV length, assume 16
                nIVLen = 16;
             keySize = (int)msg->getFieldAsBinary(VID_SESSION_IV, ucKeyBuffer, KEY_BUFFER_SIZE);
-            nSize = RSAPrivateDecrypt(keySize, ucKeyBuffer, ucSessionKey, privateKey, RSA_PKCS1_OAEP_PADDING);
-            if ((nSize == nIVLen) &&
-                (nIVLen <= EVP_CIPHER_iv_length(s_ciphers[ctx->m_cipher]())))
+            nSize = RSAPrivateDecrypt(ucKeyBuffer, keySize, ucSessionKey, sizeof(ucSessionKey), privateKey, RSA_PKCS1_OAEP_PADDING);
+            if ((nSize == nIVLen) && (nIVLen <= EVP_CIPHER_iv_length(s_ciphers[ctx->m_cipher]())))
             {
                memcpy(ctx->m_iv, ucSessionKey, std::min(EVP_MAX_IV_LENGTH, nIVLen));
             }

@@ -173,7 +173,7 @@ RSA_KEY LIBNETXMS_EXPORTABLE RSALoadKey(const TCHAR *keyFile);
 bool LIBNETXMS_EXPORTABLE RSASaveKey(RSA_KEY key, const TCHAR *keyFile);
 RSA_KEY LIBNETXMS_EXPORTABLE RSAKeyFromData(const BYTE *data, size_t size, bool withPrivate);
 RSA_KEY LIBNETXMS_EXPORTABLE RSAGenerateKey(int bits);
-BYTE LIBNETXMS_EXPORTABLE *RSASerializeKey(RSA_KEY key, bool useX509Format, size_t *size);
+BYTE LIBNETXMS_EXPORTABLE *RSASerializePublicKey(RSA_KEY key, bool useX509Format, size_t *size);
 
 /**
  * Destroy RSA key
@@ -190,36 +190,36 @@ static inline void RSAFree(RSA_KEY key)
 /**
  * Encrypt data block with RSA public key
  */
-static inline ssize_t RSAPublicEncrypt(int flen, const BYTE *from, BYTE *to, RSA_KEY rsa, int padding)
+static inline ssize_t RSAPublicEncrypt(const void *in, size_t inlen, BYTE *out, size_t outlen, RSA_KEY rsa, int padding)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(rsa, nullptr);
    EVP_PKEY_encrypt_init(ctx);
    EVP_PKEY_CTX_set_rsa_padding(ctx, padding);
-   size_t outlen;
-   int rc = EVP_PKEY_encrypt(ctx, to, &outlen, from, flen);
+   size_t bytes = outlen;
+   int rc = EVP_PKEY_encrypt(ctx, out, &bytes, static_cast<const BYTE*>(in), inlen);
    EVP_PKEY_CTX_free(ctx);
-   return (rc > 0) ? outlen : -1;
+   return (rc > 0) ? bytes : -1;
 #else
-   return RSA_public_encrypt(flen, from, to, rsa, padding);
+   return RSA_public_encrypt(static_cast<int>(inlen), static_cast<const BYTE*>(in), out, rsa, padding);
 #endif
 }
 
 /**
  * Decrypt data block with RSA private key
  */
-static inline ssize_t RSAPrivateDecrypt(int flen, const BYTE *from, BYTE *to, RSA_KEY rsa, int padding)
+static inline ssize_t RSAPrivateDecrypt(const BYTE *in, size_t inlen, void *out, size_t outlen, RSA_KEY rsa, int padding)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(rsa, nullptr);
    EVP_PKEY_decrypt_init(ctx);
    EVP_PKEY_CTX_set_rsa_padding(ctx, padding);
-   size_t outlen;
-   int rc = EVP_PKEY_decrypt(ctx, to, &outlen, from, flen);
+   size_t bytes = outlen;
+   int rc = EVP_PKEY_decrypt(ctx, static_cast<BYTE*>(out), &bytes, in, inlen);
    EVP_PKEY_CTX_free(ctx);
-   return (rc > 0) ? outlen : -1;
+   return (rc > 0) ? bytes : -1;
 #else
-   return RSA_private_decrypt(flen, from, to, rsa, padding);
+   return RSA_private_decrypt(static_cast<int>(inlen), in, static_cast<BYTE*>(out), rsa, padding);
 #endif
 }
 
