@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.tools;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.tools.views.FindByMacAddressView;
+import org.netxms.nxmc.modules.tools.views.MACAddressSearchView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ToolDescriptor;
 import org.xnap.commons.i18n.I18n;
@@ -57,6 +57,6 @@ public class FindByMacAddressDescriptor implements ToolDescriptor
    @Override
    public View createView()
    {
-      return new FindByMacAddressView();
+      return new MACAddressSearchView();
    }
 }

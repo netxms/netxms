@@ -108,11 +108,11 @@ public class SearchResult extends Composite
             WidgetHelper.saveTableViewerSettings(viewer, configPrefix);
          }
       });
-      
+
       createActions();
       createPopupMenu();
    }
-   
+
    /**
     * Create actions
     */

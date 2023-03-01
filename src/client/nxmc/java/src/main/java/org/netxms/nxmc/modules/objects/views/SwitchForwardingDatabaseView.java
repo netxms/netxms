@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
@@ -60,8 +61,9 @@ public class SwitchForwardingDatabaseView extends ObjectView
    public static final int COLUMN_VLAN = 4;
 	public static final int COLUMN_NODE = 5;
    public static final int COLUMN_TYPE = 6;
-	
+
 	private SortableTableViewer viewer;
+   private boolean refreshPending = true;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
    private Action actionCopyRowToClipboard;
@@ -160,7 +162,6 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	 */
 	private void createPopupMenu()
 	{
-		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
@@ -170,7 +171,6 @@ public class SwitchForwardingDatabaseView extends ObjectView
 			}
 		});
 
-		// Create menu.
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
 	}
@@ -186,6 +186,24 @@ public class SwitchForwardingDatabaseView extends ObjectView
       manager.add(actionExportToCsv);
       manager.add(actionExportAllToCsv);
 	}
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionExportAllToCsv);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionExportAllToCsv);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#refresh()
@@ -220,6 +238,20 @@ public class SwitchForwardingDatabaseView extends ObjectView
 	}
 
    /**
+    * @see org.netxms.nxmc.base.views.View#activate()
+    */
+   @Override
+   public void activate()
+   {
+      super.activate();
+      if (refreshPending)
+      {
+         refreshPending = false;
+         refresh();
+      }
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -227,5 +259,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
    {
       if (isActive())
          refresh();
+      else
+         refreshPending = true;
    }
 }

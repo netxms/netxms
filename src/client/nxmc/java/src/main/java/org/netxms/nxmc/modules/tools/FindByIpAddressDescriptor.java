@@ -21,7 +21,7 @@ package org.netxms.nxmc.modules.tools;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.tools.views.FindByIpAddressView;
+import org.netxms.nxmc.modules.tools.views.IPAddressSearchView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ToolDescriptor;
 import org.xnap.commons.i18n.I18n;
@@ -57,6 +57,6 @@ public class FindByIpAddressDescriptor implements ToolDescriptor
    @Override
    public View createView()
    {
-      return new FindByIpAddressView();
+      return new IPAddressSearchView();
    }
 }
