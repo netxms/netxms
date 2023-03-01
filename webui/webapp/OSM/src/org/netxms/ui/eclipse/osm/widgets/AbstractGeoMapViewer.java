@@ -41,7 +41,6 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
@@ -543,8 +542,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
     * @param verticalOffset offset from control's top border
     */
    protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH, int verticalOffset);
-	 */
-	protected abstract void drawContent(GC gc, GeoLocation currentLocation, int imgW, int imgH);
 
    /**
     * @see org.netxms.ui.eclipse.osm.GeoLocationCacheListener#geoLocationCacheChanged(org.netxms.client.objects.AbstractObject,
@@ -904,8 +901,8 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
                }
                finally
                {
-                  display.syncExec(new Runnable()
-                  {
+                  display.syncExec(new Runnable() {
+                     @Override
                      public void run()
                      {
                         close();
