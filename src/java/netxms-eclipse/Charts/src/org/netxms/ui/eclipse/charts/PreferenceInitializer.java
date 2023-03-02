@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,22 +37,22 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	   IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 	   
 	   ps.setDefault("Chart.Colors.Background", "255,255,255"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.0", "64,105,156"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.1", "158,65,62"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.2", "127,154,72"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.3", "105,81,133"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.4", "60,141,163"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.5", "204,123,56"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.6", "79,129,189"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.7", "192,80,77"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.8", "155,187,89"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.9", "128,100,162"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.10", "75,172,198"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.11", "247,150,70"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.12", "170,186,215"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.13", "217,170,169"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.14", "198,214,172"); //$NON-NLS-1$ //$NON-NLS-2$
-	   ps.setDefault("Chart.Colors.Data.15", "186,176,201"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.0", "51,160,44"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.1", "31,120,180"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.2", "255,127,0"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.3", "227,26,28"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.4", "106,61,154"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.5", "166,206,227"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.6", "178,223,138"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.7", "251,154,153"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.8", "253,191,111"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.9", "202,178,214"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.10", "177,89,40"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.11", "27,158,119"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.12", "217,95,2"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.13", "117,112,179"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.14", "230,171,2"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Data.15", "102,166,30"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.DialNeedle", "51,78,113"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.DialNeedlePin", "239,228,176"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.DialScale", "0,0,0"); //$NON-NLS-1$ //$NON-NLS-2$
