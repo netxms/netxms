@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
+import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.ObjectFilter;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -169,7 +169,7 @@ public class RelatedObjectSelectionDialog extends Dialog
       objectList = new TableViewer(listArea, SWT.FULL_SELECTION | SWT.MULTI);
 		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());
-      objectList.setLabelProvider(new BaseObjectLabelProvider());
+      objectList.setLabelProvider(new DecoratingObjectLabelProvider());
 		objectList.setComparator(new ViewerComparator());
       filter = new ObjectFilter(sourceObjects, classFilter);
 		objectList.addFilter(filter);

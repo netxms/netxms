@@ -288,7 +288,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionApply = new Action(i18n.tr("&Apply")) {
+      actionApply = new Action(i18n.tr("&Apply to...")) {
          @Override
          public void run()
          {
@@ -296,7 +296,7 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionRemove = new Action(i18n.tr("&Remove...")) {
+      actionRemove = new Action(i18n.tr("&Remove from...")) {
          @Override
          public void run()
          {

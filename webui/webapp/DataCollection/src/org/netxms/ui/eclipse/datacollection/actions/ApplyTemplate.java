@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */package org.netxms.ui.eclipse.datacollection.actions;
+ */
+package org.netxms.ui.eclipse.datacollection.actions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,8 +66,7 @@ public class ApplyTemplate implements IObjectActionDelegate
 	   if ((parentId == null) || (parentId.isEmpty()))
 	      return;
 	   
-      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell,
-            ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
 		if (dlg.open() == Window.OK)
 		{
          final NXCSession session = ConsoleSharedData.getSession();
@@ -113,8 +113,7 @@ public class ApplyTemplate implements IObjectActionDelegate
 	 */
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		if ((selection instanceof IStructuredSelection) &&
-			 (((IStructuredSelection)selection).size() != 0))
+      if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() != 0))
 		{
 		   parentId = new ArrayList<Long>();
 			for (Object s : ((IStructuredSelection)selection).toList()) 

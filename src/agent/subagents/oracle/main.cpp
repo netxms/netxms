@@ -396,7 +396,7 @@ static bool SubAgentInit(Config *config)
 	// Exit if no usable configuration found
    if (s_instances->isEmpty())
 	{
-      nxlog_write(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("No Oracle databases to monitor"));
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_ORACLE, _T("No Oracle databases to monitor"));
       delete s_instances;
       return false;
 	}

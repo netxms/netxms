@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,7 +66,7 @@ public class RelatedObjectSelectionDialog extends Dialog
    private FilterText filterText;
 	private TableViewer objectList;
 	private List<AbstractObject> selectedObjects;
-	
+
 	/**
 	 * Create class filter from array of allowed classes.
 	 * 
@@ -174,7 +174,7 @@ public class RelatedObjectSelectionDialog extends Dialog
       objectList = new TableViewer(listArea, SWT.FULL_SELECTION | SWT.MULTI);
 		objectList.getTable().setHeaderVisible(false);
 		objectList.setContentProvider(new ArrayContentProvider());
-		objectList.setLabelProvider(new WorkbenchLabelProvider());
+      objectList.setLabelProvider(WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider());
 		objectList.setComparator(new ViewerComparator());
       filter = new ObjectFilter(sourceObjects, classFilter);
 		objectList.addFilter(filter);
