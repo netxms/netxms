@@ -8077,13 +8077,13 @@ void ClientSession::changeObjectZone(const NXCPMessage& request)
  */
 void ClientSession::setupEncryption(const NXCPMessage& request)
 {
-   NXCPMessage msg;
-
 #ifdef _WITH_ENCRYPTION
 	m_encryptionRqId = request.getId();
    m_encryptionResult = RCC_TIMEOUT;
 
    // Send request for session key
+   NXCPMessage msg;
+   msg.setId(request.getId());
 	PrepareKeyRequestMsg(&msg, g_serverKey, request.getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
 	msg.setId(request.getId());
    sendMessage(msg);
@@ -8092,13 +8092,11 @@ void ClientSession::setupEncryption(const NXCPMessage& request)
    // Wait for encryption setup
    m_condEncryptionSetup.wait(30000);
 
-   // Send response
+   // Send final response
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
    msg.setField(VID_RCC, m_encryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(request.getId());
+   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
    msg.setField(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 

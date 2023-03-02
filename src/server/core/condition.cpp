@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -491,6 +491,14 @@ void ConditionObject::check()
          getParentList().get(i)->calculateCompoundStatus();
       unlockParentList();
    }
+}
+
+/**
+ * Calculate object status based on children status
+ */
+void ConditionObject::calculateCompoundStatus(bool forcedRecalc)
+{
+   // Status of the condition object depends solely on check result, so recalculation should not do anything
 }
 
 /**

@@ -4158,6 +4158,7 @@ public:
    virtual json_t *toJson() override;
 
    virtual bool lockForStatusPoll() override;
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 
    int getCacheSizeForDCI(uint32_t itemId);
 

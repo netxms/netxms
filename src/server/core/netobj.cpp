@@ -1604,7 +1604,7 @@ uint32_t NetObj::modifyFromMessageInternalStage2(const NXCPMessage& msg)
  */
 void NetObj::postModify()
 {
-   calculateCompoundStatus(TRUE);
+   calculateCompoundStatus(true);
 }
 
 /**
