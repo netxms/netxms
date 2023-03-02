@@ -26,7 +26,7 @@ import org.eclipse.swt.graphics.Image;
  */
 public class SharedIcons
 {
-	public static ImageDescriptor ADD_OBJECT;
+   public static ImageDescriptor ADD_OBJECT;
 	public static ImageDescriptor ALARM;
    public static ImageDescriptor BROWSER;
 	public static ImageDescriptor CHECKBOX_OFF;
@@ -65,6 +65,7 @@ public class SharedIcons
    public static ImageDescriptor POP_OUT;
    public static ImageDescriptor PROPERTIES;
 	public static ImageDescriptor REFRESH;
+   public static ImageDescriptor RENAME;
 	public static ImageDescriptor RESTART;
    public static ImageDescriptor SHOW;
 	public static ImageDescriptor SAVE;
@@ -121,6 +122,7 @@ public class SharedIcons
    public static Image IMG_POP_OUT;
    public static Image IMG_PROPERTIES;
 	public static Image IMG_REFRESH;
+   public static Image IMG_RENAME;
 	public static Image IMG_RESTART;
    public static Image IMG_SHOW;
 	public static Image IMG_SAVE;
@@ -182,6 +184,7 @@ public class SharedIcons
       POP_OUT = ResourceManager.getImageDescriptor("icons/pop-out.png");
       PROPERTIES = ResourceManager.getImageDescriptor("icons/properties.png");
       REFRESH = ResourceManager.getImageDescriptor("icons/refresh.png");
+      RENAME = ResourceManager.getImageDescriptor("icons/rename.png");
       RESTART = ResourceManager.getImageDescriptor("icons/restart.gif");
       SAVE = ResourceManager.getImageDescriptor("icons/save.png");
       SAVE_AS = ResourceManager.getImageDescriptor("icons/save-as.png");
@@ -238,6 +241,7 @@ public class SharedIcons
       IMG_POP_OUT = POP_OUT.createImage();
       IMG_PROPERTIES = PROPERTIES.createImage();
 		IMG_REFRESH = REFRESH.createImage();
+      IMG_RENAME = RENAME.createImage();
 		IMG_RESTART = RESTART.createImage();
 		IMG_SAVE = SAVE.createImage();
       IMG_SAVE_AS = SAVE_AS.createImage();

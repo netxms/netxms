@@ -64,6 +64,7 @@ import org.netxms.nxmc.modules.dashboards.views.ContextDashboardView;
 import org.netxms.nxmc.modules.dashboards.views.DashboardView;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
+import org.netxms.nxmc.modules.datacollection.views.PolicyListView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
@@ -183,6 +184,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new OSPFView());
       addMainView(new PerformanceView());
       addMainView(new PhysicalLinkView());
+      addMainView(new PolicyListView());
       addMainView(new PortView());
       addMainView(new PredefinedMap());
       addMainView(new ProcessesView());
