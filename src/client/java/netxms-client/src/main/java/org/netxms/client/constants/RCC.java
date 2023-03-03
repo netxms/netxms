@@ -204,7 +204,7 @@ public final class RCC
 	{
       try
       {
-         ResourceBundle bundle = PropertyResourceBundle.getBundle("messages", new Locale(lang));
+         ResourceBundle bundle = PropertyResourceBundle.getBundle("netxms-client-rcc", new Locale(lang));
          try
          {
             return String.format(bundle.getString(String.format("RCC_%04d", code)), additionalInfo);

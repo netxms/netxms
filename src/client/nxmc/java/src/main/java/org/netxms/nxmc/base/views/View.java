@@ -507,6 +507,16 @@ public abstract class View implements MessageAreaHolder
    }
 
    /**
+    * Get client area composite.
+    *
+    * @return client area composite
+    */
+   public Composite getClientArea()
+   {
+      return clientArea;
+   }
+
+   /**
     * Set visibility flag.
     * 
     * @param visible true if view should be visible
