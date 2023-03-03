@@ -345,13 +345,14 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          return;
 
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN | SWT.MULTI);
-      if (dlg.open() == null)
+      String selectionFolder = dlg.open();
+      if (selectionFolder == null)
          return;
 
       final List<PathElement> uploadList = new ArrayList<PathElement>();
       for(String name : dlg.getFileNames())
       {
-         File f = new File(dlg.getFilterPath(), name);
+         File f = (name.charAt(0) == File.separatorChar) ? new File(name) : new File(new File(selectionFolder).getParentFile(), name);
          if (f.exists())
          {
             PathElement e = ((PathElement)selection.getFirstElement()).findChild(f.getName());

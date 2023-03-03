@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.datacollection.widgets.helpers;
 
 import java.util.Set;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.Viewer;
 
 /**
  * Content provider for file delivery policy element tree
@@ -61,5 +62,19 @@ public class FileDeliveryPolicyContentProvider implements ITreeContentProvider
    public boolean hasChildren(Object element)
    {
       return ((PathElement)element).hasChildren();
+   }
+
+   @Override
+   public void dispose()
+   {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
+   {
+      // TODO Auto-generated method stub
+      
    }
 }

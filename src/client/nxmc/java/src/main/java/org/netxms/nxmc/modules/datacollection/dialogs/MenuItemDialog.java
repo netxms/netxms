@@ -149,8 +149,8 @@ public class MenuItemDialog extends Dialog
    private void selectIcon()
    {
       FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
-      dlg.setFilterExtensions(new String[] { "*.gif;*.jpg;*.png", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-      dlg.setFilterNames(new String[] { "Image files", "All files" });
+      WidgetHelper.setFileDialogFilterExtensions(dlg, new String[] { "*.gif;*.jpg;*.png", "*.*" });
+      WidgetHelper.setFileDialogFilterNames(dlg, new String[] { "Image files", "All files" });
       String fileName = dlg.open();
       if (fileName == null)
          return;

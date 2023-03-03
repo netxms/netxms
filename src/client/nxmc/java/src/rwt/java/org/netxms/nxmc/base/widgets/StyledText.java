@@ -27,10 +27,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.TypedListener;
 import org.netxms.nxmc.base.widgets.helpers.LineStyleEvent;
 import org.netxms.nxmc.base.widgets.helpers.LineStyleListener;
 import org.netxms.nxmc.base.widgets.helpers.StyleRange;
@@ -79,6 +82,43 @@ public class StyledText extends Composite
          }
       });
    }
+   
+   /**
+    * Add modify listener
+    * 
+    * @param modifyListener
+    */
+   public void addModifyListener(ModifyListener modifyListener) {
+      checkWidget();
+      if (modifyListener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+      addListener(SWT.Modify, new TypedListener(modifyListener));
+   }
+   
+   /**
+    * Remove modify listener
+    * 
+    * @param modifyListener remove modify listener
+    */
+   public void removeModifyListener(ModifyListener modifyListener) {
+      checkWidget();
+      if (modifyListener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+      removeListener(SWT.Modify, modifyListener);
+   }
+   
+   /**
+    * Create modification event and notify listeners 
+    * 
+    * @param text updated text
+    */
+   private void notifyModification(String text)
+   {
+      Event event = new Event();
+      event.start = 0;
+      event.end = getCharCount();
+      event.text = text;
+      event.doit = true;
+      notifyListeners(SWT.Modify, event);
+   }
 
    /**
     * Set widget text
@@ -95,6 +135,7 @@ public class StyledText extends Composite
       refreshContent = true;
       fireLineStyleListeners(0);
       refreshTimer.execute();
+      notifyModification(text);
    }
 
    /**
@@ -108,6 +149,7 @@ public class StyledText extends Composite
       content.append(text);
       fireLineStyleListeners(pos);
       refreshTimer.execute();
+      notifyModification(text);
    }
 
    /**
@@ -134,6 +176,7 @@ public class StyledText extends Composite
       refreshContent = true;
       fireLineStyleListeners(0);
       refreshTimer.execute();
+      notifyModification(text);
    }
 
    /** Set style for specific range of text
