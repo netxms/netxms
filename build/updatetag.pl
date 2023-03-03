@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+use File::Basename;
+
 my $file_prefix = shift || "netxms";
 my $define_prefix = shift || "NETXMS";
 my $h_file = shift || $file_prefix . "-build-tag.h";
@@ -20,9 +22,10 @@ if ($tag =~ /^Release-(.*)/)
 }
 print "Git tag: $tag\n";
 
-my $version_major=`cat ../include/netxms-version.h | grep NETXMS_VERSION_MAJOR | awk '{print \$3}'`;
-my $version_minor=`cat ../include/netxms-version.h | grep NETXMS_VERSION_MINOR | awk '{print \$3}'`;
-my $version_release=`cat ../include/netxms-version.h | grep NETXMS_VERSION_RELEASE | awk '{print \$3}'`;
+my $dirname = dirname(__FILE__);
+my $version_major=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_MAJOR | awk '{print \$3}'`;
+my $version_minor=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_MINOR | awk '{print \$3}'`;
+my $version_release=`cat $dirname/../include/netxms-version.h | grep NETXMS_VERSION_RELEASE | awk '{print \$3}'`;
 chomp $version_major;
 chomp $version_minor;
 chomp $version_release;
