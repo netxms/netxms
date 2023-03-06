@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ extern const TCHAR *g_tables[];
  * Source config
  */
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
-static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
+static TCHAR s_dbDriverOptions[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
 static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
 static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
@@ -40,21 +40,23 @@ static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
-   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
+   { _T("DBDriverOptions"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriverOptions },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   /* deprecated parameters */
+   { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriverOptions },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
  * Source connection
  */
-static DB_DRIVER s_driver = NULL;
-static DB_HANDLE s_hdbSource = NULL;
+static DB_DRIVER s_driver = nullptr;
+static DB_HANDLE s_hdbSource = nullptr;
 static int s_sourceSyntax = DB_SYNTAX_UNKNOWN;
 
 /**
@@ -141,7 +143,7 @@ bool IsTimestampConversionNeeded(const TCHAR* table)
  */
 static bool ConnectToSource()
 {
-   s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, nullptr, nullptr);
+   s_driver = DBLoadDriver(s_dbDriver, s_dbDriverOptions, nullptr, nullptr);
    if (s_driver == nullptr)
    {
 	   WriteToTerminalEx(_T("\x1b[31;1mERROR:\x1b[0m Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
@@ -374,7 +376,7 @@ static bool MigrateTable(const TCHAR *table)
 /**
  * Migrate data tables
  */
-static bool MigrateDataTables()
+static bool MigrateDataTables(bool ignoreDataMigrationErrors)
 {
    IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
    if (targets == nullptr)
@@ -396,7 +398,7 @@ static bool MigrateDataTables()
       {
          TCHAR table[32];
 		   _sntprintf(table, 32, _T("idata_%u"), id);
-		   if (!MigrateTable(table))
+		   if (!MigrateTable(table) && !ignoreDataMigrationErrors)
 			   break;
       }
 
@@ -410,7 +412,7 @@ static bool MigrateDataTables()
       {
          TCHAR table[32];
 		   _sntprintf(table, 32, _T("tdata_%u"), id);
-		   if (!MigrateTable(table))
+		   if (!MigrateTable(table) && !ignoreDataMigrationErrors)
 			   break;
       }
 	}
@@ -522,7 +524,7 @@ static bool MigrateDataToSingleTable(uint32_t nodeId, bool tdata)
             for(int i = 0; i < columnCount; i++)
             {
                DBGetColumnName(hResult, i, buffer, 256);
-               TCHAR *value = DBGetField(hResult, i, NULL, 0);
+               TCHAR *value = DBGetField(hResult, i, nullptr, 0);
                _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
                MemFree(value);
             }
@@ -587,8 +589,7 @@ static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
 
    bool success = false;
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
-   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"),
-            prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
+   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s_%u"), prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix, nodeId);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
    if (hResult == nullptr)
    {
@@ -638,20 +639,24 @@ static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
       rows++;
       if (rows >= g_migrationTxnSize)
       {
-         DBBegin(g_dbHandle);
          for(int i = 0; i < 6; i++)
          {
             if (!hasContent[i])
                continue;
-            if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+
+            queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+            DBBegin(g_dbHandle);
+            if (DBQueryEx(g_dbHandle, queries[i], errorText))
+            {
+               DBCommit(g_dbHandle);
+            }
+            else
             {
                _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
                DBRollback(g_dbHandle);
                success = false;
-               break;
             }
          }
-         DBCommit(g_dbHandle);
 
          rows = 0;
          queries[0] = BuildDataInsertQuery(tdata, _T("default"));
@@ -673,20 +678,24 @@ static bool MigrateDataToSingleTable_TSDB(uint32_t nodeId, bool tdata)
 
    if (rows > 0)
    {
-      DBBegin(g_dbHandle);
       for(int i = 0; i < 6; i++)
       {
          if (!hasContent[i])
             continue;
-         if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+
+         queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+         DBBegin(g_dbHandle);
+         if (DBQueryEx(g_dbHandle, queries[i], errorText))
+         {
+            DBCommit(g_dbHandle);
+         }
+         else
          {
             _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
             DBRollback(g_dbHandle);
             success = false;
-            break;
          }
       }
-      DBCommit(g_dbHandle);
    }
 
    DBFreeResult(hResult);
@@ -703,8 +712,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
 
    bool success = false;
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
-   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s"),
-            prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix);
+   _sntprintf(buffer, 256, _T("SELECT item_id,%s_timestamp,%s_value%s FROM %s"), prefix, prefix, tdata ? _T("") : _T(",raw_value"), prefix);
    DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
    if (hResult == nullptr)
    {
@@ -727,7 +735,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
    int rows = 0, totalRows = 0;
    while(DBFetch(hResult))
    {
-      UINT32 dciId = DBGetFieldULong(hResult, 0);
+      uint32_t dciId = DBGetFieldULong(hResult, 0);
       int *sclassPtr = s_dciStorageClasses.get(dciId);
       int sclass = (sclassPtr != nullptr) ? *sclassPtr : 0;
 
@@ -754,20 +762,24 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
       rows++;
       if (rows >= g_migrationTxnSize)
       {
-         DBBegin(g_dbHandle);
          for(int i = 0; i < 6; i++)
          {
             if (!hasContent[i])
                continue;
-            if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+
+            queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+            DBBegin(g_dbHandle);
+            if (DBQueryEx(g_dbHandle, queries[i], errorText))
+            {
+               DBCommit(g_dbHandle);
+            }
+            else
             {
                _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
                DBRollback(g_dbHandle);
                success = false;
-               break;
             }
          }
-         DBCommit(g_dbHandle);
 
          rows = 0;
          queries[0] = BuildDataInsertQuery(tdata, _T("default"));
@@ -789,20 +801,24 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
 
    if (rows > 0)
    {
-      DBBegin(g_dbHandle);
       for(int i = 0; i < 6; i++)
       {
          if (!hasContent[i])
             continue;
-         if (!DBQueryEx(g_dbHandle, queries[i], errorText))
+
+         queries[i].append(_T(" ON CONFLICT DO NOTHING"));
+         DBBegin(g_dbHandle);
+         if (DBQueryEx(g_dbHandle, queries[i], errorText))
+         {
+            DBCommit(g_dbHandle);
+         }
+         else
          {
             _tprintf(_T("ERROR: unable to insert data to destination table (%s)\n"), errorText);
             DBRollback(g_dbHandle);
             success = false;
-            break;
          }
       }
-      DBCommit(g_dbHandle);
    }
 
    DBFreeResult(hResult);
@@ -812,7 +828,7 @@ static bool MigrateSingleDataTableToTSDB(bool tdata)
 /**
  * Migrate data tables to single table
  */
-static bool MigrateDataTablesToSingleTable()
+static bool MigrateDataTablesToSingleTable(bool ignoreDataMigrationErrors)
 {
    IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
    if (targets == nullptr)
@@ -826,16 +842,16 @@ static bool MigrateDataTablesToSingleTable()
       uint32_t id = targets->get(i);
       if (g_dbSyntax == DB_SYNTAX_TSDB)
       {
-         if (!MigrateDataToSingleTable_TSDB(id, false))
+         if (!MigrateDataToSingleTable_TSDB(id, false) && !ignoreDataMigrationErrors)
             break;
-         if (!MigrateDataToSingleTable_TSDB(id, true))
+         if (!MigrateDataToSingleTable_TSDB(id, true) && !ignoreDataMigrationErrors)
             break;
       }
       else
       {
-         if (!MigrateDataToSingleTable(id, false))
+         if (!MigrateDataToSingleTable(id, false) && !ignoreDataMigrationErrors)
             break;
-         if (!MigrateDataToSingleTable(id, true))
+         if (!MigrateDataToSingleTable(id, true) && !ignoreDataMigrationErrors)
             break;
       }
    }
@@ -949,7 +965,7 @@ static bool MigrateDataFromSingleTable(uint32_t nodeId, bool tdata)
 /**
  * Migrate data tables from single table
  */
-static bool MigrateDataTablesFromSingleTable()
+static bool MigrateDataTablesFromSingleTable(bool ignoreDataMigrationErrors)
 {
    IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
    if (targets == nullptr)
@@ -970,7 +986,7 @@ static bool MigrateDataTablesFromSingleTable()
 
       if (!g_skipDataMigration)
       {
-         if (!MigrateDataFromSingleTable(id, false))
+         if (!MigrateDataFromSingleTable(id, false) && !ignoreDataMigrationErrors)
             break;
       }
 
@@ -982,7 +998,7 @@ static bool MigrateDataTablesFromSingleTable()
 
       if (!g_skipDataMigration)
       {
-         if (!MigrateDataFromSingleTable(id, true))
+         if (!MigrateDataFromSingleTable(id, true) && !ignoreDataMigrationErrors)
             break;
       }
    }
@@ -1008,7 +1024,7 @@ static bool MigrateTableCallback(const TCHAR *table, void *context)
 /**
  * Do database import or migration
  */
-static bool ImportOrMigrateDatabase(const StringList& excludedTables, const StringList& includedTables)
+static bool ImportOrMigrateDatabase(const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors)
 {
    if (!ConnectToSource())
       return false;
@@ -1059,52 +1075,52 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
          {
             if (s_sourceSyntax == DB_SYNTAX_TSDB)
             {
-               if (!MigrateTable(_T("idata_sc_default")))
+               if (!MigrateTable(_T("idata_sc_default")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("idata_sc_7")))
+               if (!MigrateTable(_T("idata_sc_7")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("idata_sc_30")))
+               if (!MigrateTable(_T("idata_sc_30")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("idata_sc_90")))
+               if (!MigrateTable(_T("idata_sc_90")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("idata_sc_180")))
+               if (!MigrateTable(_T("idata_sc_180")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("idata_sc_other")))
+               if (!MigrateTable(_T("idata_sc_other")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("tdata_sc_default")))
+               if (!MigrateTable(_T("tdata_sc_default")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("tdata_sc_7")))
+               if (!MigrateTable(_T("tdata_sc_7")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("tdata_sc_30")))
+               if (!MigrateTable(_T("tdata_sc_30")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("tdata_sc_90")))
+               if (!MigrateTable(_T("tdata_sc_90")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("tdata_sc_180")))
+               if (!MigrateTable(_T("tdata_sc_180")) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateTable(_T("tdata_sc_other")))
+               if (!MigrateTable(_T("tdata_sc_other")) && !ignoreDataMigrationErrors)
                   goto cleanup;
             }
             else
             {
                if (!LoadDCIStorageClasses())
                   goto cleanup;
-               if (!MigrateSingleDataTableToTSDB(false))
+               if (!MigrateSingleDataTableToTSDB(false) && !ignoreDataMigrationErrors)
                   goto cleanup;
-               if (!MigrateSingleDataTableToTSDB(true))
+               if (!MigrateSingleDataTableToTSDB(true) && !ignoreDataMigrationErrors)
                   goto cleanup;
             }
          }
          else
          {
-            if (!MigrateTable(_T("idata")))
+            if (!MigrateTable(_T("idata")) && !ignoreDataMigrationErrors)
                goto cleanup;
-            if (!MigrateTable(_T("tdata")))
+            if (!MigrateTable(_T("tdata")) && !ignoreDataMigrationErrors)
                goto cleanup;
          }
       }
       else if (singleTableSource && !singleTableDestination)
       {
-         if (!MigrateDataTablesFromSingleTable())
+         if (!MigrateDataTablesFromSingleTable(ignoreDataMigrationErrors))
             goto cleanup;
       }
       else if (!singleTableSource && singleTableDestination && !g_skipDataMigration)
@@ -1114,12 +1130,12 @@ static bool ImportOrMigrateDatabase(const StringList& excludedTables, const Stri
             if (!LoadDCIStorageClasses())
                goto cleanup;
          }
-         if (!MigrateDataTablesToSingleTable())
+         if (!MigrateDataTablesToSingleTable(ignoreDataMigrationErrors))
             goto cleanup;
       }
       else if (!singleTableSource && !singleTableDestination)
       {
-         if (!MigrateDataTables())
+         if (!MigrateDataTables(ignoreDataMigrationErrors))
             goto cleanup;
       }
    }
@@ -1137,7 +1153,7 @@ cleanup:
 /**
  * Migrate database
  */
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables)
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors)
 {
    // Load source config
 	Config config;
@@ -1177,14 +1193,14 @@ void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const Str
 	   return;
 
    DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
-   bool success = ImportOrMigrateDatabase(excludedTables, includedTables);
+   bool success = ImportOrMigrateDatabase(excludedTables, includedTables, ignoreDataMigrationErrors);
 	_tprintf(success ? _T("Database migration complete.\n") : _T("Database migration failed.\n"));
 }
 
 /**
  * Migrate database
  */
-void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables)
+void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors)
 {
    _tcscpy(s_dbDriver, _T("sqlite.ddr"));
 #ifdef UNICODE
@@ -1193,6 +1209,6 @@ void ImportDatabase(const char *file, const StringList& excludedTables, const St
    strlcpy(s_dbName, file, MAX_DB_NAME);
 #endif
    s_import = true;
-   bool success = ImportOrMigrateDatabase(excludedTables, includedTables);
+   bool success = ImportOrMigrateDatabase(excludedTables, includedTables, ignoreDataMigrationErrors);
    _tprintf(success ? _T("Database import complete.\n") : _T("Database import failed.\n"));
 }

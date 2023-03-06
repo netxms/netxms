@@ -50,8 +50,8 @@ bool CreateDatabase(const char *driver, const TCHAR *dbName, const TCHAR *dbLogi
 int InitDatabase(const char *initFile);
 bool ClearDatabase(bool preMigration);
 void ExportDatabase(char *file, const StringList& excludedTables, const StringList& includedTables);
-void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables);
-void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables);
+void ImportDatabase(const char *file, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
+void MigrateDatabase(const TCHAR *sourceConfig, TCHAR *destConfFields, const StringList& excludedTables, const StringList& includedTables, bool ignoreDataMigrationErrors);
 void UpgradeDatabase();
 void UnlockDatabase();
 void ReindexIData();
