@@ -886,33 +886,15 @@ public class ObjectFinder extends View
             if (!session.areObjectsSynchronized())
                session.syncObjects();
 
-            try
-            {
-               final List<ObjectQueryResult> objects = session.queryObjectDetails(query, null, null, null, true, 0);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     updateResultTable(objects);
-                     queryEditor.setFocus();
-                  }
-               });
-            }
-            catch(NXCException e)
-            {
-               if ((e.getErrorCode() == RCC.NXSL_COMPILATION_ERROR) || (e.getErrorCode() == RCC.NXSL_EXECUTION_ERROR))
+            final List<ObjectQueryResult> objects = session.queryObjectDetails(query, null, null, null, true, 0);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
                {
-                  final String errorMessage = e.getAdditionalInfo();
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        addMessage(MessageArea.WARNING, errorMessage);
-                     }
-                  });
+                  updateResultTable(objects);
+                  queryEditor.setFocus();
                }
-               throw e;
-            }
+            });
          }
          
          @Override
