@@ -235,7 +235,12 @@ public class DateFormatFactory
       long days = seconds / 86400;
       if (days > 0)
       {
-         sb.append(i18n.trn("{0} day", "{0} days", days));
+         // FIXME: trn always return singular for some reason
+         // sb.append(i18n.trn("{0} day", "{0} days", days, days));
+         sb.append(days);
+         sb.append(' ');
+         sb.append((days == 1) ? i18n.tr("day") : i18n.tr("days"));
+         sb.append(", ");
          seconds -= days * 86400;
       }
 
