@@ -363,12 +363,17 @@ public class ViewStack extends ViewContainer
             controlBarChanged = true;
          }
          enableFilter.setSelection(view.isFilterEnabled());
+         showFilterAction.setEnabled(true);
       }
-      else if (enableFilter != null)
+      else
       {
-         enableFilter.dispose();
-         enableFilter = null;
-         controlBarChanged = true;
+         if (enableFilter != null)
+         {
+            enableFilter.dispose();
+            enableFilter = null;
+            controlBarChanged = true;
+         }
+         showFilterAction.setEnabled(false);
       }
 
       if (controlBarChanged)

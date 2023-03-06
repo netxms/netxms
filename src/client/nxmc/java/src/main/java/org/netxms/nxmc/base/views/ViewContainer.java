@@ -59,6 +59,7 @@ public abstract class ViewContainer extends Composite
    protected ToolItem navigationForward = null;
    protected Object context;
    protected NavigationHistory navigationHistory = null;
+   protected Action showFilterAction;
    protected Runnable onFilterCloseCallback = null;
    protected KeyBindingManager keyBindingManager = new KeyBindingManager();
 
@@ -101,7 +102,7 @@ public abstract class ViewContainer extends Composite
       });
 
       // Keyboard binding for filter toggle
-      keyBindingManager.addBinding(SWT.CTRL, SWT.F2, new Action() {
+      showFilterAction = new Action() {
          @Override
          public void run()
          {
@@ -112,7 +113,8 @@ public abstract class ViewContainer extends Composite
                enableFilter.setSelection(view.isFilterEnabled());
             }
          }
-      });
+      };
+      keyBindingManager.addBinding("M1+F2", showFilterAction);
 
       // Keyboard binding for filter activation
       keyBindingManager.addBinding("M1+F", new Action() {
@@ -128,7 +130,6 @@ public abstract class ViewContainer extends Composite
             }
          }
       });
-
    }
 
    /**

@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -37,7 +38,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -49,8 +55,10 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpDci;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -60,6 +68,7 @@ import org.netxms.nxmc.modules.snmp.views.helpers.SnmpWalkFilter;
 import org.netxms.nxmc.modules.snmp.widgets.MibBrowser;
 import org.netxms.nxmc.modules.snmp.widgets.MibObjectDetails;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -78,6 +87,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
+   private FilterText filterText;
 	private TableViewer viewer;
 	private boolean walkActive = false;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
@@ -90,6 +100,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	private Action actionCopyValue;
 	private Action actionSelect;
 	private Action actionExportToCsv;
+   private Action actionShowResultFilter;
 	private CreateSnmpDci actionCreateSnmpDci;
 
 	private Composite resultArea;
@@ -105,7 +116,16 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
     */
    public MibExplorer()
    {
-      super(i18n.tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), ID, true);
+      super(i18n.tr("MIB Explorer"), ResourceManager.getImageDescriptor("icons/object-views/mibexplorer.gif"), ID, false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof Node) && ((Node)context).hasSnmpAgent();
    }
 
    /**
@@ -141,17 +161,38 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 
 		// Create result area
 		resultArea = new Composite(splitter, SWT.BORDER);
-		resultArea.setLayout(new FillLayout());
+      resultArea.setLayout(new FormLayout());
+
+      filterText = new FilterText(resultArea, SWT.NONE);
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            filter.setFilterString(filterText.getText());
+            viewer.refresh();
+         }
+      });
+      filterText.setCloseCallback(new Runnable() {
+         @Override
+         public void run()
+         {
+            showResultFilter(false);
+         }
+      });
 
       // walk results
-		viewer = new TableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      viewer = new TableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.getTable().setLinesVisible(true);
 		viewer.getTable().setHeaderVisible(true);
 		setupViewerColumns();
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider());
 		filter = new SnmpWalkFilter();
-      setFilterClient(viewer, filter);
 		viewer.addFilter(filter);
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -177,12 +218,47 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			}
 		});
 
-		splitter.setWeights(new int[] { 70, 30 });
+      splitter.setWeights(new int[] { 70, 30 });
 
       createActions();
-		createTreeContextMenu();
-		createResultsPopupMenu();
+      createTreeContextMenu();
+      createResultsPopupMenu();
+
+      // Setup result filter visibility
+      boolean showResultFilter = PreferenceStore.getInstance().getAsBoolean(getBaseId() + ".showResultFilter", true);
+      filterText.setVisible(showResultFilter);
+      actionShowResultFilter.setChecked(showResultFilter);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = showResultFilter ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
 	}
+
+   /**
+    * Show or hide results filter.
+    *
+    * @param show true to show filter
+    */
+   public void showResultFilter(boolean show)
+   {
+      filterText.setVisible(show);
+      FormData fd = (FormData)viewer.getControl().getLayoutData();
+      fd.top = show ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      getClientArea().layout(true, true);
+      if (show)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText("");
+         onFilterModify();
+      }
+      PreferenceStore.getInstance().set(getBaseId() + ".showResultFilter", show);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#refresh()
@@ -231,9 +307,9 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 						if (i > 0)
 							sb.append(newLine);
 						sb.append(selection[i].getText(0));
-						sb.append(" ["); //$NON-NLS-1$
+                  sb.append(" [");
 						sb.append(selection[i].getText(2));
-						sb.append("] = "); //$NON-NLS-1$
+                  sb.append("] = ");
 						sb.append(selection[i].getText(3));
 					}
 					WidgetHelper.copyToClipboard(sb.toString());
@@ -285,6 +361,16 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		
 		actionCreateSnmpDci = new CreateSnmpDci(this);
+
+      actionShowResultFilter = new Action("Show result &filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            showResultFilter(actionShowResultFilter.isChecked());
+         }
+      };
+      actionShowResultFilter.setImageDescriptor(SharedIcons.FILTER);
+      addKeyBinding("M1+F2", actionShowResultFilter);
 	}
 
 	/**
@@ -326,11 +412,28 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	}
 
 	/**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionShowResultFilter);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionShowResultFilter);
+   }
+
+   /**
     * Create context menu for MIB tree
     */
 	private void createTreeContextMenu()
 	{
-		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
@@ -340,7 +443,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			}
 		});
 
-      // Create menu
       Menu menu = menuMgr.createContextMenu(mibBrowser.getTreeControl());
       mibBrowser.getTreeControl().setMenu(menu);
 	}
@@ -363,7 +465,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	 */
 	private void createResultsPopupMenu()
 	{
-		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
@@ -385,9 +486,12 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	 */
 	protected void fillResultsContextMenu(final IMenuManager manager)
 	{
+      manager.add(actionShowResultFilter);
+      manager.add(new Separator());
+
 		if (viewer.getSelection().isEmpty())
 			return;
-		
+
 		manager.add(actionCopy);
 		manager.add(actionCopyName);
       manager.add(actionCopySymbolicName);
@@ -504,22 +608,4 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			}
 		});
 	}
-
-   /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-	@Override
-	public void dispose()
-	{
-		super.dispose();
-	}
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node) && ((Node)context).hasSnmpAgent();
-   }
 }

@@ -335,7 +335,7 @@ public class ViewFolder extends ViewContainer
       {
          view.create(this, tabFolder, onFilterCloseCallback);
          CTabItem tabItem = createViewTab(view, ignoreContext);
-         if (activate)
+         if (activate || (activeView == null))
          {
             tabFolder.setSelection(tabItem);
             activateView(view, tabItem);
@@ -429,11 +429,16 @@ public class ViewFolder extends ViewContainer
             });
          }
          enableFilter.setSelection(view.isFilterEnabled());
+         showFilterAction.setEnabled(true);
       }
-      else if (enableFilter != null)
+      else
       {
-         enableFilter.dispose();
-         enableFilter = null;
+         if (enableFilter != null)
+         {
+            enableFilter.dispose();
+            enableFilter = null;
+         }
+         showFilterAction.setEnabled(false);
       }
 
       if ((navigationBack != null) && (navigationForward != null))
