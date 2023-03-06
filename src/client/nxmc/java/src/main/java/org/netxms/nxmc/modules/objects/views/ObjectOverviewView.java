@@ -152,8 +152,6 @@ public class ObjectOverviewView extends ObjectView
       layout.verticalSpacing = 5;
       return layout;
    }
-   
-   
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
