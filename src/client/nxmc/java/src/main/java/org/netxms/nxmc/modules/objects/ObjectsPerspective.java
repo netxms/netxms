@@ -49,6 +49,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Template;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -70,6 +71,7 @@ import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
+import org.netxms.nxmc.modules.objects.actions.ForceReinstallPolicy;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
@@ -119,6 +121,7 @@ public abstract class ObjectsPerspective extends Perspective
    private ToolBar objectMenuBar;
    private Image imageEditConfig;
    private Image imageExecuteScript;
+   private Image imageForcePolicyInstall;
    private List<ObjectViewDescriptor> additionalElements = new ArrayList<>();
 
    /**
@@ -135,6 +138,7 @@ public abstract class ObjectsPerspective extends Perspective
       this.subtreeType = subtreeType;
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
+      imageForcePolicyInstall = ResourceManager.getImage("icons/push.png");
 
       ServiceLoader<ObjectViewDescriptor> loader = ServiceLoader.load(ObjectViewDescriptor.class, getClass().getClassLoader());
       for(ObjectViewDescriptor e : loader)
@@ -238,7 +242,7 @@ public abstract class ObjectsPerspective extends Perspective
       gd.heightHint = 24;
       separator.setLayoutData(gd);
 
-      objectMenuBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
+      objectMenuBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);      
    }
 
    /**
@@ -324,6 +328,17 @@ public abstract class ObjectsPerspective extends Perspective
             }.start();
          }
       });
+
+      if (object instanceof Template)
+      {
+         addObjectToolBarItem(i18n.tr("Force install policy"), imageForcePolicyInstall, new Runnable() {
+            @Override
+            public void run()
+            {
+               new ForceReinstallPolicy(i18n.tr("Force deployment of agent policies"), ObjectsPerspective.this, getNavigationSelectionProvider()).run();
+            }
+         });
+      }
    }
 
    /**

@@ -18,14 +18,11 @@
  */
 package org.netxms.nxmc.modules.objects.actions;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
@@ -37,8 +34,9 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.actions.ObjectAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDciDialog;
 import org.netxms.nxmc.modules.objects.dialogs.helpers.InterfaceDciInfo;
@@ -47,7 +45,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Action for creating interface DCIs
  */
-public class CreateInterfaceDciAction extends Action
+public class CreateInterfaceDciAction extends ObjectAction<Interface>
 {
    private static final int IFDCI_IN_BYTES = 0;
    private static final int IFDCI_OUT_BYTES = 1;
@@ -60,9 +58,6 @@ public class CreateInterfaceDciAction extends Action
 
    private final I18n i18n = LocalizationHelper.getI18n(CreateInterfaceDciAction.class);
 
-   private View view;
-   private ISelectionProvider selectionProvider;
-
    /**
     * Create action for creating interface DCIs.
     *
@@ -70,35 +65,24 @@ public class CreateInterfaceDciAction extends Action
     * @param view owning view
     * @param selectionProvider associated selection provider
     */
-   public CreateInterfaceDciAction(String text, View view, ISelectionProvider selectionProvider)
+   public CreateInterfaceDciAction(String text, Perspective perspective, ISelectionProvider selectionProvider)
    {
-      super(text);
-      this.view = view;
-      this.selectionProvider = selectionProvider;
+      super(Interface.class, text, perspective, selectionProvider);
    }
 
    /**
-    * @see org.eclipse.jface.action.Action#run()
+    * @see org.netxms.nxmc.base.actions.ObjectAction#runInternal(java.util.List)
     */
    @Override
-   public void run()
+   protected void runInternal(List<Interface> objects)
    {
-      final List<Interface> interfaces = new ArrayList<>();
-      for(Object o : ((IStructuredSelection)selectionProvider.getSelection()).toList())
-      {
-         if (o instanceof Interface)
-            interfaces.add((Interface)o);
-      }
-      if (interfaces.isEmpty())
-         return;
-
-      final CreateInterfaceDciDialog dlg = new CreateInterfaceDciDialog(view.getWindow().getShell(), (interfaces.size() == 1) ? interfaces.get(0) : null);
+      final CreateInterfaceDciDialog dlg = new CreateInterfaceDciDialog(perspective.getWindow().getShell(), (objects.size() == 1) ? objects.get(0) : null);
       if (dlg.open() != Window.OK)
          return;
 
       // Get set of nodes
       final Set<AbstractNode> nodes = new HashSet<AbstractNode>();
-      for(Interface iface : interfaces)
+      for(Interface iface : objects)
       {
          AbstractNode node = iface.getParentNode();
          if (node != null)
@@ -109,20 +93,20 @@ public class CreateInterfaceDciAction extends Action
 
       final NXCSession session = Registry.getSession();
       final String taskName = i18n.tr("Creating interface DCIs");
-      new Job(i18n.tr("Creating interface DCI"), view) {
+      new Job(i18n.tr("Creating interface DCI"), null, perspective.getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             InterfaceDciInfo[] dciInfo = dlg.getDciInfo();
-            monitor.beginTask(taskName, interfaces.size() * dciInfo.length);
-            for(int i = 0; i < interfaces.size(); i++)
+            monitor.beginTask(taskName, objects.size() * dciInfo.length);
+            for(int i = 0; i < objects.size(); i++)
             {
                for(int j = 0; j < dciInfo.length; j++)
                {
                   if (dciInfo[j].enabled)
                   {
-                     createInterfaceDci(session, interfaces.get(i), j, dciInfo[j], dlg.getPollingScheduleType(), dlg.getPollingInterval(), dlg.getRetentionType(), dlg.getRetentionTime(),
-                           interfaces.size() > 1);
+                     createInterfaceDci(session, objects.get(i), j, dciInfo[j], dlg.getPollingScheduleType(), dlg.getPollingInterval(), dlg.getRetentionType(), dlg.getRetentionTime(),
+                           objects.size() > 1);
                   }
                   monitor.worked(1);
                }

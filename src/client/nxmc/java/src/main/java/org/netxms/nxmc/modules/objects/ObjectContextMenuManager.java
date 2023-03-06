@@ -69,6 +69,7 @@ import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
+import org.netxms.nxmc.modules.objects.actions.ForceReinstallPolicy;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
@@ -110,6 +111,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionAddNode;
    private Action actionRemoveNode;
    private Action actionCreateInterfaceDCI;
+   private Action actionForcePolicyInstall;
 
    /**
     * Create new object context menu manager.
@@ -320,7 +322,9 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionCreateInterfaceDCI = new CreateInterfaceDciAction(i18n.tr("Create data collection items..."), view, selectionProvider);
+      actionCreateInterfaceDCI = new CreateInterfaceDciAction(i18n.tr("Create data collection items..."), view.getPerspective(), selectionProvider);
+      
+      actionForcePolicyInstall = new ForceReinstallPolicy(i18n.tr("Force deployment of agent policies"), view.getPerspective(), selectionProvider);
    }
 
    /**
@@ -353,7 +357,9 @@ public class ObjectContextMenuManager extends MenuManager
          {
             add(actionApply);
             add(actionRemove);
+            add(actionForcePolicyInstall);
             add(new Separator());
+            
          }
          if (object instanceof Cluster)
          {

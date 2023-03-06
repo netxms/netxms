@@ -608,6 +608,9 @@ public class PolicyListView extends ObjectView implements SessionListener
    @Override
    public void dispose()
    {
+      if (getObjectId() == 0)
+         return;
+      
       Job job = new Job("Update policy on editor close", this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
