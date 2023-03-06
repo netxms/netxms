@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,12 +62,12 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T("Module"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_moduleLoadList, nullptr },
    /* deprecated parameters */
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriverOptions },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 static DB_DRIVER s_driver = nullptr;
@@ -299,6 +299,7 @@ int main(int argc, char *argv[])
    bool replaceValue = true;
    bool showOutput = false;
    bool pauseAfterError = false;
+   bool ignoreDataMigrationErrors = false;
 	TCHAR fallbackSyntax[32] = _T("");
 	TCHAR *dbaLogin = nullptr, *dbaPassword = nullptr;
 	StringList includedTables, excludedTables;
@@ -365,7 +366,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:mMNoPqsStT:vXY:Z:")) != -1)
+   while((ch = getopt(argc, argv, "c:C:dDe:fF:GhIL:mMNoPqsStT:vxXY:Z:")) != -1)
    {
       switch(ch)
       {
@@ -411,6 +412,7 @@ stop_search:
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -T <recs>   : Transaction size for migration.\n")
                      _T("   -v          : Display version and exit.\n")
+                     _T("   -x          : Ignore collected data import/migration errors\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
                      _T("   -Y <table>  : Migrate only given table.\n")
                      _T("   -Z <log>    : Exclude specific log from export, import, or migration.\n")
@@ -826,7 +828,7 @@ stop_search:
       }
       else if (!strcmp(argv[optind], "import"))
       {
-         ImportDatabase(argv[optind + 1], excludedTables, includedTables);
+         ImportDatabase(argv[optind + 1], excludedTables, includedTables, ignoreDataMigrationErrors);
       }
       else if (!strcmp(argv[optind], "migrate"))
 		{
@@ -837,7 +839,7 @@ stop_search:
 #endif
 			TCHAR destConfFields[2048];
 			_sntprintf(destConfFields, 2048, _T("\tDriver: %s\n\tDB Name: %s\n\tDB Server: %s\n\tDB Login: %s"), s_dbDriver, s_dbName, s_dbServer, s_dbLogin);
-         MigrateDatabase(sourceConfig, destConfFields, excludedTables, includedTables);
+         MigrateDatabase(sourceConfig, destConfFields, excludedTables, includedTables, ignoreDataMigrationErrors);
 #ifdef UNICODE
          MemFree(sourceConfig);
 #endif
