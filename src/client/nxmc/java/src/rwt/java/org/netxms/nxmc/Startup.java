@@ -195,7 +195,7 @@ public class Startup implements EntryPoint, StartupParameters
             autoConnect = false; // only do auto connect first time
          }
 
-         LoginJob job = new LoginJob(Display.getCurrent(), ignoreProtocolVersion);
+         LoginJob job = new LoginJob(display, ignoreProtocolVersion);
          job.setPassword(password);
 
          ProgressMonitorDialog monitorDialog = new ProgressMonitorDialog(null);
