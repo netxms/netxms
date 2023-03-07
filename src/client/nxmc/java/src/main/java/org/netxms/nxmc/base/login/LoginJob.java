@@ -72,7 +72,7 @@ public class LoginJob implements IRunnableWithProgress
    {
       this.display = display;
 
-      PreferenceStore settings = PreferenceStore.getInstance();
+      PreferenceStore settings = PreferenceStore.getInstance(display);
       this.server = settings.getAsString("Connect.Server");
       this.loginName = settings.getAsString("Connect.Login");
       this.encryptSession = true;

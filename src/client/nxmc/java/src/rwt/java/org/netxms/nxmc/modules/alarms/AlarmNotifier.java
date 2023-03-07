@@ -75,6 +75,7 @@ public class AlarmNotifier
    }
 
    private I18n i18n = LocalizationHelper.getI18n(AlarmNotifier.class);
+   private Display display;
    private SessionListener listener = null;
    private Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
    private int outstandingAlarms = 0;
@@ -86,22 +87,28 @@ public class AlarmNotifier
 
    /**
     * Initialize alarm notifier
+    *
+    * @param session communication session
+    * @param display owning display
     */
    public static void init(NXCSession session, Display display)
    {
-      RWT.getUISession(display).setAttribute("netxms.alarmNotifier", new AlarmNotifier(session));
+      RWT.getUISession(display).setAttribute("netxms.alarmNotifier", new AlarmNotifier(session, display));
    }
 
    /**
     * Create new alarm notifier for given session
     * 
     * @param session communication session
+    * @param display owning display
     */
-   private AlarmNotifier(NXCSession session)
+   private AlarmNotifier(NXCSession session, Display display)
    {
       this.session = session;
-      ps = PreferenceStore.getInstance();
-      soundFilesDirectory = new File(Registry.getStateDir(), "sounds");
+      this.display = display;
+
+      ps = PreferenceStore.getInstance(display);
+      soundFilesDirectory = new File(Registry.getStateDir(display), "sounds");
       if (!soundFilesDirectory.isDirectory())
          soundFilesDirectory.mkdirs();
 
@@ -182,7 +189,7 @@ public class AlarmNotifier
                long currTime = System.currentTimeMillis();
                if (ps.getAsBoolean("AlarmNotifier.OutstandingAlarmsReminder", false) && (outstandingAlarms > 0) && (lastReminderTime + 300000 <= currTime))
                {
-                  Display.getDefault().syncExec(new Runnable() {
+                  display.syncExec(new Runnable() {
                      @Override
                      public void run()
                      {
@@ -309,12 +316,12 @@ public class AlarmNotifier
          {
             soundName = null;
             ps.set("AlarmNotifier.Sound." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
-            Display.getDefault().asyncExec(new Runnable() {
+            display.asyncExec(new Runnable() {
                @Override
                public void run()
                {
                   MessageDialogHelper.openError(
-                        Display.getDefault().getActiveShell(),
+                        display.getActiveShell(),
                         i18n.tr("Missing Sound File"),
                         String.format(i18n.tr(
                               "Sound file is missing and cannot be downloaded from server. Sound is removed and will not be played again. Error details: %s"),
