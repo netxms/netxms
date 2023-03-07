@@ -123,6 +123,30 @@ public class MapLoader
 		return Math.toDegrees(Math.atan(Math.sinh(n)));
 	}
 
+   /**
+    * Convert x/y/zoom coordinates to Bing QUadKey
+    *
+    * @param x x coordinate
+    * @param y y coordinate
+    * @param zoom zoom level
+    * @return quad key
+    */
+   private static String toQuadKey(int x, int y, int zoom)
+   {
+      char k[] = new char[zoom];
+      for(int i = zoom - 1, j = 0; i >= 0; i--, j++)
+      {
+         char b = '0';
+         int mask = 1 << i;
+         if ((x & mask) != 0)
+            b++;
+         if ((y & mask) != 0)
+            b += 2;
+         k[j] = b;
+      }
+      return new String(k);
+   }
+
 	/**
 	 * Load tile from tile server. Expected to be executed on background thread.
 	 * 
@@ -137,7 +161,21 @@ public class MapLoader
 		URL url = null;
 		try
 		{
-			url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+         if (tileServerURL.contains("{"))
+         {
+            // URL template with placeholders
+            url = new URL(tileServerURL
+                  .replace("{x}", Integer.toString(x))
+                  .replace("{y}", Integer.toString(y))
+                  .replace("{-y}", Integer.toString(-y))
+                  .replace("{z}", Integer.toString(zoom))
+                  .replace("{q}", toQuadKey(x, y, zoom))
+               );
+         }
+         else
+         {
+            url = new URL(tileServerURL + zoom + "/" + x + "/" + y + ".png");
+         }
 		}
 		catch(MalformedURLException e)
 		{
