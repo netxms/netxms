@@ -71,7 +71,7 @@ import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
-import org.netxms.nxmc.modules.objects.actions.ForceReinstallPolicy;
+import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
@@ -90,6 +90,7 @@ import org.netxms.nxmc.modules.objects.views.RackView;
 import org.netxms.nxmc.modules.objects.views.RadioInterfaces;
 import org.netxms.nxmc.modules.objects.views.ResourcesView;
 import org.netxms.nxmc.modules.objects.views.RoutingTableView;
+import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.modules.objects.views.ServicesView;
 import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.StatusMapView;
@@ -121,6 +122,7 @@ public abstract class ObjectsPerspective extends Perspective
    private ToolBar objectMenuBar;
    private Image imageEditConfig;
    private Image imageExecuteScript;
+   private Image imageTakeScreenshot;
    private Image imageForcePolicyInstall;
    private List<ObjectViewDescriptor> additionalElements = new ArrayList<>();
 
@@ -138,6 +140,7 @@ public abstract class ObjectsPerspective extends Perspective
       this.subtreeType = subtreeType;
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
+      imageTakeScreenshot = ResourceManager.getImage("icons/screenshot.png");
       imageForcePolicyInstall = ResourceManager.getImage("icons/push.png");
 
       ServiceLoader<ObjectViewDescriptor> loader = ServiceLoader.load(ObjectViewDescriptor.class, getClass().getClassLoader());
@@ -302,6 +305,28 @@ public abstract class ObjectsPerspective extends Perspective
                addMainView(new AgentConfigurationEditor((Node)object, object.getObjectId()), true, false);
             }
          });
+
+         if (((Node)object).getPlatformName().startsWith("windows-"))
+         {
+            addObjectToolBarItem(i18n.tr("Take screenshot"), imageTakeScreenshot, new Runnable() {
+               @Override
+               public void run()
+               {
+                  addMainView(new ScreenshotView((Node)object, null, null, 0), true, false);
+               }
+            });
+         }
+      }
+
+      if (object instanceof Template)
+      {
+         addObjectToolBarItem(i18n.tr("Force policy deployment"), imageForcePolicyInstall, new Runnable() {
+            @Override
+            public void run()
+            {
+               new ForcedPolicyDeploymentAction(i18n.tr("Force deployment of agent policies"), ObjectsPerspective.this, getNavigationSelectionProvider()).run();
+            }
+         });
       }
 
       addObjectToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, new Runnable() {
@@ -328,17 +353,6 @@ public abstract class ObjectsPerspective extends Perspective
             }.start();
          }
       });
-
-      if (object instanceof Template)
-      {
-         addObjectToolBarItem(i18n.tr("Force install policy"), imageForcePolicyInstall, new Runnable() {
-            @Override
-            public void run()
-            {
-               new ForceReinstallPolicy(i18n.tr("Force deployment of agent policies"), ObjectsPerspective.this, getNavigationSelectionProvider()).run();
-            }
-         });
-      }
    }
 
    /**

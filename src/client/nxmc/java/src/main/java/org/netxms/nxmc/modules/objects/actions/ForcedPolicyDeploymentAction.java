@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,20 +33,19 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * Action: deploy policy on agent
- *
  */
-public class ForceReinstallPolicy extends ObjectAction<Template>
+public class ForcedPolicyDeploymentAction extends ObjectAction<Template>
 {
-   private final I18n i18n = LocalizationHelper.getI18n(ForceReinstallPolicy.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ForcedPolicyDeploymentAction.class);
 
    /**
-    * Create action for creating interface DCIs.
+    * Create action for forced policy deployment.
     *
     * @param text action's text
     * @param view owning view
     * @param selectionProvider associated selection provider
     */
-   public ForceReinstallPolicy(String text, Perspective perspective, ISelectionProvider selectionProvider)
+   public ForcedPolicyDeploymentAction(String text, Perspective perspective, ISelectionProvider selectionProvider)
    {
       super(Template.class, text, perspective, selectionProvider);
    }
@@ -66,11 +65,10 @@ public class ForceReinstallPolicy extends ObjectAction<Template>
 				{
 				   session.forcePolicyInstallation(template.getObjectId());
 				   runInUIThread(new Runnable() {
-                  
                   @Override
                   public void run()
                   {
-                     perspective.getMessageArea().addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Policies for %s template were successfully installed"), template.getObjectName()));
+                     perspective.getMessageArea().addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Policies from template \"%s\" successfully installed"), template.getObjectName()));
                   }
                });				   
 				}
@@ -78,10 +76,9 @@ public class ForceReinstallPolicy extends ObjectAction<Template>
 				@Override
 				protected String getErrorMessage()
 				{
-					return String.format(i18n.tr("Unable force install policy from %s template"), template.getObjectName());
+               return String.format(i18n.tr("Unable to force install policies from template \"%s\""), template.getObjectName());
 				}
 			}.start();
 		}
-		
 	}
 }

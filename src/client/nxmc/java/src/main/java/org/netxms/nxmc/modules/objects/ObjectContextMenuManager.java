@@ -69,7 +69,7 @@ import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
-import org.netxms.nxmc.modules.objects.actions.ForceReinstallPolicy;
+import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
@@ -324,7 +324,7 @@ public class ObjectContextMenuManager extends MenuManager
 
       actionCreateInterfaceDCI = new CreateInterfaceDciAction(i18n.tr("Create data collection items..."), view.getPerspective(), selectionProvider);
       
-      actionForcePolicyInstall = new ForceReinstallPolicy(i18n.tr("Force deployment of agent policies"), view.getPerspective(), selectionProvider);
+      actionForcePolicyInstall = new ForcedPolicyDeploymentAction(i18n.tr("Force deployment of agent policies"), view.getPerspective(), selectionProvider);
    }
 
    /**
