@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Rack::Rack() : super()
+Rack::Rack() : super(), Asset(this)
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
@@ -35,7 +35,7 @@ Rack::Rack() : super()
 /**
  * Constructor for creating new object
  */
-Rack::Rack(const TCHAR *name, int height) : super(name, 0)
+Rack::Rack(const TCHAR *name, int height) : super(name, 0), Asset(this)
 {
 	m_height = height;
    m_topBottomNumbering = false;
@@ -53,7 +53,7 @@ Rack::~Rack()
 /**
  * Create object from database data
  */
-bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
+bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id)
 {
 	if (!super::loadFromDatabase(hdb, id))
 		return false;
@@ -106,6 +106,9 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       }
 	}
 
+   if (success)
+      success = Asset::loadFromDatabase(hdb, id);
+
 	return success;
 }
 
@@ -142,6 +145,12 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
          success = m_passiveElements->get(i)->saveToDatabase(hdb, m_id);
 	}
 	unlockProperties();
+
+   if (success && (m_modified & MODIFY_AM_INSTANCES))
+   {
+      success = Asset::saveToDatabase(hdb);
+   }
+
 	return success;
 }
 
@@ -157,6 +166,8 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
    for(int i = 0; i < m_passiveElements->size() && success; i++)
       success = m_passiveElements->get(i)->deleteChildren(hdb, m_id);
+   if (success)
+      success = Asset::deleteFromDatabase(hdb);
    return success;
 }
 
@@ -175,6 +186,15 @@ void Rack::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
       m_passiveElements->get(i)->fillMessage(msg, fieldId);
       fieldId += 10;
    }
+}
+
+/**
+ * Create NXCP message with object's data - stage 2
+ */
+void Rack::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
+{
+   super::fillMessageInternalStage2(msg, userId);
+   getAassetData(msg);
 }
 
 /**
@@ -220,6 +240,9 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
       }
    }
 
+   if (msg.isFieldExist(VID_AM_DATA_BASE))
+      Asset::modifyFromMessage(msg);
+
    return super::modifyFromMessageInternal(msg);
 }
 
@@ -248,6 +271,8 @@ json_t *Rack::toJson()
    }
    json_object_set_new(root, "passiveElements", passiveElements);
    unlockProperties();
+
+   Asset::assetToJson(root);
 
    return root;
 }

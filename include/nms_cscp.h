@@ -405,8 +405,8 @@ typedef struct
 #define CMD_SUBMAP_DATA                   0x00A8
 #define CMD_UPLOAD_SUBMAP_BK_IMAGE        0x00A9
 #define CMD_GET_SUBMAP_BK_IMAGE           0x00AA
-#define CMD_GET_MODULE_LIST			      0x00AB
-#define CMD_UPDATE_MODULE_INFO		      0x00AC
+#define CMD_GET_MODULE_LIST               0x00AB
+#define CMD_UPDATE_MODULE_INFO            0x00AC
 #define CMD_COPY_USER_VARIABLE            0x00AD
 #define CMD_RESOLVE_DCI_NAMES             0x00AE
 #define CMD_GET_MY_CONFIG                 0x00AF
@@ -428,18 +428,18 @@ typedef struct
 #define CMD_GET_RELATED_EVENTS_LIST       0x00BF
 #define CMD_EXPORT_CONFIGURATION          0x00C0
 #define CMD_IMPORT_CONFIGURATION          0x00C1
-#define CMD_GET_TRAP_CFG_RO			      0x00C2
-#define CMD_SNMP_REQUEST				      0x00C3
-#define CMD_GET_DCI_INFO				      0x00C4
-#define CMD_GET_GRAPH_LIST				      0x00C5
-#define CMD_SAVE_GRAPH		   		      0x00C6
-#define CMD_DELETE_GRAPH				      0x00C7
+#define CMD_GET_TRAP_CFG_RO               0x00C2
+#define CMD_SNMP_REQUEST                  0x00C3
+#define CMD_GET_DCI_INFO                  0x00C4
+#define CMD_GET_GRAPH_LIST                0x00C5
+#define CMD_SAVE_GRAPH                    0x00C6
+#define CMD_DELETE_GRAPH                  0x00C7
 #define CMD_GET_PERFTAB_DCI_LIST          0x00C8
 #define CMD_GET_OBJECT_CATEGORIES         0x00C9
 #define CMD_MODIFY_OBJECT_CATEGORY        0x00CA
 #define CMD_DELETE_OBJECT_CATEGORY        0x00CB
-#define CMD_WINDOWS_EVENT      		      0x00CC
-#define CMD_QUERY_L2_TOPOLOGY			      0x00CD
+#define CMD_WINDOWS_EVENT                 0x00CC
+#define CMD_QUERY_L2_TOPOLOGY             0x00CD
 #define CMD_AUDIT_RECORD                  0x00CE
 #define CMD_GET_AUDIT_LOG                 0x00CF
 #define CMD_SEND_NOTIFICATION             0x00D0
@@ -691,6 +691,12 @@ typedef struct
 #define CMD_UPDATE_MAINTENANCE_JOURNAL    0x01C6
 #define CMD_GET_SSH_CREDENTIALS           0x01C7
 #define CMD_UPDATE_SSH_CREDENTIALS        0x01C8
+#define CMD_GET_ASSET_MGMT_ATTRIBUTE      0x01C9
+#define CMD_CREATE_ASSET_MGMT_ATTRIBUTE   0x01CA
+#define CMD_UPDATE_ASSET_MGMT_ATTRIBUTE   0x01CB
+#define CMD_DELETE_ASSET_MGMT_ATTRIBUTE   0x01CC
+#define CMD_UPDATE_ASSET_INSTANCE         0x01CD
+#define CMD_DELETE_ASSET_INSTANCE         0x01CE
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101
@@ -1515,7 +1521,16 @@ typedef struct
 #define VID_VPN_CONNECTOR_COUNT     ((uint32_t)810)
 #define VID_MONITOR_ID              ((uint32_t)811)
 #define VID_NUM_TIME_FRAMES         ((uint32_t)812)
-#define VID_NUM_POLL_STATES         ((uint32_t)813)
+#define VID_AM_COUNT                ((uint32_t)813)
+#define VID_DATA_TYPE               ((uint32_t)814)
+#define VID_IS_MANDATORY            ((uint32_t)815)
+#define VID_IS_UNIQUE               ((uint32_t)816)
+#define VID_RANGE_MIN               ((uint32_t)817)
+#define VID_RANGE_MAX               ((uint32_t)818)
+#define VID_SYSTEM_TYPE             ((uint32_t)819)
+#define VID_ENUM_COUNT              ((uint32_t)820)
+#define VID_DISPLAY_NAME            ((uint32_t)821)
+#define VID_NUM_POLL_STATES         ((uint32_t)822)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1584,6 +1599,9 @@ typedef struct
 
 // Base value for ICMP target list
 #define VID_ICMP_TARGET_LIST_BASE   ((uint32_t)0x75000000)
+
+// Base value for asset managementn attribute instance list
+#define VID_AM_DATA_BASE            ((uint32_t)0x76000000)
 
 // IP address list base
 #define VID_IP_ADDRESS_LIST_BASE    ((uint32_t)0x7F000000)
@@ -1778,6 +1796,10 @@ typedef struct
 #define VID_CHECK_LIST_BASE         ((uint32_t)0x10000000)
 
 #define VID_TICKET_LIST_BASE        ((uint32_t)0x10000000)
+
+#define VID_AM_LIST_BASE            ((uint32_t)0x10000000)
+
+#define VID_AM_ENUM_MAP_BASE        ((uint32_t)0x10000000)
 
 #ifdef __cplusplus
 

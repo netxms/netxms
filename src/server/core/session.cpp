@@ -109,6 +109,11 @@ uint32_t ReadMaintenanceJournal(SharedObjectArray<NetObj>& sources, NXCPMessage*
 uint32_t AddMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 
+void AMFillMessage(NXCPMessage *msg);
+uint32_t AMCreateAttribute(const NXCPMessage &msg, const ClientSession &session);
+uint32_t AMUpdateAttribute(const NXCPMessage &msg, const ClientSession &session);
+uint32_t AMDeleteAttribute(const NXCPMessage &msg, const ClientSession &session);
+
 /**
  * Maximum client message size
  */
@@ -319,7 +324,7 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 /**
  * Write audit log
  */
-void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...)
+void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -330,7 +335,7 @@ void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, uint32_t ob
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)
+void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -341,7 +346,7 @@ void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, u
 /**
  * Write audit log with old and new values for changed entity
  */
-void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)
+void ClientSession::writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...) const
 {
    va_list args;
    va_start(args, format);
@@ -1897,6 +1902,24 @@ void ClientSession::processRequest(NXCPMessage *request)
          break;
       case CMD_GET_OSPF_DATA:
          getOspfData(*request);
+         break;
+      case CMD_GET_ASSET_MGMT_ATTRIBUTE:
+         getAssetManagementConfiguration(*request);
+         break;
+      case CMD_CREATE_ASSET_MGMT_ATTRIBUTE:
+         createAssetManagementConfiguration(*request);
+         break;
+      case CMD_UPDATE_ASSET_MGMT_ATTRIBUTE:
+         updateAssetManagementConfiguration(*request);
+         break;
+      case CMD_DELETE_ASSET_MGMT_ATTRIBUTE:
+         deleteAssetManagementConfiguration(*request);
+         break;
+      case CMD_UPDATE_ASSET_INSTANCE:
+         updateAssetManagementInstance(*request);
+         break;
+      case CMD_DELETE_ASSET_INSTANCE:
+         deleteAssetManagementInstance(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -16412,3 +16435,259 @@ void ClientSession::getOspfData(const NXCPMessage& request)
 
    sendMessage(response);
 }
+
+/**
+ * Get assert management configuration attributes
+ *
+ * Called by:
+ * CMD_GET_ASSET_MGMT_ATTRIBUTE
+ *
+ * Return values:
+ * VID_AM_COUNT                  Number of assert management entries
+ * VID_RCC                       Request completion code
+ * VID_AM_LIST_BASE              Base for assert management entries entry list. Also first assert management entries name
+ * VID_AM_LIST_BASE + 1          Display name
+ * VID_AM_LIST_BASE + 2          Data type
+ * VID_AM_LIST_BASE + 3          If it is mandatory
+ * VID_AM_LIST_BASE + 4          If it should be uinque
+ * VID_AM_LIST_BASE + 5          Auto fill script
+ * VID_AM_LIST_BASE + 6          Minimal range
+ * VID_AM_LIST_BASE + 7          Maximal range
+ * VID_AM_LIST_BASE + 8          System tag
+ * VID_AM_LIST_BASE + 9          Enum mapping count
+ * VID_AM_LIST_BASE + 10 + n*2   n enum key
+ * VID_AM_LIST_BASE + 11 + n*2   n enum value
+ *
+ * Second maintenance entry starts from VID_AM_LIST_BASE + 100
+ */
+void ClientSession::getAssetManagementConfiguration(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   AMFillMessage(&response);
+   response.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(response);
+}
+
+/**
+ * Create new assert management attribute
+ *
+ * Called by:
+ * CMD_UPDATE_ASSET_MGMT_ATTRIBUTE
+ *
+ * Expected input parameters:
+ * VID_NAME             assert management attribute name
+ * VID_DISPLAY_NAME     display name
+ * VID_DATA_TYPE        data type AMDataType
+ * VID_IS_MANDATORY     if this attribute is mandatory for filling
+ * VID_IS_UNIQUE        if this attribute should be unique
+ * VID_SCRIPT           auto fill script
+ * VID_RANGE_MIN        min range
+ * VID_RANGE_MAX        max range
+ * VID_SYSTEM_TYPE      system type AMSystemType
+ * VID_ENUM_COUNT       number of items in enum list
+ * VID_AM_ENUM_MAP_BASE enum list base (key, value) one by one
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::createAssetManagementConfiguration(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
+   {
+      response.setField(VID_RCC, AMCreateAttribute(request, *this));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on creating assert management attribute"));
+   }
+   sendMessage(response);
+}
+
+/**
+ * Update existing assert management attribute
+ *
+ * Called by:
+ * CMD_UPDATE_ASSET_MGMT_ATTRIBUTE
+ *
+ * Expected input parameters:
+ * VID_NAME             assert management attribute name
+ * VID_DISPLAY_NAME     display name
+ * VID_DATA_TYPE        data type AMDataType
+ * VID_IS_MANDATORY     if this attribute is mandatory for filling
+ * VID_IS_UNIQUE        if this attribute should be unique
+ * VID_SCRIPT           auto fill script
+ * VID_RANGE_MIN        min range
+ * VID_RANGE_MAX        max range
+ * VID_SYSTEM_TYPE      system type AMSystemType
+ * VID_ENUM_COUNT       number of items in enum list
+ * VID_AM_ENUM_MAP_BASE enum list base (key, value) one by one
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::updateAssetManagementConfiguration(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
+   {
+      response.setField(VID_RCC, AMUpdateAttribute(request, *this));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating assert management attribute"));
+   }
+   sendMessage(response);
+}
+
+/**
+ * Delete assert management attribute
+ *
+ * Called by:
+ * CMD_DELETE_ASSET_MGMT_ATTRIBUTE
+ *
+ * Expected input parameters:
+ * VID_NAME     assert management attribute name
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::deleteAssetManagementConfiguration(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
+   {
+   response.setField(VID_RCC, AMDeleteAttribute(request, *this));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting assert management attribute"));
+   }
+   sendMessage(response);
+}
+
+
+/**
+ * Update or create asset management instance
+ *
+ * Called by:
+ * CMD_UPDATE_ASSET_INSTANCE
+ *
+ * Expected input parameters:
+ * VID_OBJECT_ID     object id
+ * VID_NAME          attribute name
+ * VID_VALUE         attribute value
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ * VID_ERROR_TEXT                   Error text if result is not success
+ */
+void ClientSession::updateAssetManagementInstance(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         if (object->isAsset())
+         {
+            json_t *oldValue = object->toJson();
+            SharedString name = request.getFieldAsSharedString(VID_NAME);
+            SharedString value = request.getFieldAsSharedString(VID_VALUE);
+            std::pair<uint32_t, String> result = object->getAsAsset()->modifyAassetData(name, value);
+            if (result.first != RCC_SUCCESS)
+            {
+               writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Failed to update asset management instance. Reason %s"), (const TCHAR *)result.second);
+               response.setField(VID_ERROR_TEXT, result.second);
+            }
+            else
+            {
+               json_t *newValue = object->toJson();
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Object %s modified from client"), object->getName());
+               json_decref(newValue);
+            }
+            json_decref(oldValue);
+            response.setField(VID_RCC, result.first);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset management instance modification"));
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Delete asset management instance
+ *
+ * Called by:
+ * CMD_DELETE_ASSET_INSTANCE
+ *
+ * Expected input parameters:
+ * VID_OBJECT_ID     object id
+ * VID_NAME          attribute name
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::deleteAssetManagementInstance(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != nullptr)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         if (object->isAsset())
+         {
+            json_t *oldValue = object->toJson();
+            SharedString name = request.getFieldAsSharedString(VID_NAME);
+            uint32_t result = object->getAsAsset()->deleteAassetData(name);
+            if (result!= RCC_SUCCESS)
+            {
+               response.setField(VID_ERROR_TEXT, _T("Attribute is required"));
+               writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Failed to delete asset management instance."));
+            }
+            else
+            {
+               json_t *newValue = object->toJson();
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Object %s modified from client"), object->getName());
+               json_decref(newValue);
+            }
+            json_decref(oldValue);
+            response.setField(VID_RCC, result);
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset management instance deleteion"));
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+

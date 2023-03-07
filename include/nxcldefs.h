@@ -558,6 +558,8 @@ enum SessionState
 #define NX_NOTIFY_SSH_CREDENTIALS_CHANGED     60
 #define NX_NOTIFY_AGENT_TUNNEL_OPEN           61
 #define NX_NOTIFY_AGENT_TUNNEL_CLOSED         62
+#define NX_NOTIFY_AM_ATTRIBUTE_UPDATED        63
+#define NX_NOTIFY_AM_ATTRIBUTE_DELETED        64
 
 /**
  * Request completion codes
@@ -721,6 +723,8 @@ enum SessionState
 #define RCC_PROTECTED_IMAGE               ((uint32_t)156)
 #define RCC_INVALID_SSH_PROXY_ID          ((uint32_t)157)
 #define RCC_FILE_APPEND_POSSIBLE          ((uint32_t)158)
+#define RCC_VALIDATION_ERROR              ((uint32_t)159)
+#define RCC_ATTRIBUTE_REQUIRED            ((uint32_t)160)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -828,8 +832,9 @@ enum SessionState
 #define SYSTEM_ACCESS_SSH_KEY_CONFIGURATION   MASK_BIT64(46)
 #define SYSTEM_ACCESS_MANAGE_OBJECT_QUERIES   MASK_BIT64(47)
 #define SYSTEM_ACCESS_MANAGE_2FA_METHODS      MASK_BIT64(48)
+#define SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE     MASK_BIT64(49)
 
-#define SYSTEM_ACCESS_FULL                    _ULL(0x1FFFFFFFFFFFF)
+#define SYSTEM_ACCESS_FULL                    _ULL(0x3FFFFFFFFFFFF)
 
 #endif	/* NETXMS_CUSTOM_USER_RIGHTS */
 

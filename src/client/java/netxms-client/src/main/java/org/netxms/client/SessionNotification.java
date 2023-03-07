@@ -100,6 +100,8 @@ public class SessionNotification
    public static final int SSH_CREDENTIALS_CHANGED = 1060;
    public static final int AGENT_TUNNEL_OPEN = 1061;
    public static final int AGENT_TUNNEL_CLOSED = 1062;
+   public static final int AM_ATTRIBUTE_UPDATED = 1063;
+   public static final int AM_ATTRIBUTE_DELETED = 1064;
 
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

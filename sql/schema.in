@@ -2602,3 +2602,42 @@ CREATE TABLE maintenance_journal
    modification_time integer not null,
    PRIMARY KEY(record_id)
 ) TABLE_TYPE;
+
+/**
+ * Asset management attributes
+ */
+CREATE TABLE am_attributes
+(
+   attr_name varchar(63) not null,
+   display_name varchar(255) null,
+   data_type integer not null,
+   is_mandatory char(1) not null,
+   is_unique char(1) not null,
+   autofill_script SQL_TEXT null,
+   range_min integer not null,
+   range_max integer not null,
+   sys_type integer not null,
+   PRIMARY KEY(attr_name)
+) TABLE_TYPE;
+
+/**
+ * Asset management attribute value
+ */
+CREATE TABLE am_enum_values
+(
+   attr_name varchar(63) not null,
+   attr_value varchar(63) not null,
+   display_name varchar(255) not null,
+   PRIMARY KEY(attr_name,attr_value)
+) TABLE_TYPE;
+
+/**
+ * Asset management attribute object data
+ */
+CREATE TABLE am_object_data
+(
+   object_id integer not null,
+   attr_name varchar(63) not null,
+   attr_value varchar(255) null,
+   PRIMARY KEY(object_id,attr_name)
+) TABLE_TYPE;

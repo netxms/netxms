@@ -475,6 +475,13 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_MAINTENANCE_JOURNAL = 0x01C6;
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
+   public static final int CMD_GET_ASSET_MGMT_ATTRIBUTE = 0x01C9;
+   public static final int CMD_CREATE_ASSET_MGMT_ATTRIBUTE = 0x01CA;
+   public static final int CMD_UPDATE_ASSET_MGMT_ATTRIBUTE = 0x01CB;
+   public static final int CMD_DELETE_ASSET_MGMT_ATTRIBUTE = 0x01CC;
+   public static final int CMD_UPDATE_ASSET_INSTANCE = 0x01CD;
+   public static final int CMD_DELETE_ASSET_INSTANCE = 0x01CE;
+   
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -1295,7 +1302,16 @@ public class NXCPCodes
    public static final long VID_VPN_CONNECTOR_COUNT = 810;
    public static final long VID_MONITOR_ID = 811;
    public static final long VID_NUM_TIME_FRAMES = 812;
-   public static final long VID_NUM_POLL_STATES = 813;
+   public static final long VID_AM_COUNT = 813;
+   public static final long VID_DATA_TYPE = 814;
+   public static final long VID_IS_MANDATORY = 815;
+   public static final long VID_IS_UNIQUE = 816;
+   public static final long VID_RANGE_MIN = 817;
+   public static final long VID_RANGE_MAX = 818;
+   public static final long VID_SYSTEM_TYPE = 819;
+   public static final long VID_ENUM_COUNT = 820;
+   public static final long VID_DISPLAY_NAME = 821;
+   public static final long VID_NUM_POLL_STATES = 822;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1322,6 +1338,7 @@ public class NXCPCodes
    public static final long VID_TOOLTIP_DCI_LIST_BASE = 0x73000000L;
    public static final long VID_URL_LIST_BASE = 0x74000000L;
    public static final long VID_ICMP_TARGET_LIST_BASE = 0x75000000L;
+   public static final long VID_AM_DATA_BASE = 0x76000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
@@ -1416,4 +1433,6 @@ public class NXCPCodes
    public static final long VID_TICKET_LIST_BASE = 0x10000000L;
    public static final long VID_OSPF_AREA_LIST_BASE = 0x20000000L;
    public static final long VID_OSPF_NEIGHBOR_LIST_BASE = 0x30000000L;
+   public static final long VID_AM_LIST_BASE = 0x10000000L;
+   public static final long VID_AM_ENUM_MAP_BASE = 0x10000000L;
 }

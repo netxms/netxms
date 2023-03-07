@@ -77,6 +77,7 @@ public class SystemRights extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, i18n.tr("Manage all scheduled tasks")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, i18n.tr("Assert management attributes")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, i18n.tr("Configure SNMP traps")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, i18n.tr("Configure event templates")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EPP, i18n.tr("Edit event processing policy")));

@@ -69,6 +69,7 @@ public class SystemRights extends PropertyPage
       object = (AbstractUserObject)getElement().getAdapter(AbstractUserObject.class);
 
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, Messages.get().SystemRights_ManageAllScheduledTasks));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, "Assert management attributes"));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, Messages.get().SystemRights_ConfigureTraps));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EPP, Messages.get().SystemRights_EditEPP));

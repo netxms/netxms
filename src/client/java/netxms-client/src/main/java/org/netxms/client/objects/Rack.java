@@ -22,20 +22,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.PassiveRackElement;
+import org.netxms.client.objects.interfaces.Assets;
 import org.netxms.client.objects.interfaces.HardwareEntity;
 
 /**
  * Rack object
  */
-public class Rack extends GenericObject
+public class Rack extends GenericObject implements Assets
 {
 	private int height;
 	private boolean topBottomNumbering;
    private List<PassiveRackElement> passiveElements;
+   private Map<String, String> assetList;
 
 	/**
     * Create from NXCP message.
@@ -56,6 +59,8 @@ public class Rack extends GenericObject
 		   passiveElements.add(new PassiveRackElement(msg, fieldId));
          fieldId += 10;
 		}
+		
+		assetList = msg.getStringMapFromFields(NXCPCodes.VID_AM_DATA_BASE, NXCPCodes.VID_AM_COUNT);
 	}
 
 	/**
@@ -147,4 +152,13 @@ public class Rack extends GenericObject
             return e;
       return null;
 	}
+
+   /**
+    * @see org.netxms.client.objects.interfaces.Assets#getAssets()
+    */
+   @Override
+   public Map<String, String> getAssets()
+   {
+      return assetList;
+   }
 }

@@ -900,6 +900,12 @@ private:
    void cloneNetworkMap(const NXCPMessage& request);
    void findVendorByMac(const NXCPMessage& request);
    void getOspfData(const NXCPMessage& request);
+   void getAssetManagementConfiguration(const NXCPMessage& request);
+   void createAssetManagementConfiguration(const NXCPMessage& request);
+   void updateAssetManagementConfiguration(const NXCPMessage& request);
+   void deleteAssetManagementConfiguration(const NXCPMessage& request);
+   void updateAssetManagementInstance(const NXCPMessage& request);
+   void deleteAssetManagementInstance(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);
@@ -936,9 +942,9 @@ public:
    void sendPollerMsg(uint32_t requestIf, const TCHAR *text);
 	bool sendFile(const TCHAR *file, uint32_t requestId, off64_t offset, bool allowCompression = true);
 
-   void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...);
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...);
-   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...);
+   void writeAuditLog(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *format, ...)  const;
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, const TCHAR *oldValue, const TCHAR *newValue, char valueType, const TCHAR *format, ...)  const;
+   void writeAuditLogWithValues(const TCHAR *subsys, bool success, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, ...)  const;
 
    session_id_t getId() const { return m_id; }
    void setId(session_id_t id) { if (m_id == -1) m_id = id; }

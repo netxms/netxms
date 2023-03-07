@@ -1,5 +1,6 @@
 org.netxms.nxmc.modules.actions.ActionsConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.AgentConfigurationManagerElement
+org.netxms.nxmc.modules.serverconfig.AssetManagementAttributesElement
 org.netxms.nxmc.modules.agentmanagement.PackagesConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.TunnelConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.UserAgentNotificationElement

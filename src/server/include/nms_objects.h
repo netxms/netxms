@@ -41,6 +41,7 @@ class Cluster;
 class ComponentTree;
 class Pollable;
 class EventReference;
+class Asset;
 
 /**
  * Global variables used by inline methods
@@ -839,6 +840,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_DASHBOARD_LIST       0x00200000
 #define MODIFY_OSPF_AREAS           0x00400000
 #define MODIFY_OSPF_NEIGHBORS       0x00800000
+#define MODIFY_AM_INSTANCES         0x01000000
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1135,6 +1137,7 @@ class NXCORE_EXPORTABLE NetObj : public NObject
    friend class AutoBindTarget;
    friend class Pollable;
    friend class VersionableObject;
+   friend class Asset;
 
 private:
    typedef NObject super;
@@ -1201,6 +1204,7 @@ protected:
    Mutex m_mutexResponsibleUsers;
 
    Pollable* m_asPollable; // Only changed in Pollable class constructor
+   Asset *m_asAsset; // Only changed in Asset class constructor
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj> &getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
@@ -1385,6 +1389,8 @@ public:
    virtual bool isDataCollectionTarget() const;
    bool isPollable() const { return m_asPollable != nullptr; }
    virtual Pollable* getAsPollable() { return m_asPollable; }
+   bool isAsset() const { return m_asAsset != nullptr; }
+   virtual Asset* getAsAsset() { return m_asAsset; }
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -1694,6 +1700,40 @@ public:
    bool saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target) const;
 
    static IcmpStatCollector *loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period);
+};
+
+/**
+ * Class that manages asset management attribute instances for objects
+ */
+class Asset
+{
+private:
+   NetObj *m_this;
+   Mutex m_amMutexProperties;
+   StringMap m_instances;
+
+protected:
+   void internalLock() const { m_amMutexProperties.lock(); }
+   void internalUnlock() const { m_amMutexProperties.unlock(); }
+
+   std::pair<uint32_t, String> validateInput(const TCHAR *name, const TCHAR *value);
+   bool isAssetValueEqual(const TCHAR *name, const TCHAR *value);
+
+public:
+   Asset(NetObj *_this);
+
+   void modifyFromMessage(const NXCPMessage& msg);
+   std::pair<uint32_t, String>  modifyAassetData(const TCHAR *name, const TCHAR *value);
+   uint32_t deleteAassetData(const TCHAR *name);
+   void getAassetData(NXCPMessage* msg) const;
+
+   bool loadFromDatabase(DB_HANDLE db, uint32_t objectId);
+   bool saveToDatabase(DB_HANDLE db);
+   bool deleteFromDatabase(DB_HANDLE db);
+
+   void deleteItemImMemory(const TCHAR *name);
+
+   void assetToJson(json_t *root);
 };
 
 #ifdef _WIN32
@@ -2367,7 +2407,7 @@ enum GeoLocationControlMode
 /**
  * Common base class for all objects capable of collecting data
  */
-class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner, public Pollable
+class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner, public Pollable, public Asset
 {
 private:
    typedef DataCollectionOwner super;
@@ -3905,7 +3945,7 @@ public:
 /**
  * Rack object
  */
-class NXCORE_EXPORTABLE Rack : public AbstractContainer
+class NXCORE_EXPORTABLE Rack : public AbstractContainer, public Asset
 {
 protected:
    typedef AbstractContainer super;
@@ -3917,6 +3957,7 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
 
    virtual void prepareForDeletion() override;
 

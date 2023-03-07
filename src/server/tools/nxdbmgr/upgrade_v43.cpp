@@ -23,6 +23,15 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 43.8 to 44.0
+ */
+static bool H_UpgradeFromV8()
+{
+   CHK_EXEC(SetMajorSchemaVersion(44, 0));
+   return true;
+}
+
+/**
  * Upgrade from 43.7 to 43.8
  */
 static bool H_UpgradeFromV7()
@@ -334,6 +343,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  44, 0,  H_UpgradeFromV8  },
    { 7,  43, 8,  H_UpgradeFromV7  },
    { 6,  43, 7,  H_UpgradeFromV6  },
    { 5,  43, 6,  H_UpgradeFromV5  },
@@ -354,7 +364,7 @@ bool MajorSchemaUpgrade_V43()
    if (!DBGetSchemaVersion(g_dbHandle, &major, &minor))
       return false;
 
-   while ((major == 43) && (minor < DB_SCHEMA_VERSION_V43_MINOR))
+   while (major == 43)
    {
       // Find upgrade procedure
       int i;
