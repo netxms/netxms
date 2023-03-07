@@ -456,6 +456,26 @@ public class BaseFileViewer extends Composite
    }
 
    /**
+    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setBackground(Color color)
+   {
+      super.setBackground(color);
+      text.setBackground(color);
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#setForeground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setForeground(Color color)
+   {
+      super.setForeground(color);
+      text.setForeground(color);
+   }
+
+   /**
     * Replace content (including all styling) with one from given source file viewer
     *
     * @param source source file viewer

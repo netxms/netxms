@@ -40,6 +40,7 @@ import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
@@ -458,6 +459,26 @@ public class BaseFileViewer extends Composite
    public void removeSelectionListener(SelectionListener listener)
    {
       text.removeSelectionListener(listener);
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setBackground(Color color)
+   {
+      super.setBackground(color);
+      text.setBackground(color);
+   }
+
+   /**
+    * @see org.eclipse.swt.widgets.Control#setForeground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setForeground(Color color)
+   {
+      super.setForeground(color);
+      text.setForeground(color);
    }
 
    /**
