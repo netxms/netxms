@@ -901,8 +901,7 @@ public abstract class View implements MessageAreaHolder
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(view);
-         window.open();
+         PopOutViewWindow.open(view);
       }
    }
 }

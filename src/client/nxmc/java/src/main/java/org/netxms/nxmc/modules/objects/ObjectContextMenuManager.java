@@ -57,11 +57,9 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
@@ -554,7 +552,7 @@ public class ObjectContextMenuManager extends MenuManager
     */
    protected Shell getShell()
    {
-      return Registry.getMainWindow().getShell();
+      return view.getWindow().getShell();
    }
 
    /**
@@ -715,16 +713,8 @@ public class ObjectContextMenuManager extends MenuManager
       monitor.setApplicableObjects(objects);       
       PackageDeployment deployment = new PackageDeployment(monitor);
       monitor.setPackageDeploymentListener(deployment);
-      Perspective p = view.getPerspective();   
-      if (p != null)
-      {
-         p.addMainView(monitor, true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(monitor);
-         window.open();
-      }
+      view.openView(monitor);
+
       final NXCSession session = Registry.getSession();
       Job job = new Job(i18n.tr("Deploy agent package"), monitor) {
          @Override
@@ -782,16 +772,7 @@ public class ObjectContextMenuManager extends MenuManager
          return;
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
-      ScreenshotView screenshotView = new ScreenshotView((Node)object, null, null, contextId);
-      if (view.getPerspective() != null)
-      {
-         view.getPerspective().addMainView(screenshotView, true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(screenshotView);
-         window.open();
-      }
+      view.openView(new ScreenshotView((Node)object, null, null, contextId));
    }
 
    /**
@@ -804,16 +785,7 @@ public class ObjectContextMenuManager extends MenuManager
          return;
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
-      AgentConfigurationEditor editor = new AgentConfigurationEditor((Node)object, contextId);
-      if (view.getPerspective() != null)
-      {
-         view.getPerspective().addMainView(editor, true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(editor);
-         window.open();
-      }
+      view.openView(new AgentConfigurationEditor((Node)object, contextId));
    }
 
    /**
@@ -823,16 +795,7 @@ public class ObjectContextMenuManager extends MenuManager
    {
       AbstractObject object = getObjectFromSelection();
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
-      ScriptExecutorView executor = new ScriptExecutorView(object.getObjectId(), contextId);
-      if (view.getPerspective() != null)
-      {
-         view.getPerspective().addMainView(executor, true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(executor);
-         window.open();
-      }
+      view.openView(new ScriptExecutorView(object.getObjectId(), contextId));
    }
 
    /**

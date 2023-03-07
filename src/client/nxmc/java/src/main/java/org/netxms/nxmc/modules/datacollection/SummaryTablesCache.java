@@ -180,9 +180,7 @@ public class SummaryTablesCache
          return tables.isEmpty();
       }
 	}
-   
 
-   
    /**
     * Query table using selected base object
     * 
@@ -201,17 +199,15 @@ public class SummaryTablesCache
                @Override
                public void run()
                {
-                  Perspective p = viewPlacement.getPerspective();   
-                  
                   SummaryTable view = new SummaryTable(tableId, baseObjectId, contextId);
+                  Perspective p = viewPlacement.getPerspective();
                   if (p != null)
                   {
                      p.addMainView(view, true, false);
                   }
                   else
                   {
-                     PopOutViewWindow window = new PopOutViewWindow(view);
-                     window.open();
+                     PopOutViewWindow.open(view);
                   }
                   view.setTable(results);
                }

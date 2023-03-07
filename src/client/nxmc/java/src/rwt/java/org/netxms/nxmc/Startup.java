@@ -35,9 +35,7 @@ import org.eclipse.rap.rwt.application.EntryPoint;
 import org.eclipse.rap.rwt.client.service.ExitConfirmation;
 import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.rap.rwt.internal.application.ApplicationContextImpl;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.VersionInfo;
 import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.client.NXCSession;
@@ -46,6 +44,7 @@ import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.windows.MainWindow;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
@@ -71,7 +70,6 @@ public class Startup implements EntryPoint, StartupParameters
 
    private I18n i18n = LocalizationHelper.getI18n(Startup.class);
    private Display display;
-   private Shell shell;
 
    /**
     * @see org.eclipse.rap.rwt.application.EntryPoint#createUI()
@@ -109,20 +107,37 @@ public class Startup implements EntryPoint, StartupParameters
       SharedIcons.init();
       StatusDisplayInfo.init(display);
       ObjectIcons.init(display);
+      DataCollectionDisplayInfo.init();
 
-      Shell shell = new Shell(display, SWT.NO_TRIM);
-      shell.setMaximized(true);
-      shell.open();
-
-      if (!doLogin())
+      Window window;
+      String popoutId = getParameter("pop-out-id");
+      System.out.println(RWT.getRequest().getParameterMap());
+      if (popoutId != null)
       {
-         logger.info("Application instance exit");
-         display.dispose();
-         return 0;
+         window = PopOutViewWindow.create(popoutId);
+         if (window == null)
+         {
+            logger.info("Application instance exit (invalid pop-out request ID)");
+            display.dispose();
+            return 0;
+         }
+      }
+      else
+      {
+         if (!doLogin())
+         {
+            logger.info("Application instance exit (cannot login)");
+            display.dispose();
+            return 0;
+         }
+
+         MainWindow w = new MainWindow();
+         Registry.setMainWindow(w);
+         w.setBlockOnOpen(true);
+         window = w;
       }
 
       NXCSession session = Registry.getSession();
-      DataCollectionDisplayInfo.init();
       MibCache.init(session, display);
       ObjectToolsCache.init();
       ObjectToolsCache.attachSession(display, session);
@@ -132,10 +147,7 @@ public class Startup implements EntryPoint, StartupParameters
       ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
       exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));
 
-      MainWindow w = new MainWindow(shell);
-      Registry.setMainWindow(w);
-      w.setBlockOnOpen(true);
-      w.open();
+      window.open();
 
       logger.info("Application instance exit");
       AlarmNotifier.stop();
@@ -178,7 +190,7 @@ public class Startup implements EntryPoint, StartupParameters
       AppPropertiesLoader appProperties = new AppPropertiesLoader();
       settings.set("Connect.Server", appProperties.getProperty("server", "127.0.0.1"));
 
-      LoginDialog loginDialog = new LoginDialog(shell, appProperties);
+      LoginDialog loginDialog = new LoginDialog(null, appProperties);
       while(!success)
       {
          if (!autoConnect)

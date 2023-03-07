@@ -150,7 +150,7 @@ public class Startup
          SummaryTablesCache.attachSession(display, session);
          GraphTemplateCache.attachSession(display, session);
 
-         MainWindow w = new MainWindow(null);
+         MainWindow w = new MainWindow();
          Registry.setMainWindow(w);
          w.setBlockOnOpen(true);
          w.open();

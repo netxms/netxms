@@ -54,26 +54,6 @@ public final class Registry
 {
    public static final boolean IS_WEB_CLIENT = true;
 
-   private static Set<Perspective> perspectives = new HashSet<Perspective>();
-
-   static
-   {
-      perspectives.add(new AlarmsPerspective());
-      perspectives.add(new BusinessServicesPerspective());
-      perspectives.add(new ConfigurationPerspective());
-      perspectives.add(new DashboardsPerspective());
-      perspectives.add(new GraphsPerspective());
-      perspectives.add(new InfrastructurePerspective());
-      perspectives.add(new LogViewerPerspective());
-      perspectives.add(new MapsPerspective());
-      perspectives.add(new MonitorPerspective());
-      perspectives.add(new NetworkPerspective());
-      perspectives.add(new PinboardPerspective());
-      perspectives.add(new TemplatesPerspective());
-      perspectives.add(new ToolsPerspective());
-      perspectives.add(new WorldMapPerspective());
-   }
-
    /**
     * Get registry instance.
     *
@@ -272,6 +252,7 @@ public final class Registry
    private MainWindow mainWindow = null;
    private PollManager pollManager = null;
    private PinLocation lastViewPinLocation = PinLocation.PINBOARD;
+   private Set<Perspective> perspectives = new HashSet<Perspective>();
 
    /**
     * Default constructor
@@ -279,6 +260,21 @@ public final class Registry
    private Registry()
    {
       pollManager = new PollManager();
+
+      perspectives.add(new AlarmsPerspective());
+      perspectives.add(new BusinessServicesPerspective());
+      perspectives.add(new ConfigurationPerspective());
+      perspectives.add(new DashboardsPerspective());
+      perspectives.add(new GraphsPerspective());
+      perspectives.add(new InfrastructurePerspective());
+      perspectives.add(new LogViewerPerspective());
+      perspectives.add(new MapsPerspective());
+      perspectives.add(new MonitorPerspective());
+      perspectives.add(new NetworkPerspective());
+      perspectives.add(new PinboardPerspective());
+      perspectives.add(new TemplatesPerspective());
+      perspectives.add(new ToolsPerspective());
+      perspectives.add(new WorldMapPerspective());
    }
 
    /**
@@ -288,7 +284,7 @@ public final class Registry
     */
    public static List<Perspective> getPerspectives()
    {
-      List<Perspective> result = new ArrayList<Perspective>(perspectives);
+      List<Perspective> result = new ArrayList<Perspective>(getInstance().perspectives);
       result.sort(new Comparator<Perspective>() {
          @Override
          public int compare(Perspective p1, Perspective p2)

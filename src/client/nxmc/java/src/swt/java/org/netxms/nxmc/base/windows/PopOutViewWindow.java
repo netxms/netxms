@@ -46,15 +46,27 @@ import org.netxms.nxmc.keyboard.KeyStroke;
  */
 public class PopOutViewWindow extends Window implements MessageAreaHolder
 {
+   /**
+    * Open pop-out window with given view
+    *
+    * @param view view to show in pop-out window
+    */
+   public static void open(View view)
+   {
+      new PopOutViewWindow(view).open();
+   }
+
    private Composite windowArea;
    private MessageArea messageArea;
    private ViewStack viewContainer;
    private View view;
 
    /**
-    * @param parentShell
+    * Create new pop-out window.
+    *
+    * @param view view to show inside pop-out window
     */
-   public PopOutViewWindow(View view)
+   private PopOutViewWindow(View view)
    {
       super((Shell)null);
       this.view = view;

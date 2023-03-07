@@ -402,8 +402,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(view);
-         window.open();
+         PopOutViewWindow.open(view);
       }
    }
 
@@ -423,8 +422,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(view);
-         window.open();
+         PopOutViewWindow.open(view);
       }
    }
    
@@ -478,8 +476,7 @@ public final class ObjectToolExecutor
          }
          else
          {
-            PopOutViewWindow window = new PopOutViewWindow(view);
-            window.open();
+            PopOutViewWindow.open(view);
          }
       }
    }
@@ -533,8 +530,7 @@ public final class ObjectToolExecutor
          }
          else
          {
-            PopOutViewWindow window = new PopOutViewWindow(view);
-            window.open();
+            PopOutViewWindow.open(view);
          }
       }
    }
@@ -598,8 +594,7 @@ public final class ObjectToolExecutor
          }
          else
          {
-            PopOutViewWindow window = new PopOutViewWindow(view);
-            window.open();
+            PopOutViewWindow.open(view);
          }
       }
    }
@@ -651,8 +646,7 @@ public final class ObjectToolExecutor
          }
          else
          {
-            PopOutViewWindow window = new PopOutViewWindow(view);
-            window.open();
+            PopOutViewWindow.open(view);
          }
       }
    }
@@ -727,8 +721,7 @@ public final class ObjectToolExecutor
          }
          else
          {
-            PopOutViewWindow window = new PopOutViewWindow(view);
-            window.open();
+            PopOutViewWindow.open(view);
          }
       }
    }

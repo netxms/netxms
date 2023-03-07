@@ -30,8 +30,6 @@ import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.base.views.Perspective;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.datacollection.views.DataComparisonView;
@@ -163,22 +161,13 @@ public class TableValueViewer extends BaseTableValueViewer
       if (cells.length == 0)
          return;
 
-      Perspective p = view.getPerspective();
       for(int i = 0; i < cells.length; i++)
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          final String instance = buildInstanceString(cells[i].getViewerRow());
          final String tableName = column.getDisplayName() + ": " + instance.replace("~~~", " / ");
          AbstractObject object = session.findObjectById(objectId);
-         if (p != null)
-         {
-            p.addMainView(new HistoricalDataView(object, object.getObjectId(), dciId, tableName, instance, column.getName()), true, false);
-         }
-         else
-         {
-            PopOutViewWindow window = new PopOutViewWindow(new HistoricalDataView(object, object.getObjectId(), dciId, tableName, instance, column.getName()));
-            window.open();
-         }
+         view.openView(new HistoricalDataView(object, object.getObjectId(), dciId, tableName, instance, column.getName()));
       }
    }
    
@@ -215,16 +204,7 @@ public class TableValueViewer extends BaseTableValueViewer
       }
 
       AbstractObject object = view.getObject();
-      Perspective p = view.getPerspective();
-      if (p != null)
-      {
-         p.addMainView(new HistoricalGraphView(object, items, 0), true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items, 0));
-         window.open();
-      }
+      view.openView(new HistoricalGraphView(object, items, 0));
    }
 
    /**
@@ -247,16 +227,7 @@ public class TableValueViewer extends BaseTableValueViewer
          items.add(new GraphItem(objectId, dciId, currentData.getTitle(), column.getDisplayName() + ": " + instance.replace("~~~", " / "), instance, column.getName(), "%s"));
       }
 
-      Perspective p = view.getPerspective();
-      if (p != null)
-      {
-         p.addMainView(new DataComparisonView(objectId, items, chartType, objectId), true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(new DataComparisonView(objectId, items, chartType, objectId));
-         window.open();
-      }
+      view.openView(new DataComparisonView(objectId, items, chartType, objectId));
    }
 
    /**

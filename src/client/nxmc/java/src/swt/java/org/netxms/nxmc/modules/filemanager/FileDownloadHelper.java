@@ -52,7 +52,7 @@ import org.xnap.commons.i18n.I18n;
 public class FileDownloadHelper
 {
    private static final I18n i18n = LocalizationHelper.getI18n(FileDownloadHelper.class);
-   
+
    /**
     * Download file from agent
     */
@@ -245,15 +245,13 @@ public class FileDownloadHelper
    public static void uploadFolder(long objectId, IStructuredSelection selection, AgentFileManager view, final SortableTreeViewer viewer)
    {
       final Object[] objects = selection.toArray();
-      final AgentFile upladFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
-            .getParent();
+      final AgentFile uploadFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0]).getParent();
 
       final StartClientToAgentFolderUploadDialog dlg = new StartClientToAgentFolderUploadDialog(view.getWindow().getShell());
       if (dlg.open() == Window.OK)
       {
-         Job job = new UploadConsoleJob(i18n.tr("Upload folder to agent"), dlg.getLocalFile(), objectId, upladFolder, dlg.getRemoteFileName(), view, viewer);
+         Job job = new UploadConsoleJob(i18n.tr("Upload folder to agent"), dlg.getLocalFile(), objectId, uploadFolder, dlg.getRemoteFileName(), view, viewer);
          job.start();
       }
-   }   
-
+   }
 }

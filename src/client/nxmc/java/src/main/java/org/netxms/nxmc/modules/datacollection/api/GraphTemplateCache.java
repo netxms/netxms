@@ -222,8 +222,7 @@ public class GraphTemplateCache
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(view);
-         window.open();
+         PopOutViewWindow.open(view);
       }
       view.initPredefinedGraph(graphDefinition);
    }

@@ -71,7 +71,7 @@ public class ObjectToolsCache
 	   this.session = session;
 
 	   reload();
-	   
+
       session.addListener(new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)

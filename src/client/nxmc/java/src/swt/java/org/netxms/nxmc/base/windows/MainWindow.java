@@ -120,9 +120,9 @@ public class MainWindow extends Window implements MessageAreaHolder
    /**
     * @param parentShell
     */
-   public MainWindow(Shell parentShell)
+   public MainWindow()
    {
-      super(parentShell);
+      super((Shell)null);
       PreferenceStore ps = PreferenceStore.getInstance();
       verticalLayout = ps.getAsBoolean("Appearance.VerticalLayout", true);
       showServerClock = ps.getAsBoolean("Appearance.ShowServerClock", false);

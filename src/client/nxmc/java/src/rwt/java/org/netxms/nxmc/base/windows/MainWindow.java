@@ -113,14 +113,23 @@ public class MainWindow extends Window implements MessageAreaHolder
    /**
     * @param parentShell
     */
-   public MainWindow(Shell parentShell)
+   public MainWindow()
    {
-      super(parentShell);
+      super((Shell)null);
       PreferenceStore ps = PreferenceStore.getInstance();
       verticalLayout = ps.getAsBoolean("Appearance.VerticalLayout", true);
       showServerClock = ps.getAsBoolean("Appearance.ShowServerClock", false);
       userMenuManager = new UserMenuManager();
       helpMenuManager = new HelpMenuManager();
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#getShellStyle()
+    */
+   @Override
+   protected int getShellStyle()
+   {
+      return SWT.NO_TRIM;
    }
 
    /**

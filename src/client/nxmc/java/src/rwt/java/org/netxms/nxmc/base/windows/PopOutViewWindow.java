@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,12 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -33,7 +38,9 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewStack;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -45,18 +52,87 @@ import org.netxms.nxmc.keyboard.KeyStroke;
  */
 public class PopOutViewWindow extends Window implements MessageAreaHolder
 {
+   private static Map<String, Request> popOutRequests = new HashMap<>();
+
+   /**
+    * Open pop-out window with given view
+    *
+    * @param view view to show in pop-out window
+    */
+   public static void open(View view)
+   {
+      UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
+      String id;
+      synchronized(popOutRequests)
+      {
+         id = UUID.randomUUID().toString();
+         popOutRequests.put(id, new Request(view));
+      }
+      launcher.openURL("?pop-out-id=" + id);
+   }
+
+   /**
+    * Create pop-out window from request with given ID. Intended to be called only from application entry point.
+    *
+    * @param id request ID
+    * @return window object or null if request ID is invalid
+    */
+   public static PopOutViewWindow create(String id)
+   {
+      PopOutViewWindow w = null;
+      synchronized(popOutRequests)
+      {
+         Request r = popOutRequests.get(id);
+         if (r != null)
+         {
+            popOutRequests.remove(id);
+            Registry.setSession(Display.getCurrent(), r.session);
+            w = new PopOutViewWindow(r.view);
+            w.setBlockOnOpen(true);
+         }
+      }
+      return w;
+   }
+
+   /**
+    * POp-out request
+    */
+   private static class Request
+   {
+      View view;
+      NXCSession session;
+
+      Request(View view)
+      {
+         this.view = view;
+         this.session = Registry.getSession();
+      }
+   }
+
    private Composite windowArea;
    private MessageArea messageArea;
    private ViewStack viewContainer;
    private View view;
 
    /**
-    * @param parentShell
+    * Create new pop-out window.
+    *
+    * @param view view to show inside window
+    * @param shell parent shell
     */
-   public PopOutViewWindow(View view)
+   private PopOutViewWindow(View view)
    {
       super((Shell)null);
       this.view = view;
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#getShellStyle()
+    */
+   @Override
+   protected int getShellStyle()
+   {
+      return SWT.NO_TRIM;
    }
 
    /**
@@ -67,9 +143,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    {
       super.configureShell(shell);
       shell.setText(view.getFullName());
-
       shell.setMaximized(true);
-      shell.setFullScreen(true);
    }
 
    /**
@@ -135,6 +209,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
          public void widgetDisposed(DisposeEvent e)
          {
             display.removeFilter(SWT.KeyDown, keyFilter);
+            viewContainer.setEnabled(false); // To prevent calling setFocus() on views during disposal
          }
       });
 

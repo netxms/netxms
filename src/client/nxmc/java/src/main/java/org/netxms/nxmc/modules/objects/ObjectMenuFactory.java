@@ -169,8 +169,7 @@ public final class ObjectMenuFactory
             }
             else
             {
-               PopOutViewWindow window = new PopOutViewWindow(view);
-               window.open();
+               PopOutViewWindow.open(view);
             }
             view.startPoll();
          }
@@ -401,7 +400,7 @@ public final class ObjectMenuFactory
             }
             rootMenu = currMenu;
          }
-         
+
          final MenuItem item = new MenuItem(rootMenu, SWT.PUSH);
          item.setText(path[path.length - 1]);
          item.setData(tables[i]);
@@ -412,7 +411,7 @@ public final class ObjectMenuFactory
                SummaryTablesCache.queryTable(baseObject.getObjectId(), contextId, ((DciSummaryTableDescriptor)item.getData()).getId(), viewPlacement);
             }
          });
-         
+
          added++;
       }
 

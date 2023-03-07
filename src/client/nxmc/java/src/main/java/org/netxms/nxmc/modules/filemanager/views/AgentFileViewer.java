@@ -316,8 +316,7 @@ public class AgentFileViewer extends AdHocObjectView
       }
       else
       {
-         PopOutViewWindow window = new PopOutViewWindow(fileView);
-         window.open();
+         PopOutViewWindow.open(fileView);
       }
 
       fileView.viewer.setLineStyler(lineStyler);

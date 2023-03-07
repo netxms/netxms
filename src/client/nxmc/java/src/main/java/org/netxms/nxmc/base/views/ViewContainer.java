@@ -288,8 +288,7 @@ public abstract class ViewContainer extends Composite
          View clone = view.cloneView();
          if (clone != null)
          {
-            PopOutViewWindow window = new PopOutViewWindow(clone);
-            window.open();
+            PopOutViewWindow.open(clone);
          }
       }
    }

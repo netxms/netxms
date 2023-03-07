@@ -47,10 +47,8 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.RefreshAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.DashboardComposite;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.charts.api.ChartType;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
@@ -334,16 +332,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
       }
 
       AbstractObject object = (view instanceof ObjectView) ? ((ObjectView)view).getObject() : session.findObjectById(nodeId);
-      Perspective p = view.getPerspective();
-      if (p != null)
-      {
-         p.addMainView(new HistoricalGraphView(object, graphItems, 0), true, false);
-      }
-      else
-      {
-         PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, graphItems, 0));
-         window.open();
-      }
+      view.openView(new HistoricalGraphView(object, graphItems, 0));
 	}
 
    /**

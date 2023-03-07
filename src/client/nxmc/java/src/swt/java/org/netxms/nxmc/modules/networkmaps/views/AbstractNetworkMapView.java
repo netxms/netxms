@@ -89,8 +89,6 @@ import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.networkmaps.ObjectDoubleClickHandlerRegistry;
@@ -1287,16 +1285,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
                public void run()
                {
                   AbstractObject object = getObject();
-                  Perspective p = getPerspective();
-                  if (p != null)
-                  {
-                     p.addMainView(new HistoricalGraphView(object, items, getObjectId()), true, false);
-                  }
-                  else
-                  {
-                     PopOutViewWindow window = new PopOutViewWindow(new HistoricalGraphView(object, items, getObjectId()));
-                     window.open();
-                  }
+                  openView(new HistoricalGraphView(object, items, getObjectId()));
                }
             });
          }
