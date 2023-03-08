@@ -34,9 +34,8 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.actions.ObjectAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDciDialog;
 import org.netxms.nxmc.modules.objects.dialogs.helpers.InterfaceDciInfo;
@@ -47,6 +46,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class CreateInterfaceDciAction extends ObjectAction<Interface>
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(CreateInterfaceDciAction.class);
+
    private static final int IFDCI_IN_BYTES = 0;
    private static final int IFDCI_OUT_BYTES = 1;
    private static final int IFDCI_IN_BITS = 2;
@@ -56,27 +57,25 @@ public class CreateInterfaceDciAction extends ObjectAction<Interface>
    private static final int IFDCI_IN_ERRORS = 6;
    private static final int IFDCI_OUT_ERRORS = 7;
 
-   private final I18n i18n = LocalizationHelper.getI18n(CreateInterfaceDciAction.class);
-
    /**
     * Create action for creating interface DCIs.
     *
     * @param text action's text
-    * @param view owning view
+    * @param viewPlacement view placement information
     * @param selectionProvider associated selection provider
     */
-   public CreateInterfaceDciAction(String text, Perspective perspective, ISelectionProvider selectionProvider)
+   public CreateInterfaceDciAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Interface.class, text, perspective, selectionProvider);
+      super(Interface.class, i18n.tr("Create data collection &items..."), viewPlacement, selectionProvider);
    }
 
    /**
-    * @see org.netxms.nxmc.base.actions.ObjectAction#runInternal(java.util.List)
+    * @see org.netxms.nxmc.modules.objects.actions.ObjectAction#run(java.util.List)
     */
    @Override
-   protected void runInternal(List<Interface> objects)
+   protected void run(List<Interface> objects)
    {
-      final CreateInterfaceDciDialog dlg = new CreateInterfaceDciDialog(perspective.getWindow().getShell(), (objects.size() == 1) ? objects.get(0) : null);
+      final CreateInterfaceDciDialog dlg = new CreateInterfaceDciDialog(getShell(), (objects.size() == 1) ? objects.get(0) : null);
       if (dlg.open() != Window.OK)
          return;
 
@@ -93,7 +92,7 @@ public class CreateInterfaceDciAction extends ObjectAction<Interface>
 
       final NXCSession session = Registry.getSession();
       final String taskName = i18n.tr("Creating interface DCIs");
-      new Job(i18n.tr("Creating interface DCI"), null, perspective.getMessageArea()) {
+      new Job(i18n.tr("Creating interface DCI"), null, getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {

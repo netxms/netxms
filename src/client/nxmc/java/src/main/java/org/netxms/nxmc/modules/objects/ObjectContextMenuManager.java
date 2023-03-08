@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -49,7 +50,6 @@ import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
@@ -68,6 +68,7 @@ import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
+import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
@@ -75,6 +76,7 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.services.ObjectActionDescriptor;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -108,8 +110,9 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemove;
    private Action actionAddNode;
    private Action actionRemoveNode;
-   private Action actionCreateInterfaceDCI;
-   private Action actionForcePolicyInstall;
+   private ObjectAction<?> actionCreateInterfaceDCI;
+   private ObjectAction<?> actionForcePolicyInstall;
+   private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
     * Create new object context menu manager.
@@ -320,9 +323,18 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
-      actionCreateInterfaceDCI = new CreateInterfaceDciAction(i18n.tr("Create data collection items..."), view.getPerspective(), selectionProvider);
-      
-      actionForcePolicyInstall = new ForcedPolicyDeploymentAction(i18n.tr("Force deployment of agent policies"), view.getPerspective(), selectionProvider);
+      ViewPlacement viewPlacement = new ViewPlacement(view);
+      actionCreateInterfaceDCI = new CreateInterfaceDciAction(viewPlacement, selectionProvider);
+      actionForcePolicyInstall = new ForcedPolicyDeploymentAction(viewPlacement, selectionProvider);
+
+      NXCSession session = Registry.getSession();
+      ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
+      for(ObjectActionDescriptor a : actionLoader)
+      {
+         String componentId = a.getRequiredComponentId();
+         if ((componentId == null) || session.isServerComponentRegistered(componentId))
+            actionContributions.add(a.createAction(viewPlacement, selectionProvider));
+      }
    }
 
    /**
@@ -365,6 +377,11 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionRemoveNode);
             add(new Separator());
          }
+      }
+      else if (actionForcePolicyInstall.isValidForSelection(selection))
+      {
+         add(actionForcePolicyInstall);
+         add(new Separator());
       }
       if (isBindToMenuAllowed(selection))
       {
@@ -472,26 +489,26 @@ public class ObjectContextMenuManager extends MenuManager
          add(new MenuContributionItem(i18n.tr("S&ummary tables"), summaryTableMenu));
       }
 
-      if (singleObject && (getObjectFromSelection() instanceof Interface))
+      if (actionCreateInterfaceDCI.isValidForSelection(selection))
       {
          add(new Separator());
          add(actionCreateInterfaceDCI);
       }
-      else
+
+      if (!actionContributions.isEmpty())
       {
-         boolean onlyInterfaces = true;
-         for(Object o : selection.toList())
+         boolean first = true;
+         for(ObjectAction<?> a : actionContributions)
          {
-            if (!(o instanceof Interface))
+            if (a.isValidForSelection(selection))
             {
-               onlyInterfaces = false;
-               break;
+               if (first)
+               {
+                  add(new Separator());
+                  first = false;
+               }
+               add(a);
             }
-         }
-         if (onlyInterfaces)
-         {
-            add(new Separator());
-            add(actionCreateInterfaceDCI);
          }
       }
 

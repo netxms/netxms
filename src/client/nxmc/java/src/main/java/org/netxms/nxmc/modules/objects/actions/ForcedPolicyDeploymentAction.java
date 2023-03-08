@@ -24,11 +24,11 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Template;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.actions.ObjectAction;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
+import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -36,30 +36,31 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ForcedPolicyDeploymentAction extends ObjectAction<Template>
 {
-   private final I18n i18n = LocalizationHelper.getI18n(ForcedPolicyDeploymentAction.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(ForcedPolicyDeploymentAction.class);
 
    /**
     * Create action for forced policy deployment.
     *
     * @param text action's text
-    * @param view owning view
+    * @param viewPlacement view placement information
     * @param selectionProvider associated selection provider
     */
-   public ForcedPolicyDeploymentAction(String text, Perspective perspective, ISelectionProvider selectionProvider)
+   public ForcedPolicyDeploymentAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Template.class, text, perspective, selectionProvider);
+      super(Template.class, i18n.tr("&Force deployment of agent policies"), viewPlacement, selectionProvider);
+      setImageDescriptor(ResourceManager.getImageDescriptor("icons/push.png"));
    }
 
    /**
-    * @see org.netxms.nxmc.base.actions.ObjectAction#runInternal(java.util.List)
+    * @see org.netxms.nxmc.modules.objects.actions.ObjectAction#run(java.util.List)
     */
    @Override
-   protected void runInternal(List<Template> objects)
+   protected void run(List<Template> objects)
    {		
 		final NXCSession session = Registry.getSession();		
 		for(final Template template : objects)
 		{
-			new Job(String.format(i18n.tr("Force policy installation"), template.getObjectName()), null, perspective.getMessageArea()) {
+         new Job(String.format(i18n.tr("Force agent policy deployment"), template.getObjectName()), null, getMessageArea()) {
 				@Override
 				protected void run(IProgressMonitor monitor) throws Exception
 				{
@@ -68,7 +69,7 @@ public class ForcedPolicyDeploymentAction extends ObjectAction<Template>
                   @Override
                   public void run()
                   {
-                     perspective.getMessageArea().addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Policies from template \"%s\" successfully installed"), template.getObjectName()));
+                     getMessageArea().addMessage(MessageArea.INFORMATION, String.format(i18n.tr("Policies from template \"%s\" successfully installed"), template.getObjectName()));
                   }
                });				   
 				}

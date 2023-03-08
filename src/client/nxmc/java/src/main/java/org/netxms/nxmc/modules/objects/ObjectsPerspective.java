@@ -19,13 +19,22 @@
 package org.netxms.nxmc.modules.objects;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -49,7 +58,6 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
-import org.netxms.client.objects.Template;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -72,6 +80,7 @@ import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
 import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
+import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
@@ -103,6 +112,7 @@ import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.services.ObjectActionDescriptor;
 import org.netxms.nxmc.services.ObjectViewDescriptor;
 import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -111,11 +121,12 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Object browser perspective
  */
-public abstract class ObjectsPerspective extends Perspective
+public abstract class ObjectsPerspective extends Perspective implements ISelectionProvider
 {
    private final I18n i18n = LocalizationHelper.getI18n(ObjectsPerspective.class);
 
    private SubtreeType subtreeType;
+   private StructuredSelection selection = new StructuredSelection();
    private Composite headerArea;
    private Label objectName;
    private ToolBar objectToolBar;
@@ -123,8 +134,9 @@ public abstract class ObjectsPerspective extends Perspective
    private Image imageEditConfig;
    private Image imageExecuteScript;
    private Image imageTakeScreenshot;
-   private Image imageForcePolicyInstall;
-   private List<ObjectViewDescriptor> additionalElements = new ArrayList<>();
+   private ObjectAction<?> actionForcePolicyDeployment;
+   private List<ObjectAction<?>> actionContributions = new ArrayList<>();
+   private Set<ISelectionChangedListener> selectionListeners = new HashSet<>();
 
    /**
     * Create new object perspective
@@ -141,11 +153,8 @@ public abstract class ObjectsPerspective extends Perspective
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
       imageTakeScreenshot = ResourceManager.getImage("icons/screenshot.png");
-      imageForcePolicyInstall = ResourceManager.getImage("icons/push.png");
 
-      ServiceLoader<ObjectViewDescriptor> loader = ServiceLoader.load(ObjectViewDescriptor.class, getClass().getClassLoader());
-      for(ObjectViewDescriptor e : loader)
-         additionalElements.add(e);
+      actionForcePolicyDeployment = new ForcedPolicyDeploymentAction(new ViewPlacement(this), this);
    }
 
    /**
@@ -211,11 +220,22 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new WirelessStations());
 
       NXCSession session = Registry.getSession();
-      for(ObjectViewDescriptor e : additionalElements)
+
+      ServiceLoader<ObjectViewDescriptor> viewLoader = ServiceLoader.load(ObjectViewDescriptor.class, getClass().getClassLoader());
+      for(ObjectViewDescriptor v : viewLoader)
       {
-         String componentId = e.getRequiredComponentId();
+         String componentId = v.getRequiredComponentId();
          if ((componentId == null) || session.isServerComponentRegistered(componentId))
-            addMainView(e.createView());
+            addMainView(v.createView());
+      }
+
+      ViewPlacement viewPlacement = new ViewPlacement(this);
+      ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
+      for(ObjectActionDescriptor a : actionLoader)
+      {
+         String componentId = a.getRequiredComponentId();
+         if ((componentId == null) || session.isServerComponentRegistered(componentId))
+            actionContributions.add(a.createAction(viewPlacement, this));
       }
    }
 
@@ -255,9 +275,11 @@ public abstract class ObjectsPerspective extends Perspective
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
       super.navigationSelectionChanged(selection);
+
       if (selection.getFirstElement() instanceof AbstractObject)
       {
          AbstractObject object = (AbstractObject)selection.getFirstElement();
+         this.selection = new StructuredSelection(object);
          objectName.setText(object.getNameWithAlias());
          updateObjectToolBar(object);
          updateObjectMenuBar(object);
@@ -265,9 +287,17 @@ public abstract class ObjectsPerspective extends Perspective
       }
       else
       {
+         this.selection = new StructuredSelection();
          objectName.setText("");
       }
       headerArea.layout();
+
+      if (!selectionListeners.isEmpty())
+      {
+         SelectionChangedEvent e = new SelectionChangedEvent(this, selection);
+         for(ISelectionChangedListener l : selectionListeners)
+            l.selectionChanged(e);
+      }
    }
 
    /**
@@ -318,15 +348,15 @@ public abstract class ObjectsPerspective extends Perspective
          }
       }
 
-      if (object instanceof Template)
+      if (actionForcePolicyDeployment.isValidForSelection(selection))
       {
-         addObjectToolBarItem(i18n.tr("Force policy deployment"), imageForcePolicyInstall, new Runnable() {
-            @Override
-            public void run()
-            {
-               new ForcedPolicyDeploymentAction(i18n.tr("Force deployment of agent policies"), ObjectsPerspective.this, getNavigationSelectionProvider()).run();
-            }
-         });
+         addObjectToolBarItem(actionForcePolicyDeployment);
+      }
+
+      for(ObjectAction<?> a : actionContributions)
+      {
+         if (a.isValidForSelection(selection))
+            addObjectToolBarItem(a);
       }
 
       addObjectToolBarItem(i18n.tr("Delete"), SharedIcons.IMG_DELETE_OBJECT, new Runnable() {
@@ -372,6 +402,35 @@ public abstract class ObjectsPerspective extends Perspective
          public void widgetSelected(SelectionEvent e)
          {
             handler.run();
+         }
+      });
+   }
+
+   /**
+    * Add object toolbar item.
+    *
+    * @param name tooltip text
+    * @param icon icon
+    * @param handler selection handler
+    */
+   private void addObjectToolBarItem(final Action action)
+   {
+      ToolItem item = new ToolItem(objectToolBar, SWT.PUSH);
+      final Image icon = (action.getImageDescriptor() != null) ? action.getImageDescriptor().createImage() : ResourceManager.getImage("icons/empty.png");
+      item.setImage(icon);
+      item.setToolTipText(action.getText());
+      item.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            action.run();
+         }
+      });
+      item.addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            icon.dispose();
          }
       });
    }
@@ -468,5 +527,40 @@ public abstract class ObjectsPerspective extends Perspective
             addMainView(new ContextDashboardView((Dashboard)d));
          }
       }
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void addSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionListeners.add(listener);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+    */
+   @Override
+   public ISelection getSelection()
+   {
+      return selection;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void removeSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionListeners.remove(listener);
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+    */
+   @Override
+   public void setSelection(ISelection selection)
+   {
    }
 }
