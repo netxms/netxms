@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -239,12 +239,26 @@ void EscapeString(StringBuffer &str)
 /**
  * Prepare and execute SQL query with single binding - object ID.
  */
-bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query)
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, uint32_t objectId, const TCHAR *query)
 {
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt == nullptr)
       return false;
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
+   bool success = DBExecute(hStmt) ? true : false;
+   DBFreeStatement(hStmt);
+   return success;
+}
+
+/**
+ * Prepare and execute SQL query with single binding - object ID.
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId, const TCHAR *query)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt == nullptr)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, objectId, DB_BIND_STATIC);
    bool success = DBExecute(hStmt) ? true : false;
    DBFreeStatement(hStmt);
    return success;
