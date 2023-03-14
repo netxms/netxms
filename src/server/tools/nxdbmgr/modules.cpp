@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2022 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,11 +37,6 @@ struct Module
    bool (*UpgradeDB)();
    const TCHAR* const * (*GetTables)();
    const TCHAR* (*GetSchemaPrefix)();
-
-   ~Module()
-   {
-      DLClose(handle);
-   }
 };
 
 /**
@@ -115,6 +110,7 @@ static bool LoadServerModule(const TCHAR *name, bool mandatory, bool quiet)
       {
          if (!quiet)
             WriteToTerminalEx(_T("\x1b[32;1mINFO:\x1b[0m Server module \x1b[1m%s\x1b[0m skipped\n"), m->name);
+         DLClose(m->handle);
          delete m;
       }
       success = true;
