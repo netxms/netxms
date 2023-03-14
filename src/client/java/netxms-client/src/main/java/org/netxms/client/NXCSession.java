@@ -3329,7 +3329,7 @@ public class NXCSession
    {
       List<AbstractObject> objects = new ArrayList<AbstractObject>();
       Matcher matcher = Pattern.compile(regex).matcher("");
-      
+
       synchronized(objectList)
       {
          for(AbstractObject o : objectList.values())
@@ -3339,7 +3339,7 @@ public class NXCSession
                objects.add(o);
          }
       }
-      
+
       return objects;
    }   
 
