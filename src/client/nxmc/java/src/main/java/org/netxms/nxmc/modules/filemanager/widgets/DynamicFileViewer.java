@@ -32,7 +32,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.jobs.JobCallingServerJob;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,8 +115,15 @@ public class DynamicFileViewer extends BaseFileViewer
       this.remoteFileName = remoteFileName;
 
       setTextTopIndex();
-      monitoringJob = new MonitoringJob(monitorId);
-      monitoringJob.start();
+      if (monitorId != null)
+      {
+         monitoringJob = new MonitoringJob(monitorId);
+         monitoringJob.start();
+      }
+      else
+      {
+         restartTracking();
+      }
    }
 
    /**
@@ -157,7 +163,6 @@ public class DynamicFileViewer extends BaseFileViewer
                   "----------------------------------------------------------------------\n" + //$NON-NLS-1$
                   i18n.tr("Connection with the agent has been lost. Attempting to reconnect...") +
                   "\n----------------------------------------------------------------------\n"); //$NON-NLS-1$
-      view.addMessage(MessageArea.ERROR, i18n.tr("Connection with the agent has been lost. Attempting to reconnect..."));
 
       restartJob = new JobCallingServerJob(i18n.tr("Restart file tracking"), view) {
          private boolean running = true;
@@ -201,7 +206,6 @@ public class DynamicFileViewer extends BaseFileViewer
                            return;
                         }
                         
-                        view.clearMessages();
                         text.append("-------------------------------------------------------------------------------\n" + //$NON-NLS-1$
                                     i18n.tr("Connection with the agent restored.") +
                                     "\n-------------------------------------------------------------------------------\n\n"); //$NON-NLS-1$

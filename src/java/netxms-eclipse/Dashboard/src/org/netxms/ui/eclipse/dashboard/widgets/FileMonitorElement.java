@@ -42,7 +42,6 @@ public class FileMonitorElement extends ElementWidget
    private FileMonitorConfig config;
    private DynamicFileViewer viewer;
    private NXCSession session;
-   private AgentFileData file;
 
    /**
     * Create event monitor dashboard element.
@@ -77,15 +76,28 @@ public class FileMonitorElement extends ElementWidget
          @Override
          protected void runInternal(final IProgressMonitor monitor) throws Exception
          {
-            file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null, this);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.showFile(file.getFile(), true);
-                  viewer.startTracking(file.getMonitorId(), nodeId, file.getRemoteName());
-               }
-            });
+            try
+            {
+               final AgentFileData file = session.downloadFileFromAgent(nodeId, config.getFileName(), 1024, true, null, this);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.showFile(file.getFile(), true);
+                     viewer.startTracking(file.getMonitorId(), nodeId, file.getRemoteName());
+                  }
+               });
+            }
+            catch(Exception e)
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.startTracking(null, nodeId, config.getFileName());
+                  }
+               });
+            }
          }
 
          @Override

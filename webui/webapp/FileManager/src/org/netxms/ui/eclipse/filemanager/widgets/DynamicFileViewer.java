@@ -113,8 +113,15 @@ public class DynamicFileViewer extends BaseFileViewer
       this.nodeId = nodeId;
       this.remoteFileName = remoteFileName;
 
-      monitoringJob = new MonitoringJob(monitorId);
-      monitoringJob.start();
+      if (monitorId != null)
+      {
+         monitoringJob = new MonitoringJob(monitorId);
+         monitoringJob.start();
+      }
+      else
+      {
+         restartTracking();
+      }
    }
 
    /**
