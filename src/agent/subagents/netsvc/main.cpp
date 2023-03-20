@@ -49,12 +49,12 @@ void CurlCommonSetup(CURL *curl, const char *url, const OptionList& options, uin
 #endif
 
    // SSL-related stuff
-   bool verifyPeer = (((g_netsvcFlags & NETSVC_AF_VERIFYPEER) != 0) || options.getAsBoolean(_T("verify-peer"), false));
+   bool verifyPeer = options.getAsBoolean(_T("verify-peer"), (g_netsvcFlags & NETSVC_AF_VERIFYPEER) != 0);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, static_cast<long>(verifyPeer ? 1 : 0));
+
    if (s_certBundle[0] != 0)
-   {
       curl_easy_setopt(curl, CURLOPT_CAINFO, s_certBundle);
-   }
+
    if (options.getAsBoolean(_T("verify-host"), true))
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, static_cast<long>(2));
    else
