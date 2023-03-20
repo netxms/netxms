@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ public final class RCC
    public static final int OUT_OF_STATE_REQUEST = 5;
    public static final int DB_FAILURE = 6;
    public static final int INVALID_OBJECT_ID = 7;
-   public static final int ALREADY_EXIST = 8;
+   public static final int IP_ADDRESS_CONFLICT = 8;
    public static final int COMM_FAILURE = 9;
    public static final int SYSTEM_FAILURE = 10;
    public static final int INVALID_USER_ID = 11;

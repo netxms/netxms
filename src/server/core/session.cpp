@@ -3462,7 +3462,7 @@ void ClientSession::modifyObject(const NXCPMessage& request)
 				{
 					object->postModify();
 				}
-				else if (rcc == RCC_ALREADY_EXIST)
+				else if (rcc == RCC_IP_ADDRESS_CONFLICT)
 				{
                // Add information about conflicting nodes
                InetAddress ipAddr;
@@ -5971,8 +5971,8 @@ void ClientSession::createObject(const NXCPMessage& request)
                      // crash in that case
                      if (objectClass == OBJECT_NODE)
                      {
-                        msg.setField(VID_RCC, RCC_ALREADY_EXIST);
-                        //Add to description IP of new created node and name of node with the same IP
+                        msg.setField(VID_RCC, RCC_IP_ADDRESS_CONFLICT);
+                        // Add to description IP of new created node and name of node with the same IP
                         SetNodesConflictString(&msg, zoneUIN, ipAddr);
                      }
                      else if (objectClass == OBJECT_ZONE)
@@ -6014,8 +6014,7 @@ void ClientSession::createObject(const NXCPMessage& request)
       msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
@@ -9013,7 +9012,7 @@ void ClientSession::startSnmpWalk(const NXCPMessage& request)
    {
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**

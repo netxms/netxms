@@ -570,7 +570,7 @@ enum SessionState
 #define RCC_OUT_OF_STATE_REQUEST          ((uint32_t)5)
 #define RCC_DB_FAILURE                    ((uint32_t)6)
 #define RCC_INVALID_OBJECT_ID             ((uint32_t)7)
-#define RCC_ALREADY_EXIST                 ((uint32_t)8)
+#define RCC_IP_ADDRESS_CONFLICT           ((uint32_t)8)
 #define RCC_COMM_FAILURE                  ((uint32_t)9)
 #define RCC_SYSTEM_FAILURE                ((uint32_t)10)
 #define RCC_INVALID_USER_ID               ((uint32_t)11)
