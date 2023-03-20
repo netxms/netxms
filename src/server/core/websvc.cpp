@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -605,44 +605,57 @@ bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite)
 {
    if (config.getSubEntryValue(_T("name")) == nullptr)
    {
-      nxlog_debug_tag(_T("import"), 4, _T("ImportAction: no name specified"));
+      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: no name specified"));
       return false;
    }
 
-   uint32_t rcc = RCC_ALREADY_EXIST;
+   bool success = false;
    const uuid guid = config.getSubEntryValueAsUUID(_T("guid"));
-   auto service = FindWebServiceDefinition(guid);
+   shared_ptr<WebServiceDefinition> service = FindWebServiceDefinition(guid);
    TCHAR guidText[64];
-   if(service == nullptr)
+   if (service == nullptr)
    {
       // Check for duplicate name
       const TCHAR *name = config.getSubEntryValue(_T("name"));
-      if (FindWebServiceDefinition(name) != nullptr)
+      if (FindWebServiceDefinition(name) == nullptr)
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: name \"%s\" already exists"), name);
+         auto definition = make_shared<WebServiceDefinition>(config, 0);
+         uint32_t rcc = ModifyWebServiceDefinition(definition);
+         if (rcc == RCC_SUCCESS)
+         {
+            nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: web service \"%s\" created"), name);
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: cannot create web service \"%s\" (RCC=%u)"), name, rcc);
+         }
       }
       else
       {
-         auto definition = make_shared<WebServiceDefinition>(config, 0);
-         rcc = ModifyWebServiceDefinition(definition);
-         if (rcc == RCC_SUCCESS)
-            nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: \"%s\" web service created"), name);
+         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: web service with name \"%s\" already exists"), name);
       }
    }
    else if (overwrite)
    {
-      auto definition = make_shared<WebServiceDefinition>(config,service->getId());
-      rcc = ModifyWebServiceDefinition(definition);
-      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (overwrite)"),
-            service->getName(), guid.toString(guidText));
+      auto definition = make_shared<WebServiceDefinition>(config, service->getId());
+      uint32_t rcc = ModifyWebServiceDefinition(definition);
+      if (rcc == RCC_SUCCESS)
+      {
+         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (overwrite)"), service->getName(), guid.toString(guidText));
+         success = true;
+      }
+      else
+      {
+         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: cannot update existing web service \"%s\" (RCC=%u)"), service->getName(), rcc);
+      }
    }
    else
    {
-      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (skipping)"),
-            service->getName(), guid.toString(guidText));
+      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (skipping)"), service->getName(), guid.toString(guidText));
    }
 
-   return rcc == RCC_SUCCESS;
+   return success;
 }
 
 /**

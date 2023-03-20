@@ -8151,7 +8151,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
          // Check that there is no node with same IP as we try to change
          if ((FindNodeByIP(m_zoneUIN, ipAddr) != nullptr) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr))
          {
-            return RCC_ALREADY_EXIST;
+            return RCC_IP_ADDRESS_CONFLICT;
          }
       }
       setPrimaryIPAddress(ipAddr); //properties locking mutex already locked in NetObj::modifyFromMessage
@@ -8194,7 +8194,7 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
                // Check that there is no node with same IP as we try to change
                if ((FindNodeByIP(m_zoneUIN, ipAddr) != nullptr) || (FindSubnetByIP(m_zoneUIN, ipAddr) != nullptr))
                {
-                  return RCC_ALREADY_EXIST;
+                  return RCC_IP_ADDRESS_CONFLICT;
                }
             }
          }
