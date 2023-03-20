@@ -1853,7 +1853,7 @@ DCObjectInfo::DCObjectInfo(const NXCPMessage& msg, const DCObject *object)
    msg.getFieldAsString(VID_DESCRIPTION, m_description, MAX_DB_STRING);
    msg.getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
    msg.getFieldAsString(VID_INSTANCE, m_instanceName, MAX_DB_STRING);
-   if (m_type == DCO_TYPE_ITEM)
+   if ((m_type == DCO_TYPE_ITEM) && (object != nullptr))
    {
       m_unitName = static_cast<const DCItem*>(object)->m_unitName;
       m_multiplier = static_cast<const DCItem*>(object)->m_multiplier;
