@@ -1285,18 +1285,9 @@ void NXCPMessage::deleteAllFields()
 void NXCPMessage::setFieldFromMBString(uint32_t fieldId, const char *value)
 {
    size_t l = strlen(value) + 1;
-#if HAVE_ALLOCA
-   WCHAR *wcValue = reinterpret_cast<WCHAR*>(alloca(l * sizeof(WCHAR)));
-#else
-   WCHAR localBuffer[256];
-   WCHAR *wcValue = (l <= 256) ? localBuffer : static_cast<WCHAR*>(MemAlloc(l * sizeof(WCHAR)));
-#endif
-   mb_to_wchar(value, -1, wcValue, static_cast<int>(l));
-   set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, wcValue);
-#if !HAVE_ALLOCA
-   if (wcValue != localBuffer)
-      MemFree(wcValue);
-#endif
+   Buffer<WCHAR, 4096> wcValue(l);
+   mb_to_wchar(value, -1, wcValue, l);
+   set(fieldId, (m_version >= 5) ? NXCP_DT_UTF8_STRING : NXCP_DT_STRING, wcValue.buffer());
 }
 
 #endif
