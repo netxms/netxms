@@ -137,7 +137,7 @@ ProcessExecutor::~ProcessExecutor()
 /**
  * Set explicit list of inherited handles
  */
-static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle)
+static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle, uint32_t executorId)
 {
    SIZE_T size;
    if (!InitializeProcThreadAttributeList(nullptr, 1, 0, &size))
@@ -145,7 +145,7 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle)
       if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
       {
          TCHAR buffer[1024];
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+         nxlog_debug_tag_object(DEBUG_TAG, executorId, 4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
          return false;
       }
    }
@@ -154,7 +154,7 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle)
    if (!InitializeProcThreadAttributeList(si->lpAttributeList, 1, 0, &size))
    {
       TCHAR buffer[1024];
-      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug_tag_object(DEBUG_TAG, executorId, 4, _T("ProcessExecutor::execute(): InitializeProcThreadAttributeList failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       MemFree(si->lpAttributeList);
       return false;
    }
@@ -162,7 +162,7 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle)
    if (!UpdateProcThreadAttribute(si->lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST, handle, sizeof(HANDLE), nullptr, nullptr))
    {
       TCHAR buffer[1024];
-      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): UpdateProcThreadAttribute failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      nxlog_debug_tag_object(DEBUG_TAG, executorId, 4, _T("ProcessExecutor::execute(): UpdateProcThreadAttribute failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
       MemFree(si->lpAttributeList);
       return false;
    }
@@ -171,45 +171,15 @@ static bool SetInheritedHandle(STARTUPINFOEX *si, HANDLE *handle)
 }
 
 /**
- * Execute command with output capture
+ * Build process command line
  */
-bool ProcessExecutor::executeWithOutput()
+static const TCHAR *BuildCommandLine(const TCHAR *cmd, StringBuffer& appNameBuffer, StringBuffer& cmdLine)
 {
-   SECURITY_ATTRIBUTES sa;
-   sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-   sa.lpSecurityDescriptor = nullptr;
-   sa.bInheritHandle = TRUE;
-
-   HANDLE stdoutRead, stdoutWrite;
-   if (!CreatePipeEx(&stdoutRead, &stdoutWrite, true))
-   {
-      TCHAR buffer[1024];
-      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
-      return false;
-   }
-
-   // Ensure the read handle to the pipe for STDOUT is not inherited.
-   SetHandleInformation(stdoutRead, HANDLE_FLAG_INHERIT, 0);
-
-   STARTUPINFOEX si;
-   PROCESS_INFORMATION pi;
-
-   memset(&si, 0, sizeof(STARTUPINFOEX));
-   si.StartupInfo.cb = sizeof(STARTUPINFOEX);
-   si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
-   si.StartupInfo.hStdOutput = stdoutWrite;
-   si.StartupInfo.hStdError = stdoutWrite;
-   SetInheritedHandle(&si, &stdoutWrite);
-
-   bool success = false;
-
    const TCHAR *appName;
-   StringBuffer appNameBuffer;
-   StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
-   if (m_cmd[0] == _T('['))
+   if (cmd[0] == _T('['))
    {
       bool squotes = false, dquotes = false, firstElement = true;
-      for (const TCHAR *p = m_cmd + 1; *p != 0; p++)
+      for (const TCHAR *p = cmd + 1; *p != 0; p++)
       {
          if (!squotes && !dquotes)
          {
@@ -273,15 +243,54 @@ bool ProcessExecutor::executeWithOutput()
    }
    else
    {
-      cmdLine.append(m_cmd);
+      cmdLine.append(cmd);
       appName = nullptr;
    }
+   return appName;
+}
+
+/**
+ * Execute command with output capture
+ */
+bool ProcessExecutor::executeWithOutput()
+{
+   SECURITY_ATTRIBUTES sa;
+   sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+   sa.lpSecurityDescriptor = nullptr;
+   sa.bInheritHandle = TRUE;
+
+   HANDLE stdoutRead, stdoutWrite;
+   if (!CreatePipeEx(&stdoutRead, &stdoutWrite, true))
+   {
+      TCHAR buffer[1024];
+      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): cannot create pipe (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      return false;
+   }
+
+   // Ensure the read handle to the pipe for STDOUT is not inherited.
+   SetHandleInformation(stdoutRead, HANDLE_FLAG_INHERIT, 0);
+
+   STARTUPINFOEX si;
+   PROCESS_INFORMATION pi;
+
+   memset(&si, 0, sizeof(STARTUPINFOEX));
+   si.StartupInfo.cb = sizeof(STARTUPINFOEX);
+   si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
+   si.StartupInfo.hStdOutput = stdoutWrite;
+   si.StartupInfo.hStdError = stdoutWrite;
+   SetInheritedHandle(&si, &stdoutWrite, m_id);
+
+   bool success = false;
+
+   StringBuffer appNameBuffer;
+   StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
+   const TCHAR *appName = BuildCommandLine(m_cmd, appNameBuffer, cmdLine);
    if (CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, TRUE, EXTENDED_STARTUPINFO_PRESENT, nullptr, nullptr, &si.StartupInfo, &pi))
    {
       if (appName != nullptr)
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::execute(): process [exec=\"%s\" cmdline=\"%s\"] started (PID=%u)"), appName, cmdLine.cstr(), pi.dwProcessId);
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithOutput(): process [exec=\"%s\" cmdline=\"%s\"] started (PID=%u)"), appName, cmdLine.cstr(), pi.dwProcessId);
       else
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::execute(): process \"%s\" started (PID=%u)"), cmdLine.cstr(), pi.dwProcessId);
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithOutput(): process \"%s\" started (PID=%u)"), cmdLine.cstr(), pi.dwProcessId);
 
       m_phandle = pi.hProcess;
       CloseHandle(pi.hThread);
@@ -294,10 +303,10 @@ bool ProcessExecutor::executeWithOutput()
    {
       TCHAR buffer[1024];
       if (appName != nullptr)
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): cannot create process [exec=\"%s\" cmdline=\"%s\"] (Error 0x%08x: %s)"),
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithOutput(): cannot create process [exec=\"%s\" cmdline=\"%s\"] (Error 0x%08x: %s)"),
             appName, cmdLine.cstr(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
       else
-         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): cannot create process \"%s\" (Error 0x%08x: %s)"),
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithOutput(): cannot create process \"%s\" (Error 0x%08x: %s)"),
             cmdLine.cstr(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
 
       CloseHandle(stdoutRead);
@@ -314,23 +323,32 @@ bool ProcessExecutor::executeWithOutput()
  */
 bool ProcessExecutor::executeWithoutOutput()
 {
-   StringBuffer cmdLine = m_shellExec ? _T("CMD.EXE /C ") : _T("");
-   cmdLine.append(m_cmd);
+   StringBuffer appNameBuffer;
+   StringBuffer cmdLine(m_shellExec ? _T("CMD.EXE /C ") : _T(""));
+   const TCHAR *appName = BuildCommandLine(m_cmd, appNameBuffer, cmdLine);
 
    STARTUPINFO si;
    memset(&si, 0, sizeof(STARTUPINFO));
    si.cb = sizeof(STARTUPINFO);
 
    PROCESS_INFORMATION pi;
-   if (!CreateProcess(nullptr, cmdLine.getBuffer(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi))
+   if (!CreateProcess(appName, cmdLine.getBuffer(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi))
    {
       TCHAR buffer[1024];
-      nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::execute(): cannot create process \"%s\" (Error 0x%08x: %s)"),
-         cmdLine.getBuffer(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
+      if (appName != nullptr)
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithoutOutput(): cannot create process [exec=\"%s\" cmdline=\"%s\"] (Error 0x%08x: %s)"),
+            appName, cmdLine.cstr(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
+      else
+         nxlog_debug_tag_object(DEBUG_TAG, m_id, 4, _T("ProcessExecutor::executeWithoutOutput(): cannot create process \"%s\" (Error 0x%08x: %s)"),
+            cmdLine.cstr(), GetLastError(), GetSystemErrorText(GetLastError(), buffer, 1024));
       return false;
    }
 
-   nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::execute(): process \"%s\" started (PID=%u)"), cmdLine.cstr(), pi.dwProcessId);
+   if (appName != nullptr)
+      nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithoutOutput(): process [exec=\"%s\" cmdline=\"%s\"] started (PID=%u)"), appName, cmdLine.cstr(), pi.dwProcessId);
+   else
+      nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::executeWithoutOutput(): process \"%s\" started (PID=%u)"), cmdLine.cstr(), pi.dwProcessId);
+
    m_phandle = pi.hProcess;
    CloseHandle(pi.hThread);
    return true;
