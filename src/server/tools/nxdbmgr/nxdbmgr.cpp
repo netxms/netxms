@@ -379,7 +379,7 @@ stop_search:
                      _T("   check                : Check database for errors\n")
                      _T("   check-data-tables    : Check database for missing data tables\n")
                      _T("   export <file>        : Export database to file\n")
-                     _T("   get <name>           : Get value of server configuration variable\n")
+                     _T("   get <pattern>        : Get value of server configuration variable(s) matching given pattern\n")
                      _T("   import <file>        : Import database from file\n")
                      _T("   init [<type>]        : Initialize database. If type is not provided it will be deduced from driver name.\n")
                      _T("   migrate <source>     : Migrate database from given source\n")
@@ -424,6 +424,7 @@ stop_search:
                      _T("   * -e, -L, -Y, and -Z options can be specified more than once for different tables\n")
                      _T("   * -L and -Y options automatically exclude all other (not explicitly listed) tables\n")
                      _T("   * DBA credentials should be provided in form login/password\n")
+                     _T("   * Configuration variable name pattern can include character %% to match any number of characters\n")
                      _T("\n"), configFile);
             bStart = FALSE;
             break;
