@@ -27,7 +27,6 @@ import java.util.ResourceBundle;
  */
 public class ClientLocalizationHelper
 {
-
    /**
     * Get message text for given text
     * 
@@ -62,7 +61,7 @@ public class ClientLocalizationHelper
    {
       try
       {
-         ResourceBundle bundle = PropertyResourceBundle.getBundle("messages", locale);
+         ResourceBundle bundle = PropertyResourceBundle.getBundle("netxms-client-messages", locale);
          return bundle.getString(key);
       }
       catch(Exception e)
@@ -70,5 +69,4 @@ public class ClientLocalizationHelper
          return key;
       }
    }
-
 }

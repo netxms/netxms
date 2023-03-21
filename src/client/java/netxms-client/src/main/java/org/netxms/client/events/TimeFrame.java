@@ -175,11 +175,10 @@ public class TimeFrame
       if (isNever())
          return ClientLocalizationHelper.getText("TimeFrame_Never", locale);
 
-      StringBuilder builder = new StringBuilder();
-
+      StringBuilder sb = new StringBuilder();
       if (isAnyTime())
       {
-         builder.append(ClientLocalizationHelper.getText("TimeFrame_AnyTime", locale));
+         sb.append(ClientLocalizationHelper.getText("TimeFrame_AnyTime", locale));
       }
       else
       {
@@ -191,19 +190,20 @@ public class TimeFrame
          to.set(Calendar.MINUTE, getEndMinute());
          to.set(Calendar.HOUR_OF_DAY, getEndHour());
          to.set(Calendar.SECOND, 0);
-         builder.append(String.format(ClientLocalizationHelper.getText("TimeFrame_TimeFormat", locale), dfTime.format(from.getTime()), dfTime.format(to.getTime())));
+         sb.append(String.format(ClientLocalizationHelper.getText("TimeFrame_TimeFormat", locale), dfTime.format(from.getTime()), dfTime.format(to.getTime())));
       }
 
       if (isAnyDay())
       {
-         builder.append(ClientLocalizationHelper.getText("TimeFrame_AnyDay", locale));
+         sb.append(ClientLocalizationHelper.getText("TimeFrame_AnyDay", locale));
       }
       else
       {
-         builder.append(String.format(ClientLocalizationHelper.getText("TimeFrame_DayFormat", locale), getDaysOfMonth(), buildIntervals(daysOfWeek, DAYS_OF_THE_WEEK, locale),
+         sb.append(String.format(ClientLocalizationHelper.getText("TimeFrame_DayFormat", locale), getDaysOfMonth(), buildIntervals(daysOfWeek, DAYS_OF_THE_WEEK, locale),
                buildIntervals(months, MONTHS, locale)));
       }
-      return builder.toString();
+
+      return sb.toString();
    }
 
    /**

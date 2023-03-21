@@ -589,11 +589,11 @@ public class RuleEditor extends Composite
          addConditionGroupLabel(clientArea, "current time is within:", needAnd, rule.isTimeFramesInverted(), listener);
 
          final DateFormat dfTime = DateFormatFactory.getShortTimeFormat();    
-         for(TimeFrame frame : rule.getTimeFrames())
+         for(TimeFrame tf : rule.getTimeFrames())
          {
             CLabel clabel = createCLabel(clientArea, 2, false);
             clabel.addMouseListener(listener);
-            clabel.setText(frame.getFormattedDateString(dfTime, Locale.getDefault()));
+            clabel.setText(tf.getFormattedDateString(dfTime, Locale.getDefault()));
          }
          needAnd = true;
       }

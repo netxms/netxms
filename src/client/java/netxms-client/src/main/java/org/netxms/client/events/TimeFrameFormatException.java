@@ -77,8 +77,6 @@ public class TimeFrameFormatException extends Exception
    @Override
    public String getLocalizedMessage()
    {
-      Locale locale = Locale.getDefault();
-      return ClientLocalizationHelper.getText(key, locale.getLanguage());
+      return ClientLocalizationHelper.getText(key, Locale.getDefault());
    }
-
 }
