@@ -37,21 +37,10 @@
  */
 static void NtPasswordHash(const UCS2CHAR *passwd, BYTE *hash)
 {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   EVP_MD_CTX *context = EVP_MD_CTX_new();
-#else
-   EVP_MD_CTX contextBuffer;
-   EVP_MD_CTX *context = &contextBuffer;
-   EVP_MD_CTX_init(context);
-#endif
-   EVP_DigestInit_ex(context, EVP_md4(), nullptr);
-   EVP_DigestUpdate(context, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
-   EVP_DigestFinal_ex(context, hash, nullptr);
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   EVP_MD_CTX_free(context);
-#else
-   EVP_MD_CTX_cleanup(context);
-#endif
+   MD4_STATE context;
+   MD4Init(&context);
+   MD4Update(&context, passwd, ucs2_strlen(passwd) * sizeof(UCS2CHAR));
+   MD4Final(&context, hash);
 }
 
 /**

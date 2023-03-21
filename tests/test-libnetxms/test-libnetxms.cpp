@@ -28,6 +28,7 @@ void TestProcessExecutorWorker();
 void TestStringConversion();
 void TestSubProcess(const char *procname, bool debug);
 void TestGeoLocation();
+void TestMD4();
 NXCPMessage *TestSubProcessRequestHandler(UINT16 command, const void *data, size_t dataSize);
 
 /**
@@ -2202,6 +2203,7 @@ int main(int argc, char *argv[])
    TestDebugLevel();
    TestDebugTags();
    TestGeoLocation();
+   TestMD4();
 
    if (debug)
       nxlog_set_debug_level(9);

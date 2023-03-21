@@ -128,6 +128,7 @@
 #endif
 
 #define INVALID_INDEX         0xFFFFFFFF
+#define MD4_DIGEST_SIZE       16
 #define MD5_DIGEST_SIZE       16
 #define SHA1_DIGEST_SIZE      20
 #define SHA224_DIGEST_SIZE    28
