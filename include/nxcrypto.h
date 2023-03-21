@@ -68,6 +68,22 @@
 
 /**** Crypto helper functions ****/
 
+struct MD4_STATE
+{
+   uint32_t block[16];
+   BYTE buffer[64];
+   uint32_t lo;
+   uint32_t hi;
+   uint32_t a;
+   uint32_t b;
+   uint32_t c;
+   uint32_t d;
+};
+
+void LIBNETXMS_EXPORTABLE MD4Init(MD4_STATE *state);
+void LIBNETXMS_EXPORTABLE MD4Update(MD4_STATE *state, const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE MD4Final(MD4_STATE *state, BYTE *hash);
+
 #ifdef _WITH_ENCRYPTION
 struct MD_STATE
 {

@@ -219,6 +219,7 @@
     <ClCompile Include="lz4.c" />
     <ClCompile Include="macaddr.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="md4.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="memmem.cpp" />
     <ClCompile Include="mempool.cpp" />
