@@ -65,6 +65,16 @@ void TestProcessExecutor(const char *procname)
    ThreadSleepMs(100);
    AssertFalse(e2.isRunning());
    EndTest();
+
+   StartTest(_T("Process executor - [] command line syntax"));
+   _sntprintf(cmdLine, MAX_PATH, _T("['%hs', '@proc']"), procname);
+   ProcessExecutor e3(cmdLine);
+   AssertTrue(e3.execute());
+   AssertTrue(e3.isRunning());
+   e3.stop();
+   ThreadSleepMs(100);
+   AssertFalse(e3.isRunning());
+   EndTest();
 }
 
 /**
