@@ -25,6 +25,7 @@ import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.PollState;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
@@ -236,8 +237,7 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
       return autoBindFilter;
    }
 
-
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override
@@ -248,9 +248,21 @@ public class Cluster extends DataCollectionTarget implements ZoneMember, Polling
       return strings;
    }
 
+   /**
+    * @see org.netxms.client.objects.interfaces.AutoBindObject#getAutoBindFlags()
+    */
    @Override
    public int getAutoBindFlags()
    {
       return autoBindFlags;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
+    */
+   @Override
+   public PollState[] getPollStates()
+   {
+      return pollStates;
    }
 }

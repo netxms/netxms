@@ -1515,6 +1515,7 @@ typedef struct
 #define VID_VPN_CONNECTOR_COUNT     ((uint32_t)810)
 #define VID_MONITOR_ID              ((uint32_t)811)
 #define VID_NUM_TIME_FRAMES         ((uint32_t)812)
+#define VID_NUM_POLL_STATES         ((uint32_t)813)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1550,13 +1551,16 @@ typedef struct
 #define VID_EVENT_ARG_NAMES_BASE    ((UINT32)0x10000000)
 
 // Variable range for trap parameter list
-#define VID_TRAP_PBASE              ((UINT32)0x00009000)
+#define VID_TRAP_PBASE              ((uint32_t)0x00009000)
+
+// Base value for poll state list
+#define VID_POLL_STATE_LIST_BASE    ((uint32_t)0x0000A000)
 
 // Object information can contain variable number of parent and child objects' ids.
 // Because each variable in message have to have unique identifier,
 // we reserver a two range ids for this variables.
-#define VID_PARENT_ID_BASE          ((UINT32)0x00003000)
-#define VID_PARENT_ID_LAST          ((UINT32)0x00003FFF)
+#define VID_PARENT_ID_BASE          ((uint32_t)0x00003000)
+#define VID_PARENT_ID_LAST          ((uint32_t)0x00003FFF)
 
 // Reservation of 0x7FFFFFFF ids for child object's list
 #define VID_CHILD_ID_BASE           ((uint32_t)0x80000000)

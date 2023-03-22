@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.PollState;
 
 /**
  * This class represents NetXMS NODE objects.
@@ -109,5 +110,14 @@ public class Node extends AbstractNode
    public boolean canUseEtherNetIP()
    {
       return true;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
+    */
+   @Override
+   public PollState[] getPollStates()
+   {
+      return pollStates;
    }
 }

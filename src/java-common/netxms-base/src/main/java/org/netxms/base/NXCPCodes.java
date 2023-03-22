@@ -1295,6 +1295,7 @@ public class NXCPCodes
    public static final long VID_VPN_CONNECTOR_COUNT = 810;
    public static final long VID_MONITOR_ID = 811;
    public static final long VID_NUM_TIME_FRAMES = 812;
+   public static final long VID_NUM_POLL_STATES = 813;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1310,6 +1311,7 @@ public class NXCPCodes
 	public static final long VID_EVENT_ARG_BASE = 0x00008000L;
 	public static final long VID_EVENT_ARG_LAST = 0x00008FFFL;
 	public static final long VID_TRAP_PBASE = 0x00009000L;
+   public static final long VID_POLL_STATE_LIST_BASE = 0x0000A000L;
 	public static final long VID_PARENT_ID_BASE = 0x00003000L;
 	public static final long VID_PARENT_ID_LAST = 0x00003FFFL;
 	public static final long VID_CHILD_ID_BASE = 0x80000000L;

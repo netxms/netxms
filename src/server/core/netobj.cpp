@@ -1282,6 +1282,11 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
       msg->setField(fieldId++, url->getDescription());
       fieldId += 7;
    }
+
+   if (isPollable())
+   {
+      getAsPollable()->pollStateToMessage(msg);
+   }
 }
 
 /**

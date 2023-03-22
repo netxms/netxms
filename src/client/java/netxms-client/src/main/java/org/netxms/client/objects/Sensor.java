@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.PollState;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.interfaces.PollingTarget;
 import org.netxms.client.sensor.configs.DlmsConfig;
@@ -412,5 +413,14 @@ public class Sensor extends DataCollectionTarget implements PollingTarget
    public boolean canUseEtherNetIP()
    {
       return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
+    */
+   @Override
+   public PollState[] getPollStates()
+   {
+      return pollStates;
    }
 }

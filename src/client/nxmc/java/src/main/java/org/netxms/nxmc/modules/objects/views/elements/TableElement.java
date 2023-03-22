@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,10 +46,12 @@ public abstract class TableElement extends OverviewPageElement
 	private Action actionCopyValue;
 
 	/**
-	 * @param parent
-	 * @param anchor
-	 * @param objectTab
-	 */
+    * Create element.
+    *
+    * @param parent parent composite
+    * @param anchor anchor element
+    * @param objectView owning view
+    */
    public TableElement(Composite parent, OverviewPageElement anchor, ObjectView objectView)
 	{
       super(parent, anchor, objectView);

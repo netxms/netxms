@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.PollState;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.interfaces.AutoBindObject;
 import org.netxms.client.objects.interfaces.PollingTarget;
@@ -191,5 +192,14 @@ public class Container extends GenericObject implements AutoBindObject, PollingT
    public boolean canUseEtherNetIP()
    {
       return false;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
+    */
+   @Override
+   public PollState[] getPollStates()
+   {
+      return pollStates;
    }
 }

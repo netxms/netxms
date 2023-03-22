@@ -454,3 +454,34 @@ bool Pollable::saveToDatabase(DB_HANDLE hdb)
 
    return success;
 }
+
+/**
+ * Fill NXCP message with specific poll state if poll type is enabled
+ */
+#define FillPollState(state, type) \
+{ \
+   if (m_acceptablePolls & type) \
+   { \
+      state.fillMessage(msg, baseId); \
+      baseId += 10; \
+      count++; \
+   } \
+}
+
+/**
+ * Copy current poll states to NXCP message
+ */
+void Pollable::pollStateToMessage(NXCPMessage *msg)
+{
+   uint32_t count = 0;
+   uint32_t baseId = VID_POLL_STATE_LIST_BASE;
+   FillPollState(m_statusPollState, Pollable::STATUS);
+   FillPollState(m_configurationPollState, Pollable::CONFIGURATION);
+   FillPollState(m_instancePollState, Pollable::INSTANCE_DISCOVERY);
+   FillPollState(m_discoveryPollState, Pollable::DISCOVERY);
+   FillPollState(m_topologyPollState, Pollable::TOPOLOGY);
+   FillPollState(m_routingPollState, Pollable::ROUTING_TABLE);
+   FillPollState(m_icmpPollState, Pollable::ICMP);
+   FillPollState(m_autobindPollState, Pollable::AUTOBIND);
+   msg->setField(VID_NUM_POLL_STATES, count);
+}

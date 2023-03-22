@@ -22,6 +22,7 @@ import java.util.Set;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.PollState;
 import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.interfaces.AutoBindDCIObject;
 import org.netxms.client.objects.interfaces.AutoBindObject;
@@ -215,5 +216,14 @@ public class BaseBusinessService extends GenericObject implements AutoBindObject
       addString(strings, objectAutoBindFilter);
       addString(strings, dciAutoBindFilter);
       return strings;
+   }
+
+   /**
+    * @see org.netxms.client.objects.interfaces.PollingTarget#getPollStates()
+    */
+   @Override
+   public PollState[] getPollStates()
+   {
+      return pollStates;
    }
 }

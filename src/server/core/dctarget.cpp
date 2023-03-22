@@ -57,7 +57,7 @@ extern ThreadPool *g_pollerThreadPool;
 /**
  * Default constructor
  */
-DataCollectionTarget::DataCollectionTarget(uint32_t pollableFlags) : super(), Pollable(this, pollableFlags | Pollable::INSTANCE_DISCOVERY ),
+DataCollectionTarget::DataCollectionTarget(uint32_t pollableFlags) : super(), Pollable(this, pollableFlags | Pollable::INSTANCE_DISCOVERY),
          m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;

@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.views;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -30,7 +31,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.elements.Capabilities;
 import org.netxms.nxmc.modules.objects.views.elements.Commands;
@@ -40,6 +43,7 @@ import org.netxms.nxmc.modules.objects.views.elements.ExternalResources;
 import org.netxms.nxmc.modules.objects.views.elements.GeneralInfo;
 import org.netxms.nxmc.modules.objects.views.elements.LastValues;
 import org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement;
+import org.netxms.nxmc.modules.objects.views.elements.PollStates;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -127,13 +131,13 @@ public class ObjectOverviewView extends ObjectView
       elements.add(e);
       e = new Commands(leftColumn, e, this);
       elements.add(e);
-      // e = new AvailabilityChart(leftColumn, e, this);
-      // elements.add(e);
       e = new ExternalResources(leftColumn, e, this);
       elements.add(e);
       e = new Comments(leftColumn, e, this);
       elements.add(e);
       e = new Capabilities(rightColumn, null, this);
+      elements.add(e);
+      e = new PollStates(rightColumn, e, this);
       elements.add(e);
       e = new Connection(rightColumn, e, this);
       elements.add(e);
@@ -218,5 +222,26 @@ public class ObjectOverviewView extends ObjectView
 
       Point s = viewArea.getSize();
       viewArea.redraw(0, 0, s.x, s.y, true);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#refresh()
+    */
+   @Override
+   public void refresh()
+   {
+      new Job(i18n.tr("Resynchronize object"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.syncObjectSet(new long[] { getObjectId() }, true, NXCSession.OBJECT_SYNC_NOTIFY);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot initiate object synchronization");
+         }
+      }.start();
    }
 }

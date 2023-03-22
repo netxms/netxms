@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,10 +39,12 @@ public abstract class OverviewPageElement
    private ObjectView objectView;
 	
 	/**
-	 * @param parent
-	 * @param text
-	 * @param objectTab
-	 */
+    * Create element.
+    *
+    * @param parent parent composite
+    * @param anchor anchor element
+    * @param objectView owning view
+    */
    public OverviewPageElement(Composite parent, OverviewPageElement anchor, ObjectView objectView)
 	{
 		this.parent = parent;

@@ -1,5 +1,6 @@
 package org.netxms.client.objects.interfaces;
 
+import org.netxms.client.PollState;
 import org.netxms.client.constants.AgentCacheMode;
 
 /**
@@ -76,4 +77,11 @@ public interface PollingTarget
     * @return true if this object can use EtherNet/IP for communications
     */
    public boolean canUseEtherNetIP();
+
+   /**
+    * Get poll states.
+    *
+    * @return array of poll states or null if object doesn't have any
+    */
+   public PollState[] getPollStates();
 }

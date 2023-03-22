@@ -39,6 +39,7 @@ import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ObjectUrl;
+import org.netxms.client.PollState;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.services.ServiceManager;
@@ -164,6 +165,7 @@ public abstract class AbstractObject
 	protected final List<ObjectUrl> urls = new ArrayList<ObjectUrl>(0);
    protected final List<ResponsibleUser> responsibleUsers = new ArrayList<ResponsibleUser>(0);
 	protected Map<String, Object> moduleData = null;
+   protected PollState[] pollStates = null;
 
 	@Internal private int effectiveRights = 0;
 	@Internal private boolean effectiveRightsCached = false;
@@ -329,6 +331,16 @@ public abstract class AbstractObject
       id = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
       for(i = 0; i < count; i++, id += 10)
          responsibleUsers.add(new ResponsibleUser(msg, id));
+
+      // Poll states
+      count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_POLL_STATES);
+      if (count > 0)
+      {
+         id = NXCPCodes.VID_POLL_STATE_LIST_BASE;
+         pollStates = new PollState[count];
+         for(i = 0; i < count; i++, id += 10)
+            pollStates[i] = new PollState(msg, id);
+      }
 	}
 
 	/**

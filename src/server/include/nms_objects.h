@@ -962,10 +962,12 @@ private:
    ManualGauge64 m_timer;
    Mutex m_lock;
    bool m_saveNeeded;
+   const TCHAR *m_name;
 
 public:
    PollState(const TCHAR *name, bool saveNeeded = false) : m_timer(name, 1, 1000), m_lock(MutexType::FAST)
    {
+      m_name = name;
       m_pollerCount = 0;
       m_lastCompleted = TIMESTAMP_NEVER;
       m_saveNeeded = saveNeeded;
@@ -1093,6 +1095,19 @@ public:
       int64_t v = m_timer.getCurrent();
       m_lock.unlock();
       return v;
+   }
+
+   /**
+    * Fill NXCP message
+    */
+   void fillMessage(NXCPMessage *msg, uint32_t baseId)
+   {
+      msg->setField(baseId, m_name);
+      msg->setField(baseId + 1, isPending());
+      m_lock.lock();
+      msg->setFieldFromTime(baseId + 2, m_lastCompleted);
+      msg->setField(baseId + 3, m_timer.getCurrent());
+      m_lock.unlock();
    }
 };
 
@@ -1561,8 +1576,10 @@ public:
    virtual bool lockForAutobindPoll();
 
    void resetPollTimers();
+
    DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
    bool saveToDatabase(DB_HANDLE hdb);
+   void pollStateToMessage(NXCPMessage *msg);
 };
 
 /**
