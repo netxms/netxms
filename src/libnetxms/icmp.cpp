@@ -255,7 +255,7 @@ PingRequestProcessor::PingRequestProcessor(int family)
    m_controlSockets[1] = INVALID_SOCKET;
    m_processingThread = INVALID_THREAD_HANDLE;
    m_lastSocketOpenAttempt = 0;
-   m_id = static_cast<uint16_t>(GetCurrentProcessId());
+   m_id = 1;
    m_sequence = 0;
    m_family = family;
    m_shutdown = false;
@@ -737,6 +737,7 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
             if ((waitResult != 0) && (request.state == IN_PROGRESS))
             {
                request.result = ICMP_TIMEOUT;
+               m_id++;  // Change ID in case of timeout - we've seen cases when firewall start blocking ICMP requests with same ID
             }
 
             // Remove request from list
