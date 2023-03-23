@@ -64,7 +64,7 @@ public class PollStates extends TableElement
    @Override
    public boolean isApplicableForObject(AbstractObject object)
    {
-      return object instanceof PollingTarget;
+      return (object instanceof PollingTarget) && (((PollingTarget)object).getPollStates() != null);
    }
 
    /**
