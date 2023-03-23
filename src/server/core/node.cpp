@@ -4973,7 +4973,7 @@ bool Node::confPollAgent(UINT32 rqId)
 
       // Check if file manager is supported
       bool fileManagerPresent = false;
-      NXCPMessage request(CMD_GET_FOLDER_CONTENT, pAgentConn->generateRequestId());
+      NXCPMessage request(CMD_GET_FOLDER_CONTENT, pAgentConn->generateRequestId(), pAgentConn->getProtocolVersion());
       request.setField(VID_ROOT, true);
       request.setField(VID_FILE_NAME, _T("/"));
       NXCPMessage *response = pAgentConn->customRequest(&request);
