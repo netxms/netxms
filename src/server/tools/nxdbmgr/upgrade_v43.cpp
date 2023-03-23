@@ -28,6 +28,7 @@
 static bool H_UpgradeFromV7()
 {
    CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, _T("ospf_neighbors")));
+   CHK_EXEC_NO_SP(DBSetNotNullConstraint(g_dbHandle, _T("ospf_neighbors"), _T("ip_address")));
    CHK_EXEC_NO_SP(DBAddPrimaryKey(g_dbHandle, _T("ospf_neighbors"), _T("node_id,router_id,if_index,ip_address")));
    CHK_EXEC(SetMinorSchemaVersion(8));
    return true;
