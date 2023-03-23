@@ -125,7 +125,7 @@ public class AgentFileManager extends ObjectView
    {
       super(i18n.tr("File Manager"), ResourceManager.getImageDescriptor("icons/object-views/filemgr.png"), "AgentFileManager", true);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -135,7 +135,29 @@ public class AgentFileManager extends ObjectView
       super.postClone(view);
       refresh();
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      if ((context != null) && (context instanceof Node))
+      {
+         return (((Node)context).getCapabilities() & Node.NC_HAS_FILE_MANAGER) != 0;
+      }
+      return false;
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 44;
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
@@ -145,7 +167,7 @@ public class AgentFileManager extends ObjectView
       final String[] columnNames = { i18n.tr("Name"), i18n.tr("Type"), i18n.tr("Size"), i18n.tr("Date modified"), i18n.tr("Owner"), i18n.tr("Group"), i18n.tr("Access Rights") };
       final int[] columnWidths = { 300, 120, 150, 150, 150, 150, 200 };         
       viewer = new SortableTreeViewer(parent, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
-            
+
       WidgetHelper.restoreTreeViewerSettings(viewer, TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ViewAgentFilesProvider());
       viewer.setLabelProvider(new AgentFileLabelProvider());
@@ -1164,27 +1186,5 @@ public class AgentFileManager extends ObjectView
          viewer.addColumn(i18n.tr("Group"), 150);
          viewer.addColumn(i18n.tr("Access Rights"), 200);         
       }
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      if ((context != null) && (context instanceof Node))
-      {
-         return (((Node)context).getCapabilities() & Node.NC_HAS_FILE_MANAGER) != 0;
-      }
-      return false;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 44;
    }
 }
