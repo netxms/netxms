@@ -23,6 +23,17 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 43.7 to 43.8
+ */
+static bool H_UpgradeFromV7()
+{
+   CHK_EXEC_NO_SP(DBDropPrimaryKey(g_dbHandle, _T("ospf_neighbors")));
+   CHK_EXEC_NO_SP(DBAddPrimaryKey(g_dbHandle, _T("ospf_neighbors"), _T("node_id,router_id,if_index,ip_address")));
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 43.6 to 43.7
  */
 static bool H_UpgradeFromV6()
@@ -322,6 +333,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  43, 8,  H_UpgradeFromV7  },
    { 6,  43, 7,  H_UpgradeFromV6  },
    { 5,  43, 6,  H_UpgradeFromV5  },
    { 4,  43, 5,  H_UpgradeFromV4  },

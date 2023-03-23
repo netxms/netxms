@@ -523,7 +523,7 @@ CREATE TABLE ospf_neighbors
   if_index integer not null,
   is_virtual char(1) not null,
   neighbor_state integer not null,
-  PRIMARY KEY(node_id,router_id,if_index)
+  PRIMARY KEY(node_id,router_id,if_index,ip_address)
 ) TABLE_TYPE;
 
 /**
