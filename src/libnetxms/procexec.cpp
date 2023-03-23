@@ -561,7 +561,22 @@ bool ProcessExecutor::execute()
             close(m_pipe[0]);
             m_outputThread = ThreadCreateEx(waitForProcess, this);
          }
-         success = true;
+         if (m_outputThread != INVALID_THREAD_HANDLE)
+         {
+            success = true;
+         }
+         else
+         {
+            nxlog_debug_tag_object(DEBUG_TAG, m_id, 5, _T("ProcessExecutor::execute(): cannot start monitoring thread"));
+            if (m_sendOutput)
+               close(m_pipe[0]);
+            if (kill(-m_pid, SIGKILL) == 0)  // kill all processes in group
+               nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::stop(): SIGKILL signal sent to process group %u"), m_pid);
+            else
+               nxlog_debug_tag_object(DEBUG_TAG, m_id, 6, _T("ProcessExecutor::stop(): cannot send SIGKILL signal to process group %u (%s)"), m_pid, _tcserror(errno));
+            waitpid(m_pid, nullptr, 0);
+            m_pid = 0;
+         }
          break;
    }
 
