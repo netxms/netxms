@@ -2829,7 +2829,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   output.append(getZoneUIN());
                   break;
                case 'Z':   // Zone name
-                  if (getZoneUIN() != 0)
+                  if (IsZoningEnabled())
                   {
                      shared_ptr<Zone> zone = FindZoneByUIN(getZoneUIN());
                      if (zone != nullptr)
