@@ -289,6 +289,7 @@ public class LogParserEditor extends Composite
    private void updateScroller()
    {
       visualEditorArea.layout(true, true);
+      visualEditorArea.requestLayout();
       scroller.setMinSize(visualEditorArea.computeSize(scroller.getSize().x, SWT.DEFAULT));
    }
 
