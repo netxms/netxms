@@ -26,6 +26,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
@@ -312,6 +313,11 @@ public class GeneralInfo extends TableElement
          case AbstractObject.OBJECT_BUSINESSSERVICE:
             BusinessService businessService = (BusinessService)object;
             addPair("Service state", businessService.getServiceState().toString());
+            break;
+         case AbstractObject.OBJECT_CLUSTER:
+            Cluster cluster = (Cluster)object;
+            if (session.isZoningEnabled())
+               addPair("Zone UIN", getZoneName(cluster.getZoneId()));
             break;
 			default:
 				break;

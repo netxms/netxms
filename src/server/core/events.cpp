@@ -945,7 +945,8 @@ static bool RealPostEvent(ObjectQueue<Event> *queue, uint64_t *eventId, uint32_t
    // Check that source object exists
    if ((sourceId == 0) || (FindObjectById(sourceId) == nullptr))
    {
-      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u"), sourceId);
+      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u for event with code %u and origin %d"),
+            sourceId, eventCode, (int)origin);
       return false;
    }
 
