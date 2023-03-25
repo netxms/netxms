@@ -405,7 +405,7 @@ public class NXCSession
    private OUICache ouiCache;
    
    //Asset management attributes
-   private Map<String, AssetManagementAttribute> assetAttributes = new HashMap<String, AssetManagementAttribute>();
+   private Map<String, AssetManagementAttribute> assetManagementAttributes = new HashMap<String, AssetManagementAttribute>();
 
    /**
     * Message subscription class
@@ -716,20 +716,18 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_UPDATE_ASSET_MGMT_ATTRIBUTE:
                      AssetManagementAttribute attr = new AssetManagementAttribute(msg, NXCPCodes.VID_AM_LIST_BASE);
-                     sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_UPDATED,
-                           0, attr));
-                     synchronized(assetAttributes)
+                     sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_UPDATED, 0, attr));
+                     synchronized(assetManagementAttributes)
                      {
-                        assetAttributes.put(attr.getName(), attr);
+                        assetManagementAttributes.put(attr.getName(), attr);
                      }
                      break;
                   case NXCPCodes.CMD_DELETE_ASSET_MGMT_ATTRIBUTE:
                      String attrName = msg.getFieldAsString(NXCPCodes.VID_NAME);
-                     sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_DELETED,
-                           0, attrName));
-                     synchronized(assetAttributes)
+                     sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_DELETED, 0, attrName));
+                     synchronized(assetManagementAttributes)
                      {
-                        assetAttributes.remove(attrName);
+                        assetManagementAttributes.remove(attrName);
                      }
                      break;
                   default:
@@ -13706,7 +13704,6 @@ public class NXCSession
    public void syncAssetManagementAttributes() throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ASSET_MGMT_ATTRIBUTE);
-
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_AM_COUNT);
@@ -13716,11 +13713,11 @@ public class NXCSession
       {
          AssetManagementAttribute attr = new AssetManagementAttribute(response, fieldId);
          result.put(attr.getName(), attr);         
-         fieldId += 100;
+         fieldId += 256;
       }
-      synchronized(assetAttributes)
+      synchronized(assetManagementAttributes)
       {
-         assetAttributes = result;
+         assetManagementAttributes = result;
       }
    }
    
@@ -13734,9 +13731,9 @@ public class NXCSession
    public Map<String, AssetManagementAttribute> getAssetManagementAttributes()
    {
       Map<String, AssetManagementAttribute> result;
-      synchronized(assetAttributes)
+      synchronized(assetManagementAttributes)
       {
-         result = new HashMap<String, AssetManagementAttribute>(assetAttributes);
+         result = new HashMap<String, AssetManagementAttribute>(assetManagementAttributes);
       }
       return result;
    }   
@@ -13796,9 +13793,9 @@ public class NXCSession
    public boolean isAssetAttributeUnique(String newName)
    {
       boolean isUnique;
-      synchronized(assetAttributes)
+      synchronized(assetManagementAttributes)
       {
-         isUnique = !assetAttributes.containsKey(newName);
+         isUnique = !assetManagementAttributes.containsKey(newName);
       }
       return isUnique;
    }

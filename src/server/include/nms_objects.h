@@ -1723,9 +1723,9 @@ public:
    Asset(NetObj *_this);
 
    void modifyFromMessage(const NXCPMessage& msg);
-   std::pair<uint32_t, String>  modifyAassetData(const TCHAR *name, const TCHAR *value);
-   uint32_t deleteAassetData(const TCHAR *name);
-   void getAassetData(NXCPMessage* msg) const;
+   std::pair<uint32_t, String> setAssetData(const TCHAR *name, const TCHAR *value);
+   uint32_t deleteAssetData(const TCHAR *name);
+   void assetDataToMessage(NXCPMessage* msg) const;
 
    bool loadFromDatabase(DB_HANDLE db, uint32_t objectId);
    bool saveToDatabase(DB_HANDLE db);
@@ -3957,7 +3957,6 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
-   virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId) override;
 
    virtual void prepareForDeletion() override;
 

@@ -25,7 +25,9 @@
 #define DEBUG_TAG _T("am")
 #define AUDIT_AM_ATTRIBUTE _T("ASSERT_MANAGEMENT")
 
-
+/**
+ * Asset management attribute data types
+ */
 enum class AMDataType
 {
    String = 0,
@@ -39,6 +41,9 @@ enum class AMDataType
    ObjectReference = 8
 };
 
+/**
+ * Asset management attribute system types
+ */
 enum class AMSystemType
 {
    None = 0,
@@ -66,7 +71,7 @@ private:
    int32_t m_rangeMin;
    int32_t m_rangeMax;
    AMSystemType m_systemType;
-   StringMap m_enumMapping;
+   StringMap m_enumValues;
 
    bool saveToDatabase();
    void setScript(TCHAR *script);
@@ -86,13 +91,13 @@ public:
 
    const TCHAR *getName() const { return m_name; }
    AMDataType getDataType() const { return m_dataType; }
-   bool isMandotory() const { return m_isMandatory; }
+   bool isMandatory() const { return m_isMandatory; }
    bool isUnique() const { return m_isUnique; }
    int32_t getMinRange() { return m_rangeMin; }
    int32_t getMaxRange() { return m_rangeMax; }
 
-   bool isEnumValid(const TCHAR *value);
-   bool isRangeSet() { return m_rangeMin != 0 && m_rangeMax != 0; }
+   bool isValidEnumValue(const TCHAR *value) const { return m_enumValues.contains(value); }
+   bool isRangeSet() const { return m_rangeMin != 0 && m_rangeMax != 0; }
 };
 
 /**
@@ -100,7 +105,7 @@ public:
  * Fields:
  * attr_name,display_name,data_type,is_mandatory,is_unique,autofill_script,range_min,range_max,sys_type
  */
-AssetManagementAttribute::AssetManagementAttribute(DB_RESULT result, int row) : m_enumMapping()
+AssetManagementAttribute::AssetManagementAttribute(DB_RESULT result, int row)
 {
    m_name = DBGetField(result, row, 0, nullptr, 0);
    m_displayName = DBGetField(result, row, 1, nullptr, 0);
@@ -116,7 +121,10 @@ AssetManagementAttribute::AssetManagementAttribute(DB_RESULT result, int row) : 
    m_systemType = static_cast<AMSystemType>(DBGetFieldLong(result, row, 8));
 }
 
-AssetManagementAttribute::AssetManagementAttribute(TCHAR *name) : m_enumMapping()
+/**
+ * Create asset management attribute from scratch
+ */
+AssetManagementAttribute::AssetManagementAttribute(TCHAR *name)
 {
    m_name = name;
    m_displayName = nullptr;
@@ -130,12 +138,25 @@ AssetManagementAttribute::AssetManagementAttribute(TCHAR *name) : m_enumMapping(
    m_systemType = AMSystemType::None;
 }
 
+/**
+ * Asset management attribute destructor
+ */
+AssetManagementAttribute::~AssetManagementAttribute()
+{
+   MemFree(m_autofillScriptSource);
+   MemFree(m_name);
+   MemFree(m_displayName);
+   delete m_autofillScript;
+}
 
+/**
+ * Create asset management attribute from NXCP message
+ */
 AssetManagementAttribute *AssetManagementAttribute::create(const NXCPMessage &msg)
 {
-   AssetManagementAttribute *conf = new AssetManagementAttribute(msg.getFieldAsString(VID_NAME));
-   conf->update(msg);
-   return conf;
+   AssetManagementAttribute *a = new AssetManagementAttribute(msg.getFieldAsString(VID_NAME));
+   a->update(msg);
+   return a;
 }
 
 /**
@@ -146,19 +167,8 @@ void AssetManagementAttribute::addEnumMapping(DB_RESULT result)
    int rowCount = DBGetNumRows(result);
    for (int i = 0; i < rowCount; i++)
    {
-      m_enumMapping.setPreallocated(DBGetField(result, i, 1, nullptr, 0), DBGetField(result, i, 2, nullptr, 0));
+      m_enumValues.setPreallocated(DBGetField(result, i, 1, nullptr, 0), DBGetField(result, i, 2, nullptr, 0));
    }
-}
-
-/**
- * Asset management attribute distructor
- */
-AssetManagementAttribute::~AssetManagementAttribute()
-{
-   MemFree(m_autofillScriptSource);
-   MemFree(m_name);
-   MemFree(m_displayName);
-   delete m_autofillScript;
 }
 
 /**
@@ -175,16 +185,11 @@ void AssetManagementAttribute::fillMessage(NXCPMessage *msg, uint32_t baseId)
    msg->setField(baseId++, m_rangeMin);
    msg->setField(baseId++, m_rangeMax);
    msg->setField(baseId++, static_cast<uint32_t>(m_systemType));
-   msg->setField(baseId++, m_enumMapping.size());
-   for(KeyValuePair<const TCHAR> *Attribute : m_enumMapping)
-   {
-      msg->setField(baseId++, Attribute->key);
-      msg->setField(baseId++, Attribute->value);
-   }
+   m_enumValues.fillMessage(msg, baseId + 1, baseId);
 }
 
 /**
- * Update confiruation form message
+ * Update attribute form message
  */
 void AssetManagementAttribute::update(const NXCPMessage &msg)
 {
@@ -198,13 +203,8 @@ void AssetManagementAttribute::update(const NXCPMessage &msg)
    m_rangeMax = msg.getFieldAsUInt32(VID_RANGE_MAX);
    m_systemType = static_cast<AMSystemType>(msg.getFieldAsUInt32(VID_SYSTEM_TYPE));
 
-   m_enumMapping.clear();
-   uint32_t base = VID_AM_ENUM_MAP_BASE;
-   int count = msg.getFieldAsUInt32(VID_ENUM_COUNT);
-   for (int i = 0; i < count; i++)
-   {
-      m_enumMapping.setPreallocated(msg.getFieldAsString(base++), msg.getFieldAsString(base++));
-   }
+   m_enumValues.clear();
+   m_enumValues.addAllFromMessage(msg, VID_AM_ENUM_MAP_BASE, VID_ENUM_COUNT);
 
    saveToDatabase();
 }
@@ -249,14 +249,14 @@ bool AssetManagementAttribute::saveToDatabase()
 
    if (success)
    {
-      stmt = DBPrepare(db, _T("INSERT INTO am_enum_values (attr_name,attr_value,display_name) VALUES (?,?,?)"), m_enumMapping.size() > 1);
+      stmt = DBPrepare(db, _T("INSERT INTO am_enum_values (attr_name,attr_value,display_name) VALUES (?,?,?)"), m_enumValues.size() > 1);
       if (stmt != nullptr)
       {
          DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-         for(KeyValuePair<const TCHAR> *Attribute : m_enumMapping)
+         for(KeyValuePair<const TCHAR> *v : m_enumValues)
          {
-            DBBind(stmt, 2, DB_SQLTYPE_VARCHAR, Attribute->key, DB_BIND_STATIC);
-            DBBind(stmt, 3, DB_SQLTYPE_VARCHAR, Attribute->value, DB_BIND_STATIC);
+            DBBind(stmt, 2, DB_SQLTYPE_VARCHAR, v->key, DB_BIND_STATIC);
+            DBBind(stmt, 3, DB_SQLTYPE_VARCHAR, v->value, DB_BIND_STATIC);
             if (!DBExecute(stmt))
             {
                success = false;
@@ -358,21 +358,22 @@ json_t *AssetManagementAttribute::toJson()
    return root;
 }
 
+/**
+ * Asset management schema
+ */
+static StringObjectMap<AssetManagementAttribute> s_schema(Ownership::True);
 
-bool AssetManagementAttribute::isEnumValid(const TCHAR *value)
-{
-   return m_enumMapping.contains(value);
-}
-
-static StringObjectMap<AssetManagementAttribute> s_amSchema(Ownership::True);
-static RWLock s_amAttributeLock;
+/**
+ * Asset management schema lock
+ */
+static RWLock s_schemaLock;
 
 /***************************************************
  * Asset management attribute instance implementation
  ***************************************************/
 
 /**
- * Asset management attribute target constructor
+ * Asset object constructor
  */
 Asset::Asset(NetObj *_this) : m_amMutexProperties(MutexType::FAST), m_instances()
 {
@@ -381,7 +382,7 @@ Asset::Asset(NetObj *_this) : m_amMutexProperties(MutexType::FAST), m_instances(
 }
 
 /**
- * Assert management attribute target modify attribute instances form message
+ * Modify asset management attribute instances from message
  */
 void Asset::modifyFromMessage(const NXCPMessage& msg)
 {
@@ -396,7 +397,7 @@ void Asset::modifyFromMessage(const NXCPMessage& msg)
 /**
  * Assert management attribute target modify attribute instance form message
  */
-std::pair<uint32_t, String> Asset::modifyAassetData(const TCHAR *name, const TCHAR *value)
+std::pair<uint32_t, String> Asset::setAssetData(const TCHAR *name, const TCHAR *value)
 {
    std::pair<uint32_t, String> result = validateInput(name, value);
    if (result.first == RCC_SUCCESS)
@@ -406,24 +407,23 @@ std::pair<uint32_t, String> Asset::modifyAassetData(const TCHAR *name, const TCH
       internalUnlock();
       m_this->setModified(MODIFY_AM_INSTANCES, true);
    }
-
    return result;
 }
 
 /**
- * Assert management attribute target delete attribute instance form message
+ * Delete attribute instance from asset
  */
-uint32_t Asset::deleteAassetData(const TCHAR *name)
+uint32_t Asset::deleteAssetData(const TCHAR *name)
 {
    uint32_t result = RCC_SUCCESS;
-   s_amAttributeLock.readLock();
+   s_schemaLock.readLock();
    bool canBeDeleted = true;
-   AssetManagementAttribute *attr = s_amSchema.get(name);
+   AssetManagementAttribute *attr = s_schema.get(name);
    if (attr != nullptr)
    {
-      canBeDeleted = !attr->isMandotory();
+      canBeDeleted = !attr->isMandatory();
    }
-   s_amAttributeLock.unlock();
+   s_schemaLock.unlock();
    if (canBeDeleted)
    {
       internalLock();
@@ -433,21 +433,24 @@ uint32_t Asset::deleteAassetData(const TCHAR *name)
    }
    else
    {
-      result = RCC_ATTRIBUTE_REQUIRED;
+      result = RCC_MANDATORY_ATTRIBUTE;
    }
    return result;
 }
 
 /**
- * Assert management attribute target fill message
+ * Fill message with asset data
  */
-void Asset::getAassetData(NXCPMessage* msg) const
+void Asset::assetDataToMessage(NXCPMessage* msg) const
 {
    internalLock();
    m_instances.fillMessage(msg, VID_AM_DATA_BASE, VID_AM_COUNT);
    internalUnlock();
 }
 
+/**
+ * Load asset from database
+ */
 bool Asset::loadFromDatabase(DB_HANDLE db, uint32_t objectId)
 {
    bool success = false;
@@ -534,11 +537,11 @@ void Asset::assetToJson(json_t *root)
 std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR *value)
 {
    StringBuffer resultText;
-   s_amAttributeLock.readLock();
-   AssetManagementAttribute *assetAttribute = s_amSchema.get(name);
+   s_schemaLock.readLock();
+   AssetManagementAttribute *assetAttribute = s_schema.get(name);
    if (assetAttribute == nullptr)
    {
-      return std::pair<uint32_t, String>(RCC_INVALID_OBJECT_ID, _T("No such asset attribute"));
+      return std::pair<uint32_t, String>(RCC_UNKNOWN_ATTRIBUTE, _T("No such asset attribute"));
    }
 
    //Check value
@@ -560,7 +563,7 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
          break;
       case AMDataType::Enum:
       {
-         if (!assetAttribute->isEnumValid(value))
+         if (!assetAttribute->isValidEnumValue(value))
          {
             resultText = _T("Invalid enum value");
          }
@@ -662,7 +665,7 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
       }
    }
    bool shouldBeUnique = assetAttribute->isUnique();
-   s_amAttributeLock.unlock();
+   s_schemaLock.unlock();
 
    if (shouldBeUnique)
    {
@@ -696,9 +699,8 @@ bool Asset::isAssetValueEqual(const TCHAR *name, const TCHAR *value)
 }
 
 /***************************************************
- * Asset management attribute function
+ * Asset management attribute functions
  ***************************************************/
-
 
 /**
  * Load all asset management attribute
@@ -706,31 +708,35 @@ bool Asset::isAssetValueEqual(const TCHAR *name, const TCHAR *value)
 void LoadAMFromDatabase()
 {
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
-   DB_RESULT result = DBSelect(db, _T("SELECT attr_name,display_name,data_type,is_mandatory,is_unique,autofill_script,"
-         "range_min,range_max,sys_type FROM am_attributes"));
 
-   DB_STATEMENT stmt = DBPrepare(db, _T("SELECT attr_value,display_name FROM am_enum_values WHERE attr_name=?"), true);
-   if (result != nullptr && stmt != nullptr)
+   DB_RESULT result = DBSelect(db, _T("SELECT attr_name,display_name,data_type,is_mandatory,is_unique,autofill_script,range_min,range_max,sys_type FROM am_attributes"));
+   if (result != nullptr)
    {
-      int numRows = DBGetNumRows(result);
-      for (int i = 0; i < numRows; i++)
+      DB_STATEMENT stmt = DBPrepare(db, _T("SELECT attr_value,display_name FROM am_enum_values WHERE attr_name=?"), true);
+      if (stmt != nullptr)
       {
-         AssetManagementAttribute *conf = new AssetManagementAttribute(result, i);
-         s_amSchema.set(conf->getName(), conf);
-
-         DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, conf->getName(), DB_BIND_STATIC);
-         DB_RESULT mappingResult = DBSelectPrepared(stmt);
-         if (mappingResult != nullptr)
+         int numRows = DBGetNumRows(result);
+         for (int i = 0; i < numRows; i++)
          {
-            conf->addEnumMapping(mappingResult);
-            DBFreeResult(mappingResult);
+            AssetManagementAttribute *a = new AssetManagementAttribute(result, i);
+            if (a->getDataType() == AMDataType::Enum)
+            {
+               DBBind(stmt, 1, DB_SQLTYPE_VARCHAR, a->getName(), DB_BIND_STATIC);
+               DB_RESULT mappingResult = DBSelectPrepared(stmt);
+               if (mappingResult != nullptr)
+               {
+                  a->addEnumMapping(mappingResult);
+                  DBFreeResult(mappingResult);
+               }
+            }
+            s_schema.set(a->getName(), a);
          }
+         DBFreeStatement(stmt);
       }
+      DBFreeResult(result);
    }
-   DBFreeResult(result);
-   DBFreeStatement(stmt);
    DBConnectionPoolReleaseConnection(db);
-   nxlog_debug_tag(DEBUG_TAG, 2, _T("%d asset management attribute  loaded"), s_amSchema.size());
+   nxlog_debug_tag(DEBUG_TAG, 2, _T("%d asset management attribute  loaded"), s_schema.size());
 }
 
 /**
@@ -738,35 +744,33 @@ void LoadAMFromDatabase()
  */
 void AMFillMessage(NXCPMessage *msg)
 {
-   s_amAttributeLock.readLock();
-   uint32_t base = VID_AM_LIST_BASE;
-
-   msg->setField(VID_AM_COUNT, s_amSchema.size());
-   for (KeyValuePair<AssetManagementAttribute> *Attribute : s_amSchema)
+   s_schemaLock.readLock();
+   uint32_t fieldId = VID_AM_LIST_BASE;
+   msg->setField(VID_AM_COUNT, s_schema.size());
+   for (KeyValuePair<AssetManagementAttribute> *a : s_schema)
    {
-      Attribute->value->fillMessage(msg, base);
-      base += 100;
+      a->value->fillMessage(msg, fieldId);
+      fieldId += 256;
    }
-   s_amAttributeLock.unlock();
+   s_schemaLock.unlock();
 }
 
 /**
  * Create asset management attribute
  */
-uint32_t AMCreateAttribute(const NXCPMessage &msg, const ClientSession &session)
+uint32_t AMCreateAttribute(const NXCPMessage& msg, const ClientSession& session)
 {
    uint32_t result;
-   s_amAttributeLock.writeLock();
+   s_schemaLock.writeLock();
    SharedString name = msg.getFieldAsSharedString(VID_NAME, 64);
 
-   if (s_amSchema.get(name) == nullptr)
+   if (s_schema.get(name) == nullptr)
    {
       AssetManagementAttribute *attribute = AssetManagementAttribute::create(msg);
-      s_amSchema.set(name, attribute);
+      s_schema.set(name, attribute);
 
       json_t *attrData = attribute->toJson();
-      session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0,  nullptr, attrData,
-            _T("Asset management attribute %s created"), static_cast<const TCHAR *>(name));
+      session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0,  nullptr, attrData, _T("Asset management attribute \"%s\" created"), name.cstr());
       json_decref(attrData);
 
       NXCPMessage notificationMessage(CMD_UPDATE_ASSET_MGMT_ATTRIBUTE, 0);
@@ -777,29 +781,28 @@ uint32_t AMCreateAttribute(const NXCPMessage &msg, const ClientSession &session)
    }
    else
    {
-      result = RCC_ALREADY_EXIST;
+      result = RCC_ATTRIBUTE_ALREADY_EXISTS;
    }
-   s_amAttributeLock.unlock();
+   s_schemaLock.unlock();
    return result;
 }
 
 /**
  * Update asset management attribute
  */
-uint32_t AMUpdateAttribute(const NXCPMessage &msg, const ClientSession &session)
+uint32_t AMUpdateAttribute(const NXCPMessage& msg, const ClientSession& session)
 {
    uint32_t result;
-   s_amAttributeLock.writeLock();
+   s_schemaLock.writeLock();
    SharedString name = msg.getFieldAsSharedString(VID_NAME, 64);
-   AssetManagementAttribute *attribute = s_amSchema.get(name);
+   AssetManagementAttribute *attribute = s_schema.get(name);
    if (attribute != nullptr)
    {
       json_t *oldAttrData = attribute->toJson();
       attribute->update(msg);
       json_t *newAttrData = attribute->toJson();
 
-      session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0,  oldAttrData, newAttrData,
-            _T("Asset management attribute %s update"), static_cast<const TCHAR *>(name));
+      session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0,  oldAttrData, newAttrData, _T("Asset management attribute \"%s\" updated"), name.cstr());
       json_decref(oldAttrData);
       json_decref(newAttrData);
 
@@ -811,12 +814,11 @@ uint32_t AMUpdateAttribute(const NXCPMessage &msg, const ClientSession &session)
    }
    else
    {
-      result = RCC_INVALID_OBJECT_ID;
+      result = RCC_UNKNOWN_ATTRIBUTE;
    }
-   s_amAttributeLock.unlock();
+   s_schemaLock.unlock();
    return result;
 }
-
 
 /**
  * Delete asset management attribute
@@ -824,21 +826,20 @@ uint32_t AMUpdateAttribute(const NXCPMessage &msg, const ClientSession &session)
 uint32_t AMDeleteAttribute(const NXCPMessage &msg, const ClientSession &session)
 {
    uint32_t result;
-   s_amAttributeLock.writeLock();
+   s_schemaLock.writeLock();
    SharedString name = msg.getFieldAsSharedString(VID_NAME, 64);
-   AssetManagementAttribute *attribute = s_amSchema.get(name);
+   AssetManagementAttribute *attribute = s_schema.get(name);
    if (attribute != nullptr)
    {
 
       json_t *oldAttrData = attribute->toJson();
-      session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0, oldAttrData, nullptr,
-            _T("Asset management attribute %s delete"), static_cast<const TCHAR *>(name));
+      session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0, oldAttrData, nullptr, _T("Asset management attribute \"%s\" deleted"), name.cstr());
       json_decref(oldAttrData);
 
       result = RCC_SUCCESS;
 
       bool success = attribute->deleteFromDatabase();
-      s_amSchema.remove(name);
+      s_schema.remove(name);
 
       unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
       for (int i = 0; i < objects->size(); i++)
@@ -856,8 +857,8 @@ uint32_t AMDeleteAttribute(const NXCPMessage &msg, const ClientSession &session)
    }
    else
    {
-      result = RCC_INVALID_OBJECT_ID;
+      result = RCC_UNKNOWN_ATTRIBUTE;
    }
-   s_amAttributeLock.unlock();
+   s_schemaLock.unlock();
    return result;
 }

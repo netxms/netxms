@@ -724,7 +724,9 @@ enum SessionState
 #define RCC_INVALID_SSH_PROXY_ID          ((uint32_t)157)
 #define RCC_FILE_APPEND_POSSIBLE          ((uint32_t)158)
 #define RCC_VALIDATION_ERROR              ((uint32_t)159)
-#define RCC_ATTRIBUTE_REQUIRED            ((uint32_t)160)
+#define RCC_MANDATORY_ATTRIBUTE           ((uint32_t)160)
+#define RCC_UNKNOWN_ATTRIBUTE             ((uint32_t)161)
+#define RCC_ATTRIBUTE_ALREADY_EXISTS      ((uint32_t)162)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

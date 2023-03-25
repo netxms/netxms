@@ -110,9 +110,9 @@ uint32_t AddMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId
 uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 
 void AMFillMessage(NXCPMessage *msg);
-uint32_t AMCreateAttribute(const NXCPMessage &msg, const ClientSession &session);
-uint32_t AMUpdateAttribute(const NXCPMessage &msg, const ClientSession &session);
-uint32_t AMDeleteAttribute(const NXCPMessage &msg, const ClientSession &session);
+uint32_t AMCreateAttribute(const NXCPMessage& msg, const ClientSession& session);
+uint32_t AMUpdateAttribute(const NXCPMessage& msg, const ClientSession& session);
+uint32_t AMDeleteAttribute(const NXCPMessage& msg, const ClientSession& session);
 
 /**
  * Maximum client message size
@@ -16598,30 +16598,29 @@ void ClientSession::updateAssetManagementInstance(const NXCPMessage& request)
             json_t *oldValue = object->toJson();
             SharedString name = request.getFieldAsSharedString(VID_NAME);
             SharedString value = request.getFieldAsSharedString(VID_VALUE);
-            std::pair<uint32_t, String> result = object->getAsAsset()->modifyAassetData(name, value);
-            if (result.first != RCC_SUCCESS)
-            {
-               writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Failed to update asset management instance. Reason %s"), (const TCHAR *)result.second);
-               response.setField(VID_ERROR_TEXT, result.second);
-            }
-            else
+            std::pair<uint32_t, String> result = object->getAsAsset()->setAssetData(name, value);
+            if (result.first == RCC_SUCCESS)
             {
                json_t *newValue = object->toJson();
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Object %s modified from client"), object->getName());
                json_decref(newValue);
+            }
+            else
+            {
+               response.setField(VID_ERROR_TEXT, result.second);
             }
             json_decref(oldValue);
             response.setField(VID_RCC, result.first);
          }
          else
          {
-            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset management instance modification"));
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset data update"));
       }
    }
    else
@@ -16657,30 +16656,29 @@ void ClientSession::deleteAssetManagementInstance(const NXCPMessage& request)
          {
             json_t *oldValue = object->toJson();
             SharedString name = request.getFieldAsSharedString(VID_NAME);
-            uint32_t result = object->getAsAsset()->deleteAassetData(name);
-            if (result!= RCC_SUCCESS)
-            {
-               response.setField(VID_ERROR_TEXT, _T("Attribute is required"));
-               writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Failed to delete asset management instance."));
-            }
-            else
+            uint32_t result = object->getAsAsset()->deleteAssetData(name);
+            if (result == RCC_SUCCESS)
             {
                json_t *newValue = object->toJson();
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Object %s modified from client"), object->getName());
                json_decref(newValue);
+            }
+            else
+            {
+               response.setField(VID_ERROR_TEXT, _T("Attribute is mandatory"));
             }
             json_decref(oldValue);
             response.setField(VID_RCC, result);
          }
          else
          {
-            response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset management instance deleteion"));
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset data delete"));
       }
    }
    else

@@ -1283,11 +1283,6 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
       msg->setField(fieldId++, url->getDescription());
       fieldId += 7;
    }
-
-   if (isPollable())
-   {
-      getAsPollable()->pollStateToMessage(msg);
-   }
 }
 
 /**
@@ -1326,7 +1321,7 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId)
    m_accessList.fillMessage(msg);
    unlockACL();
 
-   UINT32 dwId;
+   uint32_t dwId;
    int i;
 
    readLockParentList();
@@ -1359,6 +1354,12 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId)
       msg->setField(VID_RESPONSIBLE_USERS_COUNT, static_cast<uint32_t>(0));
    }
    unlockResponsibleUsersList();
+
+   if (isPollable())
+      getAsPollable()->pollStateToMessage(msg);
+
+   if (isAsset())
+      getAsAsset()->assetDataToMessage(msg);
 }
 
 /**

@@ -189,15 +189,6 @@ void Rack::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Create NXCP message with object's data - stage 2
- */
-void Rack::fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId)
-{
-   super::fillMessageInternalStage2(msg, userId);
-   getAassetData(msg);
-}
-
-/**
  * Modify object from message
  */
 uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)

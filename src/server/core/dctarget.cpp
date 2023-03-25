@@ -157,7 +157,6 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg, uint32_t 
    unlockDciAccess();
    msg->setField(VID_OVERVIEW_DCI_COUNT, countOverview);
    msg->setField(VID_TOOLTIP_DCI_COUNT, countTooltip);
-   getAassetData(msg);
 }
 
 /**
