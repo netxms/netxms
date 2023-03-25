@@ -13711,14 +13711,16 @@ public class NXCSession
    }
    
    /**
-    * 
-    * @throws IOException  if socket I/O error occurs
+    * Synchronize asset management attributes.
+    *
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void syncAssetManagementAttributes() throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ASSET_MGMT_ATTRIBUTE);
       sendMessage(msg);
+
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_AM_COUNT);
       Map<String, AssetManagementAttribute> result = new HashMap<String, AssetManagementAttribute>(count);
@@ -13729,18 +13731,17 @@ public class NXCSession
          result.put(attr.getName(), attr);         
          fieldId += 256;
       }
+
       synchronized(assetManagementAttributes)
       {
          assetManagementAttributes = result;
       }
    }
-   
+
    /**
-    * Get all asset management configuration
+    * Get asset management attributes from client-side cache.
     *
-    * @return map with all asset management attributes
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return asset management attributes
     */
    public Map<String, AssetManagementAttribute> getAssetManagementAttributes()
    {
@@ -13751,7 +13752,7 @@ public class NXCSession
       }
       return result;
    }   
-   
+
    /**
     * Create asset management attribute
     * 
