@@ -628,4 +628,14 @@ public class PreferenceStore
    {
       setDefault(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
    }
+
+   /**
+    * Remove property.
+    *
+    * @param name property name
+    */
+   public void remove(String name)
+   {
+      properties.remove(name);
+   }
 }

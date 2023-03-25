@@ -22,6 +22,15 @@
 
 #include "nxdbmgr.h"
 
+/**
+ * Upgrade from 44.1 to 44.2
+ */
+static bool H_UpgradeFromV1()
+{
+   CHK_EXEC(CreateConfigParam(_T("Server.Security.2FA.TrustedDeviceTTL"), _T("0"), _T("TTL in seconds for 2FA trusted device."), _T("seconds"), 'I', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(2));
+   return true;
+}
 
 /**
  * Upgrade from 44.0 to 44.1
@@ -89,6 +98,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 1,  44, 2,  H_UpgradeFromV1  },
    { 0,  44, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }
 };

@@ -1440,6 +1440,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_debug_tag(DEBUG_TAG_SHUTDOWN, 1, _T("Server shutdown complete"));
 	nxlog_close();
 
+	if (g_serverKey != nullptr)
+	   RSAFree(g_serverKey);
+
 	// Remove PID file
 #ifndef _WIN32
 	_tremove(g_szPIDFile);

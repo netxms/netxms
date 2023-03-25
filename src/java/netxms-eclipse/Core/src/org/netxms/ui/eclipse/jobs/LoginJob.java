@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.jobs;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import org.eclipse.core.runtime.CoreException;
@@ -113,7 +114,7 @@ public class LoginJob implements IRunnableWithProgress
          {
             hostName = server;
          }
-         
+
          Activator.logInfo("Connecting to " + hostName + " port " + port);
 
          final NXCSession session = createSession(hostName, port);
@@ -125,6 +126,8 @@ public class LoginJob implements IRunnableWithProgress
 
          session.connect(new int[] { ProtocolVersion.INDEX_FULL });
          session.login(authMethod, loginName, password, certificate, signature, new TwoFactorAuthenticationCallback() {
+            private boolean trustedDevice = false;
+
             @Override
             public int selectMethod(final List<String> methods)
             {
@@ -146,19 +149,51 @@ public class LoginJob implements IRunnableWithProgress
             }
 
             @Override
-            public String getUserResponse(final String challenge, final String qrLabel)
+            public String getUserResponse(final String challenge, final String qrLabel, final boolean trustedDevicesAllowed)
             {
                final String[] response = new String[1];
                display.syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
-                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel);
+                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel, trustedDevicesAllowed);
                      if (dlg.open() == Window.OK)
+                     {
                         response[0] = dlg.getResponse();
+                        trustedDevice = dlg.isTrustedDevice();
+                     }
                   }
                });
                return response[0];
+            }
+
+            @Override
+            public void saveTrustedDeviceToken(long serverId, String username, final byte[] token)
+            {
+               final String key = "TrustedDeviceToken." + Long.toString(serverId) + "." + username;
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     IPreferenceStore store = ConsoleSharedData.getSettings();
+                     store.setValue(key, trustedDevice ? Base64.getEncoder().encodeToString(token) : "");
+                  }
+               });
+            }
+
+            @Override
+            public byte[] getTrustedDeviceToken(final long serverId, final String username)
+            {
+               final String[] token = new String[1];
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     IPreferenceStore store = ConsoleSharedData.getSettings();
+                     token[0] = store.getString("TrustedDeviceToken." + Long.toString(serverId) + "." + username);
+                  }
+               });
+               return !token[0].isEmpty() ? Base64.getDecoder().decode(token[0]) : null;
             }
          });
          monitor.worked(40);

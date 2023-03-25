@@ -541,24 +541,47 @@ static bool LoadCertificate(RSA_KEY *serverKey, const TCHAR *certificatePath, co
    if (serverKey != nullptr)
    {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000
-      *serverKey = EVP_PKEY_dup(*certificateKey);
+      EVP_PKEY *publicKey = X509_get0_pubkey(*certificate);
+      if (publicKey != nullptr)
+      {
+         // Combine into one key
+         uint32_t keyLen = i2d_PublicKey(publicKey, nullptr);
+         keyLen += i2d_PrivateKey(*certificateKey, nullptr);
+         BYTE *keyBuffer = MemAllocArrayNoInit<BYTE>(keyLen);
+
+         BYTE *p = keyBuffer;
+         i2d_PublicKey(publicKey, &p);
+         i2d_PrivateKey(*certificateKey, &p);
+
+         *serverKey = RSAKeyFromData(keyBuffer, keyLen, true);
+         MemFree(keyBuffer);
+      }
 #else
       RSA *privKey = EVP_PKEY_get1_RSA(*certificateKey);
-      RSA *pubKey = EVP_PKEY_get1_RSA(X509_get_pubkey(*certificate));
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+      EVP_PKEY *certPubKey = X509_get0_pubkey(*certificate);
+#else
+      EVP_PKEY *certPubKey = X509_get_pubkey(*certificate);
+#endif
+      RSA *pubKey = EVP_PKEY_get1_RSA(certPubKey);
       if ((privKey != nullptr) && (pubKey != nullptr))
       {
          // Combine into one key
-         int len = i2d_RSAPublicKey(pubKey, nullptr);
-         len += i2d_RSAPrivateKey(privKey, nullptr);
-         BYTE *buffer = MemAllocArray<BYTE>(len);
+         int keyLen = i2d_RSAPublicKey(pubKey, nullptr);
+         keyLen += i2d_RSAPrivateKey(privKey, nullptr);
+         BYTE *keyBuffer = MemAllocArray<BYTE>(keyLen);
 
-         BYTE *pos = buffer;
+         BYTE *pos = keyBuffer;
          i2d_RSAPublicKey(pubKey, &pos);
          i2d_RSAPrivateKey(privKey, &pos);
 
-         *serverKey = RSAKeyFromData(buffer, len, true);
+         *serverKey = RSAKeyFromData(keyBuffer, keyLen, true);
          MemFree(buffer);
       }
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+      if (certPubKey != nullptr)
+         EVP_PKEY_free(certPubKey);
+#endif
 #endif
    }
 

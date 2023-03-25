@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -38,8 +39,11 @@ public class TwoFactorResponseDialog extends Dialog
 {
    private String challenge;
    private String qrText;
+   private boolean trustedDevicesAllowed;
    private String response;
+   private boolean trustedDevice;
    private LabeledText responseText;
+   private Button checkTrustedDevice;
 
    /**
     * Create two-factor response dialog.
@@ -47,12 +51,14 @@ public class TwoFactorResponseDialog extends Dialog
     * @param parentShell parent shell
     * @param challenge challenge provided by server
     * @param qrText text to be displayed as QR code
+    * @param trustedDevicesAllowed true if server allows trusted devices
     */
-   public TwoFactorResponseDialog(Shell parentShell, String challenge, String qrText)
+   public TwoFactorResponseDialog(Shell parentShell, String challenge, String qrText, boolean trustedDevicesAllowed)
    {
       super(parentShell);
       this.challenge = challenge;
       this.qrText = qrText;
+      this.trustedDevicesAllowed = trustedDevicesAllowed;
    }
 
    /**
@@ -117,6 +123,12 @@ public class TwoFactorResponseDialog extends Dialog
       gd.widthHint = 400;
       responseText.setLayoutData(gd);
 
+      if (trustedDevicesAllowed)
+      {
+         checkTrustedDevice = new Button(dialogArea, SWT.CHECK);
+         checkTrustedDevice.setText("&Don't ask again on this computer");
+      }
+
       return dialogArea;
    }
 
@@ -127,6 +139,7 @@ public class TwoFactorResponseDialog extends Dialog
    protected void okPressed()
    {
       response = responseText.getText().trim();
+      trustedDevice = trustedDevicesAllowed ? checkTrustedDevice.getSelection() : false;
       super.okPressed();
    }
 
@@ -138,5 +151,15 @@ public class TwoFactorResponseDialog extends Dialog
    public String getResponse()
    {
       return response;
+   }
+
+   /**
+    * Get "trusted device" flag.
+    *
+    * @return "trusted device" flag
+    */
+   public boolean isTrustedDevice()
+   {
+      return trustedDevice;
    }
 }

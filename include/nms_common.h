@@ -121,7 +121,7 @@
 #define GROUP_FLAG               ((uint32_t)0x40000000)
 
 #define NETXMS_MAX_CIPHERS       6
-#define NETXMS_RSA_KEYLEN        2048
+#define NETXMS_RSA_KEYLEN        4096
 
 #ifndef EVENTLOG_DEBUG_TYPE
 #define EVENTLOG_DEBUG_TYPE		0x0080

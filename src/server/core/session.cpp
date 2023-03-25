@@ -2284,7 +2284,7 @@ void ClientSession::login(const NXCPMessage& request)
       if (request.isFieldExist(VID_CLIENT_ADDRESS))
       {
          request.getFieldAsString(VID_CLIENT_ADDRESS, m_workstation, 64);
-         debugPrintf(5, _T("Real web client address is %s"), m_workstation);
+         debugPrintf(4, _T("Real web client address is %s"), m_workstation);
       }
    }
 
@@ -2298,7 +2298,7 @@ void ClientSession::login(const NXCPMessage& request)
       uint32_t rcc;
       m_loginInfo = new LoginInfo();
       int authType = request.getFieldAsInt16(VID_AUTH_TYPE);
-      debugPrintf(6, _T("Selected authentication type %d"), authType);
+      debugPrintf(4, _T("Selected authentication type is %d"), authType);
 		switch(authType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
@@ -2323,13 +2323,27 @@ void ClientSession::login(const NXCPMessage& request)
          unique_ptr<StringList> methods = GetUserConfigured2FAMethods(m_dwUserId);
          if (methods->isEmpty())
          {
+            debugPrintf(4, _T("Two-factor authentication is not required (not configured)"));
             rcc = finalizeLogin(request, &response);
             delete_and_null(m_loginInfo);
          }
          else
          {
-            rcc = RCC_NEED_2FA;
-            methods->fillMessage(&response, VID_2FA_METHOD_LIST_BASE, VID_2FA_METHOD_COUNT);
+            size_t tokenSize;
+            const BYTE *token = request.getBinaryFieldPtr(VID_TRUSTED_DEVICE_TOKEN, &tokenSize);
+            if (Validate2FATrustedDeviceToken(token, tokenSize, m_dwUserId))
+            {
+               debugPrintf(4, _T("Two-factor authentication is not required (valid trusted device token provided)"));
+               rcc = finalizeLogin(request, &response);
+               delete_and_null(m_loginInfo);
+            }
+            else
+            {
+               debugPrintf(4, _T("Two-factor authentication is required (%d methods available)"), methods->size());
+               rcc = RCC_NEED_2FA;
+               methods->fillMessage(&response, VID_2FA_METHOD_LIST_BASE, VID_2FA_METHOD_COUNT);
+               response.setField(VID_TRUSTED_DEVICES_ALLOWED, ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0) > 0);
+            }
          }
       }
       else
@@ -2384,10 +2398,17 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
    {
       TCHAR userResponse[1024];
       request.getFieldAsString(VID_2FA_RESPONSE, userResponse, 1024);
-      if (Validate2FAResponse(m_loginInfo->token, userResponse, m_dwUserId))
+      BYTE *trustedDeviceToken = nullptr;
+      size_t trustedDeviceTokenSize = 0;
+      if (Validate2FAResponse(m_loginInfo->token, userResponse, m_dwUserId, &trustedDeviceToken, &trustedDeviceTokenSize))
       {
          uint32_t rcc = finalizeLogin(request, &response);
          response.setField(VID_RCC, rcc);
+         if ((rcc == RCC_SUCCESS) && (trustedDeviceToken != nullptr))
+         {
+            response.setField(VID_TRUSTED_DEVICE_TOKEN, trustedDeviceToken, trustedDeviceTokenSize);
+         }
+         MemFree(trustedDeviceToken);
       }
       else
       {

@@ -210,7 +210,11 @@ static inline ssize_t RSAPublicEncrypt(const void *in, size_t inlen, BYTE *out, 
 {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(rsa, nullptr);
-   EVP_PKEY_encrypt_init(ctx);
+   if (EVP_PKEY_encrypt_init(ctx) <= 0)
+   {
+      EVP_PKEY_CTX_free(ctx);
+      return -1;
+   }
    EVP_PKEY_CTX_set_rsa_padding(ctx, padding);
    size_t bytes = outlen;
    int rc = EVP_PKEY_encrypt(ctx, out, &bytes, static_cast<const BYTE*>(in), inlen);
@@ -218,6 +222,50 @@ static inline ssize_t RSAPublicEncrypt(const void *in, size_t inlen, BYTE *out, 
    return (rc > 0) ? bytes : -1;
 #else
    return RSA_public_encrypt(static_cast<int>(inlen), static_cast<const BYTE*>(in), out, rsa, padding);
+#endif
+}
+
+/**
+ * Encrypt data block with RSA public key. Output buffer dynamically allocated and should be freed with MemFree.
+ */
+static inline BYTE *RSAPublicEncrypt(const void *in, size_t inlen, size_t *outlen, RSA_KEY rsa, int padding)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+   EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(rsa, nullptr);
+   if (EVP_PKEY_encrypt_init(ctx) <= 0)
+   {
+      EVP_PKEY_CTX_free(ctx);
+      return nullptr;
+   }
+   EVP_PKEY_CTX_set_rsa_padding(ctx, padding);
+   BYTE *out = nullptr;
+   size_t bytes = 0;
+   if (EVP_PKEY_encrypt(ctx, nullptr, &bytes, static_cast<const BYTE*>(in), inlen) > 0)
+   {
+      out = MemAllocArrayNoInit<BYTE>(bytes);
+      if (EVP_PKEY_encrypt(ctx, out, &bytes, static_cast<const BYTE*>(in), inlen) > 0)
+      {
+         *outlen = bytes;
+      }
+      else
+      {
+         MemFreeAndNull(out);
+      }
+   }
+   EVP_PKEY_CTX_free(ctx);
+   return out;
+#else
+   BYTE *out = MemAllocArrayNoInit<BYTE>(RSA_size(rsa));
+   int bytes = RSA_public_encrypt(static_cast<int>(inlen), static_cast<const BYTE*>(in), out, rsa, padding);
+   if (bytes > 0)
+   {
+      *outlen = bytes;
+   }
+   else
+   {
+      MemFreeAndNull(out);
+   }
+   return out;
 #endif
 }
 
@@ -236,6 +284,18 @@ static inline ssize_t RSAPrivateDecrypt(const BYTE *in, size_t inlen, void *out,
    return (rc > 0) ? bytes : -1;
 #else
    return RSA_private_decrypt(static_cast<int>(inlen), in, static_cast<BYTE*>(out), rsa, padding);
+#endif
+}
+
+/**
+ * Get maximum buffer size required for encryption/decryption operations with given buffer
+ */
+static inline size_t RSASize(RSA_KEY rsa)
+{
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+   return EVP_PKEY_get_size(rsa);
+#else
+   return RSA_size(rsa);
 #endif
 }
 

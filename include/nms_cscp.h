@@ -1531,6 +1531,8 @@ typedef struct
 #define VID_ENUM_COUNT              ((uint32_t)820)
 #define VID_DISPLAY_NAME            ((uint32_t)821)
 #define VID_NUM_POLL_STATES         ((uint32_t)822)
+#define VID_TRUSTED_DEVICE_TOKEN    ((uint32_t)823)
+#define VID_TRUSTED_DEVICES_ALLOWED ((uint32_t)824)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

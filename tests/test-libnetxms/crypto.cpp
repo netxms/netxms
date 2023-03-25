@@ -67,6 +67,16 @@ void TestRSA()
    AssertTrue(csize == strlen(TEXT) + 1);
    AssertTrue(!strcmp(TEXT, clearText));
 
+   size_t esize2 = 0;
+   BYTE *encrypted2 = RSAPublicEncrypt(TEXT, strlen(TEXT) + 1, &esize2, k, RSA_PKCS1_OAEP_PADDING);
+   AssertNotNull(encrypted2);
+   AssertTrue(esize2 > 0);
+
+   csize = RSAPrivateDecrypt(encrypted2, esize2, clearText, sizeof(clearText), k, RSA_PKCS1_OAEP_PADDING);
+   AssertTrue(csize == strlen(TEXT) + 1);
+   AssertTrue(!strcmp(TEXT, clearText));
+
+   MemFree(encrypted2);
    RSAFree(k);
    EndTest();
 }

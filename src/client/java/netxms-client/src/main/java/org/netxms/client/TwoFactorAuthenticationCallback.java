@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021-2022 Raden Solutions
+ * Copyright (C) 2021-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,26 @@ public interface TwoFactorAuthenticationCallback
     *
     * @param challenge optional challenge text (could be null)
     * @param qrLabel text to be displayed as QR code for scan (could be null)
+    * @param trustedDevicesAllowed true if trusted devices are allowed by the server
     * @return user's response
     */
-   public String getUserResponse(String challenge, String qrLabel);
+   public String getUserResponse(String challenge, String qrLabel, boolean trustedDevicesAllowed);
+
+   /**
+    * Save trusted device token.
+    *
+    * @param serverId server ID
+    * @param username user name for which token should be provided
+    * @param token trusted device token sent by server
+    */
+   public void saveTrustedDeviceToken(long serverId, String username, byte[] token);
+
+   /**
+    * Get trusted device token to be provided to the server.
+    *
+    * @param serverId server ID
+    * @param username user name for which token should be provided
+    * @return trusted device token to provide to the server or null
+    */
+   public byte[] getTrustedDeviceToken(long serverId, String username);
 }

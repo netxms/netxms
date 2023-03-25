@@ -213,7 +213,7 @@ bool LIBNETXMS_EXPORTABLE RSASaveKey(RSA_KEY key, const TCHAR *keyFile)
 
    uint32_t keyLen = i2d_PublicKey(key, nullptr);
    keyLen += i2d_PrivateKey(key, nullptr);
-   BYTE *keyBuffer = static_cast<BYTE*>(MemAlloc(keyLen));
+   BYTE *keyBuffer = MemAllocArrayNoInit<BYTE>(keyLen);
 
    BYTE *p = keyBuffer;
    i2d_PublicKey(key, &p);

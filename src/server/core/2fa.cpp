@@ -26,6 +26,18 @@
 #define DEBUG_TAG _T("2fa")
 
 /**
+ * Trusted device token - issued by server to the client after successful 2FA authentication to allow 2FA bypass for configured period of time
+ */
+struct TrustedDeviceToken
+{
+   uint64_t timestamp;
+   uint32_t userId;
+   uint32_t padding1;
+   char userName[MAX_USER_NAME + 16];
+   BYTE hash[SHA256_DIGEST_SIZE];
+};
+
+/**
  * TOTP token constructor
  */
 TOTPToken::TOTPToken(const TCHAR* methodName, const BYTE* secret, const TCHAR *userName, bool newSecret) : TwoFactorAuthenticationToken(methodName)
@@ -453,7 +465,7 @@ TwoFactorAuthenticationToken *Prepare2FAChallenge(const TCHAR *methodName, uint3
 /**
  * Validate 2FA response
  */
-bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId)
+bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize)
 {
    bool success = false;
    s_authMethodListLock.lock();
@@ -466,7 +478,57 @@ bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, u
       }
    }
    s_authMethodListLock.unlock();
+
+   if (success)
+   {
+      TrustedDeviceToken token;
+      memset(&token, 0, sizeof(TrustedDeviceToken));
+      token.timestamp = time(nullptr);
+      token.userId = userId;
+
+      TCHAR userName[MAX_USER_NAME];
+      ResolveUserId(userId, userName, true);
+      tchar_to_utf8(userName, -1, token.userName, MAX_USER_NAME + 16);
+
+      CalculateSHA256Hash(&token, offsetof(TrustedDeviceToken, hash), token.hash);
+
+      *trustedDeviceToken = RSAPublicEncrypt(&token, sizeof(TrustedDeviceToken), trustedDeviceTokenSize, g_serverKey, RSA_PKCS1_OAEP_PADDING);
+   }
    return success;
+}
+
+/**
+ * Validate trusted device token
+ */
+bool Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId)
+{
+   if (token == nullptr)
+      return false;
+
+   size_t decryptionBufferSize = RSASize(g_serverKey);
+   TrustedDeviceToken *decryptedToken = static_cast<TrustedDeviceToken*>(MemAllocLocal(decryptionBufferSize));
+   ssize_t decryptedSize = RSAPrivateDecrypt(token, size, decryptedToken, decryptionBufferSize, g_serverKey, RSA_PKCS1_OAEP_PADDING);
+   if (decryptedSize != sizeof(TrustedDeviceToken))
+      return false;
+
+   BYTE hash[SHA256_DIGEST_SIZE];
+   CalculateSHA256Hash(decryptedToken, offsetof(TrustedDeviceToken, hash), hash);
+   if (memcmp(hash, decryptedToken->hash, SHA256_DIGEST_SIZE))
+      return false;
+
+   if (decryptedToken->userId != userId)
+      return false;
+
+   TCHAR userName[MAX_USER_NAME];
+   ResolveUserId(userId, userName, true);
+
+   char userNameUtf8[MAX_USER_NAME + 16];
+   tchar_to_utf8(userName, -1, userNameUtf8, MAX_USER_NAME + 16);
+   if (strcmp(userNameUtf8, decryptedToken->userName))
+      return false;
+
+   uint32_t trustedDeviceTTL = ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0);
+   return decryptedToken->timestamp + trustedDeviceTTL >= time(nullptr);
 }
 
 /**

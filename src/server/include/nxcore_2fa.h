@@ -34,7 +34,7 @@ private:
    TCHAR m_methodName[MAX_OBJECT_NAME];
 
 public:
-   TwoFactorAuthenticationToken(const TCHAR* methodName)
+   TwoFactorAuthenticationToken(const TCHAR *methodName)
    {
       _tcslcpy(m_methodName, methodName, MAX_OBJECT_NAME);
    }
@@ -83,16 +83,15 @@ public:
    MessageToken(const TCHAR* methodName, uint32_t secret) : TwoFactorAuthenticationToken(methodName), m_secret(secret)
    {
    }
-   virtual ~MessageToken()
-   {
-   }
+   virtual ~MessageToken() = default;
 
    uint32_t getSecret() const { return m_secret; };
 };
 
 void LoadTwoFactorAuthenticationMethods();
 TwoFactorAuthenticationToken* Prepare2FAChallenge(const TCHAR *methodName, uint32_t userId);
-bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId);
+bool Validate2FAResponse(TwoFactorAuthenticationToken *token, TCHAR *response, uint32_t userId, BYTE **trustedDeviceToken, size_t *trustedDeviceTokenSize);
+bool Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t userId);
 void Get2FADrivers(NXCPMessage *msg);
 void Get2FAMethods(NXCPMessage *msg);
 uint32_t Modify2FAMethod(const TCHAR *name, const TCHAR *driver, const TCHAR *description, char *configuration);

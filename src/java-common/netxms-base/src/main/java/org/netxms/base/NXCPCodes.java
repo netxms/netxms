@@ -1312,9 +1312,11 @@ public class NXCPCodes
    public static final long VID_ENUM_COUNT = 820;
    public static final long VID_DISPLAY_NAME = 821;
    public static final long VID_NUM_POLL_STATES = 822;
+   public static final long VID_TRUSTED_DEVICE_TOKEN = 823;
+   public static final long VID_TRUSTED_DEVICES_ALLOWED = 824;
 
-	public static final long VID_ACL_USER_BASE = 0x00001000L;
-	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
+   public static final long VID_ACL_USER_BASE = 0x00001000L;
+   public static final long VID_ACL_USER_LAST = 0x00001FFFL;
 	public static final long VID_ACL_RIGHTS_BASE = 0x00002000L;
 	public static final long VID_ACL_RIGHTS_LAST = 0x00002FFFL;
    public static final long VID_ACTION_LIST_BASE = 0x50000000L;

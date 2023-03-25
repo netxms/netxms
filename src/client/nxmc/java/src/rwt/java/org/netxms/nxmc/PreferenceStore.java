@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -600,7 +600,7 @@ public class PreferenceStore
       properties.setProperty(name + ".Count", Integer.toString(value.size()));
       int index = 0;
       for(String s : value)
-         properties.setProperty(name + "." + Integer.toString(index), s);
+         properties.setProperty(name + "." + Integer.toString(index++), s);
       save();
       firePropertyChangeListeners(name, null, null);
    }
@@ -694,5 +694,15 @@ public class PreferenceStore
    public void setDefault(String name, RGB value)
    {
       setDefault(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
+   }
+
+   /**
+    * Remove property.
+    *
+    * @param name property name
+    */
+   public void remove(String name)
+   {
+      properties.remove(name);
    }
 }

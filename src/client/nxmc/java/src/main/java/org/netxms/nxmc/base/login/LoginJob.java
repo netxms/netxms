@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Locale;
 import java.util.ServiceLoader;
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
@@ -108,12 +109,12 @@ public class LoginJob implements IRunnableWithProgress
          {
             hostName = server;
          }
-         
+
          logger.info("Connecting to " + hostName + " port " + port);
 
          final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(Locale.getDefault().getLanguage());
-         
+
          session.setClientInfo("nxmc/" + VersionInfo.version()); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
          monitor.worked(1);
@@ -122,6 +123,8 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(1);
 
          session.login(authMethod, loginName, password, certificate, signature, new TwoFactorAuthenticationCallback() {
+            private boolean trustedDevice = false;
+
             @Override
             public int selectMethod(final List<String> methods)
             {
@@ -143,23 +146,57 @@ public class LoginJob implements IRunnableWithProgress
             }
 
             @Override
-            public String getUserResponse(final String challenge, final String qrLabel)
+            public String getUserResponse(final String challenge, final String qrLabel, final boolean trustedDevicesAllowed)
             {
                final String[] response = new String[1];
                display.syncExec(new Runnable() {
                   @Override
                   public void run()
                   {
-                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel);
+                     TwoFactorResponseDialog dlg = new TwoFactorResponseDialog(null, challenge, qrLabel, trustedDevicesAllowed);
                      if (dlg.open() == Window.OK)
+                     {
                         response[0] = dlg.getResponse();
+                        trustedDevice = dlg.isTrustedDevice();
+                     }
                   }
                });
                return response[0];
             }
+
+            @Override
+            public void saveTrustedDeviceToken(long serverId, String username, byte[] token)
+            {
+               final String key = "TrustedDeviceToken." + Long.toString(serverId) + "." + username;
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (trustedDevice)
+                        PreferenceStore.getInstance().set(key, Base64.encodeBase64String(token));
+                     else
+                        PreferenceStore.getInstance().remove(key);
+                  }
+               });
+            }
+
+            @Override
+            public byte[] getTrustedDeviceToken(long serverId, String username)
+            {
+               final String key = "TrustedDeviceToken." + Long.toString(serverId) + "." + username;
+               final String[] token = new String[1];
+               display.syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     token[0] = PreferenceStore.getInstance().getAsString(key);
+                  }
+               });
+               return ((token[0] != null) && !token[0].isEmpty()) ? Base64.decodeBase64(token[0]) : null;
+            }
          });
          monitor.worked(1);
-         
+
          monitor.setTaskName(i18n.tr("Synchronizing objects..."));
          PreferenceStore store = PreferenceStore.getInstance();
          boolean fullySync = store.getAsBoolean("Connect.FullObjectSync", false);

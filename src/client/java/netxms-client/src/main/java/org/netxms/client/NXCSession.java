@@ -2302,8 +2302,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     * @throws IllegalStateException if the state is illegal
     */
-   public void login(String login, Certificate certificate, Signature signature)
-         throws NXCException, IOException, IllegalStateException
+   public void login(String login, Certificate certificate, Signature signature) throws NXCException, IOException, IllegalStateException
    {
       login(AuthenticationType.CERTIFICATE, login, null, certificate, signature, null);
    }
@@ -2360,6 +2359,13 @@ public class NXCSession
          }
       }
 
+      if (twoFactorAuthenticationCallback != null)
+      {
+         byte[] token = twoFactorAuthenticationCallback.getTrustedDeviceToken(serverId, login);
+         if ((token != null) && (token.length != 0))
+            request.setField(NXCPCodes.VID_TRUSTED_DEVICE_TOKEN, token);
+      }
+
       request.setField(NXCPCodes.VID_LIBNXCL_VERSION, VersionInfo.version());
       request.setField(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
       request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
@@ -2383,6 +2389,7 @@ public class NXCSession
          logger.info("Two factor authentication requested by server");
 
          List<String> methods = response.getStringListFromFields(NXCPCodes.VID_2FA_METHOD_LIST_BASE, NXCPCodes.VID_2FA_METHOD_COUNT);
+         boolean trustedDevicesAllowed = response.getFieldAsBoolean(NXCPCodes.VID_TRUSTED_DEVICES_ALLOWED);
          int selectedMethod = twoFactorAuthenticationCallback.selectMethod(methods);
          logger.debug("Selected method " + selectedMethod);
 
@@ -2400,7 +2407,7 @@ public class NXCSession
             {
                String challenge = response.getFieldAsString(NXCPCodes.VID_CHALLENGE);
                String qrLabel = response.getFieldAsString(NXCPCodes.VID_QR_LABEL);
-               String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge, qrLabel);
+               String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge, qrLabel, trustedDevicesAllowed);
                request = newMessage(NXCPCodes.CMD_2FA_VALIDATE_RESPONSE);
                request.setField(NXCPCodes.VID_2FA_RESPONSE, userResponse);
                sendMessage(request);
@@ -2408,6 +2415,13 @@ public class NXCSession
                response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
                rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
                logger.debug("Two factor validation response received, RCC=" + rcc);
+
+               if ((rcc == RCC.SUCCESS) && trustedDevicesAllowed && response.isFieldPresent(NXCPCodes.VID_TRUSTED_DEVICE_TOKEN))
+               {
+                  byte[] token = response.getFieldAsBinary(NXCPCodes.VID_TRUSTED_DEVICE_TOKEN);
+                  if ((token != null) && (token.length > 0))
+                     twoFactorAuthenticationCallback.saveTrustedDeviceToken(serverId, login, token);
+               }
             }
          }
       }
@@ -13767,7 +13781,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
-   
+
    /**
     * Delete asset management attribute
     * 
