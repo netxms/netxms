@@ -576,7 +576,7 @@ static bool LoadCertificate(RSA_KEY *serverKey, const TCHAR *certificatePath, co
          i2d_RSAPrivateKey(privKey, &pos);
 
          *serverKey = RSAKeyFromData(keyBuffer, keyLen, true);
-         MemFree(buffer);
+         MemFree(keyBuffer);
       }
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
       if (certPubKey != nullptr)
