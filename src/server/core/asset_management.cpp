@@ -541,7 +541,7 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
    AssetManagementAttribute *assetAttribute = s_schema.get(name);
    if (assetAttribute == nullptr)
    {
-      return std::pair<uint32_t, String>(RCC_UNKNOWN_ATTRIBUTE, _T("No such asset attribute"));
+      return std::pair<uint32_t, String>(RCC_UNKNOWN_ATTRIBUTE, _T("No such attribute"));
    }
 
    //Check value
@@ -550,14 +550,14 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
       case AMDataType::String:
          if (assetAttribute->isRangeSet())
          {
-            uint32_t len = _tcslen(value);
+            int32_t len = static_cast<int32_t>(_tcslen(value));
             if (len < assetAttribute->getMinRange())
             {
-               resultText = _T("String too short");
+               resultText = _T("String is too short");
             }
             if (len > assetAttribute->getMaxRange())
             {
-               resultText = _T("String too long");
+               resultText = _T("String is too long");
             }
          }
          break;
@@ -581,11 +581,11 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
          {
             if(number < assetAttribute->getMinRange())
             {
-               resultText = _T("Integer too small");
+               resultText = _T("Integer is too small");
             }
             if(number > assetAttribute->getMaxRange())
             {
-               resultText = _T("Integer too big");
+               resultText = _T("Integer is too big");
             }
          }
          break;
@@ -602,11 +602,11 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
          {
             if(number < assetAttribute->getMinRange())
             {
-               resultText = _T("Number too small");
+               resultText = _T("Number is too small");
             }
             if(number > assetAttribute->getMaxRange())
             {
-               resultText = _T("Number too big");
+               resultText = _T("Number is too big");
             }
          }
          break;
@@ -650,16 +650,19 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
       }
       case AMDataType::ObjectReference:
       {
-         TCHAR *error;
-         uint32_t objectId = _tcstoll(value, &error, 0);
-         if (*error != 0)
+         TCHAR *eptr;
+         uint32_t objectId = _tcstoul(value, &eptr, 0);
+         if ((objectId != 0) && (*eptr -= 0))
          {
-            resultText = _T("Invalid object reference a number");
+            shared_ptr<NetObj> object = FindObjectById(objectId);
+            if (object == nullptr)
+            {
+               resultText = _T("Referenced object not found");
+            }
          }
-         shared_ptr<NetObj> object = FindObjectById(objectId);
-         if (object == nullptr)
+         else
          {
-            resultText = _T("Object id not found");
+            resultText = _T("Invalid object reference");
          }
          break;
       }
@@ -667,7 +670,7 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
    bool shouldBeUnique = assetAttribute->isUnique();
    s_schemaLock.unlock();
 
-   if (shouldBeUnique)
+   if (shouldBeUnique && resultText.isEmpty())
    {
       unique_ptr<SharedObjectArray<NetObj>> objects = g_idxObjectById.getObjects();
       for (int i = 0; i < objects->size(); i++)
@@ -675,7 +678,7 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
          shared_ptr<NetObj> object = objects->getShared(i);
          if (object->isAsset())
          {
-            if(object->getAsAsset()->isAssetValueEqual(name, value))
+            if (object->getAsAsset()->isAssetValueEqual(name, value))
             {
                resultText.append(_T("Duplicate value. Original value comes from: "));
                resultText.append(object->getName());

@@ -117,6 +117,9 @@
     <ClCompile Include="upgrade_v43.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="upgrade_v44.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\netxms-version.h">

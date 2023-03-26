@@ -528,7 +528,7 @@ bool Validate2FATrustedDeviceToken(const BYTE *token, size_t size, uint32_t user
       return false;
 
    uint32_t trustedDeviceTTL = ConfigReadULong(_T("Server.Security.2FA.TrustedDeviceTTL"), 0);
-   return decryptedToken->timestamp + trustedDeviceTTL >= time(nullptr);
+   return static_cast<time_t>(decryptedToken->timestamp + trustedDeviceTTL) >= time(nullptr);
 }
 
 /**

@@ -1705,7 +1705,7 @@ public:
 /**
  * Class that manages asset management attribute instances for objects
  */
-class Asset
+class NXCORE_EXPORTABLE Asset
 {
 private:
    NetObj *m_this;

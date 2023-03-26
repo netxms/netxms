@@ -207,6 +207,7 @@
     <ClCompile Include="agent_policy.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
+    <ClCompile Include="asset_management.cpp" />
     <ClCompile Include="audit.cpp" />
     <ClCompile Include="authtokens.cpp" />
     <ClCompile Include="beacon.cpp" />
