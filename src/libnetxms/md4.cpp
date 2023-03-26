@@ -193,12 +193,12 @@ void LIBNETXMS_EXPORTABLE MD4Init(MD4_STATE *state)
 void LIBNETXMS_EXPORTABLE MD4Update(MD4_STATE *state, const void *data, size_t size)
 {
 	uint32_t saved_lo;
-	unsigned long used, available;
+	size_t used, available;
 
 	saved_lo = state->lo;
-	if ((state->lo = (saved_lo + size) & 0x1fffffff) < saved_lo)
+	if ((state->lo = (saved_lo + static_cast<uint32_t>(size)) & 0x1fffffff) < saved_lo)
 		state->hi++;
-	state->hi += size >> 29;
+	state->hi += static_cast<uint32_t>(size) >> 29;
 
 	used = saved_lo & 0x3f;
 
@@ -217,13 +217,14 @@ void LIBNETXMS_EXPORTABLE MD4Update(MD4_STATE *state, const void *data, size_t s
 	}
 
 	if (size >= 64) {
-		data = body(state, data, size & ~(unsigned long)0x3f);
+		data = body(state, data, size & ~(size_t)0x3f);
 		size &= 0x3f;
 	}
 
 	memcpy(state->buffer, data, size);
 }
 
+#undef OUT
 #define OUT(dst, src) \
 	(dst)[0] = (unsigned char)(src); \
 	(dst)[1] = (unsigned char)((src) >> 8); \
