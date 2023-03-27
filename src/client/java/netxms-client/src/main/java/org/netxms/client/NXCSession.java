@@ -13718,7 +13718,7 @@ public class NXCSession
     */
    public void syncAssetManagementAttributes() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ASSET_MGMT_ATTRIBUTE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ASSET_MGMT_ATTRIBUTES);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -13767,7 +13767,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
-   
+
    /**
     * Update asset management attribute
     * 
@@ -13814,19 +13814,19 @@ public class NXCSession
       }
       return isUnique;
    }
-   
+
    /**
-    * Update asset 
+    * Update asset attribute
     * 
     * @param objectId object id
     * @param name asset name
     * @param value asset value
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateAsset(long objectId, String name, String value) throws IOException, NXCException
+   public void updateAssetAttribute(long objectId, String name, String value) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ASSET_INSTANCE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AM_ATTRIBUTE_INSTANCE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_VALUE, value);
@@ -13835,16 +13835,16 @@ public class NXCSession
    }
    
    /**
-    * Delete asset
+    * Delete asset attribute
     * 
     * @param objectId object id
-    * @param name asset name
-    * @throws IOException  if socket I/O error occurs
+    * @param name attribute name
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAsset(long objectId, String name) throws IOException, NXCException
+   public void deleteAssetAttribute(long objectId, String name) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ASSET_INSTANCE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AM_ATTRIBUTE_INSTANCE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);

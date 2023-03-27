@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -206,16 +206,16 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_TRAP_LOG_RECORDS"),
       _T("CMD_START_SNMP_WALK"),
       _T("CMD_SNMP_WALK_DATA"),
-      _T("CMD_GET_MAP_LIST"),
-      _T("CMD_LOAD_MAP"),
-      _T("CMD_SAVE_MAP"),
-      _T("CMD_DELETE_MAP"),
-      _T("CMD_RESOLVE_MAP_NAME"),
-      _T("CMD_SUBMAP_DATA"),
-      _T("CMD_UPLOAD_SUBMAP_BK_IMAGE"),
-      _T("CMD_GET_SUBMAP_BK_IMAGE"),
-      _T("CMD_GET_MODULE_LIST"),
-      _T("CMD_UPDATE_MODULE_INFO"),
+      _T("CMD_GET_ASSET_MGMT_ATTRIBUTES"),
+      _T("CMD_CREATE_ASSET_MGMT_ATTRIBUTE"),
+      _T("CMD_UPDATE_ASSET_MGMT_ATTRIBUTE"),
+      _T("CMD_DELETE_ASSET_MGMT_ATTRIBUTE"),
+      _T("CMD_UPDATE_AM_ATTRIBUTE_INSTANCE"),
+      _T("CMD_DELETE_AM_ATTRIBUTE_INSTANCE"),
+      _T("CMD_0x00A9"), // was: CMD_UPLOAD_SUBMAP_BK_IMAGE
+      _T("CMD_0x00AA"), // was: CMD_GET_SUBMAP_BK_IMAGE
+      _T("CMD_0x00AB"), // was: CMD_GET_MODULE_LIST
+      _T("CMD_0x00AC"), // was: CMD_UPDATE_MODULE_INFO
       _T("CMD_COPY_USER_VARIABLE"),
       _T("CMD_RESOLVE_DCI_NAMES"),
       _T("CMD_GET_MY_CONFIG"),
@@ -499,13 +499,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_WRITE_MAINTENANCE_JOURNAL"),
       _T("CMD_UPDATE_MAINTENANCE_JOURNAL"),
       _T("CMD_GET_SSH_CREDENTIALS"),
-      _T("CMD_UPDATE_SSH_CREDENTIALS"),
-      _T("CMD_GET_ASSET_MGMT_ATTRIBUTE"),
-      _T("CMD_CREATE_ASSET_MGMT_ATTRIBUTE"),
-      _T("CMD_UPDATE_ASSET_MGMT_ATTRIBUTE"),
-      _T("CMD_DELETE_ASSET_MGMT_ATTRIBUTE"),
-      _T("CMD_UPDATE_ASSET_INSTANCE"),
-      _T("CMD_DELETE_ASSET_INSTANCE")
+      _T("CMD_UPDATE_SSH_CREDENTIALS")
    };
    static const TCHAR *reportingMessageNames[] =
    {
@@ -518,7 +512,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_RS_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_DELETE_ASSET_INSTANCE))
+   if ((code >= CMD_LOGIN) && (code <= CMD_UPDATE_SSH_CREDENTIALS))
    {
       _tcscpy(buffer, messageNames[code - CMD_LOGIN]);
    }

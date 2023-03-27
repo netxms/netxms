@@ -900,12 +900,12 @@ private:
    void cloneNetworkMap(const NXCPMessage& request);
    void findVendorByMac(const NXCPMessage& request);
    void getOspfData(const NXCPMessage& request);
-   void getAssetManagementConfiguration(const NXCPMessage& request);
-   void createAssetManagementConfiguration(const NXCPMessage& request);
-   void updateAssetManagementConfiguration(const NXCPMessage& request);
-   void deleteAssetManagementConfiguration(const NXCPMessage& request);
-   void updateAssetManagementInstance(const NXCPMessage& request);
-   void deleteAssetManagementInstance(const NXCPMessage& request);
+   void getAssetManagementAttributes(const NXCPMessage& request);
+   void createAssetManagementAttribute(const NXCPMessage& request);
+   void updateAssetManagementAttribute(const NXCPMessage& request);
+   void deleteAssetManagementAttribute(const NXCPMessage& request);
+   void updateAssetMgmtAttrInstance(const NXCPMessage& request);
+   void deleteAssetMgmtAttrInstance(const NXCPMessage& request);
 
    void alarmUpdateWorker(Alarm *alarm);
    void sendActionDBUpdateMessage(NXCP_MESSAGE *msg);

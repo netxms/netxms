@@ -1903,23 +1903,23 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_OSPF_DATA:
          getOspfData(*request);
          break;
-      case CMD_GET_ASSET_MGMT_ATTRIBUTE:
-         getAssetManagementConfiguration(*request);
+      case CMD_GET_ASSET_MGMT_ATTRIBUTES:
+         getAssetManagementAttributes(*request);
          break;
       case CMD_CREATE_ASSET_MGMT_ATTRIBUTE:
-         createAssetManagementConfiguration(*request);
+         createAssetManagementAttribute(*request);
          break;
       case CMD_UPDATE_ASSET_MGMT_ATTRIBUTE:
-         updateAssetManagementConfiguration(*request);
+         updateAssetManagementAttribute(*request);
          break;
       case CMD_DELETE_ASSET_MGMT_ATTRIBUTE:
-         deleteAssetManagementConfiguration(*request);
+         deleteAssetManagementAttribute(*request);
          break;
-      case CMD_UPDATE_ASSET_INSTANCE:
-         updateAssetManagementInstance(*request);
+      case CMD_UPDATE_AM_ATTRIBUTE_INSTANCE:
+         updateAssetMgmtAttrInstance(*request);
          break;
-      case CMD_DELETE_ASSET_INSTANCE:
-         deleteAssetManagementInstance(*request);
+      case CMD_DELETE_AM_ATTRIBUTE_INSTANCE:
+         deleteAssetMgmtAttrInstance(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -16458,10 +16458,10 @@ void ClientSession::getOspfData(const NXCPMessage& request)
 }
 
 /**
- * Get assert management configuration attributes
+ * Get asset management attributes
  *
  * Called by:
- * CMD_GET_ASSET_MGMT_ATTRIBUTE
+ * CMD_GET_ASSET_MGMT_ATTRIBUTES
  *
  * Return values:
  * VID_AM_COUNT                  Number of assert management entries
@@ -16481,7 +16481,7 @@ void ClientSession::getOspfData(const NXCPMessage& request)
  *
  * Second maintenance entry starts from VID_AM_LIST_BASE + 100
  */
-void ClientSession::getAssetManagementConfiguration(const NXCPMessage& request)
+void ClientSession::getAssetManagementAttributes(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    AMFillMessage(&response);
@@ -16493,7 +16493,7 @@ void ClientSession::getAssetManagementConfiguration(const NXCPMessage& request)
  * Create new assert management attribute
  *
  * Called by:
- * CMD_UPDATE_ASSET_MGMT_ATTRIBUTE
+ * CMD_CREATE_ASSET_MGMT_ATTRIBUTE
  *
  * Expected input parameters:
  * VID_NAME             assert management attribute name
@@ -16511,7 +16511,7 @@ void ClientSession::getAssetManagementConfiguration(const NXCPMessage& request)
  * Return values:
  * VID_RCC                          Request completion code
  */
-void ClientSession::createAssetManagementConfiguration(const NXCPMessage& request)
+void ClientSession::createAssetManagementAttribute(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
@@ -16527,7 +16527,7 @@ void ClientSession::createAssetManagementConfiguration(const NXCPMessage& reques
 }
 
 /**
- * Update existing assert management attribute
+ * Update existing asset management attribute
  *
  * Called by:
  * CMD_UPDATE_ASSET_MGMT_ATTRIBUTE
@@ -16548,7 +16548,7 @@ void ClientSession::createAssetManagementConfiguration(const NXCPMessage& reques
  * Return values:
  * VID_RCC                          Request completion code
  */
-void ClientSession::updateAssetManagementConfiguration(const NXCPMessage& request)
+void ClientSession::updateAssetManagementAttribute(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
@@ -16564,7 +16564,7 @@ void ClientSession::updateAssetManagementConfiguration(const NXCPMessage& reques
 }
 
 /**
- * Delete assert management attribute
+ * Delete asset management attribute
  *
  * Called by:
  * CMD_DELETE_ASSET_MGMT_ATTRIBUTE
@@ -16575,7 +16575,7 @@ void ClientSession::updateAssetManagementConfiguration(const NXCPMessage& reques
  * Return values:
  * VID_RCC                          Request completion code
  */
-void ClientSession::deleteAssetManagementConfiguration(const NXCPMessage& request)
+void ClientSession::deleteAssetManagementAttribute(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
@@ -16590,12 +16590,11 @@ void ClientSession::deleteAssetManagementConfiguration(const NXCPMessage& reques
    sendMessage(response);
 }
 
-
 /**
- * Update or create asset management instance
+ * Update asset management attribute instance
  *
  * Called by:
- * CMD_UPDATE_ASSET_INSTANCE
+ * CMD_UPDATE_AM_ATTRIBUTE_INSTANCE
  *
  * Expected input parameters:
  * VID_OBJECT_ID     object id
@@ -16606,7 +16605,7 @@ void ClientSession::deleteAssetManagementConfiguration(const NXCPMessage& reques
  * VID_RCC                          Request completion code
  * VID_ERROR_TEXT                   Error text if result is not success
  */
-void ClientSession::updateAssetManagementInstance(const NXCPMessage& request)
+void ClientSession::updateAssetMgmtAttrInstance(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
@@ -16653,10 +16652,10 @@ void ClientSession::updateAssetManagementInstance(const NXCPMessage& request)
 }
 
 /**
- * Delete asset management instance
+ * Delete asset management attribute instance
  *
  * Called by:
- * CMD_DELETE_ASSET_INSTANCE
+ * CMD_DELETE_AM_ATTRIBUTE_INSTANCE
  *
  * Expected input parameters:
  * VID_OBJECT_ID     object id
@@ -16665,7 +16664,7 @@ void ClientSession::updateAssetManagementInstance(const NXCPMessage& request)
  * Return values:
  * VID_RCC                          Request completion code
  */
-void ClientSession::deleteAssetManagementInstance(const NXCPMessage& request)
+void ClientSession::deleteAssetMgmtAttrInstance(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));

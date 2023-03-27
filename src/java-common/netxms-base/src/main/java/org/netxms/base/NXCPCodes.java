@@ -186,16 +186,16 @@ public class NXCPCodes
 	public static final int CMD_TRAP_LOG_RECORDS = 0x00A0;
 	public static final int CMD_START_SNMP_WALK = 0x00A1;
 	public static final int CMD_SNMP_WALK_DATA = 0x00A2;
-	public static final int CMD_GET_MAP_LIST = 0x00A3;
-	public static final int CMD_LOAD_MAP = 0x00A4;
-	public static final int CMD_SAVE_MAP = 0x00A5;
-	public static final int CMD_DELETE_MAP = 0x00A6;
-	public static final int CMD_RESOLVE_MAP_NAME = 0x00A7;
-	public static final int CMD_SUBMAP_DATA = 0x00A8;
-	public static final int CMD_UPLOAD_SUBMAP_BK_IMAGE = 0x00A9;
-	public static final int CMD_GET_SUBMAP_BK_IMAGE = 0x00AA;
-	public static final int CMD_GET_MODULE_LIST = 0x00AB;
-	public static final int CMD_UPDATE_MODULE_INFO = 0x00AC;
+   public static final int CMD_GET_ASSET_MGMT_ATTRIBUTES = 0x00A3;
+   public static final int CMD_CREATE_ASSET_MGMT_ATTRIBUTE = 0x00A4;
+   public static final int CMD_UPDATE_ASSET_MGMT_ATTRIBUTE = 0x00A5;
+   public static final int CMD_DELETE_ASSET_MGMT_ATTRIBUTE = 0x00A6;
+   public static final int CMD_UPDATE_AM_ATTRIBUTE_INSTANCE = 0x00A7;
+   public static final int CMD_DELETE_AM_ATTRIBUTE_INSTANCE = 0x00A8;
+   // public static final int CMD_UPLOAD_SUBMAP_BK_IMAGE = 0x00A9;
+   // public static final int CMD_GET_SUBMAP_BK_IMAGE = 0x00AA;
+   // public static final int CMD_GET_MODULE_LIST = 0x00AB;
+   // public static final int CMD_UPDATE_MODULE_INFO = 0x00AC;
 	public static final int CMD_COPY_USER_VARIABLE = 0x00AD;
 	public static final int CMD_RESOLVE_DCI_NAMES = 0x00AE;
 	public static final int CMD_GET_MY_CONFIG = 0x00AF;
@@ -475,13 +475,6 @@ public class NXCPCodes
 	public static final int CMD_UPDATE_MAINTENANCE_JOURNAL = 0x01C6;
    public static final int CMD_GET_SSH_CREDENTIALS = 0x01C7;
    public static final int CMD_UPDATE_SSH_CREDENTIALS = 0x01C8;
-   public static final int CMD_GET_ASSET_MGMT_ATTRIBUTE = 0x01C9;
-   public static final int CMD_CREATE_ASSET_MGMT_ATTRIBUTE = 0x01CA;
-   public static final int CMD_UPDATE_ASSET_MGMT_ATTRIBUTE = 0x01CB;
-   public static final int CMD_DELETE_ASSET_MGMT_ATTRIBUTE = 0x01CC;
-   public static final int CMD_UPDATE_ASSET_INSTANCE = 0x01CD;
-   public static final int CMD_DELETE_ASSET_INSTANCE = 0x01CE;
-   
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

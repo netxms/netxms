@@ -397,16 +397,16 @@ typedef struct
 #define CMD_TRAP_LOG_RECORDS              0x00A0
 #define CMD_START_SNMP_WALK               0x00A1
 #define CMD_SNMP_WALK_DATA                0x00A2
-#define CMD_GET_MAP_LIST                  0x00A3
-#define CMD_LOAD_MAP                      0x00A4
-#define CMD_SAVE_MAP                      0x00A5
-#define CMD_DELETE_MAP                    0x00A6
-#define CMD_RESOLVE_MAP_NAME              0x00A7
-#define CMD_SUBMAP_DATA                   0x00A8
-#define CMD_UPLOAD_SUBMAP_BK_IMAGE        0x00A9
-#define CMD_GET_SUBMAP_BK_IMAGE           0x00AA
-#define CMD_GET_MODULE_LIST               0x00AB
-#define CMD_UPDATE_MODULE_INFO            0x00AC
+#define CMD_GET_ASSET_MGMT_ATTRIBUTES     0x00A3
+#define CMD_CREATE_ASSET_MGMT_ATTRIBUTE   0x00A4
+#define CMD_UPDATE_ASSET_MGMT_ATTRIBUTE   0x00A5
+#define CMD_DELETE_ASSET_MGMT_ATTRIBUTE   0x00A6
+#define CMD_UPDATE_AM_ATTRIBUTE_INSTANCE  0x00A7
+#define CMD_DELETE_AM_ATTRIBUTE_INSTANCE  0x00A8
+// unused: #define CMD_UPLOAD_SUBMAP_BK_IMAGE        0x00A9
+// unused: #define CMD_GET_SUBMAP_BK_IMAGE           0x00AA
+// unused: #define CMD_GET_MODULE_LIST               0x00AB
+// unused: #define CMD_UPDATE_MODULE_INFO            0x00AC
 #define CMD_COPY_USER_VARIABLE            0x00AD
 #define CMD_RESOLVE_DCI_NAMES             0x00AE
 #define CMD_GET_MY_CONFIG                 0x00AF
@@ -691,12 +691,6 @@ typedef struct
 #define CMD_UPDATE_MAINTENANCE_JOURNAL    0x01C6
 #define CMD_GET_SSH_CREDENTIALS           0x01C7
 #define CMD_UPDATE_SSH_CREDENTIALS        0x01C8
-#define CMD_GET_ASSET_MGMT_ATTRIBUTE      0x01C9
-#define CMD_CREATE_ASSET_MGMT_ATTRIBUTE   0x01CA
-#define CMD_UPDATE_ASSET_MGMT_ATTRIBUTE   0x01CB
-#define CMD_DELETE_ASSET_MGMT_ATTRIBUTE   0x01CC
-#define CMD_UPDATE_ASSET_INSTANCE         0x01CD
-#define CMD_DELETE_ASSET_INSTANCE         0x01CE
 
 #define CMD_RS_LIST_REPORTS               0x1100
 #define CMD_RS_GET_REPORT_DEFINITION      0x1101

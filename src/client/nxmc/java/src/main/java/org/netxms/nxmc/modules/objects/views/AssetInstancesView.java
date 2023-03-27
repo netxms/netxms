@@ -242,7 +242,7 @@ public class AssetInstancesView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateAsset(getObjectId(), name, value);
+            session.updateAssetAttribute(getObjectId(), name, value);
          }
          
          @Override
@@ -276,7 +276,7 @@ public class AssetInstancesView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateAsset(getObjectId(), name, value);
+            session.updateAssetAttribute(getObjectId(), name, value);
          }
          
          @Override
@@ -307,7 +307,7 @@ public class AssetInstancesView extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for (Object o : selection)
-               session.deleteAsset(getObjectId(), ((Entry<String, String>)o).getKey());
+               session.deleteAssetAttribute(getObjectId(), ((Entry<String, String>)o).getKey());
          }
          
          @Override
