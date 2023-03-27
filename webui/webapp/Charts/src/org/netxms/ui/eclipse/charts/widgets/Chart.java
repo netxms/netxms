@@ -356,6 +356,7 @@ public class Chart extends Composite
          for(Control c : legend.getChildren())
             c.setMenu(menu);
       }
+      legend.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
    }
 
    /**
