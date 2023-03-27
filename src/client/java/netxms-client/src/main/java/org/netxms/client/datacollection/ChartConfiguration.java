@@ -60,7 +60,7 @@ public class ChartConfiguration
 	protected boolean showLegend = true;
 
 	@Element(required = false)
-   protected boolean extendedLegend = false;
+   protected boolean extendedLegend = true;
 
 	@Element(required = false)
 	protected boolean showTitle = false;
