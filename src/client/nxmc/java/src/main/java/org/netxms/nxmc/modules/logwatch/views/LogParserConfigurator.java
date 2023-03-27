@@ -30,6 +30,7 @@ import org.netxms.client.constants.RCC;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logwatch.widgets.LogParserEditor;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserModifyListener;
@@ -65,6 +66,28 @@ public class LogParserConfigurator extends ConfigurationView
       this.configName = configName;
       this.displayName = displayName;
       session = Registry.getSession();
+   }
+
+   /**
+    * Create global log parser configuration view
+    */
+   protected LogParserConfigurator()
+   {
+      super(null, null, null, false);
+      session = Registry.getSession();
+   }  
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      LogParserConfigurator view = (LogParserConfigurator)super.cloneView();
+      view.parserType = parserType;
+      view.configName = configName;
+      view.displayName = displayName;
+      return view;
    }
 
    /**
