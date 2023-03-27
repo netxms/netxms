@@ -1533,7 +1533,8 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("software_inventory"), _T("node_id,name,version"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns);
+               DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("am_object_data"), _T("object_id,attr_name"), _T("*"));
 
       if (success)
       {
