@@ -56,6 +56,7 @@
 extern ThreadPool *g_clientThreadPool;
 extern ThreadPool *g_syncerThreadPool;
 extern ThreadPool *g_discoveryThreadPool;
+extern ThreadPool *g_pollerThreadPool;
 
 extern Config g_serverConfig;
 
@@ -1109,6 +1110,10 @@ retry_db_lock:
    g_agentConnectionThreadPool = ThreadPoolCreate(_T("AGENT"),
          ConfigReadInt(_T("ThreadPool.Agent.BaseSize"), 32),
          ConfigReadInt(_T("ThreadPool.Agent.MaxSize"), 256));
+   g_pollerThreadPool = ThreadPoolCreate( _T("POLLERS"),
+         ConfigReadInt(_T("ThreadPool.Poller.BaseSize"), 10),
+         ConfigReadInt(_T("ThreadPool.Poller.MaxSize"), 250),
+         256 * 1024);
 
    // Setup unique identifiers table
    if (!InitIdTable())

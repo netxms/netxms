@@ -301,10 +301,6 @@ static void QueueForPolling(NetObj *object, void *data)
 void PollManager(Condition *startCondition)
 {
    ThreadSetName("PollManager");
-   g_pollerThreadPool = ThreadPoolCreate( _T("POLLERS"),
-         ConfigReadInt(_T("ThreadPool.Poller.BaseSize"), 10),
-         ConfigReadInt(_T("ThreadPool.Poller.MaxSize"), 250),
-         256 * 1024);
 
    // Start active discovery poller
    THREAD activeDiscoveryPollerThread = ThreadCreateEx(ActiveDiscoveryPoller);
