@@ -367,7 +367,7 @@ public class DataCollectionConfiguration
     */
    private void copyObjectsInternal(long destNodeId, long[] items, boolean move) throws IOException, NXCException
    {
-      if (localChangeListener != null)
+      if (localChangeListener != null && (move || destNodeId == ownerId))
          localChangeListener.onObjectChange();
       
       NXCPMessage msg = session.newMessage(NXCPCodes.CMD_COPY_DCI);
