@@ -78,7 +78,7 @@ public class DataSourceEditDlg extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
+      dciSelector = new DciSelector(dialogArea, SWT.NONE);
 		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
 		dciSelector.setDciId(dci.getNodeId(), dci.dciId);
 		dciSelector.setDcObjectType(dci.type);

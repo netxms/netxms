@@ -137,7 +137,7 @@ public class StatusIndicatorElementEditDialog extends Dialog
       switch(typeSelector.getSelectionIndex())
       {
          case StatusIndicatorConfig.ELEMENT_TYPE_DCI:
-            dciSelector = new DciSelector(typeSpecificControl, SWT.NONE, false);
+            dciSelector = new DciSelector(typeSpecificControl, SWT.NONE);
             dciSelector.setLabel("Data collection item");
             dciSelector.setDciId(element.getObjectId(), element.getDciId());
             break;

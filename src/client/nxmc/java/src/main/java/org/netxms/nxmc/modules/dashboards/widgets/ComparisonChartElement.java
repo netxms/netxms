@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciValue;
@@ -108,6 +109,9 @@ public abstract class ComparisonChartElement extends ElementWidget
                   Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
                   for(DciValue dciInfo : nodeDciList)
                   {
+                     if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
+                        continue;
+
                      if ((!dci.dciName.isEmpty() && namePattern.matcher(dciInfo.getName()).find()) || (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
                      {
                         ChartDciConfig instance = new ChartDciConfig(dci);
