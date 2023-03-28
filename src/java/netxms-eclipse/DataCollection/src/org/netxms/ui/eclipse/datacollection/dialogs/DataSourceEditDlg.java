@@ -97,7 +97,7 @@ public class DataSourceEditDlg extends Dialog
       GridData gd = new GridData();
       if (!isTemplate)
       {
-   		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
+         dciSelector = new DciSelector(dialogArea, SWT.NONE);
    		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
    		dciSelector.setDciId(dci.nodeId, dci.dciId);
    		dciSelector.setDcObjectType(dci.type);

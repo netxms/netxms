@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,16 +51,29 @@ public class DciSelector extends AbstractSelector
 	private boolean allowNoValueObjects = false;
 
 	/**
-	 * @param parent
-	 * @param style
-	 * @param useHyperlink
-	 */
-	public DciSelector(Composite parent, int style, boolean useHyperlink)
+    * Create DCI selector.
+    *
+    * @param parent parent composite
+    * @param style widget style
+    */
+   public DciSelector(Composite parent, int style)
 	{
-      super(parent, style, useHyperlink ? USE_HYPERLINK : 0);
-		setText(emptySelectionName);
-		session = ConsoleSharedData.getSession();
+      this(parent, style, false);
 	}
+
+   /**
+    * Create DCI selector.
+    *
+    * @param parent parent composite
+    * @param style widget style
+    * @param showContextButton true to show context button
+    */
+   public DciSelector(Composite parent, int style, boolean showContextButton)
+   {
+      super(parent, style, showContextButton ? SHOW_CONTEXT_BUTTON : 0);
+      setText(emptySelectionName);
+      session = ConsoleSharedData.getSession();
+   }
 
    /**
     * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
@@ -87,21 +100,39 @@ public class DciSelector extends AbstractSelector
 				setDciId(fixedNode ? nodeId : 0, 0);
 				dciName = null;
 			}
+         fireModifyListeners();
 		}
 	}
-	
+
 	/**
-	 * Update text
-	 */
+    * @see org.netxms.nxmc.base.widgets.AbstractSelector#contextButtonHandler()
+    */
+   @Override
+   protected void contextButtonHandler()
+   {
+      setDciId(AbstractObject.CONTEXT, 0);
+      dciName = null;
+      fireModifyListeners();
+   }
+
+   /**
+    * Update text
+    */
 	private void updateText()
 	{
+      if (nodeId == AbstractObject.CONTEXT)
+      {
+         setText("<context>");
+         return;
+      }
+
 		if ((nodeId == 0) || (dciId == 0))
 		{
 			setText(emptySelectionName);
 			return;
 		}
 
-		new ConsoleJob(Messages.get().DciSelector_JobTitle, null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DciSelector_JobTitle, null, Activator.PLUGIN_ID) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

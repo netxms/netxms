@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ public class TableValueViewer extends BaseTableValueViewer
    }
    
    /**
-    * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#buildConfigId(java.lang.String)
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#buildConfigId(java.lang.String)
     */
    @Override
    protected String buildConfigId(String configSubId)
@@ -84,7 +84,7 @@ public class TableValueViewer extends BaseTableValueViewer
    }
 
    /**
-    * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#createActions()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#createActions()
     */
    @Override
    protected void createActions()
@@ -124,8 +124,8 @@ public class TableValueViewer extends BaseTableValueViewer
       };
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#fillContextMenu(org.eclipse.jface.action.IMenuManager)
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#fillContextMenu(org.eclipse.jface.action.IMenuManager)
     */
    @Override
    protected void fillContextMenu(IMenuManager manager)
@@ -263,16 +263,18 @@ public class TableValueViewer extends BaseTableValueViewer
    }
 
    /**
-    * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#readData()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#readData()
     */
    @Override
    protected Table readData() throws Exception
    {
+      if (objectId == 0)
+         return null;
       return session.getTableLastValues(objectId, dciId);
    }
 
    /**
-    * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#getReadJobName()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#getReadJobName()
     */
    @Override
    protected String getReadJobName()
@@ -281,7 +283,7 @@ public class TableValueViewer extends BaseTableValueViewer
    }
 
    /**
-    * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#getReadJobErrorMessage()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.BaseTableValueViewer#getReadJobErrorMessage()
     */
    @Override
    protected String getReadJobErrorMessage()

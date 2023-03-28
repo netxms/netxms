@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,21 @@
 package org.netxms.nxmc.modules.dashboards.propertypages;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.config.DashboardElementConfig;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
 import org.netxms.nxmc.modules.dashboards.widgets.TitleConfigurator;
 import org.netxms.nxmc.modules.datacollection.widgets.DciSelector;
+import org.netxms.nxmc.modules.datacollection.widgets.TemplateDciSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -42,6 +46,8 @@ public class TableValue extends DashboardElementPropertyPage
 
 	private TableValueConfig config;
 	private DciSelector dciSelector;
+   private TemplateDciSelector dciName;
+   private TemplateDciSelector dciDescription;
    private TitleConfigurator title;
 	private Spinner refreshRate;
 
@@ -61,7 +67,7 @@ public class TableValue extends DashboardElementPropertyPage
    @Override
    public String getId()
    {
-      return "alarm-viewer";
+      return "table-value";
    }
 
    /**
@@ -101,7 +107,7 @@ public class TableValue extends DashboardElementPropertyPage
       gd.grabExcessHorizontalSpace = true;
       title.setLayoutData(gd);
 
-		dciSelector = new DciSelector(dialogArea, SWT.NONE, true);
+      dciSelector = new DciSelector(dialogArea, SWT.NONE, true);
       dciSelector.setLabel(i18n.tr("Table DCI"));
 		dciSelector.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
 		dciSelector.setDciId(config.getObjectId(), config.getDciId());
@@ -109,6 +115,36 @@ public class TableValue extends DashboardElementPropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		dciSelector.setLayoutData(gd);
+      dciSelector.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            boolean isTemplate = (dciSelector.getNodeId() == AbstractObject.CONTEXT);
+            dciName.setEnabled(isTemplate);
+            dciDescription.setEnabled(isTemplate);
+         }
+      });
+
+      dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
+      dciName.setLabel(i18n.tr("DCI Name"));
+      dciName.setText(config.getDciName());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      dciName.setLayoutData(gd);
+      dciName.setEnabled(config.getObjectId() == AbstractObject.CONTEXT);
+
+      dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
+      dciDescription.setLabel(i18n.tr("DCI Description"));
+      dciDescription.setText(config.getDciDescription());
+      dciDescription.setSelectDescription(true);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      dciDescription.setLayoutData(gd);
+      dciDescription.setEnabled(config.getObjectId() == AbstractObject.CONTEXT);
 
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
@@ -129,6 +165,8 @@ public class TableValue extends DashboardElementPropertyPage
       title.updateConfiguration(config);
 		config.setObjectId(dciSelector.getNodeId());
 		config.setDciId(dciSelector.getDciId());
+      config.setDciName(dciName.getText());
+      config.setDciDescription(dciDescription.getText());
 		config.setRefreshRate(refreshRate.getSelection());
 		return true;
 	}
