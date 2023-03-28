@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,15 +116,21 @@ public class ScheduledTaskLabelProvider extends LabelProvider implements ITableL
          case ScheduledTaskView.PARAMETERS:
             return task.getParameters();
          case ScheduledTaskView.EXECUTION_TIME:
-            if (task.getSchedule().isEmpty())
-               return RegionalSettings.getDateTimeFormat().format(task.getExecutionTime());
-            else
-               return task.getSchedule();
+            return task.getSchedule().isEmpty() ? RegionalSettings.getDateTimeFormat().format(task.getExecutionTime()) : task.getSchedule();
          case ScheduledTaskView.EXECUTION_TIME_DESCRIPTION:
             if (task.getSchedule().isEmpty())
+            {
                return String.format("Exactly at %s", RegionalSettings.getDateTimeFormat().format(task.getExecutionTime()));
-            else
+            }
+            try
+            {
                return CronExpressionDescriptor.getDescription(task.getSchedule());
+            }
+            catch(Exception e)
+            {
+               // CronExpressionDescriptor can throw exception if it cannot parse expression
+               return "";
+            }
          case ScheduledTaskView.LAST_EXECUTION_TIME:
             return (task.getLastExecutionTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(task.getLastExecutionTime());
          case ScheduledTaskView.STATUS:
