@@ -76,7 +76,7 @@ public abstract class ObjectView extends ViewWithContext
          {
             if (n.getCode() == SessionNotification.OBJECT_CHANGED && getObjectId() == n.getSubCode())
             {
-               getViewArea().getDisplay().asyncExec(new Runnable() {
+               getDisplay().asyncExec(new Runnable() {
                   @Override
                   public void run()
                   {

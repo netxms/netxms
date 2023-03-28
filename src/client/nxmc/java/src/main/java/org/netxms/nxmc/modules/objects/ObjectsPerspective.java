@@ -67,7 +67,7 @@ import org.netxms.nxmc.modules.datacollection.views.PerformanceView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
-import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
+import org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
@@ -184,7 +184,7 @@ public abstract class ObjectsPerspective extends Perspective
       addMainView(new PerformanceView());
       addMainView(new PhysicalLinkView());
       addMainView(new PortView());
-      addMainView(new PredefinedMap());
+      addMainView(new PredefinedMapView());
       addMainView(new ProcessesView());
       addMainView(new RackView());
       addMainView(new RadioInterfaces());

@@ -143,7 +143,7 @@ public class NetworkMapWidget extends Composite
       };
       session.addListener(sessionListener);
 	}
-	
+
 	/**
 	 * Enable double click on objects 
 	 */
@@ -155,14 +155,14 @@ public class NetworkMapWidget extends Composite
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
             if (selection.isEmpty() || !(selection.getFirstElement() instanceof NetworkMapObject))
                return;
-            
+
             AbstractObject object = ConsoleSharedData.getSession().findObjectById(((NetworkMapObject)selection.getFirstElement()).getObjectId());
             if (object == null)
                return;
-            
+
             if (doubleClickHandlers.handleDoubleClick(object))
                return;
 
@@ -183,13 +183,13 @@ public class NetworkMapWidget extends Composite
       if (objectId == 0)
          return;
 
-      Object test = ConsoleSharedData.getSession().findObjectById(objectId);
-      if (test instanceof NetworkMap)
+      Object drillDownObject = ConsoleSharedData.getSession().findObjectById(objectId);
+      if (drillDownObject instanceof NetworkMap)
       {
-         if (test != null)
+         if (drillDownObject != null)
          {
             history.push(currentMapId);
-            setContent((NetworkMap)test, false);
+            setContent((NetworkMap)drillDownObject, false);
             viewer.showBackButton(new Runnable() {
                @Override
                public void run()
@@ -199,7 +199,7 @@ public class NetworkMapWidget extends Composite
             });
          }
       }
-      if (viewPart != null && test instanceof Dashboard)
+      else if ((viewPart != null) && (drillDownObject instanceof Dashboard))
       {
          try
          {

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,31 +16,30 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views;
+package org.netxms.nxmc.modules.networkmaps.views;
 
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.NetworkMap;
 
 /**
- * Ad-hoc chassis view
+ * Ad-hoc map view
  */
-public class AdHocChassisView extends ChassisView
+public class AdHocPredefinedMapView extends PredefinedMapView
 {
    private long contextObjectId;
-   private Chassis chassis;
+   private NetworkMap map;
 
    /**
-    * Create ad-hoc chassis view.
+    * Create ad-hoc map view.
     * 
     * @param contextObjectId ID of object that is context for this view
     * @param chassis chassis object to be shown
     */
-   public AdHocChassisView(long contextObjectId, Chassis chassis)
+   public AdHocPredefinedMapView(long contextObjectId, NetworkMap map)
    {
-      super(chassis.getGuid().toString());
+      super(map.getGuid().toString());
       this.contextObjectId = contextObjectId;
-      this.chassis = chassis;
+      this.map = map;
    }
 
    /**
@@ -53,7 +52,7 @@ public class AdHocChassisView extends ChassisView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#getPriority()
+    * @see org.netxms.nxmc.modules.objects.views.RackView#getPriority()
     */
    @Override
    public int getPriority()
@@ -76,17 +75,7 @@ public class AdHocChassisView extends ChassisView
    @Override
    public String getName()
    {
-      return super.getName() + " - " + chassis.getObjectName();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#createContent(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-   protected void createContent(Composite parent)
-   {
-      super.createContent(parent);
-      buildViewForChassis(chassis);
+      return super.getName() + " - " + map.getObjectName();
    }
 
    /**
@@ -95,6 +84,15 @@ public class AdHocChassisView extends ChassisView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      // Ignore object change - this view always show chassis set at construction
+      // Ignore object change - this view always show rack set at construction
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#getMapObject()
+    */
+   @Override
+   protected NetworkMap getMapObject()
+   {
+      return map;
    }
 }
