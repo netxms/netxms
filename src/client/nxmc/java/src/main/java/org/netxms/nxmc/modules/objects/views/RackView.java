@@ -71,6 +71,16 @@ public class RackView extends ObjectView implements ISelectionProvider
    }
 
    /**
+    * Create new rack view with ID extended by given sub ID. Intended for use by subclasses implementing ad-hoc views.
+    * 
+    * @param subId extension for base ID
+    */
+   protected RackView(String subId)
+   {
+      super(i18n.tr("Rack"), ResourceManager.getImageDescriptor("icons/object-views/rack.gif"), "Rack@" + subId, false);
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
     */
    @Override
@@ -162,6 +172,16 @@ public class RackView extends ObjectView implements ISelectionProvider
    @Override
    protected void onObjectChange(AbstractObject object)
    {
+      buildRackView((Rack)object);
+   }
+
+   /**
+    * Build rack view.
+    *
+    * @param rack rack object
+    */
+   protected void buildRackView(Rack rack)
+   {
       if (rackFrontWidget != null)
       {
          rackFrontWidget.dispose();
@@ -173,7 +193,7 @@ public class RackView extends ObjectView implements ISelectionProvider
          rackRearWidget = null;
       }
 
-      if (object != null)
+      if (rack != null)
       {
          ElementSelectionListener listener = new ElementSelectionListener() {
             @Override
@@ -185,10 +205,10 @@ public class RackView extends ObjectView implements ISelectionProvider
             }
          };
 
-         rackFrontWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.FRONT, this);
+         rackFrontWidget = new RackWidget(content, SWT.NONE, rack, RackOrientation.FRONT, this);
          rackFrontWidget.addSelectionListener(listener);
 
-         rackRearWidget = new RackWidget(content, SWT.NONE, (Rack)object, RackOrientation.REAR, this);
+         rackRearWidget = new RackWidget(content, SWT.NONE, rack, RackOrientation.REAR, this);
          rackRearWidget.addSelectionListener(listener);
 
          scroller.setMinSize(content.computeSize(SWT.DEFAULT, scroller.getSize().y));

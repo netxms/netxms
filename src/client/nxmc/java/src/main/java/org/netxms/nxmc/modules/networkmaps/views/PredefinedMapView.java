@@ -89,9 +89,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * View for predefined map
  */
-public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdateListener
+public class PredefinedMapView extends AbstractNetworkMapView implements ImageUpdateListener
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PredefinedMap.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(PredefinedMapView.class);
 
 	private Action actionAddObject;
 	private Action actionAddDCIContainer;
@@ -116,10 +116,20 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	/**
 	 * Create predefined map view
 	 */
-	public PredefinedMap()
+	public PredefinedMapView()
 	{
       super(i18n.tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap");
 	}
+
+   /**
+    * Create new map view with ID extended by given sub ID. Intended for use by subclasses implementing ad-hoc views.
+    * 
+    * @param subId extension for base ID
+    */
+   protected PredefinedMapView(String subId)
+   {
+      super(i18n.tr("Map"), ResourceManager.getImageDescriptor("icons/object-views/netmap.png"), "PredefinedMap@" + subId);
+   }
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
@@ -128,6 +138,15 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    public boolean isValidForContext(Object context)
    {
       return (context != null) && (context instanceof NetworkMap);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 15;
    }
 
    /**
@@ -156,7 +175,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
                   public void run()
                   {
                      readOnlyFlagsCache.put(object.getObjectId(), readOnly);
-                     PredefinedMap.this.readOnly = readOnly;
+                     PredefinedMapView.this.readOnly = readOnly;
                      reconfigureViewer();
                      updateToolBar();
                      updateMenu();
@@ -173,10 +192,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          };
          job.setUser(false);
          job.start();
-         
+
          syncObjects();
       }
-
    }
 
    /**
@@ -844,7 +862,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	{
       super.processObjectUpdateNotification(object);
 
-      if (object.getObjectId() != getObjectId())
+      if (object.getObjectId() != getMapObject().getObjectId())
 			return;
 
       NetworkMap mapObject = (NetworkMap)object;
@@ -1174,7 +1192,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
     *
     * @return current object as NetworkMap object
     */
-   private NetworkMap getMapObject()
+   protected NetworkMap getMapObject()
    {
       return (NetworkMap)getObject();
    }

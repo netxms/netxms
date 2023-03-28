@@ -54,7 +54,7 @@ public class ObjectDoubleClickHandlerRegistry
       this.viewPart = viewPart;
       registerDoubleClickHandlers();
    }
-   
+
    /**
     * Handle double click on object by executing appropriate handler
     * 
@@ -128,8 +128,7 @@ public class ObjectDoubleClickHandlerRegistry
    {
       // Read all registered extensions and create handlers
       final IExtensionRegistry reg = Platform.getExtensionRegistry();
-      IConfigurationElement[] elements = reg
-            .getConfigurationElementsFor("org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers"); //$NON-NLS-1$
+      IConfigurationElement[] elements = reg.getConfigurationElementsFor("org.netxms.ui.eclipse.networkmaps.objectDoubleClickHandlers"); //$NON-NLS-1$
       for(int i = 0; i < elements.length; i++)
       {
          try

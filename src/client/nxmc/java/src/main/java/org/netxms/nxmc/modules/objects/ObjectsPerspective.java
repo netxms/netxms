@@ -77,7 +77,7 @@ import org.netxms.nxmc.modules.datacollection.views.PolicyListView;
 import org.netxms.nxmc.modules.datacollection.views.SummaryDataCollectionView;
 import org.netxms.nxmc.modules.datacollection.views.ThresholdSummaryView;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileManager;
-import org.netxms.nxmc.modules.networkmaps.views.PredefinedMap;
+import org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
@@ -204,7 +204,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new PhysicalLinkView());
       addMainView(new PolicyListView());
       addMainView(new PortView());
-      addMainView(new PredefinedMap());
+      addMainView(new PredefinedMapView());
       addMainView(new ProcessesView());
       addMainView(new RackView());
       addMainView(new RadioInterfaces());

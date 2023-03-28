@@ -46,7 +46,7 @@ public class ContextDashboardView extends AbstractDashboardView
       super(dashboard.getObjectName(), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "ContextDashboard." + dashboard.getObjectId());
       this.dashboard = dashboard;
    }
-   
+
    /**
     * Clone constructor
     */
@@ -55,8 +55,6 @@ public class ContextDashboardView extends AbstractDashboardView
       super(null, null, null);
    } 
 
-   
-   
    /**
     * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
     */

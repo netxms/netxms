@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,15 @@ package org.netxms.nxmc.modules.objects.views;
 
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.Rack;
 
 /**
- * Ad-hoc chassis view
+ * Ad-hoc rack view
  */
-public class AdHocChassisView extends ChassisView
+public class AdHocRackView extends RackView
 {
    private long contextObjectId;
-   private Chassis chassis;
+   private Rack rack;
 
    /**
     * Create ad-hoc chassis view.
@@ -36,11 +36,11 @@ public class AdHocChassisView extends ChassisView
     * @param contextObjectId ID of object that is context for this view
     * @param chassis chassis object to be shown
     */
-   public AdHocChassisView(long contextObjectId, Chassis chassis)
+   public AdHocRackView(long contextObjectId, Rack rack)
    {
-      super(chassis.getGuid().toString());
+      super(rack.getGuid().toString());
       this.contextObjectId = contextObjectId;
-      this.chassis = chassis;
+      this.rack = rack;
    }
 
    /**
@@ -53,7 +53,7 @@ public class AdHocChassisView extends ChassisView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#getPriority()
+    * @see org.netxms.nxmc.modules.objects.views.RackView#getPriority()
     */
    @Override
    public int getPriority()
@@ -76,7 +76,7 @@ public class AdHocChassisView extends ChassisView
    @Override
    public String getName()
    {
-      return super.getName() + " - " + chassis.getObjectName();
+      return super.getName() + " - " + rack.getObjectName();
    }
 
    /**
@@ -86,7 +86,7 @@ public class AdHocChassisView extends ChassisView
    protected void createContent(Composite parent)
    {
       super.createContent(parent);
-      buildViewForChassis(chassis);
+      buildRackView(rack);
    }
 
    /**
@@ -95,6 +95,6 @@ public class AdHocChassisView extends ChassisView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      // Ignore object change - this view always show chassis set at construction
+      // Ignore object change - this view always show rack set at construction
    }
 }

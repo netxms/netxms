@@ -205,7 +205,7 @@ public abstract class View implements MessageAreaHolder
       clientArea = new Composite(viewArea, SWT.NONE);
       clientArea.setLayout(new FillLayout());
       createContent(clientArea);
-      
+
       if (originalView != null)
       {
          postClone(originalView);
@@ -327,6 +327,7 @@ public abstract class View implements MessageAreaHolder
    public void activate()
    {
       viewArea.moveAbove(null);
+      viewArea.layout(true, true);
       for(ViewStateListener listener : stateListeners)
          listener.viewActivated(this);
    }

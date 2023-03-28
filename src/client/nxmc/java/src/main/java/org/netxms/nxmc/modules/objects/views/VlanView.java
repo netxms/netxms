@@ -52,7 +52,7 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.networkmaps.views.VlanMap;
+import org.netxms.nxmc.modules.networkmaps.views.VlanMapView;
 import org.netxms.nxmc.modules.objects.views.helpers.VlanLabelProvider;
 import org.netxms.nxmc.modules.objects.widgets.DeviceViewWidget;
 import org.netxms.nxmc.modules.objects.widgets.helpers.PortInfo;
@@ -298,7 +298,7 @@ public class VlanView extends ObjectView
       for(final Object o : selection.toList())
       {
          final VlanInfo vlan = (VlanInfo)o;
-         openView(new VlanMap(getObject(), vlan.getVlanId()));
+         openView(new VlanMapView(getObject(), vlan.getVlanId()));
       }
 	}
 

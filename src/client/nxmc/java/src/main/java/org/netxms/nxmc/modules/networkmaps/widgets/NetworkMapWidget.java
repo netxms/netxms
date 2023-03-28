@@ -55,7 +55,6 @@ import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
@@ -140,66 +139,43 @@ public class NetworkMapWidget extends Composite
       };
       session.addListener(sessionListener);
 	}
-	
+
 	/**
 	 * Enable double click on objects 
 	 */
 	public void enableObjectDoubleClick()
 	{
       doubleClickHandlers = new ObjectDoubleClickHandlerRegistry(view);
-	   doubleClickHandlers.setDefaultHandlerEnabled(false);
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+            IStructuredSelection selection = viewer.getStructuredSelection();
             if (selection.isEmpty() || !(selection.getFirstElement() instanceof NetworkMapObject))
                return;
-            
+
             AbstractObject object = session.findObjectById(((NetworkMapObject)selection.getFirstElement()).getObjectId());
             if (object == null)
                return;
-            
-            if (doubleClickHandlers.handleDoubleClick(object))
-               return;
 
-            // Default behavior
-            openDrillDownObject(object);
+            if (object instanceof NetworkMap)
+            {
+               history.push(currentMapId);
+               setContent((NetworkMap)object, false);
+               viewer.showBackButton(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     goBack();
+                  }
+               });
+            }
+            else
+            {
+               doubleClickHandlers.handleDoubleClick(object);
+            }
          }
       });
-	}
-
-	/**
-	 * Open drill-down object for currently selected object
-	 * 
-	 * @param object
-	 */
-	private void openDrillDownObject(AbstractObject object)
-	{
-      long drillDownObjectId = (object instanceof NetworkMap) ? object.getObjectId() : object.getDrillDownObjectId();
-      if (drillDownObjectId == 0)
-         return;
-
-      Object drillDownObject = session.findObjectById(drillDownObjectId);
-      if (drillDownObject == null)
-         return;
-
-      if (drillDownObject instanceof NetworkMap)
-      {
-         history.push(currentMapId);
-         setContent((NetworkMap)drillDownObject, false);
-         viewer.showBackButton(new Runnable() {
-            @Override
-            public void run()
-            {
-               goBack();
-            }
-         });
-      }
-      else if ((view != null) && (drillDownObject instanceof Dashboard))
-      {
-         /* FIXME: implement dashboard open */
-      }
 	}
 
 	/**

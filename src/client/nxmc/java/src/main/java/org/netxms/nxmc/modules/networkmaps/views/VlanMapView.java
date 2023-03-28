@@ -39,9 +39,9 @@ import org.xnap.commons.i18n.I18n;
  * IP neighbors for given node
  *
  */
-public class VlanMap extends AbstractNetworkMapView
+public class VlanMapView extends AbstractNetworkMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(VlanMap.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(VlanMapView.class);
    public static final String ID = "VlanMap";
 	
 	private int vlanId;
@@ -50,7 +50,7 @@ public class VlanMap extends AbstractNetworkMapView
    /**
     * Create "VPNs" view
     */
-   public VlanMap(AbstractObject rootObject, int vlanId)
+   public VlanMapView(AbstractObject rootObject, int vlanId)
    {
       super(String.format(i18n.tr("Vlan Map - %d@%s"), vlanId, rootObject.getObjectName()), ResourceManager.getImageDescriptor("icons/object-views/vpn.png"), String.format(i18n.tr("VlanMap%d@%s"), vlanId, rootObject.getObjectName()));
       this.rootObject = rootObject;
@@ -60,7 +60,7 @@ public class VlanMap extends AbstractNetworkMapView
    /**
     * Create "VPNs" view
     */
-   protected VlanMap()
+   protected VlanMapView()
    {
       super(null, null, "");
    }
@@ -71,7 +71,7 @@ public class VlanMap extends AbstractNetworkMapView
    @Override
    public View cloneView()
    {
-      VlanMap view = (VlanMap)super.cloneView();
+      VlanMapView view = (VlanMapView)super.cloneView();
       view.vlanId = vlanId;
       view.rootObject = rootObject;
       return view;
