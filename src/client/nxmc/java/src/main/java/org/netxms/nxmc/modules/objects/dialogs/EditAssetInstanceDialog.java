@@ -200,10 +200,10 @@ public class EditAssetInstanceDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       mainElement.setLayoutData(gd);
-      
+
       return dialogArea;
    }
-   
+
    /**
     * Get selected value
     * 
@@ -213,7 +213,7 @@ public class EditAssetInstanceDialog extends Dialog
    {
       return value;
    }
-   
+
    /**
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
@@ -222,18 +222,13 @@ public class EditAssetInstanceDialog extends Dialog
    {
       switch (config.getDataType())
       {
-         case INTEGER:
-         {
-            value = Integer.toString(((LabeledSpinner)mainElement).getSelection());
-            break;
-         }
          case BOOLEAN:
-         {
             value = ((Combo)mainElement).getSelectionIndex() == 0 ? "Yes" : "No";
             break;
-         }
+         case INTEGER:
+            value = Integer.toString(((LabeledSpinner)mainElement).getSelection());
+            break;
          case ENUM:
-         {
             int selectionIndex = ((Combo)mainElement).getSelectionIndex();
             if (selectionIndex == -1)
             {
@@ -242,27 +237,30 @@ public class EditAssetInstanceDialog extends Dialog
             }
             value = (String)config.getEnumMapping().keySet().toArray()[selectionIndex];                       
             break;
-         }
          default:
          case NUMBER:
          case STRING:
          case MAC_ADDRESS:
          case IP_ADDRESS:
          case UUID:
-         {
             value = ((LabeledText)mainElement).getText();
             break;
-         }
          case OBJECT_REFERENCE:
-         {
             value = Long.toString(((ObjectSelector)mainElement).getObjectId());
             break;
-         }
       }
-      
-      //validate
+
+      // Validate value
       switch (config.getDataType())
       {
+         case IP_ADDRESS:
+            if (!WidgetHelper.validateTextInput(((LabeledText)mainElement), new IPAddressValidator(false), null))
+               return;
+            break;
+         case MAC_ADDRESS:
+            if (!WidgetHelper.validateTextInput(((LabeledText)mainElement), new MacAddressValidator(false), null))
+               return;
+            break;
          case NUMBER:
             try
             {
@@ -270,7 +268,7 @@ public class EditAssetInstanceDialog extends Dialog
             }
             catch (NumberFormatException e)
             {
-               MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Value must be double"));
+               MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Value must represent valid floating point number"));
                return;
             }
             break;
@@ -279,20 +277,12 @@ public class EditAssetInstanceDialog extends Dialog
             {
                if (value.length() < config.getRangeMin())
                {
-                  MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("String value too short"));  
+                  MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Value is too short"));
                   return;                
                }
             }
             break;
-         case MAC_ADDRESS:  
-            if (!WidgetHelper.validateTextInput(((LabeledText)mainElement), new MacAddressValidator(false), null))
-               return;
-            break;
-         case IP_ADDRESS:   
-            if (!WidgetHelper.validateTextInput(((LabeledText)mainElement), new IPAddressValidator(false), null))
-               return;
-            break;
-         case UUID:       
+         case UUID:
             try
             {
                UUID.fromString(value);
@@ -303,8 +293,10 @@ public class EditAssetInstanceDialog extends Dialog
                return;               
             }
             break;
+         default:
+            break;
       }
-         
+
       super.okPressed();
    }
 }
