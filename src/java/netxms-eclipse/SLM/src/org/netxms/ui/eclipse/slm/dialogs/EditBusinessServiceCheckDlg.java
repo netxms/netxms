@@ -146,7 +146,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
 
       if (check.getCheckType() == BusinessServiceCheckType.DCI)
       {
-         objectOrDciSelector = new DciSelector(selectorGroup, SWT.NONE, false);
+         objectOrDciSelector = new DciSelector(selectorGroup, SWT.NONE);
          objectOrDciSelector.setLabel("Data collection item");
          ((DciSelector)objectOrDciSelector).setDciId(check.getObjectId(), check.getDciId());
       }
@@ -204,7 +204,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       if (type == BusinessServiceCheckType.DCI && !(objectOrDciSelector instanceof DciSelector))
       {
          objectOrDciSelector.dispose();
-         objectOrDciSelector = new DciSelector(selectorGroup, SWT.NONE, false);
+         objectOrDciSelector = new DciSelector(selectorGroup, SWT.NONE);
          objectOrDciSelector.setLabel("Data collection item");
          ((DciSelector)objectOrDciSelector).setDciId(check.getObjectId(), check.getDciId());
       }

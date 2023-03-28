@@ -59,7 +59,7 @@ public class TableDataSource extends PropertyPage
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 		
-		dci = new DciSelector(dialogArea, SWT.NONE, false);
+      dci = new DciSelector(dialogArea, SWT.NONE);
 		dci.setLabel(Messages.get().TableDataSource_Object);
 		dci.setDciId(config.getNodeId(), config.getDciId());
 		dci.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);
@@ -99,9 +99,9 @@ public class TableDataSource extends PropertyPage
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    */
 	@Override
 	public boolean performOk()
 	{

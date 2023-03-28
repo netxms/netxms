@@ -77,7 +77,7 @@ public class DCIImageGeneral extends PropertyPage
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
 
-      dci = new DciSelector(dialogArea, SWT.NONE, false);
+      dci = new DciSelector(dialogArea, SWT.NONE);
       dci.setLabel(i18n.tr("Metric"));
       if (dciConf != null)
       {

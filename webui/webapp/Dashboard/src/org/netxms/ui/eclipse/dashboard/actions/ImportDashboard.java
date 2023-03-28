@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -204,16 +204,16 @@ public class ImportDashboard implements IObjectActionDelegate
 		// try to match objects
 		for(ObjectIdMatchingData d : objects.values())
 		{
-			if (d.srcId < 10)
+         if ((d.srcId < 10) || (d.srcId == AbstractObject.CONTEXT))
 			{
 				// built-in object 
 				d.dstId = d.srcId;
 				continue;
 			}
-			
+
 			if (d.srcName.isEmpty())
 				continue;
-			
+
 			AbstractObject object = session.findObjectByName(d.srcName);
 			if ((object != null) && isCompatibleClasses(object.getObjectClass(), d.objectClass))
 			{
@@ -230,10 +230,10 @@ public class ImportDashboard implements IObjectActionDelegate
 
 			// get node ID on target system
 			ObjectIdMatchingData od = objects.get(d.srcNodeId);
-			
+
 			// bind DCI data to appropriate node data
 			od.dcis.add(d);
-			
+
 			if (od.dstId == 0)
 				continue;	// no match for node
 

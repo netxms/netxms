@@ -99,7 +99,7 @@ public class TableDataSource extends DashboardElementPropertyPage
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 
-		dci = new DciSelector(dialogArea, SWT.NONE, false);
+      dci = new DciSelector(dialogArea, SWT.NONE);
       dci.setLabel(i18n.tr("Table DCI"));
 		dci.setDciId(config.getNodeId(), config.getDciId());
 		dci.setDcObjectType(DataCollectionObject.DCO_TYPE_TABLE);

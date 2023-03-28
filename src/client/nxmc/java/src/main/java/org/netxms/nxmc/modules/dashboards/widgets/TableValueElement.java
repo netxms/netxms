@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,18 @@
  */
 package org.netxms.nxmc.modules.dashboards.widgets;
 
+import java.util.regex.Pattern;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.modules.dashboards.config.TableValueConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.modules.datacollection.widgets.TableValueViewer;
@@ -57,8 +65,15 @@ public class TableValueElement extends ElementWidget
       processCommonSettings(config);
 
       viewer = new TableValueViewer(getContentArea(), SWT.NONE, view, parent.getDashboardObject().getGuid().toString(), true);
-		viewer.setObject(config.getObjectId(), config.getDciId());	
-		viewer.refresh(null);
+      if (config.getObjectId() == AbstractObject.CONTEXT)
+      {
+         configureContext();
+      }
+      else
+      {
+         viewer.setObject(config.getObjectId(), config.getDciId());
+         viewer.refresh(null);
+      }
 
       final ViewRefreshController refreshController = new ViewRefreshController(view, config.getRefreshRate(), new Runnable() {
 			@Override
@@ -66,7 +81,7 @@ public class TableValueElement extends ElementWidget
 			{
 				if (TableValueElement.this.isDisposed())
 					return;
-				
+
 				viewer.refresh(null);
 			}
 		});
@@ -79,4 +94,50 @@ public class TableValueElement extends ElementWidget
          }
       });
 	}
+
+   /**
+    * Configure context if element is context-aware
+    */
+   private void configureContext()
+   {
+      final AbstractObject contextObject = getContext();
+      if (contextObject == null)
+         return;
+
+      final NXCSession session = Registry.getSession();
+      new Job("Configuring context", view) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            DciValue[] dciList = session.getLastValues(contextObject.getObjectId());
+            Pattern namePattern = Pattern.compile(config.getDciName());
+            Pattern descriptionPattern = Pattern.compile(config.getDciDescription());
+            for(DciValue dciInfo : dciList)
+            {
+               if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_TABLE)
+                  continue;
+
+               if ((!config.getDciName().isEmpty() && namePattern.matcher(dciInfo.getName()).find()) ||
+                   (!config.getDciDescription().isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
+               {
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        viewer.setObject(dciInfo.getNodeId(), dciInfo.getId());
+                        viewer.refresh(null);
+                     }
+                  });
+                  break;
+               }
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot read DCI data from server";
+         }
+      }.start();
+   }
 }

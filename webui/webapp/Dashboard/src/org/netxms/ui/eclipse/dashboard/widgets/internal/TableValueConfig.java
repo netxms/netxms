@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,12 @@ public class TableValueConfig extends DashboardElementConfig
 
 	@Element(required=true)
 	private long dciId = 0;
+
+   @Element(required = false)
+   public String dciName;
+
+   @Element(required = false)
+   public String dciDescription;
 
 	@Element(required = false)
 	private int refreshRate = 30;
@@ -150,8 +156,40 @@ public class TableValueConfig extends DashboardElementConfig
 	}
 
 	/**
-	 * @return
-	 */
+    * @return the dciName
+    */
+   public String getDciName()
+   {
+      return (dciName != null) ? dciName : "";
+   }
+
+   /**
+    * @param dciName the dciName to set
+    */
+   public void setDciName(String dciName)
+   {
+      this.dciName = dciName;
+   }
+
+   /**
+    * @return the dciDescription
+    */
+   public String getDciDescription()
+   {
+      return (dciDescription != null) ? dciDescription : "";
+   }
+
+   /**
+    * @param dciDescription the dciDescription to set
+    */
+   public void setDciDescription(String dciDescription)
+   {
+      this.dciDescription = dciDescription;
+   }
+
+   /**
+    * @return
+    */
 	public int getRefreshRate()
 	{
 		return refreshRate;

@@ -62,7 +62,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
 
-      dci = new DciSelector(dialogArea, SWT.NONE, false);
+      dci = new DciSelector(dialogArea, SWT.NONE);
       dci.setLabel(Messages.get().GeneralDCIImagePropertyPage_DataSource);
       if (dciConf != null)
       {

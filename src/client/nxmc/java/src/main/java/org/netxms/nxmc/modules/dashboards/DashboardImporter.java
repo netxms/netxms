@@ -101,7 +101,7 @@ public class DashboardImporter
 				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 				DocumentBuilder db = dbf.newDocumentBuilder();
 				Document dom = db.parse(dlg.getImportFile());
-				
+
 				Element root = dom.getDocumentElement();
             if (!root.getNodeName().equals("dashboard"))
                throw new Exception(i18n.tr("Invalid format of dashboard definition file"));
@@ -164,23 +164,23 @@ public class DashboardImporter
 		// add all node IDs from DCI list if they are missing
 		for(DciIdMatchingData d : dcis.values())
 		{
-			if (!objects.containsKey(d.srcNodeId))
-				objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", AbstractObject.OBJECT_NODE)); //$NON-NLS-1$
+         if ((d.srcNodeId != AbstractObject.CONTEXT) && !objects.containsKey(d.srcNodeId))
+            objects.put(d.srcNodeId, new ObjectIdMatchingData(d.srcNodeId, "", AbstractObject.OBJECT_NODE));
 		}
-		
+
 		// try to match objects
 		for(ObjectIdMatchingData d : objects.values())
 		{
-			if (d.srcId < 10)
+         if ((d.srcId < 10) || (d.srcId == AbstractObject.CONTEXT))
 			{
 				// built-in object 
 				d.dstId = d.srcId;
 				continue;
 			}
-			
+
 			if (d.srcName.isEmpty())
 				continue;
-			
+
 			AbstractObject object = session.findObjectByName(d.srcName);
 			if ((object != null) && isCompatibleClasses(object.getObjectClass(), d.objectClass))
 			{
@@ -194,13 +194,13 @@ public class DashboardImporter
 		{
 			// get node ID on target system
 			ObjectIdMatchingData od = objects.get(d.srcNodeId);
-			
+
 			// bind DCI data to appropriate node data
 			od.dcis.add(d);
-			
+
 			if (od.dstId == 0)
 				continue;	// no match for node
-			
+
 			d.dstNodeId = od.dstId;
 			DciValue[] dciValues = session.getLastValues(d.dstNodeId);
 			for(DciValue v : dciValues)
@@ -281,13 +281,13 @@ public class DashboardImporter
 		{
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 				continue;
-			
-			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("object"); //$NON-NLS-1$
+
+         NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("object");
 			for(int j = 0; j < elements.getLength(); j++)
 			{
 				Element e = (Element)elements.item(j);
 				long id = getAttributeAsLong(e, "id", 0); //$NON-NLS-1$
-				objects.put(id, new ObjectIdMatchingData(id, e.getTextContent(), (int)getAttributeAsLong(e, "class", 0))); //$NON-NLS-1$
+            objects.put(id, new ObjectIdMatchingData(id, e.getTextContent(), (int)getAttributeAsLong(e, "class", 0)));
 			}
 		}
 		return objects;
@@ -308,12 +308,12 @@ public class DashboardImporter
 			if (objectsRoot.item(i).getNodeType() != Node.ELEMENT_NODE)
 				continue;
 			
-			NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("dci"); //$NON-NLS-1$
+         NodeList elements = ((Element)objectsRoot.item(i)).getElementsByTagName("dci");
 			for(int j = 0; j < elements.getLength(); j++)
 			{
 				Element e = (Element)elements.item(j);
-				long id = getAttributeAsLong(e, "id", 0); //$NON-NLS-1$
-				dcis.put(id, new DciIdMatchingData(getAttributeAsLong(e, "node", 0), id, e.getTextContent())); //$NON-NLS-1$
+            long id = getAttributeAsLong(e, "id", 0);
+            dcis.put(id, new DciIdMatchingData(getAttributeAsLong(e, "node", 0), id, e.getTextContent()));
 			}
 		}
 		return dcis;
