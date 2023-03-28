@@ -734,6 +734,17 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    {
       value = vm->createValue(object->getAlias());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("asset"))
+   {
+      if (object->isAsset())
+      {
+         value = vm->createValue(vm->createObject(&g_nxslAssetData, new shared_ptr<NetObj>(object->self())));
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("backupZoneProxy"))
    {
       uint32_t id = object->getAssignedZoneProxyId(true);
@@ -4122,6 +4133,52 @@ NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *object, const NXSL_Iden
 }
 
 /**
+ * NXSL class AssetData: constructor
+ */
+NXSL_AssetData::NXSL_AssetData() : NXSL_Class()
+{
+   setName(_T("AssetData"));
+}
+
+
+/**
+ * Object destructor
+ */
+void NXSL_AssetData::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<shared_ptr<NetObj>*>(object->getData());
+}
+
+/**
+ * NXSL class AssetData: get attribute
+ */
+NXSL_Value *NXSL_AssetData::getAttr(NXSL_Object *_object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(_object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = _object->vm();
+   auto object = SharedObjectFromData<NetObj>(_object);
+   if (object != nullptr)   // Object can be null if attribute scan is running
+   {
+      Asset *asset = object->getAsAsset();
+      if (asset != nullptr)
+      {
+#ifdef UNICODE
+         WCHAR wattr[MAX_IDENTIFIER_LENGTH];
+         utf8_to_wchar(attr.value, -1, wattr, MAX_IDENTIFIER_LENGTH);
+         wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
+         value = asset->getValueForNXSL(vm, wattr);
+#else
+         value = object->getValueForNXSL(vm, attr.value);
+#endif
+      }
+   }
+   return value;
+}
+
+/**
  * DCI::forcePoll() method
  */
 NXSL_METHOD_DEFINITION(DCI, forcePoll)
@@ -5587,6 +5644,7 @@ void NXSL_OSPFNeighborClass::onObjectDelete(NXSL_Object *object)
 NXSL_AccessPointClass g_nxslAccessPointClass;
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
+NXSL_AssetData g_nxslAssetData;
 NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
 NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 NXSL_ChassisClass g_nxslChassisClass;

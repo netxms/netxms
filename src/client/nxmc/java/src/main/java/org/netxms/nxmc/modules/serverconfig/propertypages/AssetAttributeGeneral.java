@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.netxms.base.MacAddress;
 import org.netxms.client.asset.AssetManagementAttribute;
 import org.netxms.client.constants.AMDataType;
 import org.netxms.client.constants.AMSystemType;
@@ -186,6 +187,11 @@ public class AssetAttributeGeneral extends PropertyPage
          if (!Registry.getSession().isAssetAttributeUnique(newName))
          { 
             MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Name should be unique"));
+            return false;            
+         }
+         if (!newName.matches("[A-Za-z$_][A-Za-z0-9$_]*"))
+         { 
+            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Name should be NXSL complient"));
             return false;            
          }
          attr.setName(textName.getText());

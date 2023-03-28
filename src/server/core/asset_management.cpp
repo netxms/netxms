@@ -613,6 +613,10 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
       }
       case AMDataType::Boolean:
       {
+         if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
+              || !_tcsicmp(value, _T("no")) || !_tcsicmp(value, _T("false")) || !_tcsicmp(value, _T("off")))
+            break;
+
          TCHAR *error;
          _tcstol(value, &error, 0);
          if (*error != 0)
@@ -690,6 +694,9 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
    return std::pair<uint32_t, String>(resultText.isEmpty() ? RCC_SUCCESS : RCC_VALIDATION_ERROR, resultText);
 }
 
+/**
+ * Check if given asset instance value is equals with the given one
+ */
 bool Asset::isAssetValueEqual(const TCHAR *name, const TCHAR *value)
 {
    bool equal = false;
@@ -699,6 +706,42 @@ bool Asset::isAssetValueEqual(const TCHAR *name, const TCHAR *value)
       equal = !_tcscmp(objectValue, value);
    internalUnlock();
    return equal;
+}
+
+
+
+/**
+ * Get asset value as NXSL value
+ */
+NXSL_Value *Asset::getValueForNXSL(NXSL_VM *vm, const TCHAR *name) const
+{
+   s_schemaLock.readLock();
+   AssetManagementAttribute *assetAttribute = s_schema.get(name);
+   bool isBoolean;
+   if (assetAttribute == nullptr)
+   {
+      s_schemaLock.unlock();
+      return nullptr;
+   }
+   else
+   {
+      isBoolean = assetAttribute->getDataType() == AMDataType::Boolean;
+   }
+   s_schemaLock.unlock();
+   NXSL_Value *nxslValue = nullptr;
+
+   internalLock();
+   const TCHAR *value = m_instances.get(name);
+   if (value != nullptr)
+   {
+      if (isBoolean)
+         nxslValue = vm->createValue(!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
+               || (_tcstol(value, nullptr, 0) != 0));
+      else
+         nxslValue = vm->createValue(value);
+   }
+   internalUnlock();
+   return nxslValue;
 }
 
 /***************************************************
@@ -767,24 +810,31 @@ uint32_t AMCreateAttribute(const NXCPMessage& msg, const ClientSession& session)
    s_schemaLock.writeLock();
    SharedString name = msg.getFieldAsSharedString(VID_NAME, 64);
 
-   if (s_schema.get(name) == nullptr)
+   if (RegexpMatch(name, _T("^[A-Za-z$_][A-Za-z0-9$_]*$"), true))
    {
-      AssetManagementAttribute *attribute = AssetManagementAttribute::create(msg);
-      s_schema.set(name, attribute);
+      if (s_schema.get(name) == nullptr)
+      {
+         AssetManagementAttribute *attribute = AssetManagementAttribute::create(msg);
+         s_schema.set(name, attribute);
 
-      json_t *attrData = attribute->toJson();
-      session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0,  nullptr, attrData, _T("Asset management attribute \"%s\" created"), name.cstr());
-      json_decref(attrData);
+         json_t *attrData = attribute->toJson();
+         session.writeAuditLogWithValues(AUDIT_AM_ATTRIBUTE, true, 0,  nullptr, attrData, _T("Asset management attribute \"%s\" created"), name.cstr());
+         json_decref(attrData);
 
-      NXCPMessage notificationMessage(CMD_UPDATE_ASSET_MGMT_ATTRIBUTE, 0);
-      attribute->fillMessage(&notificationMessage, VID_AM_LIST_BASE);
-      NotifyClientSessions(notificationMessage);
+         NXCPMessage notificationMessage(CMD_UPDATE_ASSET_MGMT_ATTRIBUTE, 0);
+         attribute->fillMessage(&notificationMessage, VID_AM_LIST_BASE);
+         NotifyClientSessions(notificationMessage);
 
-      result = RCC_SUCCESS;
+         result = RCC_SUCCESS;
+      }
+      else
+      {
+         result = RCC_ATTRIBUTE_ALREADY_EXISTS;
+      }
    }
    else
    {
-      result = RCC_ATTRIBUTE_ALREADY_EXISTS;
+      result = RCC_INVALID_OBJECT_NAME;
    }
    s_schemaLock.unlock();
    return result;

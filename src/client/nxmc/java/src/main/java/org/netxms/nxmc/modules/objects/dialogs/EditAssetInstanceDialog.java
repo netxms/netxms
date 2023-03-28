@@ -143,6 +143,7 @@ public class EditAssetInstanceDialog extends Dialog
             {
                booleanCombo.select(LogParser.stringToBoolean(value) ? 0 : 1);
             }
+            mainElement = booleanCombo;
             break;
          }
          case ENUM:

@@ -1204,7 +1204,7 @@ protected:
    Mutex m_mutexResponsibleUsers;
 
    Pollable* m_asPollable; // Only changed in Pollable class constructor
-   Asset *m_asAsset; // Only changed in Asset class constructor
+   Asset *m_asAsset; //Only changed in Asset class constructor
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj> &getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
@@ -1726,6 +1726,7 @@ public:
    std::pair<uint32_t, String> setAssetData(const TCHAR *name, const TCHAR *value);
    uint32_t deleteAssetData(const TCHAR *name);
    void assetDataToMessage(NXCPMessage* msg) const;
+   NXSL_Value *getValueForNXSL(NXSL_VM *vm, const TCHAR *name) const;
 
    bool loadFromDatabase(DB_HANDLE db, uint32_t objectId);
    bool saveToDatabase(DB_HANDLE db);
