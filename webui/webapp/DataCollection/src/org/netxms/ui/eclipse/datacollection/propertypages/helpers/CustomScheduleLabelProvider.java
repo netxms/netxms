@@ -28,13 +28,18 @@ import it.burning.cron.CronExpressionDescriptor;
  */
 public class CustomScheduleLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
@@ -43,9 +48,16 @@ public class CustomScheduleLabelProvider extends LabelProvider implements ITable
          case 0:
             return (String)element;
          case 1:
-            return CronExpressionDescriptor.getDescription((String)element);
+            try
+            {
+               return CronExpressionDescriptor.getDescription((String)element);
+            }
+            catch(Exception e)
+            {
+               // CronExpressionDescriptor can throw exception if it cannot parse expression
+               return "";
+            }
       }
       return null;
    }
-   
 }
