@@ -81,7 +81,7 @@ import org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
-import org.netxms.nxmc.modules.objects.views.AssetInstancesView;
+import org.netxms.nxmc.modules.objects.views.AssetView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
 import org.netxms.nxmc.modules.objects.views.EntityMIBView;
@@ -183,7 +183,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addNavigationView(new ObjectBrowser(getName(), null, subtreeType));
       addMainView(new AgentFileManager());
       addMainView(new AlarmsView());
-      addMainView(new AssetInstancesView());      
+      addMainView(new AssetView());      
       addMainView(new BusinessServiceAvailabilityView());
       addMainView(new BusinessServiceChecksView());
       addMainView(new ChassisView());

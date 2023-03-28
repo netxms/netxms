@@ -26,12 +26,12 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.interfaces.Assets;
+import org.netxms.client.objects.interfaces.Asset;
 
 /**
  * Base class for all data collection targets
  */
-public class DataCollectionTarget extends GenericObject implements Assets
+public class DataCollectionTarget extends GenericObject implements Asset
 {   
    public static final int DCF_DISABLE_STATUS_POLL    = 0x00000001;
    public static final int DCF_DISABLE_CONF_POLL      = 0x00000002;
@@ -168,10 +168,10 @@ public class DataCollectionTarget extends GenericObject implements Assets
    }
 
    /**
-    * @see org.netxms.client.objects.interfaces.Assets#getAssets()
+    * @see org.netxms.client.objects.interfaces.Asset#getAssetInformation()
     */
    @Override
-   public Map<String, String> getAssets()
+   public Map<String, String> getAssetInformation()
    {
       return assetList;
    }

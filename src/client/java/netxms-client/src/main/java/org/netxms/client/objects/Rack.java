@@ -27,13 +27,13 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.PassiveRackElement;
-import org.netxms.client.objects.interfaces.Assets;
+import org.netxms.client.objects.interfaces.Asset;
 import org.netxms.client.objects.interfaces.HardwareEntity;
 
 /**
  * Rack object
  */
-public class Rack extends GenericObject implements Assets
+public class Rack extends GenericObject implements Asset
 {
 	private int height;
 	private boolean topBottomNumbering;
@@ -154,10 +154,10 @@ public class Rack extends GenericObject implements Assets
 	}
 
    /**
-    * @see org.netxms.client.objects.interfaces.Assets#getAssets()
+    * @see org.netxms.client.objects.interfaces.Asset#getAssetInformation()
     */
    @Override
-   public Map<String, String> getAssets()
+   public Map<String, String> getAssetInformation()
    {
       return assetList;
    }

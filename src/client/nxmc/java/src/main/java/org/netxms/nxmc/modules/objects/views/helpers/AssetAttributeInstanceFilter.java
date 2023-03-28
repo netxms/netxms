@@ -26,7 +26,7 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 /**
  * Asset instance filter
  */
-public class AssetInstanceFilter extends ViewerFilter implements AbstractViewerFilter
+public class AssetAttributeInstanceFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
 
@@ -38,13 +38,13 @@ public class AssetInstanceFilter extends ViewerFilter implements AbstractViewerF
    {
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
-      
+
       @SuppressWarnings("unchecked")
       Entry<String, String> entry = (Entry<String, String>)element;
-      
+
       return entry.getKey().toUpperCase().contains(filterString) || entry.getValue().contains(filterString);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
     */
@@ -53,5 +53,4 @@ public class AssetInstanceFilter extends ViewerFilter implements AbstractViewerF
    {
       this.filterString = (string != null) ? string.toUpperCase() : null;
    }
-
 }

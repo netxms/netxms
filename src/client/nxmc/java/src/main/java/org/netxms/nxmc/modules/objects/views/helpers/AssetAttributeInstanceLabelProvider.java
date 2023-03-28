@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Reden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,54 +25,53 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.views.AssetInstancesView;
+import org.netxms.nxmc.modules.objects.views.AssetView;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetManagementAttributeLabelProvider;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Asset instance label provider
  */
-public class AssetInstanceLabelProvider extends LabelProvider implements ITableLabelProvider
+public class AssetAttributeInstanceLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   NXCSession session;
-   final I18n i18n = LocalizationHelper.getI18n(AssetInstancesView.class);
-   
-   /**
-    * Constructor
-    */
-   public AssetInstanceLabelProvider()
-   {
-      session = Registry.getSession();
-   }
+   final I18n i18n = LocalizationHelper.getI18n(AssetView.class);
 
+   NXCSession session = Registry.getSession();
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
    @SuppressWarnings("unchecked")
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
       String name = ((Entry<String, String>)element).getKey();
-      
+
       switch(columnIndex)
       {
-         case AssetInstancesView.NAME:
+         case AssetView.NAME:
             return getName(name);
-         case AssetInstancesView.VALUE:
+         case AssetView.VALUE:
             return ((Entry<String, String>)element).getValue();
-         case AssetInstancesView.IS_MANDATORY:
+         case AssetView.IS_MANDATORY:
             return isMandatory(name);
-         case AssetInstancesView.IS_UNIQUE:
+         case AssetView.IS_UNIQUE:
             return isUnique(name);
-         case AssetInstancesView.SYSTEM_TYPE:
+         case AssetView.SYSTEM_TYPE:
             return getSystemType(name);            
       }
       return null;
    }
-   
+
    /**
     * Get name of the system type
     * 
@@ -116,5 +115,4 @@ public class AssetInstanceLabelProvider extends LabelProvider implements ITableL
       String displayName = session.getAssetManagementAttributes().get(name).getDisplayName();
       return (displayName == null || displayName.isEmpty()) ? name : displayName;
    }
-
 }

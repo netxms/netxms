@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.modules.objects.views;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -39,15 +41,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.asset.AssetManagementAttribute;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.interfaces.Assets;
+import org.netxms.client.objects.interfaces.Asset;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.EditAssetInstanceDialog;
-import org.netxms.nxmc.modules.objects.views.helpers.AssetInstanceComparator;
-import org.netxms.nxmc.modules.objects.views.helpers.AssetInstanceFilter;
-import org.netxms.nxmc.modules.objects.views.helpers.AssetInstanceLabelProvider;
+import org.netxms.nxmc.modules.objects.views.helpers.AssetAttributeInstanceComparator;
+import org.netxms.nxmc.modules.objects.views.helpers.AssetAttributeInstanceFilter;
+import org.netxms.nxmc.modules.objects.views.helpers.AssetAttributeInstanceLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -57,31 +59,30 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Asset management attribute instances
  */
-public class AssetInstancesView extends ObjectView
+public class AssetView extends ObjectView
 {
-   static final I18n i18n = LocalizationHelper.getI18n(AssetInstancesView.class);
+   static final I18n i18n = LocalizationHelper.getI18n(AssetView.class);
 
    public static final int NAME = 0;
    public static final int VALUE = 1;
    public static final int IS_MANDATORY = 2;
    public static final int IS_UNIQUE = 3;
    public static final int SYSTEM_TYPE = 4;
-   
+
    private SortableTableViewer viewer;
-   private AssetInstanceFilter filter;
-   private Map<String, String> assets;
-   private AssetInstanceLabelProvider labelProvider;
+   private AssetAttributeInstanceFilter filter;
+   private Map<String, String> attributes;
+   private AssetAttributeInstanceLabelProvider labelProvider;
    private MenuManager createMenu;
    private Action actionEdit;
-   private Action actionDelete;  
-     
-   
+   private Action actionDelete;
+
    /**
     * Constructor
     */
-   public AssetInstancesView()
+   public AssetView()
    {
-      super(i18n.tr("Assets"), ResourceManager.getImageDescriptor("icons/object-views/components.png"), "Assets", true);
+      super(i18n.tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/components.png"), "Asset", true);
    }
 
    /**
@@ -95,9 +96,9 @@ public class AssetInstancesView extends ObjectView
             i18n.tr("Is Unique"), i18n.tr("System type") };
       viewer = new SortableTableViewer(parent, names, widths, NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      labelProvider = new AssetInstanceLabelProvider();
+      labelProvider = new AssetAttributeInstanceLabelProvider();
       viewer.setLabelProvider(labelProvider);
-      viewer.setComparator(new AssetInstanceComparator(labelProvider));
+      viewer.setComparator(new AssetAttributeInstanceComparator(labelProvider));
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -106,17 +107,16 @@ public class AssetInstancesView extends ObjectView
          }
       });
 
-      filter = new AssetInstanceFilter();
+      filter = new AssetAttributeInstanceFilter();
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
-      WidgetHelper.restoreTableViewerSettings(viewer, "AssetInstance");
-
+      WidgetHelper.restoreTableViewerSettings(viewer, "Asset");
       viewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTableViewerSettings(viewer, "AssetInstance");
+            WidgetHelper.saveTableViewerSettings(viewer, "Asset");
          }
       });
 
@@ -127,17 +127,17 @@ public class AssetInstancesView extends ObjectView
    }   
 
    /**
-    * Check all required assets and notify if something is missing
+    * Check if all mandatory attributes are set and notify if something is missing
     */
-   private void notifyOnMissingAssets()
+   private void checkMandatoryAttributes()
    {
       if (getObject() == null)
          return;
-      
+
       StringBuilder missingEntries = new StringBuilder();
       for (AssetManagementAttribute definition : session.getAssetManagementAttributes().values())
       {
-         if (definition.isMandatory() && !assets.containsKey(definition.getName()))
+         if (definition.isMandatory() && !attributes.containsKey(definition.getName()))
          {
             if (missingEntries.length() != 0)
             {
@@ -146,12 +146,11 @@ public class AssetInstancesView extends ObjectView
             missingEntries.append(labelProvider.getName(definition.getName()));
          }
       }
-      
+
       clearMessages();
       if (missingEntries.length() != 0)
       {
-         missingEntries.insert(0, i18n.tr("Missing entries: "));
-         addMessage(MessageArea.WARNING, missingEntries.toString());
+         addMessage(MessageArea.WARNING, i18n.tr("Some mandatory attributes are not set: {0}", missingEntries.toString()));
       }
    }
 
@@ -160,7 +159,7 @@ public class AssetInstancesView extends ObjectView
     */
    void createActions()
    {    
-      createMenu = new MenuManager(i18n.tr("&Create"));
+      createMenu = new MenuManager(i18n.tr("&Add"));
       createMenu.setImageDescriptor(SharedIcons.ADD_OBJECT);
       createMenu.setRemoveAllWhenShown(true);
       createMenu.addMenuListener(new IMenuListener() {         
@@ -169,31 +168,31 @@ public class AssetInstancesView extends ObjectView
          {
             for (AssetManagementAttribute definition : session.getAssetManagementAttributes().values())
             {
-               if (!assets.containsKey(definition.getName()))
+               if (!attributes.containsKey(definition.getName()))
                {
                   addMenuItem(createMenu, labelProvider.getName(definition.getName()), definition.getName());
                }
             }
          }
       });
-      
-      actionEdit = new Action(i18n.tr("Edit"), SharedIcons.EDIT) {
+
+      actionEdit = new Action(i18n.tr("&Edit"), SharedIcons.EDIT) {
          @Override
          public void run()
          {
-            updateAssetInstance();
+            updateAttribute();
          }         
       };
-      
-      actionDelete = new Action(i18n.tr("Delete"), SharedIcons.DELETE_OBJECT) {
+
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
-            deleteAssetInstance();
+            deleteAttribute();
          }         
       };
    }
-   
+
    /**
     * Add asset management attribute as menu item 
     * 
@@ -207,7 +206,7 @@ public class AssetInstancesView extends ObjectView
          @Override
          public void run()
          {
-            createAssetInstance(attributeName);
+            addAttribute(attributeName);
          }
       });      
    }
@@ -219,18 +218,20 @@ public class AssetInstancesView extends ObjectView
    public void refresh()
    {
       if (getObject() != null)
-         assets = ((Assets)getObject()).getAssets();
+         attributes = ((Asset)getObject()).getAssetInformation();
       else
-         assets = new HashMap<String, String>();
-      
-      viewer.setInput(assets.entrySet().toArray());  
-      notifyOnMissingAssets();
+         attributes = new HashMap<String, String>();
+
+      viewer.setInput(attributes.entrySet().toArray());  
+      checkMandatoryAttributes();
    }
 
    /**
-    * Create asset instance
+    * Add attribute.
+    *
+    * @param name attribute name
     */
-   protected void createAssetInstance(String name)
+   private void addAttribute(String name)
    {      
       EditAssetInstanceDialog dlg = new EditAssetInstanceDialog(getWindow().getShell(), name, labelProvider.getName(name), null);
       if (dlg.open() != Window.OK)
@@ -254,66 +255,68 @@ public class AssetInstancesView extends ObjectView
    }
 
    /**
-    * Update asset instance
+    * Update attribute instance
     */
    @SuppressWarnings("unchecked")
-   protected void updateAssetInstance()
+   private void updateAttribute()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       Entry<String, String> element = (Entry<String, String>)selection.getFirstElement();
       String name = element.getKey();
-      
+
       EditAssetInstanceDialog dlg = new EditAssetInstanceDialog(getWindow().getShell(), name, labelProvider.getName(name), element.getValue());
       if (dlg.open() != Window.OK)
          return;
-      
+
       final String value = dlg.getValue();
-      
-      new Job(i18n.tr("Update asset"), this) {       
+      new Job(i18n.tr("Updating asset management information"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.updateAssetAttribute(getObjectId(), name, value);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Failed to update asset");
+            return i18n.tr("Cannot update asset management information");
          }
       }.start();
    }
 
    /**
-    * Delete asset instance
+    * Delete attribute instance
     */
-   protected void deleteAssetInstance()
+   @SuppressWarnings("unchecked")
+   private void deleteAttribute()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.size() < 1)
+      if (selection.isEmpty())
          return;
-      
-      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete asset"), 
-            i18n.tr("Selected assets will be deleted. Are you sure?")))
+
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Attribute"), 
+            i18n.tr("Selected attributes will be deleted. Are you sure?")))
          return;
-      
-      new Job(i18n.tr("Delete asset"), this) {
-         
-         @SuppressWarnings("unchecked")
+
+      List<String> attributes = new ArrayList<String>(selection.size());
+      for(Object o : selection.toList())
+         attributes.add(((Entry<String, String>)o).getKey());
+
+      new Job(i18n.tr("Delete asset management attribute value"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            for (Object o : selection)
-               session.deleteAssetAttribute(getObjectId(), ((Entry<String, String>)o).getKey());
+            for(String a : attributes)
+               session.deleteAssetAttribute(getObjectId(), a);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Failed to delete asset");
+            return i18n.tr("Cannot delete asset management attribute from object");
          }
       }.start();
    }
@@ -326,7 +329,7 @@ public class AssetInstancesView extends ObjectView
    {
       refresh();
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
     */
@@ -383,8 +386,7 @@ public class AssetInstancesView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && 
-            ((context instanceof Assets));
+      return (context != null) && ((context instanceof Asset));
    }
 
    /**

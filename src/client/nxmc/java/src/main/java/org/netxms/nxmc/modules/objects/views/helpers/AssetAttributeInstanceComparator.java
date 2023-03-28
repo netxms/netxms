@@ -5,21 +5,21 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.objects.views.AssetInstancesView;
+import org.netxms.nxmc.modules.objects.views.AssetView;
 
 /**
- * Asset instance comparator
+ * Asset attribute instance comparator
  */
-public class AssetInstanceComparator extends ViewerComparator
+public class AssetAttributeInstanceComparator extends ViewerComparator
 {
-   AssetInstanceLabelProvider labelProvider;
-   
+   private AssetAttributeInstanceLabelProvider labelProvider;
+
    /**
     * Asset instance comparator
     * 
     * @param labelProvider asset instance comparator
     */
-   public AssetInstanceComparator(AssetInstanceLabelProvider labelProvider)
+   public AssetAttributeInstanceComparator(AssetAttributeInstanceLabelProvider labelProvider)
    {
       this.labelProvider = labelProvider;
    }
@@ -37,23 +37,23 @@ public class AssetInstanceComparator extends ViewerComparator
       int result = 0;
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
       {
-         case AssetInstancesView.NAME:
+         case AssetView.NAME:
             result = labelProvider.getName(o1.getKey()).compareToIgnoreCase(labelProvider.getName(o1.getKey()));
             break;
-         case AssetInstancesView.VALUE:
+         case AssetView.VALUE:
             result = o1.getValue().compareToIgnoreCase(o2.getValue());
             break;
-         case AssetInstancesView.IS_MANDATORY:
+         case AssetView.IS_MANDATORY:
             result = labelProvider.isMandatory(o1.getKey()).compareToIgnoreCase(labelProvider.isMandatory(o2.getKey()));
             break;
-         case AssetInstancesView.IS_UNIQUE:
+         case AssetView.IS_UNIQUE:
             result = labelProvider.isUnique(o1.getKey()).compareToIgnoreCase(labelProvider.isUnique(o2.getKey()));
             break;
-         case AssetInstancesView.SYSTEM_TYPE:
+         case AssetView.SYSTEM_TYPE:
             result = labelProvider.getSystemType(o1.getKey()).compareToIgnoreCase(labelProvider.getSystemType(o2.getKey()));  
             break;      
       }
-      
+
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
    }   
 }

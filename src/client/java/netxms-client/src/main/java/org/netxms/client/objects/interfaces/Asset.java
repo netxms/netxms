@@ -21,15 +21,14 @@ package org.netxms.client.objects.interfaces;
 import java.util.Map;
 
 /**
- * Interface for assets
+ * Interface for asset
  */
-public interface Assets
+public interface Asset
 {   
    /**
-    * Get assets
+    * Get asset information for this object in form of key/value pairs where key is asset management attribute name.
     * 
-    * @return assets configured for this object
+    * @return asset information for this object
     */
-   public Map<String, String> getAssets();
-
+   public Map<String, String> getAssetInformation();
 }
