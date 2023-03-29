@@ -404,8 +404,8 @@ public class NXCSession
    // OUI cache
    private OUICache ouiCache;
    
-   //Asset management attributes
-   private Map<String, AssetManagementAttribute> assetManagementAttributes = new HashMap<String, AssetManagementAttribute>();
+   // Asset management schema
+   private Map<String, AssetManagementAttribute> assetManagementSchema = new HashMap<String, AssetManagementAttribute>();
 
    /**
     * Message subscription class
@@ -717,17 +717,17 @@ public class NXCSession
                   case NXCPCodes.CMD_UPDATE_ASSET_MGMT_ATTRIBUTE:
                      AssetManagementAttribute attr = new AssetManagementAttribute(msg, NXCPCodes.VID_AM_LIST_BASE);
                      sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_UPDATED, 0, attr));
-                     synchronized(assetManagementAttributes)
+                     synchronized(assetManagementSchema)
                      {
-                        assetManagementAttributes.put(attr.getName(), attr);
+                        assetManagementSchema.put(attr.getName(), attr);
                      }
                      break;
                   case NXCPCodes.CMD_DELETE_ASSET_MGMT_ATTRIBUTE:
                      String attrName = msg.getFieldAsString(NXCPCodes.VID_NAME);
                      sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_DELETED, 0, attrName));
-                     synchronized(assetManagementAttributes)
+                     synchronized(assetManagementSchema)
                      {
-                        assetManagementAttributes.remove(attrName);
+                        assetManagementSchema.remove(attrName);
                      }
                      break;
                   default:
@@ -13711,47 +13711,58 @@ public class NXCSession
    }
    
    /**
-    * Synchronize asset management attributes.
+    * Synchronize asset management schema.
     *
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void syncAssetManagementAttributes() throws IOException, NXCException
+   public void syncAssetManagementSchema() throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ASSET_MGMT_ATTRIBUTES);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_AM_COUNT);
-      Map<String, AssetManagementAttribute> result = new HashMap<String, AssetManagementAttribute>(count);
       long fieldId = NXCPCodes.VID_AM_LIST_BASE;
-      for(int i = 0; i < count; i++)
+      synchronized(assetManagementSchema)
       {
-         AssetManagementAttribute attr = new AssetManagementAttribute(response, fieldId);
-         result.put(attr.getName(), attr);         
-         fieldId += 256;
-      }
-
-      synchronized(assetManagementAttributes)
-      {
-         assetManagementAttributes = result;
+         assetManagementSchema.clear();
+         for(int i = 0; i < count; i++)
+         {
+            AssetManagementAttribute attr = new AssetManagementAttribute(response, fieldId);
+            assetManagementSchema.put(attr.getName(), attr);
+            fieldId += 256;
+         }
       }
    }
 
    /**
-    * Get asset management attributes from client-side cache.
+    * Get asset management schema from client-side cache.
     *
     * @return asset management attributes
     */
-   public Map<String, AssetManagementAttribute> getAssetManagementAttributes()
+   public Map<String, AssetManagementAttribute> getAssetManagementSchema()
    {
       Map<String, AssetManagementAttribute> result;
-      synchronized(assetManagementAttributes)
+      synchronized(assetManagementSchema)
       {
-         result = new HashMap<String, AssetManagementAttribute>(assetManagementAttributes);
+         result = new HashMap<String, AssetManagementAttribute>(assetManagementSchema);
       }
       return result;
-   }   
+   }
+
+   /**
+    * Get size of asset management schema (number of defined attributes).
+    *
+    * @return size of asset management schema
+    */
+   public int getAssetManagementSchemaSize()
+   {
+      synchronized(assetManagementSchema)
+      {
+         return assetManagementSchema.size();
+      }
+   }
 
    /**
     * Create asset management attribute
@@ -13808,9 +13819,9 @@ public class NXCSession
    public boolean isAssetAttributeUnique(String newName)
    {
       boolean isUnique;
-      synchronized(assetManagementAttributes)
+      synchronized(assetManagementSchema)
       {
-         isUnique = !assetManagementAttributes.containsKey(newName);
+         isUnique = !assetManagementSchema.containsKey(newName);
       }
       return isUnique;
    }

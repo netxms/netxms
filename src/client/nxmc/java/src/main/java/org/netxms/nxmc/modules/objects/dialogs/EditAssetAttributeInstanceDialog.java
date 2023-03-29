@@ -47,28 +47,27 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Editor dialog for asset management attribute instance
  */
-public class EditAssetInstanceDialog extends Dialog
+public class EditAssetAttributeInstanceDialog extends Dialog
 {
-   private final I18n i18n = LocalizationHelper.getI18n(EditAssetInstanceDialog.class);
-   private final Logger log = LoggerFactory.getLogger(EditAssetInstanceDialog.class);
-   
-   private String attributeDisplayName;
+   private static final Logger logger = LoggerFactory.getLogger(EditAssetAttributeInstanceDialog.class);
+
+   private final I18n i18n = LocalizationHelper.getI18n(EditAssetAttributeInstanceDialog.class);
+
    private String value;
-   private AssetManagementAttribute config;
+   private AssetManagementAttribute attribute;
    private Composite mainElement;
 
    /**
     * Constructor
     * 
-    * @param parentShell shell
+    * @param parentShell parent shell
     * @param attributeName attribute name
-    * @param value attribute value
+    * @param value current attribute instance value
     */
-   public EditAssetInstanceDialog(Shell parentShell, String attributeName, String attributeDisplayName, String value)
+   public EditAssetAttributeInstanceDialog(Shell parentShell, String attributeName, String value)
    {
       super(parentShell);   
-      config = Registry.getSession().getAssetManagementAttributes().get(attributeName);
-      this.attributeDisplayName = attributeDisplayName;
+      attribute = Registry.getSession().getAssetManagementSchema().get(attributeName);
       this.value = value;
    }
 
@@ -79,7 +78,7 @@ public class EditAssetInstanceDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText(i18n.tr("Edit asset amangement attribute instance"));
+      newShell.setText(i18n.tr("Edit Asset Attribute"));
    }
 
    /**
@@ -95,13 +94,13 @@ public class EditAssetInstanceDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
-      
-      switch (config.getDataType())
+
+      switch (attribute.getDataType())
       {
          case INTEGER:
          {
             LabeledSpinner spiner = new LabeledSpinner(dialogArea, SWT.NONE);
-            spiner.setLabel(attributeDisplayName);
+            spiner.setLabel(attribute.getDisplayName());
             if (value != null)
             {
                int integer = 0;
@@ -111,14 +110,14 @@ public class EditAssetInstanceDialog extends Dialog
                }
                catch (NumberFormatException e)
                {
-                  log.error("Failed to parse integer", e);
+                  logger.error("Failed to parse integer", e);
                }
                spiner.setSelection(integer);
             }
-            if (config.getRangeMax() != 0 || config.getRangeMin() != 0)
+            if (attribute.getRangeMax() != 0 || attribute.getRangeMin() != 0)
             {
-               spiner.getSpinnerControl().setMaximum(config.getRangeMax());
-               spiner.getSpinnerControl().setMinimum(config.getRangeMin());
+               spiner.getSpinnerControl().setMaximum(attribute.getRangeMax());
+               spiner.getSpinnerControl().setMinimum(attribute.getRangeMin());
             }
             mainElement = spiner;
             break;
@@ -126,7 +125,7 @@ public class EditAssetInstanceDialog extends Dialog
          case NUMBER:
          {
             LabeledText number = new LabeledText(dialogArea, SWT.NONE);
-            number.setLabel(attributeDisplayName); 
+            number.setLabel(attribute.getDisplayName());
             if (value != null)
             {
                number.setText(value);  
@@ -136,7 +135,7 @@ public class EditAssetInstanceDialog extends Dialog
          }
          case BOOLEAN:
          {
-            Combo booleanCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attributeDisplayName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+            Combo booleanCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attribute.getDisplayName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
             booleanCombo.add("Yes");
             booleanCombo.add("No");
             if (value != null)
@@ -148,9 +147,9 @@ public class EditAssetInstanceDialog extends Dialog
          }
          case ENUM:
          {
-            Combo enumCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attributeDisplayName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+            Combo enumCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attribute.getDisplayName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
             int currentIndex = 0;
-            for (Entry<String, String> element : config.getEnumMapping().entrySet())
+            for (Entry<String, String> element : attribute.getEnumMapping().entrySet())
             {
                enumCombo.add(element.getValue().isBlank() ? element.getKey() : element.getValue());
                if (value != null && value.equals(element.getValue()))
@@ -167,7 +166,7 @@ public class EditAssetInstanceDialog extends Dialog
          case UUID:
          {
             LabeledText text = new LabeledText(dialogArea, SWT.NONE);
-            text.setLabel(attributeDisplayName);
+            text.setLabel(attribute.getDisplayName());
             if (value != null)
             {
                text.setText(value);
@@ -178,7 +177,7 @@ public class EditAssetInstanceDialog extends Dialog
          case OBJECT_REFERENCE:
          {
             ObjectSelector selector = new ObjectSelector(dialogArea, SWT.NONE, false);
-            selector.setLabel(attributeDisplayName);
+            selector.setLabel(attribute.getDisplayName());
             selector.setObjectClass(GenericObject.class);
             if (value != null)
             {
@@ -189,7 +188,7 @@ public class EditAssetInstanceDialog extends Dialog
                }
                catch (NumberFormatException e)
                {
-                  log.error("Failed to parse object id", e);
+                  logger.error("Failed to parse object id", e);
                }
                selector.setObjectId(objectId);    
             }
@@ -221,7 +220,7 @@ public class EditAssetInstanceDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      switch (config.getDataType())
+      switch (attribute.getDataType())
       {
          case BOOLEAN:
             value = ((Combo)mainElement).getSelectionIndex() == 0 ? "Yes" : "No";
@@ -236,7 +235,7 @@ public class EditAssetInstanceDialog extends Dialog
                MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("One of options should be selected"));
                return;
             }
-            value = (String)config.getEnumMapping().keySet().toArray()[selectionIndex];                       
+            value = (String)attribute.getEnumMapping().keySet().toArray()[selectionIndex];                       
             break;
          default:
          case NUMBER:
@@ -252,7 +251,7 @@ public class EditAssetInstanceDialog extends Dialog
       }
 
       // Validate value
-      switch (config.getDataType())
+      switch (attribute.getDataType())
       {
          case IP_ADDRESS:
             if (!WidgetHelper.validateTextInput(((LabeledText)mainElement), new IPAddressValidator(false), null))
@@ -274,9 +273,9 @@ public class EditAssetInstanceDialog extends Dialog
             }
             break;
          case STRING:
-            if (config.getRangeMax() != 0 && config.getRangeMin() != 0)
+            if (attribute.getRangeMax() != 0 && attribute.getRangeMin() != 0)
             {
-               if (value.length() < config.getRangeMin())
+               if (value.length() < attribute.getRangeMin())
                {
                   MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Value is too short"));
                   return;                

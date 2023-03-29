@@ -365,7 +365,7 @@ public class AssetManagementAttributesView extends ConfigurationView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final Map<String, AssetManagementAttribute> attr = session.getAssetManagementAttributes();
+            final Map<String, AssetManagementAttribute> attr = session.getAssetManagementSchema();
             runInUIThread(new Runnable() {               
                @Override
                public void run()

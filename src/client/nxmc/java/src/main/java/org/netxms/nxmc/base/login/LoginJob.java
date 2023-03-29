@@ -201,7 +201,7 @@ public class LoginJob implements IRunnableWithProgress
          PreferenceStore store = PreferenceStore.getInstance();
          boolean fullySync = store.getAsBoolean("Connect.FullObjectSync", false);
          session.syncObjects(fullySync);
-         session.syncAssetManagementAttributes();
+         session.syncAssetManagementSchema();
          monitor.worked(1);
 
          monitor.setTaskName(i18n.tr("Synchronizing user database..."));

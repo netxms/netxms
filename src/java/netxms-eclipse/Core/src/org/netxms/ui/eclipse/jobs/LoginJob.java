@@ -246,6 +246,7 @@ public class LoginJob implements IRunnableWithProgress
             }
          });
          session.syncObjects(objectsFullSync[0]);
+         session.syncAssetManagementSchema();
          monitor.worked(25);
 
          monitor.setTaskName(Messages.get().LoginJob_sync_users);
@@ -292,7 +293,7 @@ public class LoginJob implements IRunnableWithProgress
          TweakletManager.postLogin(session);
          callLoginListeners(session);
          monitor.worked(5);
-         
+
          setupSessionListener(session, display);
 
          Activator.logInfo("Creating keepalive timer");

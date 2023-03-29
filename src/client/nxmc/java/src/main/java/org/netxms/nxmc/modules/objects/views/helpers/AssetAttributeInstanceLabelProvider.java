@@ -80,7 +80,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
     */
    public String getSystemType(String name)
    {
-      return AssetManagementAttributeLabelProvider.SYSTEM_TYPE[session.getAssetManagementAttributes().get(name).getSystemType().getValue()];
+      return AssetManagementAttributeLabelProvider.SYSTEM_TYPE[session.getAssetManagementSchema().get(name).getSystemType().getValue()];
    }
 
    /**
@@ -91,7 +91,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
     */
    public String isUnique(String name)
    {
-      return session.getAssetManagementAttributes().get(name).isUnique() ? i18n.tr("Yes") : i18n.tr("No");
+      return session.getAssetManagementSchema().get(name).isUnique() ? i18n.tr("Yes") : i18n.tr("No");
    }
 
    /**
@@ -102,7 +102,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
     */
    public String isMandatory(String name)
    {
-      return session.getAssetManagementAttributes().get(name).isMandatory() ? i18n.tr("Yes") : i18n.tr("No");
+      return session.getAssetManagementSchema().get(name).isMandatory() ? i18n.tr("Yes") : i18n.tr("No");
    }
 
    /**
@@ -112,7 +112,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
     */
    public String getName(String name)
    {
-      String displayName = session.getAssetManagementAttributes().get(name).getDisplayName();
+      String displayName = session.getAssetManagementSchema().get(name).getDisplayName();
       return (displayName == null || displayName.isEmpty()) ? name : displayName;
    }
 }

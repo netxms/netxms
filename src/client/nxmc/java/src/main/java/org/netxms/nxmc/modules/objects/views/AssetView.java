@@ -46,7 +46,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.dialogs.EditAssetInstanceDialog;
+import org.netxms.nxmc.modules.objects.dialogs.EditAssetAttributeInstanceDialog;
 import org.netxms.nxmc.modules.objects.views.helpers.AssetAttributeInstanceComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.AssetAttributeInstanceFilter;
 import org.netxms.nxmc.modules.objects.views.helpers.AssetAttributeInstanceLabelProvider;
@@ -73,7 +73,8 @@ public class AssetView extends ObjectView
    private AssetAttributeInstanceFilter filter;
    private Map<String, String> attributes;
    private AssetAttributeInstanceLabelProvider labelProvider;
-   private MenuManager createMenu;
+   private MenuManager attributeSelectionMenu;
+   private Action actionAdd;
    private Action actionEdit;
    private Action actionDelete;
 
@@ -135,7 +136,7 @@ public class AssetView extends ObjectView
          return;
 
       StringBuilder missingEntries = new StringBuilder();
-      for (AssetManagementAttribute definition : session.getAssetManagementAttributes().values())
+      for (AssetManagementAttribute definition : session.getAssetManagementSchema().values())
       {
          if (definition.isMandatory() && !attributes.containsKey(definition.getName()))
          {
@@ -150,7 +151,7 @@ public class AssetView extends ObjectView
       clearMessages();
       if (missingEntries.length() != 0)
       {
-         addMessage(MessageArea.WARNING, i18n.tr("Some mandatory attributes are not set: {0}", missingEntries.toString()));
+         addMessage(MessageArea.WARNING, i18n.tr("The following mandatory attributes are not set: {0}", missingEntries.toString()));
       }
    }
 
@@ -159,22 +160,35 @@ public class AssetView extends ObjectView
     */
    void createActions()
    {    
-      createMenu = new MenuManager(i18n.tr("&Add"));
-      createMenu.setImageDescriptor(SharedIcons.ADD_OBJECT);
-      createMenu.setRemoveAllWhenShown(true);
-      createMenu.addMenuListener(new IMenuListener() {         
+      attributeSelectionMenu = new MenuManager(i18n.tr("&Add"));
+      attributeSelectionMenu.setImageDescriptor(SharedIcons.ADD_OBJECT);
+      attributeSelectionMenu.setRemoveAllWhenShown(true);
+      attributeSelectionMenu.addMenuListener(new IMenuListener() {         
          @Override
          public void menuAboutToShow(IMenuManager manager)
          {
-            for (AssetManagementAttribute definition : session.getAssetManagementAttributes().values())
+            for(final AssetManagementAttribute definition : session.getAssetManagementSchema().values())
             {
                if (!attributes.containsKey(definition.getName()))
                {
-                  addMenuItem(createMenu, labelProvider.getName(definition.getName()), definition.getName());
+                  attributeSelectionMenu.add(new Action(definition.getDisplayName()) {
+                     @Override
+                     public void run()
+                     {
+                        addAttribute(definition.getName());
+                     }
+                  });
                }
             }
          }
       });
+
+      actionAdd = new Action(i18n.tr("&Add"), SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+         }
+      };
 
       actionEdit = new Action(i18n.tr("&Edit"), SharedIcons.EDIT) {
          @Override
@@ -191,24 +205,6 @@ public class AssetView extends ObjectView
             deleteAttribute();
          }         
       };
-   }
-
-   /**
-    * Add asset management attribute as menu item 
-    * 
-    * @param manager manager to add an item
-    * @param actionName action name
-    * @param attributeName attribute name
-    */
-   private void addMenuItem(MenuManager manager, String actionName, String attributeName)
-   {
-      manager.add(new Action(actionName) {
-         @Override
-         public void run()
-         {
-            addAttribute(attributeName);
-         }
-      });      
    }
 
    /**
@@ -233,23 +229,32 @@ public class AssetView extends ObjectView
     */
    private void addAttribute(String name)
    {      
-      EditAssetInstanceDialog dlg = new EditAssetInstanceDialog(getWindow().getShell(), name, labelProvider.getName(name), null);
+      EditAssetAttributeInstanceDialog dlg = new EditAssetAttributeInstanceDialog(getWindow().getShell(), name, null);
       if (dlg.open() != Window.OK)
          return;
-      
+
       final String value = dlg.getValue(); 
-      
-      new Job(i18n.tr("Create asset"), this) {      
+      new Job(i18n.tr("Adding asset attribute instance"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.updateAssetAttribute(getObjectId(), name, value);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (attributes.size() == session.getAssetManagementSchemaSize())
+                  {
+                     actionAdd.setEnabled(false);
+                  }
+               }
+            });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Failed to create asset");
+            return i18n.tr("Cannot add asset attribute instance");
          }
       }.start();
    }
@@ -267,7 +272,7 @@ public class AssetView extends ObjectView
       Entry<String, String> element = (Entry<String, String>)selection.getFirstElement();
       String name = element.getKey();
 
-      EditAssetInstanceDialog dlg = new EditAssetInstanceDialog(getWindow().getShell(), name, labelProvider.getName(name), element.getValue());
+      EditAssetAttributeInstanceDialog dlg = new EditAssetAttributeInstanceDialog(getWindow().getShell(), name, element.getValue());
       if (dlg.open() != Window.OK)
          return;
 
@@ -282,7 +287,7 @@ public class AssetView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot update asset management information");
+            return i18n.tr("Cannot update asset attribute instance");
          }
       }.start();
    }
@@ -297,15 +302,14 @@ public class AssetView extends ObjectView
       if (selection.isEmpty())
          return;
 
-      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Attribute"), 
-            i18n.tr("Selected attributes will be deleted. Are you sure?")))
+      if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Attribute"), i18n.tr("Selected attributes will be deleted. Are you sure?")))
          return;
 
       List<String> attributes = new ArrayList<String>(selection.size());
       for(Object o : selection.toList())
          attributes.add(((Entry<String, String>)o).getKey());
 
-      new Job(i18n.tr("Delete asset management attribute value"), this) {
+      new Job(i18n.tr("Deleting asset management attribute instance"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -316,7 +320,7 @@ public class AssetView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot delete asset management attribute from object");
+            return i18n.tr("Cannot delete asset management attribute instance");
          }
       }.start();
    }
@@ -336,7 +340,7 @@ public class AssetView extends ObjectView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(createMenu);
+      manager.add(actionAdd);
    }
 
    /**
@@ -345,7 +349,8 @@ public class AssetView extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      manager.add(createMenu);
+      attributeSelectionMenu.update(true);
+      manager.add(attributeSelectionMenu);
    }
 
    /**
@@ -374,8 +379,11 @@ public class AssetView extends ObjectView
     */
    protected void fillContextMenu(IMenuManager mgr)
    {
-      createMenu.update(true);
-      mgr.add(createMenu);
+      if (attributes.size() < session.getAssetManagementSchemaSize())
+      {
+         attributeSelectionMenu.update(true);
+         mgr.add(attributeSelectionMenu);
+      }
       mgr.add(actionEdit);
       mgr.add(actionDelete);
    }

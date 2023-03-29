@@ -251,6 +251,7 @@ public class LoginJob implements IRunnableWithProgress
             }
          });
          session.syncObjects(objectsFullSync[0]);
+         session.syncAssetManagementSchema();
          monitor.worked(25);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_users);
