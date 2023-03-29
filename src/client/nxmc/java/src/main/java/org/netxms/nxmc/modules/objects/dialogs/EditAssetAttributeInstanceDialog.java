@@ -265,7 +265,17 @@ public class EditAssetAttributeInstanceDialog extends Dialog
          case NUMBER:
             try
             {
-               Double.parseDouble(value);
+               double number = Double.parseDouble(value);
+               if (number < attribute.getRangeMin())
+               {
+                  MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Number is too small"));
+                  return;                
+               }
+               if (number > attribute.getRangeMax())
+               {
+                  MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Number is too big"));
+                  return;                
+               }
             }
             catch (NumberFormatException e)
             {
@@ -279,6 +289,11 @@ public class EditAssetAttributeInstanceDialog extends Dialog
                if (value.length() < attribute.getRangeMin())
                {
                   MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Value is too short"));
+                  return;                
+               }
+               if (value.length() > attribute.getRangeMax())
+               {
+                  MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Value is too long"));
                   return;                
                }
             }
