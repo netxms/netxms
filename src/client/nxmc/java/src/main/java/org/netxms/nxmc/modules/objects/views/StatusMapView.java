@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ public class StatusMapView extends ObjectView
    public void createContent(Composite parent)
 	{
 	   clientArea = parent;
-	   
+
       final PreferenceStore settings = PreferenceStore.getInstance();
       displayOption = settings.getAsInteger("StatusMap.DisplayMode", 1);
       fitToScreen = settings.getAsBoolean("StatusMap.FitToScreen", true);
@@ -191,8 +191,9 @@ public class StatusMapView extends ObjectView
       else
          map = new FlatObjectStatusMap(this, clientArea, SWT.NONE);
 
-      map.refresh();
+      map.setRootObjectId(getObjectId());
       map.setFitToScreen(fitToScreen);
+      map.refresh();
 
       clientArea.layout();
    }
@@ -245,6 +246,7 @@ public class StatusMapView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
+      map.setRootObjectId((object != null) ? object.getObjectId() : 0);
       map.refresh();
    }
 

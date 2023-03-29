@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,8 +50,8 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.WidgetHelper;
 
@@ -60,7 +60,8 @@ import org.netxms.nxmc.tools.WidgetHelper;
  */
 public abstract class AbstractObjectStatusMap extends Composite implements ISelectionProvider
 {
-   protected ObjectView view;
+   protected View view;
+   protected long rootObjectId = 0;
    protected NXCSession session;
    protected ISelection selection = null;
    protected Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
@@ -78,11 +79,11 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    /**
     * Create object status map.
     *
-    * @param viewPart owning view part
+    * @param view owning view
     * @param parent parent composite
     * @param style widget's style
     */
-   public AbstractObjectStatusMap(ObjectView view, Composite parent, int style)
+   public AbstractObjectStatusMap(View view, Composite parent, int style)
    {
       super(parent, style);
 
@@ -243,6 +244,26 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
    protected void showObjectDetails(AbstractObject object)
    {
       // TODO: implement switch to object
+   }
+
+   /**
+    * Get root object ID.
+    *
+    * @return root object ID
+    */
+   public long getRootObjectId()
+   {
+      return rootObjectId;
+   }
+
+   /**
+    * Set root object ID.
+    *
+    * @param rootObjectId new root object ID
+    */
+   public void setRootObjectId(long rootObjectId)
+   {
+      this.rootObjectId = rootObjectId;
    }
 
    /**

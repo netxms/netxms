@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.base.views.View;
 
 /**
  * Widget showing "heat" map of nodes under given root object
@@ -64,7 +64,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
     * @param parent parent composite
     * @param style widget's style
     */
-   public FlatObjectStatusMap(ObjectView view, Composite parent, int style)
+   public FlatObjectStatusMap(View view, Composite parent, int style)
 	{
       super(view, parent, style);
       titleFont = JFaceResources.getFontRegistry().getBold(JFaceResources.BANNER_FONT);
@@ -100,12 +100,12 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 		}
 		
 		if (groupObjects)
-			buildSection(view.getObjectId(), ""); //$NON-NLS-1$
+         buildSection(rootObjectId, "");
 		else
 			buildFlatView();
 		dataArea.layout(true, true);
 		updateScrollBars();
-		
+
 		for(Runnable l : refreshListeners)
 		   l.run();
 	}
@@ -115,7 +115,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 	 */
 	private void buildFlatView()
 	{
-		AbstractObject root = session.findObjectById(view.getObjectId());
+      AbstractObject root = session.findObjectById(rootObjectId);
 		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
 			return;
 
@@ -328,8 +328,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
 					}
 				});
 			}
-			else if ((object.getObjectId() == view.getObjectId()) || 
-			         (object.isChildOf(view.getObjectId()) && (isContainerObject(object) || isAcceptedByFilter(object))))
+         else if ((object.getObjectId() == rootObjectId) || (object.isChildOf(rootObjectId) && (isContainerObject(object) || isAcceptedByFilter(object))))
 			{
 				refreshTimer.execute();
 			}
