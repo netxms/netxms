@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -50,7 +50,7 @@ public class RadialObjectStatusMap extends AbstractObjectStatusMap
     * @param parent parent composite
     * @param style widget's style
     */
-   public RadialObjectStatusMap(ObjectView view, Composite parent, int style)
+   public RadialObjectStatusMap(View view, Composite parent, int style)
 	{
       super(view, parent, style);
 	}
@@ -165,9 +165,10 @@ public class RadialObjectStatusMap extends AbstractObjectStatusMap
    @Override
 	public void refresh()
 	{
-      AbstractObject root = session.findObjectById(view.getObjectId());
-      if(root == null)
+      AbstractObject root = session.findObjectById(rootObjectId);
+      if (root == null)
          return;
+
       Collection<AbstractObject> objects = createFilteredList(root);
       widget.updateObjects(root, objects);
       widget.refresh();
@@ -181,7 +182,7 @@ public class RadialObjectStatusMap extends AbstractObjectStatusMap
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      if (widget.containsChangedObject(object) || (object.isChildOf(view.getObjectId()) && isAcceptedByFilter(object)))
+      if (widget.containsChangedObject(object) || (object.isChildOf(rootObjectId) && isAcceptedByFilter(object)))
          refreshTimer.execute();
    }
 
