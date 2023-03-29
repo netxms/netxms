@@ -94,13 +94,14 @@ public class EditAssetAttributeInstanceDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
+      String attributeDisplayName = attribute.getDisplayName().isBlank() ? attribute.getName() : attribute.getDisplayName();
 
       switch (attribute.getDataType())
       {
          case INTEGER:
          {
             LabeledSpinner spiner = new LabeledSpinner(dialogArea, SWT.NONE);
-            spiner.setLabel(attribute.getDisplayName());
+            spiner.setLabel(attributeDisplayName);
             if (value != null)
             {
                int integer = 0;
@@ -125,7 +126,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
          case NUMBER:
          {
             LabeledText number = new LabeledText(dialogArea, SWT.NONE);
-            number.setLabel(attribute.getDisplayName());
+            number.setLabel(attributeDisplayName);
             if (value != null)
             {
                number.setText(value);  
@@ -135,7 +136,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
          }
          case BOOLEAN:
          {
-            Combo booleanCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attribute.getDisplayName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+            Combo booleanCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attributeDisplayName, WidgetHelper.DEFAULT_LAYOUT_DATA);
             booleanCombo.add("Yes");
             booleanCombo.add("No");
             if (value != null)
@@ -147,12 +148,12 @@ public class EditAssetAttributeInstanceDialog extends Dialog
          }
          case ENUM:
          {
-            Combo enumCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attribute.getDisplayName(), WidgetHelper.DEFAULT_LAYOUT_DATA);
+            Combo enumCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attributeDisplayName, WidgetHelper.DEFAULT_LAYOUT_DATA);
             int currentIndex = 0;
             for (Entry<String, String> element : attribute.getEnumMapping().entrySet())
             {
                enumCombo.add(element.getValue().isBlank() ? element.getKey() : element.getValue());
-               if (value != null && value.equals(element.getValue()))
+               if (value != null && value.equals(element.getKey()))
                   enumCombo.select(currentIndex);
                currentIndex++;
             }
@@ -166,7 +167,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
          case UUID:
          {
             LabeledText text = new LabeledText(dialogArea, SWT.NONE);
-            text.setLabel(attribute.getDisplayName());
+            text.setLabel(attributeDisplayName);
             if (value != null)
             {
                text.setText(value);
@@ -177,7 +178,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
          case OBJECT_REFERENCE:
          {
             ObjectSelector selector = new ObjectSelector(dialogArea, SWT.NONE, false);
-            selector.setLabel(attribute.getDisplayName());
+            selector.setLabel(attributeDisplayName);
             selector.setObjectClass(GenericObject.class);
             if (value != null)
             {

@@ -654,9 +654,9 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
       }
       case AMDataType::ObjectReference:
       {
-         TCHAR *eptr;
-         uint32_t objectId = _tcstoul(value, &eptr, 0);
-         if ((objectId != 0) && (*eptr -= 0))
+         TCHAR *error;
+         uint32_t objectId = _tcstoul(value, &error, 0);
+         if ((objectId != 0) && (*error == 0))
          {
             shared_ptr<NetObj> object = FindObjectById(objectId);
             if (object == nullptr)

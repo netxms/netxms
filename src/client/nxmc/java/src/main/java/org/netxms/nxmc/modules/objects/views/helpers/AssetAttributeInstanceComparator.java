@@ -38,10 +38,10 @@ public class AssetAttributeInstanceComparator extends ViewerComparator
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
       {
          case AssetView.NAME:
-            result = labelProvider.getName(o1.getKey()).compareToIgnoreCase(labelProvider.getName(o1.getKey()));
+            result = labelProvider.getName(o1.getKey()).compareToIgnoreCase(labelProvider.getName(o2.getKey()));
             break;
          case AssetView.VALUE:
-            result = o1.getValue().compareToIgnoreCase(o2.getValue());
+            result = labelProvider.getValue(o1).compareToIgnoreCase(labelProvider.getValue(o2));
             break;
          case AssetView.IS_MANDATORY:
             result = labelProvider.isMandatory(o1.getKey()).compareToIgnoreCase(labelProvider.isMandatory(o2.getKey()));

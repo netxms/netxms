@@ -108,7 +108,7 @@ public class AssetView extends ObjectView
          }
       });
 
-      filter = new AssetAttributeInstanceFilter();
+      filter = new AssetAttributeInstanceFilter(labelProvider);
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
@@ -171,7 +171,7 @@ public class AssetView extends ObjectView
             {
                if (!attributes.containsKey(definition.getName()))
                {
-                  attributeSelectionMenu.add(new Action(definition.getDisplayName()) {
+                  attributeSelectionMenu.add(new Action(definition.getDisplayName().isBlank() ? definition.getName() : definition.getDisplayName()) {
                      @Override
                      public void run()
                      {

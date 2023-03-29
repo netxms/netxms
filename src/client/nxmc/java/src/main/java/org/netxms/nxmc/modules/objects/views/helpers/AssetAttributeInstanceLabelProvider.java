@@ -23,10 +23,16 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.constants.AMDataType;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.AssetView;
+import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetManagementAttributeLabelProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -35,15 +41,41 @@ import org.xnap.commons.i18n.I18n;
 public class AssetAttributeInstanceLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    final I18n i18n = LocalizationHelper.getI18n(AssetView.class);
+   final Logger log = LoggerFactory.getLogger(AssetManagementAttributeLabelProvider.class);
 
-   NXCSession session = Registry.getSession();
+   private NXCSession session = Registry.getSession();
+   private BaseObjectLabelProvider objectLabelProvider;
 
+   public AssetAttributeInstanceLabelProvider()
+   {
+      objectLabelProvider = new BaseObjectLabelProvider();
+   }
+   
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
+      if (columnIndex == AssetView.VALUE)
+      {
+         String name = ((Entry<String, String>)element).getKey();
+         if (session.getAssetManagementSchema().get(name).getDataType() == AMDataType.OBJECT_REFERENCE)
+         {
+            long objectId = 0;
+            try 
+            {
+               objectId = Integer.parseInt(((Entry<String, String>)element).getValue());
+            }
+            catch (NumberFormatException e)
+            {
+               log.warn("Filed to parse object ID", e);
+            }
+            AbstractObject object = session.findObjectById(objectId);
+            if (object != null)
+               return objectLabelProvider.getImage(object);
+         }         
+      }
       return null;
    }
 
@@ -61,7 +93,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
          case AssetView.NAME:
             return getName(name);
          case AssetView.VALUE:
-            return ((Entry<String, String>)element).getValue();
+            return getValue((Entry<String, String>)element);
          case AssetView.IS_MANDATORY:
             return isMandatory(name);
          case AssetView.IS_UNIQUE:
@@ -70,6 +102,34 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
             return getSystemType(name);            
       }
       return null;
+   }
+   
+   public String getValue(Entry<String, String> element)
+   {
+      String name = element.getKey();
+      AssetManagementAttribute asetAttribute = session.getAssetManagementSchema().get(name);
+      if (asetAttribute.getDataType() == AMDataType.OBJECT_REFERENCE)
+      {
+         long objectId = 0;
+         try 
+         {
+            objectId = Integer.parseInt(element.getValue());
+         }
+         catch (NumberFormatException e)
+         {
+            log.warn("Filed to parse object ID", e);
+         }
+         AbstractObject object = session.findObjectById(objectId);
+         if (object != null)
+            return objectLabelProvider.getText(object);
+      }
+      else if (asetAttribute.getDataType() == AMDataType.ENUM)
+      {
+         String displayName = asetAttribute.getEnumMapping().get(element.getValue());
+         return displayName == null || displayName.isBlank() ? element.getValue() : displayName;
+      }         
+      
+      return element.getValue();
    }
 
    /**
@@ -115,4 +175,14 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
       String displayName = session.getAssetManagementSchema().get(name).getDisplayName();
       return (displayName == null || displayName.isEmpty()) ? name : displayName;
    }
+
+   /**
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      objectLabelProvider.dispose();
+      super.dispose();
+   }   
 }

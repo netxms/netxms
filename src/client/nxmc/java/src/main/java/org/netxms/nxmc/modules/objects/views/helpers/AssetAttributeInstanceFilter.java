@@ -29,6 +29,17 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 public class AssetAttributeInstanceFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
+   private AssetAttributeInstanceLabelProvider labelProvider;
+
+   /**
+    * Asset instance comparator
+    * 
+    * @param labelProvider asset instance comparator
+    */
+   public AssetAttributeInstanceFilter(AssetAttributeInstanceLabelProvider labelProvider)
+   {
+      this.labelProvider = labelProvider;
+   }
 
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -42,7 +53,7 @@ public class AssetAttributeInstanceFilter extends ViewerFilter implements Abstra
       @SuppressWarnings("unchecked")
       Entry<String, String> entry = (Entry<String, String>)element;
 
-      return entry.getKey().toUpperCase().contains(filterString) || entry.getValue().contains(filterString);
+      return entry.getKey().toUpperCase().contains(filterString) || labelProvider.getValue(entry).toUpperCase().contains(filterString);
    }
 
    /**
