@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.services.PreferenceInitializer;
 import org.slf4j.Logger;
@@ -74,6 +75,17 @@ public class PreferenceStore
     * @return instance of preference store
     */
    public static PreferenceStore getInstance()
+   {
+      return instance;
+   }
+
+   /**
+    * Get instance of preference store (RAP compatibility version)
+    * 
+    * @param display owning display (ignored)
+    * @return instance of preference store
+    */
+   public static PreferenceStore getInstance(Display display)
    {
       return instance;
    }
@@ -615,5 +627,15 @@ public class PreferenceStore
    public void setDefault(String name, RGB value)
    {
       setDefault(name, Integer.toString(value.red) + "," + Integer.toString(value.green) + "," + Integer.toString(value.blue));
+   }
+
+   /**
+    * Remove property.
+    *
+    * @param name property name
+    */
+   public void remove(String name)
+   {
+      properties.remove(name);
    }
 }
