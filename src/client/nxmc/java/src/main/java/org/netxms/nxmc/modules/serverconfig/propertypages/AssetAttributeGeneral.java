@@ -21,6 +21,8 @@ package org.netxms.nxmc.modules.serverconfig.propertypages;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -55,6 +57,7 @@ public class AssetAttributeGeneral extends PropertyPage
    Combo comboDataType = null;
    Button buttonMandatory;
    Button buttonUnique;
+   Button useLimits;
    LabeledSpinner spinnerRangeMin;
    LabeledSpinner spinnerRangeMax;
    Combo comboSystemType;   
@@ -117,10 +120,14 @@ public class AssetAttributeGeneral extends PropertyPage
          {
             AMDataType seleciton = AMDataType.getByValue(comboDataType.getSelectionIndex());
             boolean haveLimits = seleciton == AMDataType.STRING || seleciton == AMDataType.NUMBER || seleciton == AMDataType.INTEGER;
-            spinnerRangeMin.setEnabled(haveLimits);
+            useLimits.setEnabled(haveLimits);
+            haveLimits &= useLimits.getSelection();
             spinnerRangeMax.setEnabled(haveLimits);       
-            spinnerRangeMax.setLabel((attr.getDataType() == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Maximum value"));
-            spinnerRangeMin.setLabel((attr.getDataType() == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
+            spinnerRangeMax.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Maximum value"));
+            spinnerRangeMax.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
+            spinnerRangeMin.setEnabled(haveLimits);
+            spinnerRangeMin.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
+            spinnerRangeMin.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
          }
       });
 
@@ -131,17 +138,37 @@ public class AssetAttributeGeneral extends PropertyPage
       }
       comboSystemType.select(attr.getSystemType().getValue());
 
+      boolean haveLimits = (attr.getDataType() == AMDataType.STRING || attr.getDataType() == AMDataType.NUMBER || attr.getDataType() == AMDataType.INTEGER);
+      useLimits = new Button(dialogArea, SWT.CHECK);
+      useLimits.setText(i18n.tr("Use limits"));
+      gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
+      gd.horizontalSpan = 2;
+      useLimits.setLayoutData(gd);
+      useLimits.setSelection(attr.getRangeMax() != 0 || attr.getRangeMin() != 0);
+      useLimits.addSelectionListener(new SelectionAdapter()
+      {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            spinnerRangeMax.setEnabled(useLimits.getSelection()); 
+            spinnerRangeMin.setEnabled(useLimits.getSelection());
+         }
+      });
+      useLimits.setEnabled(haveLimits);
+      haveLimits &= useLimits.getSelection();
+      
       spinnerRangeMin = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMin.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       spinnerRangeMin.setLabel((attr.getDataType() == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
+      spinnerRangeMin.setRange((attr.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
       spinnerRangeMin.setSelection(attr.getRangeMin());
       
       spinnerRangeMax = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMax.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       spinnerRangeMax.setLabel((attr.getDataType() == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Minimum value"));
+      spinnerRangeMax.setRange((attr.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
       spinnerRangeMax.setSelection(attr.getRangeMax());
       
-      boolean haveLimits = (attr.getDataType() == AMDataType.STRING || attr.getDataType() == AMDataType.NUMBER || attr.getDataType() == AMDataType.INTEGER);
       spinnerRangeMin.setEnabled(haveLimits);
       spinnerRangeMax.setEnabled(haveLimits);
       
@@ -168,7 +195,7 @@ public class AssetAttributeGeneral extends PropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
-      if (spinnerRangeMin.getSelection() > spinnerRangeMax.getSelection())
+      if (useLimits.getSelection() && (spinnerRangeMin.getSelection() > spinnerRangeMax.getSelection()))
       {
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Minumun can't be lesst than maximum"));
          return false;
@@ -197,8 +224,16 @@ public class AssetAttributeGeneral extends PropertyPage
       attr.setDisplayName(textDisplayName.getText());
       attr.setDataType(AMDataType.getByValue(comboDataType.getSelectionIndex()));
       attr.setSystemType(AMSystemType.getByValue(comboSystemType.getSelectionIndex()));
-      attr.setRangeMin(spinnerRangeMin.getSelection());
-      attr.setRangeMax(spinnerRangeMax.getSelection());
+      if (useLimits.getSelection())
+      {
+         attr.setRangeMin(spinnerRangeMin.getSelection());
+         attr.setRangeMax(spinnerRangeMax.getSelection());
+      }
+      else
+      {
+         attr.setRangeMin(0);
+         attr.setRangeMax(0);         
+      }
       attr.setMandatory(buttonMandatory.getSelection());
       attr.setUnique(buttonUnique.getSelection());
       
