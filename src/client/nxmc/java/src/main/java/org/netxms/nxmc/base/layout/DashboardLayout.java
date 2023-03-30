@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -158,14 +158,14 @@ public class DashboardLayout extends Layout
          if (rowSizeY[e.getValue().y] < s.y / layoutData.verticalSpan)
             rowSizeY[e.getValue().y] = s.y / layoutData.verticalSpan;
       }
-      
-      Point size = new Point(0, 0);
+
+      Point size = new Point(0, (rowCount - 1) * verticalSpacing + marginHeight * 2);
       for(int i = 0; i < rowCount; i++)
       {
-         if (size.x < rowSizeX[i])
-            size.x = rowSizeX[i];
-         if (size.y < rowSizeX[i])
-            size.y = rowSizeX[i];
+         int w = rowSizeX[i] + marginWidth * 2 + (numColumns - 1) * horizontalSpacing;
+         if (size.x < w)
+            size.x = w;
+         size.y += rowSizeY[i];
       }
       cachedSize = new Point(size.x, size.y);
       return size;
@@ -290,16 +290,16 @@ public class DashboardLayout extends Layout
       rowStart[0] = marginHeight;
       for(int i = 1; i < rowCount; i++)
          rowStart[i] = Math.round(rowStart[i - 1] + rowSize[i - 1]) + verticalSpacing;
-      
+
       for(Control c : composite.getChildren())
       {
          if (!c.isVisible())
             continue;
-         
+
          Point p = coordinates.get(c);
          if (p == null)
             continue;
-         
+
          DashboardLayoutData layoutData = getLayoutData(c);
          int cw = layoutData.horizontalSpan * columnWidth + (layoutData.horizontalSpan - 1) * horizontalSpacing;
          float ch = rowSize[p.y];
