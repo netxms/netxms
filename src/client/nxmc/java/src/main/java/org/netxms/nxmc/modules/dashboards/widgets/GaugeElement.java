@@ -141,6 +141,8 @@ public class GaugeElement extends ComparisonChartElement
             heightCalculationFont = new Font(getDisplay(), elementConfig.getFontName(), fontSize, SWT.BOLD);
          }
          int h = WidgetHelper.getTextExtent(this, heightCalculationFont, "X").y + 10;
+         if (elementConfig.isShowLegend())
+            h += WidgetHelper.getTextExtent(this, "X").y;
          return elementConfig.isVertical() ? h * elementConfig.getDciList().length : h;
       }
 
