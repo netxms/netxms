@@ -191,6 +191,9 @@ public class PortViewElement extends ElementWidget
 	private void syncChildren() 
 	{
       AbstractObject root = session.findObjectById(getEffectiveObjectId(config.getRootObjectId()));
+      if (root == null)
+         return;
+
       List<AbstractObject> parentsForChildSync = new ArrayList<AbstractObject>();
       if (root instanceof Node)
       {
