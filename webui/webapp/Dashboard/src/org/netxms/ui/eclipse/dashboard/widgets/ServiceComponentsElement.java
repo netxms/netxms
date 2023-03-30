@@ -110,6 +110,9 @@ public class ServiceComponentsElement extends ElementWidget
     */
    private void addServiceComponents(AbstractObject object, long parentElementId)
    {
+      if (object == null)
+         return;
+
       Iterator<Long> it = object.getChildren();
       while(it.hasNext())
       {

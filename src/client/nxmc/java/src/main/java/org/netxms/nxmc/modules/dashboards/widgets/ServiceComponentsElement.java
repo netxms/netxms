@@ -73,12 +73,11 @@ public class ServiceComponentsElement extends ElementWidget
 
       session = Registry.getSession();
       long rootObjectId = getEffectiveObjectId(config.getObjectId());
-      AbstractObject rootObject = session.findObjectById(rootObjectId);
 
       mapPage = new NetworkMapPage("ServiceComponents." + rootObjectId);
       long elementId = mapPage.createElementId();
       mapPage.addElement(new NetworkMapObject(elementId, rootObjectId));
-      addServiceComponents(rootObject, elementId);
+      addServiceComponents(session.findObjectById(rootObjectId), elementId);
 
       if (mapPage != null)
       {
@@ -109,6 +108,9 @@ public class ServiceComponentsElement extends ElementWidget
     */
    private void addServiceComponents(AbstractObject object, long parentElementId)
    {
+      if (object == null)
+         return;
+
       Iterator<Long> it = object.getChildren();
       while(it.hasNext())
       {

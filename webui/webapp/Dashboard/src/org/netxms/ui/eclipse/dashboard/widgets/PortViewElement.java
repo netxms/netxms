@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,6 +198,9 @@ public class PortViewElement extends ElementWidget
 	private void syncChildren() 
 	{
       AbstractObject root = session.findObjectById(getEffectiveObjectId(config.getRootObjectId()));
+      if (root == null)
+         return;
+
       List<AbstractObject> parentsForChildSync = new ArrayList<AbstractObject>();
       if (root instanceof Node)
       {
@@ -396,7 +399,7 @@ public class PortViewElement extends ElementWidget
             {
                selection = new StructuredSelection();
             }
-            
+
             for(ISelectionChangedListener listener : selectionListeners)
                listener.selectionChanged(new SelectionChangedEvent(getSelectionProvider(), selection));
          }
