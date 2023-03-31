@@ -23,6 +23,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -32,6 +36,8 @@ import org.eclipse.swt.custom.CTabFolderEvent;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -65,11 +71,14 @@ public class ViewFolder extends ViewContainer
    private CTabFolder tabFolder;
    private Composite topRightControl;
    private boolean allViewsAreCloseable = false;
+   private boolean enableViewExtraction;
+   private boolean enableViewPinning;
    private boolean disposeWhenEmpty = false;
    private boolean useGlobalViewId = false;
    private String preferredViewId = null;
    private String lastViewId = null;
    private View activeView = null;
+   private CTabItem contextMenuTabItem = null;
    private boolean contextChange = false;
    private Map<String, View> views = new HashMap<>();
    private Map<String, CTabItem> tabs = new HashMap<>();
@@ -87,6 +96,9 @@ public class ViewFolder extends ViewContainer
    public ViewFolder(Window window, Perspective perspective, Composite parent, boolean enableViewExtraction, boolean enableViewPinning, boolean enableNavigationHistory)
    {
       super(window, perspective, parent, SWT.NONE);
+
+      this.enableViewExtraction = enableViewExtraction;
+      this.enableViewPinning = enableViewPinning;
 
       setLayout(new FillLayout());
       tabFolder = new CTabFolder(this, SWT.TOP | SWT.BORDER);
@@ -256,6 +268,100 @@ public class ViewFolder extends ViewContainer
             }
          });
       }
+
+      keyBindingManager.addBinding("M1+W", new Action() {
+         @Override
+         public void run()
+         {
+            View view = getActiveView();
+            if ((view != null) && view.isCloseable())
+               closeView(view);
+         }
+      });
+
+      createTabContextMenu();
+   }
+
+   /**
+    * Create context menu for view tabs
+    */
+   private void createTabContextMenu()
+   {
+      MenuManager tabMenuManager = new MenuManager();
+      tabMenuManager.setRemoveAllWhenShown(true);
+      tabMenuManager.addMenuListener(new IMenuListener() {
+         @Override
+         public void menuAboutToShow(IMenuManager manager)
+         {
+            fillTabContextMenu(manager);
+         }
+      });
+
+      Menu menu = tabMenuManager.createContextMenu(tabFolder);
+      tabFolder.setMenu(menu);
+
+      tabFolder.addMenuDetectListener(new MenuDetectListener() {
+         @Override
+         public void menuDetected(MenuDetectEvent e)
+         {
+            // FInd tab item under mouse and block event if click is not on the tab
+            contextMenuTabItem = null;
+            Point pt = tabFolder.toControl(e.x, e.y);
+            for(CTabItem t : tabFolder.getItems())
+            {
+               if (t.getBounds().contains(pt))
+               {
+                  contextMenuTabItem = t;
+                  break;
+               }
+            }
+            e.doit = (contextMenuTabItem != null);
+         }
+      });
+   }
+
+   /**
+    * Fill context menu for tab
+    *
+    * @param manager manager
+    */
+   private void fillTabContextMenu(IMenuManager manager)
+   {
+      if (contextMenuTabItem == null)
+         return;
+
+      final View view = (View)contextMenuTabItem.getData("view");
+      if (allViewsAreCloseable || view.isCloseable())
+      {
+         manager.add(new Action(i18n.tr("&Close") + "\t" + KeyStroke.normalizeDefinition("M1+W")) {
+            @Override
+            public void run()
+            {
+               closeView(view);
+            }
+         });
+      }
+
+      if (enableViewPinning)
+      {
+         manager.add(new Separator());
+         createPinMenuItem(manager, view, PinLocation.PINBOARD, i18n.tr("&Pin to pinboard"));
+         createPinMenuItem(manager, view, PinLocation.LEFT, i18n.tr("Pin at &left"));
+         createPinMenuItem(manager, view, PinLocation.RIGHT, i18n.tr("Pin at &right"));
+         createPinMenuItem(manager, view, PinLocation.BOTTOM, i18n.tr("Pin at &bottom"));
+      }
+
+      if (enableViewExtraction)
+      {
+         manager.add(new Separator());
+         manager.add(new Action(i18n.tr("Pop &out") + "\t" + KeyStroke.normalizeDefinition("F8")) {
+            @Override
+            public void run()
+            {
+               extractView(view);
+            }
+         });
+      }
    }
 
    /**
@@ -280,7 +386,7 @@ public class ViewFolder extends ViewContainer
     * @param location pin location
     * @param name menu item name
     */
-   private void createPinMenuItem(Menu menu, PinLocation location, String name)
+   private void createPinMenuItem(Menu menu, final PinLocation location, String name)
    {
       MenuItem item = new MenuItem(menu, SWT.PUSH);
       item.setText(name);
@@ -290,6 +396,26 @@ public class ViewFolder extends ViewContainer
          {
             Registry.setLastViewPinLocation(location);
             pinActiveView(location);
+         }
+      });
+   }
+
+   /**
+    * Create item for view pinning menu
+    *
+    * @param manager menu manager
+    * @param view view to pin
+    * @param location pin location
+    * @param name menu item name
+    */
+   private void createPinMenuItem(IMenuManager manager, final View view, final PinLocation location, String name)
+   {
+      manager.add(new Action(name) {
+         @Override
+         public void run()
+         {
+            Registry.setLastViewPinLocation(location);
+            pinView(view, location);
          }
       });
    }
@@ -364,10 +490,7 @@ public class ViewFolder extends ViewContainer
       View view = views.remove(id);
       if (view != null)
       {
-         view.dispose();
-         CTabItem tabItem = tabs.remove(getViewId(view));
-         if (tabItem != null)
-            tabItem.dispose();
+         closeView(view);
       }
    }
 
@@ -520,6 +643,55 @@ public class ViewFolder extends ViewContainer
       });
       tabs.put(getViewId(view), tabItem);
       return tabItem;
+   }
+
+   /**
+    * Close view
+    *
+    * @param view view to close
+    */
+   protected void closeView(View view)
+   {
+      view.dispose();
+      CTabItem tabItem = tabs.remove(getViewId(view));
+      if (tabItem != null)
+         tabItem.dispose();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewContainer#extractView(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void extractView(View view)
+   {
+      // Update context of selected view if it is not an active one
+      if (view != getActiveView())
+      {
+         if ((view instanceof ViewWithContext) && !ignoreContextForView(contextMenuTabItem))
+         {
+            if (((ViewWithContext)view).getContext() != context)
+               ((ViewWithContext)view).setContext(context);
+         }
+      }
+      super.extractView(view);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewContainer#pinView(org.netxms.nxmc.base.views.View, org.netxms.nxmc.base.views.PinLocation)
+    */
+   @Override
+   protected void pinView(View view, PinLocation location)
+   {
+      // Update context of selected view if it is not an active one
+      if (view != getActiveView())
+      {
+         if ((view instanceof ViewWithContext) && !ignoreContextForView(contextMenuTabItem))
+         {
+            if (((ViewWithContext)view).getContext() != context)
+               ((ViewWithContext)view).setContext(context);
+         }
+      }
+      super.pinView(view, location);
    }
 
    /**
