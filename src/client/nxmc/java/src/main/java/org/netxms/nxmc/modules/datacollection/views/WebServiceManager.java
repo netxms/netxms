@@ -69,11 +69,11 @@ public class WebServiceManager extends ConfigurationView
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_URL = 1;
    public static final int COLUMN_METHOD = 2;
-   public static final int COLUMN_AUTHENTICATION = 4;
-   public static final int COLUMN_LOGIN = 5;
-   public static final int COLUMN_RETENTION_TIME = 6;
-   public static final int COLUMN_TIMEOUT = 7;
-   public static final int COLUMN_DESCRIPTION = 8;
+   public static final int COLUMN_AUTHENTICATION = 3;
+   public static final int COLUMN_LOGIN = 4;
+   public static final int COLUMN_RETENTION_TIME = 5;
+   public static final int COLUMN_TIMEOUT = 6;
+   public static final int COLUMN_DESCRIPTION = 7;
 
    private Map<Integer, WebServiceDefinition> webServiceDefinitions = new HashMap<Integer, WebServiceDefinition>();
    private int nameCounter = 1;
