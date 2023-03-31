@@ -23,6 +23,16 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 44.2 to 44.3
+ */
+static bool H_UpgradeFromV2()
+{
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("object_properties"), _T("submap_id"), _T("drilldown_object_id")));
+   CHK_EXEC(SetMinorSchemaVersion(3));
+   return true;
+}
+
+/**
  * Upgrade from 44.1 to 44.2
  */
 static bool H_UpgradeFromV1()
@@ -98,6 +108,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 2,  44, 3,  H_UpgradeFromV2  },
    { 1,  44, 2,  H_UpgradeFromV1  },
    { 0,  44, 1,  H_UpgradeFromV0  },
    { 0,  0,  0,  nullptr }

@@ -91,7 +91,7 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
       m_statusTranslation[i] = i + 1;
       m_statusThresholds[i] = 80 - i * 20;
    }
-   m_submapId = 0;
+   m_drilldownObjectId = 0;
    m_moduleData = nullptr;
    m_primaryZoneProxyId = 0;
    m_backupZoneProxyId = 0;
@@ -246,7 +246,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       _T("name"), _T("status"), _T("is_deleted"), _T("inherit_access_rights"), _T("last_modified"), _T("status_calc_alg"),
       _T("status_prop_alg"), _T("status_fixed_val"), _T("status_shift"), _T("status_translation"), _T("status_single_threshold"),
       _T("status_thresholds"), _T("comments"), _T("is_system"), _T("location_type"), _T("latitude"), _T("longitude"),
-      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("submap_id"), _T("country"),
+      _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
       _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
       _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
       _T("name_on_map"), _T("category"), _T("comments_source"), nullptr
@@ -288,7 +288,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
    DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_mapImage);
-   DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
+   DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_drilldownObjectId);
    DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress.getCountry(), DB_BIND_STATIC);
    DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress.getRegion(), DB_BIND_STATIC);
    DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress.getCity(), DB_BIND_STATIC);
@@ -552,7 +552,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
                                   _T("SELECT name,status,is_deleted,inherit_access_rights,last_modified,status_calc_alg,")
                                   _T("status_prop_alg,status_fixed_val,status_shift,status_translation,status_single_threshold,")
                                   _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
-                                  _T("location_timestamp,guid,map_image,submap_id,country,region,city,district,street_address,")
+                                  _T("location_timestamp,guid,map_image,drilldown_object_id,country,region,city,district,street_address,")
                                   _T("postcode,maint_event_id,state_before_maint,maint_initiator,state,flags,creation_time,alias,")
                                   _T("name_on_map,category,comments_source FROM object_properties WHERE object_id=?"));
    if (hStmt != nullptr)
@@ -594,7 +594,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 
 				m_guid = DBGetFieldGUID(hResult, 0, 19);
 				m_mapImage = DBGetFieldGUID(hResult, 0, 20);
-				m_submapId = DBGetFieldULong(hResult, 0, 21);
+				m_drilldownObjectId = DBGetFieldULong(hResult, 0, 21);
 
             TCHAR buffer[256];
             m_postalAddress.setCountry(DBGetField(hResult, 0, 22, buffer, 64));
@@ -1250,7 +1250,7 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    msg->setField(VID_COMMENTS_SOURCE, CHECK_NULL_EX(m_commentsSource));
    msg->setField(VID_IMAGE, m_mapImage);
-   msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_submapId);
+   msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_drilldownObjectId);
    msg->setField(VID_CATEGORY_ID, m_categoryId);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
@@ -1498,7 +1498,7 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
 
 	if (msg.isFieldExist(VID_DRILL_DOWN_OBJECT_ID))
 	{
-		m_submapId = msg.getFieldAsUInt32(VID_DRILL_DOWN_OBJECT_ID);
+	   m_drilldownObjectId = msg.getFieldAsUInt32(VID_DRILL_DOWN_OBJECT_ID);
 	}
 
    if (msg.isFieldExist(VID_COUNTRY))
@@ -2636,7 +2636,7 @@ json_t *NetObj::toJson()
    json_object_set_new(root, "mapImage", m_mapImage.toJson());
    json_object_set_new(root, "geoLocation", m_geoLocation.toJson());
    json_object_set_new(root, "postalAddress", m_postalAddress.toJson());
-   json_object_set_new(root, "submapId", json_integer(m_submapId));
+   json_object_set_new(root, "drilldownObjectId", json_integer(m_drilldownObjectId));
    json_object_set_new(root, "dashboards", m_dashboards.toJson());
    json_object_set_new(root, "urls", json_object_array(m_urls));
    json_object_set_new(root, "accessList", m_accessList.toJson());

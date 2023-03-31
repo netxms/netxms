@@ -1179,7 +1179,7 @@ protected:
    bool m_isHidden;
    bool m_isSystem;
    uuid m_mapImage;
-   uint32_t m_submapId;          // Map object which should be open on drill-down request
+   uint32_t m_drilldownObjectId;    // Object that should be opened on drill-down request
    uint32_t m_categoryId;
    Mutex m_mutexProperties;         // Object data access mutex
    GeoLocation m_geoLocation;
