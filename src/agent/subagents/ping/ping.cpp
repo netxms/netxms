@@ -81,6 +81,8 @@ retry:
       target->lastRTT = 10000;
       unreachable = true;
    }
+   nxlog_debug_tag(DEBUG_TAG, 7, _T("Poller: completed for host=%s timeout=%d packetSize=%d dontFragment=%s unreachable=%s time=%d"),
+      target->dnsName, s_timeout, target->packetSize, target->dontFragment ? _T("true") : _T("false"), unreachable ? _T("true") : _T("false"), target->lastRTT);
 
    target->rttHistory[target->bufPos] = target->lastRTT;
 

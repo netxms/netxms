@@ -170,6 +170,7 @@ struct PingRequest
    uint32_t timeout;
    uint32_t result;
    uint32_t rtt;
+   uint16_t id;
    uint16_t sequence;
    bool dontFragment;
    PingRequestState state;
@@ -223,7 +224,7 @@ private:
 
    void receivePacketV4();
    void receivePacketV6();
-   void processEchoReply(const InetAddress& addr, uint16_t sequence);
+   void processEchoReply(const InetAddress& addr, uint16_t id, uint16_t sequence);
    void processHostUnreachable(const InetAddress& addr);
 
    void sendRequestV4(PingRequest *request);
@@ -390,11 +391,11 @@ void PingRequestProcessor::processingThread()
 /**
  * Process echo reply
  */
-void PingRequestProcessor::processEchoReply(const InetAddress& addr, uint16_t sequence)
+void PingRequestProcessor::processEchoReply(const InetAddress& addr, uint16_t id, uint16_t sequence)
 {
    for(PingRequest *r = m_head->next; r != nullptr; r = r->next)
    {
-      if (r->address.equals(addr) && (r->sequence == sequence))
+      if (r->address.equals(addr) && (r->id == id) && (r->sequence == sequence))
       {
          r->rtt = GetCurrentTimeMs() - r->timestamp;
          CloseRequest(r, ICMP_SUCCESS);
@@ -424,9 +425,9 @@ void PingRequestProcessor::receivePacketV4()
    if (recvfrom(m_dataSocket, (char *)&reply, sizeof(ICMP_ECHO_REPLY), 0, (struct sockaddr *)&saSrc, &addrLen) <= 0)
       return;
 
-   if ((reply.m_icmpHdr.m_cType == 0) && (reply.m_icmpHdr.m_wId == m_id))
+   if (reply.m_icmpHdr.m_cType == 0)
    {
-      processEchoReply(InetAddress(ntohl(reply.m_ipHdr.m_iaSrc.s_addr)), reply.m_icmpHdr.m_wSeq);
+      processEchoReply(InetAddress(ntohl(reply.m_ipHdr.m_iaSrc.s_addr)), reply.m_icmpHdr.m_wId, reply.m_icmpHdr.m_wSeq);
    }
    else if ((reply.m_icmpHdr.m_cType == 3) && (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreachable"
    {
@@ -447,9 +448,9 @@ void PingRequestProcessor::receivePacketV6()
       return;
 
    ICMP6_REPLY *reply = reinterpret_cast<ICMP6_REPLY*>(buffer);
-   if ((reply->type == 129) && (reply->id == static_cast<uint32_t>(m_id))) // ICMPv6 Echo Reply
+   if (reply->type == 129) // ICMPv6 Echo Reply
    {
-      processEchoReply(InetAddress(saSrc.sin6_addr.s6_addr), static_cast<uint16_t>(reply->sequence));
+      processEchoReply(InetAddress(saSrc.sin6_addr.s6_addr), static_cast<uint16_t>(reply->id), static_cast<uint16_t>(reply->sequence));
    }
    else if ((reply->type == 1) || (reply->type == 3))    // 1 = Destination Unreachable, 3 = Time Exceeded
    {
@@ -496,7 +497,7 @@ void PingRequestProcessor::sendRequestV4(PingRequest *request)
    ICMP_ECHO_REQUEST packet;
    packet.m_icmpHdr.m_cType = 8;   // ICMP ECHO REQUEST
    packet.m_icmpHdr.m_cCode = 0;
-   packet.m_icmpHdr.m_wId = m_id;
+   packet.m_icmpHdr.m_wId = request->id;
    packet.m_icmpHdr.m_wSeq = request->sequence;
    memcpy(packet.m_data, payload, MIN(request->packetSize - sizeof(ICMPHDR) - sizeof(IPHDR), 64));
 
@@ -616,7 +617,7 @@ void PingRequestProcessor::sendRequestV6(PingRequest *request)
    memcpy(p->destAddr, dest.sin6_addr.s6_addr, 16);
    p->nextHeader = 58;
    p->type = 128;  // ICMPv6 Echo Request
-   p->id = m_id;
+   p->id = request->id;
    p->sequence = request->sequence;
    memcpy(p->data, payload, MIN(33, size - sizeof(ICMP6_PACKET_HEADER) + 8));
    p->checksum = 0;
@@ -694,6 +695,7 @@ uint32_t PingRequestProcessor::ping(const InetAddress &addr, uint32_t timeout, u
 
       if (request.result == ICMP_SUCCESS) // Continue only if request processor is ready
       {
+         request.id = m_id;
          request.sequence = m_sequence++;
          if (sendRequest(&request))
          {
