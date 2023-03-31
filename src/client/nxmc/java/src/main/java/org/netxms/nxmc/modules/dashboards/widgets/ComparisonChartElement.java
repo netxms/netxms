@@ -26,8 +26,6 @@ import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
 import org.netxms.client.dashboards.DashboardElement;
@@ -261,16 +259,6 @@ public abstract class ComparisonChartElement extends ElementWidget
 		job.setUser(false);
 		job.start();
 	}
-
-   /**
-    * @see org.netxms.nxmc.modules.dashboards.widgets.ElementWidget#adjustContentHeight(org.eclipse.swt.widgets.Composite,
-    *      org.eclipse.swt.graphics.Point)
-    */
-   @Override
-   protected int adjustContentHeight(Composite content, Point computedSize)
-   {
-      return Math.max(computedSize.y, 250);
-   }
 
    /**
     * Get list of configured DCIs.

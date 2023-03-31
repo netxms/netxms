@@ -83,6 +83,7 @@ public class DashboardElements extends ObjectPropertyPage
 
 	private Dashboard dashboard;
 	private LabeledSpinner columnCount;
+   private Button checkScrollable;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -151,11 +152,12 @@ public class DashboardElements extends ObjectPropertyPage
       columnCount.setLabel(i18n.tr("Number of columns"));
       columnCount.setRange(1, 128);
       columnCount.setSelection(dashboard.getNumColumns());
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.LEFT;
-      gd.horizontalSpan = 2;
-      gd.verticalAlignment = SWT.BOTTOM;
-      columnCount.setLayoutData(gd);
+      columnCount.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+
+      checkScrollable = new Button(dialogArea, SWT.CHECK);
+      checkScrollable.setText("&Scrollable content");
+      checkScrollable.setSelection(dashboard.isScrollable());
+      checkScrollable.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
 
       final String[] columnNames = { i18n.tr("Type"), i18n.tr("Span"), i18n.tr("Height"), i18n.tr("Title") };
       final int[] columnWidths = { 150, 60, 90, 300 };
@@ -166,7 +168,7 @@ public class DashboardElements extends ObjectPropertyPage
       elements = copyElements(dashboard.getElements());
       viewer.setInput(elements.toArray());
 
-      gd = new GridData();
+      GridData gd = new GridData();
       gd.verticalAlignment = GridData.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
@@ -314,6 +316,7 @@ public class DashboardElements extends ObjectPropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(dashboard.getObjectId());
 		md.setDashboardElements(elements);
 		md.setColumnCount(columnCount.getSelection());
+      md.setObjectFlags(checkScrollable.getSelection() ? Dashboard.SCROLLABLE : 0, Dashboard.SCROLLABLE);
 
 		if (isApply)
 			setValid(false);

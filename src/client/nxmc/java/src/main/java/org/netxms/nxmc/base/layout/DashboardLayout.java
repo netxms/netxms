@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ public class DashboardLayout extends Layout
    public int marginHeight = 0;
    public int horizontalSpacing = 5;
    public int verticalSpacing = 5;
+   public boolean scrollable = false;
 
    private static final int MAX_ROWS = 64;
 
@@ -155,17 +156,18 @@ public class DashboardLayout extends Layout
          DashboardLayoutData layoutData = getLayoutData(e.getKey());
          Point s = e.getKey().computeSize((widthHint != SWT.DEFAULT) ? widthHint * layoutData.horizontalSpan : SWT.DEFAULT, SWT.DEFAULT, flushCache);
          rowSizeX[e.getValue().y] += s.x;
-         if (rowSizeY[e.getValue().y] < s.y / layoutData.verticalSpan)
-            rowSizeY[e.getValue().y] = s.y / layoutData.verticalSpan;
+         int h = ((layoutData.heightHint > 0) && (scrollable || !layoutData.fill)) ? layoutData.heightHint : s.y;
+         if (rowSizeY[e.getValue().y] < h / layoutData.verticalSpan)
+            rowSizeY[e.getValue().y] = h / layoutData.verticalSpan;
       }
-      
-      Point size = new Point(0, 0);
+
+      Point size = new Point(0, (rowCount - 1) * verticalSpacing + marginHeight * 2);
       for(int i = 0; i < rowCount; i++)
       {
-         if (size.x < rowSizeX[i])
-            size.x = rowSizeX[i];
-         if (size.y < rowSizeX[i])
-            size.y = rowSizeX[i];
+         int w = rowSizeX[i] + marginWidth * 2 + (numColumns - 1) * horizontalSpacing;
+         if (size.x < w)
+            size.x = w;
+         size.y += rowSizeY[i];
       }
       cachedSize = new Point(size.x, size.y);
       return size;
@@ -194,7 +196,7 @@ public class DashboardLayout extends Layout
       for(Entry<Control, Point> e : coordinates.entrySet())
       {
          DashboardLayoutData layoutData = getLayoutData(e.getKey());
-         if (layoutData.fill)
+         if (layoutData.fill && !scrollable)
          {
             if (layoutData.verticalSpan > 1)
             {
@@ -226,25 +228,28 @@ public class DashboardLayout extends Layout
       }
 
       // Make sure that each control with fill flag set has at least one row with definite fill
-      for(Entry<Control, Point> e : coordinates.entrySet())
+      if (!scrollable)
       {
-         DashboardLayoutData layoutData = getLayoutData(e.getKey());
-         if (layoutData.fill && (layoutData.verticalSpan > 1))
+         for(Entry<Control, Point> e : coordinates.entrySet())
          {
-            boolean ok = false;
-            // First try to choose rows without preference for no-fill
-            for(int i = 0; i < layoutData.verticalSpan; i++)
+            DashboardLayoutData layoutData = getLayoutData(e.getKey());
+            if (layoutData.fill && (layoutData.verticalSpan > 1))
             {
-               int r = e.getValue().y + i;
-               if (rowFill[r] >= 2)
+               boolean ok = false;
+               // First try to choose rows without preference for no-fill
+               for(int i = 0; i < layoutData.verticalSpan; i++)
                {
-                  rowFill[r] = 3;
-                  ok = true;
+                  int r = e.getValue().y + i;
+                  if (rowFill[r] >= 2)
+                  {
+                     rowFill[r] = 3;
+                     ok = true;
+                  }
                }
-            }
 
-            if (!ok) // If still didn't find at least one row for grow, select first one
-               rowFill[e.getValue().y] = 3;
+               if (!ok) // If still didn't find at least one row for grow, select first one
+                  rowFill[e.getValue().y] = 3;
+            }
          }
       }
 
@@ -290,16 +295,16 @@ public class DashboardLayout extends Layout
       rowStart[0] = marginHeight;
       for(int i = 1; i < rowCount; i++)
          rowStart[i] = Math.round(rowStart[i - 1] + rowSize[i - 1]) + verticalSpacing;
-      
+
       for(Control c : composite.getChildren())
       {
          if (!c.isVisible())
             continue;
-         
+
          Point p = coordinates.get(c);
          if (p == null)
             continue;
-         
+
          DashboardLayoutData layoutData = getLayoutData(c);
          int cw = layoutData.horizontalSpan * columnWidth + (layoutData.horizontalSpan - 1) * horizontalSpacing;
          float ch = rowSize[p.y];

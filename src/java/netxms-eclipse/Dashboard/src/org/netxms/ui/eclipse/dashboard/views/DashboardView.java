@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,12 +34,16 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -80,7 +84,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Dashboard view
  */
-public class DashboardView extends ViewPart implements ISaveablePart
+public class DashboardView extends ViewPart implements ISaveablePart, DashboardControlOwner
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardView"; //$NON-NLS-1$
 
@@ -93,6 +97,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private boolean fullScreenDisplay = false;
 	private Shell fullScreenDisplayShell;
    private Composite parentComposite;
+   private ScrolledComposite scroller;
 	private DashboardControl dbc;
 	private DashboardModifyListener dbcModifyListener;
 	private Action actionRefresh;
@@ -147,11 +152,11 @@ public class DashboardView extends ViewPart implements ISaveablePart
             }
          }
       };
-      
-      dbc = new DashboardControl(parent, SWT.NONE, dashboard, (contextObjectId != 0) ? session.findObjectById(contextObjectId) : null, this, selectionProvider, false);
 
       activateContext();
       createActions();
+
+      rebuildDashboard(true);
 
 	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID) {
          @Override
@@ -211,6 +216,17 @@ public class DashboardView extends ViewPart implements ISaveablePart
          }
       });
 	}
+
+   /**
+    * Update scroll area
+    */
+   private void updateScroller()
+   {
+      dbc.layout(true, true);
+      Rectangle r = scroller.getClientArea();
+      Point s = dbc.computeSize(r.width, SWT.DEFAULT);
+      scroller.setMinSize(s);
+   }
 
    /**
     * @see org.eclipse.ui.part.WorkbenchPart#dispose()
@@ -301,8 +317,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
-		actionEditMode.setChecked(dbc.isEditMode());
-		
+
       actionAddColumn = new Action("Add &column", Activator.getImageDescriptor("icons/add-column.png")) {
          @Override
          public void run()
@@ -325,7 +340,6 @@ public class DashboardView extends ViewPart implements ISaveablePart
             actionAddColumn.setEnabled(true);
          }
       };
-      actionRemoveColumn.setEnabled(dashboard.getNumColumns() > dbc.getMinimalColumnCount());
 
 		actionFullScreenDisplay = new Action("&Full screen display", Action.AS_CHECK_BOX) {
          @Override
@@ -475,38 +489,85 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		if (dbc != null)
 			dbc.dispose();
 
+      if (scroller != null)
+      {
+         scroller.dispose();
+         scroller = null;
+      }
+
+      Composite parent = fullScreenDisplay ? fullScreenDisplayShell : parentComposite;
 		if (reload)
 		{
          dashboard = ConsoleSharedData.getSession().findObjectById(dashboard.getObjectId(), Dashboard.class);
-
 			if (dashboard != null)
 			{
-            dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dashboard, (contextObjectId != 0) ? session.findObjectById(contextObjectId) : null, this, selectionProvider, false);
-				dbc.getParent().layout(true, true);
+            if (dashboard.isScrollable())
+            {
+               scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
+               scroller.setExpandHorizontal(true);
+               scroller.setExpandVertical(true);
+               scroller.getVerticalBar().setIncrement(20);
+               parent.layout(true, true);
+            }
+            dbc = new DashboardControl(dashboard.isScrollable() ? scroller : parent, SWT.NONE, dashboard, (contextObjectId != 0) ? session.findObjectById(contextObjectId) : null, this, selectionProvider, false);
 				setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
-				if (!readOnly)
-				{
-				   dbc.setModifyListener(dbcModifyListener);
-				}
 			}
 			else
 			{
+            if (scroller != null)
+            {
+               scroller.dispose();
+               scroller = null;
+            }
 				dbc = null;
 			}
 		}
 		else
 		{
-         dbc = new DashboardControl(fullScreenDisplay ? fullScreenDisplayShell : parentComposite, SWT.NONE, dbc);
-			dbc.getParent().layout(true, true);
-			if (!readOnly)
-			{
-			   dbc.setModifyListener(dbcModifyListener);
-			}
+         if (dashboard.isScrollable())
+         {
+            scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
+            scroller.setExpandHorizontal(true);
+            scroller.setExpandVertical(true);
+            scroller.getVerticalBar().setIncrement(20);
+            parent.layout(true, true);
+         }
+         dbc = new DashboardControl(dashboard.isScrollable() ? scroller : parent, SWT.NONE, dbc);
 		}
 
-		actionSave.setEnabled((dbc != null) ? dbc.isModified() : false);
-      actionAddColumn.setEnabled(dbc.getColumnCount() < 128);
-      actionRemoveColumn.setEnabled(dbc.getColumnCount() > dbc.getMinimalColumnCount());
+      if (dbc != null)
+      {
+         if (dashboard.isScrollable())
+         {
+            scroller.setContent(dbc);
+            scroller.addControlListener(new ControlAdapter() {
+               public void controlResized(ControlEvent e)
+               {
+                  updateScroller();
+               }
+            });
+            updateScroller();
+         }
+         else
+         {
+            parent.layout(true, true);
+         }
+         if (!readOnly)
+         {
+            dbc.setModifyListener(dbcModifyListener);
+         }
+
+         actionSave.setEnabled(dbc.isModified());
+         actionAddColumn.setEnabled(dbc.getColumnCount() < 128);
+         actionRemoveColumn.setEnabled(dbc.getColumnCount() > dbc.getMinimalColumnCount());
+      }
+      else
+      {
+         actionSave.setEnabled(false);
+         actionAddColumn.setEnabled(false);
+         actionRemoveColumn.setEnabled(false);
+      }
+
 		firePropertyChange(PROP_DIRTY);
 	}
 
@@ -731,5 +792,17 @@ public class DashboardView extends ViewPart implements ISaveablePart
       saver.save(selected, SWT.IMAGE_PNG);
 
       image.dispose();
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.views.DashboardControlOwner#requestDashboardLayout()
+    */
+   @Override
+   public void requestDashboardLayout()
+   {
+      if (scroller != null)
+         updateScroller();
+      else
+         parentComposite.layout(true, true);
    }
 }

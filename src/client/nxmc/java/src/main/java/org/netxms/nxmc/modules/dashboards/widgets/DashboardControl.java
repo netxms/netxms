@@ -137,6 +137,7 @@ public class DashboardControl extends Composite
       layout.marginHeight = embedded ? 0 : 8;
       layout.horizontalSpacing = 8;
       layout.verticalSpacing = 8;
+      layout.scrollable = dashboard.isScrollable();
 		setLayout(layout);
 
 		for(final DashboardElement e : elements)
@@ -719,5 +720,16 @@ public class DashboardControl extends Composite
    public AbstractObject getContext()
    {
       return context;
+   }
+
+   /**
+    * Request dashboard layout. Can be called by dashboard element if it's size could have been changed.
+    */
+   public void requestDashboardLayout()
+   {
+      if (view != null)
+         view.requestDashboardLayout();
+      else
+         layout(true, true);
    }
 }

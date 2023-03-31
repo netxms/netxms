@@ -18,13 +18,11 @@
  */
 package org.netxms.nxmc.modules.dashboards.views;
 
-import org.eclipse.swt.SWT;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.netxms.nxmc.resources.ResourceManager;
 
 /**
@@ -110,10 +108,7 @@ public class ContextDashboardView extends AbstractDashboardView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      if (dbc != null)
-         dbc.dispose();
-      dbc = new DashboardControl(viewArea, SWT.NONE, dashboard, object, this, false);
-      viewArea.layout(true, true);
+      rebuildDashboard(dashboard, object);
    }
 
    /**

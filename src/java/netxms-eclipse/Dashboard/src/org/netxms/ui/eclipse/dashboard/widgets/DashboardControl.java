@@ -40,6 +40,7 @@ import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.dialogs.EditElementXmlDlg;
+import org.netxms.ui.eclipse.dashboard.views.DashboardControlOwner;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
@@ -138,6 +139,7 @@ public class DashboardControl extends Composite
       layout.marginHeight = embedded ? 0 : 8;
       layout.horizontalSpacing = 8;
       layout.verticalSpacing = 8;
+      layout.scrollable = dashboard.isScrollable();
 		setLayout(layout);
 
 		for(final DashboardElement e : elements)
@@ -734,5 +736,16 @@ public class DashboardControl extends Composite
    public AbstractObject getContext()
    {
       return context;
+   }
+
+   /**
+    * Request dashboard layout. Can be called by dashboard element if it's size could have been changed.
+    */
+   public void requestDashboardLayout()
+   {
+      if ((viewPart != null) && (viewPart instanceof DashboardControlOwner))
+         ((DashboardControlOwner)viewPart).requestDashboardLayout();
+      else
+         layout(true, true);
    }
 }

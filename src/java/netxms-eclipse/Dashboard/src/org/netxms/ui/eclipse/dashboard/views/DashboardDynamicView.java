@@ -23,13 +23,17 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -41,12 +45,13 @@ import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
  * Dynamic dashboard view - change dashboard when selection in dashboard
  * navigator changes
  */
-public class DashboardDynamicView extends ViewPart
+public class DashboardDynamicView extends ViewPart implements DashboardControlOwner
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView"; //$NON-NLS-1$
 
    private IntermediateSelectionProvider selectionProvider;
 	private Dashboard dashboard = null;
+   private ScrolledComposite scroller = null;
 	private DashboardControl dbc = null;
 	private ISelectionService selectionService;
 	private ISelectionListener selectionListener;
@@ -64,7 +69,7 @@ public class DashboardDynamicView extends ViewPart
       
 		parentComposite = parent;
 		if (dashboard != null)
-         dbc = new DashboardControl(parent, SWT.NONE, dashboard, null, this, selectionProvider, false);
+         rebuildDashboard();
 
 		createActions();
 		contributeToActionBars();
@@ -133,15 +138,13 @@ public class DashboardDynamicView extends ViewPart
 		manager.add(actionRefresh);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
 	@Override
 	public void setFocus()
 	{
-		if (dbc != null)
+      if ((dbc != null) && !dbc.isDisposed())
 		{
 			dbc.setFocus();
 		}
@@ -152,12 +155,8 @@ public class DashboardDynamicView extends ViewPart
 	 */
 	private void setObject(Dashboard object)
 	{
-		if (dbc != null)
-			dbc.dispose();
 		dashboard = object;
-      dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, null, this, selectionProvider, false);
-		parentComposite.layout();
-		setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
+      rebuildDashboard();
 	}
 	
 	/**
@@ -167,25 +166,64 @@ public class DashboardDynamicView extends ViewPart
 	{
 		if (dashboard == null)
 			return;
-		
+
 		if (dbc != null)
 			dbc.dispose();
-		dashboard = (Dashboard)((NXCSession)ConsoleSharedData.getSession()).findObjectById(dashboard.getObjectId(), Dashboard.class);
-		if (dashboard != null)
-		{
-         dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, null, this, selectionProvider, false);
-			parentComposite.layout();
-			setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
-		}
-		else
-		{
-			dbc = null;
-		}
+
+      dashboard = ConsoleSharedData.getSession().findObjectById(dashboard.getObjectId(), Dashboard.class);
+      if (dashboard == null)
+      {
+         dbc = null;
+         return;
+      }
+      setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
+
+      if ((scroller != null) && !dashboard.isScrollable())
+      {
+         scroller.dispose();
+         scroller = null;
+      }
+      else if ((scroller == null) && dashboard.isScrollable())
+      {
+         scroller = new ScrolledComposite(parentComposite, SWT.V_SCROLL);
+         scroller.setExpandHorizontal(true);
+         scroller.setExpandVertical(true);
+         scroller.getVerticalBar().setIncrement(20);
+         parentComposite.layout(true, true);
+      }
+
+      dbc = new DashboardControl(dashboard.isScrollable() ? scroller : parentComposite, SWT.NONE, dashboard, null, this, selectionProvider, false);
+      if (dashboard.isScrollable())
+      {
+         scroller.setContent(dbc);
+         scroller.addControlListener(new ControlAdapter() {
+            public void controlResized(ControlEvent e)
+            {
+               updateScroller();
+            }
+         });
+         updateScroller();
+      }
+      else
+      {
+         parentComposite.layout();
+      }
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+
+   /**
+    * Update scroll area
+    */
+   private void updateScroller()
+   {
+      dbc.layout(true, true);
+      Rectangle r = scroller.getClientArea();
+      Point s = dbc.computeSize(r.width, SWT.DEFAULT);
+      scroller.setMinSize(s);
+   }
+
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{
@@ -193,4 +231,16 @@ public class DashboardDynamicView extends ViewPart
 			selectionService.removeSelectionListener(selectionListener);
 		super.dispose();
 	}
+
+   /**
+    * @see org.netxms.ui.eclipse.dashboard.views.DashboardControlOwner#requestDashboardLayout()
+    */
+   @Override
+   public void requestDashboardLayout()
+   {
+      if (scroller != null)
+         updateScroller();
+      else
+         parentComposite.layout(true, true);
+   }
 }

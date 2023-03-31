@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,6 +79,7 @@ public class DashboardElements extends PropertyPage
 
 	private Dashboard object;
 	private LabeledSpinner columnCount;
+   private Button checkScrollable;
 	private SortableTableViewer viewer;
 	private Button addButton;
 	private Button editButton;
@@ -112,11 +113,12 @@ public class DashboardElements extends PropertyPage
       columnCount.setLabel(Messages.get().DashboardElements_NumColumns);
       columnCount.setRange(1, 128);
       columnCount.setSelection(object.getNumColumns());
-      GridData gd = new GridData();
-      gd.horizontalAlignment = SWT.LEFT;
-      gd.horizontalSpan = 2;
-      gd.verticalAlignment = SWT.BOTTOM;
-      columnCount.setLayoutData(gd);
+      columnCount.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+
+      checkScrollable = new Button(dialogArea, SWT.CHECK);
+      checkScrollable.setText("&Scrollable content");
+      checkScrollable.setSelection(object.isScrollable());
+      checkScrollable.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
 
       final String[] columnNames = { Messages.get().DashboardElements_Type, Messages.get().DashboardElements_Span, "Height", "Title" };
       final int[] columnWidths = { 150, 60, 90, 300 };
@@ -127,7 +129,7 @@ public class DashboardElements extends PropertyPage
       elements = copyElements(object.getElements());
       viewer.setInput(elements.toArray());
 
-      gd = new GridData();
+      GridData gd = new GridData();
       gd.verticalAlignment = GridData.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.horizontalAlignment = GridData.FILL;
@@ -276,6 +278,7 @@ public class DashboardElements extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setDashboardElements(elements);
 		md.setColumnCount(columnCount.getSelection());
+      md.setObjectFlags(checkScrollable.getSelection() ? Dashboard.SCROLLABLE : 0, Dashboard.SCROLLABLE);
 
 		if (isApply)
 			setValid(false);

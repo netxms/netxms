@@ -19,19 +19,28 @@
 package org.netxms.nxmc.modules.dashboards.views;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Base class for different dashboard views
  */
 public abstract class AbstractDashboardView extends ObjectView
 {
-   protected Composite viewArea;
-   protected DashboardControl dbc;
+   private Composite viewArea;
+   private ScrolledComposite scroller;
+   private DashboardControl dbc;
 
    /**
     * Create view.
@@ -72,5 +81,67 @@ public abstract class AbstractDashboardView extends ObjectView
    {
       setContext(Registry.getSession().findObjectById(getObjectId()));
       super.refresh();
-   }   
+   }
+
+   /**
+    * Request complete dashboard layout
+    */
+   public void requestDashboardLayout()
+   {
+      if (scroller != null)
+         updateScroller();
+      else
+         viewArea.layout(true, true);
+   }
+
+   /**
+    * Rebuild dashboard
+    */
+   protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)
+   {
+      if (dbc != null)
+         dbc.dispose();
+
+      if ((scroller != null) && !dashboard.isScrollable())
+      {
+         scroller.dispose();
+         scroller = null;
+      }
+      else if ((scroller == null) && dashboard.isScrollable())
+      {
+         scroller = new ScrolledComposite(viewArea, SWT.V_SCROLL);
+         scroller.setExpandHorizontal(true);
+         scroller.setExpandVertical(true);
+         WidgetHelper.setScrollBarIncrement(scroller, SWT.VERTICAL, 20);
+         viewArea.layout(true, true);
+      }
+
+      dbc = new DashboardControl(dashboard.isScrollable() ? scroller : viewArea, SWT.NONE, dashboard, dashboardContext, this, false);
+      if (dashboard.isScrollable())
+      {
+         scroller.setContent(dbc);
+         scroller.addControlListener(new ControlAdapter() {
+            public void controlResized(ControlEvent e)
+            {
+               updateScroller();
+            }
+         });
+         updateScroller();
+      }
+      else
+      {
+         viewArea.layout(true, true);
+      }
+   }
+
+   /**
+    * Update scroller
+    */
+   private void updateScroller()
+   {
+      dbc.layout(true, true);
+      Rectangle r = scroller.getClientArea();
+      Point s = dbc.computeSize(r.width, SWT.DEFAULT);
+      scroller.setMinSize(s);
+   }
 }

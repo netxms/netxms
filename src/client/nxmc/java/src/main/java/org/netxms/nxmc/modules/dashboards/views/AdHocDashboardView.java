@@ -18,14 +18,12 @@
  */
 package org.netxms.nxmc.modules.dashboards.views;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.netxms.nxmc.resources.ResourceManager;
 
 /**
@@ -89,7 +87,7 @@ public class AdHocDashboardView extends AbstractDashboardView
    protected void createContent(Composite parent)
    {
       super.createContent(parent);
-      rebuildDashboard();
+      rebuildDashboard(dashboard, dashboardContext);
    }
 
    /**
@@ -114,7 +112,7 @@ public class AdHocDashboardView extends AbstractDashboardView
                      {
                         dashboard = (Dashboard)n.getObject();
                         setName(dashboard.getObjectName());
-                        rebuildDashboard();
+                        rebuildDashboard(dashboard, dashboardContext);
                      }
                   });
                }
@@ -125,7 +123,7 @@ public class AdHocDashboardView extends AbstractDashboardView
                      public void run()
                      {
                         dashboardContext = (AbstractObject)n.getObject();
-                        rebuildDashboard();
+                        rebuildDashboard(dashboard, dashboardContext);
                      }
                   });
                }
@@ -134,17 +132,6 @@ public class AdHocDashboardView extends AbstractDashboardView
       };
 
       session.addListener(clientListener);
-   }
-
-   /**
-    * Rebuild dashboard
-    */
-   private void rebuildDashboard()
-   {
-      if (dbc != null)
-         dbc.dispose();
-      dbc = new DashboardControl(viewArea, SWT.NONE, dashboard, dashboardContext, this, false);
-      viewArea.layout(true, true);
    }
 
    /**

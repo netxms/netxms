@@ -253,6 +253,7 @@
  * Dashboard flags
  */
 #define DBF_SHOW_AS_OBJECT_VIEW        0x00010000
+#define DBF_SCROLLABLE                 0x00020000
 
 /**
  * Data Collection Target flags (lower bits of flags field)

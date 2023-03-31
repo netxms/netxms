@@ -163,7 +163,7 @@ public class AssetView extends ObjectView
       attributeSelectionMenu = new MenuManager(i18n.tr("&Add"));
       attributeSelectionMenu.setImageDescriptor(SharedIcons.ADD_OBJECT);
       attributeSelectionMenu.setRemoveAllWhenShown(true);
-      attributeSelectionMenu.addMenuListener(new IMenuListener() {         
+      attributeSelectionMenu.addMenuListener(new IMenuListener() {
          @Override
          public void menuAboutToShow(IMenuManager manager)
          {

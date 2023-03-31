@@ -18,11 +18,9 @@
  */
 package org.netxms.nxmc.modules.dashboards.views;
 
-import org.eclipse.swt.SWT;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.dashboards.widgets.DashboardControl;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
@@ -59,9 +57,6 @@ public class DashboardView extends AbstractDashboardView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      if (dbc != null)
-         dbc.dispose();
-      dbc = new DashboardControl(viewArea, SWT.NONE, (Dashboard)object, null, this, false);
-      viewArea.layout(true, true);
+      rebuildDashboard((Dashboard)object, null);
    }
 }

@@ -34,7 +34,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.HistoricalDataType;
@@ -43,9 +42,9 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
-import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -372,18 +371,6 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
 		job.start();
 	}
 
-   /**
-    * @see org.eclipse.swt.widgets.Composite#computeSize(int, int, boolean)
-    */
-	@Override
-	public Point computeSize(int wHint, int hHint, boolean changed)
-	{
-		Point size = super.computeSize(wHint, hHint, changed);
-		if ((hHint == SWT.DEFAULT) && (size.y < 210))
-			size.y = 210;
-		return size;
-	}
-	
 	/**
 	 * Get data cache for this chart. Must be called on UI thread.
 	 * 

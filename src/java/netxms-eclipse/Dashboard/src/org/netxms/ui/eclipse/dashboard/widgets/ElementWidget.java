@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,11 +106,11 @@ public class ElementWidget extends DashboardComposite implements ControlListener
             Point size = super.computeSize(wHint, hHint, changed);
             if (hHint == SWT.DEFAULT)
             {
-               int h = adjustContentHeight(this, size);
-               if (h > 0)
-                  size.y = h;
+               int mh = getPreferredHeight();
+               if (mh > size.y)
+                  size.y = mh;
             }
-            return (size != null) ? size : super.computeSize(wHint, hHint, changed);
+            return size;
          }
       };
       content.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -138,16 +138,13 @@ public class ElementWidget extends DashboardComposite implements ControlListener
    }
 
    /**
-    * Adjust content height. Called by framework after size for content area is computed so subclasses can implement more complex
-    * logic for preferred height calculation.
+    * Get preferred component height - used when component is not required to fill all available space.
     *
-    * @param content content area
-    * @param computedSize computed content area size
-    * @return adjusted content height or -1 to leave computed height
+    * @return preferred component height
     */
-   protected int adjustContentHeight(Composite content, Point computedSize)
+   protected int getPreferredHeight()
    {
-      return -1;
+      return 300;
    }
 
    /**
@@ -297,7 +294,7 @@ public class ElementWidget extends DashboardComposite implements ControlListener
 	 */
 	protected void requestDashboardLayout()
 	{
-	   dbc.layout(true, true);
+      dbc.requestDashboardLayout();
 	}
 
    /**

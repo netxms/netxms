@@ -22,8 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ChartConfiguration;
@@ -122,11 +120,10 @@ public class GaugeElement extends ComparisonChartElement
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.dashboard.widgets.ComparisonChartElement#adjustContentHeight(org.eclipse.swt.widgets.Composite,
-    *      org.eclipse.swt.graphics.Point)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.ElementWidget#getPreferredHeight()
     */
    @Override
-   protected int adjustContentHeight(Composite content, Point computedSize)
+   protected int getPreferredHeight()
    {
       if (elementConfig.getGaugeType() == GaugeConfig.BAR)
          return elementConfig.isVertical() ? 40 * elementConfig.getDciList().length : 40;
@@ -141,9 +138,11 @@ public class GaugeElement extends ComparisonChartElement
             heightCalculationFont = new Font(getDisplay(), elementConfig.getFontName(), fontSize, SWT.BOLD);
          }
          int h = WidgetHelper.getTextExtent(this, heightCalculationFont, "X").y + 10;
+         if (elementConfig.isShowLegend())
+            h += WidgetHelper.getTextExtent(this, "X").y;
          return elementConfig.isVertical() ? h * elementConfig.getDciList().length : h;
       }
 
-      return super.adjustContentHeight(content, computedSize);
+      return super.getPreferredHeight();
    }
 }
