@@ -23,6 +23,50 @@
 #include "nxdbmgr.h"
 
 /**
+ * Upgrade from 44.3 to 44.4
+ */
+static bool H_UpgradeFromV3()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold value reached for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>).\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   dciName - Parameter name\r\n")
+      _T("   dciDescription - Item description\r\n")
+      _T("   thresholdValue - Threshold value\r\n")
+      _T("   currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   dciId - Data collection item ID\r\n")
+      _T("   instance - Instance\r\n")
+      _T("   isRepeatedEvent - Repeat flag\r\n")
+      _T("   dciValue - Last collected DCI value\r\n")
+      _T("   operation - Threshold''s operation code\r\n")
+      _T("   function - Threshold''s function code\r\n")
+      _T("   pollCount - Threshold''s required poll count\r\n")
+      _T("   thresholdDefinition - Threshold''s textual definition'")
+      _T(" WHERE event_code=17")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when threshold check is rearmed for specific data collection item.\r\n")
+      _T("Parameters are accessible via %<...> and can have \"m\" or \"multipliers\" and \"u\" or \"units\" format modifiers for value formatting (for example %<{m,u}currentValue>)\r\n\r\n")
+      _T("Parameters:\r\n")
+      _T("   dciName - Parameter name\r\n")
+      _T("   dciDescription - Item description\r\n")
+      _T("   dciId - Data collection item ID\r\n")
+      _T("   instance - Instance\r\n")
+      _T("   thresholdValue - Threshold value\r\n")
+      _T("   currentValue - Actual value which is compared to threshold value\r\n")
+      _T("   dciValue - Last collected DCI value\r\n")
+      _T("   operation - Threshold''s operation code\r\n")
+      _T("   function - Threshold''s function code\r\n")
+      _T("   pollCount - Threshold''s required poll count\r\n")
+      _T("   thresholdDefinition - Threshold''s textual definition'")
+      _T( "WHERE event_code=18")));
+
+   CHK_EXEC(SetMinorSchemaVersion(4));
+   return true;
+}
+
+/**
  * Upgrade from 44.2 to 44.3
  */
 static bool H_UpgradeFromV2()
@@ -108,6 +152,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 3,  44, 4,  H_UpgradeFromV3  },
    { 2,  44, 3,  H_UpgradeFromV2  },
    { 1,  44, 2,  H_UpgradeFromV1  },
    { 0,  44, 1,  H_UpgradeFromV0  },

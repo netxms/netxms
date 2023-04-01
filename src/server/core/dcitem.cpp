@@ -26,8 +26,8 @@
 /**
  * Event parameter names
  */
-static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent"), _T("dciValue") };
-static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue"), _T("dciValue") };
+static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent"), _T("dciValue"), _T("operation"), _T("function"), _T("pollCount"), _T("thresholdDefinition") };
+static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue"), _T("dciValue"), _T("operation"), _T("function"), _T("pollCount"), _T("thresholdDefinition") };
 
 /**
  * Create DCItem from another DCItem
@@ -435,9 +435,10 @@ void DCItem::checkThresholds(ItemValue &value)
       {
          case ThresholdCheckResult::ACTIVATED:
             {
-               PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
+               PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisdsddds",
                      s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
-                     checkValue.getString(), m_id, m_instanceName.cstr(), 0, value.getString());
+                     checkValue.getString(), m_id, m_instanceName.cstr(), 0, value.getString(),
+                     t->getOperation(), t->getFunction(), t->getSampleCount(), t->getTextualDefinition().cstr());
 				   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 				   if (evt != nullptr)
 				   {
@@ -449,9 +450,10 @@ void DCItem::checkThresholds(ItemValue &value)
             NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::DEACTIVATED:
-            PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissssddds",
                   s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instanceName.cstr(),
-                  thresholdValue.getString(), checkValue.getString(), value.getString());
+                  thresholdValue.getString(), checkValue.getString(), value.getString(),
+                  t->getOperation(), t->getFunction(), t->getSampleCount(), t->getTextualDefinition().cstr());
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
                // this flag used to re-send activation event for next active threshold
@@ -466,9 +468,10 @@ void DCItem::checkThresholds(ItemValue &value)
 	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
 				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
 				   {
-                  PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
+                  PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisdsddds",
                         s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
-                        checkValue.getString(), m_id, m_instanceName.cstr(), 1, value.getString());
+                        checkValue.getString(), m_id, m_instanceName.cstr(), 1, value.getString(),
+                        t->getOperation(), t->getFunction(), t->getSampleCount(), t->getTextualDefinition().cstr());
                   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
 					   if (evt != nullptr)
 					   {
@@ -926,7 +929,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                value = value.getDouble() - m_prevRawValue.getDouble();
                break;
             case DCI_DT_STRING:
-               value = (INT32)((_tcscmp(value.getString(), m_prevRawValue.getString()) == 0) ? 0 : 1);
+               value = static_cast<int32_t>((_tcscmp(value.getString(), m_prevRawValue.getString()) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types
@@ -968,7 +971,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
                // I don't see any meaning in _T("average delta per second (minute)") for string
                // values, so result will be 0 if there are no difference between
                // current and previous values, and 1 otherwise
-               value = (INT32)((_tcscmp(value.getString(), m_prevRawValue.getString()) == 0) ? 0 : 1);
+               value = static_cast<int32_t>((_tcscmp(value.getString(), m_prevRawValue.getString()) == 0) ? 0 : 1);
                break;
             default:
                // Delta calculation is not supported for other types

@@ -195,6 +195,7 @@ public:
 	time_t getLastEventTimestamp() const { return m_lastEventTimestamp; }
 	int getCurrentSeverity() const { return m_currentSeverity; }
 	bool needValueExpansion() const { return m_expandValue; }
+	String getTextualDefinition() const;
 
 	void markLastEvent(int severity);
    void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }

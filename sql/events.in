@@ -263,14 +263,18 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Generated when threshold value reached for specific data collection item.' CONCAT CRLF CONCAT
 		'Parameters are accessible via %<...> and can have "m" or "multipliers" and "u" or "units" format modifiers for value formatting (for example %<{m,u}currentValue>).' CONCAT CRLF CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   dciName - Parameter name' CONCAT CRLF CONCAT \
-		'   dciDescription - Item description' CONCAT CRLF CONCAT \
-		'   thresholdValue - Threshold value' CONCAT CRLF CONCAT \
-		'   currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT \
-		'   dciId - Data collection item ID' CONCAT CRLF CONCAT \
-		'   instance - Instance' CONCAT CRLF CONCAT \
-		'   isRepeatedEvent - Repeat flag' CONCAT CRLF CONCAT \
-		'   dciValue - Last collected DCI value'
+		'   dciName - Parameter name' CONCAT CRLF CONCAT
+		'   dciDescription - Item description' CONCAT CRLF CONCAT
+		'   thresholdValue - Threshold value' CONCAT CRLF CONCAT
+		'   currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT
+		'   dciId - Data collection item ID' CONCAT CRLF CONCAT
+		'   instance - Instance' CONCAT CRLF CONCAT
+		'   isRepeatedEvent - Repeat flag' CONCAT CRLF CONCAT
+		'   dciValue - Last collected DCI value' CONCAT CRLF CONCAT
+		'   operation - Threshold''s operation code' CONCAT CRLF CONCAT
+		'   function - Threshold''s function code' CONCAT CRLF CONCAT
+		'   pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
+		'   thresholdDefinition - Threshold''s textual definition'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -286,7 +290,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'   instance - Instance' CONCAT CRLF CONCAT
 		'   thresholdValue - Threshold value' CONCAT CRLF CONCAT
 		'   currentValue - Actual value which is compared to threshold value' CONCAT CRLF CONCAT
-		'   dciValue - Last collected DCI value'
+		'   dciValue - Last collected DCI value' CONCAT CRLF CONCAT
+		'   operation - Threshold''s operation code' CONCAT CRLF CONCAT
+		'   function - Threshold''s function code' CONCAT CRLF CONCAT
+		'   pollCount - Threshold''s required poll count' CONCAT CRLF CONCAT
+		'   thresholdDefinition - Threshold''s textual definition'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

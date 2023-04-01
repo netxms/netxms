@@ -1002,3 +1002,23 @@ void Threshold::reconcile(const Threshold *src)
    m_lastScriptErrorReport = src->m_lastScriptErrorReport;
    m_lastCheckValue = src->m_lastCheckValue;
 }
+
+/**
+ * Get textual definition of this threshold
+ */
+String Threshold::getTextualDefinition() const
+{
+   static const TCHAR *functionNames[] = { _T("last("), _T("average("), _T("mean-deviation("), _T("diff("), _T("error("), _T("sum("), _T("script("), _T("abs-deviation(") };
+   static const TCHAR *operationNames[] = { _T("<"), _T("<="), _T("=="), _T(">="), _T(">"), _T("!="), _T("like"), _T("not like") };
+
+   StringBuffer text(functionNames[m_function]);
+   text.append(m_sampleCount);
+   text.append(_T(") "));
+   if ((m_function != F_SCRIPT) && (m_function != F_ERROR))
+   {
+      text.append(operationNames[m_operation]);
+      text.append(_T(' '));
+      text.append(m_value.getString());
+   }
+   return text;
+}
