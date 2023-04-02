@@ -204,7 +204,7 @@ bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
 
    FindConfigFile();
    if (IsStandalone())
-      _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
+      WriteToTerminalEx(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 
 	if (g_serverConfig.loadConfig(g_szConfigFile, _T("server")) && g_serverConfig.parseTemplate(_T("server"), m_cfgTemplate))
    {

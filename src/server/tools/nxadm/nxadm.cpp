@@ -24,6 +24,7 @@
 #include "nxadm.h"
 #include <nxcldefs.h>
 #include <netxms_getopt.h>
+#include <netxms-editline.h>
 #include <netxms-version.h>
 
 NETXMS_EXECUTABLE_HEADER(nxadm)
@@ -33,44 +34,44 @@ NETXMS_EXECUTABLE_HEADER(nxadm)
  */
 static void Help()
 {
-   _tprintf(_T("NetXMS Server Administration Tool  Version ") NETXMS_VERSION_STRING _T("\n")
-            _T("Copyright (c) 2004-2023 Raden Solutions\n\n")
-            _T("Usage: nxadm [-u <login>] [-P|-p <password>] -c <command>\n")
-            _T("       nxadm [-u <login>] [-P|-p <password>] -i\n")
-            _T("       nxadm [-u <login>] [-P|-p <password>] [-r] -s <script>\n")
-            _T("       nxadm -P\n")
-            _T("       nxadm -p <db password>\n")
-            _T("       nxadm -h\n")
-            _T("       nxadm -v\n\n")
-            _T("Options:\n")
-            _T("   -c <command>   Execute given command at server debug console and disconnect\n")
-            _T("   -i             Connect to server debug console in interactive mode\n")
-            _T("   -h             Display help and exit\n")
-            _T("   -p <password>  Provide database password for server startup or\n")
-            _T("                  user's password for console access\n")
-            _T("   -P             Provide database password for server startup or\n")
-            _T("                  user's password for console access (password read from terminal)\n")
-            _T("   -r             Use script's return value as exit code\n")
-            _T("   -s <script>    Execute given NXSL script and disconnect\n")
-            _T("   -u name        User name for authentication\n")
-            _T("   -v             Display version and exit\n\n"));
+   printf("NetXMS Server Administration Tool  Version " NETXMS_VERSION_STRING_A "\n"
+          "Copyright (c) 2004-2023 Raden Solutions\n\n"
+          "Usage: nxadm [-u <login>] [-P|-p <password>] -c <command>\n"
+          "       nxadm [-u <login>] [-P|-p <password>] -i\n"
+          "       nxadm [-u <login>] [-P|-p <password>] [-r] -s <script>\n"
+          "       nxadm -P\n"
+          "       nxadm -p <db password>\n"
+          "       nxadm -h\n"
+          "       nxadm -v\n\n"
+          "Options:\n"
+          "   -c <command>   Execute given command at server debug console and disconnect\n"
+          "   -i             Connect to server debug console in interactive mode\n"
+          "   -h             Display help and exit\n"
+          "   -p <password>  Provide database password for server startup or\n"
+          "                  user's password for console access\n"
+          "   -P             Provide database password for server startup or\n"
+          "                  user's password for console access (password read from terminal)\n"
+          "   -r             Use script's return value as exit code\n"
+          "   -s <script>    Execute given NXSL script and disconnect\n"
+          "   -u name        User name for authentication\n"
+          "   -v             Display version and exit\n\n");
 }
 
 /**
  * Get server error text
  */
-static const TCHAR *GetServerErrorText(uint32_t rcc)
+static const char *GetServerErrorText(uint32_t rcc)
 {
    switch(rcc)
    {
       case RCC_SUCCESS:
-         return _T("Success");
+         return "Success";
       case RCC_ACCESS_DENIED:
-         return _T("Access denied");
+         return "Access denied";
       case RCC_NOT_IMPLEMENTED:
-         return _T("Command not implemented");
+         return "Command not implemented";
    }
-   return _T("Internal error");
+   return "Internal error";
 }
 
 /**
@@ -88,13 +89,13 @@ static bool SendPassword(const TCHAR *password)
    {
       uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
       if (rcc != 0)
-         _tprintf(_T("ERROR: server error %u (%s)\n"), rcc, GetServerErrorText(rcc));
+         printf("ERROR: server error %u (%s)\n", rcc, GetServerErrorText(rcc));
       delete response;
       success = (rcc == 0);
    }
    else
    {
-      _tprintf(_T("ERROR: no response from server\n"));
+      printf("ERROR: no response from server\n");
    }
 
    return success;
@@ -113,7 +114,7 @@ static bool Login(const TCHAR *login, const TCHAR *password)
    NXCPMessage *response = RecvMsg();
    if (response == nullptr)
    {
-      _tprintf(_T("Authentication failed (no response from server)\n"));
+      printf("Authentication failed (no response from server)\n");
       return false;
    }
 
@@ -121,7 +122,7 @@ static bool Login(const TCHAR *login, const TCHAR *password)
    delete response;
    if (rcc != RCC_SUCCESS)
    {
-      _tprintf(_T("Authentication failed (server error %u: %s)\n"), rcc, GetServerErrorText(rcc));
+      printf("Authentication failed (server error %u: %s)\n", rcc, GetServerErrorText(rcc));
       return false;
    }
    return true;
@@ -149,7 +150,7 @@ static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *p
       NXCPMessage *response = RecvMsg();
       if (response == nullptr)
       {
-         _tprintf(_T("Connection closed\n"));
+         printf("Connection closed\n");
          connClosed = true;
          break;
       }
@@ -168,7 +169,7 @@ static bool ExecCommand(const TCHAR *command, const TCHAR *login, const TCHAR *p
       {
          uint32_t rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc != RCC_SUCCESS)
-            _tprintf(_T("Server error %u (%s)\n"), rcc, GetServerErrorText(rcc));
+            printf("Server error %u (%s)\n", rcc, GetServerErrorText(rcc));
          delete response;
          break;
       }
@@ -200,7 +201,7 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
       NXCPMessage *response = RecvMsg();
       if (response == nullptr)
       {
-         _tprintf(_T("Connection closed\n"));
+         printf("Connection closed\n");
          rcc = RCC_COMM_FAILURE;
          break;
       }
@@ -225,7 +226,7 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
          }
          else
          {
-            _tprintf(_T("Server error %u (%s)\n"), rcc, GetServerErrorText(rcc));
+            printf("Server error %u (%s)\n", rcc, GetServerErrorText(rcc));
          }
          delete response;
          break;
@@ -235,6 +236,19 @@ static int ExecScript(const TCHAR *script, const TCHAR *login, const TCHAR *pass
 
    return rcc;
 }
+
+#if HAVE_LIBEDIT
+
+/**
+ * Get command line prompt
+ */
+static wchar_t *Prompt(EditLine *el)
+{
+   static TCHAR prompt[] = _T("\1\x1b[33mnetxmsd:\x1b[0m\1 ");
+   return prompt;
+}
+
+#endif
 
 /**
  * Interactive mode loop
@@ -246,7 +260,7 @@ static void Shell(const TCHAR *login, const TCHAR *password)
    NXCPMessage *response = RecvMsg();
    if (response == nullptr)
    {
-      _tprintf(_T("Connection closed\n"));
+      printf("Connection closed\n");
       return;
    }
 
@@ -256,7 +270,7 @@ static void Shell(const TCHAR *login, const TCHAR *password)
    TCHAR loginBuffer[256], passwordBuffer[MAX_PASSWORD];
    if (authenticationRequired && (login == nullptr))
    {
-      _tprintf(_T("Server requires authentication. Please provide login and password.\n\nLogin: "));
+      printf("Server requires authentication. Please provide login and password.\n\nLogin: ");
       fflush(stdout);
 
       if (_fgetts(loginBuffer, 255, stdin) == nullptr)
@@ -268,7 +282,7 @@ static void Shell(const TCHAR *login, const TCHAR *password)
 
       if (!ReadPassword(_T("Password: "), passwordBuffer, MAX_PASSWORD))
       {
-         _tprintf(_T("Cannot read password from terminal\n"));
+         printf("Cannot read password from terminal\n");
          return;
       }
 
@@ -282,17 +296,41 @@ static void Shell(const TCHAR *login, const TCHAR *password)
          return;
    }
 
-   _tprintf(_T("\nNetXMS Server Remote Console V") NETXMS_VERSION_STRING _T(" Ready\n")
-            _T("Enter \"help\" for command list\n\n"));
+   printf("\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING_A " Ready\n"
+          "Enter \"help\" for command list\n\n");
 
-   while(1)
+#if HAVE_LIBEDIT
+   HistoryT *h = history_tinit();
+
+   HistEventT ev;
+   history_t(h, &ev, H_SETSIZE, 100);  // Remember 100 events
+   history_t(h, &ev, H_LOAD, ".nxadm_history");
+
+   EditLine *el = el_init("nxadm", stdin, stdout, stderr);
+   el_tset(el, EL_PROMPT_ESC, Prompt, '\1');
+   el_tset(el, EL_HIST, history_t, h);
+   el_tset(el, EL_SIGNAL, 1);
+   el_tset(el, EL_BIND, _T("^L"), _T("ed-clear-screen"), nullptr);
+   el_source(el, nullptr);
+#endif
+
+   TCHAR command[1024];
+   while(true)
    {
+#if HAVE_LIBEDIT
+      int numchars;
+      const TCHAR *line = el_tgets(el, &numchars);
+      if ((line == nullptr) || (numchars == 0))
+         break;
+
+      _tcslcpy(command, line, 1024);
+#else
       WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
       fflush(stdout);
 
-      TCHAR command[256];
-      if (_fgetts(command, 255, stdin) == nullptr)
+      if (_fgetts(command, 1023, stdin) == nullptr)
          break;   // Error reading stdin
+#endif
 
       TCHAR *nl = _tcschr(command, '\n');
       if (nl != nullptr)
@@ -300,16 +338,30 @@ static void Shell(const TCHAR *login, const TCHAR *password)
       Trim(command);
       if (command[0] != 0)
       {
+#if HAVE_LIBEDIT
+         history_t(h, &ev, H_ENTER, line);
+#endif
          if (ExecCommand(command, nullptr, nullptr))
             break;
       }
       else
       {
-         _tprintf(_T("\n"));
+#if !HAVE_LIBEDIT
+         WriteToTerminal(_T("\n"));
+#endif
       }
    }
+
+#if HAVE_LIBEDIT
+   el_end(el);
+   history_t(h, &ev, H_SAVE, ".nxadm_history");
+   history_tend(h);
+#endif
 }
 
+/**
+ * Work mode
+ */
 enum WorkMode
 {
    UNDEFINED,
@@ -361,7 +413,7 @@ int main(int argc, char *argv[])
                exitCode = 0;
                break;
             case 'i':
-               command = NULL;
+               command = nullptr;
                workMode = SHELL;
                break;
             case 'p':
@@ -393,7 +445,7 @@ int main(int argc, char *argv[])
 #endif
                break;
             case 'v':
-               _tprintf(_T("NetXMS Server Local Administration Tool Version ") NETXMS_VERSION_STRING _T("\n"));
+               printf("NetXMS Server Local Administration Tool Version " NETXMS_VERSION_STRING_A "\n");
                start = false;
                exitCode = 0;
                break;
@@ -417,7 +469,7 @@ int main(int argc, char *argv[])
             {
                if (!ReadPassword((workMode == DB_PASSWORD) ? _T("Database password: ") : _T("Password: "), passwordBuffer, MAX_PASSWORD))
                {
-                  _tprintf(_T("Cannot read password from terminal\n"));
+                  printf("Cannot read password from terminal\n");
                   exitCode = 4;
                   goto stop;
                }

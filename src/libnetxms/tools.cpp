@@ -2933,17 +2933,10 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 #endif
 
 #if defined(UNICODE) && !defined(_WIN32) && HAVE_FPUTWS
-#define WRT_UNICODE  1
-#define WRT_TCHAR    WCHAR
-#define _wrt_tcschr  wcschr
-#define _wrt_tcslen  wcslen
-#else
-#define WRT_TCHAR    char
-#define _wrt_tcschr  strchr
-#define _wrt_tcslen  strlen
-#endif
 
-#if WRT_UNICODE
+/**
+ * Write part of wide character string to output stream
+ */
 static void fputwsl(const WCHAR *text, const WCHAR *stop, FILE *out)
 {
    const WCHAR *p = text;
@@ -2953,28 +2946,23 @@ static void fputwsl(const WCHAR *text, const WCHAR *stop, FILE *out)
       p++;
    }
 }
-#endif
 
 /**
  * Write text with escape sequences to file
  */
-static void WriteRedirectedTerminalOutput(const WRT_TCHAR *text)
+static void WriteRedirectedTerminalOutputW(const WCHAR *text)
 {
-   const WRT_TCHAR *curr = text;
+   const WCHAR *curr = text;
    while(*curr != 0)
    {
-      const WRT_TCHAR *esc = _wrt_tcschr(curr, 27);	// Find ESC
-      if (esc != NULL)
+      const WCHAR *esc = wcschr(curr, 27);	// Find ESC
+      if (esc != nullptr)
       {
          esc++;
          if (*esc == '[')
          {
             // write everything up to ESC char
-#if WRT_UNICODE
             fputwsl(curr, esc - 1, stdout);
-#else
-            fwrite(curr, sizeof(WRT_TCHAR), esc - curr - 1, stdout);
-#endif
             esc++;
             while((*esc != 0) && (*esc != _T('m')))
                esc++;
@@ -2984,25 +2972,60 @@ static void WriteRedirectedTerminalOutput(const WRT_TCHAR *text)
          }
          else
          {
-#if WRT_UNICODE
             fputwsl(curr, esc, stdout);
-#else
-            fwrite(curr, sizeof(WRT_TCHAR), esc - curr, stdout);
-#endif
          }
          curr = esc;
       }
       else
       {
-#if WRT_UNICODE
          fputws(curr, stdout);
-#else
-         fputs(curr, stdout);
-#endif
          break;
       }
    }
 }
+
+#endif
+
+#if !defined(UNICODE) || !HAVE_FPUTWS || HAVE_FWIDE
+
+/**
+ * Write text with escape sequences to file
+ */
+static void WriteRedirectedTerminalOutputA(const char *text)
+{
+   const char *curr = text;
+   while(*curr != 0)
+   {
+      const char *esc = strchr(curr, 27);   // Find ESC
+      if (esc != nullptr)
+      {
+         esc++;
+         if (*esc == '[')
+         {
+            // write everything up to ESC char
+            fwrite(curr, 1, esc - curr - 1, stdout);
+            esc++;
+            while((*esc != 0) && (*esc != 'm'))
+               esc++;
+            if (*esc == 0)
+               break;
+            esc++;
+         }
+         else
+         {
+            fwrite(curr, 1, esc - curr, stdout);
+         }
+         curr = esc;
+      }
+      else
+      {
+         fputs(curr, stdout);
+         break;
+      }
+   }
+}
+
+#endif
 
 /**
  * Write to terminal with support for ANSI color codes
@@ -3088,22 +3111,44 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #ifdef UNICODE
 #if HAVE_FPUTWS
    if (isatty(fileno(stdout)))
+   {
+#if HAVE_FWIDE
+      if (fwide(stdout, 0) < 0)
+      {
+         char *mbtext = MBStringFromWideStringSysLocale(text);
+         fputs(mbtext, stdout);
+         MemFree(mbtext);
+      }
+      else
+#endif
 	   fputws(text, stdout);
+   }
    else
-      WriteRedirectedTerminalOutput(text);
+   {
+#if HAVE_FWIDE
+      if (fwide(stdout, 0) < 0)
+      {
+         char *mbtext = MBStringFromWideStringSysLocale(text);
+         WriteRedirectedTerminalOutputA(mbtext);
+         MemFree(mbtext);
+      }
+      else
+#endif
+      WriteRedirectedTerminalOutputW(text);
+   }
 #else
 	char *mbtext = MBStringFromWideStringSysLocale(text);
    if (isatty(fileno(stdout)))
       fputs(mbtext, stdout);
    else
-      WriteRedirectedTerminalOutput(mbtext);
+      WriteRedirectedTerminalOutputA(mbtext);
    MemFree(mbtext);
 #endif
 #else
    if (isatty(fileno(stdout)))
       fputs(text, stdout);
    else
-      WriteRedirectedTerminalOutput(text);
+      WriteRedirectedTerminalOutputA(text);
 #endif
 #endif
 }
@@ -3780,7 +3825,7 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
 {
    if (prompt != nullptr)
    {
-      _tprintf(_T("%s"), prompt);
+      WriteToTerminal(prompt);
       fflush(stdout);
    }
 
@@ -3806,7 +3851,7 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
    if (_fgetts(buffer, (int)bufferSize, stdin) != nullptr)
    {
       TCHAR *nl = _tcschr(buffer, _T('\n'));
-      if (nl != NULL)
+      if (nl != nullptr)
          *nl = 0;
    }
 
@@ -3819,7 +3864,7 @@ bool LIBNETXMS_EXPORTABLE ReadPassword(const TCHAR *prompt, TCHAR *buffer, size_
    tcsetattr(fileno(stdin), TCSAFLUSH, &ts);
 #endif
 
-   _tprintf(_T("\n"));
+   WriteToTerminal(_T("\n"));
    return true;
 }
 

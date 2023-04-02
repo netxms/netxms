@@ -261,7 +261,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 			   s_debugLevel = strtoul(optarg, &eptr, 0);
 				if ((*eptr != 0) || (s_debugLevel > 9))
 				{
-					_tprintf(_T("Invalid debug level \"%hs\" - should be in range 0..9\n"), optarg);
+					WriteToTerminalEx(_T("Invalid debug level \"%hs\" - should be in range 0..9\n"), optarg);
 					s_debugLevel = 0;
 				}
 				break;
@@ -416,6 +416,11 @@ int main(int argc, char* argv[])
 {
    InitNetXMSProcess(false);
 
+#if defined(UNICODE) && HAVE_LIBEDIT && HAVE_FWIDE
+   // Try to switch stdout to byte oriented mode
+   fwide(stdout, -1);
+#endif
+
    // Check for alternate config file location
 #ifdef _WIN32
    HKEY hKey;
@@ -442,12 +447,12 @@ int main(int argc, char* argv[])
    if (s_generateConfig)
    {
       FindConfigFile();
-      _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
+      WriteToTerminalEx(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 
       FILE *fp = _tfopen(g_szConfigFile, _T("w"));
       if (fp == nullptr)
       {
-         _tprintf(_T("Cannot create file \"%s\" (%s)"), g_szConfigFile, _tcserror(errno));
+         WriteToTerminalEx(_T("Cannot create file \"%s\" (%s)"), g_szConfigFile, _tcserror(errno));
          return 1;
       }
 
@@ -470,7 +475,7 @@ int main(int argc, char* argv[])
    if (!LoadConfig(&s_debugLevel))
    {
       if (IsStandalone())
-         _tprintf(_T("Error loading configuration file\n"));
+         WriteToTerminal(_T("Error loading configuration file\n"));
       return 1;
    }
    delete s_configEntries;
@@ -556,7 +561,7 @@ int main(int argc, char* argv[])
       else
       {
          if (IsStandalone())
-            _tprintf(_T("ERROR: Failed to execute command \"%hs\"\n"), command);
+            WriteToTerminalEx(_T("ERROR: Failed to execute command \"%hs\"\n"), command);
       }
    }
 

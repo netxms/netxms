@@ -33,6 +33,7 @@
 #include <nxcore_ps.h>
 #include <nxcore_websvc.h>
 #include <nxnet.h>
+#include <netxms-editline.h>
 
 #ifdef _WIN32
 #include <errno.h>
@@ -1582,6 +1583,19 @@ stop_handler:
 
 #endif
 
+#if HAVE_LIBEDIT
+
+/**
+ * Get command line prompt
+ */
+static wchar_t *Prompt(EditLine *el)
+{
+   static TCHAR prompt[] = _T("\1\x1b[33mnetxmsd:\x1b[0m\1 ");
+   return prompt;
+}
+
+#endif
+
 /**
  * Common main()
  */
@@ -1593,50 +1607,68 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
    {
       if (!(g_flags & AF_DEBUG_CONSOLE_DISABLED))
 	   {
-		   char *ptr, szCommand[256];
-		   LocalTerminalConsole ctx;
-#ifdef UNICODE
-   		WCHAR wcCommand[256];
+#if HAVE_LIBEDIT
+         HistoryT *h = history_tinit();
+
+         HistEventT ev;
+         history_t(h, &ev, H_SETSIZE, 100);  // Remember 100 events
+         history_t(h, &ev, H_LOAD, ".netxmsd_history");
+
+         EditLine *el = el_init("netxmsd", stdin, stdout, stderr);
+         el_tset(el, EL_PROMPT_ESC, Prompt, '\1');
+         el_tset(el, EL_HIST, history_t, h);
+         el_tset(el, EL_BIND, _T("^L"), _T("ed-clear-screen"), nullptr);
+         el_source(el, nullptr);
 #endif
 
 		   WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_BUILD_TAG IS_UNICODE_BUILD_STRING _T(" Ready\n")
 				             _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
 				             _T("System Console\n\n"));
 
-		   while(1)
+         TCHAR command[256];
+         LocalTerminalConsole ctx;
+		   while(true)
 		   {
+#if HAVE_LIBEDIT
+            int numchars;
+            const TCHAR *line = el_tgets(el, &numchars);
+            if ((line == nullptr) || (numchars == 0))
+               break;
+
+            _tcslcpy(command, line, 256);
+#else
 			   WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
 			   fflush(stdout);
-			   if (fgets(szCommand, 255, stdin) == nullptr)
+			   if (_fgetts(command, 255, stdin) == nullptr)
 				   break;   // Error reading stdin
-			   ptr = strchr(szCommand, '\n');
+#endif
+
+			   TCHAR *ptr = _tcschr(command, _T('\n'));
 			   if (ptr != nullptr)
 				   *ptr = 0;
-			   ptr = szCommand;
+			   Trim(command);
 
-			   if (ptr != nullptr)
+			   if (command[0] != 0)
 			   {
-#ifdef UNICODE
-			      MultiByteToWideCharSysLocale(ptr, wcCommand, 255);
-				   wcCommand[255] = 0;
-				   TrimW(wcCommand);
-				   if (wcCommand[0] != 0)
-				   {
-					   if (ProcessConsoleCommand(wcCommand, &ctx) == CMD_EXIT_SHUTDOWN)
-#else
-				   TrimA(ptr);
-				   if (*ptr != 0)
-				   {
-					   if (ProcessConsoleCommand(ptr, &ctx) == CMD_EXIT_SHUTDOWN)
+#if HAVE_LIBEDIT
+			      history_t(h, &ev, H_ENTER, line);
 #endif
-						   break;
-				   }
+               if (ProcessConsoleCommand(command, &ctx) == CMD_EXIT_SHUTDOWN)
+                  break;
 			   }
 			   else
 			   {
-				   _tprintf(_T("\n"));
+#if !HAVE_LIBEDIT
+			      WriteToTerminal(_T("\n"));
+#endif
 			   }
 		   }
+
+#if HAVE_LIBEDIT
+         el_end(el);
+         history_t(h, &ev, H_SAVE, ".netxmsd_history");
+         history_tend(h);
+#endif
 
    		if (!(g_flags & AF_SHUTDOWN))
    		{
@@ -1657,7 +1689,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
          _tprintf(_T("Server shutting down...\n"));
          Shutdown();
 #else
-         _tprintf(_T("Server running. Press Ctrl+C to shutdown.\n"));
+         WriteToTerminal(_T("Server running. Press Ctrl+C to shutdown.\n"));
          // Shutdown will be called from signal handler
          SleepAndCheckForShutdown(INFINITE);
 #endif

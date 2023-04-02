@@ -2348,7 +2348,15 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$BUILD_SERVER" = "xyes" ; then
-   AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
+	AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
+
+	AC_CHECK_HEADER(histedit.h,HAVE_LIBEDIT=yes,HAVE_LIBEDIT=no)
+	if test "x$HAVE_LIBEDIT" = "xyes"; then
+		AC_CHECK_LIB(edit, history_winit, [
+			SERVER_LIBS="$SERVER_LIBS -ledit"
+	   		AC_DEFINE(HAVE_LIBEDIT, 1, Define to 1 if libedit is available)
+		], [ HAVE_LIBEDIT=no ])
+	fi
 fi
 
 check_substr "$COMPONENTS" "sqlite"
@@ -3245,7 +3253,7 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #endif
 ])
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper towlower])
-AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
+AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws fwide])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
@@ -4912,6 +4920,11 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 		echo "MicroHTTPD support      : YES"
 	else
 		echo "MicroHTTPD support      : NO"
+	fi
+	if test "x${HAVE_LIBEDIT}" = "xyes"; then
+		echo "Editline support        : YES"
+	else
+		echo "Editline support        : NO"
 	fi
 else
 	echo "Build Server            : NO"
