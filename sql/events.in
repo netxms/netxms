@@ -1584,11 +1584,11 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Automatic update of asset management attribute "%<name>" with value "%<newValue>" failed (%<reason>)',
       'Generated when automatic update of asset management attribute fails.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   name - attribute\'s name' CONCAT CRLF CONCAT
-      '   displayName - attribute\'s display name' CONCAT CRLF CONCAT
-      '   dataType - attribute\'s data type' CONCAT CRLF CONCAT
-      '   currValue - current attribute\'s value' CONCAT CRLF CONCAT
-      '   newValue - new attribute\'s value' CONCAT CRLF CONCAT
+      '   name - attribute''s name' CONCAT CRLF CONCAT
+      '   displayName - attribute''s display name' CONCAT CRLF CONCAT
+      '   dataType - attribute''s data type' CONCAT CRLF CONCAT
+      '   currValue - current attribute''s value' CONCAT CRLF CONCAT
+      '   newValue - new attribute''s value' CONCAT CRLF CONCAT
       '   reason - failure reason'
 	);
 
