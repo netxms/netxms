@@ -2932,7 +2932,7 @@ static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 
 #endif
 
-#if defined(UNICODE) && !defined(_WIN32) && HAVE_FPUTWS
+#if defined(UNICODE) && (defined(_WIN32) || HAVE_FPUTWS)
 
 /**
  * Write part of wide character string to output stream
@@ -2986,7 +2986,7 @@ static void WriteRedirectedTerminalOutputW(const WCHAR *text)
 
 #endif
 
-#if !defined(UNICODE) || !HAVE_FPUTWS || HAVE_FWIDE
+#if !defined(UNICODE) || (!HAVE_FPUTWS && !defined(_WIN32)) || HAVE_FWIDE
 
 /**
  * Write text with escape sequences to file
@@ -3040,9 +3040,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
    {
       // Assume output is redirected
 #ifdef UNICODE
-      char *mbText = MBStringFromWideString(text);
-      WriteRedirectedTerminalOutput(mbText);
-      MemFree(mbText);
+      WriteRedirectedTerminalOutputW(text);
 #else
       WriteRedirectedTerminalOutput(text);
 #endif
