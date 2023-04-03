@@ -715,7 +715,7 @@ retry:
             deleteContent();
             long responseCode;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-            if (data.size() > 0 && responseCode == 200)
+            if (data.size() > 0 && (responseCode >= 200 && responseCode <= 299))
             {
                data.write('\0');
 
@@ -813,7 +813,7 @@ retry:
             }
             else
             {
-               if (responseCode != 200)
+               if (responseCode < 200 || responseCode > 299)
                   nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): HTTP response %03d"), url, static_cast<uint32_t>(responseCode));
                else if (data.size() == 0)
                   nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): empty response"), url);
