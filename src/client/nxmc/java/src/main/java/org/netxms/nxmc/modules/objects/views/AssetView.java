@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.asset.AssetManagementAttribute;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.interfaces.Asset;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
@@ -171,7 +172,7 @@ public class AssetView extends ObjectView
             {
                if (!attributes.containsKey(definition.getName()))
                {
-                  attributeSelectionMenu.add(new Action(definition.getDisplayName().isBlank() ? definition.getName() : definition.getDisplayName()) {
+                  attributeSelectionMenu.add(new Action(definition.getActualName()) {
                      @Override
                      public void run()
                      {
@@ -331,6 +332,9 @@ public class AssetView extends ObjectView
    @Override
    protected void onObjectUpdate(AbstractObject object)
    {
+      System.out.println("On object update");
+      super.onObjectUpdate(object);
+      System.out.println("On object update: " + ((Asset)getObject()).getAssetInformation().get("name"));
       refresh();
    }
 
@@ -394,7 +398,7 @@ public class AssetView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof Asset));
+      return (context != null) && ((context instanceof Asset) && !(context instanceof Cluster));
    }
 
    /**
@@ -412,6 +416,7 @@ public class AssetView extends ObjectView
    @Override
    protected void onObjectChange(AbstractObject object)
    {
+      super.onObjectChange(object);
       refresh();
    }   
 }

@@ -20,7 +20,6 @@ package org.netxms.client.asset;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.constants.AMDataType;
@@ -76,12 +75,7 @@ public class AssetManagementAttribute
       rangeMin = response.getFieldAsInt32(fieldId++);
       rangeMax = response.getFieldAsInt32(fieldId++);
       systemType = AMSystemType.getByValue(response.getFieldAsInt32(fieldId++));
-      int enumMappingCount = response.getFieldAsInt32(fieldId++);
-      enumMapping = new HashMap<String, String>();   
-      for (int i = 0; i < enumMappingCount; i++)
-      {
-         enumMapping.put(response.getFieldAsString(fieldId++), response.getFieldAsString(fieldId++));
-      }
+      enumMapping = response.getStringMapFromFields(fieldId + 1, fieldId);
    }
 
    /**
@@ -100,13 +94,7 @@ public class AssetManagementAttribute
       msg.setFieldInt32(NXCPCodes.VID_RANGE_MIN, rangeMin);
       msg.setFieldInt32(NXCPCodes.VID_RANGE_MAX, rangeMax);
       msg.setFieldInt32(NXCPCodes.VID_SYSTEM_TYPE, systemType.getValue());
-      msg.setFieldInt32(NXCPCodes.VID_ENUM_COUNT, enumMapping.size());
-      long baseId = NXCPCodes.VID_AM_ENUM_MAP_BASE;
-      for (Entry<String, String> entry : enumMapping.entrySet())
-      {
-         msg.setField(baseId++, entry.getKey());
-         msg.setField(baseId++, entry.getValue());         
-      }
+      msg.setFieldsFromStringMap(enumMapping, NXCPCodes.VID_AM_ENUM_MAP_BASE, NXCPCodes.VID_ENUM_COUNT);
    }
 
    /**
@@ -131,6 +119,14 @@ public class AssetManagementAttribute
    public String getDisplayName()
    {
       return displayName;
+   }
+
+   /**
+    * @return the displayName
+    */
+   public String getActualName()
+   {
+      return displayName.isBlank() ? name : displayName;
    }
 
    /**

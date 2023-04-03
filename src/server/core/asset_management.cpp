@@ -25,6 +25,8 @@
 #define DEBUG_TAG _T("am")
 #define AUDIT_AM_ATTRIBUTE _T("ASSERT_MANAGEMENT")
 
+String GetAssetAttributeDisplayName(const TCHAR *name);
+
 /**
  * Asset management attribute data types
  */
@@ -90,14 +92,17 @@ public:
    json_t *toJson();
 
    const TCHAR *getName() const { return m_name; }
+   const TCHAR *getActualDisplayName() const;
    AMDataType getDataType() const { return m_dataType; }
    bool isMandatory() const { return m_isMandatory; }
    bool isUnique() const { return m_isUnique; }
-   int32_t getMinRange() { return m_rangeMin; }
-   int32_t getMaxRange() { return m_rangeMax; }
+   int32_t getMinRange() const { return m_rangeMin; }
+   int32_t getMaxRange() const { return m_rangeMax; }
+   NXSL_Program *getScript() const { return m_autofillScript; }
 
    bool isValidEnumValue(const TCHAR *value) const { return m_enumValues.contains(value); }
-   bool isRangeSet() const { return m_rangeMin != 0 && m_rangeMax != 0; }
+   bool isRangeSet() const { return (m_rangeMin != 0) || (m_rangeMax != 0); }
+   bool hasScript() const { return m_autofillScript != nullptr; }
 };
 
 /**
@@ -159,6 +164,12 @@ AssetManagementAttribute *AssetManagementAttribute::create(const NXCPMessage &ms
    return a;
 }
 
+
+const TCHAR *AssetManagementAttribute::getActualDisplayName() const
+{
+   return ((m_displayName != nullptr) && (*m_displayName != 0)) ? m_displayName : m_name;
+}
+
 /**
  * Add enum value to description mapping
  */
@@ -167,7 +178,7 @@ void AssetManagementAttribute::addEnumMapping(DB_RESULT result)
    int rowCount = DBGetNumRows(result);
    for (int i = 0; i < rowCount; i++)
    {
-      m_enumValues.setPreallocated(DBGetField(result, i, 1, nullptr, 0), DBGetField(result, i, 2, nullptr, 0));
+      m_enumValues.setPreallocated(DBGetField(result, i, 0, nullptr, 0), DBGetField(result, i, 1, nullptr, 0));
    }
 }
 
@@ -355,6 +366,7 @@ json_t *AssetManagementAttribute::toJson()
    json_object_set_new(root, "rangeMin", json_integer(m_rangeMin));
    json_object_set_new(root, "rangeMax", json_integer(m_rangeMax));
    json_object_set_new(root, "systemType", json_integer(static_cast<uint32_t>(m_systemType)));
+   json_object_set_new(root, "enumMap", m_enumValues.toJson());
    return root;
 }
 
@@ -403,9 +415,11 @@ std::pair<uint32_t, String> Asset::setAssetData(const TCHAR *name, const TCHAR *
    if (result.first == RCC_SUCCESS)
    {
       internalLock();
+      bool changed = m_instances.get(name) != nullptr ? _tcscmp(m_instances.get(name), value) : true;
       m_instances.set(name, value);
       internalUnlock();
-      m_this->setModified(MODIFY_AM_INSTANCES, true);
+      if (changed)
+         m_this->setModified(MODIFY_AM_INSTANCES);
    }
    return result;
 }
@@ -427,9 +441,11 @@ uint32_t Asset::deleteAssetData(const TCHAR *name)
    if (canBeDeleted)
    {
       internalLock();
+      bool changed = m_instances.contains(name);
       m_instances.remove(name);
       internalUnlock();
-      m_this->setModified(MODIFY_AM_INSTANCES, true);
+      if (changed)
+         m_this->setModified(MODIFY_AM_INSTANCES);
    }
    else
    {
@@ -512,8 +528,11 @@ bool Asset::deleteFromDatabase(DB_HANDLE db)
 void Asset::deleteItemImMemory(const TCHAR *name)
 {
    internalLock();
+   bool changed = m_instances.contains(name);
    m_instances.remove(name);
    internalUnlock();
+   if (changed)
+      m_this->setModified(MODIFY_RUNTIME);
 }
 
 void Asset::assetToJson(json_t *root)
@@ -572,7 +591,7 @@ std::pair<uint32_t, String> Asset::validateInput(const TCHAR *name, const TCHAR 
       case AMDataType::Integer:
       {
          TCHAR *error;
-         uint32_t number = _tcstol(value, &error, 0);
+         int32_t number = _tcstol(value, &error, 0);
          if (*error != 0)
          {
             resultText = _T("Not an integer");
@@ -742,6 +761,95 @@ NXSL_Value *Asset::getValueForNXSL(NXSL_VM *vm, const TCHAR *name) const
    }
    internalUnlock();
    return nxslValue;
+}
+
+struct AssetAttributeCopy
+{
+   TCHAR *name;
+   AMDataType dataType;
+   NXSL_VM *vm;
+
+   AssetAttributeCopy(const TCHAR* name, AMDataType dataType, NXSL_VM *vm)
+   {
+      this->name = MemCopyString(name);
+      this->dataType = dataType;
+      this->vm = vm;
+   }
+
+   ~AssetAttributeCopy()
+   {
+      MemFree(name);
+      delete vm;
+   }
+
+};
+
+/**
+ * Fill asset data form auto fill script
+ */
+void Asset::autoFillAssetData()
+{
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Asset::autoFillAssetData(%s [%u]): start asset auto fill"), m_this->getName(), m_this->getId());
+   s_schemaLock.readLock();
+   ObjectArray<AssetAttributeCopy> autoFillScripts(0, 16, Ownership::True);
+   for (KeyValuePair<AssetManagementAttribute> *a : s_schema)
+   {
+      if (a->value->hasScript())
+      {
+         NXSL_Program *script = a->value->getScript();
+         NXSL_VM *vm = CreateServerScriptVM(script, m_this->self());
+         if (vm != nullptr)
+         {
+            autoFillScripts.add(new AssetAttributeCopy(a->key, a->value->getDataType(), vm));
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Asset::autoFillAssetData(%s [%u]): Script load failed"), m_this->getName(), m_this->getId());
+            ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, m_this, 0, _T("Script load failed"),  _T("Asset::%s::autoFill"), a->key);
+         }
+      }
+   }
+   s_schemaLock.unlock();
+
+   internalLock();
+   StringMap intanceCopy(m_instances);
+   internalUnlock();
+
+   for (AssetAttributeCopy *item : autoFillScripts)
+   {
+      NXSL_VM *vm = item->vm;
+      NXSL_Value *parameters[2];
+      parameters[0] = vm->createValue(intanceCopy.get(item->name));
+      if (vm->run(1, parameters))
+      {
+         const TCHAR *newValue = vm->getResult()->getValueAsCString();
+         std::pair<uint32_t, String> result = setAssetData(item->name, newValue);
+         if (result.first != RCC_SUCCESS && result.first != RCC_UNKNOWN_ATTRIBUTE)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Asset::autoFillAssetData(%s [%u]): automatic update of asset management attribute \"%s\" with value \"%s\" failed (%s)"),
+                  m_this->getName(), m_this->getId(), item->name, newValue,  static_cast<const TCHAR *>(result.second));
+            static const TCHAR *parameterNames[] = { _T("name"), _T("displayName"), _T("dataType"), _T("currValue"), _T("newValue"), _T("reason") };
+            String displayName = GetAssetAttributeDisplayName(item->name);
+            PostSystemEventWithNames(EVENT_ASSET_AUTO_UPDATE_FAILED, m_this->getId(), "ssisss", parameterNames, item->name,
+                  static_cast<const TCHAR *>(displayName), item->dataType, intanceCopy.get(item->name), newValue, static_cast<const TCHAR *>(result.second));
+         }
+      }
+      else
+      {
+         if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Asset::autoFillAssetData(%s [%u]): automatic update of asset management attribute \"%s\" aborted"),
+                  m_this->getName(), m_this->getId(), item->name);
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Asset::autoFillAssetData(%s [%u]): automatic update of asset management attribute \"%s\" failed (%s)"),
+                  m_this->getName(), m_this->getId(), item->name, vm->getErrorText());
+            ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, m_this, 0, vm->getErrorText(), _T("Asset::%s::autoFill"), item->name);
+         }
+      }
+   }
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("Asset::autoFillAssetData(%s [%u]): finish"), m_this->getName(), m_this->getId());
 }
 
 /***************************************************
@@ -914,4 +1022,22 @@ uint32_t AMDeleteAttribute(const NXCPMessage &msg, const ClientSession &session)
    }
    s_schemaLock.unlock();
    return result;
+}
+
+String GetAssetAttributeDisplayName(const TCHAR *name)
+{
+   const TCHAR *displayName;
+   s_schemaLock.writeLock();
+   AssetManagementAttribute *attribute = s_schema.get(name);
+   if (attribute != nullptr)
+   {
+      displayName = attribute->getActualDisplayName();
+   }
+   else
+   {
+      displayName = name;
+   }
+   String reuslt(displayName);
+   s_schemaLock.unlock();
+   return reuslt;
 }

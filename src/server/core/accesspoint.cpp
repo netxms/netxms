@@ -566,6 +566,8 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
 
    sendPollerMsg(_T("Finished configuration poll of access point %s\r\n"), m_name);
 
+   autoFillAssetData();
+
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;
    m_runtimeFlags |= ODF_CONFIGURATION_POLL_PASSED;

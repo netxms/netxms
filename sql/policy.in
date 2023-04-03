@@ -204,6 +204,10 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
     VALUES (48,'75640293-d630-4bfc-9b5e-9655cf59fd00',7944,'Terminate notification channel down alarm when notification channel is back up',
         '%m',6,'NOTIFICATION_CHANNEL_DOWN_%1','',0,EVENT_ALARM_TIMEOUT);
 
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event)
+    VALUES (49,'1499d2d3-2304-4bb1-823b-0c530cbb6224',7944,'Generate alarm when automatic update of asset management attribute fails',
+        '%m',5,'ASSET_UPDATE_FAILED_%i_%<name>','',0,EVENT_ALARM_TIMEOUT);
+
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_SERVICE_DOWN);

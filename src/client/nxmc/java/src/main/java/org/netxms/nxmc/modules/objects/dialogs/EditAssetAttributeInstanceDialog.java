@@ -94,7 +94,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
-      String attributeDisplayName = attribute.getDisplayName().isBlank() ? attribute.getName() : attribute.getDisplayName();
+      String attributeDisplayName = attribute.getActualName();
 
       switch (attribute.getDataType())
       {

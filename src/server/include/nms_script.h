@@ -229,12 +229,12 @@ public:
 };
 
 /**
- * NXSL "AssetData" class
+ * NXSL "Asset" class
  */
-class NXSL_AssetData : public NXSL_Class
+class NXSL_Asset : public NXSL_Class
 {
 public:
-   NXSL_AssetData();
+   NXSL_Asset();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const NXSL_Identifier& attr) override;
    virtual void onObjectDelete(NXSL_Object *object) override;
@@ -526,7 +526,7 @@ bool ParseValueList(NXSL_VM *vm, TCHAR **start, ObjectRefArray<NXSL_Value> &args
 extern NXSL_AccessPointClass g_nxslAccessPointClass;
 extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
-extern NXSL_AssetData g_nxslAssetData;
+extern NXSL_Asset g_nxslAsset;
 extern NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
 extern NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 extern NXSL_ChassisClass g_nxslChassisClass;

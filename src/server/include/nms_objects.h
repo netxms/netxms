@@ -1727,6 +1727,7 @@ public:
    uint32_t deleteAssetData(const TCHAR *name);
    void assetDataToMessage(NXCPMessage* msg) const;
    NXSL_Value *getValueForNXSL(NXSL_VM *vm, const TCHAR *name) const;
+   void autoFillAssetData();
 
    bool loadFromDatabase(DB_HANDLE db, uint32_t objectId);
    bool saveToDatabase(DB_HANDLE db);
@@ -2762,6 +2763,7 @@ public:
    bool isResourceOnNode(uint32_t resourceId, uint32_t nodeId);
    uint32_t getResourceOwner(uint32_t resourceId) { return getResourceOwnerInternal(resourceId, nullptr); }
    uint32_t getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
+   bool isAsset() const { return false; }
 
    uint32_t collectAggregatedData(DCItem *item, TCHAR *buffer);
    uint32_t collectAggregatedData(DCTable *table, shared_ptr<Table> *result);

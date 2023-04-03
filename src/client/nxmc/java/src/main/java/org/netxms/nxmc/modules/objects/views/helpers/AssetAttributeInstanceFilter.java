@@ -21,6 +21,8 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.NXCSession;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -30,6 +32,7 @@ public class AssetAttributeInstanceFilter extends ViewerFilter implements Abstra
 {
    private String filterString = null;
    private AssetAttributeInstanceLabelProvider labelProvider;
+   private NXCSession session = Registry.getSession();
 
    /**
     * Asset instance comparator
@@ -53,7 +56,7 @@ public class AssetAttributeInstanceFilter extends ViewerFilter implements Abstra
       @SuppressWarnings("unchecked")
       Entry<String, String> entry = (Entry<String, String>)element;
 
-      return entry.getKey().toUpperCase().contains(filterString) || labelProvider.getValue(entry).toUpperCase().contains(filterString);
+      return session.getAssetManagementSchema().get(entry.getKey()).getActualName().toUpperCase().contains(filterString) || labelProvider.getValue(entry).toUpperCase().contains(filterString);
    }
 
    /**

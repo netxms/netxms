@@ -738,7 +738,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    {
       if (object->isAsset())
       {
-         value = vm->createValue(vm->createObject(&g_nxslAssetData, new shared_ptr<NetObj>(object->self())));
+         value = vm->createValue(vm->createObject(&g_nxslAsset, new shared_ptr<NetObj>(object->self())));
       }
       else
       {
@@ -4133,18 +4133,18 @@ NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *object, const NXSL_Iden
 }
 
 /**
- * NXSL class AssetData: constructor
+ * NXSL class Asset: constructor
  */
-NXSL_AssetData::NXSL_AssetData() : NXSL_Class()
+NXSL_Asset::NXSL_Asset() : NXSL_Class()
 {
-   setName(_T("AssetData"));
+   setName(_T("Asset"));
 }
 
 
 /**
  * Object destructor
  */
-void NXSL_AssetData::onObjectDelete(NXSL_Object *object)
+void NXSL_Asset::onObjectDelete(NXSL_Object *object)
 {
    delete static_cast<shared_ptr<NetObj>*>(object->getData());
 }
@@ -4152,7 +4152,7 @@ void NXSL_AssetData::onObjectDelete(NXSL_Object *object)
 /**
  * NXSL class AssetData: get attribute
  */
-NXSL_Value *NXSL_AssetData::getAttr(NXSL_Object *_object, const NXSL_Identifier& attr)
+NXSL_Value *NXSL_Asset::getAttr(NXSL_Object *_object, const NXSL_Identifier& attr)
 {
    NXSL_Value *value = NXSL_Class::getAttr(_object, attr);
    if (value != nullptr)
@@ -5644,7 +5644,7 @@ void NXSL_OSPFNeighborClass::onObjectDelete(NXSL_Object *object)
 NXSL_AccessPointClass g_nxslAccessPointClass;
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
-NXSL_AssetData g_nxslAssetData;
+NXSL_Asset g_nxslAsset;
 NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
 NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 NXSL_ChassisClass g_nxslChassisClass;

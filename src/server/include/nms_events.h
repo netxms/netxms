@@ -49,6 +49,7 @@ enum class EventOrigin
 #define SCRIPT_CONTEXT_ACTION       _T("Action")
 #define SCRIPT_CONTEXT_AGENT_CFG    _T("Agent configuration")
 #define SCRIPT_CONTEXT_ALARM        _T("Alarm")
+#define SCRIPT_CONTEXT_ASSET_MGMT   _T("Asset management")
 #define SCRIPT_CONTEXT_AUTOBIND     _T("Autobind")
 #define SCRIPT_CONTEXT_BIZSVC       _T("Business service")
 #define SCRIPT_CONTEXT_CLIENT       _T("Client")

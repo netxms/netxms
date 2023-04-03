@@ -1566,6 +1566,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Parameters:' CONCAT CRLF CONCAT
       '   No message-specific parameters'
 	);
+	
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
 		EVENT_SSH_UNREACHABLE, 'SYS_SSH_UNREACHABLE', '55a6a26e-e1f0-4196-b325-833d8a1311fe',
@@ -1574,6 +1575,21 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Generated when node becomes unreachable by SSH.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
       '   No message-specific parameters'
+	);
+	
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		SYS_ASSET_AUTO_UPDATE_FAILED, 'SYS_ASSET_AUTO_UPDATE_FAILED', 'f4ae5e79-9d39-41d0-b74c-b6c591930d08',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Automatic update of asset management attribute "%<name>" with value "%<newValue>" failed (%<reason>)',
+      'Generated when automatic update of asset management attribute fails.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   name - attribute\'s name' CONCAT CRLF CONCAT
+      '   displayName - attribute\'s display name' CONCAT CRLF CONCAT
+      '   dataType - attribute\'s data type' CONCAT CRLF CONCAT
+      '   currValue - current attribute\'s value' CONCAT CRLF CONCAT
+      '   newValue - new attribute\'s value' CONCAT CRLF CONCAT
+      '   reason - failure reason'
 	);
 
 /*

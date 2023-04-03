@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Rack::Rack() : super(), Asset(this)
+Rack::Rack() : super(), Asset(this) //TODO: ass pollable interface for configuration poll and asset auto set
 {
 	m_height = 42;
 	m_topBottomNumbering = false;

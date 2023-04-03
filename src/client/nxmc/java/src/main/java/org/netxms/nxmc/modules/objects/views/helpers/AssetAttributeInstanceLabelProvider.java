@@ -172,8 +172,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
     */
    public String getName(String name)
    {
-      String displayName = session.getAssetManagementSchema().get(name).getDisplayName();
-      return (displayName == null || displayName.isEmpty()) ? name : displayName;
+      return session.getAssetManagementSchema().get(name).getActualName();
    }
 
    /**

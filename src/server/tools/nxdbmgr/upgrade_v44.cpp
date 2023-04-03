@@ -21,6 +21,36 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
+
+/**
+ * Upgrade from 44.4 to 44.5
+ */
+static bool H_UpgradeFromV4()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_ASSET_AUTO_UPDATE_FAILED, _T("SYS_ASSET_AUTO_UPDATE_FAILED"),
+                                EVENT_SEVERITY_MAJOR, EF_LOG, _T("f4ae5e79-9d39-41d0-b74c-b6c591930d08"),
+                                _T("Automatic update of asset management attribute \"%<name>\" with value \"%<newValue>\" failed (%<reason>)"),
+                                _T("Generated when automatic update of asset management attribute fails.\r\n")
+                                _T("Parameters:\r\n")
+                                _T("   name - attribute's name\r\n")
+                                _T("   displayName - attribute's display name\r\n")
+                                _T("   dataType - attribute's data type\r\n")
+                                _T("   currValue - current attribute's value\r\n")
+                                _T("   newValue - new attribute's value\r\n")
+                                _T("   reason - failure reason")
+                                ));
+
+   int ruleId = NextFreeEPPruleID();
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'1499d2d3-2304-4bb1-823b-0c530cbb6224',7944,'Generate alarm when automatic update of asset management attribute fails','%%m',5,'ASSET_UPDATE_FAILED_%%i_%%<name>','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(5));
+   return true;
+}
 
 /**
  * Upgrade from 44.3 to 44.4
@@ -152,6 +182,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 4,  44, 5,  H_UpgradeFromV4  },
    { 3,  44, 4,  H_UpgradeFromV3  },
    { 2,  44, 3,  H_UpgradeFromV2  },
    { 1,  44, 2,  H_UpgradeFromV1  },
