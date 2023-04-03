@@ -201,18 +201,28 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
    AgentGetParameterArgA(parameters, 3, sniServerName, sizeof(sniServerName));
 
    if (host[0] == 0 || portText[0] == 0)
-      return SYSINFO_RC_ERROR;
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("H_TLSCertificateInfo: invalid host/port combination \"%hs\"/\"%s\""), host, portText);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
 
-   uint16_t port = static_cast<uint16_t>(_tcstol(portText, nullptr, 10));
-   if (port == 0)
-      return SYSINFO_RC_ERROR;
+   TCHAR *eptr;
+   uint16_t port = static_cast<uint16_t>(_tcstol(portText, &eptr, 10));
+   if ((port == 0) || (*eptr != 0))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("H_TLSCertificateInfo(%hs): invalid port number \"%s\""), host, portText);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
 
    const OptionList options(parameters, 4);
    uint32_t timeout = options.getAsUInt32(_T("timeout"), g_netsvcTimeout);
 
    SOCKET hSocket = NetConnectTCP(host, InetAddress::INVALID, port, timeout);
    if (hSocket == INVALID_SOCKET)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 7, _T("H_TLSCertificateInfo(%hs, %d): connection error"), host, port);
       return SYSINFO_RC_ERROR;
+   }
 
    bool success = SetupTLSSession(hSocket, timeout, (sniServerName[0] != 0) ? sniServerName : host, port,
        [host, port, arg, value](SSL_CTX *context, SSL *ssl) -> bool
