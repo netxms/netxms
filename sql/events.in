@@ -1579,7 +1579,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 	
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
-		SYS_ASSET_AUTO_UPDATE_FAILED, 'SYS_ASSET_AUTO_UPDATE_FAILED', 'f4ae5e79-9d39-41d0-b74c-b6c591930d08',
+		EVENT_ASSET_AUTO_UPDATE_FAILED, 'SYS_ASSET_AUTO_UPDATE_FAILED', 'f4ae5e79-9d39-41d0-b74c-b6c591930d08',
 		EVENT_SEVERITY_MAJOR, 1,
 		'Automatic update of asset management attribute "%<name>" with value "%<newValue>" failed (%<reason>)',
       'Generated when automatic update of asset management attribute fails.' CONCAT CRLF CONCAT

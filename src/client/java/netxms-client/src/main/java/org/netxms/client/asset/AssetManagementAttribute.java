@@ -122,11 +122,13 @@ public class AssetManagementAttribute
    }
 
    /**
-    * @return the displayName
+    * Display name or name if display name is empty 
+    * 
+    * @return name that should be used as a display name
     */
    public String getActualName()
    {
-      return displayName.isBlank() ? name : displayName;
+      return displayName.isEmpty() ? name : displayName;
    }
 
    /**
