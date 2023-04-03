@@ -24,8 +24,6 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -35,7 +33,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.dialogs.DialogWithFilter;
-import org.netxms.nxmc.base.widgets.FilterText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.dialogs.helpers.ZoneSelectionDialogComparator;
@@ -52,7 +49,6 @@ public class ZoneSelectionDialog extends DialogWithFilter
 {
    private I18n i18n = LocalizationHelper.getI18n(ZoneSelectionDialog.class);
    private Zone zone;
-   private FilterText filterText;
    private TableViewer zoneList;
    private ZoneSelectionDialogFilter filter;
    
@@ -91,12 +87,6 @@ public class ZoneSelectionDialog extends DialogWithFilter
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);
-      
-      filterText = new FilterText(dialogArea, SWT.NONE, null, false);
-      GridData gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      filterText.setLayoutData(gd);
 
       final String[] names = { i18n.tr("Name") };
       final int[] widths = { 200 };
@@ -108,7 +98,7 @@ public class ZoneSelectionDialog extends DialogWithFilter
       zoneList.addFilter(filter);
       setFilterClient(zoneList, filter);
 
-      gd = new GridData();
+      GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
@@ -116,15 +106,6 @@ public class ZoneSelectionDialog extends DialogWithFilter
       zoneList.getTable().setLayoutData(gd);
       
       zoneList.setInput(session.getAllZones());
-      
-      filterText.addModifyListener(new ModifyListener() {
-         @Override
-         public void modifyText(ModifyEvent e)
-         {
-            filter.setFilterString(filterText.getText());
-            zoneList.refresh();
-         }
-      });
       
       zoneList.addDoubleClickListener(new IDoubleClickListener() {
          @Override
@@ -134,7 +115,6 @@ public class ZoneSelectionDialog extends DialogWithFilter
          }
       });
       
-      filterText.setFocus();
       return dialogArea;
    }
 
