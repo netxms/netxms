@@ -34,7 +34,7 @@ def processDirectory(directory):
                     if len(sys.argv) > 3:
                         output += "Bundle-Version: %s.%s\n" % (sys.argv[2], sys.argv[3])
                     else:
-                        output += "Bundle-Version: %s\n" % (sys.argv[2])
+                        output += "Bundle-Version: %s.qualifier\n" % (sys.argv[2])
                 else:
                     m = re.search("(.*) ([a-zA-Z0-9.]+);bundle-version=\"[0-9.]+\"(.*)", line)
                     if m and (m.group(2).startswith("org.netxms.ui") or m.group(2).startswith("org.netxms.webui") or m.group(2).startswith("com.radensolutions")):
