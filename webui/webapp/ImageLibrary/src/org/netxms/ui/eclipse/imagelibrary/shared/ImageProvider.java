@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2023 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.imagelibrary.shared;
 
 import java.io.ByteArrayInputStream;
@@ -16,33 +34,31 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.client.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
-import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ImageProvider
 {
-	private final Map<UUID, Image> cache = Collections.synchronizedMap(new HashMap<UUID, Image>());
-	private final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
-
-	/**
-	 * @param display
-	 * @param session
-	 */
+   /**
+    * Create image provider instance.
+    *
+    * @param display owning display
+    * @param session communication session
+    */
 	public static void createInstance(final Display display, final NXCSession session)
 	{
 	   display.syncExec(new Runnable() {
          @Override
          public void run()
          {
-            ImageProvider p = new ImageProvider();
-            p.init(display, session);
+            ImageProvider p = new ImageProvider(display, session);
             ConsoleSharedData.setProperty("ImageProvider", p);
          }
       });
@@ -67,58 +83,67 @@ public class ImageProvider
    {
       return (ImageProvider)ConsoleSharedData.getProperty("ImageProvider");
    }
-	
-	private Image missingImage;
-	private Set<ImageUpdateListener> updateListeners;
 
-	private boolean initialized = false;
-	private NXCSession session;
-	private Display display;
+   private final NXCSession session;
+   private final Display display;
+   private final Image missingImage;
+   private final Map<UUID, Image> imageCache = Collections.synchronizedMap(new HashMap<UUID, Image>());
+   private final Map<UUID, Image> objectIconCache = Collections.synchronizedMap(new HashMap<UUID, Image>());
+   private final Map<UUID, LibraryImage> libraryIndex = Collections.synchronizedMap(new HashMap<UUID, LibraryImage>());
+   private final Set<ImageUpdateListener> updateListeners = new HashSet<ImageUpdateListener>();
 
-	/**
-	 * 
-	 */
-	private ImageProvider()
+   /**
+    * Create image provider.
+    *
+    * @param display owning display
+    * @param session communication session
+    */
+   private ImageProvider(Display display, NXCSession session)
 	{
-	}
-
-	/**
-	 * 
-	 */
-	private void init(Display display, NXCSession session)
-	{
-		if (initialized)
-			return;
-		
 		this.display = display;
 		this.session = session;
-		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png");
+		final ImageDescriptor imageDescriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "icons/missing.png"); //$NON-NLS-1$
 		missingImage = imageDescriptor.createImage(display);
-		updateListeners = new HashSet<ImageUpdateListener>();
-		initialized = true;
 	}
 
 	/**
-	 * @param listener
-	 */
+    * Add update listener. Has no effect if same listener already added. Listener always called in UI thread.
+    *
+    * @param listener listener to add
+    */
 	public void addUpdateListener(final ImageUpdateListener listener)
 	{
 		updateListeners.add(listener);
 	}
 
 	/**
-	 * @param listener
-	 */
+    * Remove update listener. Has no effect if same listener already removed or was not added.
+    *
+    * @param listener listener to remove
+    */
 	public void removeUpdateListener(final ImageUpdateListener listener)
 	{
 		updateListeners.remove(listener);
 	}
 
+   /**
+    * Notify listeners on image update.
+    *
+    * @param guid image GUID
+    */
+   private void notifyListeners(final UUID guid)
+   {
+      for(final ImageUpdateListener listener : updateListeners)
+         listener.imageUpdated(guid);
+   }
+
 	/**
-	 * @throws NXCException
-	 * @throws IOException
-	 */
-	public void syncMetaData() throws NXCException, IOException
+    * Synchronize image library metadata.
+    *
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void syncMetaData() throws IOException, NXCException
 	{
 		List<LibraryImage> imageLibrary = session.getImageLibrary();
 		libraryIndex.clear();
@@ -134,99 +159,135 @@ public class ImageProvider
     */
 	private void clearCache()
 	{
-		for(Image image : cache.values())
+		for(Image image : imageCache.values())
 		{
 			if (image != missingImage)
-			{
 				image.dispose();
-			}
 		}
-		cache.clear();
+		imageCache.clear();
+
+      for(Image image : objectIconCache.values())
+      {
+         if ((image != missingImage) && !image.isDisposed())
+            image.dispose();
+      }
+      objectIconCache.clear();
 	}
 
 	/**
-	 * @param guid
-	 * @return
-	 */
+    * Get image by GUID.
+    *
+    * @param guid image GUID
+    * @return corresponding image or special image representing missing image
+    */
 	public Image getImage(final UUID guid)
 	{
 	   if (guid == null)
 	      return missingImage;
-	   
+
 		final Image image;
-		if (cache.containsKey(guid))
+		if (imageCache.containsKey(guid))
 		{
-			image = cache.get(guid);
+			image = imageCache.get(guid);
 		}
 		else
 		{
 			image = missingImage;
-			cache.put(guid, image);
-			if (libraryIndex.containsKey(guid))
-			{
-				new ConsoleJob(Messages.get().ImageProvider_JobName, null, Activator.PLUGIN_ID, null) {
-					@Override
-					protected void runInternal(IProgressMonitor monitor) throws Exception
-					{
-						loadImageFromServer(guid);
-					}
-					
-					@Override
-					protected String getErrorMessage()
-					{
-						return null;
-					}
-				}.start();
-			}
+         loadImageFromServer(guid);
 		}
 		return image;
 	}
 
-	/**
-	 * @param guid
-	 */
-	private void loadImageFromServer(final UUID guid)
-	{
-		LibraryImage libraryImage;
-		try
-		{
-			libraryImage = session.getImage(guid);
-			//libraryIndex.put(guid, libraryImage); // replace existing half-loaded object w/o image data
-			final ByteArrayInputStream stream = new ByteArrayInputStream(libraryImage.getBinaryData());
-			try
-			{
-				display.syncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						final Image image = new Image(display, stream);
-						if (image != null)
-							cache.put(guid, image);
-					}
-				});
-				notifySubscribers(guid);
-			}
-			catch(SWTException e)
-			{
-				Activator.logError("Cannot decode image", e); //$NON-NLS-1$
-				cache.put(guid, missingImage);
-			}
-		}
-		catch(Exception e)
-		{
-			Activator.logError("Cannot retrive image from server", e); //$NON-NLS-1$
-		}
-	}
+   /**
+    * Get image as object icon. Image is cut to square form if needed, and resized according to current device zoom level (16x16 on
+    * 100% zoom).
+    * 
+    * @param guid image GUID
+    * @return corresponding image as object icon or special image representing missing image
+    */
+   public Image getObjectIcon(final UUID guid)
+   {
+      if (guid == null)
+         return missingImage;
+
+      Image image;
+      if (objectIconCache.containsKey(guid))
+      {
+         image = objectIconCache.get(guid);
+      }
+      else if (imageCache.containsKey(guid))
+      {
+         image = imageCache.get(guid);
+         ImageData imageData = image.getImageData();
+         if ((imageData.width == 16) && (imageData.height == 16))
+         {
+            objectIconCache.put(guid, image);
+         }
+         else
+         {
+            image = new Image(display, imageData.scaledTo(16, 16));
+            objectIconCache.put(guid, image);
+         }
+      }
+      else
+      {
+         image = missingImage;
+         loadImageFromServer(guid);
+      }
+      return image;
+   }
 
 	/**
-	 * @param guid
-	 */
-	private void notifySubscribers(final UUID guid)
+    * Load image from server.
+    *
+    * @param guid image GUID
+    */
+	private void loadImageFromServer(final UUID guid)
 	{
-		for(final ImageUpdateListener listener : updateListeners)
-		{
-			listener.imageUpdated(guid);
-		}
+      imageCache.put(guid, missingImage);
+      if (!libraryIndex.containsKey(guid))
+         return;
+
+      ConsoleJob job = new ConsoleJob("Loading image from server", null, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            LibraryImage libraryImage;
+            try
+            {
+               libraryImage = session.getImage(guid);
+               final ByteArrayInputStream stream = new ByteArrayInputStream(libraryImage.getBinaryData());
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     try
+                     {
+                        imageCache.put(guid, new Image(display, stream));
+                        notifyListeners(guid);
+                     }
+                     catch(SWTException e)
+                     {
+                        Activator.logError("Cannot decode image", e);
+                        imageCache.put(guid, missingImage);
+                     }
+                  }
+               });
+            }
+            catch(Exception e)
+            {
+               Activator.logError("Cannot retrive image from server", e);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot load image from server";
+         }
+      };
+      job.setUser(false);
+      job.start();
 	}
 
 	/**
@@ -255,17 +316,27 @@ public class ImageProvider
     */
    public void updateImage(final UUID guid)
 	{
-      Image image = cache.remove(guid);
-		if (image != null && image != missingImage)
+      Image image = imageCache.remove(guid);
+      if ((image != null) && (image != missingImage))
 			image.dispose();
 
-      ConsoleJob job = new ConsoleJob("Update library image", null, Activator.PLUGIN_ID, null, display) {
+      image = objectIconCache.remove(guid);
+      if ((image != null) && (image != missingImage) && !image.isDisposed())
+         image.dispose();
+
+      ConsoleJob job = new ConsoleJob("Update library image", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             LibraryImage imageHandle = session.getImage(guid);
             libraryIndex.put(guid, imageHandle);
-            notifySubscribers(guid);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  notifyListeners(guid);
+               }
+            });
          }
 
          @Override
@@ -292,10 +363,22 @@ public class ImageProvider
     */
    public void deleteImage(UUID guid)
    {
-      Image image = cache.remove(guid);
-      if (image != null && image != missingImage)
+      Image image = imageCache.remove(guid);
+      if ((image != null) && (image != missingImage))
          image.dispose();
+
+      image = objectIconCache.remove(guid);
+      if ((image != null) && (image != missingImage) && !image.isDisposed())
+         image.dispose();
+
       libraryIndex.remove(guid);
-      notifySubscribers(guid);
+
+      display.asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            notifyListeners(guid);
+         }
+      });
    }
 }

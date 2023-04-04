@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -432,7 +432,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
    }
 
    /**
-    * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
+    * @see org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener#imageUpdated(java.util.UUID)
     */
    @Override
    public void imageUpdated(UUID guid)
@@ -449,14 +449,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       }
       if (found)
       {
-         getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               if (!isDisposed())
-                  redraw();
-            }
-         });
+         redraw();
       }
    }
 

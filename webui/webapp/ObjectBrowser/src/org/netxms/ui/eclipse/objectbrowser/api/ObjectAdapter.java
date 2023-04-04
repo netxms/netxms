@@ -57,7 +57,7 @@ public class ObjectAdapter implements IWorkbenchAdapter
       UUID iconId = ((AbstractObject)object).getIcon();
       if (iconId != null)
       {
-         Image icon = ImageProvider.getInstance().getImage(iconId);
+         Image icon = ImageProvider.getInstance().getObjectIcon(iconId);
          if (icon != null)
             return ImageDescriptor.createFromImage(icon);
       }

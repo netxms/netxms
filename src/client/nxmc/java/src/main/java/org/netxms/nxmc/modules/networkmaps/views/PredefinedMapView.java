@@ -820,26 +820,18 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	@Override
 	public void imageUpdated(final UUID guid)
 	{
-      getWindow().getShell().getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-            if (guid.equals(getMapObject().getBackground()))
-               viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid), getMapObject().isCenterBackgroundImage());
+      if (guid.equals(getMapObject().getBackground()))
+         viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid), getMapObject().isCenterBackgroundImage());
 
-				final String guidText = guid.toString();
-				for(NetworkMapElement e : mapPage.getElements())
-				{
-					if ((e instanceof NetworkMapDecoration) && 
-					    (((NetworkMapDecoration)e).getDecorationType() == NetworkMapDecoration.IMAGE) &&
-					    ((NetworkMapDecoration)e).getTitle().equals(guidText))
-					{
-						viewer.updateDecorationFigure((NetworkMapDecoration)e);
-						break;
-					}
-				}
+      final String guidText = guid.toString();
+      for(NetworkMapElement e : mapPage.getElements())
+      {
+         if ((e instanceof NetworkMapDecoration) && (((NetworkMapDecoration)e).getDecorationType() == NetworkMapDecoration.IMAGE) && ((NetworkMapDecoration)e).getTitle().equals(guidText))
+			{
+            viewer.updateDecorationFigure((NetworkMapDecoration)e);
+            break;
 			}
-		});
+      }
 	}
 
    /**

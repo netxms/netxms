@@ -181,9 +181,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
    
    		addDropSupport();
 	   }
-	   
+
 		ImageProvider.getInstance().addUpdateListener(this);
-		
+
 		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
 		{
 			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
@@ -322,11 +322,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       job.start();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createActions()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#createActions()
+    */
 	@Override
 	protected void createActions()
 	{
@@ -483,13 +481,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		return menu;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#fillMapContextMenu(
-	 * org.eclipse.jface.action.IMenuManager)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#fillMapContextMenu(org.eclipse.jface.action.IMenuManager)
+    */
 	@Override
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
@@ -885,13 +879,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		dlg.open();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#isSelectableElement
-	 * (java.lang.Object)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#isSelectableElement(java.lang.Object)
+    */
 	@Override
 	protected boolean isSelectableElement(Object element)
 	{
@@ -900,37 +890,29 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		       (element instanceof NetworkMapTextBox);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
+    */
 	@Override
 	public void imageUpdated(final UUID guid)
 	{
-		getSite().getShell().getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run()
+      if (guid.equals(mapObject.getBackground()))
+         viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid), mapObject.isCenterBackgroundImage());
+
+      final String guidText = guid.toString();
+      for(NetworkMapElement e : mapPage.getElements())
+      {
+         if ((e instanceof NetworkMapDecoration) && (((NetworkMapDecoration)e).getDecorationType() == NetworkMapDecoration.IMAGE) && ((NetworkMapDecoration)e).getTitle().equals(guidText))
 			{
-				if (guid.equals(mapObject.getBackground()))
-               viewer.setBackgroundImage(ImageProvider.getInstance().getImage(guid), mapObject.isCenterBackgroundImage());
-				
-				final String guidText = guid.toString();
-				for(NetworkMapElement e : mapPage.getElements())
-				{
-					if ((e instanceof NetworkMapDecoration) && 
-					    (((NetworkMapDecoration)e).getDecorationType() == NetworkMapDecoration.IMAGE) &&
-					    ((NetworkMapDecoration)e).getTitle().equals(guidText))
-					{
-						viewer.updateDecorationFigure((NetworkMapDecoration)e);
-						break;
-					}
-				}
+            viewer.updateDecorationFigure((NetworkMapDecoration)e);
+            break;
 			}
-		});
+      }
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#dispose()
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#dispose()
+    */
 	@Override
 	public void dispose()
 	{

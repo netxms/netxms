@@ -258,7 +258,7 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       return new Point(wHint + MARGIN_WIDTH * 2, hHint + titleSize);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
     */
    @Override
@@ -267,8 +267,8 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       ImageProvider.getInstance().removeUpdateListener(this);
    }
 
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
+   /**
+    * @see org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener#imageUpdated(java.util.UUID)
     */
    @Override
    public void imageUpdated(UUID guid)
@@ -284,17 +284,10 @@ public class ChassisWidget extends Canvas implements PaintListener, DisposeListe
       }
       if (found)
       {
-         getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               if (!isDisposed())
-                  redraw();
-            }
-         });
+         redraw();
       }
    }
-   
+
    /**
     * Get object at given point
     * 
