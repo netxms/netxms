@@ -300,31 +300,23 @@ public class ImageSelectionDialog extends Dialog implements ImageUpdateListener
       if (getShell().isDisposed())
          return;
 
-      final LibraryImage image = ImageProvider.getInstance(getShell().getDisplay()).getLibraryImageObject(guid);
+      final LibraryImage image = ImageProvider.getInstance().getLibraryImageObject(guid);
       if (image != null)
       {
-         getShell().getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-               UUID selectedGuid = ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage))
-                     ? ((LibraryImage)selection.getFirstElement()).getGuid()
-                     : NXCommon.EMPTY_GUID;
+         IStructuredSelection selection = viewer.getStructuredSelection();
+         UUID selectedGuid = ((selection.size() == 1) && (selection.getFirstElement() instanceof LibraryImage)) ? ((LibraryImage)selection.getFirstElement()).getGuid() : NXCommon.EMPTY_GUID;
 
-               ImageCategory category = imageCategories.get(image.getCategory());
-               if (category == null)
-               {
-                  category = new ImageCategory(image.getCategory());
-                  imageCategories.put(category.getName(), category);
-               }
-               category.addImage(image);
-               viewer.refresh();
+         ImageCategory category = imageCategories.get(image.getCategory());
+         if (category == null)
+         {
+            category = new ImageCategory(image.getCategory());
+            imageCategories.put(category.getName(), category);
+         }
+         category.addImage(image);
+         viewer.refresh();
 
-               if (selectedGuid.equals(image.getGuid()))
-                  viewer.setSelection(new StructuredSelection(image));
-            }
-         });
+         if (selectedGuid.equals(image.getGuid()))
+            viewer.setSelection(new StructuredSelection(image));
       }
 	}
 }

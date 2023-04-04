@@ -21,6 +21,7 @@ package org.netxms.client.objects;
 import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
 
 /**
  * Object category
@@ -100,7 +101,7 @@ public class ObjectCategory
     */
    public UUID getIcon()
    {
-      return icon;
+      return !NXCommon.EMPTY_GUID.equals(icon) ? icon : null;
    }
 
    /**
@@ -108,7 +109,7 @@ public class ObjectCategory
     */
    public UUID getMapImage()
    {
-      return mapImage;
+      return !NXCommon.EMPTY_GUID.equals(mapImage) ? mapImage : null;
    }
 
    /**

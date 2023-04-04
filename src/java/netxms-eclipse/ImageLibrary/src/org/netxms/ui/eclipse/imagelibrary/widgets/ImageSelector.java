@@ -161,16 +161,10 @@ public class ImageSelector extends AbstractSelector implements ImageUpdateListen
 	{
 		if (guid.equals(imageGuid))
 		{
-		   getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               setImage(ImageProvider.getInstance().getImage(imageGuid));
-               getParent().layout();
-               if (parentShell != null)
-                  parentShell.pack(true);
-            }
-         });
+         setImage(ImageProvider.getInstance().getImage(imageGuid));
+         getParent().layout();
+         if (parentShell != null)
+            parentShell.pack(true);
 		}
 	}
 

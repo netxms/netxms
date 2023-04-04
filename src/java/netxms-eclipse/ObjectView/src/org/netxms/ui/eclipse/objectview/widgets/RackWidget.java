@@ -451,14 +451,7 @@ public class RackWidget extends Canvas implements PaintListener, ImageUpdateList
       }
       if (found)
       {
-         getDisplay().asyncExec(new Runnable() {
-            @Override
-            public void run()
-            {
-               if (!isDisposed())
-                  redraw();
-            }
-         });
+         redraw();
       }
    }
 
