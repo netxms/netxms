@@ -28,8 +28,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentPolicy;
+import org.netxms.ui.eclipse.datacollection.views.PolicyEditorView;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.AgentConfigEditor;
 
@@ -49,7 +49,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
+   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView viewPart)
    {
       super(parent, style, policy, viewPart);  
 
@@ -62,12 +62,11 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
       layout.marginHeight = 0;
       layout.marginWidth = 0;
       mainArea.setLayout(layout);
-      
+
       buttonExpandMacro = new Button(mainArea, SWT.CHECK);
       buttonExpandMacro.setText("Expand macro");
       buttonExpandMacro.setLayoutData(new GridData());
       buttonExpandMacro.addSelectionListener(new SelectionListener() {
-         
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -105,8 +104,8 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    @Override
    public void updateControlFromPolicy()
    {
-      editor.setText(getPolicy().getContent());
-      flags = getPolicy().getFlags();
+      editor.setText(policy.getContent());
+      flags = policy.getFlags();
       buttonExpandMacro.setSelection((flags & AgentPolicy.EXPAND_MACRO) > 0);
    }
 
@@ -114,9 +113,9 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
     */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
-      getPolicy().setContent(editor.getText());
+      policy.setContent(editor.getText());
       if (buttonExpandMacro.getSelection())
       {
          flags |= AgentPolicy.EXPAND_MACRO;
@@ -125,8 +124,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
       {
          flags &= ~AgentPolicy.EXPAND_MACRO;         
       }
-      getPolicy().setFlags(flags);
-      return getPolicy();
+      policy.setFlags(flags);
    }   
 
    /**
@@ -137,7 +135,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    {
       return editor.setFocus();      
    }
-   
+
    /* toto add find and replace in the view
    protected void createActions()
    {

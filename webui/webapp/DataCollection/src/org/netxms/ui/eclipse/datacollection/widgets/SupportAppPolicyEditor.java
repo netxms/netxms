@@ -53,11 +53,11 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentPolicy;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.dialogs.MenuItemDialog;
+import org.netxms.ui.eclipse.datacollection.views.PolicyEditorView;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.AppMenuItem;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppMenuItemLabelProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.SupportAppMenuItemProvider;
@@ -132,7 +132,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
+   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView viewPart)
    {
       super(parent, style, policy, viewPart);      
       
@@ -709,7 +709,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
     */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
       policyData.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
       policyData.welcomeMessage = welcomeMessageText.getText();
@@ -738,13 +738,12 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
 
       try
       {
-         getPolicy().setContent(policyData.createXml());
+         policy.setContent(policyData.createXml());
       }
       catch(Exception e)
       {
-         getPolicy().setContent("");
+         policy.setContent("");
          e.printStackTrace();
       }
-      return getPolicy();
    }
 }
