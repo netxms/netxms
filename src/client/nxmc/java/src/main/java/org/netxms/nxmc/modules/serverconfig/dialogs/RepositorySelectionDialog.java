@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.actions.dialogs;
+package org.netxms.nxmc.modules.serverconfig.dialogs;
 
-import java.util.Collection;
 import java.util.List;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -31,133 +33,118 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.NXCSession;
-import org.netxms.client.ServerAction;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.modules.actions.views.helpers.DecoratingActionLabelProvider;
+import org.netxms.client.market.Repository;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
- * Action selection dialog
+ * Repository selection dialog
  */
-public class ActionSelectionDialog extends Dialog
+public class RepositorySelectionDialog extends Dialog
 {
-   private Collection<ServerAction> localCache;
+   private List<Repository> repositories;
+   private Repository selection = null;
    private TableViewer viewer;
-   private List<ServerAction> selection;
-
+   
    /**
-    * Action selection dialog construction
-    * @param parentShell parent shell
+    * @param parentShell
+    * @param repositories
     */
-   public ActionSelectionDialog(Shell parentShell)
+   public RepositorySelectionDialog(Shell parentShell, List<Repository> repositories)
    {
       super(parentShell);
+      this.repositories = repositories;
    }
 
-   /**
-    * Action selection dialog construction
-    * 
-    * @param parentShell parent shell
-    */
-   public ActionSelectionDialog(Shell parentShell, Collection<ServerAction> localCache)
-   {
-      super(parentShell);
-      this.localCache = localCache;
-   }
-
-   /**
+   /* (non-Javadoc)
     * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
     */
    @Override
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select action");
+      newShell.setText("Select Repository");
    }
 
-   /**
+   /* (non-Javadoc)
     * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected Control createDialogArea(Composite parent)
    {
-      final Composite dialogArea = (Composite)super.createDialogArea(parent);
+      Composite dialogArea = (Composite)super.createDialogArea(parent);
       
       GridLayout layout = new GridLayout();
-      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
+      layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogArea.setLayout(layout);
-
-      viewer = new TableViewer(dialogArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      
+      Label label = new Label(dialogArea, SWT.LEFT);
+      label.setText("Available repositories");
+      
+      viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new DecoratingActionLabelProvider());
+      viewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((Repository)element).getDescription();
+         }
+      });
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((ServerAction)e1).getName().compareToIgnoreCase(((ServerAction)e2).getName());
+            return ((Repository)e1).getDescription().compareToIgnoreCase(((Repository)e2).getDescription());
          }
       });
-
-      if (localCache == null)
-      {
-         NXCSession session = Registry.getSession();
-         new Job("Get server actions", null) {
-            @Override
-            protected void run(IProgressMonitor monitor) throws Exception
-            {
-               final List<ServerAction> list = session.getActions();
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     viewer.setInput(list.toArray());
-                  }
-               });
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return "Cannot get server actions";
-            }
-         }.start();
-      }
-      else
-      {
-         viewer.setInput(localCache.toArray());
-      }
-
+      viewer.setInput(repositories);
+      
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            okPressed();
+         }
+      });
+      
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
-      gd.heightHint = 400;
+      gd.widthHint = 500;
+      gd.heightHint = 300;
       viewer.getControl().setLayoutData(gd);
-
+      
       return dialogArea;
    }
 
-   /**
+   /* (non-Javadoc)
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
-   @SuppressWarnings("unchecked")
    @Override
    protected void okPressed()
    {
-      selection = viewer.getStructuredSelection().toList();
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Plese select repository from the list then press OK");
+         return;
+      }
+      
+      this.selection = (Repository)selection.getFirstElement();
+      
       super.okPressed();
    }
 
    /**
-    * Get selection 
     * @return the selection
     */
-   public List<ServerAction> getSelection()
+   public Repository getSelection()
    {
       return selection;
    }
