@@ -48,6 +48,9 @@ static bool H_UpgradeFromV4()
          ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
 
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_ASSET_AUTO_UPDATE_FAILED);
+   CHK_EXEC(SQLQuery(query));
+
    CHK_EXEC(SetMinorSchemaVersion(5));
    return true;
 }
