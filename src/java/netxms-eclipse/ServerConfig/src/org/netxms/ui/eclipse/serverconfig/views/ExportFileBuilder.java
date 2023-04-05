@@ -382,7 +382,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		trapViewer.getTable().setLayoutData(gd);
 		trapViewer.setContentProvider(new ArrayContentProvider());
 		trapViewer.setLabelProvider(new TrapListLabelProvider());
-		trapViewer.setComparator(new ElementLabelComparator((ILabelProvider)eventViewer.getLabelProvider()));
+		trapViewer.setComparator(new ElementLabelComparator((ILabelProvider)trapViewer.getLabelProvider()));
 		trapViewer.getTable().setSortDirection(SWT.UP);
 
 		final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
