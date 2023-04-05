@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2023 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.nxmc.modules.datacollection.widgets;
 
 import java.util.HashSet;
@@ -6,14 +24,18 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.AgentPolicy;
-import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.PolicyModifyListener;
 
+/**
+ * Abstract agent policy editor.
+ */
 public abstract class AbstractPolicyEditor extends Composite 
 {
-   private AgentPolicy policy;  
+   protected AgentPolicy policy;
+   protected PolicyEditorView view;
+
    private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
-   private View view;
    private boolean enableModifyListeners = true;
 
    /**
@@ -23,7 +45,7 @@ public abstract class AbstractPolicyEditor extends Composite
     * @param style control style
     * @param policy policy object
     */
-   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy, View view)
+   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView view)
    {
       super(parent, style);
       this.policy = policy;
@@ -57,16 +79,6 @@ public abstract class AbstractPolicyEditor extends Composite
    }
    
    /**
-    * Get policy object currently being edited
-    * 
-    * @return policy object currently being edited
-    */
-   protected AgentPolicy getPolicy()
-   {
-      return policy;
-   }
-
-   /**
     * Set new policy object to edit
     * 
     * @param policy new policy object to edit
@@ -85,12 +97,10 @@ public abstract class AbstractPolicyEditor extends Composite
    public abstract void updateControlFromPolicy();
 
    /**
-    * Get policy object updated from editor content
-    * 
-    * @return policy object updated from editor content
+    * Update policy object with editor content.
     */
-   public abstract AgentPolicy updatePolicyFromControl();
-   
+   public abstract void updatePolicyFromControl();
+
    /**
     * Fill local pull down menu with additional actions
     * 
@@ -110,20 +120,22 @@ public abstract class AbstractPolicyEditor extends Composite
    }
 
    /**
-    * @return the viewPart
+    * Check if save is allowed by editor. If save is not allowed editor should return string with reason.
+    *
+    * @return null to allow save operation or string describing the reason for not allowing save operation
     */
-   public View getView()
+   public String isSaveAllowed()
    {
-      return view;
+      return null;
    }
-   
+
    /**
     * Callback that will be called on policy save
     */
    public void onSave()
    {      
    }
-   
+
    /**
     * Callback that will be called on save discard
     */

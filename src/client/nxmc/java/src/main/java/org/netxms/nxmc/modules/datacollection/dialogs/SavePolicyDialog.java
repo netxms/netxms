@@ -98,7 +98,7 @@ public class SavePolicyDialog extends Dialog
       });
 
       final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-      text.setText("Policy is not Saved.\n Save it, discard changes or return to the editor.");
+      text.setText("Policy is not saved.\nDo you want to save it, discard changes, or return to the editor?");
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;

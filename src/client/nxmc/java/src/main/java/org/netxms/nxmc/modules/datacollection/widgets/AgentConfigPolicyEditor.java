@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 Raden Solutions
+ * Copyright (C) 2019-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.AgentPolicy;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.agentmanagement.widgets.AgentConfigEditor;
+import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -49,7 +49,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy, View view)
+   public AgentConfigPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView view)
    {
       super(parent, style, policy, view);  
 
@@ -100,23 +100,23 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
    }
    
    /**
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
    public void updateControlFromPolicy()
    {
-      editor.setText(getPolicy().getContent());
-      flags = getPolicy().getFlags();
+      editor.setText(policy.getContent());
+      flags = policy.getFlags();
       buttonExpandMacro.setSelection((flags & AgentPolicy.EXPAND_MACRO) > 0);
    }
 
    /**
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
     */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
-      getPolicy().setContent(editor.getText());
+      policy.setContent(editor.getText());
       if (buttonExpandMacro.getSelection())
       {
          flags |= AgentPolicy.EXPAND_MACRO;
@@ -125,8 +125,7 @@ public class AgentConfigPolicyEditor extends AbstractPolicyEditor
       {
          flags &= ~AgentPolicy.EXPAND_MACRO;         
       }
-      getPolicy().setFlags(flags);
-      return getPolicy();
+      policy.setFlags(flags);
    }   
 
    /**

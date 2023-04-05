@@ -22,7 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.AgentPolicy;
-import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.modules.logwatch.widgets.LogParserEditor;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserModifyListener;
 import org.netxms.nxmc.modules.logwatch.widgets.helpers.LogParserType;
@@ -40,7 +40,7 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy, View view)
+   public LogParserPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView view)
    {
       super(parent, style, policy, view);      
 
@@ -59,22 +59,21 @@ public class LogParserPolicyEditor extends AbstractPolicyEditor
    }
    
    /**
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
    public void updateControlFromPolicy()
    {
-      editor.setParserXml(getPolicy().getContent());
+      editor.setParserXml(policy.getContent());
    }
 
    /**
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
     */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
-      getPolicy().setContent(editor.getParserXml());
-      return getPolicy();
+      policy.setContent(editor.getParserXml());
    }
 
    /**

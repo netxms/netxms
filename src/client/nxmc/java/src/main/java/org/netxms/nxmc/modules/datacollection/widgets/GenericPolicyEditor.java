@@ -25,8 +25,8 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.AgentPolicy;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.StyledText;
+import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 
 /**
  * Generic policy editor widget
@@ -41,7 +41,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy, View view)
+   public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView view)
    {
       super(parent, style, policy, view);      
       
@@ -63,18 +63,20 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    }
    
    /**
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
    public void updateControlFromPolicy()
    {
-      editor.setText(getPolicy().getContent());
+      editor.setText(policy.getContent());
    }
 
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
+    */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
-      getPolicy().setContent(editor.getText());
-      return getPolicy();
+      policy.setContent(editor.getText());
    }
 }

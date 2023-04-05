@@ -74,7 +74,6 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
    private boolean modified = false;
    private boolean modifiedByOtherUser = false;
    private boolean saveInProgress = false;
-   
    private Composite content;
    private Action actionSave;
    private LocalChangeListener localChangeListener;
@@ -86,7 +85,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
    {
       super(i18n.tr("Policy Editor"), ResourceManager.getImageDescriptor("icons/object-views/policy.gif"), policyGUID.toString(), templateId, templateId, false); 
       session = Registry.getSession();
-      
+
       this.templateId = templateId;
       this.policyGUID = policyGUID;
       this.localChangeListener = localChangeListener;
@@ -100,7 +99,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
       super(null, null, null, 0, 0, false); 
       session = Registry.getSession();
    }
-   
+
    /**
     * @see org.netxms.nxmc.modules.objects.views.AdHocObjectView#cloneView()
     */
@@ -122,7 +121,8 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
    {
       super.postClone(view);
       PolicyEditorView origin = (PolicyEditorView)view;
-      policy = origin.editor.updatePolicyFromControl();
+      origin.editor.updatePolicyFromControl();
+      policy = origin.policy;
       modified = origin.modified;
       modifiedByOtherUser = origin.modifiedByOtherUser = false;
       actionSave.setEnabled(modified);   
@@ -158,14 +158,13 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
    }
 
    /**
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#dispose()
     */
    @Override
    public void dispose()
    {
       modified = false;
       localChangeListener = null;
-
       super.dispose();
    }
 
@@ -318,6 +317,19 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
       actionSave.setEnabled(true);
    }
    
+   /**
+    * Enable/disable save action
+    * 
+    * @param enable true to enable
+    */
+   public void enableSaveAction(boolean enable)
+   {
+      actionSave.setEnabled(enable && modified);
+   }
+
+   /**
+    * Save policy
+    */
    public void doSave()
    {
       try
@@ -351,9 +363,9 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
       saveInProgress = true;
       modifiedByOtherUser = false;      
       throwExceptionOnSave = true;
-      policy = editor.updatePolicyFromControl();
+      editor.updatePolicyFromControl();
       editor.onSave();
-      new Job("Save agent policy", this) {
+      new Job("Saving agent policy", this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -361,7 +373,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
             doSave();
             if (saveException != null) 
                throw saveException;
-            
+
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -374,16 +386,13 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return "Cannot save agent policy";
          }
 
-         /* (non-Javadoc)
-          * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
-          */
          @Override
          protected void jobFinalize()
          {
@@ -411,7 +420,14 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
    {
       if (!modified)
          return true;
-      
+
+      String reason = editor.isSaveAllowed();
+      if (reason != null)
+      {
+         MessageDialogHelper.openWarning(getWindow().getShell(), i18n.tr("Save Not Allowed"), reason);
+         return false;
+      }
+
       SavePolicyDialog dlg = new SavePolicyDialog(getWindow().getShell());
       int rc = dlg.open();
       if (rc == SavePolicyDialog.SAVE_ID)

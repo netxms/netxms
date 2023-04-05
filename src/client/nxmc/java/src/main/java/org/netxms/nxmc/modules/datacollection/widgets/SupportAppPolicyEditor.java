@@ -54,12 +54,12 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.AgentPolicy;
-import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.modules.datacollection.dialogs.MenuItemDialog;
+import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.AppMenuItem;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.SupportAppMenuItemLabelProvider;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.SupportAppMenuItemProvider;
@@ -135,7 +135,7 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy, View view)
+   public SupportAppPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView view)
    {
       super(parent, style, policy, view);      
       
@@ -649,8 +649,8 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
       updateIconPreview();
    }
    
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlsFromPolicy()
+   /**
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
    public void updateControlFromPolicy()
@@ -709,10 +709,10 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
    }
 
    /**
-    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
+    * @see org.netxms.nxmc.modules.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
     */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
       policyData.setIcon((iconFile != null) && (iconFile.length > 0) ? iconFile : null);
       policyData.welcomeMessage = welcomeMessageText.getText();
@@ -741,13 +741,12 @@ public class SupportAppPolicyEditor extends AbstractPolicyEditor
 
       try
       {
-         getPolicy().setContent(policyData.createXml());
+         policy.setContent(policyData.createXml());
       }
       catch(Exception e)
       {
-         getPolicy().setContent("");
+         policy.setContent("");
          e.printStackTrace();
       }
-      return getPolicy();
    }
 }

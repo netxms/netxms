@@ -40,7 +40,9 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
@@ -49,10 +51,11 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.EmbeddedProgressMonitor;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.modules.datacollection.dialogs.FilePermissionDialog;
+import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicy;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicyComparator;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.FileDeliveryPolicyContentProvider;
@@ -69,15 +72,16 @@ import org.slf4j.LoggerFactory;
 public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
 {
    private static final Logger logger = LoggerFactory.getLogger(FileDeliveryPolicyEditor.class);
-   
+
    public static final int COLUMN_NAME = 0;
    public static final int COLUMN_GUID = 1;
    public static final int COLUMN_DATE = 2;
    public static final int COLUMN_USER = 3;
    public static final int COLUMN_GROUP = 4;
    public static final int COLUMN_PERMISSIONS = 5;
-   
+
    private SortableTreeViewer fileTree;
+   private EmbeddedProgressMonitor progressMonitor;
    private Set<PathElement> rootElements = new HashSet<PathElement>();
    private Action actionAddRoot;
    private Action actionAddDirectory;
@@ -88,16 +92,17 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private Action actionEditPermissions;
    private Set<String> filesForDeletion = new HashSet<String>();
    private Set<String> notSavedFiles = new HashSet<String>();
+   private boolean fileTransferInProgress = false;
 
    /**
     * @param parent
     * @param style
     */
-   public FileDeliveryPolicyEditor(Composite parent, int style, AgentPolicy policy, View view)
+   public FileDeliveryPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView view)
    {
       super(parent, style, policy, view);
-      
-      setLayout(new FillLayout());
+
+      setLayout(new FormLayout());
 
       final String[] columnNames = { "Name", "Guid", "Date", "User", "Group", "Permissions" };
       final int[] columnWidths = { 300, 300, 200, 150, 150, 200 };
@@ -121,6 +126,33 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
          }
       });
 
+      progressMonitor = new EmbeddedProgressMonitor(this, SWT.NONE, false);
+
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      fileTree.getControl().setLayoutData(fd);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      progressMonitor.setLayoutData(fd);
+
+      createActions();
+      createPopupMenu();
+
+      fileTree.setInput(rootElements);
+      updateControlFromPolicy();
+   }
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
       actionAddRoot = new Action("&Add root directory...", ResourceManager.getImageDescriptor("icons/add_directory.png")) {
          @Override
          public void run()
@@ -176,11 +208,6 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
             changePermissions();
          }
       };
-
-      createPopupMenu();
-
-      fileTree.setInput(rootElements);
-      updateControlFromPolicy();
    }
 
    /**
@@ -238,6 +265,21 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    }
 
    /**
+    * Enable/disable file transfer mode
+    *
+    * @param enable true to enable
+    */
+   private void enableFileTransferMode(boolean enable)
+   {
+      fileTransferInProgress = enable;
+      actionAddFile.setEnabled(!enable);
+      view.enableSaveAction(!enable);
+      progressMonitor.setVisible(enable);
+      ((FormData)fileTree.getControl().getLayoutData()).bottom = enable ? new FormAttachment(progressMonitor, 0, SWT.TOP) : new FormAttachment(100, 0);
+      layout(true, true);
+   }
+
+   /**
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updateControlFromPolicy()
     */
    @Override
@@ -246,7 +288,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       Set<PathElement> newElementSet = new HashSet<PathElement>();
       try
       {
-         FileDeliveryPolicy policyData = FileDeliveryPolicy.createFromXml(getPolicy().getContent());
+         FileDeliveryPolicy policyData = FileDeliveryPolicy.createFromXml(policy.getContent());
          newElementSet.addAll(Arrays.asList(policyData.elements));
       }
       catch(Exception e)
@@ -308,19 +350,18 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
     * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
     */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
       FileDeliveryPolicy data = new FileDeliveryPolicy();
       data.elements = rootElements.toArray(new PathElement[rootElements.size()]);
       try
       {
-         getPolicy().setContent(data.createXml());
+         policy.setContent(data.createXml());
       }
       catch(Exception e)
       {
          logger.error("Error serializing file delivery policy", e);
       }
-      return getPolicy();
    }
 
    /**
@@ -379,30 +420,56 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       {
          fileTree.refresh();
          fireModifyListeners();
+         enableFileTransferMode(true);
 
          logger.info("FileDeliveryPolicyEditor: " + uploadList.size() + " files to upload");          
          final NXCSession session = Registry.getSession();
-         new Job("Upload files", getView()) {
+         new Job("Uploading files", view) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               monitor.beginTask("Upload files", uploadList.size());
+               long totalBytes = 0;
+               for(PathElement e : uploadList)
+                  totalBytes += e.getLocalFile().length();
+
+               monitor.beginTask("Uploading files", (int)(totalBytes / 16384)); // Count 16K blocks
                for(PathElement e : uploadList)
                {
-                  logger.info("FileDeliveryPolicyEditor: uploading file " + e.getName() + " from " + e.getLocalFile());        
+                  logger.info("FileDeliveryPolicyEditor: uploading file " + e.getName() + " from " + e.getLocalFile());
                   monitor.subTask(e.getName());
-                  session.uploadFileToServer(e.getLocalFile(), "FileDelivery-" + e.getGuid().toString(), null);
-                  monitor.worked(1);
+                  session.uploadFileToServer(e.getLocalFile(), "FileDelivery-" + e.getGuid().toString(), new ProgressListener() {
+                     long completed = 0;
+
+                     @Override
+                     public void setTotalWorkAmount(long workTotal)
+                     {
+                     }
+
+                     @Override
+                     public void markProgress(long workDone)
+                     {
+                        monitor.worked((int)((workDone - completed) / 16384));
+                        completed = workDone;
+                     }
+                  });
                }
                monitor.done();
             }
-            
+
             @Override
             protected String getErrorMessage()
             {
                return "Cannot upload file";
             }
-         }.start();
+
+            @Override
+            protected void jobFinalize()
+            {
+               runInUIThread(() -> {
+                  enableFileTransferMode(false);
+               });
+            }
+         }.start(progressMonitor);
       }
    }
 
@@ -412,14 +479,13 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    private void deleteFile(final String name)
    {
       final NXCSession session = Registry.getSession();
-
-      new Job("Delete file", getView()) {
+      new Job("Delete file", view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             session.deleteServerFile("FileDelivery-" + name);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -446,43 +512,53 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       if (!file.exists())
          return;
 
-      final UUID guid = ((PathElement)selection.getFirstElement()).getGuid();
+      enableFileTransferMode(true);
+
+      final PathElement e = (PathElement)selection.getFirstElement();
       final NXCSession session = Registry.getSession();
-      new Job("Upload file", getView()) {
+      new Job("Uploading file", view) {
          @Override
          protected void run(final IProgressMonitor monitor) throws Exception
          {
-            session.uploadFileToServer(file, "FileDelivery-" + guid.toString(), new ProgressListener() {
+            session.uploadFileToServer(file, "FileDelivery-" + e.getGuid().toString(), new ProgressListener() {
+               long completed = 0;
+
                @Override
                public void setTotalWorkAmount(long workTotal)
                {
-                  monitor.beginTask("Upload file", (int)file.length());
+                  monitor.beginTask("Uploading file", (int)(file.length() / 16384));
+                  monitor.subTask(e.getName());
                }
-               
+
                @Override
                public void markProgress(long workDone)
                {
-                  monitor.worked((int)workDone);
+                  monitor.worked((int)((workDone - completed) / 16384));
+                  completed = workDone;
                }
             });
             monitor.done();
-            runInUIThread(new Runnable() {               
-               @Override
-               public void run()
-               {
-                  ((PathElement)selection.getFirstElement()).updateCreationTime(); 
-                  fileTree.refresh(true);
-                  fireModifyListeners();
-               }
+            runInUIThread(() -> {
+               ((PathElement)selection.getFirstElement()).updateCreationTime();
+               fileTree.refresh(true);
+               fireModifyListeners();
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
             return "Cannot upload file";
          }
-      }.start();
+
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(() -> {
+               enableFileTransferMode(false);
+            });
+         }
+      }.start(progressMonitor);
    }
 
    /**
@@ -659,6 +735,15 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
    }
 
    /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#isSaveAllowed()
+    */
+   @Override
+   public String isSaveAllowed()
+   {
+      return fileTransferInProgress ? "File transfer is in progress" : null;
+   }
+
+   /**
     * Callback that will be called on policy save
     */
    public void onSave()
@@ -670,7 +755,7 @@ public class FileDeliveryPolicyEditor extends AbstractPolicyEditor
       }
       filesForDeletion.clear();
    }
-   
+
    /**
     * Callback that will be called on save discard
     */
