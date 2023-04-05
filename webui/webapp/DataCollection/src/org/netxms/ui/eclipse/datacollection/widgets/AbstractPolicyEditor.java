@@ -5,15 +5,16 @@ import java.util.Set;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentPolicy;
+import org.netxms.ui.eclipse.datacollection.views.PolicyEditorView;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener;
 
 public abstract class AbstractPolicyEditor extends Composite
 {
-   private AgentPolicy policy;  
+   protected PolicyEditorView viewPart;
+   protected AgentPolicy policy;
+
    private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
-   private IViewPart viewPart;
    private boolean enableModifyListeners = true;
 
    /**
@@ -23,7 +24,7 @@ public abstract class AbstractPolicyEditor extends Composite
     * @param style control style
     * @param policy policy object
     */
-   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
+   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView viewPart)
    {
       super(parent, style);
       this.policy = policy;
@@ -57,16 +58,6 @@ public abstract class AbstractPolicyEditor extends Composite
    }
    
    /**
-    * Get policy object currently being edited
-    * 
-    * @return policy object currently being edited
-    */
-   protected AgentPolicy getPolicy()
-   {
-      return policy;
-   }
-
-   /**
     * Set new policy object to edit
     * 
     * @param policy new policy object to edit
@@ -85,11 +76,9 @@ public abstract class AbstractPolicyEditor extends Composite
    public abstract void updateControlFromPolicy();
 
    /**
-    * Get policy object updated from editor content
-    * 
-    * @return policy object updated from editor content
+    * Update policy object from editor content
     */
-   public abstract AgentPolicy updatePolicyFromControl();
+   public abstract void updatePolicyFromControl();
 
    /**
     * Fill local pull down menu with additional actions
@@ -110,13 +99,15 @@ public abstract class AbstractPolicyEditor extends Composite
    }
 
    /**
-    * @return the viewPart
+    * Check if save is allowed by editor. If save is not allowed editor should return string with reason.
+    *
+    * @return null to allow save operation or string describing the reason for not allowing save operation
     */
-   public IViewPart getViewPart()
+   public String isSaveAllowed()
    {
-      return viewPart;
+      return null;
    }
-   
+
    /**
     * Callback that will be called on policy save
     */

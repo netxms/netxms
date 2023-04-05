@@ -6,17 +6,18 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.AgentPolicy;
+import org.netxms.ui.eclipse.datacollection.views.PolicyEditorView;
 import org.netxms.ui.eclipse.datacollection.widgets.helpers.PolicyModifyListener;
 
 public abstract class AbstractPolicyEditor extends Composite implements IFindReplaceTarget
 {
-   private AgentPolicy policy;  
+   protected PolicyEditorView viewPart;
+   protected AgentPolicy policy;
+
    private Set<PolicyModifyListener> listeners = new HashSet<PolicyModifyListener>();
    private FindReplaceAction actionFindReplace = null;
-   private IViewPart viewPart;
    private boolean enableModifyListeners = true;
 
    /**
@@ -26,7 +27,7 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
     * @param style control style
     * @param policy policy object
     */
-   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
+   public AbstractPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView viewPart)
    {
       super(parent, style);
       this.policy = policy;
@@ -60,16 +61,6 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    }
    
    /**
-    * Get policy object currently being edited
-    * 
-    * @return policy object currently being edited
-    */
-   protected AgentPolicy getPolicy()
-   {
-      return policy;
-   }
-
-   /**
     * Set new policy object to edit
     * 
     * @param policy new policy object to edit
@@ -88,11 +79,9 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    public abstract void updateControlFromPolicy();
 
    /**
-    * Get policy object updated from editor content
-    * 
-    * @return policy object updated from editor content
+    * Update policy object from editor content
     */
-   public abstract AgentPolicy updatePolicyFromControl();
+   public abstract void updatePolicyFromControl();
 
    /**
     * Check if Find/Replace action is required for this editor
@@ -118,7 +107,7 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    {
       return actionFindReplace;
    }
-   
+
    /**
     * Call update() on Find/Replace action 
     */
@@ -147,13 +136,15 @@ public abstract class AbstractPolicyEditor extends Composite implements IFindRep
    }
 
    /**
-    * @return the viewPart
+    * Check if save is allowed by editor. If save is not allowed editor should return string with reason.
+    *
+    * @return null to allow save operation or string describing the reason for not allowing save operation
     */
-   public IViewPart getViewPart()
+   public String isSaveAllowed()
    {
-      return viewPart;
+      return null;
    }
-   
+
    /**
     * Callback that will be called on policy save
     */

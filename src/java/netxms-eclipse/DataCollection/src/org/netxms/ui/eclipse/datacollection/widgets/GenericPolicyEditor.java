@@ -25,8 +25,8 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IViewPart;
 import org.netxms.client.AgentPolicy;
+import org.netxms.ui.eclipse.datacollection.views.PolicyEditorView;
 import org.netxms.ui.eclipse.widgets.TextEditor;
 
 /**
@@ -42,7 +42,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
     * @param parent
     * @param style
     */
-   public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy, IViewPart viewPart)
+   public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView viewPart)
    {
       super(parent, style, policy, viewPart);      
       
@@ -70,14 +70,16 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    @Override
    public void updateControlFromPolicy()
    {
-      editor.setText(getPolicy().getContent());
+      editor.setText(policy.getContent());
    }
 
+   /**
+    * @see org.netxms.ui.eclipse.datacollection.widgets.AbstractPolicyEditor#updatePolicyFromControl()
+    */
    @Override
-   public AgentPolicy updatePolicyFromControl()
+   public void updatePolicyFromControl()
    {
-      getPolicy().setContent(editor.getText());
-      return getPolicy();
+      policy.setContent(editor.getText());
    }
 
    /**
@@ -86,7 +88,7 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    @Override
    public boolean isFindAndReplaceRequired()
    {
-      return false;
+      return true;
    }
 
    /**
