@@ -126,11 +126,16 @@ public abstract class Job
 
    /**
     * Execute job.
+    * 
+    * @param monitor progress monitor (can be null)
     */
-   protected void execute()
+   protected final void execute(IProgressMonitor monitor)
    {
       state = JobState.RUNNING;
-      monitor = new JobProgressMonitor();
+
+      if (monitor == null)
+         monitor = new JobProgressMonitor();
+
       try
       {
          run(monitor);
@@ -163,7 +168,17 @@ public abstract class Job
     */
    public void start()
    {
-      JobManager.getInstance().submit(this);
+      JobManager.getInstance().submit(this, null);
+   }
+
+   /**
+    * Start job using provided progress monitor.
+    * 
+    * @param monitor progress monitor
+    */
+   public void start(IProgressMonitor monitor)
+   {
+      JobManager.getInstance().submit(this, monitor);
    }
 
    /**

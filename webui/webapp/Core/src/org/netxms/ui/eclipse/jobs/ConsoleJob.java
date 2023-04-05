@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -147,19 +147,19 @@ public abstract class ConsoleJob extends Job
       return status;
    }
 
-	/**
-	 * Start job.
-	 */
-	public void start()
-	{
-		display.asyncExec(new Starter());
-	}
-	
-	/**
-	 * Starter class
-	 */
-	public class Starter implements Runnable
-	{
+   /**
+    * Start job.
+    */
+   public void start()
+   {
+      display.asyncExec(new Starter());
+   }
+
+   /**
+    * Starter class
+    */
+   public class Starter implements Runnable
+   {
       @Override
       public void run()
       {
@@ -234,58 +234,78 @@ public abstract class ConsoleJob extends Job
    {
    }
 
-	/**
-	 * Run job in foreground using IProgressService.busyCursorWhile
-	 * 
-	 * @return true if job was successful
-	 */
-	public boolean runInForeground()
-	{
-		passException = true;
-		IProgressService service = PlatformUI.getWorkbench().getProgressService();
-		boolean success = true;
-		try
-		{
-			service.run(true, false, new IRunnableWithProgress() {
-				@Override
-				public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
-				{
-					IStatus status = ConsoleJob.this.run(monitor);
-					if (!status.isOK())
-					{
-						throw new InvocationTargetException(status.getException());
-					}
-				}
-			});
-		}
-		catch(InvocationTargetException e)
-		{
-			Throwable cause = e.getCause();
-			if (cause == null)
-				cause = e;
-			MessageDialog.openError(null, Messages.get().ConsoleJob_ErrorDialogTitle, getErrorMessage() + ": " + cause.getLocalizedMessage()); //$NON-NLS-1$
-		}
-		catch(InterruptedException e)
-		{
-		}
-		return success;
-	}
-	
-	/**
-	 * Run code in UI thread
-	 * 
-	 * @param runnable
-	 */
-	protected void runInUIThread(final Runnable runnable)
-	{
-		display.asyncExec(runnable);
-	}
-	
-	/**
-	 * @return
-	 */
-	protected Display getDisplay()
-	{
-		return display;
-	}
+   /**
+    * Run job in foreground using IProgressService.busyCursorWhile
+    * 
+    * @return true if job was successful
+    */
+   public boolean runInForeground()
+   {
+      passException = true;
+      IProgressService service = PlatformUI.getWorkbench().getProgressService();
+      boolean success = true;
+      try
+      {
+         service.run(true, false, new IRunnableWithProgress() {
+            @Override
+            public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
+            {
+               IStatus status = ConsoleJob.this.run(monitor);
+               if (!status.isOK())
+               {
+                  throw new InvocationTargetException(status.getException());
+               }
+            }
+         });
+      }
+      catch(InvocationTargetException e)
+      {
+         Throwable cause = e.getCause();
+         if (cause == null)
+            cause = e;
+         MessageDialog.openError(null, Messages.get().ConsoleJob_ErrorDialogTitle, getErrorMessage() + ": " + cause.getLocalizedMessage()); //$NON-NLS-1$
+      }
+      catch(InterruptedException e)
+      {
+      }
+      return success;
+   }
+
+   /**
+    * Run job in background thread, not using job manager
+    *
+    * @param monitor progress monitor
+    */
+   public void runInBackground(IProgressMonitor monitor)
+   {
+      Thread thread = new Thread(new Runnable() {
+         @Override
+         public void run()
+         {
+            ConsoleJob.this.run(monitor);
+         }
+      });
+      thread.setDaemon(true);
+      thread.start();
+   }
+
+   /**
+    * Run code in UI thread
+    * 
+    * @param runnable
+    */
+   protected void runInUIThread(final Runnable runnable)
+   {
+      display.asyncExec(runnable);
+   }
+
+   /**
+    * Get display associated with this job.
+    *
+    * @return display associated with this job
+    */
+   protected Display getDisplay()
+   {
+      return display;
+   }
 }
