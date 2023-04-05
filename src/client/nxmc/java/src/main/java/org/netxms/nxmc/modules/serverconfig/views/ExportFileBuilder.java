@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,6 @@
  */
 package org.netxms.nxmc.modules.serverconfig.views;
 
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,9 +43,9 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.base.VersionInfo;
+import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
@@ -60,7 +53,6 @@ import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
-import org.netxms.client.market.Repository;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objects.TemplateGroup;
@@ -70,7 +62,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.ImageHyperlink;
-import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.Section;
 import org.netxms.nxmc.base.widgets.events.HyperlinkAdapter;
 import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
@@ -86,7 +77,6 @@ import org.netxms.nxmc.modules.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.dialogs.ObjectToolSelectionDialog;
-import org.netxms.nxmc.modules.serverconfig.dialogs.RepositorySelectionDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SummaryTableSelectionDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.helpers.TrapListLabelProvider;
@@ -98,13 +88,10 @@ import org.netxms.nxmc.modules.serverconfig.views.helpers.SummaryTablesComparato
 import org.netxms.nxmc.modules.serverconfig.views.helpers.SummaryTablesLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.ToolComparator;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.ToolLabelProvider;
-import org.netxms.nxmc.modules.tools.views.ServerConsole;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.ElementLabelComparator;
 import org.netxms.nxmc.tools.WidgetHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -113,38 +100,40 @@ import org.xnap.commons.i18n.I18n;
 public class ExportFileBuilder extends ConfigurationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ExportFileBuilder.class);
-   private static final Logger log = LoggerFactory.getLogger(ExportFileBuilder.class);
 
 	private NXCSession session = Registry.getSession();
 	private Composite content;
-	private LabeledText description;
-	private TableViewer templateViewer;
-	private TableViewer eventViewer;
-	private TableViewer trapViewer;
-	private TableViewer ruleViewer;
-   private TableViewer scriptViewer;
-   private TableViewer toolsViewer;
-   private TableViewer summaryTableViewer;
+   private Text description;
    private TableViewer actionViewer;
+   private TableViewer eventViewer;
+   private TableViewer ruleViewer;
+   private TableViewer scriptViewer;
+   private TableViewer summaryTableViewer;
+	private TableViewer templateViewer;
+   private TableViewer toolsViewer;
+	private TableViewer trapViewer;
    private TableViewer webServiceViewer;
-	private Action actionSave;
-	private Action actionPublish;
-	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
-	private Map<Long, Template> templates = new HashMap<Long, Template>();
-	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
-   private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
-	private Map<Long, Script> scripts = new HashMap<Long, Script>();
-	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
-   private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
+	private Action actionExport;
+   private Action actionClear;
    private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
+	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
+   private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
+   private Map<Long, Script> scripts = new HashMap<Long, Script>();
+   private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
+	private Map<Long, Template> templates = new HashMap<Long, Template>();
+   private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
+	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
    private Map<Integer, WebServiceDefinition> webServices = new HashMap<Integer, WebServiceDefinition>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
 
+   /**
+    * Create configuration export view
+    */
 	public ExportFileBuilder()
 	{
-	   super("Export configuration", ResourceManager.getImageDescriptor("icons/config-views/export.png"), "ExportConfiguration", false);
+      super(i18n.tr("Export Configuration"), ResourceManager.getImageDescriptor("icons/config-views/export.png"), "ExportConfiguration", false);
 	}
 
    /**
@@ -174,8 +163,8 @@ public class ExportFileBuilder extends ConfigurationView
 
       scroller.setContent(content);
 		
-		createFileSection();		
-		createTemplateSection();
+		createDescriptionSection();		
+		createTemplatesSection();
 		createEventSection();
 		createTrapSection();
 		createRuleSection();
@@ -185,25 +174,24 @@ public class ExportFileBuilder extends ConfigurationView
       createActionsSection();
       createWebServiceSection();
       
-		
 		createActions();
 	}
 	
 	/**
-	 * Create "File" section
-	 */
-	private void createFileSection()
+    * Create "Description" section
+    */
+	private void createDescriptionSection()
 	{
-      Section section = new Section(content, i18n.tr("Export File"), false);
+      Section section = new Section(content, i18n.tr("Description"), false);
+
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.horizontalSpan = 2;
       section.setLayoutData(gd);
-		
-		description = new LabeledText(section, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
-		description.setLabel(i18n.tr("Description"));
+
+      description = new Text(section.getClient(), SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
@@ -212,11 +200,11 @@ public class ExportFileBuilder extends ConfigurationView
 		gd.heightHint = 200;
 		description.setLayoutData(gd);
 	}
-	
+
 	/**
 	 * Create "Templates" section
 	 */
-	private void createTemplateSection()
+	private void createTemplatesSection()
 	{
       Section section = new Section(content, i18n.tr("Templates"), false);
       GridData gd = new GridData();
@@ -227,27 +215,41 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
 		clientArea.setBackground(content.getBackground());
-		
-		templateViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+
+      templateViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 200;
-		gd.verticalSpan = 2;
 		templateViewer.getTable().setLayoutData(gd);
 		templateViewer.setContentProvider(new ArrayContentProvider());
 		templateViewer.setLabelProvider(new DecoratingObjectLabelProvider());
 		templateViewer.setComparator(new ElementLabelComparator((ILabelProvider)templateViewer.getLabelProvider()));
 		templateViewer.getTable().setSortDirection(SWT.UP);
 
-		final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
 		linkAdd.setText(i18n.tr("Add..."));
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
@@ -259,9 +261,10 @@ public class ExportFileBuilder extends ConfigurationView
 			}
 		});
 		
-		final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkRemove.setLayoutData(gd);
@@ -288,27 +291,41 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
 		
-		eventViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      eventViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 200;
-		gd.verticalSpan = 2;
 		eventViewer.getTable().setLayoutData(gd);
 		eventViewer.setContentProvider(new ArrayContentProvider());
 		eventViewer.setLabelProvider(new BaseEventTemplateLabelProvider());
 		eventViewer.setComparator(new ElementLabelComparator((ILabelProvider)eventViewer.getLabelProvider()));
 		eventViewer.getTable().setSortDirection(SWT.UP);
 
-		final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
 		linkAdd.setText(i18n.tr("Add..."));
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
@@ -320,9 +337,10 @@ public class ExportFileBuilder extends ConfigurationView
 			}
 		});
 		
-		final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkRemove.setLayoutData(gd);
@@ -349,27 +367,41 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
 		
-		trapViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      trapViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 200;
-		gd.verticalSpan = 2;
 		trapViewer.getTable().setLayoutData(gd);
 		trapViewer.setContentProvider(new ArrayContentProvider());
 		trapViewer.setLabelProvider(new TrapListLabelProvider());
 		trapViewer.setComparator(new ElementLabelComparator((ILabelProvider)trapViewer.getLabelProvider()));
 		trapViewer.getTable().setSortDirection(SWT.UP);
 
-		final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
 		linkAdd.setText(i18n.tr("Add..."));
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
@@ -407,9 +439,10 @@ public class ExportFileBuilder extends ConfigurationView
 			}
 		});
 		
-		final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkRemove.setLayoutData(gd);
@@ -436,11 +469,14 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
 		clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
 		
-		ruleViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      ruleViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
 		ruleViewer.getTable().setLinesVisible(true);
 		ruleViewer.getTable().setHeaderVisible(true);
 
@@ -458,16 +494,27 @@ public class ExportFileBuilder extends ConfigurationView
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 200;
-		gd.verticalSpan = 2;
 		ruleViewer.getTable().setLayoutData(gd);
 		ruleViewer.setContentProvider(new ArrayContentProvider());
 		ruleViewer.setLabelProvider(new RuleLabelProvider());
 		ruleViewer.setComparator(new RuleComparator());
 		ruleViewer.getTable().setSortDirection(SWT.UP);
 
-		final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
 		linkAdd.setText(i18n.tr("Add..."));
 		linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkAdd.setLayoutData(gd);
@@ -505,9 +552,10 @@ public class ExportFileBuilder extends ConfigurationView
 			}
 		});
 		
-		final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
 		linkRemove.setText(i18n.tr("Remove"));
 		linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		linkRemove.setLayoutData(gd);
@@ -534,27 +582,41 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
       
-      scriptViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      scriptViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 200;
-      gd.verticalSpan = 2;
       scriptViewer.getTable().setLayoutData(gd);
       scriptViewer.setContentProvider(new ArrayContentProvider());
       scriptViewer.setLabelProvider(new ScriptLabelProvider());
       scriptViewer.setComparator(new ScriptComparator());
       scriptViewer.getTable().setSortDirection(SWT.UP);
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
       linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -566,9 +628,10 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
       
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -595,27 +658,41 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
       
-      toolsViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      toolsViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 200;
-      gd.verticalSpan = 2;
       toolsViewer.getTable().setLayoutData(gd);
       toolsViewer.setContentProvider(new ArrayContentProvider());
       toolsViewer.setLabelProvider(new ToolLabelProvider());
       toolsViewer.setComparator(new ToolComparator());
       toolsViewer.getTable().setSortDirection(SWT.UP);
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
       linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -627,9 +704,10 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
       
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -656,27 +734,41 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
       
-      summaryTableViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      summaryTableViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 200;
-      gd.verticalSpan = 2;
       summaryTableViewer.getTable().setLayoutData(gd);
       summaryTableViewer.setContentProvider(new ArrayContentProvider());
       summaryTableViewer.setLabelProvider(new SummaryTablesLabelProvider());
       summaryTableViewer.setComparator(new SummaryTablesComparator());
       summaryTableViewer.getTable().setSortDirection(SWT.UP);
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
       linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -688,9 +780,10 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
       
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -717,27 +810,41 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
       
-      actionViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      actionViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 200;
-      gd.verticalSpan = 2;
       actionViewer.getTable().setLayoutData(gd);
       actionViewer.setContentProvider(new ArrayContentProvider());
       actionViewer.setLabelProvider(new ActionLabelProvider());
       actionViewer.setComparator(new ActionComparator());
       actionViewer.getTable().setSortDirection(SWT.UP);
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
       linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -749,9 +856,10 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
       
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -778,18 +886,20 @@ public class ExportFileBuilder extends ConfigurationView
 
       Composite clientArea = section.getClient();
       GridLayout layout = new GridLayout();
-      layout.numColumns = 2;
+      layout.numColumns = 3;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.horizontalSpacing = 0;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
       
-      webServiceViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      webServiceViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessVerticalSpace = true;
       gd.heightHint = 200;
-      gd.verticalSpan = 2;
       webServiceViewer.getTable().setLayoutData(gd);
       webServiceViewer.setContentProvider(new ArrayContentProvider());
       webServiceViewer.setLabelProvider(new LabelProvider() {
@@ -808,9 +918,21 @@ public class ExportFileBuilder extends ConfigurationView
       });
       webServiceViewer.getTable().setSortDirection(SWT.UP);
 
-      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      Label separator = new Label(clientArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      separator.setLayoutData(gd);
+
+      Composite controlArea = new Composite(clientArea, SWT.NONE);
+      controlArea.setBackground(clientArea.getBackground());
+      controlArea.setLayout(new GridLayout());
+      controlArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(controlArea, SWT.NONE);
       linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -822,9 +944,10 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
       
-      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      final ImageHyperlink linkRemove = new ImageHyperlink(controlArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -832,7 +955,7 @@ public class ExportFileBuilder extends ConfigurationView
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            IStructuredSelection selection = (IStructuredSelection)webServiceViewer.getSelection();
+            IStructuredSelection selection = webServiceViewer.getStructuredSelection();
             if (selection.size() > 0)
             {
                removeObjects(webServiceViewer, webServices);
@@ -846,24 +969,25 @@ public class ExportFileBuilder extends ConfigurationView
 	 */
 	private void createActions()
 	{      
-		actionSave = new Action(i18n.tr("&Save..."), SharedIcons.SAVE) {
+      actionExport = new Action(i18n.tr("&Export..."), SharedIcons.EXPORT) {
 			@Override
 			public void run()
 			{
 				save();
 			}
 		};		
-      
-      actionPublish = new Action("&Publish...", ResourceManager.getImageDescriptor("icons/publish.gif")) {
+      addKeyBinding("M1+E", actionExport);
+      actionExport.setEnabled(false);
+
+      actionClear = new Action(i18n.tr("&Clear"), SharedIcons.CLEAR) {
          @Override
          public void run()
          {
-            publish();
+            clear();
          }
-      };      
+      };
+      addKeyBinding("M1+L", actionClear);
 	}
-	
-	
 
 	/**
     * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
@@ -871,8 +995,8 @@ public class ExportFileBuilder extends ConfigurationView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionSave);
-      manager.add(actionPublish);
+      manager.add(actionExport);
+      manager.add(actionClear);
    }
 
    /**
@@ -881,99 +1005,10 @@ public class ExportFileBuilder extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      manager.add(actionSave);
-      manager.add(actionPublish);
+      manager.add(actionExport);
+      manager.add(actionClear);
    }
-   
-	/**
-	 * Publish configuration
-	 */
-	private void publish()
-	{
-	   new Job("Get list of configured repositories", this) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            final List<Repository> repositories = session.getRepositories();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  publishStage2(repositories);
-               }
-            });
-         }
-         
-         @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot get list of configured repositories";
-         }
-      }.start();
-	}
 
-	/**
-	 * Publish configuration - stage 2
-	 * 
-	 * @param repositories
-	 */
-	private void publishStage2(List<Repository> repositories)
-	{
-	   RepositorySelectionDialog dlg = new RepositorySelectionDialog(getWindow().getShell(), repositories);
-	   if (dlg.open() != Window.OK)
-	      return;
-	   
-	   final Repository repository = dlg.getSelection();
-	   doExport(new ExportCompletionHandler() {
-         @Override
-         public void exportCompleted(final String xml)
-         {
-            new Job("Publish configuration", ExportFileBuilder.this) {
-               @Override
-               protected void run(IProgressMonitor monitor) throws Exception
-               {
-                  URL url = new URL(repository.getUrl() + "/rest-api/push-export?accessToken=" + repository.getAuthToken());
-                  URLConnection conn = url.openConnection();
-                  if (!(conn instanceof HttpURLConnection))
-                  {
-                     throw new Exception("Unsupported URL type");
-                  }
-                  ((HttpURLConnection)conn).setRequestMethod("POST");
-                  ((HttpURLConnection)conn).setRequestProperty("User-Agent", "NetXMS Console/" + VersionInfo.version());
-                  ((HttpURLConnection)conn).setRequestProperty("Content-Type", "application/xml; charset=utf-8");
-                  ((HttpURLConnection)conn).setDoOutput(true);
-                  ((HttpURLConnection)conn).setAllowUserInteraction(false);
-                  ((HttpURLConnection)conn).setUseCaches(false);
-                  
-                  OutputStream out = conn.getOutputStream();
-                  try
-                  {
-                     out.write(xml.getBytes("UTF-8"));
-                     out.flush();
-                     
-                     int responseCode = ((HttpURLConnection)conn).getResponseCode();
-                     log.info("Publish config: url=" + url.toString() + " response=" + responseCode);
-                     if (responseCode != 200)
-                     {
-                        throw new Exception(String.format("HTTP error %d", responseCode));
-                     }
-                  }
-                  finally
-                  {
-                     out.close();
-                  }
-               }
-               
-               @Override
-               protected String getErrorMessage()
-               {
-                  return "Cannot publish configuration to repository";
-               }
-            }.start();
-         }
-      });
-	}
-	
 	/**
 	 * Do export operation and call completion handler when done
 	 * 
@@ -1342,6 +1377,37 @@ public class ExportFileBuilder extends ConfigurationView
    }
 
    /**
+    * Clear configuration
+    */
+   private void clear()
+   {
+      description.setText("");
+
+      actions.clear();
+      events.clear();
+      rules.clear();
+      scripts.clear();
+      summaryTables.clear();
+      templates.clear();
+      traps.clear();
+      tools.clear();
+      webServices.clear();
+
+      actionViewer.setInput(new Object[0]);
+      eventViewer.setInput(new Object[0]);
+      ruleViewer.setInput(new Object[0]);
+      scriptViewer.setInput(new Object[0]);
+      summaryTableViewer.setInput(new Object[0]);
+      templateViewer.setInput(new Object[0]);
+      toolsViewer.setInput(new Object[0]);
+      trapViewer.setInput(new Object[0]);
+      webServiceViewer.setInput(new Object[0]);
+
+      modified = false;
+      actionExport.setEnabled(false);
+   }
+
+   /**
     * Export completion handler
     */
    private interface ExportCompletionHandler
@@ -1360,6 +1426,7 @@ public class ExportFileBuilder extends ConfigurationView
    private void setModified()
    {
       modified = true;
+      actionExport.setEnabled(true);
    }
 
    /**
