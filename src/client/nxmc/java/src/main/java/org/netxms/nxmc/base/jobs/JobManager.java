@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
  * Job manager
@@ -79,17 +80,15 @@ public class JobManager
     * Submit job for execution
     *
     * @param job job object
+    * @param monitor optional progress monitor
     */
-   protected synchronized void submit(final Job job)
+   protected synchronized void submit(final Job job, final IProgressMonitor monitor)
    {
       job.setId(jobId++);
       jobs.put(job.getId(), job);
-      threadPool.execute(new Runnable() {
-         @Override
-         public void run()
-         {
-            job.execute();
-         }
+      threadPool.execute(() -> {
+         job.execute(monitor);
+         onJobCompletion(job);
       });
    }
 
@@ -104,18 +103,21 @@ public class JobManager
       job.setId(jobId++);
       job.setScheduledState();
       jobs.put(job.getId(), job);
-      scheduler.schedule(new Runnable() {
-         @Override
-         public void run()
-         {
-            threadPool.execute(new Runnable() {
-               @Override
-               public void run()
-               {
-                  job.execute();
-               }
-            });
-         }
+      scheduler.schedule(() -> {
+         threadPool.execute(() -> {
+            job.execute(null);
+            onJobCompletion(job);
+         });
       }, delay, TimeUnit.MILLISECONDS);
+   }
+
+   /**
+    * Process job completion.
+    *
+    * @param job completed job
+    */
+   private synchronized void onJobCompletion(Job job)
+   {
+      jobs.remove(job.getId());
    }
 }
