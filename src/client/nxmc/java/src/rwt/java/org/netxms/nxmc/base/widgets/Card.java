@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,12 +91,12 @@ public abstract class Card extends DashboardComposite
 			public void mouseUp(MouseEvent e)
 			{
 			}
-			
+
 			@Override
 			public void mouseDown(MouseEvent e)
 			{
 			}
-			
+
 			@Override
 			public void mouseDoubleClick(MouseEvent e)
 			{
@@ -275,7 +275,7 @@ public abstract class Card extends DashboardComposite
 	{
 		this.doubleClickAction = doubleClickAction;
 	}
-	
+
 	/**
 	 * Dispose current client area and create new one by calling createClientArea
 	 */
