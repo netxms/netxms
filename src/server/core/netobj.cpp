@@ -2693,10 +2693,9 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
       return StringBuffer();
 
    TCHAR buffer[256];
-   char entryPoint[MAX_IDENTIFIER_LENGTH];
    int i;
 
-   nxlog_debug_tag(_T("obj.macro"), 8, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(" instance='%s')"),
+   nxlog_debug_tag(_T("obj.macro"), 7, _T("NetObj::expandText(sourceObject=%u template='%s' alarm=%u event=") UINT64_FMT _T(" instance='%s')"),
              m_id, CHECK_NULL(textTemplate), (alarm == nullptr) ? 0 : alarm->getAlarmId() , (event == nullptr) ? 0 : event->getId(),
              CHECK_NULL(instance));
 
@@ -2884,65 +2883,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                   else
                   {
                      buffer[i] = 0;
-
-                     // Entry point can be given in form script/entry_point
-                     TCHAR *s = _tcschr(buffer, _T('/'));
-                     if (s != nullptr)
-                     {
-                        *s = 0;
-                        s++;
-                        Trim(s);
-#ifdef UNICODE
-                        wchar_to_utf8(s, -1, entryPoint, MAX_IDENTIFIER_LENGTH);
-                        entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
-#else
-                        strlcpy(entryPoint, s, MAX_IDENTIFIER_LENGTH);
-#endif
-                     }
-                     else
-                     {
-                        entryPoint[0] = 0;
-                     }
-                     Trim(buffer);
-
-                     NXSL_VM *vm = CreateServerScriptVM(buffer, self(),
-                        ((dci == nullptr) && (event != nullptr) && (event->getDciId() != 0) && isDataCollectionTarget()) ?
-                              static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor() : dci);
-                     if (vm != nullptr)
-                     {
-                        if (event != nullptr)
-                           vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
-                        if (alarm != nullptr)
-                        {
-                           vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm, true)));
-                           vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
-                           vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
-                        }
-
-                        if (vm->run(0, nullptr, nullptr, nullptr, nullptr, (entryPoint[0] != 0) ? entryPoint : nullptr))
-                        {
-                           NXSL_Value *result = vm->getResult();
-                           const TCHAR *temp = result->getValueAsCString();
-                           if (temp != nullptr)
-                           {
-                              output.append(temp);
-                              DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s executed successfully"),
-                                 (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer);
-                           }
-                        }
-                        else
-                        {
-                           DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
-                                     (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer, vm->getErrorText());
-                           ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), buffer);
-                        }
-                        delete vm;
-                     }
-                     else
-                     {
-                        DbgPrintf(4, _T("NetObj::ExpandText(%d, \"%s\"): Cannot find script %s"),
-                           (int)((event != nullptr) ? event->getCode() : 0), textTemplate, buffer);
-                     }
+                     expandScriptMacro(buffer, alarm, event, dci, &output);
                   }
                   break;
                case '{':   // Custom attribute
@@ -3086,6 +3027,97 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
       }
    }
    return output;
+}
+
+/**
+ * Expand script macro (intended to be called from expandText)
+ */
+void NetObj::expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output)
+{
+   // Arguments can be provided as script_name(arg1, arg2, ... argN)
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != nullptr)
+   {
+      size_t l = _tcslen(name) - 1;
+      if (name[l] != _T(')'))
+      {
+         nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): missing closing parenthesis in macro \"%%[%s]\""), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+         return;
+      }
+      name[l] = 0;
+      *p = 0;
+      Trim(name);
+   }
+
+   // Entry point can be given in form script/entry_point
+   char entryPoint[MAX_IDENTIFIER_LENGTH];
+   TCHAR *s = _tcschr(name, _T('/'));
+   if (s != nullptr)
+   {
+      *s = 0;
+      s++;
+      Trim(s);
+#ifdef UNICODE
+      wchar_to_utf8(s, -1, entryPoint, MAX_IDENTIFIER_LENGTH);
+      entryPoint[MAX_IDENTIFIER_LENGTH - 1] = 0;
+#else
+      strlcpy(entryPoint, s, MAX_IDENTIFIER_LENGTH);
+#endif
+   }
+   else
+   {
+      entryPoint[0] = 0;
+   }
+   Trim(name);
+
+   NXSL_VM *vm = CreateServerScriptVM(name, self(),
+      ((dci == nullptr) && (event != nullptr) && (event->getDciId() != 0) && isDataCollectionTarget()) ?
+            static_cast<DataCollectionTarget*>(this)->getDCObjectById(event->getDciId(), 0)->createDescriptor() : dci);
+   if (vm != nullptr)
+   {
+      if (event != nullptr)
+         vm->setGlobalVariable("$event", vm->createValue(vm->createObject(&g_nxslEventClass, event, true)));
+      if (alarm != nullptr)
+      {
+         vm->setGlobalVariable("$alarm", vm->createValue(vm->createObject(&g_nxslAlarmClass, alarm, true)));
+         vm->setGlobalVariable("$alarmMessage", vm->createValue(alarm->getMessage()));
+         vm->setGlobalVariable("$alarmKey", vm->createValue(alarm->getKey()));
+      }
+
+      ObjectRefArray<NXSL_Value> args(16, 16);
+      if ((p == nullptr) || ParseValueList(vm, &p, args, true))
+      {
+         if (vm->run(args, nullptr, nullptr, nullptr, (entryPoint[0] != 0) ? entryPoint : nullptr))
+         {
+            NXSL_Value *result = vm->getResult();
+            const TCHAR *temp = result->getValueAsCString();
+            if (temp != nullptr)
+            {
+               output->append(temp);
+               nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): Script \"%s\" executed successfully"), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+            }
+         }
+         else
+         {
+            nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): Script \"%s\" execution error (%s)"),
+                  m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name, vm->getErrorText());
+            ReportScriptError(SCRIPT_CONTEXT_OBJECT, this, 0, vm->getErrorText(), name);
+         }
+      }
+      else
+      {
+         if (p != nullptr)
+            *p = _T('(');
+         if (s != nullptr)
+            *s = _T('/');
+         nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): cannot parse argument list in macro \"%%[%s]\""), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+      }
+      delete vm;
+   }
+   else
+   {
+      nxlog_debug_tag(_T("obj.macro"), 6, _T("NetObj::ExpandText(%s [%u], %s): Cannot find script \"%s\""), m_name, m_id, (event != nullptr) ? event->getName() : _T("<no event>"), name);
+   }
 }
 
 /**

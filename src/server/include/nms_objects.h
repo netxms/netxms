@@ -1151,6 +1151,8 @@ private:
    bool saveACLToDB(DB_HANDLE hdb);
    bool saveModuleData(DB_HANDLE hdb);
 
+   void expandScriptMacro(TCHAR *name, const Alarm *alarm, const Event *event, const shared_ptr<DCObjectInfo>& dci, StringBuffer *output);
+
 protected:
    time_t m_timestamp;           // Last change time stamp
    SharedString m_alias;         // Object's alias

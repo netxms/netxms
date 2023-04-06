@@ -1665,6 +1665,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 		   }
 
 #if HAVE_LIBEDIT
+		   el_reset(el);
          el_end(el);
          history_t(h, &ev, H_SAVE, ".netxmsd_history");
          history_tend(h);
