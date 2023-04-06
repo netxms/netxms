@@ -506,9 +506,9 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	if (m_thresholds != nullptr)
 	{
 		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
-		UINT32 dwId = VID_DCI_THRESHOLD_BASE;
-		for(int i = 0; i < m_thresholds->size(); i++, dwId += 20)
-			m_thresholds->get(i)->fillMessage(pMsg, dwId);
+		uint32_t fieldId = VID_DCI_THRESHOLD_BASE;
+		for(int i = 0; i < m_thresholds->size(); i++, fieldId += 20)
+			m_thresholds->get(i)->fillMessage(pMsg, fieldId);
 	}
 	else
 	{
@@ -691,11 +691,11 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       m_tPrevValueTimeStamp = tmTimeStamp;
 
       // Save raw value into database
-      QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_bCacheLoaded  && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
+      QueueRawDciDataUpdate(tmTimeStamp, m_id, originalValue, pValue->getString(), (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[m_cacheSize - 1]->getTimeStamp() : 0);
    }
 
 	// Check if user wants to collect all values or only changed values.
-   if (!isStoreChangesOnly() || _tcscmp(pValue->getString() , m_ppValueCache[0]->getString()))
+   if (!isStoreChangesOnly() || (m_bCacheLoaded && (m_cacheSize > 0) && _tcscmp(pValue->getString(), m_ppValueCache[0]->getString())))
    {
       //Save transformed value to database
       if (m_retentionType != DC_RETENTION_NONE)
