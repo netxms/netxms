@@ -298,6 +298,8 @@ static uint32_t s_defaultExecutionTimeout = 0;  // Default execution timeout for
 #ifdef _WIN32
 static TCHAR s_dumpDirectory[MAX_PATH] = _T("{default}");
 static Condition s_shutdownCondition(true);
+#else
+static char s_umask[32] = "";
 #endif
 
 #if !defined(_WIN32)
@@ -361,6 +363,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ExternalSubagent"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalSubAgentsList, nullptr },
    { _T("ExternalTable"), CT_STRING_CONCAT, '\n', 0, 0, 0, &s_externalTablesConfig, nullptr },
    { _T("FatalExitOnCRTError"), CT_BOOLEAN_FLAG_32, 0, 0, SF_FATAL_EXIT_ON_CRT_ERROR, 0, &s_startupFlags, nullptr },
+#ifndef _WIN32
+   { _T("FileModeCreationMask"), CT_MB_STRING, 0, 0, sizeof(s_umask), 0, s_umask, nullptr },
+#endif
    { _T("FileStore"), CT_STRING, 0, 0, MAX_PATH, 0, g_szFileStore, nullptr },
    { _T("FullCrashDumps"), CT_BOOLEAN_FLAG_32, 0, 0, SF_WRITE_FULL_DUMP, 0, &s_startupFlags, nullptr },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, nullptr },
@@ -723,9 +728,8 @@ LONG RestartAgent()
    si.cb = sizeof(STARTUPINFO);
 
    // Create new process
-   if (!CreateProcess(NULL, command.getBuffer(), NULL, NULL, FALSE,
-                      (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
-                      NULL, NULL, &si, &pi))
+   if (!CreateProcess(nullptr, command.getBuffer(), nullptr, nullptr, FALSE,
+         (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE), nullptr, nullptr, &si, &pi))
    {
       TCHAR buffer[1024];
       nxlog_write(NXLOG_ERROR, _T("Unable to create process \"%s\" (%s)"),
@@ -982,6 +986,31 @@ BOOL Initialize()
    if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
       s_debugLevel = 0;
 
+#ifndef _WIN32
+   bool validUmask = true;
+   if (s_umask[0] != 0)
+   {
+      // umask should be given as 3 octal digits
+      if (strlen(s_umask) == 3)
+      {
+         char *eptr;
+         int mask = strtol(s_umask, &eptr, 8);
+         if (*eptr == 0)
+         {
+            umask(mask);
+         }
+         else
+         {
+            validUmask = false;
+         }
+      }
+      else
+      {
+         validUmask = false;
+      }
+   }
+#endif
+
    // Open log file
    if (!nxlog_open((s_startupFlags & SF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
                    GetLogDestinationFlag() |
@@ -1005,8 +1034,8 @@ BOOL Initialize()
                _tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
       }
    }
-	nxlog_write(NXLOG_INFO, _T("Core agent version ") NETXMS_BUILD_TAG);
-	nxlog_write(NXLOG_INFO, _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Core agent version ") NETXMS_BUILD_TAG);
+   nxlog_write_tag(NXLOG_INFO, _T("config"), _T("Additional configuration files was loaded from %s"), g_szConfigIncludeDir);
    nxlog_write_tag(NXLOG_INFO, _T("logger"), _T("Debug level set to %d"), s_debugLevel);
 
    if (g_failFlags & FAIL_LOAD_CONFIG)
@@ -1040,41 +1069,51 @@ BOOL Initialize()
 
 	nxlog_set_debug_level(s_debugLevel);
 
+#ifndef _WIN32
+   if (s_umask[0] != 0)
+   {
+      if (validUmask)
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("File mode creation mask (umask) set to %hs"), s_umask);
+      else
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Invalid umask value \"%hs\""), s_umask);
+   }
+#endif
+
 	if (_tcscmp(g_masterAgent, _T("not_set")))
 	{
 		g_dwFlags |= AF_SUBAGENT_LOADER;
-		nxlog_write(NXLOG_INFO, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
+		nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Switched to external subagent loader mode, master agent address is %s"), g_masterAgent);
 	}
 
    if (g_dataDirRecoveryPath[0] != 0)
-      nxlog_write(NXLOG_INFO, _T("Data directory recovered from %s"), g_dataDirRecoveryPath);
-	nxlog_write(NXLOG_INFO, _T("Data directory: %s"), g_szDataDirectory);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory recovered from %s"), g_dataDirRecoveryPath);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Data directory: %s"), g_szDataDirectory);
    CreateDirectoryTree(g_szDataDirectory);
 
 #ifdef _WIN32
    if (s_startupFlags & SF_CATCH_EXCEPTIONS)
    {
-      nxlog_write(NXLOG_INFO, _T("Crash dump generation is enabled (dump directory is %s)"), s_dumpDirectory);
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Crash dump generation is enabled (dump directory is %s)"), s_dumpDirectory);
       CreateDirectoryTree(s_dumpDirectory);
       if (g_failFlags & FAIL_CRASH_SERVER_START)
-         nxlog_write(NXLOG_ERROR, _T("Failed to start crash dump collector process"));
+         nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to start crash dump collector process"));
    }
    else
    {
-      nxlog_write(NXLOG_INFO, _T("Crash dump generation is disabled"));
+      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Crash dump generation is disabled"));
    }
 #endif
 
-   nxlog_write(NXLOG_INFO, _T("File store: %s"), g_szFileStore);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("File store: %s"), g_szFileStore);
    CreateDirectoryTree(g_szFileStore);
    SetEnvironmentVariable(_T("NETXMS_FILE_STORE"), g_szFileStore);
 
 #ifndef _WIN32
-   nxlog_debug(2, _T("Effective user ID %d"), (int)geteuid());
-   nxlog_debug(2, _T("Effective group ID %d"), (int)getegid());
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Effective user ID %d"), (int)geteuid());
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Effective group ID %d"), (int)getegid());
 #endif
 
-   nxlog_debug(2, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
+   nxlog_debug_tag(DEBUG_TAG_STARTUP, 2, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
 
    ConfigureAgentDirectory(g_szLogParserDirectory, SUBDIR_LOGPARSER_POLICY, _T("Log parser policy"));
    ConfigureAgentDirectory(g_userAgentPolicyDirectory, SUBDIR_USERAGENT_POLICY, _T("User agent policy"));
@@ -1087,7 +1126,7 @@ BOOL Initialize()
    if (wrc != 0)
    {
       TCHAR buffer[1024];
-      nxlog_write(NXLOG_ERROR, _T("Call to WSAStartup() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Call to WSAStartup() failed (%s)"), GetLastSocketErrorText(buffer, 1024));
       return FALSE;
    }
 #endif
