@@ -199,6 +199,7 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','0','0',1,0,'C','Resolve DNS to IP on status poll.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll.Interval','0','0',1,0,'I','Number of status polls between resolving primary host name to IP, if Objects.Nodes.ResolveDNSToIPOnStatusPoll set to "Always".','polls');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.ResolveNames','1','1',1,0,'B','Resolve node name using DNS, SNMP system name, or host name if current node name is it''s IP address.','');
+INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.Resolver.AddressFamilyHint','0','0',1,0,'C','Address family hint for node DNS name resolver.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.Nodes.SyncNamesWithDNS','0','0',1,0,'B','Enable/disable synchronization of node names with DNS on each configuration poll.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.PollCountForStatusChange','1','1',1,1,'I','The number of consecutive unsuccessful polls required to declare interface as down.','polls');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Objects.ResponsibleUsers.AllowedTags','','',1,0,'S','Allowed tags for responsible users (comma separated list).','');
@@ -307,6 +308,14 @@ INSERT INTO config_values (var_name,var_value) VALUES ('SNMP.Traps.ListenerPort'
 INSERT INTO config_values (var_name,var_value) VALUES ('Syslog.ListenPort','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('XMPP.Port','65535');
 INSERT INTO config_values (var_name,var_value) VALUES ('Server.AllowedCiphers','63');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultCacheMode','1','On');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultCacheMode','2','Off');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','0','Disabled');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','1','Allowed');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','2','Preferred');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','3','Required');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultProtocolCompressionMode','1','Enabled');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultProtocolCompressionMode','2','Disabled');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','0','1.0');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','1','1.1');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('AgentTunnels.TLS.MinVersion','2','1.2');
@@ -326,26 +335,6 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Business
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','0','Auto');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','1','Off');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('DBWriter.HouseKeeperInterlock','2','On');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultCacheMode','1','On');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultCacheMode','2','Off');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultProtocolCompressionMode','1','Enabled');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultProtocolCompressionMode','2','Disabled');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','0','Disabled');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','1','Allowed');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','2','Preferred');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Agent.DefaultEncryptionPolicy','3','Required');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','0','Never');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','1','Only missing elements');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','2','Always');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.CalculationAlgorithm','1','Most critical');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.CalculationAlgorithm','2','Single threshold');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.CalculationAlgorithm','3','Multiple thresholds');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','1','Unchanged');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','2','Fixed');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','3','Relative');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','4','Translated');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','0','IP, then hostname');
-INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','1','Hostname, then IP');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','0','Local password');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','1','RADIUS password');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('LDAP.NewUserAuthMethod','2','Certificate');
@@ -368,6 +357,21 @@ INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','0','Never');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','1','Always');
 INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.ResolveDNSToIPOnStatusPoll','2','On failure');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.Resolver.AddressFamilyHint','0','None');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.Resolver.AddressFamilyHint','1','IPv4');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.Resolver.AddressFamilyHint','2','IPv6');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.CalculationAlgorithm','1','Most critical');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.CalculationAlgorithm','2','Single threshold');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.CalculationAlgorithm','3','Multiple thresholds');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','1','Unchanged');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','2','Fixed');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','3','Relative');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.StatusCalculation.PropagationAlgorithm','4','Translated');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','0','Never');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','1','Only missing elements');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Server.ImportConfigurationOnStartup','2','Always');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','0','IP, then hostname');
+INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Syslog.NodeMatchingPolicy','1','Hostname, then IP');
 
 
 /*

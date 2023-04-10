@@ -24,6 +24,24 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.5 to 44.6
+ */
+static bool H_UpgradeFromV5()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Nodes.Resolver.AddressFamilyHint"), _T("0"), _T("Address family hint for node DNS name resolver."), nullptr, 'C', true, false, false, false));
+
+   static const TCHAR *batch =
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.Resolver.AddressFamilyHint','0','None')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.Resolver.AddressFamilyHint','1','IPv4')\n")
+      _T("INSERT INTO config_values (var_name,var_value,var_description) VALUES ('Objects.Nodes.Resolver.AddressFamilyHint','2','IPv6')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetMinorSchemaVersion(6));
+   return true;
+}
+
+/**
  * Upgrade from 44.4 to 44.5
  */
 static bool H_UpgradeFromV4()
@@ -185,6 +203,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 5,  44, 6,  H_UpgradeFromV5  },
    { 4,  44, 5,  H_UpgradeFromV4  },
    { 3,  44, 4,  H_UpgradeFromV3  },
    { 2,  44, 3,  H_UpgradeFromV2  },

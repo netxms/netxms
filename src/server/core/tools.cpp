@@ -265,14 +265,31 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId
 }
 
 /**
+ * Get address family hint from config
+ */
+static inline int GetAddressFamilyHint()
+{
+   switch(ConfigReadInt(_T("Objects.Nodes.Resolver.AddressFamilyHint"), 0))
+   {
+      case 1:
+         return AF_INET;
+      case 2:
+         return AF_INET6;
+      default:
+         return AF_UNSPEC;
+   }
+}
+
+/**
  * Resolve host name using zone if needed
  */
-InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname)
+InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *hostname, int afHint)
 {
    InetAddress ipAddr = InetAddress::parse(hostname);
    if (ipAddr.isValid())
       return ipAddr;
 
+   int af = (afHint != AF_UNSPEC) ? afHint : GetAddressFamilyHint();
    if (IsZoningEnabled() && (zoneUIN != 0))
    {
       // resolve address through proxy agent
@@ -283,10 +300,18 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
          if (proxy != nullptr)
          {
             TCHAR query[256], buffer[128];
-            _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s)"), hostname);
+            _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s,%d)"), hostname, (af == AF_INET) ? 4 : ((af == AF_INET6) ? 6 : 0));
             if (static_cast<Node&>(*proxy).getMetricFromAgent(query, buffer, 128) == ERR_SUCCESS)
             {
                ipAddr = InetAddress::parse(buffer);
+            }
+            if (!ipAddr.isValid() && (af != AF_UNSPEC))
+            {
+               _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s)"), hostname);
+               if (static_cast<Node&>(*proxy).getMetricFromAgent(query, buffer, 128) == ERR_SUCCESS)
+               {
+                  ipAddr = InetAddress::parse(buffer);
+               }
             }
          }
       }
@@ -294,13 +319,18 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(int32_t zoneUIN, const TCHAR *host
       // Resolve address through local resolver as fallback
       if (!ipAddr.isValid() && ConfigReadBoolean(_T("Objects.Nodes.FallbackToLocalResolver"), false))
       {
-         ipAddr = InetAddress::resolveHostName(hostname);
+         ipAddr = InetAddress::resolveHostName(hostname, af);
+         if (!ipAddr.isValid() && (af != AF_UNSPEC))
+            ipAddr = InetAddress::resolveHostName(hostname, AF_UNSPEC);
       }
    }
    else
    {
-      ipAddr = InetAddress::resolveHostName(hostname);
+      ipAddr = InetAddress::resolveHostName(hostname, af);
+      if (!ipAddr.isValid() && (af != AF_UNSPEC))
+         ipAddr = InetAddress::resolveHostName(hostname, AF_UNSPEC);
    }
+
    return ipAddr;
 }
 

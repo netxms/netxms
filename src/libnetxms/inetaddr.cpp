@@ -484,7 +484,7 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
    struct addrinfo *ai, hints;
    memset(&hints, 0, sizeof(hints));
    hints.ai_family = af;
-   if (getaddrinfo(hostname, NULL, &hints, &ai) == 0)
+   if (getaddrinfo(hostname, nullptr, &hints, &ai) == 0)
    {
       addr = InetAddress::createFromSockaddr(ai->ai_addr);
       freeaddrinfo(ai);
@@ -492,18 +492,18 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
    }
 #else
 #if HAVE_GETHOSTBYNAME2_R
-   struct hostent h, *hs = NULL;
+   struct hostent h, *hs = nullptr;
    char buffer[1024];
    int err;
    gethostbyname2_r(hostname, (af != AF_UNSPEC) ? af : AF_INET, &h, buffer, 1024, &hs, &err);
 #else
    struct hostent *hs = gethostbyname(hostname);
 #endif
-   if (hs != NULL)
+   if (hs != nullptr)
    {
       if ((hs->h_addrtype == AF_INET) && ((af == AF_UNSPEC) || (af == AF_INET)))
       {
-         return InetAddress(ntohl(*((UINT32 *)hs->h_addr)));
+         return InetAddress(ntohl(*((uint32_t*)hs->h_addr)));
       }
       else if ((hs->h_addrtype == AF_INET6) && ((af == AF_UNSPEC) || (af == AF_INET6)))
       {

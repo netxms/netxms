@@ -3668,9 +3668,7 @@ void Node::updatePrimaryIpAddr()
    if (!ipAddr.equals(getIpAddress()) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryHostName, _T("0.0.0.0")) || ((m_capabilities & NC_IS_LOCAL_MGMT) && ipAddr.isLoopback())))
    {
       TCHAR buffer1[64], buffer2[64];
-
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%d] changed from %s to %s"),
-         m_name, (int)m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("IP address for node %s [%u] changed from %s to %s"), m_name, m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
       PostSystemEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
 
       lockProperties();
