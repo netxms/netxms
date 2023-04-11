@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,7 +104,18 @@ public class SortableTreeViewer extends TreeViewer
 			getTree().setSortColumn(columns.get(defaultSortingColumn));
 		getTree().setSortDirection(defaultSortDir);
 	}
-	
+
+   /**
+    * Pack columns
+    */
+   public void packColumns()
+   {
+      Tree tree = getTree();
+      int count = tree.getColumnCount();
+      for(int i = 0; i < count; i++)
+         tree.getColumn(i).pack();
+   }
+
 	/**
 	 * Get column object by id (named data with key ID)
 	 * @param id Column ID
@@ -179,5 +190,26 @@ public class SortableTreeViewer extends TreeViewer
             return;
          }
       }
+   }
+   
+   /**
+    * Add column to viewer
+    * 
+    * @param name column name
+    * @param width column width
+    * @return created column object
+    */
+   public TreeColumn addColumn(String name, int width)
+   {
+      int index = getTree().getColumnCount();
+      TreeColumn c = new TreeColumn(getTree(), SWT.LEFT);
+      columns.add(c);
+      c.setText(name);
+      c.pack();
+      if (width > 0)
+         c.setWidth(width);
+      c.setData("ID", Integer.valueOf(index)); //$NON-NLS-1$
+      c.addSelectionListener(sortingListener);
+      return c;
    }
 }
