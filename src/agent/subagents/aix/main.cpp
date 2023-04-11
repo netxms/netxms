@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2005-2020 Victor Kirhenshtein
+** Copyright (C) 2005-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -74,11 +74,6 @@ LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
  * Shutdown flag
  */
 BOOL g_bShutdown = FALSE;
-
-/**
- * CPU usage calculator thread handle
- */
-static THREAD m_hCPUStatThread = INVALID_THREAD_HANDLE;
 
 /**
  * Detect support for source packages

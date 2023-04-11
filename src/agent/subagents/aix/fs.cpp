@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -237,7 +237,6 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCom
          }
          else
          {
-            TCHAR buffer[1024];
             nxlog_debug_tag(AIX_DEBUG_TAG, 4, _T("H_FileSystems: Call to statvfs(\"%hs\") failed (%s)"), mountPoint, _tcserror(errno));
 
             if (fstype != nullptr)
