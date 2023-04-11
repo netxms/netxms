@@ -44,6 +44,6 @@ if [ -x ./private/branding/build/prepare_release_build_hook.sh ]; then
 	./private/branding/build/prepare_release_build_hook.sh
 fi
 
-if [ -z $NO_RECONF ]; then
+if [ "x$NO_RECONF" = "x" ]; then
    ./reconf
 fi
