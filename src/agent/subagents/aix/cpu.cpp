@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2018 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -191,16 +191,15 @@ static void CpuUsageCollector()
 /**
  * Collector thread
  */
-static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *arg)
+static void CpuUsageCollectorThread()
 {
    nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("CPU usage collector thread started"));
-	while(m_stopCollectorThread == false)
-	{
-		CpuUsageCollector();
-		ThreadSleepMs(1000); // sleep 1 second
-	}
+   while(m_stopCollectorThread == false)
+   {
+      CpuUsageCollector();
+      ThreadSleepMs(1000); // sleep 1 second
+   }
    nxlog_debug_tag(AIX_DEBUG_TAG, 1, _T("CPU usage collector thread stopped"));
-	return THREAD_OK;
 }
 
 /**
@@ -208,8 +207,6 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *arg)
  */
 void StartCpuUsageCollector()
 {
-   int i, j;
-
    perfstat_cpu_total_t cpuTotals;
    if (perfstat_cpu_total(NULL, &cpuTotals, sizeof(perfstat_cpu_total_t), 1) == 1)
    {
@@ -263,7 +260,7 @@ void StartCpuUsageCollector()
    CpuUsageCollector();
 
    // fill all slots with current cpu usage
-   for (i = 1; i < CPU_USAGE_SLOTS * (m_maxCPU + 1); i++)
+   for (int i = 1; i < CPU_USAGE_SLOTS * (m_maxCPU + 1); i++)
    {
       m_cpuUsage[i] = m_cpuUsage[0];
       m_cpuUsageUser[i] = m_cpuUsageUser[0];
@@ -271,7 +268,7 @@ void StartCpuUsageCollector()
       m_cpuUsageIdle[i] = m_cpuUsageIdle[0];
       m_cpuUsageIoWait[i] = m_cpuUsageIoWait[0];
    }
-   for (i = 1; i < CPU_USAGE_SLOTS; i++)
+   for (int i = 1; i < CPU_USAGE_SLOTS; i++)
    {
       m_cpuPhysicalUsage[i] = m_cpuPhysicalUsage[0];
       m_cpuPhysicalUsageUser[i] = m_cpuPhysicalUsageUser[0];
@@ -281,7 +278,7 @@ void StartCpuUsageCollector()
    }
 
    // start collector
-   m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread, 0, NULL);
+   m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread);
 }
 
 /**

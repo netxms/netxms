@@ -261,7 +261,6 @@ LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	char device[MAX_PATH];
-	struct stat devInfo;
 	LONG rc = SYSINFO_RC_SUCCESS;
 	int i;
 
