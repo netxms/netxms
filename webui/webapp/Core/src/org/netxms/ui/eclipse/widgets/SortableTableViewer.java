@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -214,9 +214,9 @@ public class SortableTableViewer extends TableViewer
       return null;
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.TableViewer#getViewerRowFromItem(org.eclipse.swt.widgets.Widget)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.TableViewer#getViewerRowFromItem(org.eclipse.swt.widgets.Widget)
+    */
 	@Override
 	public ViewerRow getViewerRowFromItem(Widget item)
 	{
