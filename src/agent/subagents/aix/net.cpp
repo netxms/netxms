@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -395,8 +395,6 @@ LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, Ab
 	if (nSocket > 0)
 	{
 		struct ifreq ifr;
-		int flags;
-
 		memset(&ifr, 0, sizeof(ifr));
 		strlcpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
 		if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
