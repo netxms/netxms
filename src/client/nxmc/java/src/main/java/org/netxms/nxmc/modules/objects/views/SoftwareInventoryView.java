@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ public class SoftwareInventoryView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(SoftwareInventory.class);
 	public static final String ID = "org.netxms.ui.eclipse.objectview.views.SoftwareInventoryView"; //$NON-NLS-1$
-	
+
 	private SoftwareInventory inventoryWidget;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
@@ -57,9 +57,9 @@ public class SoftwareInventoryView extends ObjectView
     */
    public SoftwareInventoryView()
    {
-      super(i18n.tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "SoftwareInventory", false);
+      super(i18n.tr("Software Inventory"), ResourceManager.getImageDescriptor("icons/object-views/software.png"), "SoftwareInventory", true);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -76,11 +76,12 @@ public class SoftwareInventoryView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-		inventoryWidget = new SoftwareInventory(parent, SWT.NONE, this, "SoftwareInventoryView"); //$NON-NLS-1$
+      inventoryWidget = new SoftwareInventory(parent, SWT.NONE, this);
+
 		createActions();
 		createPopupMenu();
 	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -96,7 +97,7 @@ public class SoftwareInventoryView extends ObjectView
 		actionExportToCsv = new ExportToCsvAction(this, vp, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, vp, false);
 	}
-	
+
    /**
     * Fill context menu
     * @param mgr Menu manager
@@ -134,8 +135,8 @@ public class SoftwareInventoryView extends ObjectView
    {
       manager.add(actionExportAllToCsv);
       manager.add(new Separator());
-   }   
-   
+   }
+
    /**
     * Refresh
     */

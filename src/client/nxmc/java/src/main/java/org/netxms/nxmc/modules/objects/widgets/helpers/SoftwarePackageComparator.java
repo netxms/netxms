@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,15 +31,16 @@ import org.netxms.nxmc.modules.objects.widgets.SoftwareInventory;
  */
 public class SoftwarePackageComparator extends ViewerComparator
 {
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+    */
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
 		int result;
-		final int column = (viewer instanceof SortableTableViewer) ? (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID") : (Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID"); //$NON-NLS-1$ //$NON-NLS-2$
-		
+      final int column = (viewer instanceof SortableTableViewer) ? (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID") :
+            (Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID");
+
 		if (e1 instanceof SoftwareInventoryNode)
 		{
 			if (column == 0)

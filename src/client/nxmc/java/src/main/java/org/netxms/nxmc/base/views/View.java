@@ -662,7 +662,7 @@ public abstract class View implements MessageAreaHolder
     * @param viewer viewer to refresh
     * @param filter filter to set filtering text
     */
-   protected void setFilterClient(ISelectionProvider viewer, AbstractViewerFilter filter)
+   public void setFilterClient(ISelectionProvider viewer, AbstractViewerFilter filter)
    {
       this.viewer = viewer;
       this.filter = filter;

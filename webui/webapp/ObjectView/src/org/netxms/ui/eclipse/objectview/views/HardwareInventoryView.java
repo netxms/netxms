@@ -52,8 +52,8 @@ public class HardwareInventoryView extends ViewPart
    private Action actionRefresh;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
-   
-   /* (non-Javadoc)
+
+   /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -65,13 +65,13 @@ public class HardwareInventoryView extends ViewPart
       setPartName("Hardware Inventory - " + ((NXCSession)ConsoleSharedData.getSession()).getObjectName(rootObjectId));
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
    public void createPartControl(Composite parent)
    {
-      inventoryWidget = new HardwareInventory(parent, SWT.NONE, this, "HardwareInventoryView"); //$NON-NLS-1$
+      inventoryWidget = new HardwareInventory(parent, SWT.NONE, this);
       inventoryWidget.setRootObjectId(rootObjectId);
 
       createActions();

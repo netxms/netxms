@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -47,8 +45,8 @@ import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwareInventoryContentProvider;
 import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwareInventoryNode;
 import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwarePackageComparator;
+import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwarePackageFilter;
 import org.netxms.nxmc.modules.objects.widgets.helpers.SoftwarePackageLabelProvider;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -56,80 +54,64 @@ import org.xnap.commons.i18n.I18n;
  */
 public class SoftwareInventory extends Composite
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SoftwareInventory.class);
-   
 	public static final int COLUMN_NAME = 0;
 	public static final int COLUMN_VERSION = 1;
 	public static final int COLUMN_VENDOR = 2;
 	public static final int COLUMN_DATE = 3;
 	public static final int COLUMN_DESCRIPTION = 4;
 	public static final int COLUMN_URL = 5;
-	
-	private static final String[] names = { i18n.tr("Name"), i18n.tr("Version"), i18n.tr("Vendor"), i18n.tr("Install Date"), i18n.tr("Description"), i18n.tr("URL") };
-	private static final int[] widths = { 200, 100, 200, 100, 300, 200 };
-	
-	private ObjectView viewPart;
+
+   private final I18n i18n = LocalizationHelper.getI18n(SoftwareInventory.class);
+   private final String[] names = { i18n.tr("Name"), i18n.tr("Version"), i18n.tr("Vendor"), i18n.tr("Install Date"), i18n.tr("Description"), i18n.tr("URL") };
+   private final int[] widths = { 200, 100, 200, 100, 300, 200 };
+
+	private ObjectView view;
 	private ColumnViewer viewer;
-	private String configPrefix;
+   private SoftwarePackageFilter filter = new SoftwarePackageFilter();
 	private MenuManager menuManager = null;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public SoftwareInventory(Composite parent, int style, ObjectView viewPart, String configPrefix)
+   public SoftwareInventory(Composite parent, int style, ObjectView view)
 	{
 		super(parent, style);
-		this.viewPart = viewPart;
-		this.configPrefix = configPrefix;
+		this.view = view;
 		
 		setLayout(new FillLayout());
 		createTableViewer();
 	}
-	
+
 	/**
 	 * Create viewer for table mode
 	 */
 	private void createTableViewer()
 	{
 		viewer = new SortableTableViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
-		WidgetHelper.restoreColumnViewerSettings(viewer, configPrefix);
-		viewer.getControl().addDisposeListener(new DisposeListener() {			
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				WidgetHelper.saveColumnViewerSettings(viewer, configPrefix);
-			}
-		});
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SoftwarePackageLabelProvider(false));
 		viewer.setComparator(new SoftwarePackageComparator());
-		
+      viewer.addFilter(filter);
+      view.setFilterClient(viewer, filter);
 		if (menuManager != null)
 		{
 			Menu menu = menuManager.createContextMenu(viewer.getControl());
 			viewer.getControl().setMenu(menu);
 		}
 	}
-	
+
 	/**
 	 * Create viewer for tree mode
 	 */
 	private void createTreeViewer()
 	{
 		viewer = new SortableTreeViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
-		WidgetHelper.restoreColumnViewerSettings(viewer, configPrefix);
-		viewer.getControl().addDisposeListener(new DisposeListener() {			
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				WidgetHelper.saveColumnViewerSettings(viewer, configPrefix);
-			}
-		});
 		viewer.setContentProvider(new SoftwareInventoryContentProvider());
 		viewer.setLabelProvider(new SoftwarePackageLabelProvider(true));
 		viewer.setComparator(new SoftwarePackageComparator());
-		
+      viewer.addFilter(filter);
+      view.setFilterClient(viewer, filter);
 		if (menuManager != null)
 		{
 			Menu menu = menuManager.createContextMenu(viewer.getControl());
@@ -143,19 +125,20 @@ public class SoftwareInventory extends Composite
 	public void refresh()
 	{
 		final NXCSession session = Registry.getSession();
-		new Job(i18n.tr("Read software package information"), viewPart) {
+      new Job(i18n.tr("Reading software package information"), view) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
-				AbstractObject object = session.findObjectById(viewPart.getObjectId());
+				AbstractObject object = session.findObjectById(view.getObjectId());
 				if (object instanceof AbstractNode)
 				{
-					final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(viewPart.getObjectId());
+					final List<SoftwarePackage> packages = session.getNodeSoftwarePackages(view.getObjectId());
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
 							viewer.setInput(packages.toArray());
+                     ((SortableTableViewer)viewer).packColumns();
 						}
 					});
 				}
@@ -180,6 +163,7 @@ public class SoftwareInventory extends Composite
 						public void run()
 						{
 							viewer.setInput(nodes);
+                     ((SortableTreeViewer)viewer).packColumns();
 						}
 					});
 				}
@@ -226,7 +210,7 @@ public class SoftwareInventory extends Composite
 	{
 		return viewer;
 	}
-	
+
 	/**
 	 * @param manager
 	 */
@@ -246,5 +230,15 @@ public class SoftwareInventory extends Composite
    public void clear()
    {
       viewer.setInput(new ArrayList<Objects>());
+   }
+
+   /**
+    * Get viewer filter.
+    *
+    * @return viewer filter
+    */
+   public SoftwarePackageFilter getFilter()
+   {
+      return filter;
    }
 }

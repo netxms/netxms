@@ -74,11 +74,11 @@ public class HardwareInventoryView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-      inventoryWidget = new HardwareInventory(parent, SWT.NONE, this, "HardwareInventoryView"); //$NON-NLS-1$
+      inventoryWidget = new HardwareInventory(parent, SWT.NONE, this);
       createActions();
       createPopupMenu();
    }
-   
+
    /**
     * Create actions
     */

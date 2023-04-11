@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,10 +53,10 @@ public class SoftwareInventoryView extends ViewPart
 	private Action actionRefresh;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
+
+   /**
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
 	@Override
 	public void init(IViewSite site) throws PartInitException
 	{
@@ -66,13 +66,13 @@ public class SoftwareInventoryView extends ViewPart
 		setPartName(Messages.get().SoftwareInventoryView_PartName + ((NXCSession)ConsoleSharedData.getSession()).getObjectName(rootObjectId));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		inventoryWidget = new SoftwareInventory(parent, SWT.NONE, this, "SoftwareInventoryView"); //$NON-NLS-1$
+      inventoryWidget = new SoftwareInventory(parent, SWT.NONE, this);
 		inventoryWidget.setRootObjectId(rootObjectId);
 
 		createActions();

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -37,7 +35,6 @@ import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.HardwareComponentComparator;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.HardwareComponentLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -55,48 +52,38 @@ public class HardwareInventory extends Composite
    public static final int COLUMN_SERIAL_NUMBER = 7;
    public static final int COLUMN_LOCATION = 8;
    public static final int COLUMN_DESCRIPTION = 9;
-   
+
    private static final String[] names = { "Category", "Index", "Type", "Vendor", "Model", "Capacity", "Part number", "Serial number", "Location", "Description" };
    private static final int[] widths = { 100, 70, 100, 200, 200, 90, 130, 130, 200, 300 };
-   
+
    private IViewPart viewPart;
    private long rootObjectId;
-   private ColumnViewer viewer;
-   private String configPrefix;
+   private SortableTableViewer viewer;
    private MenuManager menuManager = null;
-   
+
    /**
     * @param parent
     * @param style
     */
-   public HardwareInventory(Composite parent, int style, IViewPart viewPart, String configPrefix)
+   public HardwareInventory(Composite parent, int style, IViewPart viewPart)
    {
       super(parent, style);
       this.viewPart = viewPart;
-      this.configPrefix = configPrefix;
-      
+
       setLayout(new FillLayout());
       createTableViewer();
    }
-   
+
    /**
     * Create table viewer
     */
    private void createTableViewer()
    {
       viewer = new SortableTableViewer(this, names, widths, 0, SWT.UP, SWT.MULTI | SWT.FULL_SELECTION);
-      WidgetHelper.restoreColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
-      viewer.getControl().addDisposeListener(new DisposeListener() {       
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            WidgetHelper.saveColumnViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configPrefix);
-         }
-      });
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new HardwareComponentLabelProvider());
       viewer.setComparator(new HardwareComponentComparator());
-      
+
       if (menuManager != null)
       {
          Menu menu = menuManager.createContextMenu(viewer.getControl());
@@ -105,14 +92,14 @@ public class HardwareInventory extends Composite
          viewPart.getSite().registerContextMenu(menuManager, viewer);
       }
    }
-   
+
    /**
     * Refresh list
     */
    public void refresh()
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Loading hardware inventory", viewPart, Activator.PLUGIN_ID, null) {
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Loading hardware inventory", viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -122,10 +109,11 @@ public class HardwareInventory extends Composite
                public void run()
                {
                   viewer.setInput(components.toArray());
+                  viewer.packColumns();
                }
             });
       }
-         
+
          @Override
          protected String getErrorMessage()
          {
