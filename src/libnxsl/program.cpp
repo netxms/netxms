@@ -59,7 +59,7 @@ static const char *s_nxslCommandMnemonic[] =
    "CASELT", "CASEGT", "CASEGT", "PUSH",
    "PUSH", "PUSH", "PUSH", "PUSH", "PUSH",
    "PUSH", "PUSH", "SPREAD", "ARGV", "APPEND",
-   "FSTR"
+   "FSTR", "CALL"
 };
 
 /**
@@ -313,11 +313,14 @@ void NXSL_ProgramBuilder::dump(FILE *fp, uint32_t addr, const NXSL_Instruction& 
       case OPCODE_CALL:
          _ftprintf(fp, _T("%04X, %d\n"), instruction.m_operand.m_addr, instruction.m_stackItems);
          break;
-      case OPCODE_CALL_METHOD:
-         _ftprintf(fp, _T("@%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
-         break;
       case OPCODE_CALL_EXTPTR:
          _ftprintf(fp, _T("%hs, %d\n"), instruction.m_operand.m_function->m_name, instruction.m_stackItems);
+         break;
+      case OPCODE_CALL_INDIRECT:
+         _ftprintf(fp, _T("(%d)\n"), instruction.m_stackItems);
+         break;
+      case OPCODE_CALL_METHOD:
+         _ftprintf(fp, _T("@%hs, %d\n"), instruction.m_operand.m_identifier->value, instruction.m_stackItems);
          break;
       case OPCODE_CATCH:
       case OPCODE_JMP:

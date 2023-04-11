@@ -1,0 +1,8 @@
+/* Tests for bult-in function __invoke */
+assert(__invoke("pow", 2, 3) == 8);
+assert(abs(__invoke("time") - time()) < 2);
+
+arr = %( 2, 3 );
+assert(__invoke("pow", ...arr) == 8);
+
+return 0;

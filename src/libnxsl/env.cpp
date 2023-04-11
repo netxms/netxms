@@ -27,73 +27,73 @@
 /**
  * Externals
  */
-int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_abs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_acos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_asin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_assert(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_atan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_atan2(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_classof(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_cos(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_cosh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_exit(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_exp(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_floor(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_format(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_index(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_inList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_left(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_length(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_log(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_log10(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_lower(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_max(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_md5(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_min(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_print(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_println(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_random(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_replace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_right(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_round(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sin(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sinh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_sqrt(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_substr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tan(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_tanh(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_time(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_trace(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_upper(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_weierstrass(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Base64Decode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Base64Encode(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ByteStream(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
-int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** ppResult, NXSL_VM* vm);
+int F_FormatMetricPrefix(int argc, NXSL_Value** argv, NXSL_Value** result, NXSL_VM* vm);
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetCurrentTimeMs(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_GetThreadPoolNames(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -102,7 +102,7 @@ int F_JsonArray(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonObject(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_JsonParse(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_Table(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -111,7 +111,7 @@ int F_CopyFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_CreateDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_DeleteFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FileAccess(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
-int F_OpenFile(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_OpenFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_RemoveDirectory(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_RenameFile(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
@@ -119,10 +119,19 @@ int S_max(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value
 int S_min(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 
 /**
+ * Placeholder for __invoke function - will only be called if no arguments provided
+ */
+static int F_invoke(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+}
+
+/**
  * Default built-in function list
  */
 static NXSL_ExtFunction s_builtinFunctions[] =
 {
+   { "__invoke", F_invoke, -1 },
    { "__new@ByteStream", F_ByteStream, 0 },
    { "__new@GeoLocation", F_GeoLocation, -1 },
    { "__new@InetAddress", F_InetAddress, -1 },

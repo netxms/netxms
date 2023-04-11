@@ -15,11 +15,12 @@ nxsltest_DATA = \
 	arrays.nxsl \
 	base64.nxsl \
 	boolean.nxsl \
-   bytestream.nxsl \
+	bytestream.nxsl \
 	control.nxsl \
 	gethost.nxsl \
 	globals.nxsl \
 	hashmap.nxsl \
+	invoke.nxsl \
 	json.nxsl \
 	like.nxsl \
 	math.nxsl \

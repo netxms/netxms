@@ -223,7 +223,7 @@ Function:
 		char szErrorText[256];
 
 		builder->addInstruction(lexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS);
-		
+
 		if (!builder->addFunction($2, INVALID_ADDRESS, szErrorText))
 		{
 			compiler->error(szErrorText);
@@ -1285,7 +1285,10 @@ New:
 FunctionCall:
 	FunctionName { builder->addInstruction(lexer->getCurrLine(), OPCODE_ARGV); } ParameterList ')'
 {
-	builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $3);
+	if (!strcmp($1.v, "__invoke"))
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_INDIRECT, static_cast<int16_t>($3 - 1));
+	else
+		builder->addInstruction(lexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $3);
 }
 |	FunctionName ')'
 {

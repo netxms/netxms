@@ -202,6 +202,19 @@ public:
    }
 
    /**
+    * Remove value from stack at given offset from top
+    */
+   void *remove(int offset)
+   {
+      if ((offset <= 0) || (offset > m_pos))
+         return nullptr;
+      void *value = m_data[m_pos - offset];
+      memmove(&m_data[m_pos - offset], &m_data[m_pos - offset + 1], (offset - 1) * sizeof(void*));
+      m_pos--;
+      return value;
+   }
+
+   /**
     * Reste stack
     */
    void reset()
@@ -230,6 +243,7 @@ public:
    T *pop() { return (T*)NXSL_Stack::pop(); }
    T *peek() { return (T*)NXSL_Stack::peek(); }
    T *peekAt(int offset) { return (T*)NXSL_Stack::peekAt(offset); }
+   T *remove(int offset) { return (T*)NXSL_Stack::remove(offset); }
 };
 
 class NXSL_Value;

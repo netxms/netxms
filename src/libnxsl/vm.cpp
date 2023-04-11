@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1430,6 +1430,44 @@ void NXSL_VM::execute()
             dwNext = m_instructionSet.size();
          if (cp->m_stackItems > 0)
             m_argvIndex--;
+         break;
+      case OPCODE_CALL_INDIRECT:
+         if (m_dataStack.getPosition() > cp->m_stackItems + m_spreadCounts[m_argvIndex])
+         {
+            pValue = m_dataStack.remove(cp->m_stackItems + m_spreadCounts[m_argvIndex] + 1);
+            if (pValue->isString())
+            {
+               pFunc = m_env->findFunction(pValue->getValueAsMBString());
+               if (pFunc != nullptr)
+               {
+                  if (callExternalFunction(pFunc, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))
+                     dwNext = m_instructionSet.size();
+               }
+               else
+               {
+                  uint32_t addr = getFunctionAddress(pValue->getValueAsMBString());
+                  if (addr != INVALID_ADDRESS)
+                  {
+                     dwNext = addr;
+                     callFunction((cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0);
+                  }
+                  else
+                  {
+                     error(NXSL_ERR_NO_FUNCTION);
+                  }
+               }
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_STRING);
+            }
+            destroyValue(pValue);
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         m_argvIndex--;
          break;
       case OPCODE_CALL_METHOD:
          if (callMethod(*cp->m_operand.m_identifier, (cp->m_stackItems > 0) ? cp->m_stackItems + m_spreadCounts[m_argvIndex] : 0))

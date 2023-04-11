@@ -154,6 +154,7 @@ typedef void *yyscan_t;
 #define OPCODE_ARGV           109
 #define OPCODE_APPEND_ALL     110
 #define OPCODE_FSTRING        111
+#define OPCODE_CALL_INDIRECT  112
 
 class NXSL_Compiler;
 
