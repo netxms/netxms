@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -91,19 +91,6 @@ bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(const X509 *cert, int nid, 
 }
 
 /**
- * Get single field from certificate issuer
- */
-bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(const X509 *cert, int nid, TCHAR *buffer, size_t size)
-{
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-   X509_NAME *issuer = X509_get_issuer_name(cert);
-#else
-   X509_NAME *issuer = X509_get_issuer_name(const_cast<X509*>(cert));
-#endif
-   return (issuer != nullptr) ? GetX509NameField(issuer, nid, buffer, size) : false;
-}
-
-/**
  * Get CN from certificate
  */
 bool LIBNETXMS_EXPORTABLE GetCertificateCN(const X509 *cert, TCHAR *buffer, size_t size)
@@ -120,51 +107,31 @@ bool LIBNETXMS_EXPORTABLE GetCertificateOU(const X509 *cert, TCHAR *buffer, size
 }
 
 /**
- * Get subject/issuer/... string (C=XX,ST=state,L=locality,O=org,OU=unit,CN=cn) from certificate
+ * Convert X.509 name to string representation
  */
-template<bool (*GetField)(const X509*, int, TCHAR*, size_t)> static inline String GetCertificateNameString(const X509 *cert)
+static String X509NameToString(X509_NAME *name)
 {
    StringBuffer text;
-   TCHAR buffer[256];
-   if (GetField(cert, NID_countryName, buffer, 256))
+   int count = X509_NAME_entry_count(name);
+   for(int i = 0; i < count; i++)
    {
-      text.append(_T("C="));
-      text.append(buffer);
-   }
-   if (GetField(cert, NID_stateOrProvinceName, buffer, 256))
-   {
+      X509_NAME_ENTRY *entry = X509_NAME_get_entry(name, i);
+
       if (!text.isEmpty())
          text.append(_T(','));
-      text.append(_T("ST="));
-      text.append(buffer);
-   }
-   if (GetField(cert, NID_localityName, buffer, 256))
-   {
-      if (!text.isEmpty())
-         text.append(_T(','));
-      text.append(_T("L="));
-      text.append(buffer);
-   }
-   if (GetField(cert, NID_organizationName, buffer, 256))
-   {
-      if (!text.isEmpty())
-         text.append(_T(','));
-      text.append(_T("O="));
-      text.append(buffer);
-   }
-   if (GetField(cert, NID_organizationalUnitName, buffer, 256))
-   {
-      if (!text.isEmpty())
-         text.append(_T(','));
-      text.append(_T("OU="));
-      text.append(buffer);
-   }
-   if (GetField(cert, NID_commonName, buffer, 256))
-   {
-      if (!text.isEmpty())
-         text.append(_T(','));
-      text.append(_T("CN="));
-      text.append(buffer);
+
+      ASN1_OBJECT *o = X509_NAME_ENTRY_get_object(entry);
+      text.appendUtf8String(OBJ_nid2sn(OBJ_obj2nid(o)));
+      text.append(_T('='));
+
+      ASN1_STRING *data = X509_NAME_ENTRY_get_data(entry);
+      if (data == nullptr)
+         continue;
+
+      unsigned char *entryText;
+      ASN1_STRING_to_UTF8(&entryText, data);
+      text.appendUtf8String(reinterpret_cast<char*>(entryText));
+      OPENSSL_free(entryText);
    }
    return text;
 }
@@ -174,7 +141,12 @@ template<bool (*GetField)(const X509*, int, TCHAR*, size_t)> static inline Strin
  */
 String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(const X509 *cert)
 {
-   return GetCertificateNameString<GetCertificateSubjectField>(cert);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   X509_NAME *subject = X509_get_subject_name(cert);
+#else
+   X509_NAME *subject = X509_get_subject_name(const_cast<X509*>(cert));
+#endif
+   return (subject != nullptr) ? X509NameToString(subject) : String();
 }
 
 /**
@@ -182,7 +154,12 @@ String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(const X509 *cert)
  */
 String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(const X509 *cert)
 {
-   return GetCertificateNameString<GetCertificateIssuerField>(cert);
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+   X509_NAME *issuer = X509_get_issuer_name(cert);
+#else
+   X509_NAME *issuer = X509_get_issuer_name(const_cast<X509*>(cert));
+#endif
+   return (issuer != nullptr) ? X509NameToString(issuer) : String();
 }
 
 /**
