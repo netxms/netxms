@@ -4,5 +4,11 @@ assert(abs(__invoke("time") - time()) < 2);
 
 arr = %( 2, 3 );
 assert(__invoke("pow", ...arr) == 8);
+assert(__invoke("sum", ...arr) == 5);
 
 return 0;
+
+function sum(n1, n2)
+{
+   return n1 + n2;
+}

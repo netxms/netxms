@@ -119,11 +119,11 @@ int S_max(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value
 int S_min(const NXSL_Identifier& name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 
 /**
- * Placeholder for __invoke function - will only be called if no arguments provided
+ * Placeholder for __invoke function - will only be called if no arguments provided or via indirect call
  */
 static int F_invoke(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
-   return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+   return (argc == 0) ? NXSL_ERR_INVALID_ARGUMENT_COUNT : NXSL_ERR_TOO_MANY_NESTED_CALLS;
 }
 
 /**
