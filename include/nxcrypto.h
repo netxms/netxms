@@ -50,7 +50,6 @@ bool LIBNETXMS_EXPORTABLE GetCertificateSubjectField(const X509 *cert, int nid, 
 bool LIBNETXMS_EXPORTABLE GetCertificateCN(const X509 *cert, TCHAR *buffer, size_t size);
 bool LIBNETXMS_EXPORTABLE GetCertificateOU(const X509 *cert, TCHAR *buffer, size_t size);
 String LIBNETXMS_EXPORTABLE GetCertificateSubjectString(const X509 *cert);
-bool LIBNETXMS_EXPORTABLE GetCertificateIssuerField(const X509 *cert, int nid, TCHAR *buffer, size_t size);
 String LIBNETXMS_EXPORTABLE GetCertificateIssuerString(const X509 *cert);
 time_t LIBNETXMS_EXPORTABLE GetCertificateExpirationTime(const X509 *cert);
 time_t LIBNETXMS_EXPORTABLE GetCertificateIssueTime(const X509 *cert);
