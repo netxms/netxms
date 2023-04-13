@@ -592,7 +592,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
    sendPollerMsg(_T("Finished configuration poll of sensor %s\r\n"), m_name);
    sendPollerMsg(_T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
-   autoFillAssetData();
+   autoFillAssetProperties();
 
    lockProperties();
    m_runtimeFlags &= ~ODF_CONFIGURATION_POLL_PENDING;

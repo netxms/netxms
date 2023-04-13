@@ -4439,7 +4439,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node is marked as unreachable, configuration poll aborted"));
    }
 
-   autoFillAssetData();
+   autoFillAssetProperties();
 
    // Finish configuration poll
    poller->setStatus(_T("cleanup"));

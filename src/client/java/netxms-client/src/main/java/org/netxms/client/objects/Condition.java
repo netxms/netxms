@@ -28,7 +28,6 @@ import org.netxms.client.datacollection.ConditionDciInfo;
 
 /**
  * Condition object
- *
  */
 public class Condition extends GenericObject
 {

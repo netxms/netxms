@@ -90,9 +90,9 @@ public abstract class AbstractObject
 	public static final int OBJECT_CONDITION = 13;
 	public static final int OBJECT_CLUSTER = 14;
    public static final int OBJECT_BUSINESSSERVICEPROTOTYPE = 15;
-   // public static final int OBJECT_POLICYROOT = 16;
-   // public static final int OBJECT_AGENTPOLICY = 17;
-   // public static final int OBJECT_AGENTPOLICY_CONFIG = 18;
+   public static final int OBJECT_ASSET = 16;
+   public static final int OBJECT_ASSETGROUP = 17;
+   public static final int OBJECT_ASSETROOT = 18;
 	public static final int OBJECT_NETWORKMAPROOT = 19;
 	public static final int OBJECT_NETWORKMAPGROUP = 20;
 	public static final int OBJECT_NETWORKMAP = 21;
@@ -147,6 +147,7 @@ public abstract class AbstractObject
 	protected PostalAddress postalAddress;
 	protected UUID mapImage;
 	protected long drillDownObjectId;
+   protected long assetId;
 	protected final HashSet<Long> trustedObjects = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
@@ -237,6 +238,7 @@ public abstract class AbstractObject
 		postalAddress = new PostalAddress(msg);
 		mapImage = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
 		drillDownObjectId = msg.getFieldAsInt64(NXCPCodes.VID_DRILL_DOWN_OBJECT_ID);
+      assetId = msg.getFieldAsInt64(NXCPCodes.VID_ASSET_ID);
 		creationTime = msg.getFieldAsDate(NXCPCodes.VID_CREATION_TIME);
 
 		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
@@ -1082,8 +1084,18 @@ public abstract class AbstractObject
 	}
 
 	/**
-	 * @return the statusCalculationMethod
-	 */
+    * Get ID of linked asset object.
+    *
+    * @return ID of linked asset object or 0
+    */
+   public long getAssetId()
+   {
+      return assetId;
+   }
+
+   /**
+    * @return the statusCalculationMethod
+    */
 	public int getStatusCalculationMethod()
 	{
 		return statusCalculationMethod;

@@ -25,7 +25,7 @@
 /**
  * Default constructor
  */
-Rack::Rack() : super(), Asset(this) //TODO: ass pollable interface for configuration poll and asset auto set
+Rack::Rack() : super()
 {
 	m_height = 42;
 	m_topBottomNumbering = false;
@@ -35,7 +35,7 @@ Rack::Rack() : super(), Asset(this) //TODO: ass pollable interface for configura
 /**
  * Constructor for creating new object
  */
-Rack::Rack(const TCHAR *name, int height) : super(name, 0), Asset(this)
+Rack::Rack(const TCHAR *name, int height) : super(name, 0)
 {
 	m_height = height;
    m_topBottomNumbering = false;
@@ -106,9 +106,6 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, uint32_t id)
       }
 	}
 
-   if (success)
-      success = Asset::loadFromDatabase(hdb, id);
-
 	return success;
 }
 
@@ -146,11 +143,6 @@ bool Rack::saveToDatabase(DB_HANDLE hdb)
 	}
 	unlockProperties();
 
-   if (success && (m_modified & MODIFY_AM_INSTANCES))
-   {
-      success = Asset::saveToDatabase(hdb);
-   }
-
 	return success;
 }
 
@@ -166,8 +158,6 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
       success = ExecuteQueryOnObject(hdb, m_id, _T("DELETE FROM rack_passive_elements WHERE rack_id=?"));
    for(int i = 0; i < m_passiveElements->size() && success; i++)
       success = m_passiveElements->get(i)->deleteChildren(hdb, m_id);
-   if (success)
-      success = Asset::deleteFromDatabase(hdb);
    return success;
 }
 
@@ -231,9 +221,6 @@ uint32_t Rack::modifyFromMessageInternal(const NXCPMessage& msg)
       }
    }
 
-   if (msg.isFieldExist(VID_AM_DATA_BASE))
-      Asset::modifyFromMessage(msg);
-
    return super::modifyFromMessageInternal(msg);
 }
 
@@ -263,11 +250,12 @@ json_t *Rack::toJson()
    json_object_set_new(root, "passiveElements", passiveElements);
    unlockProperties();
 
-   Asset::assetToJson(root);
-
    return root;
 }
 
+/**
+ * Get description for passive element
+ */
 String Rack::getRackPasiveElementDescription(uint32_t id)
 {
    StringBuffer description;

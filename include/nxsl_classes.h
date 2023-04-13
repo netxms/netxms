@@ -323,6 +323,10 @@ protected:
       }
       return name.equals(tmpl);
    }
+   void registerAttributes(const StringSet& attributes)
+   {
+      m_attributes.addAll(attributes);
+   }
 
 public:
    NXSL_Class();

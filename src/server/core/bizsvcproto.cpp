@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -445,7 +445,7 @@ unique_ptr<StringMap> BusinessServicePrototype::getInstances()
 unique_ptr<SharedObjectArray<BusinessService>> BusinessServicePrototype::getServices()
 {
    unique_ptr<SharedObjectArray<NetObj>> objects = g_idxBusinessServicesById.getObjects([](NetObj* object, void* context) -> bool {
-      return (object->getObjectClass() == OBJECT_BUSINESS_SERVICE) && (static_cast<BusinessService*>(object)->getPrototypeId() == CAST_FROM_POINTER(context, uint32_t));
+      return (object->getObjectClass() == OBJECT_BUSINESSSERVICE) && (static_cast<BusinessService*>(object)->getPrototypeId() == CAST_FROM_POINTER(context, uint32_t));
    }, CAST_TO_POINTER(m_id, void*));
 
    unique_ptr<SharedObjectArray<BusinessService>> services = make_unique<SharedObjectArray<BusinessService>>(objects->size());

@@ -25,6 +25,7 @@
 #include <ethernet_ip.h>
 #include <agent_tunnel.h>
 #include <nxcore_websvc.h>
+#include <asset_management.h>
 
 /**
  * Maintenance journal access
@@ -736,9 +737,28 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const NXSL_Identifie
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("asset"))
    {
-      if (object->isAsset())
+      uint32_t assetId = object->getAssetId();
+      if (assetId != 0)
       {
-         value = vm->createValue(vm->createObject(&g_nxslAsset, new shared_ptr<NetObj>(object->self())));
+         shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
+         value = (asset != nullptr) ? asset->createNXSLObject(vm) : vm->createValue();
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("assetId"))
+   {
+      value = vm->createValue(object->getAssetId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("assetProperties"))
+   {
+      uint32_t assetId = object->getAssetId();
+      if (assetId != 0)
+      {
+         shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
+         value = (asset != nullptr) ? vm->createValue(vm->createObject(&g_nxslAssetPropertiesClass, new shared_ptr<Asset>(asset))) : vm->createValue();
       }
       else
       {
@@ -966,6 +986,95 @@ NXSL_Value *NXSL_SubnetClass::getAttr(NXSL_Object *object, const NXSL_Identifier
    {
       value = vm->createValue(subnet->getZoneUIN());
    }
+   return value;
+}
+
+/**
+ * NXSL class "Asset" constructor
+ */
+NXSL_AssetClass::NXSL_AssetClass() : NXSL_NetObjClass()
+{
+   setName(_T("Asset"));
+}
+
+/**
+ * NXSL class "Asset" attribute getter
+ */
+NXSL_Value *NXSL_AssetClass::getAttr(NXSL_Object *object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = object->vm();
+   auto asset = SharedObjectFromData<Asset>(object);
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("linkedObject"))
+   {
+      uint32_t id = asset->getLinkedObjectId();
+      if (id != 0)
+      {
+         shared_ptr<NetObj> object = FindObjectById(id);
+         value = (object != nullptr) ? object->createNXSLObject(vm) : vm->createValue();
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("linkedObjectId"))
+   {
+      value = vm->createValue(asset->getLinkedObjectId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("properties"))
+   {
+      value = vm->createValue(vm->createObject(&g_nxslAssetPropertiesClass, new shared_ptr<Asset>(asset)));
+   }
+   return value;
+}
+
+/**
+ * NXSL class "AssetProperties" constructor
+ */
+NXSL_AssetPropertiesClass::NXSL_AssetPropertiesClass() : NXSL_Class()
+{
+   setName(_T("AssetProperties"));
+}
+
+/**
+ * NXSL class "AssetProperties" destructor
+ */
+void NXSL_AssetPropertiesClass::onObjectDelete(NXSL_Object *object)
+{
+   delete static_cast<shared_ptr<Asset>*>(object->getData());
+}
+
+/**
+ * NXSL class "AssetProperties" attribute getter
+ */
+NXSL_Value *NXSL_AssetPropertiesClass::getAttr(NXSL_Object *_object, const NXSL_Identifier& attr)
+{
+   NXSL_Value *value = NXSL_Class::getAttr(_object, attr);
+   if (value != nullptr)
+      return value;
+
+   NXSL_VM *vm = _object->vm();
+   auto asset = SharedObjectFromData<Asset>(_object);
+   if (asset != nullptr)   // Object can be null if attribute scan is running
+   {
+#ifdef UNICODE
+      WCHAR wattr[MAX_IDENTIFIER_LENGTH];
+      utf8_to_wchar(attr.value, -1, wattr, MAX_IDENTIFIER_LENGTH);
+      wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
+      value = asset->getPropertyValueForNXSL(vm, wattr);
+#else
+      value = object->getValueForNXSL(vm, attr.value);
+#endif
+   }
+   else if (attr.value[0] == '?')
+   {
+      registerAttributes(*GetAssetAttributeNames());
+   }
+
    return value;
 }
 
@@ -4133,52 +4242,6 @@ NXSL_Value *NXSL_AlarmCommentClass::getAttr(NXSL_Object *object, const NXSL_Iden
 }
 
 /**
- * NXSL class Asset: constructor
- */
-NXSL_Asset::NXSL_Asset() : NXSL_Class()
-{
-   setName(_T("Asset"));
-}
-
-
-/**
- * Object destructor
- */
-void NXSL_Asset::onObjectDelete(NXSL_Object *object)
-{
-   delete static_cast<shared_ptr<NetObj>*>(object->getData());
-}
-
-/**
- * NXSL class AssetData: get attribute
- */
-NXSL_Value *NXSL_Asset::getAttr(NXSL_Object *_object, const NXSL_Identifier& attr)
-{
-   NXSL_Value *value = NXSL_Class::getAttr(_object, attr);
-   if (value != nullptr)
-      return value;
-
-   NXSL_VM *vm = _object->vm();
-   auto object = SharedObjectFromData<NetObj>(_object);
-   if (object != nullptr)   // Object can be null if attribute scan is running
-   {
-      Asset *asset = object->getAsAsset();
-      if (asset != nullptr)
-      {
-#ifdef UNICODE
-         WCHAR wattr[MAX_IDENTIFIER_LENGTH];
-         utf8_to_wchar(attr.value, -1, wattr, MAX_IDENTIFIER_LENGTH);
-         wattr[MAX_IDENTIFIER_LENGTH - 1] = 0;
-         value = asset->getValueForNXSL(vm, wattr);
-#else
-         value = object->getValueForNXSL(vm, attr.value);
-#endif
-      }
-   }
-   return value;
-}
-
-/**
  * DCI::forcePoll() method
  */
 NXSL_METHOD_DEFINITION(DCI, forcePoll)
@@ -5644,7 +5707,8 @@ void NXSL_OSPFNeighborClass::onObjectDelete(NXSL_Object *object)
 NXSL_AccessPointClass g_nxslAccessPointClass;
 NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_AlarmCommentClass g_nxslAlarmCommentClass;
-NXSL_Asset g_nxslAsset;
+NXSL_AssetClass g_nxslAssetClass;
+NXSL_AssetPropertiesClass g_nxslAssetPropertiesClass;
 NXSL_BusinessServiceClass g_nxslBusinessServiceClass;
 NXSL_BusinessServiceCheckClass g_nxslBusinessServiceCheckClass;
 NXSL_ChassisClass g_nxslChassisClass;

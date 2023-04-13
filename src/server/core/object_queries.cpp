@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -422,9 +422,12 @@ unique_ptr<ObjectArray<ObjectQueryResult>> QueryObjects(const TCHAR *query, uint
 
    // Set class constants
    vm->addConstant("ACCESSPOINT", vm->createValue(OBJECT_ACCESSPOINT));
-   vm->addConstant("BUSINESSSERVICE", vm->createValue(OBJECT_BUSINESS_SERVICE));
-   vm->addConstant("BUSINESSSERVICEPROTOTYPE", vm->createValue(OBJECT_BUSINESS_SERVICE_PROTOTYPE));
-   vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESS_SERVICE_ROOT));
+   vm->addConstant("ASSET", vm->createValue(OBJECT_ASSET));
+   vm->addConstant("ASSETGROUP", vm->createValue(OBJECT_ASSETGROUP));
+   vm->addConstant("ASSETROOT", vm->createValue(OBJECT_ASSETROOT));
+   vm->addConstant("BUSINESSSERVICE", vm->createValue(OBJECT_BUSINESSSERVICE));
+   vm->addConstant("BUSINESSSERVICEPROTOTYPE", vm->createValue(OBJECT_BUSINESSSERVICEPROTO));
+   vm->addConstant("BUSINESSSERVICEROOT", vm->createValue(OBJECT_BUSINESSSERVICEROOT));
    vm->addConstant("CHASSIS", vm->createValue(OBJECT_CHASSIS));
    vm->addConstant("CLUSTER", vm->createValue(OBJECT_CLUSTER));
    vm->addConstant("CONDITION", vm->createValue(OBJECT_CONDITION));

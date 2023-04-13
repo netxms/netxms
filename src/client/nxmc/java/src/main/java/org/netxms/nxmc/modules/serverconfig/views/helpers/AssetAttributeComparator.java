@@ -21,61 +21,58 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.serverconfig.views.AssetManagementAttributesView;
-
+import org.netxms.nxmc.modules.serverconfig.views.AssetManagementSchemaManager;
 
 /**
- *  Asset management attribute comparator
+ * Asset attribute comparator
  */
-public class AssetManagementAttributeComparator extends ViewerComparator
+public class AssetAttributeComparator extends ViewerComparator
 {
-
    /**
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
    public int compare(Viewer viewer, Object e1, Object e2)
    {
-      AssetManagementAttribute attr1 = (AssetManagementAttribute)e1;
-      AssetManagementAttribute attr2 = (AssetManagementAttribute)e2;
+      AssetAttribute attr1 = (AssetAttribute)e1;
+      AssetAttribute attr2 = (AssetAttribute)e2;
       int result = 0; 
       
       switch((Integer) ((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
       {
-         case AssetManagementAttributesView.NAME:
+         case AssetManagementSchemaManager.COLUMN_NAME:
             result = attr1.getName().compareToIgnoreCase(attr2.getName());
             break;
-         case AssetManagementAttributesView.DISPLAY_NAME:
+         case AssetManagementSchemaManager.COLUMN_DISPLAY_NAME:
             result = attr1.getDisplayName().compareToIgnoreCase(attr2.getDisplayName());
             break;
-         case AssetManagementAttributesView.DATA_TYPE:
-            result = AssetManagementAttributeLabelProvider.DATA_TYPES[attr1.getDataType().getValue()].compareTo(
-                  AssetManagementAttributeLabelProvider.DATA_TYPES[attr2.getDataType().getValue()]);
+         case AssetManagementSchemaManager.COLUMN_DATA_TYPE:
+            result = AssetAttributeListLabelProvider.DATA_TYPES[attr1.getDataType().getValue()].compareTo(
+                  AssetAttributeListLabelProvider.DATA_TYPES[attr2.getDataType().getValue()]);
             break;
-         case AssetManagementAttributesView.IS_MANDATORY:
+         case AssetManagementSchemaManager.COLUMN_IS_MANDATORY:
             result = Boolean.compare(attr1.isMandatory(), attr2.isMandatory());
             break;
-         case AssetManagementAttributesView.IS_UNIQUE:
+         case AssetManagementSchemaManager.COLUMN_IS_UNIQUE:
             result = Boolean.compare(attr1.isUnique(), attr2.isUnique());
             break;
-         case AssetManagementAttributesView.HAS_SCRIPT:
+         case AssetManagementSchemaManager.COLUMN_HAS_SCRIPT:
             result = Boolean.compare(!attr1.getAutofillScript().isEmpty(), !attr2.getAutofillScript().isEmpty());
             break;
-         case AssetManagementAttributesView.RANGE_MIN:
+         case AssetManagementSchemaManager.COLUMN_RANGE_MIN:
             result = Integer.compare(attr1.getRangeMin(), attr2.getRangeMin());
             break;
-         case AssetManagementAttributesView.RANGE_MAX:
+         case AssetManagementSchemaManager.COLUMN_RANGE_MAX:
             result = Integer.compare(attr1.getRangeMax(), attr2.getRangeMax());
             break;
-         case AssetManagementAttributesView.SYSTEM_TYPE:
-            result = AssetManagementAttributeLabelProvider.SYSTEM_TYPE[attr1.getSystemType().getValue()].compareTo(
-                  AssetManagementAttributeLabelProvider.SYSTEM_TYPE[attr2.getSystemType().getValue()]);
+         case AssetManagementSchemaManager.COLUMN_SYSTEM_TYPE:
+            result = AssetAttributeListLabelProvider.SYSTEM_TYPE[attr1.getSystemType().getValue()].compareTo(
+                  AssetAttributeListLabelProvider.SYSTEM_TYPE[attr2.getSystemType().getValue()]);
             break;
       }      
       
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : - result;
    }
-   
 }

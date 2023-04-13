@@ -20,16 +20,16 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
- * Asset management attribute filter
+ * Asset attribute filter
  */
-public class AssetManagementAttributeFilter extends ViewerFilter implements AbstractViewerFilter
+public class AssetAttributeFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
-   
+
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
@@ -39,13 +39,13 @@ public class AssetManagementAttributeFilter extends ViewerFilter implements Abst
       if (filterString == null || filterString.isEmpty())
          return true;
       
-      AssetManagementAttribute task = (AssetManagementAttribute)element;
+      AssetAttribute task = (AssetAttribute)element;
       if ((task.getName().toUpperCase().contains(filterString)) ||
             (task.getDisplayName().toUpperCase().contains(filterString)))
          return true;
       return false;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.AbstractViewerFilter#setFilterString(java.lang.String)
     */
@@ -54,5 +54,4 @@ public class AssetManagementAttributeFilter extends ViewerFilter implements Abst
    {
       this.filterString = filterString != null ? filterString.toUpperCase() : null;
    }
-
 }

@@ -21,57 +21,62 @@ package org.netxms.nxmc.modules.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.serverconfig.views.AssetManagementAttributesView;
+import org.netxms.nxmc.modules.serverconfig.views.AssetManagementSchemaManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Asset management attribute label provider
+ * Asset attribute list label provider
  */
-public class AssetManagementAttributeLabelProvider extends LabelProvider implements ITableLabelProvider
+public class AssetAttributeListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   final static I18n i18n = LocalizationHelper.getI18n(AssetManagementAttributeLabelProvider.class);
-   
+   final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeListLabelProvider.class);
+
    public final static String[] DATA_TYPES = { i18n.tr("String"), i18n.tr("Integer"), i18n.tr("Number"), 
          i18n.tr("Boolean"), i18n.tr("Enum"), i18n.tr("MAC address"), i18n.tr("IP address"), 
          i18n.tr("UUID"), i18n.tr("Object reference") };
    public final static String[] SYSTEM_TYPE = { i18n.tr("None"), i18n.tr("Serial"), i18n.tr("IP address"), 
          i18n.tr("MAC address"), i18n.tr("Vendor"), i18n.tr("Model") };
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+    */
    @Override
    public String getColumnText(Object element, int columnIndex)
    {
-      AssetManagementAttribute attr = (AssetManagementAttribute)element;
+      AssetAttribute attr = (AssetAttribute)element;
       switch(columnIndex)
       {
-         case AssetManagementAttributesView.NAME:
+         case AssetManagementSchemaManager.COLUMN_NAME:
             return attr.getName();
-         case AssetManagementAttributesView.DISPLAY_NAME:
+         case AssetManagementSchemaManager.COLUMN_DISPLAY_NAME:
             return attr.getDisplayName();
-         case AssetManagementAttributesView.DATA_TYPE:
+         case AssetManagementSchemaManager.COLUMN_DATA_TYPE:
             return DATA_TYPES[attr.getDataType().getValue()];
-         case AssetManagementAttributesView.IS_MANDATORY:
+         case AssetManagementSchemaManager.COLUMN_IS_MANDATORY:
             return attr.isMandatory() ? i18n.tr("Yes") : i18n.tr("No");
-         case AssetManagementAttributesView.IS_UNIQUE:
+         case AssetManagementSchemaManager.COLUMN_IS_UNIQUE:
             return attr.isUnique() ? i18n.tr("Yes") : i18n.tr("No");
-         case AssetManagementAttributesView.HAS_SCRIPT:
+         case AssetManagementSchemaManager.COLUMN_HAS_SCRIPT:
             return attr.getAutofillScript().isEmpty() ? i18n.tr("No") : i18n.tr("Yes");
-         case AssetManagementAttributesView.RANGE_MIN:
+         case AssetManagementSchemaManager.COLUMN_RANGE_MIN:
             return Integer.toString(attr.getRangeMin());
-         case AssetManagementAttributesView.RANGE_MAX:
+         case AssetManagementSchemaManager.COLUMN_RANGE_MAX:
             return Integer.toString(attr.getRangeMax());
-         case AssetManagementAttributesView.SYSTEM_TYPE:
+         case AssetManagementSchemaManager.COLUMN_SYSTEM_TYPE:
             return SYSTEM_TYPE[attr.getSystemType().getValue()];
          
       }
       return null;
    }
 
+   /**
+    * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+    */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
       return null;
    }
-
 }

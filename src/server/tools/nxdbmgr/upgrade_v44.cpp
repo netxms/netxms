@@ -24,6 +24,42 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.6 to 44.7
+ */
+static bool H_UpgradeFromV6()
+{
+   CHK_EXEC(DBRenameColumn(g_dbHandle, _T("am_enum_values"), _T("attr_value"), _T("value")));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE assets (")
+      _T("   id integer not null,")
+      _T("   linked_object_id integer not null,")
+      _T("   PRIMARY KEY (id))")));
+
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE asset_properties (")
+      _T("   asset_id integer not null,")
+      _T("   attr_name varchar(63) not null,")
+      _T("   value varchar(2000) null,")
+      _T("PRIMARY KEY(asset_id,attr_name))")));
+
+   if (DBIsTableExist(g_dbHandle, _T("am_object_data")) == DBIsTableExist_Found)
+   {
+      CHK_EXEC(SQLQuery(_T("DROP TABLE am_object_data")));
+   }
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE object_properties ADD asset_id integer\n")
+      _T("UPDATE object_properties SET asset_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("asset_id")));
+
+   CHK_EXEC(SetMinorSchemaVersion(7));
+   return true;
+}
+
+/**
  * Upgrade from 44.5 to 44.6
  */
 static bool H_UpgradeFromV5()
@@ -143,31 +179,24 @@ static bool H_UpgradeFromV1()
 static bool H_UpgradeFromV0()
 {
    CHK_EXEC(CreateTable(
-            _T("CREATE TABLE am_attributes (")
-            _T("attr_name varchar(63) not null,")
-            _T("display_name varchar(255) null,")
-            _T("data_type integer not null,")
-            _T("is_mandatory char(1) not null,")
-            _T("is_unique char(1) not null,")
-            _T("autofill_script $SQL:TEXT null,")
-            _T("range_min integer not null,")
-            _T("range_max integer not null,")
-            _T("sys_type integer not null,")
-            _T("PRIMARY KEY(attr_name))")));
+      _T("CREATE TABLE am_attributes (")
+      _T("   attr_name varchar(63) not null,")
+      _T("   display_name varchar(255) null,")
+      _T("   data_type integer not null,")
+      _T("   is_mandatory char(1) not null,")
+      _T("   is_unique char(1) not null,")
+      _T("   autofill_script $SQL:TEXT null,")
+      _T("   range_min integer not null,")
+      _T("   range_max integer not null,")
+      _T("   sys_type integer not null,")
+      _T("   PRIMARY KEY(attr_name))")));
 
    CHK_EXEC(CreateTable(
-            _T("CREATE TABLE am_enum_values (")
-            _T("attr_name varchar(63) not null,")
-            _T("attr_value varchar(63) not null,")
-            _T("display_name varchar(255) not null,")
-            _T("PRIMARY KEY(attr_name,attr_value))")));
-
-   CHK_EXEC(CreateTable(
-            _T("CREATE TABLE am_object_data (")
-            _T("object_id integer not null,")
-            _T("attr_name varchar(63) not null,")
-            _T("attr_value varchar(255) null,")
-            _T("PRIMARY KEY(object_id,attr_name))")));
+      _T("CREATE TABLE am_enum_values (")
+      _T("   attr_name varchar(63) not null,")
+      _T("   attr_value varchar(63) not null,")
+      _T("   display_name varchar(255) not null,")
+      _T("   PRIMARY KEY(attr_name,attr_value))")));
 
    // Update access rights for predefined "Admins" group
    DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=1073741825"));
@@ -176,7 +205,7 @@ static bool H_UpgradeFromV0()
       if (DBGetNumRows(hResult) > 0)
       {
          uint64_t access = DBGetFieldUInt64(hResult, 0, 0);
-         access |= SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE;
+         access |= SYSTEM_ACCESS_MANAGE_AM_SCHEMA;
          TCHAR query[256];
          _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=1073741825"), access);
          CHK_EXEC(SQLQuery(query));
@@ -203,6 +232,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 6,  44, 7,  H_UpgradeFromV6  },
    { 5,  44, 6,  H_UpgradeFromV5  },
    { 4,  44, 5,  H_UpgradeFromV4  },
    { 3,  44, 4,  H_UpgradeFromV3  },

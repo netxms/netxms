@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -411,7 +411,7 @@ void BusinessService::onChildStateChange()
    for(int i = 0; (i < getChildList().size()) && (mostCriticalState != STATUS_CRITICAL); i++)
    {
       NetObj *o = getChildList().get(i);
-      if (o->getObjectClass() != OBJECT_BUSINESS_SERVICE)
+      if (o->getObjectClass() != OBJECT_BUSINESSSERVICE)
          continue;
 
       int state = static_cast<BusinessService*>(o)->getServiceState();
@@ -483,7 +483,7 @@ void BusinessService::statusPoll(PollerInfo *poller, ClientSession *session, uin
       for(int i = 0; (i < getChildList().size()) && (mostCriticalState != STATUS_CRITICAL); i++)
       {
          NetObj *o = getChildList().get(i);
-         if (o->getObjectClass() != OBJECT_BUSINESS_SERVICE)
+         if (o->getObjectClass() != OBJECT_BUSINESSSERVICE)
             continue;
 
          int state = static_cast<BusinessService*>(o)->getServiceState();
@@ -515,7 +515,7 @@ void BusinessService::addTicketToParents(shared_ptr<BusinessServiceTicketData> d
    {
       if (DBBegin(hdb))
       {
-         unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESS_SERVICE);
+         unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESSSERVICE);
          for (const shared_ptr<NetObj>& parent : *parents)
             static_cast<BusinessService&>(*parent).addChildTicket(hStmt, data);
          DBCommit(hdb);
@@ -534,7 +534,7 @@ void BusinessService::addTicketToParents(shared_ptr<BusinessServiceTicketData> d
  */
 void BusinessService::addChildTicket(DB_STATEMENT hStmt, const shared_ptr<BusinessServiceTicketData>& data)
 {
-   unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESS_SERVICE);
+   unique_ptr<SharedObjectArray<NetObj>> parents = getParents(OBJECT_BUSINESSSERVICE);
    for (const shared_ptr<NetObj>& parent : *parents)
       static_cast<BusinessService&>(*parent).addChildTicket(hStmt, data);
 
@@ -772,7 +772,7 @@ shared_ptr<BusinessService> BusinessService::getParentService() const
 
    readLockParentList();
    for(int i = 0; i < getParentList().size(); i++)
-      if (getParentList().get(i)->getObjectClass() == OBJECT_BUSINESS_SERVICE)
+      if (getParentList().get(i)->getObjectClass() == OBJECT_BUSINESSSERVICE)
       {
          service = static_pointer_cast<BusinessService>(getParentList().getShared(i));
          break;

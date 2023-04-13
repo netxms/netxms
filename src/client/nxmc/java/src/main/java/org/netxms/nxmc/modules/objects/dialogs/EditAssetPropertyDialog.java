@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
@@ -47,14 +47,14 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Editor dialog for asset management attribute instance
  */
-public class EditAssetAttributeInstanceDialog extends Dialog
+public class EditAssetPropertyDialog extends Dialog
 {
-   private static final Logger logger = LoggerFactory.getLogger(EditAssetAttributeInstanceDialog.class);
+   private static final Logger logger = LoggerFactory.getLogger(EditAssetPropertyDialog.class);
 
-   private final I18n i18n = LocalizationHelper.getI18n(EditAssetAttributeInstanceDialog.class);
+   private final I18n i18n = LocalizationHelper.getI18n(EditAssetPropertyDialog.class);
 
    private String value;
-   private AssetManagementAttribute attribute;
+   private AssetAttribute attribute;
    private Composite mainElement;
 
    /**
@@ -64,7 +64,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
     * @param attributeName attribute name
     * @param value current attribute instance value
     */
-   public EditAssetAttributeInstanceDialog(Shell parentShell, String attributeName, String value)
+   public EditAssetPropertyDialog(Shell parentShell, String attributeName, String value)
    {
       super(parentShell);   
       attribute = Registry.getSession().getAssetManagementSchema().get(attributeName);
@@ -150,7 +150,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
          {
             Combo enumCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, attributeDisplayName, WidgetHelper.DEFAULT_LAYOUT_DATA);
             int currentIndex = 0;
-            for (Entry<String, String> element : attribute.getEnumMapping().entrySet())
+            for (Entry<String, String> element : attribute.getEnumValues().entrySet())
             {
                enumCombo.add(element.getValue().isBlank() ? element.getKey() : element.getValue());
                if (value != null && value.equals(element.getKey()))
@@ -236,7 +236,7 @@ public class EditAssetAttributeInstanceDialog extends Dialog
                MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("One of options should be selected"));
                return;
             }
-            value = (String)attribute.getEnumMapping().keySet().toArray()[selectionIndex];                       
+            value = (String)attribute.getEnumValues().keySet().toArray()[selectionIndex];                       
             break;
          default:
          case NUMBER:

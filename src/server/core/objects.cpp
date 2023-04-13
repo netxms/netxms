@@ -34,6 +34,7 @@ shared_ptr<ServiceRoot> NXCORE_EXPORTABLE g_infrastructureServiceRoot;
 shared_ptr<TemplateRoot> NXCORE_EXPORTABLE g_templateRoot;
 shared_ptr<NetworkMapRoot> NXCORE_EXPORTABLE g_mapRoot;
 shared_ptr<DashboardRoot> NXCORE_EXPORTABLE g_dashboardRoot;
+shared_ptr<AssetRoot> NXCORE_EXPORTABLE g_assetRoot;
 shared_ptr<BusinessServiceRoot> NXCORE_EXPORTABLE g_businessServiceRoot;
 
 UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
@@ -56,6 +57,7 @@ ObjectIndex g_idxBusinessServicesById;
 ObjectIndex g_idxNetMapById;
 ObjectIndex g_idxChassisById;
 ObjectIndex g_idxSensorById;
+ObjectIndex g_idxAssetById;
 
 /**
  * Static data
@@ -260,6 +262,10 @@ void ObjectsInit()
    g_dashboardRoot = make_shared<DashboardRoot>();
    NetObjInsert(g_dashboardRoot, false, false);
 
+   // Create "Asset Root" object
+   g_assetRoot = make_shared<AssetRoot>();
+   NetObjInsert(g_assetRoot, false, false);
+
    // Create "Business Service Root" object
    g_businessServiceRoot = make_shared<BusinessServiceRoot>();
    NetObjInsert(g_businessServiceRoot, false, false);
@@ -335,6 +341,8 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
       switch(object->getObjectClass())
       {
          case OBJECT_GENERIC:
+         case OBJECT_ASSETGROUP:
+         case OBJECT_ASSETROOT:
          case OBJECT_NETWORK:
          case OBJECT_CONTAINER:
          case OBJECT_SERVICEROOT:
@@ -348,7 +356,7 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
 			case OBJECT_DASHBOARDROOT:
          case OBJECT_DASHBOARDGROUP:
 			case OBJECT_DASHBOARD:
-			case OBJECT_BUSINESS_SERVICE_ROOT:
+			case OBJECT_BUSINESSSERVICEROOT:
 			case OBJECT_RACK:
             break;
          case OBJECT_NODE:
@@ -377,9 +385,12 @@ void NetObjInsert(const shared_ptr<NetObj>& object, bool newObject, bool importe
             if (static_cast<Node&>(*object).getAgentCertificateMappingData() != nullptr)
                UpdateAgentCertificateMappingIndex(static_pointer_cast<Node>(object), nullptr, static_cast<Node&>(*object).getAgentCertificateMappingData());
             break;
-         case OBJECT_BUSINESS_SERVICE:
-         case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+         case OBJECT_BUSINESSSERVICE:
+         case OBJECT_BUSINESSSERVICEPROTO:
             g_idxBusinessServicesById.put(object->getId(), object);
+            break;
+         case OBJECT_ASSET:
+            g_idxAssetById.put(object->getId(), object);
             break;
 			case OBJECT_CLUSTER:
             g_idxClusterById.put(object->getId(), object);
@@ -496,6 +507,8 @@ void NetObjDeleteFromIndexes(const NetObj& object)
    switch(object.getObjectClass())
    {
       case OBJECT_GENERIC:
+      case OBJECT_ASSETGROUP:
+      case OBJECT_ASSETROOT:
       case OBJECT_NETWORK:
       case OBJECT_CONTAINER:
       case OBJECT_SERVICEROOT:
@@ -509,7 +522,7 @@ void NetObjDeleteFromIndexes(const NetObj& object)
 		case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARDGROUP:
 		case OBJECT_DASHBOARD:
-		case OBJECT_BUSINESS_SERVICE_ROOT:
+		case OBJECT_BUSINESSSERVICEROOT:
 		case OBJECT_RACK:
 			break;
       case OBJECT_NODE:
@@ -538,12 +551,15 @@ void NetObjDeleteFromIndexes(const NetObj& object)
          if (static_cast<const Node&>(object).getAgentCertificateMappingData() != nullptr)
             UpdateAgentCertificateMappingIndex(const_cast<Node&>(static_cast<const Node&>(object)).self(), static_cast<const Node&>(object).getAgentCertificateMappingData(), nullptr);
          break;
-		case OBJECT_BUSINESS_SERVICE:
-      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+		case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
 			g_idxBusinessServicesById.remove(object.getId());
          break;
-		case OBJECT_CLUSTER:
-			g_idxClusterById.remove(object.getId());
+		case OBJECT_ASSET:
+			g_idxAssetById.remove(object.getId());
+         break;
+      case OBJECT_CLUSTER:
+         g_idxClusterById.remove(object.getId());
          break;
       case OBJECT_MOBILEDEVICE:
 			g_idxMobileDeviceById.remove(object.getId());
@@ -1104,9 +1120,12 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objClass)
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
-      case OBJECT_BUSINESS_SERVICE:
-      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+      case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
+         break;
+      case OBJECT_ASSET:
+         index = &g_idxAssetById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1171,9 +1190,12 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
-      case OBJECT_BUSINESS_SERVICE:
-      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+      case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
+         break;
+      case OBJECT_ASSET:
+         index = &g_idxAssetById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1221,9 +1243,12 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, vo
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
-      case OBJECT_BUSINESS_SERVICE:
-      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+      case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
+         break;
+      case OBJECT_ASSET:
+         index = &g_idxAssetById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1461,7 +1486,8 @@ bool LoadObjects()
                                            _T("check_function"), _T("check_operation"), _T("sample_count"), _T("event_code"), _T("rearm_event_code"),
                                            _T("repeat_interval"), _T("current_state"), _T("current_severity"), _T("match_count"),
                                            _T("last_event_timestamp"), _T("table_id"), _T("flags"), _T("id"), _T("activation_event"),
-                                           _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"), nullptr };
+                                           _T("deactivation_event"), _T("group_id"), _T("iface_id"), _T("vlan_id"), _T("object_id"),
+                                           _T("asset_id"), nullptr };
 
       nxlog_debug_tag(_T("obj.init"), 1, _T("Caching object configuration tables"));
       bool success =
@@ -1534,7 +1560,8 @@ bool LoadObjects()
                DBCacheTable(cachedb, mainDB, _T("hardware_inventory"), _T("node_id,category,component_index"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("versionable_object"), _T("object_id"), _T("*"), intColumns) &&
                DBCacheTable(cachedb, mainDB, _T("pollable_objects"), _T("id"), _T("*"), intColumns) &&
-               DBCacheTable(cachedb, mainDB, _T("am_object_data"), _T("object_id,attr_name"), _T("*"));
+               DBCacheTable(cachedb, mainDB, _T("assets"), _T("id"), _T("*"), intColumns) &&
+               DBCacheTable(cachedb, mainDB, _T("asset_properties"), _T("asset_id,attr_name"), _T("*"));
 
       if (success)
       {
@@ -1555,6 +1582,7 @@ bool LoadObjects()
    g_templateRoot->loadFromDatabase(hdb);
 	g_mapRoot->loadFromDatabase(hdb);
 	g_dashboardRoot->loadFromDatabase(hdb);
+   g_assetRoot->loadFromDatabase(hdb);
 	g_businessServiceRoot->loadFromDatabase(hdb);
 
 	// Switch indexes to startup mode
@@ -1562,6 +1590,7 @@ bool LoadObjects()
    g_idxSubnetById.setStartupMode(true);
 	g_idxZoneByUIN.setStartupMode(true);
 	g_idxNodeById.setStartupMode(true);
+   g_idxAssetById.setStartupMode(true);
 	g_idxClusterById.setStartupMode(true);
 	g_idxMobileDeviceById.setStartupMode(true);
 	g_idxAccessPointById.setStartupMode(true);
@@ -1643,6 +1672,10 @@ bool LoadObjects()
    // All data collection targets must be loaded at this point.
    ThreadCreate(CacheLoadingThread);
 
+   LoadObjectsFromTable<Cluster>(_T("asset"), hdb, _T("assets"));
+   g_idxAssetById.setStartupMode(false);
+   LoadObjectsFromTable<DashboardGroup>(_T("asset group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_ASSETGROUP));
+
    LoadObjectsFromTable<Template>(_T("template"), hdb, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
    LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));
    g_idxNetMapById.setStartupMode(false);
@@ -1651,8 +1684,8 @@ bool LoadObjects()
    LoadObjectsFromTable<NetworkMapGroup>(_T("map group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_NETWORKMAPGROUP));
    LoadObjectsFromTable<Dashboard>(_T("dashboard"), hdb, _T("dashboards"));
    LoadObjectsFromTable<DashboardGroup>(_T("dashboard group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_DASHBOARDGROUP));
-   LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESS_SERVICE));
-   LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESS_SERVICE_PROTOTYPE));
+   LoadObjectsFromTable<BusinessService>(_T("business service"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICE));
+   LoadObjectsFromTable<BusinessServicePrototype>(_T("business service prototype"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_BUSINESSSERVICEPROTO));
 
    g_idxBusinessServicesById.setStartupMode(false);
    g_idxObjectById.setStartupMode(false);
@@ -1670,7 +1703,7 @@ bool LoadObjects()
    // Allow objects to change it's modification flag
    g_modificationsLocked = false;
 
-   //Prune custom attributes if required
+   // Prune custom attributes if required
    if (MetaDataReadInt32(_T("PruneCustomAttributes"), 0) > 0)
    {
       g_idxObjectById.forEach([](NetObj *object, void *context) { object->pruneCustomAttributes(); }, nullptr);
@@ -1966,8 +1999,7 @@ bool IsValidParentClass(int childClass, int parentClass)
          break;
       case OBJECT_TEMPLATEROOT:
       case OBJECT_TEMPLATEGROUP:
-         if ((childClass == OBJECT_TEMPLATEGROUP) ||
-             (childClass == OBJECT_TEMPLATE))
+         if ((childClass == OBJECT_TEMPLATEGROUP) || (childClass == OBJECT_TEMPLATE))
             return true;
          break;
       case OBJECT_TEMPLATE:
@@ -1981,15 +2013,13 @@ bool IsValidParentClass(int childClass, int parentClass)
          break;
       case OBJECT_NETWORKMAPROOT:
       case OBJECT_NETWORKMAPGROUP:
-         if ((childClass == OBJECT_NETWORKMAPGROUP) ||
-             (childClass == OBJECT_NETWORKMAP))
+         if ((childClass == OBJECT_NETWORKMAPGROUP) || (childClass == OBJECT_NETWORKMAP))
             return true;
          break;
       case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARDGROUP:
       case OBJECT_DASHBOARD:
-         if ((childClass == OBJECT_DASHBOARDGROUP) ||
-             (childClass == OBJECT_DASHBOARD))
+         if ((childClass == OBJECT_DASHBOARDGROUP) || (childClass == OBJECT_DASHBOARD))
             return true;
          break;
       case OBJECT_NODE:
@@ -2003,9 +2033,14 @@ bool IsValidParentClass(int childClass, int parentClass)
          if (childClass == OBJECT_NODE)
             return true;
          break;
-		case OBJECT_BUSINESS_SERVICE_ROOT:
-      case OBJECT_BUSINESS_SERVICE:
-			if ((childClass == OBJECT_BUSINESS_SERVICE) || (childClass == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
+      case OBJECT_ASSETROOT:
+      case OBJECT_ASSETGROUP:
+         if ((childClass == OBJECT_ASSETGROUP) || (childClass == OBJECT_ASSET))
+            return true;
+         break;
+		case OBJECT_BUSINESSSERVICEROOT:
+      case OBJECT_BUSINESSSERVICE:
+			if ((childClass == OBJECT_BUSINESSSERVICE) || (childClass == OBJECT_BUSINESSSERVICEPROTO))
             return true;
          break;
       case OBJECT_ZONE:
@@ -2026,6 +2061,14 @@ bool IsValidParentClass(int childClass, int parentClass)
 	}
 
    return false;
+}
+
+/**
+ * Check if given class is a valid taget for asset link
+ */
+bool IsValidAssetLinkTargetClass(int objectClass)
+{
+   return (objectClass == OBJECT_ACCESSPOINT) || (objectClass == OBJECT_CHASSIS) || (objectClass == OBJECT_MOBILEDEVICE) || (objectClass == OBJECT_NODE) || (objectClass == OBJECT_RACK) || (objectClass == OBJECT_SENSOR);
 }
 
 /**
@@ -2191,8 +2234,8 @@ bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass)
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
-      case OBJECT_BUSINESS_SERVICE:
-      case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+      case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
          break;
       case OBJECT_CLUSTER:

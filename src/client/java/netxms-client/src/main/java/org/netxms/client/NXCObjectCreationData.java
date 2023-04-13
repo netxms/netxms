@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -101,6 +101,7 @@ public class NXCObjectCreationData
    private String description;
    private long sensorProxy;
    private int instanceDiscoveryMethod;
+   private long assetId;
 
 	/**
 	 * Constructor.
@@ -1153,6 +1154,22 @@ public class NXCObjectCreationData
    }
 
    /**
+    * @return the assetId
+    */
+   public long getAssetId()
+   {
+      return assetId;
+   }
+
+   /**
+    * @param assetId the assetId to set
+    */
+   public void setAssetId(long assetId)
+   {
+      this.assetId = assetId;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -1167,6 +1184,6 @@ public class NXCObjectCreationData
             physicalPort + ", createStatusDci=" + createStatusDci + ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" +
             chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" + sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", commProtocol=" + commProtocol + ", xmlConfig=" +
             xmlConfig + ", xmlRegConfig=" + xmlRegConfig + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", metaType=" + metaType + ", description=" + description +
-            ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + "]";
+            ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + "]";
    }
 }

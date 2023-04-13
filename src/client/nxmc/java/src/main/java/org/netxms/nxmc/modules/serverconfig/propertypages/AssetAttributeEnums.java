@@ -23,7 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.KeyValueSetEditor;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -31,19 +31,19 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Asset management attribute enum configuration
+ * Asset attribute "Enum Values" property page
  */
 public class AssetAttributeEnums extends PropertyPage
 {
    final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeEnums.class);
    
-   AssetManagementAttribute attr = null;
+   AssetAttribute attribute = null;
    KeyValueSetEditor enumEditor;
 
-   public AssetAttributeEnums(AssetManagementAttribute attr)
+   public AssetAttributeEnums(AssetAttribute attribute)
    {
       super("Enum configuration");
-      this.attr = attr;
+      this.attribute = attribute;
       noDefaultAndApplyButton();
    }
 
@@ -67,9 +67,9 @@ public class AssetAttributeEnums extends PropertyPage
       gd.heightHint = 150;
       gd.verticalIndent = WidgetHelper.OUTER_SPACING * 2;
       enumEditor.setLayoutData(gd);
-      enumEditor.addAll(attr.getEnumMapping());
+      enumEditor.addAll(attribute.getEnumValues());
       //TODO: enumEditor.setEnabled(attr.getDataType() == AMDataType.ENUM);
-      
+
       return dialogArea;
    }
 
@@ -79,8 +79,7 @@ public class AssetAttributeEnums extends PropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
-      attr.setEnumMapping(enumEditor.getContent());
+      attribute.setEnumValues(enumEditor.getContent());
       return true;
    }
-
 }

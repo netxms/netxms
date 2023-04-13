@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.constants.AMDataType;
 import org.netxms.client.constants.AMSystemType;
 import org.netxms.nxmc.Registry;
@@ -37,7 +37,7 @@ import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetManagementAttributeLabelProvider;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeListLabelProvider;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -48,8 +48,8 @@ import org.xnap.commons.i18n.I18n;
 public class AssetAttributeGeneral extends PropertyPage
 {
    final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeGeneral.class);
-   
-   AssetManagementAttribute attr = null;
+
+   AssetAttribute attribute = null;
    boolean createNew = false;
 
    LabeledText textName;
@@ -66,12 +66,12 @@ public class AssetAttributeGeneral extends PropertyPage
    /**
     * Page constructor
     * 
-    * @param attr attribute to edit
+    * @param attribute attribute to edit
     */
-   public AssetAttributeGeneral(AssetManagementAttribute attr, boolean createNew)
+   public AssetAttributeGeneral(AssetAttribute attribute, boolean createNew)
    {
       super("General");
-      this.attr = attr;
+      this.attribute = attribute;
       this.createNew = createNew;
       noDefaultAndApplyButton();
    }
@@ -83,7 +83,7 @@ public class AssetAttributeGeneral extends PropertyPage
    protected Control createContents(Composite parent)
    {
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      
+
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.marginWidth = 0;
@@ -96,7 +96,7 @@ public class AssetAttributeGeneral extends PropertyPage
       GridData gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalSpan = 2;
       textName.setLayoutData(gd);
-      textName.setText(attr.getName());
+      textName.setText(attribute.getName());
       textName.setEditable(createNew);
       
       textDisplayName = new LabeledText(dialogArea, SWT.NONE);
@@ -104,14 +104,14 @@ public class AssetAttributeGeneral extends PropertyPage
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalSpan = 2;
       textDisplayName.setLayoutData(gd);
-      textDisplayName.setText(attr.getDisplayName());
+      textDisplayName.setText(attribute.getDisplayName());
       
       comboDataType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Data type"), new GridData(SWT.FILL, SWT.CENTER, true, false));
-      for (String s : AssetManagementAttributeLabelProvider.DATA_TYPES)
+      for (String s : AssetAttributeListLabelProvider.DATA_TYPES)
       {
          comboDataType.add(s);
       }
-      comboDataType.select(attr.getDataType().getValue());
+      comboDataType.select(attribute.getDataType().getValue());
       
       comboDataType.addModifyListener(new ModifyListener() {
          
@@ -124,27 +124,27 @@ public class AssetAttributeGeneral extends PropertyPage
             haveLimits &= useLimits.getSelection();
             spinnerRangeMax.setEnabled(haveLimits);       
             spinnerRangeMax.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Maximum value"));
-            spinnerRangeMax.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
+            spinnerRangeMax.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
             spinnerRangeMin.setEnabled(haveLimits);
             spinnerRangeMin.setLabel((seleciton == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
-            spinnerRangeMin.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
+            spinnerRangeMin.setRange((seleciton == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
          }
       });
 
       comboSystemType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("System type"), new GridData(SWT.FILL, SWT.CENTER, true, false));
-      for (String s : AssetManagementAttributeLabelProvider.SYSTEM_TYPE)
+      for (String s : AssetAttributeListLabelProvider.SYSTEM_TYPE)
       {
          comboSystemType.add(s);
       }
-      comboSystemType.select(attr.getSystemType().getValue());
+      comboSystemType.select(attribute.getSystemType().getValue());
 
-      boolean haveLimits = (attr.getDataType() == AMDataType.STRING || attr.getDataType() == AMDataType.NUMBER || attr.getDataType() == AMDataType.INTEGER);
+      boolean haveLimits = (attribute.getDataType() == AMDataType.STRING || attribute.getDataType() == AMDataType.NUMBER || attribute.getDataType() == AMDataType.INTEGER);
       useLimits = new Button(dialogArea, SWT.CHECK);
       useLimits.setText(i18n.tr("Use limits"));
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalSpan = 2;
       useLimits.setLayoutData(gd);
-      useLimits.setSelection(attr.getRangeMax() != 0 || attr.getRangeMin() != 0);
+      useLimits.setSelection(attribute.getRangeMax() != 0 || attribute.getRangeMin() != 0);
       useLimits.addSelectionListener(new SelectionAdapter()
       {
          @Override
@@ -159,15 +159,15 @@ public class AssetAttributeGeneral extends PropertyPage
       
       spinnerRangeMin = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMin.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      spinnerRangeMin.setLabel((attr.getDataType() == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
-      spinnerRangeMin.setRange((attr.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
-      spinnerRangeMin.setSelection(attr.getRangeMin());
+      spinnerRangeMin.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
+      spinnerRangeMin.setRange((attribute.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
+      spinnerRangeMin.setSelection(attribute.getRangeMin());
       
       spinnerRangeMax = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMax.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      spinnerRangeMax.setLabel((attr.getDataType() == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Minimum value"));
-      spinnerRangeMax.setRange((attr.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attr.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
-      spinnerRangeMax.setSelection(attr.getRangeMax());
+      spinnerRangeMax.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Minimum value"));
+      spinnerRangeMax.setRange((attribute.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
+      spinnerRangeMax.setSelection(attribute.getRangeMax());
       
       spinnerRangeMin.setEnabled(haveLimits);
       spinnerRangeMax.setEnabled(haveLimits);
@@ -179,12 +179,12 @@ public class AssetAttributeGeneral extends PropertyPage
       buttonMandatory = new Button(checkContainer, SWT.CHECK);
       buttonMandatory.setText(i18n.tr("Is mandatory"));
       buttonMandatory.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      buttonMandatory.setSelection(attr.isMandatory());
+      buttonMandatory.setSelection(attribute.isMandatory());
       
       buttonUnique = new Button(checkContainer, SWT.CHECK);
       buttonUnique.setText(i18n.tr("Is unique"));
       buttonUnique.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      buttonUnique.setSelection(attr.isUnique());
+      buttonUnique.setSelection(attribute.isUnique());
       
       return dialogArea;
    }
@@ -219,23 +219,23 @@ public class AssetAttributeGeneral extends PropertyPage
             MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Name should be NXSL complient"));
             return false;            
          }
-         attr.setName(textName.getText());
+         attribute.setName(textName.getText());
       }
-      attr.setDisplayName(textDisplayName.getText());
-      attr.setDataType(AMDataType.getByValue(comboDataType.getSelectionIndex()));
-      attr.setSystemType(AMSystemType.getByValue(comboSystemType.getSelectionIndex()));
+      attribute.setDisplayName(textDisplayName.getText());
+      attribute.setDataType(AMDataType.getByValue(comboDataType.getSelectionIndex()));
+      attribute.setSystemType(AMSystemType.getByValue(comboSystemType.getSelectionIndex()));
       if (useLimits.getSelection())
       {
-         attr.setRangeMin(spinnerRangeMin.getSelection());
-         attr.setRangeMax(spinnerRangeMax.getSelection());
+         attribute.setRangeMin(spinnerRangeMin.getSelection());
+         attribute.setRangeMax(spinnerRangeMax.getSelection());
       }
       else
       {
-         attr.setRangeMin(0);
-         attr.setRangeMax(0);         
+         attribute.setRangeMin(0);
+         attribute.setRangeMax(0);         
       }
-      attr.setMandatory(buttonMandatory.getSelection());
-      attr.setUnique(buttonUnique.getSelection());
+      attribute.setMandatory(buttonMandatory.getSelection());
+      attribute.setUnique(buttonUnique.getSelection());
       
       return true;
    }

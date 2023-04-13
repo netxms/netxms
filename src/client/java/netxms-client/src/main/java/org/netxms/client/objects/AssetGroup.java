@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Raden Solutions
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.objects.interfaces;
+package org.netxms.client.objects;
 
-import java.util.Map;
+import org.netxms.base.NXCPMessage;
+import org.netxms.client.NXCSession;
 
 /**
- * Interface for asset
+ * Asset group object
+ *
  */
-public interface Asset
-{   
-   /**
-    * Get asset information for this object in form of key/value pairs where key is asset management attribute name.
-    * 
-    * @return asset information for this object
-    */
-   public Map<String, String> getAssetInformation();
+public class AssetGroup extends GenericObject
+{
+	/**
+    * Create from NXCP message.
+    *
+    * @param msg NXCP message
+    * @param session owning client session
+	 */
+	public AssetGroup(NXCPMessage msg, NXCSession session)
+	{
+		super(msg, session);
+	}
+
+	/**
+	 * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
+	 */
+	@Override
+	public String getObjectClassName()
+	{
+      return "AssetGroup";
+	}
 }

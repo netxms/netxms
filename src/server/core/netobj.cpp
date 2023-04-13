@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,8 +35,8 @@ static const WCHAR *s_classNameW[]=
       L"Network", L"Container", L"Zone", L"ServiceRoot",
       L"Template", L"TemplateGroup", L"TemplateRoot",
       L"NetworkService", L"VPNConnector", L"Condition",
-      L"Cluster", L"PolicyGroup", L"PolicyRoot",
-      L"AgentPolicy", L"AgentPolicyConfig", L"NetworkMapRoot",
+      L"Cluster", L"BusinessServiceProto", L"Asset",
+      L"AssetGroup", L"AssetRoot", L"NetworkMapRoot",
       L"NetworkMapGroup", L"NetworkMap", L"DashboardRoot",
       L"Dashboard", L"ReportRoot", L"ReportGroup", L"Report",
       L"BusinessServiceRoot", L"BusinessService", L"NodeLink",
@@ -50,8 +50,8 @@ static const char *s_classNameA[]=
       "Network", "Container", "Zone", "ServiceRoot",
       "Template", "TemplateGroup", "TemplateRoot",
       "NetworkService", "VPNConnector", "Condition",
-      "Cluster", "PolicyGroup", "PolicyRoot",
-      "AgentPolicy", "AgentPolicyConfig", "NetworkMapRoot",
+      "Cluster", "BusinessServiceProto", "Asset",
+      "AssetGroup", "AssetRoot", "NetworkMapRoot",
       "NetworkMapGroup", "NetworkMap", "DashboardRoot",
       "Dashboard", "ReportRoot", "ReportGroup", "Report",
       "BusinessServiceRoot", "BusinessService", "NodeLink",
@@ -103,8 +103,8 @@ NetObj::NetObj() : NObject(), m_mutexProperties(MutexType::FAST), m_dashboards(0
    m_responsibleUsers = nullptr;
    m_creationTime = 0;
    m_categoryId = 0;
+   m_assetId = 0;
    m_asPollable = nullptr;
-   m_asAsset = nullptr;
 }
 
 /**
@@ -249,7 +249,7 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
       _T("location_accuracy"), _T("location_timestamp"), _T("guid"), _T("map_image"), _T("drilldown_object_id"), _T("country"),
       _T("region"), _T("city"), _T("district"), _T("street_address"), _T("postcode"), _T("maint_event_id"),
       _T("state_before_maint"), _T("state"), _T("flags"), _T("creation_time"), _T("maint_initiator"), _T("alias"),
-      _T("name_on_map"), _T("category"), _T("comments_source"), nullptr
+      _T("name_on_map"), _T("category"), _T("comments_source"), _T("asset_id"), nullptr
    };
 
    DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("object_properties"), _T("object_id"), m_id, columns);
@@ -305,7 +305,8 @@ bool NetObj::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_nameOnMap, DB_BIND_STATIC);
    DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_categoryId);
    DBBind(hStmt, 38, DB_SQLTYPE_TEXT, m_commentsSource, DB_BIND_STATIC);
-   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_assetId);
+   DBBind(hStmt, 40, DB_SQLTYPE_INTEGER, m_id);
 
    success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -554,7 +555,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
                                   _T("status_thresholds,comments,is_system,location_type,latitude,longitude,location_accuracy,")
                                   _T("location_timestamp,guid,map_image,drilldown_object_id,country,region,city,district,street_address,")
                                   _T("postcode,maint_event_id,state_before_maint,maint_initiator,state,flags,creation_time,alias,")
-                                  _T("name_on_map,category,comments_source FROM object_properties WHERE object_id=?"));
+                                  _T("name_on_map,category,comments_source,asset_id FROM object_properties WHERE object_id=?"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -616,6 +617,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
             m_nameOnMap = DBGetFieldAsSharedString(hResult, 0, 35);
             m_categoryId = DBGetFieldULong(hResult, 0, 36);
             m_commentsSource = DBGetFieldAsSharedString(hResult, 0, 37);
+            m_assetId = DBGetFieldULong(hResult, 0, 38);
             success = true;
          }
          DBFreeResult(hResult);
@@ -1252,6 +1254,7 @@ void NetObj::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_IMAGE, m_mapImage);
    msg->setField(VID_DRILL_DOWN_OBJECT_ID, m_drilldownObjectId);
    msg->setField(VID_CATEGORY_ID, m_categoryId);
+   msg->setField(VID_ASSET_ID, m_assetId);
 	msg->setFieldFromTime(VID_CREATION_TIME, m_creationTime);
 	if ((m_trustedObjects != nullptr) && !m_trustedObjects->isEmpty())
 	{
@@ -1357,9 +1360,6 @@ void NetObj::fillMessage(NXCPMessage *msg, uint32_t userId)
 
    if (isPollable())
       getAsPollable()->pollStateToMessage(msg);
-
-   if (isAsset())
-      getAsAsset()->assetDataToMessage(msg);
 }
 
 /**

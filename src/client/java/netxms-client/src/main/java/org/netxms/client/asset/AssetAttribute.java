@@ -26,9 +26,9 @@ import org.netxms.client.constants.AMDataType;
 import org.netxms.client.constants.AMSystemType;
 
 /**
- * Assert management class 
+ * Assert attribute (element of asset management schema).
  */
-public class AssetManagementAttribute
+public class AssetAttribute
 {
    String name;
    String displayName;
@@ -39,12 +39,12 @@ public class AssetManagementAttribute
    int rangeMin;
    int rangeMax;
    AMSystemType systemType;
-   Map<String, String> enumMapping;
-   
+   Map<String, String> enumValues;
+
    /**
-    * New item constructor
+    * Create new attribute
     */
-   public AssetManagementAttribute()
+   public AssetAttribute()
    {
       name = "";
       displayName = "";
@@ -55,27 +55,27 @@ public class AssetManagementAttribute
       rangeMin = -1;
       rangeMax = - 1;
       systemType = AMSystemType.NONE;
-      enumMapping = new HashMap<String, String>();      
+      enumValues = new HashMap<String, String>();      
    }
    
    /**
-    * Constructor form server message 
+    * Create attribute from server message.
     * 
-    * @param response message with data
-    * @param fieldId base field id
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
-   public AssetManagementAttribute(NXCPMessage response, long fieldId)
+   public AssetAttribute(NXCPMessage msg, long baseId)
    {
-      name = response.getFieldAsString(fieldId++);
-      displayName = response.getFieldAsString(fieldId++);
-      dataType = AMDataType.getByValue(response.getFieldAsInt32(fieldId++));
-      isMandatory = response.getFieldAsBoolean(fieldId++);
-      isUnique = response.getFieldAsBoolean(fieldId++);
-      autofillScript = response.getFieldAsString(fieldId++);
-      rangeMin = response.getFieldAsInt32(fieldId++);
-      rangeMax = response.getFieldAsInt32(fieldId++);
-      systemType = AMSystemType.getByValue(response.getFieldAsInt32(fieldId++));
-      enumMapping = response.getStringMapFromFields(fieldId + 1, fieldId);
+      name = msg.getFieldAsString(baseId++);
+      displayName = msg.getFieldAsString(baseId++);
+      dataType = AMDataType.getByValue(msg.getFieldAsInt32(baseId++));
+      isMandatory = msg.getFieldAsBoolean(baseId++);
+      isUnique = msg.getFieldAsBoolean(baseId++);
+      autofillScript = msg.getFieldAsString(baseId++);
+      rangeMin = msg.getFieldAsInt32(baseId++);
+      rangeMax = msg.getFieldAsInt32(baseId++);
+      systemType = AMSystemType.getByValue(msg.getFieldAsInt32(baseId++));
+      enumValues = msg.getStringMapFromFields(baseId + 1, baseId);
    }
 
    /**
@@ -94,7 +94,7 @@ public class AssetManagementAttribute
       msg.setFieldInt32(NXCPCodes.VID_RANGE_MIN, rangeMin);
       msg.setFieldInt32(NXCPCodes.VID_RANGE_MAX, rangeMax);
       msg.setFieldInt32(NXCPCodes.VID_SYSTEM_TYPE, systemType.getValue());
-      msg.setFieldsFromStringMap(enumMapping, NXCPCodes.VID_AM_ENUM_MAP_BASE, NXCPCodes.VID_ENUM_COUNT);
+      msg.setFieldsFromStringMap(enumValues, NXCPCodes.VID_AM_ENUM_MAP_BASE, NXCPCodes.VID_ENUM_COUNT);
    }
 
    /**
@@ -254,16 +254,16 @@ public class AssetManagementAttribute
    /**
     * @return the enumMapping
     */
-   public Map<String, String> getEnumMapping()
+   public Map<String, String> getEnumValues()
    {
-      return enumMapping;
+      return enumValues;
    }
 
    /**
     * @param enumMapping the enumMapping to set
     */
-   public void setEnumMapping(Map<String, String> enumMapping)
+   public void setEnumValues(Map<String, String> enumMapping)
    {
-      this.enumMapping = enumMapping;
+      this.enumValues = enumMapping;
    }
 }

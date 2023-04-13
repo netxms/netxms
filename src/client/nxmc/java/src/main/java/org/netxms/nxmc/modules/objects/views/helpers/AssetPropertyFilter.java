@@ -26,12 +26,12 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
- * Asset instance filter
+ * Asset property filter
  */
-public class AssetAttributeInstanceFilter extends ViewerFilter implements AbstractViewerFilter
+public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
-   private AssetAttributeInstanceLabelProvider labelProvider;
+   private AssetPropertyListLabelProvider labelProvider;
    private NXCSession session = Registry.getSession();
 
    /**
@@ -39,7 +39,7 @@ public class AssetAttributeInstanceFilter extends ViewerFilter implements Abstra
     * 
     * @param labelProvider asset instance comparator
     */
-   public AssetAttributeInstanceFilter(AssetAttributeInstanceLabelProvider labelProvider)
+   public AssetPropertyFilter(AssetPropertyListLabelProvider labelProvider)
    {
       this.labelProvider = labelProvider;
    }
@@ -56,7 +56,7 @@ public class AssetAttributeInstanceFilter extends ViewerFilter implements Abstra
       @SuppressWarnings("unchecked")
       Entry<String, String> entry = (Entry<String, String>)element;
 
-      return session.getAssetManagementSchema().get(entry.getKey()).getActualName().toUpperCase().contains(filterString) || labelProvider.getValue(entry).toUpperCase().contains(filterString);
+      return session.getAssetManagementSchema().get(entry.getKey()).getActualName().toUpperCase().contains(filterString) || labelProvider.getPropertyValue(entry).toUpperCase().contains(filterString);
    }
 
    /**

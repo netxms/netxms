@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,16 @@ package org.netxms.client.objects;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.GeoLocationControlMode;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.interfaces.Asset;
 
 /**
  * Base class for all data collection targets
  */
-public class DataCollectionTarget extends GenericObject implements Asset
+public class DataCollectionTarget extends GenericObject
 {   
    public static final int DCF_DISABLE_STATUS_POLL    = 0x00000001;
    public static final int DCF_DISABLE_CONF_POLL      = 0x00000002;
@@ -47,7 +45,6 @@ public class DataCollectionTarget extends GenericObject implements Asset
    protected GeoLocationControlMode geoLocationControlMode;
    protected long[] geoAreas;
    protected long webServiceProxyId;
-   private Map<String, String> assetList;
 
    /**
     * Create new object.
@@ -98,7 +95,6 @@ public class DataCollectionTarget extends GenericObject implements Asset
       geoLocationControlMode = GeoLocationControlMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_GEOLOCATION_CTRL_MODE));
       geoAreas = msg.getFieldAsUInt32Array(NXCPCodes.VID_GEO_AREAS);
       webServiceProxyId = msg.getFieldAsInt64(NXCPCodes.VID_WEB_SERVICE_PROXY);
-      assetList = msg.getStringMapFromFields(NXCPCodes.VID_AM_DATA_BASE, NXCPCodes.VID_AM_COUNT);
    }
 
    /**
@@ -165,14 +161,5 @@ public class DataCollectionTarget extends GenericObject implements Asset
    public long getWebServiceProxyId()
    {
       return webServiceProxyId;
-   }
-
-   /**
-    * @see org.netxms.client.objects.interfaces.Asset#getAssetInformation()
-    */
-   @Override
-   public Map<String, String> getAssetInformation()
-   {
-      return assetList;
    }
 }

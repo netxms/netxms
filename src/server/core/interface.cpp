@@ -161,11 +161,11 @@ Interface::~Interface()
 /**
  * Create object from database record
  */
-bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
    bool success = false;
 
-   m_id = dwId;
+   m_id = id;
 
    if (!loadCommonProperties(hdb))
       return false;
@@ -978,7 +978,7 @@ uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg)
    // Flags
    if (msg.isFieldExist(VID_FLAGS))
    {
-      UINT32 mask = msg.isFieldExist(VID_FLAGS_MASK) ? (msg.getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
+      uint32_t mask = msg.isFieldExist(VID_FLAGS_MASK) ? (msg.getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
       m_flags &= ~mask;
       m_flags |= msg.getFieldAsUInt32(VID_FLAGS) & mask;
    }
@@ -989,9 +989,7 @@ uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg)
 
 	// Expected interface state
 	if (msg.isFieldExist(VID_EXPECTED_STATE))
-	{
 		setExpectedStateInternal(msg.getFieldAsInt16(VID_EXPECTED_STATE));
-	}
 
    return super::modifyFromMessageInternal(msg);
 }

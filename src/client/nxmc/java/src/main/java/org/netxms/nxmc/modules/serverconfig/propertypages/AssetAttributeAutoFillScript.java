@@ -22,23 +22,26 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.xnap.commons.i18n.I18n;
 
+/**
+ * "Auto Fill Script" property page for asset attribute
+ */
 public class AssetAttributeAutoFillScript extends PropertyPage
 {
    final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeAutoFillScript.class);
-   
-   AssetManagementAttribute attr = null;
+
+   AssetAttribute attribute;
    ScriptEditor script;
 
-   public AssetAttributeAutoFillScript(AssetManagementAttribute attr)
+   public AssetAttributeAutoFillScript(AssetAttribute attribute)
    {
-      super("Auto fill script");
-      this.attr = attr;
+      super("Auto Fill Script");
+      this.attribute = attribute;
       noDefaultAndApplyButton();
    }
 
@@ -50,9 +53,9 @@ public class AssetAttributeAutoFillScript extends PropertyPage
    {
       Composite dialogArea = new Composite(parent, SWT.NONE);
       dialogArea.setLayout(new FillLayout());
-      
-      script = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, "Should return new value for attributte instance");
-      script.setText(attr.getAutofillScript());
+
+      script = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, "Should return new value for asset property");
+      script.setText(attribute.getAutofillScript());
       return dialogArea;
    }
 
@@ -62,7 +65,7 @@ public class AssetAttributeAutoFillScript extends PropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
-      attr.setAutofillScript(script.getText());
+      attribute.setAutofillScript(script.getText());
       return true;
    }
 }

@@ -41,7 +41,6 @@ class Cluster;
 class ComponentTree;
 class Pollable;
 class EventReference;
-class Asset;
 
 /**
  * Global variables used by inline methods
@@ -86,7 +85,7 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, const TCHAR *objectId
 #define BUILTIN_OID_SERVICEROOT           2
 #define BUILTIN_OID_TEMPLATEROOT          3
 #define BUILTIN_OID_ZONE0                 4
-//#define BUILTIN_OID_POLICYROOT            5
+#define BUILTIN_OID_ASSETROOT             5
 #define BUILTIN_OID_NETWORKMAPROOT        6
 #define BUILTIN_OID_DASHBOARDROOT         7
 #define BUILTIN_OID_BUSINESSSERVICEROOT   9
@@ -541,32 +540,6 @@ public:
 template class NXCORE_EXPORTABLE SynchronizedObjectMemoryPool<shared_ptr<NetObj>>;
 #endif
 
-/**
- * Object index
- */
-class NXCORE_EXPORTABLE ObjectIndex : public SharedPointerIndex<NetObj>
-{
-public:
-   ObjectIndex() : SharedPointerIndex<NetObj>() { }
-   ObjectIndex(const ObjectIndex& src) = delete;
-
-   unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr);
-
-   template<typename C>
-   unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj *, C *), C *context)
-   {
-      return getObjects(reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
-   }
-
-   void getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj *, void *) = nullptr, void *context = nullptr);
-
-   template<typename C>
-   void getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj *, C *), C *context)
-   {
-      getObjects(destination, reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
-   }
-};
-
 struct InetAddressIndexEntry;
 
 /**
@@ -840,7 +813,7 @@ struct NXCORE_EXPORTABLE NewNodeData
 #define MODIFY_DASHBOARD_LIST       0x00200000
 #define MODIFY_OSPF_AREAS           0x00400000
 #define MODIFY_OSPF_NEIGHBORS       0x00800000
-#define MODIFY_AM_INSTANCES         0x01000000
+#define MODIFY_ASSET_PROPERTIES     0x01000080
 #define MODIFY_ALL                  0xFFFFFFFF
 
 /**
@@ -1129,6 +1102,8 @@ public:
    bool match(const SearchAttributeProvider &provider) const;
 };
 
+class ObjectIndex;
+
 /**
  * Base class for network objects
  */
@@ -1137,7 +1112,6 @@ class NXCORE_EXPORTABLE NetObj : public NObject
    friend class AutoBindTarget;
    friend class Pollable;
    friend class VersionableObject;
-   friend class Asset;
 
 private:
    typedef NObject super;
@@ -1192,6 +1166,7 @@ protected:
    ObjectArray<ObjectUrl> m_urls;  // URLs associated with this object
    uint32_t m_primaryZoneProxyId;     // ID of assigned primary zone proxy node
    uint32_t m_backupZoneProxyId;      // ID of assigned backup zone proxy node
+   uint32_t m_assetId;  // ID of linked asset object
 
    AccessList m_accessList;
    bool m_inheritAccessRights;
@@ -1206,7 +1181,6 @@ protected:
    Mutex m_mutexResponsibleUsers;
 
    Pollable* m_asPollable; // Only changed in Pollable class constructor
-   Asset *m_asAsset; //Only changed in Asset class constructor
 
    const SharedObjectArray<NetObj> &getChildList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getChildList()); }
    const SharedObjectArray<NetObj> &getParentList() const { return reinterpret_cast<const SharedObjectArray<NetObj>&>(super::getParentList()); }
@@ -1336,7 +1310,7 @@ public:
    void expandCommentMacros();
    void setNameOnMap(const TCHAR *name);
    void setCreationTime() { m_creationTime = time(nullptr); }
-   time_t getCreationTime() { return m_creationTime; }
+   time_t getCreationTime() const { return m_creationTime; }
 
    bool isInMaintenanceMode() const { return m_maintenanceEventId != 0; }
    uint64_t getMaintenanceEventId() const { return m_maintenanceEventId; }
@@ -1368,6 +1342,10 @@ public:
 
    void executeHookScript(const TCHAR *hookName);
 
+   bool linkAsset(uint32_t assetId);
+   bool unlinkAsset(uint32_t assetId);
+   uint32_t getAssetId() const { return m_assetId; }
+
    bool addDashboard(uint32_t id);
    bool removeDashboard(uint32_t id);
 
@@ -1389,10 +1367,9 @@ public:
    virtual bool showThresholdSummary() const;
    virtual bool isEventSource() const;
    virtual bool isDataCollectionTarget() const;
+
    bool isPollable() const { return m_asPollable != nullptr; }
-   virtual Pollable* getAsPollable() { return m_asPollable; }
-   bool isAsset() const { return m_asAsset != nullptr; }
-   virtual Asset* getAsAsset() { return m_asAsset; }
+   virtual Pollable *getAsPollable() { return m_asPollable; }
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -1523,6 +1500,8 @@ protected:
    void _pollerUnlock() { m_pollerMutex.unlock(); }
 
    bool loadFromDatabase(DB_HANDLE hdb, uint32_t id);
+
+   void autoFillAssetProperties();
 
 public:
    Pollable(NetObj *_this, uint32_t acceptablePolls);
@@ -1702,42 +1681,6 @@ public:
    bool saveToDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target) const;
 
    static IcmpStatCollector *loadFromDatabase(DB_HANDLE hdb, uint32_t objectId, const TCHAR *target, int period);
-};
-
-/**
- * Class that manages asset management attribute instances for objects
- */
-class NXCORE_EXPORTABLE Asset
-{
-private:
-   NetObj *m_this;
-   Mutex m_amMutexProperties;
-   StringMap m_instances;
-
-protected:
-   void internalLock() const { m_amMutexProperties.lock(); }
-   void internalUnlock() const { m_amMutexProperties.unlock(); }
-
-   std::pair<uint32_t, String> validateInput(const TCHAR *name, const TCHAR *value);
-   bool isAssetValueEqual(const TCHAR *name, const TCHAR *value);
-
-public:
-   Asset(NetObj *_this);
-
-   void modifyFromMessage(const NXCPMessage& msg);
-   std::pair<uint32_t, String> setAssetData(const TCHAR *name, const TCHAR *value);
-   uint32_t deleteAssetData(const TCHAR *name);
-   void assetDataToMessage(NXCPMessage* msg) const;
-   NXSL_Value *getValueForNXSL(NXSL_VM *vm, const TCHAR *name) const;
-   void autoFillAssetData();
-
-   bool loadFromDatabase(DB_HANDLE db, uint32_t objectId);
-   bool saveToDatabase(DB_HANDLE db);
-   bool deleteFromDatabase(DB_HANDLE db);
-
-   void deleteItemImMemory(const TCHAR *name);
-
-   void assetToJson(json_t *root);
 };
 
 #ifdef _WIN32
@@ -2411,7 +2354,7 @@ enum GeoLocationControlMode
 /**
  * Common base class for all objects capable of collecting data
  */
-class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner, public Pollable, public Asset
+class NXCORE_EXPORTABLE DataCollectionTarget : public DataCollectionOwner, public Pollable
 {
 private:
    typedef DataCollectionOwner super;
@@ -2502,8 +2445,6 @@ public:
    virtual uint32_t getEffectiveSourceNode(DCObject *dco);
 
    uint32_t getEffectiveWebServiceProxy();
-
-   virtual json_t *toJson() override;
 
    NXSL_Array *getTemplatesForNXSL(NXSL_VM *vm);
 
@@ -2765,7 +2706,6 @@ public:
    bool isResourceOnNode(uint32_t resourceId, uint32_t nodeId);
    uint32_t getResourceOwner(uint32_t resourceId) { return getResourceOwnerInternal(resourceId, nullptr); }
    uint32_t getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
-   bool isAsset() const { return false; }
 
    uint32_t collectAggregatedData(DCItem *item, TCHAR *buffer);
    uint32_t collectAggregatedData(DCTable *table, shared_ptr<Table> *result);
@@ -3950,7 +3890,7 @@ public:
 /**
  * Rack object
  */
-class NXCORE_EXPORTABLE Rack : public AbstractContainer, public Asset
+class NXCORE_EXPORTABLE Rack : public AbstractContainer
 {
 protected:
    typedef AbstractContainer super;
@@ -4346,6 +4286,85 @@ public:
 };
 
 /**
+ * Asset representation
+ */
+class NXCORE_EXPORTABLE Asset : public NetObj
+{
+private:
+   typedef NetObj super;
+
+   StringMap m_properties;
+   uint32_t m_linkedObjectId;
+
+protected:
+   virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+
+public:
+   Asset();
+   Asset(const TCHAR *name, const StringMap& properties);
+   virtual ~Asset();
+
+   shared_ptr<Asset> self() { return static_pointer_cast<Asset>(NObject::self()); }
+   shared_ptr<const Asset> self() const { return static_pointer_cast<const Asset>(NObject::self()); }
+
+   virtual int getObjectClass() const override { return OBJECT_ASSET; }
+
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
+   virtual bool saveToDatabase(DB_HANDLE hdb) override;
+   virtual bool deleteFromDatabase(DB_HANDLE hdb) override;
+
+   virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
+   virtual json_t *toJson() override;
+
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+
+   void autoFillProperties();
+
+   uint32_t getLinkedObjectId() const { return m_linkedObjectId; }
+
+   std::pair<uint32_t, String> setProperty(const TCHAR *attr, const TCHAR *value);
+   uint32_t deleteProperty(const TCHAR *attr);
+   void deleteCachedProperty(const TCHAR *attr);
+
+   bool isSamePropertyValue(const TCHAR *attr, const TCHAR *value) const;
+   NXSL_Value *getPropertyValueForNXSL(NXSL_VM *vm, const TCHAR *name) const;
+};
+
+/**
+ * Asset group object
+ */
+class NXCORE_EXPORTABLE AssetGroup : public AbstractContainer
+{
+protected:
+   typedef AbstractContainer super;
+
+public:
+   AssetGroup() : super() { }
+   AssetGroup(const TCHAR *name) : super(name, 0) { }
+
+   virtual int getObjectClass() const override { return OBJECT_ASSETGROUP; }
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+
+   virtual bool showThresholdSummary() const override;
+};
+
+/**
+ * Asset tree root
+ */
+class NXCORE_EXPORTABLE AssetRoot : public UniversalRoot
+{
+protected:
+   typedef UniversalRoot super;
+
+public:
+   AssetRoot();
+
+   virtual int getObjectClass() const override { return OBJECT_ASSETROOT; }
+   virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+};
+
+/**
  * Dashboard tree root
  */
 class NXCORE_EXPORTABLE DashboardRoot : public UniversalRoot
@@ -4559,7 +4578,7 @@ protected:
 public:
    BusinessServiceRoot();
 
-   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_ROOT; }
+   virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICEROOT; }
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
 };
 
@@ -4657,7 +4676,7 @@ public:
    shared_ptr<BusinessServicePrototype> self() { return static_pointer_cast<BusinessServicePrototype>(NObject::self()); }
    shared_ptr<const BusinessServicePrototype> self() const { return static_pointer_cast<const BusinessServicePrototype>(NObject::self()); }
 
-   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE_PROTOTYPE; }
+   virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICEPROTO; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -4708,7 +4727,7 @@ public:
    shared_ptr<BusinessService> self() { return static_pointer_cast<BusinessService>(NObject::self()); }
    shared_ptr<const BusinessService> self() const { return static_pointer_cast<const BusinessService>(NObject::self()); }
 
-   virtual int getObjectClass() const override { return OBJECT_BUSINESS_SERVICE; }
+   virtual int getObjectClass() const override { return OBJECT_BUSINESSSERVICE; }
 
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool saveToDatabase(DB_HANDLE hdb) override;
@@ -4727,6 +4746,40 @@ public:
    void updateFromPrototype(const BusinessServicePrototype& prototype);
    void updateCheckFromPrototype(const BusinessServiceCheck& prototype);
    void deleteCheckFromPrototype(uint32_t prototypeCheckId);
+};
+
+/**
+ * Object index
+ */
+class NXCORE_EXPORTABLE ObjectIndex : public SharedPointerIndex<NetObj>
+{
+public:
+   ObjectIndex() : SharedPointerIndex<NetObj>() { }
+   ObjectIndex(const ObjectIndex& src) = delete;
+
+   unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj*, void*) = nullptr, void *context = nullptr);
+
+   template<typename C>
+   unique_ptr<SharedObjectArray<NetObj>> getObjects(bool (*filter)(NetObj*, C*), C *context)
+   {
+      return getObjects(reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
+   }
+
+   unique_ptr<SharedObjectArray<NetObj>> getObjects(int classFilter)
+   {
+      return getObjects([] (NetObj *o, void *c) -> bool
+         {
+            return o->getObjectClass() == *static_cast<int*>(c);
+         }, &classFilter);
+   }
+
+   void getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj*, void*) = nullptr, void *context = nullptr);
+
+   template<typename C>
+   void getObjects(SharedObjectArray<NetObj> *destination, bool (*filter)(NetObj*, C*), C *context)
+   {
+      getObjects(destination, reinterpret_cast<bool (*)(NetObj*, void*)>(filter), context);
+   }
 };
 
 /**
@@ -4926,6 +4979,7 @@ void DeleteUserFromAllObjects(uint32_t userId);
 
 bool IsValidParentClass(int childClass, int parentClass);
 bool IsEventSource(int objectClass);
+bool IsValidAssetLinkTargetClass(int objectClass);
 
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);

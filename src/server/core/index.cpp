@@ -526,7 +526,7 @@ void AbstractIndexBase::forEach(std::function<void (void*)> callback) const
  * must be destroyed by the caller. Changes in result array will
  * not affect content of the index.
  */
-unique_ptr<SharedObjectArray<NetObj>> ObjectIndex::getObjects(bool (*filter)(NetObj *, void *), void *context)
+unique_ptr<SharedObjectArray<NetObj>> ObjectIndex::getObjects(bool (*filter)(NetObj*, void*), void *context)
 {
    INDEX_HEAD *index = acquireIndex();
    auto result = make_unique<SharedObjectArray<NetObj>>(index->size);

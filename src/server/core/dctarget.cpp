@@ -58,7 +58,7 @@ extern ThreadPool *g_pollerThreadPool;
  * Default constructor
  */
 DataCollectionTarget::DataCollectionTarget(uint32_t pollableFlags) : super(), Pollable(this, pollableFlags | Pollable::INSTANCE_DISCOVERY),
-      Asset(this), m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
+      m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
@@ -70,7 +70,7 @@ DataCollectionTarget::DataCollectionTarget(uint32_t pollableFlags) : super(), Po
  * Constructor for creating new data collection capable objects
  */
 DataCollectionTarget::DataCollectionTarget(const TCHAR *name, uint32_t pollableFlags) : super(name), Pollable(this, pollableFlags | Pollable::INSTANCE_DISCOVERY),
-      Asset(this), m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
+      m_deletedItems(0, 32), m_deletedTables(0, 32), m_geoAreas(0, 16), m_proxyLoadFactor(0)
 {
    m_geoLocationControlMode = GEOLOCATION_NO_CONTROL;
    m_geoLocationRestrictionsViolated = false;
@@ -101,9 +101,6 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 
    if (success)
       success = super::deleteFromDatabase(hdb);
-
-   if (success)
-      success = Asset::deleteFromDatabase(hdb);
 
    return success;
 }
@@ -173,9 +170,6 @@ uint32_t DataCollectionTarget::modifyFromMessageInternal(const NXCPMessage& msg)
    if (msg.isFieldExist(VID_WEB_SERVICE_PROXY))
       m_webServiceProxy = msg.getFieldAsUInt32(VID_WEB_SERVICE_PROXY);
 
-   if (msg.isFieldExist(VID_AM_DATA_BASE))
-      Asset::modifyFromMessage(msg);
-
    return super::modifyFromMessageInternal(msg);
 }
 
@@ -221,9 +215,6 @@ bool DataCollectionTarget::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    }
    DBFreeResult(hResult);
 
-   if (!Asset::loadFromDatabase(hdb, id))
-      return false;
-
    return true;
 }
 
@@ -265,11 +256,6 @@ bool DataCollectionTarget::saveToDatabase(DB_HANDLE hdb)
 
    if ((success) && (m_modified & MODIFY_DATA_COLLECTION))
       success = saveDCIListForCleanup(hdb);
-
-   if (success && (m_modified & MODIFY_AM_INSTANCES))
-   {
-      success = Asset::saveToDatabase(hdb);
-   }
 
    return success;
 }
@@ -2132,16 +2118,6 @@ void DataCollectionTarget::updateContainerMembership()
       }
       delete cachedFilterVM;
    }
-}
-
-/**
- * Serialize object to JSON
- */
-json_t *DataCollectionTarget::toJson()
-{
-   json_t *root = super::toJson();
-   Asset::assetToJson(root);
-   return root;
 }
 
 /**

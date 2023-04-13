@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,6 +91,24 @@ DashboardRoot::DashboardRoot() : super()
  * Redefined status calculation for dashboard tree root
  */
 void DashboardRoot::calculateCompoundStatus(bool forcedRecalc)
+{
+   m_status = STATUS_NORMAL;
+}
+
+/**
+ * Dashboard tree root class default constructor
+ */
+AssetRoot::AssetRoot() : super()
+{
+   m_id = BUILTIN_OID_ASSETROOT;
+   _tcscpy(m_name, _T("Assets"));
+   m_status = STATUS_NORMAL;
+}
+
+/**
+ * Redefined status calculation for dashboard tree root
+ */
+void AssetRoot::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
 }

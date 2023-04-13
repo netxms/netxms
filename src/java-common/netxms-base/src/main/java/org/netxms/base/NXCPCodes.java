@@ -186,12 +186,12 @@ public class NXCPCodes
 	public static final int CMD_TRAP_LOG_RECORDS = 0x00A0;
 	public static final int CMD_START_SNMP_WALK = 0x00A1;
 	public static final int CMD_SNMP_WALK_DATA = 0x00A2;
-   public static final int CMD_GET_ASSET_MGMT_ATTRIBUTES = 0x00A3;
-   public static final int CMD_CREATE_ASSET_MGMT_ATTRIBUTE = 0x00A4;
-   public static final int CMD_UPDATE_ASSET_MGMT_ATTRIBUTE = 0x00A5;
-   public static final int CMD_DELETE_ASSET_MGMT_ATTRIBUTE = 0x00A6;
-   public static final int CMD_UPDATE_AM_ATTRIBUTE_INSTANCE = 0x00A7;
-   public static final int CMD_DELETE_AM_ATTRIBUTE_INSTANCE = 0x00A8;
+   public static final int CMD_GET_ASSET_MANAGEMENT_SCHEMA = 0x00A3;
+   public static final int CMD_CREATE_ASSET_ATTRIBUTE = 0x00A4;
+   public static final int CMD_UPDATE_ASSET_ATTRIBUTE = 0x00A5;
+   public static final int CMD_DELETE_ASSET_ATTRIBUTE = 0x00A6;
+   public static final int CMD_SET_ASSET_PROPERTY = 0x00A7;
+   public static final int CMD_DELETE_ASSET_PROPERTY = 0x00A8;
    // public static final int CMD_UPLOAD_SUBMAP_BK_IMAGE = 0x00A9;
    // public static final int CMD_GET_SUBMAP_BK_IMAGE = 0x00AA;
    // public static final int CMD_GET_MODULE_LIST = 0x00AB;
@@ -1295,7 +1295,7 @@ public class NXCPCodes
    public static final long VID_VPN_CONNECTOR_COUNT = 810;
    public static final long VID_MONITOR_ID = 811;
    public static final long VID_NUM_TIME_FRAMES = 812;
-   public static final long VID_AM_COUNT = 813;
+   public static final long VID_NUM_ASSET_PROPERTIES = 813;
    public static final long VID_DATA_TYPE = 814;
    public static final long VID_IS_MANDATORY = 815;
    public static final long VID_IS_UNIQUE = 816;
@@ -1307,6 +1307,9 @@ public class NXCPCodes
    public static final long VID_NUM_POLL_STATES = 822;
    public static final long VID_TRUSTED_DEVICE_TOKEN = 823;
    public static final long VID_TRUSTED_DEVICES_ALLOWED = 824;
+   public static final long VID_LINKED_OBJECT = 825;
+   public static final long VID_NUM_ASSET_ATTRIBUTES = 826;
+   public static final long VID_ASSET_ID = 827;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1333,7 +1336,7 @@ public class NXCPCodes
    public static final long VID_TOOLTIP_DCI_LIST_BASE = 0x73000000L;
    public static final long VID_URL_LIST_BASE = 0x74000000L;
    public static final long VID_ICMP_TARGET_LIST_BASE = 0x75000000L;
-   public static final long VID_AM_DATA_BASE = 0x76000000L;
+   public static final long VID_ASSET_PROPERTIES_BASE = 0x76000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
@@ -1428,6 +1431,6 @@ public class NXCPCodes
    public static final long VID_TICKET_LIST_BASE = 0x10000000L;
    public static final long VID_OSPF_AREA_LIST_BASE = 0x20000000L;
    public static final long VID_OSPF_NEIGHBOR_LIST_BASE = 0x30000000L;
-   public static final long VID_AM_LIST_BASE = 0x10000000L;
+   public static final long VID_AM_ATTRIBUTES_BASE = 0x10000000L;
    public static final long VID_AM_ENUM_MAP_BASE = 0x10000000L;
 }

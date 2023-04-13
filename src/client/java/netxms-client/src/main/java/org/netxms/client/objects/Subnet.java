@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,25 +84,25 @@ public class Subnet extends GenericObject implements ZoneMember
 	   return networkAddress.getHostBits() == 1;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
-	 */
+   /**
+    * @see org.netxms.client.NXCObject#getObjectClassName()
+    */
 	@Override
 	public String getObjectClassName()
 	{
 		return "Subnet";
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
-	 */
+   /**
+    * @see org.netxms.client.objects.AbstractObject#isAllowedOnMap()
+    */
 	@Override
 	public boolean isAllowedOnMap()
 	{
 		return true;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
     */
    @Override
@@ -111,7 +111,7 @@ public class Subnet extends GenericObject implements ZoneMember
       return true;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.ZoneMember#getZoneId()
     */
    @Override
@@ -120,7 +120,7 @@ public class Subnet extends GenericObject implements ZoneMember
 		return zoneId;
 	}
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.ZoneMember#getZoneName()
     */
    @Override
@@ -130,7 +130,7 @@ public class Subnet extends GenericObject implements ZoneMember
       return (zone != null) ? zone.getObjectName() : Long.toString(zoneId);
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.netxms.client.objects.AbstractObject#getStrings()
     */
    @Override

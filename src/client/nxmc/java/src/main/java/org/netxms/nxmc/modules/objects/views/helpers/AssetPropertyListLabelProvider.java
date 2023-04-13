@@ -23,34 +23,34 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.constants.AMDataType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.AssetView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetManagementAttributeLabelProvider;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeListLabelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Asset instance label provider
+ * Asset properties label provider
  */
-public class AssetAttributeInstanceLabelProvider extends LabelProvider implements ITableLabelProvider
+public class AssetPropertyListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
    final I18n i18n = LocalizationHelper.getI18n(AssetView.class);
-   final Logger log = LoggerFactory.getLogger(AssetManagementAttributeLabelProvider.class);
+   final Logger log = LoggerFactory.getLogger(AssetPropertyListLabelProvider.class);
 
    private NXCSession session = Registry.getSession();
    private BaseObjectLabelProvider objectLabelProvider;
 
-   public AssetAttributeInstanceLabelProvider()
+   public AssetPropertyListLabelProvider()
    {
       objectLabelProvider = new BaseObjectLabelProvider();
    }
-   
+
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
@@ -70,7 +70,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
             }
             catch (NumberFormatException e)
             {
-               log.warn("Filed to parse object ID", e);
+               log.warn("Cannot parse object ID", e);
             }
             AbstractObject object = session.findObjectById(objectId);
             if (object != null)
@@ -94,7 +94,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
          case AssetView.NAME:
             return getName(name);
          case AssetView.VALUE:
-            return getValue((Entry<String, String>)element);
+            return getPropertyValue((Entry<String, String>)element);
          case AssetView.IS_MANDATORY:
             return isMandatory(name);
          case AssetView.IS_UNIQUE:
@@ -104,11 +104,17 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
       }
       return null;
    }
-   
-   public String getValue(Entry<String, String> element)
+
+   /**
+    * Get property value.
+    *
+    * @param element property (name-value pair)
+    * @return string representation of property value, decoded as needed
+    */
+   public String getPropertyValue(Entry<String, String> element)
    {
       String name = element.getKey();
-      AssetManagementAttribute asetAttribute = session.getAssetManagementSchema().get(name);
+      AssetAttribute asetAttribute = session.getAssetManagementSchema().get(name);
       if (asetAttribute.getDataType() == AMDataType.OBJECT_REFERENCE)
       {
          long objectId = 0;
@@ -126,10 +132,10 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
       }
       else if (asetAttribute.getDataType() == AMDataType.ENUM)
       {
-         String displayName = asetAttribute.getEnumMapping().get(element.getValue());
+         String displayName = asetAttribute.getEnumValues().get(element.getValue());
          return displayName == null || displayName.isBlank() ? element.getValue() : displayName;
       }         
-      
+
       return element.getValue();
    }
 
@@ -141,7 +147,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
     */
    public String getSystemType(String name)
    {
-      return AssetManagementAttributeLabelProvider.SYSTEM_TYPE[session.getAssetManagementSchema().get(name).getSystemType().getValue()];
+      return AssetAttributeListLabelProvider.SYSTEM_TYPE[session.getAssetManagementSchema().get(name).getSystemType().getValue()];
    }
 
    /**

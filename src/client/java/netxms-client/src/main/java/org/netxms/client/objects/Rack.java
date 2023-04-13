@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,23 +22,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.configs.PassiveRackElement;
-import org.netxms.client.objects.interfaces.Asset;
 import org.netxms.client.objects.interfaces.HardwareEntity;
 
 /**
  * Rack object
  */
-public class Rack extends GenericObject implements Asset
+public class Rack extends GenericObject
 {
 	private int height;
 	private boolean topBottomNumbering;
    private List<PassiveRackElement> passiveElements;
-   private Map<String, String> assetList;
 
 	/**
     * Create from NXCP message.
@@ -59,8 +56,6 @@ public class Rack extends GenericObject implements Asset
 		   passiveElements.add(new PassiveRackElement(msg, fieldId));
          fieldId += 10;
 		}
-		
-		assetList = msg.getStringMapFromFields(NXCPCodes.VID_AM_DATA_BASE, NXCPCodes.VID_AM_COUNT);
 	}
 
 	/**
@@ -152,13 +147,4 @@ public class Rack extends GenericObject implements Asset
             return e;
       return null;
 	}
-
-   /**
-    * @see org.netxms.client.objects.interfaces.Asset#getAssetInformation()
-    */
-   @Override
-   public Map<String, String> getAssetInformation()
-   {
-      return assetList;
-   }
 }

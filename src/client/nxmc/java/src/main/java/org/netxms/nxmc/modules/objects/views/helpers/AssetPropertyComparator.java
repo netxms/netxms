@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2023 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.nxmc.modules.objects.views.helpers;
 
 import java.util.Map.Entry;
@@ -8,18 +26,18 @@ import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.modules.objects.views.AssetView;
 
 /**
- * Asset attribute instance comparator
+ * Asset property comparator
  */
-public class AssetAttributeInstanceComparator extends ViewerComparator
+public class AssetPropertyComparator extends ViewerComparator
 {
-   private AssetAttributeInstanceLabelProvider labelProvider;
+   private AssetPropertyListLabelProvider labelProvider;
 
    /**
     * Asset instance comparator
     * 
     * @param labelProvider asset instance comparator
     */
-   public AssetAttributeInstanceComparator(AssetAttributeInstanceLabelProvider labelProvider)
+   public AssetPropertyComparator(AssetPropertyListLabelProvider labelProvider)
    {
       this.labelProvider = labelProvider;
    }
@@ -41,7 +59,7 @@ public class AssetAttributeInstanceComparator extends ViewerComparator
             result = labelProvider.getName(o1.getKey()).compareToIgnoreCase(labelProvider.getName(o2.getKey()));
             break;
          case AssetView.VALUE:
-            result = labelProvider.getValue(o1).compareToIgnoreCase(labelProvider.getValue(o2));
+            result = labelProvider.getPropertyValue(o1).compareToIgnoreCase(labelProvider.getPropertyValue(o2));
             break;
          case AssetView.IS_MANDATORY:
             result = labelProvider.isMandatory(o1.getKey()).compareToIgnoreCase(labelProvider.isMandatory(o2.getKey()));

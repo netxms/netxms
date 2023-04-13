@@ -397,12 +397,12 @@ typedef struct
 #define CMD_TRAP_LOG_RECORDS              0x00A0
 #define CMD_START_SNMP_WALK               0x00A1
 #define CMD_SNMP_WALK_DATA                0x00A2
-#define CMD_GET_ASSET_MGMT_ATTRIBUTES     0x00A3
-#define CMD_CREATE_ASSET_MGMT_ATTRIBUTE   0x00A4
-#define CMD_UPDATE_ASSET_MGMT_ATTRIBUTE   0x00A5
-#define CMD_DELETE_ASSET_MGMT_ATTRIBUTE   0x00A6
-#define CMD_UPDATE_AM_ATTRIBUTE_INSTANCE  0x00A7
-#define CMD_DELETE_AM_ATTRIBUTE_INSTANCE  0x00A8
+#define CMD_GET_ASSET_MANAGEMENT_SCHEMA   0x00A3
+#define CMD_CREATE_ASSET_ATTRIBUTE        0x00A4
+#define CMD_UPDATE_ASSET_ATTRIBUTE        0x00A5
+#define CMD_DELETE_ASSET_ATTRIBUTE        0x00A6
+#define CMD_SET_ASSET_PROPERTY            0x00A7
+#define CMD_DELETE_ASSET_PROPERTY         0x00A8
 // unused: #define CMD_UPLOAD_SUBMAP_BK_IMAGE        0x00A9
 // unused: #define CMD_GET_SUBMAP_BK_IMAGE           0x00AA
 // unused: #define CMD_GET_MODULE_LIST               0x00AB
@@ -1515,7 +1515,7 @@ typedef struct
 #define VID_VPN_CONNECTOR_COUNT     ((uint32_t)810)
 #define VID_MONITOR_ID              ((uint32_t)811)
 #define VID_NUM_TIME_FRAMES         ((uint32_t)812)
-#define VID_AM_COUNT                ((uint32_t)813)
+#define VID_NUM_ASSET_PROPERTIES    ((uint32_t)813)
 #define VID_DATA_TYPE               ((uint32_t)814)
 #define VID_IS_MANDATORY            ((uint32_t)815)
 #define VID_IS_UNIQUE               ((uint32_t)816)
@@ -1527,6 +1527,9 @@ typedef struct
 #define VID_NUM_POLL_STATES         ((uint32_t)822)
 #define VID_TRUSTED_DEVICE_TOKEN    ((uint32_t)823)
 #define VID_TRUSTED_DEVICES_ALLOWED ((uint32_t)824)
+#define VID_LINKED_OBJECT           ((uint32_t)825)
+#define VID_NUM_ASSET_ATTRIBUTES    ((uint32_t)826)
+#define VID_ASSET_ID                ((uint32_t)827)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1596,8 +1599,8 @@ typedef struct
 // Base value for ICMP target list
 #define VID_ICMP_TARGET_LIST_BASE   ((uint32_t)0x75000000)
 
-// Base value for asset managementn attribute instance list
-#define VID_AM_DATA_BASE            ((uint32_t)0x76000000)
+// Base value for asset properties
+#define VID_ASSET_PROPERTIES_BASE   ((uint32_t)0x76000000)
 
 // IP address list base
 #define VID_IP_ADDRESS_LIST_BASE    ((uint32_t)0x7F000000)
@@ -1793,9 +1796,8 @@ typedef struct
 
 #define VID_TICKET_LIST_BASE        ((uint32_t)0x10000000)
 
-#define VID_AM_LIST_BASE            ((uint32_t)0x10000000)
-
-#define VID_AM_ENUM_MAP_BASE        ((uint32_t)0x10000000)
+#define VID_AM_ATTRIBUTES_BASE      ((uint32_t)0x10000000)
+#define VID_AM_ENUM_MAP_BASE        ((uint32_t)0x20000000)
 
 #ifdef __cplusplus
 

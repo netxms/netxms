@@ -99,7 +99,7 @@ void InitCountryList();
 void InitCurrencyList();
 
 void LoadOUIDatabase();
-void LoadAMFromDatabase();
+void LoadAssetManagementSchema();
 
 /**
  * Syslog server control
@@ -1212,7 +1212,7 @@ retry_db_lock:
    LoadPerfDataStorageDrivers();
    LoadWebServiceDefinitions();
    InitDataCollector();
-   LoadAMFromDatabase();
+   LoadAssetManagementSchema();
 
    LoadObjectQueries();
 

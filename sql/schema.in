@@ -186,6 +186,7 @@ CREATE TABLE object_properties
   maint_initiator integer not null,
   creation_time integer not null,
   category integer not null,
+  asset_id integer not null,
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
@@ -2621,23 +2622,33 @@ CREATE TABLE am_attributes
 ) TABLE_TYPE;
 
 /**
- * Asset management attribute value
+ * Possible values for asset management attributes of "enum" type
  */
 CREATE TABLE am_enum_values
 (
    attr_name varchar(63) not null,
-   attr_value varchar(63) not null,
+   value varchar(63) not null,
    display_name varchar(255) not null,
-   PRIMARY KEY(attr_name,attr_value)
+   PRIMARY KEY(attr_name,value)
 ) TABLE_TYPE;
 
 /**
- * Asset management attribute object data
+ * Assets
  */
-CREATE TABLE am_object_data
+CREATE TABLE assets
 (
-   object_id integer not null,
+   id integer not null,
+   linked_object_id integer not null,
+   PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/**
+ * Asset properties
+ */
+CREATE TABLE asset_properties
+(
+   asset_id integer not null,
    attr_name varchar(63) not null,
-   attr_value varchar(255) null,
-   PRIMARY KEY(object_id,attr_name)
+   value varchar(2000) null,
+   PRIMARY KEY(asset_id,attr_name)
 ) TABLE_TYPE;

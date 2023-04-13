@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -51,9 +51,9 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.serverconfig.propertypages.AssetAttributeAutoFillScript;
 import org.netxms.nxmc.modules.serverconfig.propertypages.AssetAttributeEnums;
 import org.netxms.nxmc.modules.serverconfig.propertypages.AssetAttributeGeneral;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetManagementAttributeComparator;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetManagementAttributeFilter;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetManagementAttributeLabelProvider;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeComparator;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeFilter;
+import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeListLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -61,38 +61,37 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Asset management attribute view
+ * Asset management schema manager
  */
-public class AssetManagementAttributesView extends ConfigurationView
+public class AssetManagementSchemaManager extends ConfigurationView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(AssetManagementAttributesView.class);
-   
-   public static final int NAME = 0;
-   public static final int DISPLAY_NAME = 1;
-   public static final int DATA_TYPE = 2;
-   public static final int IS_MANDATORY = 3;
-   public static final int IS_UNIQUE = 4;
-   public static final int HAS_SCRIPT = 5;
-   public static final int RANGE_MIN = 6;
-   public static final int RANGE_MAX = 7;
-   public static final int SYSTEM_TYPE = 8;
-   
-   Map<String, AssetManagementAttribute> attributes = null;
+   private static final I18n i18n = LocalizationHelper.getI18n(AssetManagementSchemaManager.class);
+
+   public static final int COLUMN_NAME = 0;
+   public static final int COLUMN_DISPLAY_NAME = 1;
+   public static final int COLUMN_DATA_TYPE = 2;
+   public static final int COLUMN_IS_MANDATORY = 3;
+   public static final int COLUMN_IS_UNIQUE = 4;
+   public static final int COLUMN_HAS_SCRIPT = 5;
+   public static final int COLUMN_RANGE_MIN = 6;
+   public static final int COLUMN_RANGE_MAX = 7;
+   public static final int COLUMN_SYSTEM_TYPE = 8;
+
+   Map<String, AssetAttribute> attributes = null;
    private NXCSession session;
    private SessionListener listener;
    private SortableTableViewer viewer;
-   private AssetManagementAttributeFilter filter;
-   private Action actionCreate;
+   private AssetAttributeFilter filter;
+   private Action actionAdd;
    private Action actionEdit;
    private Action actionDelete;
-   
 
    /**
     * Create notification channels view
     */
-   public AssetManagementAttributesView()
+   public AssetManagementSchemaManager()
    {
-      super(i18n.tr("Asset Management"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "AssetManagement", true);
+      super(i18n.tr("Asset Management Schema"), ResourceManager.getImageDescriptor("icons/config-views/scheduled-tasks.png"), "AssetManagementSchema", true);
       session = Registry.getSession();
    }
 
@@ -105,10 +104,10 @@ public class AssetManagementAttributesView extends ConfigurationView
       final int[] widths = { 200, 200, 100, 100, 100, 100, 100, 100, 100 };
       final String[] names = { i18n.tr("Name"), i18n.tr("Display Name"), i18n.tr("Data Type"), i18n.tr("Is mandatory"), 
             i18n.tr("Is Unique"), i18n.tr("Autofill"), i18n.tr("Range min"), i18n.tr("Range max"), i18n.tr("System type") };
-      viewer = new SortableTableViewer(parent, names, widths, NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new AssetManagementAttributeLabelProvider());
-      viewer.setComparator(new AssetManagementAttributeComparator());
+      viewer.setLabelProvider(new AssetAttributeListLabelProvider());
+      viewer.setComparator(new AssetAttributeComparator());
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -117,7 +116,7 @@ public class AssetManagementAttributesView extends ConfigurationView
          }
       });
 
-      filter = new AssetManagementAttributeFilter();
+      filter = new AssetAttributeFilter();
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
@@ -141,7 +140,7 @@ public class AssetManagementAttributesView extends ConfigurationView
                   @Override
                   public void run()
                   {
-                     AssetManagementAttribute attr = (AssetManagementAttribute)n.getObject();
+                     AssetAttribute attr = (AssetAttribute)n.getObject();
                      attributes.put(attr.getName(), attr);
                      viewer.refresh();
                   }
@@ -173,31 +172,34 @@ public class AssetManagementAttributesView extends ConfigurationView
     */
    private void createActions()
    {
-      actionCreate = new Action(i18n.tr("Create"), SharedIcons.ADD_OBJECT) {
+      actionAdd = new Action(i18n.tr("&New attribute..."), SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
             createAttribute();
          }         
       };
+      addKeyBinding("M1+N", actionAdd);
       
-      actionEdit = new Action(i18n.tr("Edit"), SharedIcons.EDIT) {
+      actionEdit = new Action(i18n.tr("&Edit..."), SharedIcons.EDIT) {
          @Override
          public void run()
          {
             updateAttribute();
          }         
       };
+      addKeyBinding("M3+ENTER", actionEdit);
       
-      actionDelete = new Action(i18n.tr("Delete"), SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
             deleteAttribute();
          }         
       };
+      addKeyBinding("M1+D", actionDelete);
    }
-   
+
    /**
     * Delete attribute
     */
@@ -206,26 +208,25 @@ public class AssetManagementAttributesView extends ConfigurationView
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.isEmpty())
          return;
-      
+
       if (!MessageDialogHelper.openQuestion(getWindow().getShell(), i18n.tr("Delete Attribute"), 
             i18n.tr("Selected attributes will be deleted. Are you sure?")))
          return;
-         
-      new Job(i18n.tr("Delete attributes"), this) {
-         
+
+      new Job(i18n.tr("Updating asset management schema"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(Object o : selection.toList())
             {
-               session.deleteAssetManagementAttribute(((AssetManagementAttribute)o).getName());
+               session.deleteAssetAttribute(((AssetAttribute)o).getName());
             }            
          }
          
          @Override
          protected String getErrorMessage()
          {
-            return "Failed to delete attributes";
+            return i18n.tr("Cannot update asset management schema");
          }
       }.start();      
    }
@@ -238,23 +239,22 @@ public class AssetManagementAttributesView extends ConfigurationView
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
-      AssetManagementAttribute attr = (AssetManagementAttribute)selection.getFirstElement();      
+
+      AssetAttribute attr = (AssetAttribute)selection.getFirstElement();
       if (!showAttributePropertyPage(attr, false))
          return;          
-      
-      new Job(i18n.tr("Create asset management attributes"), this) {
-         
+
+      new Job(i18n.tr("Updating asset management schema"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.updateAssetManagementAttribute(attr);          
+            session.updateAssetAttribute(attr);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Failed to get asset management attributes");
+            return i18n.tr("Cannot update asset management schema");
          }
       }.start();
       
@@ -265,53 +265,59 @@ public class AssetManagementAttributesView extends ConfigurationView
     */
    protected void createAttribute()
    {
-      final AssetManagementAttribute attr = new AssetManagementAttribute();
+      final AssetAttribute attr = new AssetAttribute();
       if (!showAttributePropertyPage(attr, true))
          return;      
-      
-      new Job(i18n.tr("Create asset management attributes"), this) {
-         
+
+      new Job(i18n.tr("Updating asset management schema"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.createAssetManagementAttribute(attr);          
+            session.createAssetAttribute(attr);
          }
          
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Failed to get asset management attributes");
+            return i18n.tr("Cannot update asset management schema");
          }
       }.start();
    }
-   
-   private boolean showAttributePropertyPage(AssetManagementAttribute attribute, boolean isNew)
+
+   /**
+    * Show property page for given attribute.
+    *
+    * @param attribute attribute to edit
+    * @param isNew true if creating new attribute
+    * @return true if OK was pressed
+    */
+   private boolean showAttributePropertyPage(AssetAttribute attribute, boolean isNew)
    {
       PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("general", new AssetAttributeGeneral(attribute, isNew)));
       pm.addToRoot(new PreferenceNode("script", new AssetAttributeAutoFillScript(attribute)));
       pm.addToRoot(new PreferenceNode("enum", new AssetAttributeEnums(attribute)));
-      
+
       PreferenceDialog dlg = new PreferenceDialog(getWindow().getShell(), pm) {
          @Override
          protected void configureShell(Shell newShell)
          {
             super.configureShell(newShell);
-            newShell.setText("Properties for attribute");
+            newShell.setText("Asset Attribute Properties");
          }
       };
       dlg.setBlockOnOpen(true);
-      
+
       return dlg.open() == Window.OK;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
     */
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionCreate);
+      manager.add(actionAdd);
    }
 
    /**
@@ -320,7 +326,7 @@ public class AssetManagementAttributesView extends ConfigurationView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      manager.add(actionCreate);
+      manager.add(actionAdd);
    }
 
    /**
@@ -349,7 +355,7 @@ public class AssetManagementAttributesView extends ConfigurationView
     */
    protected void fillContextMenu(IMenuManager mgr)
    {
-      mgr.add(actionCreate);
+      mgr.add(actionAdd);
       mgr.add(actionEdit);
       mgr.add(actionDelete);
    }
@@ -360,29 +366,9 @@ public class AssetManagementAttributesView extends ConfigurationView
    @Override
    public void refresh()
    {
-      new Job(i18n.tr("Get asset management attributes"), this) {
-         
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            final Map<String, AssetManagementAttribute> attr = session.getAssetManagementSchema();
-            runInUIThread(new Runnable() {               
-               @Override
-               public void run()
-               {
-                  attributes = attr;
-                  viewer.setInput(attributes.values());
-               }
-            });
-            
-         }
-         
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Failed to get asset management attributes");
-         }
-      }.start();
+      // getAssetManagementSchema() will return cached schema so background job is not needed
+      attributes = session.getAssetManagementSchema();
+      viewer.setInput(attributes.values());
    }
 
    /**
@@ -395,7 +381,7 @@ public class AssetManagementAttributesView extends ConfigurationView
          session.removeListener(listener);
       super.dispose();
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
     */
@@ -412,5 +398,4 @@ public class AssetManagementAttributesView extends ConfigurationView
    public void save()
    {
    }
-
 }

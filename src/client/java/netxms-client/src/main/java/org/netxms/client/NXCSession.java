@@ -71,7 +71,7 @@ import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.VersionInfo;
 import org.netxms.client.agent.config.AgentConfiguration;
 import org.netxms.client.agent.config.AgentConfigurationHandle;
-import org.netxms.client.asset.AssetManagementAttribute;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.businessservices.BusinessServiceTicket;
 import org.netxms.client.constants.AggregationFunction;
@@ -92,7 +92,6 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.DciLastValue;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
@@ -101,6 +100,7 @@ import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.datacollection.GraphFolder;
+import org.netxms.client.datacollection.MeasurementUnit;
 import org.netxms.client.datacollection.PerfTabDci;
 import org.netxms.client.datacollection.PredictionEngine;
 import org.netxms.client.datacollection.RemoteChangeListener;
@@ -135,6 +135,9 @@ import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.Asset;
+import org.netxms.client.objects.AssetGroup;
+import org.netxms.client.objects.AssetRoot;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
@@ -405,7 +408,7 @@ public class NXCSession
    private OUICache ouiCache;
    
    // Asset management schema
-   private Map<String, AssetManagementAttribute> assetManagementSchema = new HashMap<String, AssetManagementAttribute>();
+   private Map<String, AssetAttribute> assetManagementSchema = new HashMap<String, AssetAttribute>();
 
    /**
     * Message subscription class
@@ -714,15 +717,15 @@ public class NXCSession
                      sendNotification(
                            new SessionNotification(msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE, new AgentTunnel(msg, NXCPCodes.VID_ELEMENT_LIST_BASE)));
                      break;
-                  case NXCPCodes.CMD_UPDATE_ASSET_MGMT_ATTRIBUTE:
-                     AssetManagementAttribute attr = new AssetManagementAttribute(msg, NXCPCodes.VID_AM_LIST_BASE);
+                  case NXCPCodes.CMD_UPDATE_ASSET_ATTRIBUTE:
+                     AssetAttribute attr = new AssetAttribute(msg, NXCPCodes.VID_AM_ATTRIBUTES_BASE);
                      sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_UPDATED, 0, attr));
                      synchronized(assetManagementSchema)
                      {
                         assetManagementSchema.put(attr.getName(), attr);
                      }
                      break;
-                  case NXCPCodes.CMD_DELETE_ASSET_MGMT_ATTRIBUTE:
+                  case NXCPCodes.CMD_DELETE_ASSET_ATTRIBUTE:
                      String attrName = msg.getFieldAsString(NXCPCodes.VID_NAME);
                      sendNotification(new SessionNotification(SessionNotification.AM_ATTRIBUTE_DELETED, 0, attrName));
                      synchronized(assetManagementSchema)
@@ -1490,6 +1493,15 @@ public class NXCSession
       {
          case AbstractObject.OBJECT_ACCESSPOINT:
             object = new AccessPoint(msg, this);
+            break;
+         case AbstractObject.OBJECT_ASSET:
+            object = new Asset(msg, this);
+            break;
+         case AbstractObject.OBJECT_ASSETGROUP:
+            object = new AssetGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_ASSETROOT:
+            object = new AssetRoot(msg, this);
             break;
          case AbstractObject.OBJECT_BUSINESSSERVICE:
             object = new BusinessService(msg, this);
@@ -5801,6 +5813,7 @@ public class NXCSession
       if ((data.getObjectAlias() != null) && !data.getObjectAlias().isEmpty())
          msg.setField(NXCPCodes.VID_ALIAS, data.getObjectAlias());
       msg.setFieldInt32(NXCPCodes.VID_ZONE_UIN, data.getZoneUIN());
+      msg.setFieldInt32(NXCPCodes.VID_ASSET_ID, (int)data.getAssetId());
       if (data.getComments() != null)
          msg.setField(NXCPCodes.VID_COMMENTS, data.getComments());
 
@@ -13718,18 +13731,18 @@ public class NXCSession
     */
    public void syncAssetManagementSchema() throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ASSET_MGMT_ATTRIBUTES);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ASSET_MANAGEMENT_SCHEMA);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      int count = response.getFieldAsInt32(NXCPCodes.VID_AM_COUNT);
-      long fieldId = NXCPCodes.VID_AM_LIST_BASE;
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ASSET_ATTRIBUTES);
+      long fieldId = NXCPCodes.VID_AM_ATTRIBUTES_BASE;
       synchronized(assetManagementSchema)
       {
          assetManagementSchema.clear();
          for(int i = 0; i < count; i++)
          {
-            AssetManagementAttribute attr = new AssetManagementAttribute(response, fieldId);
+            AssetAttribute attr = new AssetAttribute(response, fieldId);
             assetManagementSchema.put(attr.getName(), attr);
             fieldId += 256;
          }
@@ -13741,12 +13754,12 @@ public class NXCSession
     *
     * @return asset management attributes
     */
-   public Map<String, AssetManagementAttribute> getAssetManagementSchema()
+   public Map<String, AssetAttribute> getAssetManagementSchema()
    {
-      Map<String, AssetManagementAttribute> result;
+      Map<String, AssetAttribute> result;
       synchronized(assetManagementSchema)
       {
-         result = new HashMap<String, AssetManagementAttribute>(assetManagementSchema);
+         result = new HashMap<String, AssetAttribute>(assetManagementSchema);
       }
       return result;
    }
@@ -13765,45 +13778,45 @@ public class NXCSession
    }
 
    /**
-    * Create asset management attribute
+    * Create asset attribute (definition in asset management schema)..
     * 
     * @param attr attribute to create
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createAssetManagementAttribute(AssetManagementAttribute attr) throws IOException, NXCException
+   public void createAssetAttribute(AssetAttribute attr) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_ASSET_MGMT_ATTRIBUTE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_ASSET_ATTRIBUTE);
       attr.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
 
    /**
-    * Update asset management attribute
+    * Update asset attribute (definition in asset management schema).
     * 
     * @param attr attribute to update
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateAssetManagementAttribute(AssetManagementAttribute attr) throws IOException, NXCException
+   public void updateAssetAttribute(AssetAttribute attr) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ASSET_MGMT_ATTRIBUTE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ASSET_ATTRIBUTE);
       attr.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
 
    /**
-    * Delete asset management attribute
+    * Delete asset attribute (definition in asset management schema).
     * 
-    * @param name attribute name to be deleted
-    * @throws IOException  if socket I/O error occurs
+    * @param name name of attribute to be deleted
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAssetManagementAttribute(String name) throws IOException, NXCException
+   public void deleteAssetAttribute(String name) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ASSET_MGMT_ATTRIBUTE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ASSET_ATTRIBUTE);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
@@ -13827,35 +13840,35 @@ public class NXCSession
    }
 
    /**
-    * Update asset attribute
+    * Set asset property value.
     * 
     * @param objectId object id
-    * @param name asset name
-    * @param value asset value
+    * @param name property name
+    * @param value new value
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateAssetAttribute(long objectId, String name, String value) throws IOException, NXCException
+   public void setAssetProperty(long objectId, String name, String value) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_AM_ATTRIBUTE_INSTANCE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ASSET_PROPERTY);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_VALUE, value);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
-   
+
    /**
-    * Delete asset attribute
+    * Delete asset property.
     * 
     * @param objectId object id
-    * @param name attribute name
+    * @param name property name
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAssetAttribute(long objectId, String name) throws IOException, NXCException
+   public void deleteAssetProperty(long objectId, String name) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AM_ATTRIBUTE_INSTANCE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ASSET_PROPERTY);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);

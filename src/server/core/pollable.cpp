@@ -485,3 +485,16 @@ void Pollable::pollStateToMessage(NXCPMessage *msg)
    FillPollState(m_autobindPollState, Pollable::AUTOBIND);
    msg->setField(VID_NUM_POLL_STATES, count);
 }
+
+/**
+ * Auto fill properties of linked asset
+ */
+void Pollable::autoFillAssetProperties()
+{
+   if (m_this->m_assetId == 0)
+      return;  // No linked asset
+
+   shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(m_this->m_assetId, OBJECT_ASSET));
+   if (asset != nullptr)
+      asset->autoFillProperties();
+}

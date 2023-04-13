@@ -33,6 +33,7 @@
 #include <nxcore_discovery.h>
 #include <nms_pkg.h>
 #include <nxcore_2fa.h>
+#include <asset_management.h>
 #include <netxms-version.h>
 
 #ifdef _WIN32
@@ -108,11 +109,6 @@ unique_ptr<ObjectArray<EventReference>> GetAllEventReferences(uint32_t eventCode
 uint32_t ReadMaintenanceJournal(SharedObjectArray<NetObj>& sources, NXCPMessage* response, uint32_t maxEntries);
 uint32_t AddMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
 uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t userId);
-
-void AMFillMessage(NXCPMessage *msg);
-uint32_t AMCreateAttribute(const NXCPMessage& msg, const ClientSession& session);
-uint32_t AMUpdateAttribute(const NXCPMessage& msg, const ClientSession& session);
-uint32_t AMDeleteAttribute(const NXCPMessage& msg, const ClientSession& session);
 
 /**
  * Maximum client message size
@@ -1903,23 +1899,23 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_OSPF_DATA:
          getOspfData(*request);
          break;
-      case CMD_GET_ASSET_MGMT_ATTRIBUTES:
-         getAssetManagementAttributes(*request);
+      case CMD_GET_ASSET_MANAGEMENT_SCHEMA:
+         getAssetManagementSchema(*request);
          break;
-      case CMD_CREATE_ASSET_MGMT_ATTRIBUTE:
-         createAssetManagementAttribute(*request);
+      case CMD_CREATE_ASSET_ATTRIBUTE:
+         createAssetAttribute(*request);
          break;
-      case CMD_UPDATE_ASSET_MGMT_ATTRIBUTE:
-         updateAssetManagementAttribute(*request);
+      case CMD_UPDATE_ASSET_ATTRIBUTE:
+         updateAssetAttribute(*request);
          break;
-      case CMD_DELETE_ASSET_MGMT_ATTRIBUTE:
-         deleteAssetManagementAttribute(*request);
+      case CMD_DELETE_ASSET_ATTRIBUTE:
+         deleteAssetAttribute(*request);
          break;
-      case CMD_UPDATE_AM_ATTRIBUTE_INSTANCE:
-         updateAssetMgmtAttrInstance(*request);
+      case CMD_SET_ASSET_PROPERTY:
+         setAssetProperty(*request);
          break;
-      case CMD_DELETE_AM_ATTRIBUTE_INSTANCE:
-         deleteAssetMgmtAttrInstance(*request);
+      case CMD_DELETE_ASSET_PROPERTY:
+         deleteAssetProperty(*request);
          break;
       default:
          if ((code >> 8) == 0x11)
@@ -5732,7 +5728,7 @@ void ClientSession::getMIBTimestamp(const NXCPMessage& request)
  */
 void ClientSession::createObject(const NXCPMessage& request)
 {
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
    int objectClass = request.getFieldAsUInt16(VID_OBJECT_CLASS);
    int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
@@ -5763,7 +5759,11 @@ void ClientSession::createObject(const NXCPMessage& request)
       }
    }
 
-   if ((parent != nullptr) || (objectClass == OBJECT_NODE))
+   uint32_t assetId = request.getFieldAsUInt32(VID_ASSET_ID);
+   shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(assetId, OBJECT_ASSET));
+
+   if (((parent != nullptr) || (objectClass == OBJECT_NODE)) &&
+       ((assetId == 0) || (asset != nullptr)))
    {
       // User should have create access to parent object
       if ((parent != nullptr) ?
@@ -5771,7 +5771,9 @@ void ClientSession::createObject(const NXCPMessage& request)
             g_entireNetwork->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
       {
          // Parent object should be of valid type
-         if (parentAlwaysValid || IsValidParentClass(objectClass, (parent != nullptr) ? parent->getObjectClass() : -1))
+         // If asset ID is set then class should be valid taget for linking asset
+         if ((parentAlwaysValid || IsValidParentClass(objectClass, (parent != nullptr) ? parent->getObjectClass() : -1)) &&
+             ((assetId == 0) || IsValidAssetLinkTargetClass(objectClass)))
          {
 				// Check zone
 				bool zoneIsValid;
@@ -5809,11 +5811,11 @@ void ClientSession::createObject(const NXCPMessage& request)
                   TCHAR deviceId[MAX_OBJECT_NAME];
                   switch(objectClass)
                   {
-                     case OBJECT_BUSINESS_SERVICE_PROTOTYPE:
+                     case OBJECT_BUSINESSSERVICEPROTO:
                         object = make_shared<BusinessServicePrototype>(objectName, request.getFieldAsUInt32(VID_INSTD_METHOD));
                         NetObjInsert(object, true, false);
                         break;
-                     case OBJECT_BUSINESS_SERVICE:
+                     case OBJECT_BUSINESSSERVICE:
                         object = make_shared<BusinessService>(objectName);
                         NetObjInsert(object, true, false);
                         break;
@@ -5917,7 +5919,7 @@ void ClientSession::createObject(const NXCPMessage& request)
                         IntegerArray<uint32_t> objects = CheckSubnetOverlap(ipAddr, zoneUIN);
                         if (objects.size() > 0)
                         {
-                           msg.setFieldFromInt32Array(VID_OBJECT_LIST, objects);
+                           response.setFieldFromInt32Array(VID_OBJECT_LIST, objects);
                         }
                         else
                         {
@@ -6004,8 +6006,8 @@ void ClientSession::createObject(const NXCPMessage& request)
                      }
 
                      object->unhide();
-                     msg.setField(VID_RCC, RCC_SUCCESS);
-                     msg.setField(VID_OBJECT_ID, object->getId());
+                     response.setField(VID_RCC, RCC_SUCCESS);
+                     response.setField(VID_OBJECT_ID, object->getId());
                   }
                   else
                   {
@@ -6015,50 +6017,50 @@ void ClientSession::createObject(const NXCPMessage& request)
                      // crash in that case
                      if (objectClass == OBJECT_NODE)
                      {
-                        msg.setField(VID_RCC, RCC_IP_ADDRESS_CONFLICT);
+                        response.setField(VID_RCC, RCC_IP_ADDRESS_CONFLICT);
                         // Add to description IP of new created node and name of node with the same IP
-                        SetNodesConflictString(&msg, zoneUIN, ipAddr);
+                        SetNodesConflictString(&response, zoneUIN, ipAddr);
                      }
                      else if (objectClass == OBJECT_ZONE)
                      {
-                        msg.setField(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
+                        response.setField(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
                      }
                      else if (objectClass == OBJECT_SUBNET)
                      {
-                        msg.setField(VID_RCC, RCC_SUBNET_OVERLAP);
+                        response.setField(VID_RCC, RCC_SUBNET_OVERLAP);
                      }
                      else
                      {
-                        msg.setField(VID_RCC, RCC_OBJECT_CREATION_FAILED);
+                        response.setField(VID_RCC, RCC_OBJECT_CREATION_FAILED);
                      }
                   }
                }
                else
                {
-                  msg.setField(VID_RCC, moduleRCC);
+                  response.setField(VID_RCC, moduleRCC);
                }
 				}
 				else
 				{
-					msg.setField(VID_RCC, RCC_INVALID_ZONE_ID);
+					response.setField(VID_RCC, RCC_INVALID_ZONE_ID);
 				}
          }
          else
          {
-            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
          }
       }
       else
       {
-         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }
    else
    {
-      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   sendMessage(msg);
+   sendMessage(response);
 }
 
 /**
@@ -15824,7 +15826,7 @@ void ClientSession::getBusinessServiceCheckList(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
+      if ((object->getObjectClass() == OBJECT_BUSINESSSERVICE) || (object->getObjectClass() == OBJECT_BUSINESSSERVICEPROTO))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
@@ -15877,7 +15879,7 @@ void ClientSession::modifyBusinessServiceCheck(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
+      if ((object->getObjectClass() == OBJECT_BUSINESSSERVICE) || (object->getObjectClass() == OBJECT_BUSINESSSERVICEPROTO))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
@@ -15917,7 +15919,7 @@ void ClientSession::deleteBusinessServiceCheck(const NXCPMessage& request)
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
-      if ((object->getObjectClass() == OBJECT_BUSINESS_SERVICE) || (object->getObjectClass() == OBJECT_BUSINESS_SERVICE_PROTOTYPE))
+      if ((object->getObjectClass() == OBJECT_BUSINESSSERVICE) || (object->getObjectClass() == OBJECT_BUSINESSSERVICEPROTO))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
@@ -15956,7 +15958,7 @@ void ClientSession::deleteBusinessServiceCheck(const NXCPMessage& request)
 void ClientSession::getBusinessServiceUptime(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESSSERVICE);
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -16009,7 +16011,7 @@ void ClientSession::getBusinessServiceUptime(const NXCPMessage& request)
 void ClientSession::getBusinessServiceTickets(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESS_SERVICE);
+   shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_BUSINESSSERVICE);
    if (object != nullptr)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
@@ -16458,42 +16460,79 @@ void ClientSession::getOspfData(const NXCPMessage& request)
 }
 
 /**
- * Get asset management attributes
+ * Get asset management schema
  *
  * Called by:
- * CMD_GET_ASSET_MGMT_ATTRIBUTES
+ * CMD_GET_ASSET_MANAGEMENT_SCHEMA
  *
  * Return values:
- * VID_AM_COUNT                  Number of assert management entries
- * VID_RCC                       Request completion code
- * VID_AM_LIST_BASE              Base for assert management entries entry list. Also first assert management entries name
- * VID_AM_LIST_BASE + 1          Display name
- * VID_AM_LIST_BASE + 2          Data type
- * VID_AM_LIST_BASE + 3          If it is mandatory
- * VID_AM_LIST_BASE + 4          If it should be uinque
- * VID_AM_LIST_BASE + 5          Auto fill script
- * VID_AM_LIST_BASE + 6          Minimal range
- * VID_AM_LIST_BASE + 7          Maximal range
- * VID_AM_LIST_BASE + 8          System tag
- * VID_AM_LIST_BASE + 9          Enum mapping count
- * VID_AM_LIST_BASE + 10 + n*2   n enum key
- * VID_AM_LIST_BASE + 11 + n*2   n enum value
+ * VID_RCC                             Request completion code
+ * VID_NUM_ASSET_ATTRIBUTES            Number of attributes
+ * VID_AM_ATTRIBUTES_BASE              Base for assert management entries entry list. Also first assert management entries name
+ * VID_AM_ATTRIBUTES_BASE + 1          Display name
+ * VID_AM_ATTRIBUTES_BASE + 2          Data type
+ * VID_AM_ATTRIBUTES_BASE + 3          If it is mandatory
+ * VID_AM_ATTRIBUTES_BASE + 4          If it should be uinque
+ * VID_AM_ATTRIBUTES_BASE + 5          Auto fill script
+ * VID_AM_ATTRIBUTES_BASE + 6          Minimal range
+ * VID_AM_ATTRIBUTES_BASE + 7          Maximal range
+ * VID_AM_ATTRIBUTES_BASE + 8          System tag
+ * VID_AM_ATTRIBUTES_BASE + 9          Enum mapping count
+ * VID_AM_ATTRIBUTES_BASE + 10 + n*2   n enum key
+ * VID_AM_ATTRIBUTES_BASE + 11 + n*2   n enum value
  *
- * Second maintenance entry starts from VID_AM_LIST_BASE + 100
+ * Second attribute starts at VID_AM_ATTRIBUTES_BASE + 256
  */
-void ClientSession::getAssetManagementAttributes(const NXCPMessage& request)
+void ClientSession::getAssetManagementSchema(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   AMFillMessage(&response);
+   AssetManagementSchemaToMessage(&response);
    response.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(response);
 }
 
 /**
- * Create new assert management attribute
+ * Create new assert attribute
  *
  * Called by:
- * CMD_CREATE_ASSET_MGMT_ATTRIBUTE
+ * CMD_CREATE_ASSET_ATTRIBUTE
+ *
+ * Expected input parameters:
+ * VID_NAME             attribute name
+ * VID_DISPLAY_NAME     display name
+ * VID_DATA_TYPE        data type AMDataType
+ * VID_IS_MANDATORY     if this attribute is mandatory for filling
+ * VID_IS_UNIQUE        if this attribute should be unique
+ * VID_SCRIPT           auto fill script
+ * VID_RANGE_MIN        min range
+ * VID_RANGE_MAX        max range
+ * VID_SYSTEM_TYPE      system type AMSystemType
+ * VID_ENUM_COUNT       number of items in enum list
+ * VID_AM_ENUM_MAP_BASE enum list base (key, value) one by one
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::createAssetAttribute(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_AM_SCHEMA))
+   {
+      response.setField(VID_RCC, CreateAssetAttribute(request, *this));
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on creating asset attribute"));
+   }
+   sendMessage(response);
+}
+
+/**
+ * Update existing asset attribute
+ *
+ * Called by:
+ * CMD_UPDATE_ASSET_ATTRIBUTE
  *
  * Expected input parameters:
  * VID_NAME             assert management attribute name
@@ -16511,118 +16550,81 @@ void ClientSession::getAssetManagementAttributes(const NXCPMessage& request)
  * Return values:
  * VID_RCC                          Request completion code
  */
-void ClientSession::createAssetManagementAttribute(const NXCPMessage& request)
+void ClientSession::updateAssetAttribute(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
+   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_AM_SCHEMA))
    {
-      response.setField(VID_RCC, AMCreateAttribute(request, *this));
+      response.setField(VID_RCC, UpdateAssetAttribute(request, *this));
    }
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on creating assert management attribute"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating asset attribute"));
    }
    sendMessage(response);
 }
 
 /**
- * Update existing asset management attribute
+ * Delete asset attribute
  *
  * Called by:
- * CMD_UPDATE_ASSET_MGMT_ATTRIBUTE
+ * CMD_DELETE_ASSET_ATTRIBUTE
  *
  * Expected input parameters:
- * VID_NAME             assert management attribute name
- * VID_DISPLAY_NAME     display name
- * VID_DATA_TYPE        data type AMDataType
- * VID_IS_MANDATORY     if this attribute is mandatory for filling
- * VID_IS_UNIQUE        if this attribute should be unique
- * VID_SCRIPT           auto fill script
- * VID_RANGE_MIN        min range
- * VID_RANGE_MAX        max range
- * VID_SYSTEM_TYPE      system type AMSystemType
- * VID_ENUM_COUNT       number of items in enum list
- * VID_AM_ENUM_MAP_BASE enum list base (key, value) one by one
+ * VID_NAME     attribute name
  *
  * Return values:
  * VID_RCC                          Request completion code
  */
-void ClientSession::updateAssetManagementAttribute(const NXCPMessage& request)
+void ClientSession::deleteAssetAttribute(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
+   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_AM_SCHEMA))
    {
-      response.setField(VID_RCC, AMUpdateAttribute(request, *this));
+      response.setField(VID_RCC, DeleteAssetAttribute(request, *this));
    }
    else
    {
       response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on updating assert management attribute"));
+      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting asset attribute"));
    }
    sendMessage(response);
 }
 
 /**
- * Delete asset management attribute
+ * Set asset property
  *
  * Called by:
- * CMD_DELETE_ASSET_MGMT_ATTRIBUTE
- *
- * Expected input parameters:
- * VID_NAME     assert management attribute name
- *
- * Return values:
- * VID_RCC                          Request completion code
- */
-void ClientSession::deleteAssetManagementAttribute(const NXCPMessage& request)
-{
-   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
-   if (checkSysAccessRights(SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE))
-   {
-   response.setField(VID_RCC, AMDeleteAttribute(request, *this));
-   }
-   else
-   {
-      response.setField(VID_RCC, RCC_ACCESS_DENIED);
-      writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on deleting assert management attribute"));
-   }
-   sendMessage(response);
-}
-
-/**
- * Update asset management attribute instance
- *
- * Called by:
- * CMD_UPDATE_AM_ATTRIBUTE_INSTANCE
+ * CMD_SET_ASSET_PROPERTY
  *
  * Expected input parameters:
  * VID_OBJECT_ID     object id
  * VID_NAME          attribute name
- * VID_VALUE         attribute value
+ * VID_VALUE         value
  *
  * Return values:
  * VID_RCC                          Request completion code
  * VID_ERROR_TEXT                   Error text if result is not success
  */
-void ClientSession::updateAssetMgmtAttrInstance(const NXCPMessage& request)
+void ClientSession::setAssetProperty(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
+      SharedString name = request.getFieldAsSharedString(VID_NAME);
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         if (object->isAsset())
+         if (object->getObjectClass() == OBJECT_ASSET)
          {
             json_t *oldValue = object->toJson();
-            SharedString name = request.getFieldAsSharedString(VID_NAME);
             SharedString value = request.getFieldAsSharedString(VID_VALUE);
-            std::pair<uint32_t, String> result = object->getAsAsset()->setAssetData(name, value);
+            std::pair<uint32_t, String> result = static_cast<Asset&>(*object).setProperty(name, value);
             if (result.first == RCC_SUCCESS)
             {
                json_t *newValue = object->toJson();
-               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Object %s modified from client"), object->getName());
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Asset property %s changed"), name.cstr());
                json_decref(newValue);
             }
             else
@@ -16639,8 +16641,8 @@ void ClientSession::updateAssetMgmtAttrInstance(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on setting asset property %s"), name.cstr());
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset data update"));
       }
    }
    else
@@ -16652,10 +16654,10 @@ void ClientSession::updateAssetMgmtAttrInstance(const NXCPMessage& request)
 }
 
 /**
- * Delete asset management attribute instance
+ * Delete asset property
  *
  * Called by:
- * CMD_DELETE_AM_ATTRIBUTE_INSTANCE
+ * CMD_DELETE_ASSET_PROPERTY
  *
  * Expected input parameters:
  * VID_OBJECT_ID     object id
@@ -16664,23 +16666,23 @@ void ClientSession::updateAssetMgmtAttrInstance(const NXCPMessage& request)
  * Return values:
  * VID_RCC                          Request completion code
  */
-void ClientSession::deleteAssetMgmtAttrInstance(const NXCPMessage& request)
+void ClientSession::deleteAssetProperty(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    shared_ptr<NetObj> object = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
    if (object != nullptr)
    {
+      SharedString name = request.getFieldAsSharedString(VID_NAME);
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         if (object->isAsset())
+         if (object->getObjectClass() == OBJECT_ASSET)
          {
             json_t *oldValue = object->toJson();
-            SharedString name = request.getFieldAsSharedString(VID_NAME);
-            uint32_t result = object->getAsAsset()->deleteAssetData(name);
+            uint32_t result = static_cast<Asset&>(*object).deleteProperty(name);
             if (result == RCC_SUCCESS)
             {
                json_t *newValue = object->toJson();
-               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Object %s modified from client"), object->getName());
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Asset property %s deleted"), name.cstr());
                json_decref(newValue);
             }
             else
@@ -16698,7 +16700,7 @@ void ClientSession::deleteAssetMgmtAttrInstance(const NXCPMessage& request)
       else
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
-         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on asset data delete"));
+         writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on deleting asset property %s"), name.cstr());
       }
    }
    else
@@ -16708,4 +16710,3 @@ void ClientSession::deleteAssetMgmtAttrInstance(const NXCPMessage& request)
 
    sendMessage(response);
 }
-
