@@ -6,6 +6,28 @@ assert(x - 1 == -6);
 assert(x * y == -110);
 assert(-y == -22);
 assert(y / 2 == 11);
+assert(y \ 3 == 7);
+assert(y % 3 == 1);
+assert(y / 0 == "inf");
+assert(x / 0 == "-inf");
+
+try
+{
+   z = x \ 0;
+}
+catch
+{
+   assert($errorcode == 9);
+}
+
+try
+{
+   z = x % 0;
+}
+catch
+{
+   assert($errorcode == 9);
+}
 
 assert(pow(y, 2) == y * y);
 assert(pow(y, 4) == y * y * y * y);
