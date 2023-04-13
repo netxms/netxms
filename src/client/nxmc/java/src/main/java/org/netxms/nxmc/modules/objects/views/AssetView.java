@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Reden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ public class AssetView extends ObjectView
     */
    public AssetView()
    {
-      super(i18n.tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/components.png"), "Asset", true);
+      super(i18n.tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Asset", true);
    }
 
    /**
@@ -94,8 +94,7 @@ public class AssetView extends ObjectView
    protected void createContent(Composite parent)
    {
       final int[] widths = { 200, 400, 100, 100, 200 };
-      final String[] names = { i18n.tr("Name"), i18n.tr("Value"), i18n.tr("Is mandatory"), 
-            i18n.tr("Is Unique"), i18n.tr("System type") };
+      final String[] names = { i18n.tr("Attribute"), i18n.tr("Value"), i18n.tr("Mandatory"), i18n.tr("Unique"), i18n.tr("System type") };
       viewer = new SortableTableViewer(parent, names, widths, NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       labelProvider = new AssetAttributeInstanceLabelProvider();
