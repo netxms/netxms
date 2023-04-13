@@ -28,7 +28,7 @@ import org.netxms.client.constants.DataType;
 import org.netxms.client.constants.HardwareComponentCategory;
 import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.MeasurementUnit;
-import org.netxms.nxmc.modules.objects.widgets.HardwareInventory;
+import org.netxms.nxmc.modules.objects.widgets.HardwareInventoryTable;
 
 /**
  * Label provider for hardware inventory view
@@ -70,7 +70,7 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
       HardwareComponent c = (HardwareComponent)element;
       switch(columnIndex)
       {
-         case HardwareInventory.COLUMN_CAPACITY:
+         case HardwareInventoryTable.COLUMN_CAPACITY:
             switch(c.getCategory())
             {
                case BATTERY:
@@ -86,23 +86,23 @@ public class HardwareComponentLabelProvider extends LabelProvider implements ITa
                   break;
             }
             return "";
-         case HardwareInventory.COLUMN_CATEGORY:
+         case HardwareInventoryTable.COLUMN_CATEGORY:
             return categoryNames.get(c.getCategory());
-         case HardwareInventory.COLUMN_DESCRIPTION:
+         case HardwareInventoryTable.COLUMN_DESCRIPTION:
             return c.getDescription();
-         case HardwareInventory.COLUMN_INDEX:
+         case HardwareInventoryTable.COLUMN_INDEX:
             return Integer.toString(c.getIndex());
-         case HardwareInventory.COLUMN_LOCATION:
+         case HardwareInventoryTable.COLUMN_LOCATION:
             return c.getLocation();
-         case HardwareInventory.COLUMN_MODEL:
+         case HardwareInventoryTable.COLUMN_MODEL:
             return c.getModel();
-         case HardwareInventory.COLUMN_PART_NUMBER:
+         case HardwareInventoryTable.COLUMN_PART_NUMBER:
             return c.getPartNumber();
-         case HardwareInventory.COLUMN_SERIAL_NUMBER:
+         case HardwareInventoryTable.COLUMN_SERIAL_NUMBER:
             return c.getSerialNumber();
-         case HardwareInventory.COLUMN_TYPE:
+         case HardwareInventoryTable.COLUMN_TYPE:
             return c.getType();
-         case HardwareInventory.COLUMN_VENDOR:
+         case HardwareInventoryTable.COLUMN_VENDOR:
             return c.getVendor();
       }      
       return null;

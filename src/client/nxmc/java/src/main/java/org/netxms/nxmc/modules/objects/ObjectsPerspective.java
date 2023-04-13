@@ -84,7 +84,6 @@ import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.views.AssetView;
 import org.netxms.nxmc.modules.objects.views.ChassisView;
 import org.netxms.nxmc.modules.objects.views.Dot1xStatusView;
-import org.netxms.nxmc.modules.objects.views.EntityMIBView;
 import org.netxms.nxmc.modules.objects.views.HardwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.InterfacesView;
 import org.netxms.nxmc.modules.objects.views.MaintenanceJournalView;
@@ -190,7 +189,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new DashboardView());
       addMainView(new DataCollectionView());
       addMainView(new Dot1xStatusView());
-      addMainView(new EntityMIBView());
       addMainView(new HardwareInventoryView());
       addMainView(new InterfacesView());
       addMainView(new MaintenanceJournalView());

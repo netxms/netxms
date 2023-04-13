@@ -19,29 +19,27 @@
 package org.netxms.nxmc.modules.objects.widgets;
 
 import java.util.List;
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.netxms.client.HardwareComponent;
-import org.netxms.client.NXCSession;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.HardwareComponentComparator;
 import org.netxms.nxmc.modules.objects.widgets.helpers.HardwareComponentLabelProvider;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Hardware inventory widget
+ * Hardware inventory table (display hardware inventory retrieved from agent)
  */
-public class HardwareInventory extends Composite
+public class HardwareInventoryTable extends AbstractHardwareInventoryWidget
 {
    public static final int COLUMN_CATEGORY = 0;
    public static final int COLUMN_INDEX = 1;
@@ -54,11 +52,9 @@ public class HardwareInventory extends Composite
    public static final int COLUMN_LOCATION = 8;
    public static final int COLUMN_DESCRIPTION = 9;
 
-   private final I18n i18n = LocalizationHelper.getI18n(HardwareInventory.class);
+   private final I18n i18n = LocalizationHelper.getI18n(HardwareInventoryTable.class);
 
-   private ObjectView view;
    private SortableTableViewer viewer;
-   private MenuManager menuManager = null;
 
    /**
     * Create new hardware inventory widget.
@@ -67,20 +63,10 @@ public class HardwareInventory extends Composite
     * @param style widget style
     * @param view owning view
     */
-   public HardwareInventory(Composite parent, int style, ObjectView view)
+   public HardwareInventoryTable(Composite parent, int style, ObjectView view)
    {
-      super(parent, style);
-      this.view = view;
+      super(parent, style, view);
 
-      setLayout(new FillLayout());
-      createTableViewer();
-   }
-
-   /**
-    * Create table viewer
-    */
-   private void createTableViewer()
-   {
       final String[] names = { i18n.tr("Category"), i18n.tr("Index"), i18n.tr("Type"), i18n.tr("Vendor"), i18n.tr("Model"),
             i18n.tr("Capacity"), i18n.tr("Part number"), i18n.tr("Serial number"), i18n.tr("Location"), i18n.tr("Description") };
       final int[] widths = { 100, 70, 100, 200, 200, 90, 130, 130, 200, 300 };
@@ -88,20 +74,14 @@ public class HardwareInventory extends Composite
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new HardwareComponentLabelProvider());
       viewer.setComparator(new HardwareComponentComparator());
-
-      if (menuManager != null)
-      {
-         Menu menu = menuManager.createContextMenu(viewer.getControl());
-         viewer.getControl().setMenu(menu);
-      }
    }
 
    /**
-    * Refresh list
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#refresh()
     */
+   @Override
    public void refresh()
    {
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Loading hardware inventory"), view) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -126,31 +106,80 @@ public class HardwareInventory extends Composite
    }
 
    /**
-    * @return the viewer
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#getViewer()
     */
+   @Override
    public ColumnViewer getViewer()
    {
       return viewer;
    }
 
    /**
-    * @param manager
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#copySelectionToClipboard(int)
     */
-   public void setViewerMenu(MenuManager manager)
+   @Override
+   public void copySelectionToClipboard(int column)
    {
-      menuManager = manager;
-      if (viewer != null)
+      TableItem[] selection = viewer.getTable().getSelection();
+      if (selection.length > 0)
       {
-         Menu menu = menuManager.createContextMenu(viewer.getControl());
-         viewer.getControl().setMenu(menu);
+         final String newLine = SystemUtils.IS_OS_WINDOWS ? "\r\n" : "\n";
+         StringBuilder sb = new StringBuilder();
+         for(int i = 0; i < selection.length; i++)
+         {
+            if (i > 0)
+               sb.append(newLine);
+            if (column == -1)
+            {
+               sb.append(selection[i].getText(0));
+               for(int j = 1; j < viewer.getTable().getColumnCount(); j++)
+               {
+                  sb.append("\t");
+                  sb.append(selection[i].getText(j));
+               }
+            }
+            else
+            {
+               sb.append(selection[i].getText(column));
+            }
+         }
+         WidgetHelper.copyToClipboard(sb.toString());
       }
    }
 
    /**
-    * Clear data form view
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#getNameColumnIndex()
     */
-   public void clear()
+   @Override
+   public int getNameColumnIndex()
    {
-      viewer.setInput(new Object[0]);
+      return -1;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#getDescriptionColumnIndex()
+    */
+   @Override
+   public int getDescriptionColumnIndex()
+   {
+      return COLUMN_DESCRIPTION;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#getModelColumnIndex()
+    */
+   @Override
+   public int getModelColumnIndex()
+   {
+      return COLUMN_MODEL;
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget#getSerialColumnIndex()
+    */
+   @Override
+   public int getSerialColumnIndex()
+   {
+      return COLUMN_SERIAL_NUMBER;
    }
 }

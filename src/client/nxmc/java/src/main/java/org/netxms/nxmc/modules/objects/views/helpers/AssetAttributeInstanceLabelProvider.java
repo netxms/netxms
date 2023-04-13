@@ -54,6 +54,7 @@ public class AssetAttributeInstanceLabelProvider extends LabelProvider implement
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
+   @SuppressWarnings("unchecked")
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {

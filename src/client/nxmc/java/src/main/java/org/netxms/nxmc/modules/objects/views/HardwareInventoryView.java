@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2019 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,9 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
@@ -32,8 +34,11 @@ import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.actions.ViewerProvider;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.widgets.HardwareInventory;
+import org.netxms.nxmc.modules.objects.widgets.AbstractHardwareInventoryWidget;
+import org.netxms.nxmc.modules.objects.widgets.EntityMibTreeViewer;
+import org.netxms.nxmc.modules.objects.widgets.HardwareInventoryTable;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -41,12 +46,24 @@ import org.xnap.commons.i18n.I18n;
  */
 public class HardwareInventoryView extends ObjectView
 {
+   private static enum DisplayMode
+   {
+      AGENT, ENTITY_MIB
+   };
+
    private static final I18n i18n = LocalizationHelper.getI18n(HardwareInventoryView.class);
-   public static final String ID = "org.netxms.ui.eclipse.objectview.views.HardwareInventoryView"; //$NON-NLS-1$
-   
-   private HardwareInventory inventoryWidget;
+
+   private DisplayMode displayMode = DisplayMode.AGENT;
+   private AbstractHardwareInventoryWidget inventoryWidget;
    private Action actionExportToCsv;
    private Action actionExportAllToCsv;
+   private Action actionCopy;
+   private Action actionCopyName;
+   private Action actionCopyDescription;
+   private Action actionCopyModel;
+   private Action actionCopySerial;
+   private Action actionCollapseAll;
+   private Action actionExpandAll;
 
    /**
     * @param name
@@ -55,9 +72,20 @@ public class HardwareInventoryView extends ObjectView
     */
    public HardwareInventoryView()
    {
-      super(i18n.tr("Hardware Inventory"), ResourceManager.getImageDescriptor("icons/object-views/components.png"), "HardwareInventory", false);
+      super(i18n.tr("Hardware Inventory"), ResourceManager.getImageDescriptor("icons/object-views/hardware.png"), "HardwareInventory", false);
    }
-   
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      HardwareInventoryView view = (HardwareInventoryView)super.cloneView();
+      view.displayMode = displayMode;
+      return view;
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -69,14 +97,32 @@ public class HardwareInventoryView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof Node) && (((Node)context).hasAgent() || ((((Node)context).getCapabilities() & Node.NC_HAS_ENTITY_MIB) != 0));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 60;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected void createContent(Composite parent)
    {
-      inventoryWidget = new HardwareInventory(parent, SWT.NONE, this);
+      inventoryWidget = (displayMode == DisplayMode.AGENT) ? new HardwareInventoryTable(parent, SWT.NONE, this) : new EntityMibTreeViewer(parent, SWT.NONE, this);
       createActions();
-      createPopupMenu();
+      createContextMenu();
    }
 
    /**
@@ -93,6 +139,62 @@ public class HardwareInventoryView extends ObjectView
       };
       actionExportToCsv = new ExportToCsvAction(this, vp, true);
       actionExportAllToCsv = new ExportToCsvAction(this, vp, false);
+
+      actionCopy = new Action(i18n.tr("&Copy to clipboard"), SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            inventoryWidget.copySelectionToClipboard(-1);
+         }
+      };
+
+      actionCopyName = new Action(i18n.tr("Copy &name to clipboard")) {
+         @Override
+         public void run()
+         {
+            inventoryWidget.copySelectionToClipboard(inventoryWidget.getNameColumnIndex());
+         }
+      };
+
+      actionCopyDescription = new Action(i18n.tr("Copy &description to clipboard")) {
+         @Override
+         public void run()
+         {
+            inventoryWidget.copySelectionToClipboard(inventoryWidget.getDescriptionColumnIndex());
+         }
+      };
+
+      actionCopyModel = new Action(i18n.tr("Copy &model to clipboard")) {
+         @Override
+         public void run()
+         {
+            inventoryWidget.copySelectionToClipboard(inventoryWidget.getModelColumnIndex());
+         }
+      };
+
+      actionCopySerial = new Action(i18n.tr("Copy &serial number to clipboard")) {
+         @Override
+         public void run()
+         {
+            inventoryWidget.copySelectionToClipboard(inventoryWidget.getSerialColumnIndex());
+         }
+      };
+
+      actionCollapseAll = new Action(i18n.tr("C&ollapse all"), SharedIcons.COLLAPSE_ALL) {
+         @Override
+         public void run()
+         {
+            ((TreeViewer)inventoryWidget.getViewer()).collapseAll();
+         }
+      };
+
+      actionExpandAll = new Action(i18n.tr("&Expand all"), SharedIcons.EXPAND_ALL) {
+         @Override
+         public void run()
+         {
+            ((TreeViewer)inventoryWidget.getViewer()).expandAll();
+         }
+      };
    }
 
    /**
@@ -118,9 +220,8 @@ public class HardwareInventoryView extends ObjectView
    /**
     * Create pop-up menu
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
-      // Create menu manager.
       MenuManager menuMgr = new MenuManager();
       menuMgr.setRemoveAllWhenShown(true);
       menuMgr.addMenuListener(new IMenuListener() {
@@ -138,12 +239,25 @@ public class HardwareInventoryView extends ObjectView
     */
    protected void fillContextMenu(IMenuManager manager)
    {
+      manager.add(actionCopy);
+      if (inventoryWidget.getNameColumnIndex() != -1)
+         manager.add(actionCopyName);
+      manager.add(actionCopyDescription);
+      manager.add(actionCopyModel);
+      manager.add(actionCopySerial);
+      manager.add(new Separator());
       manager.add(actionExportToCsv);
       manager.add(actionExportAllToCsv);
+      if (inventoryWidget.isTreeViewer())
+      {
+         manager.add(new Separator());
+         manager.add(actionCollapseAll);
+         manager.add(actionExpandAll);
+      }
    }
-   
+
    /**
-    * Refresh
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override
    public void refresh()
@@ -158,28 +272,26 @@ public class HardwareInventoryView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       clearMessages();
+
       inventoryWidget.clear();
       if (object == null)
          return;
-      
+
+      if ((displayMode == DisplayMode.AGENT) && !((Node)object).hasAgent())
+      {
+         inventoryWidget.dispose();
+         inventoryWidget = new EntityMibTreeViewer(getClientArea(), SWT.NONE, this);
+         displayMode = DisplayMode.ENTITY_MIB;
+         createContextMenu();
+      }
+      else if ((displayMode == DisplayMode.ENTITY_MIB) && ((((Node)object).getCapabilities() & Node.NC_HAS_ENTITY_MIB) == 0))
+      {
+         inventoryWidget.dispose();
+         inventoryWidget = new HardwareInventoryTable(getClientArea(), SWT.NONE, this);
+         displayMode = DisplayMode.AGENT;
+         createContextMenu();
+      }
+
       inventoryWidget.refresh();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node) && ((Node)context).hasAgent();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 60;
    }
 }

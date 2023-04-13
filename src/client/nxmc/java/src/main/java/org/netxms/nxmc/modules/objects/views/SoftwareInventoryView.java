@@ -71,6 +71,28 @@ public class SoftwareInventoryView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      if ((context != null) && (context instanceof Node))
+      {
+         return (((Node)context).getCapabilities() & Node.NC_IS_NATIVE_AGENT) != 0;
+      }
+      return (context != null) && (context instanceof Container);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 60;
+   }
+
+   /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -79,7 +101,7 @@ public class SoftwareInventoryView extends ObjectView
       inventoryWidget = new SoftwareInventory(parent, SWT.NONE, this);
 
 		createActions();
-		createPopupMenu();
+		createContextMenu();
 	}
 
 	/**
@@ -111,7 +133,7 @@ public class SoftwareInventoryView extends ObjectView
 	/**
 	 * Create pop-up menu
 	 */
-	private void createPopupMenu()
+	private void createContextMenu()
 	{
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
@@ -158,31 +180,5 @@ public class SoftwareInventoryView extends ObjectView
 
       inventoryWidget.setRootObjectId(object.getObjectId());
       inventoryWidget.refresh();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      if ((context != null) && (context instanceof Node))
-      {
-         return (((Node)context).getCapabilities() & Node.NC_IS_NATIVE_AGENT) != 0;
-      }
-      if ((context != null) && (context instanceof Container))
-      {
-         return true;
-      }
-      return false;
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 60;
    }
 }

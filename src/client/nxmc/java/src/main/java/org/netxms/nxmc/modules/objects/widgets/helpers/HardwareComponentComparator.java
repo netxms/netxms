@@ -23,7 +23,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.HardwareComponent;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.objects.widgets.HardwareInventory;
+import org.netxms.nxmc.modules.objects.widgets.HardwareInventoryTable;
 
 /**
  * Comparator for hardware component objects
@@ -44,34 +44,34 @@ public class HardwareComponentComparator extends ViewerComparator
       int result = 0;
       switch(column)
       {
-         case HardwareInventory.COLUMN_CAPACITY:
+         case HardwareInventoryTable.COLUMN_CAPACITY:
             result = Long.signum(c1.getCapacity() - c2.getCapacity());
             break;
-         case HardwareInventory.COLUMN_CATEGORY:
+         case HardwareInventoryTable.COLUMN_CATEGORY:
             result = c1.getCategory().getValue() - c2.getCategory().getValue();
             break;
-         case HardwareInventory.COLUMN_DESCRIPTION:
+         case HardwareInventoryTable.COLUMN_DESCRIPTION:
             result = c1.getDescription().compareToIgnoreCase(c2.getDescription());
             break;
-         case HardwareInventory.COLUMN_INDEX:
+         case HardwareInventoryTable.COLUMN_INDEX:
             result = Integer.signum(c1.getIndex() - c2.getIndex());
             break;
-         case HardwareInventory.COLUMN_LOCATION:
+         case HardwareInventoryTable.COLUMN_LOCATION:
             result = c1.getLocation().compareToIgnoreCase(c2.getLocation());
             break;
-         case HardwareInventory.COLUMN_MODEL:
+         case HardwareInventoryTable.COLUMN_MODEL:
             result = c1.getModel().compareToIgnoreCase(c2.getModel());
             break;
-         case HardwareInventory.COLUMN_PART_NUMBER:
+         case HardwareInventoryTable.COLUMN_PART_NUMBER:
             result = c1.getPartNumber().compareToIgnoreCase(c2.getPartNumber());
             break;
-         case HardwareInventory.COLUMN_SERIAL_NUMBER:
+         case HardwareInventoryTable.COLUMN_SERIAL_NUMBER:
             result = c1.getSerialNumber().compareToIgnoreCase(c2.getSerialNumber());
             break;
-         case HardwareInventory.COLUMN_TYPE:
+         case HardwareInventoryTable.COLUMN_TYPE:
             result = c1.getType().compareToIgnoreCase(c2.getType());
             break;
-         case HardwareInventory.COLUMN_VENDOR:
+         case HardwareInventoryTable.COLUMN_VENDOR:
             result = c1.getVendor().compareToIgnoreCase(c2.getVendor());
             break;
       }

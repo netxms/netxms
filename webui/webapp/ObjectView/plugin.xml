@@ -40,7 +40,7 @@
       <view
             allowMultiple="true"
             class="org.netxms.ui.eclipse.objectview.views.HardwareInventoryView"
-            icon="icons/components.png"
+            icon="icons/hardware.png"
             id="org.netxms.ui.eclipse.objectview.views.HardwareInventoryView"
             name="Hardware Inventory"
             restorable="true">
@@ -297,7 +297,7 @@
          <action
                class="org.netxms.ui.eclipse.objectview.actions.ShowHardwareInventory"
                enablesFor="1"
-               icon="icons/components.png"
+               icon="icons/hardware.png"
                id="org.netxms.ui.eclipse.objectview.popupActions.ShowHardwareInventory"
                label="Hardware inventory">
          </action>

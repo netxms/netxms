@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views.helpers;
+package org.netxms.nxmc.modules.objects.widgets.helpers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +28,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.views.EntityMIBView;
+import org.netxms.nxmc.modules.objects.widgets.EntityMibTreeViewer;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -92,7 +92,7 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 		PhysicalComponent c = (PhysicalComponent)element;
 		switch(columnIndex)
 		{
-         case EntityMIBView.COLUMN_CLASS:
+         case EntityMibTreeViewer.COLUMN_CLASS:
 				try
 				{
 					return className[c.getPhyClass()];
@@ -101,19 +101,19 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 				{
 					return className[PhysicalComponent.UNKNOWN];
 				}
-         case EntityMIBView.COLUMN_DESCRIPTION:
+         case EntityMibTreeViewer.COLUMN_DESCRIPTION:
             return c.getDescription();
-         case EntityMIBView.COLUMN_INTERFACE:
+         case EntityMibTreeViewer.COLUMN_INTERFACE:
             return getInterfaceName(c);
-         case EntityMIBView.COLUMN_FIRMWARE:
+         case EntityMibTreeViewer.COLUMN_FIRMWARE:
 				return c.getFirmware();
-         case EntityMIBView.COLUMN_MODEL:
+         case EntityMibTreeViewer.COLUMN_MODEL:
 				return c.getModel();
-         case EntityMIBView.COLUMN_NAME:
+         case EntityMibTreeViewer.COLUMN_NAME:
 				return c.getDisplayName();
-         case EntityMIBView.COLUMN_SERIAL:
+         case EntityMibTreeViewer.COLUMN_SERIAL:
 				return c.getSerialNumber();
-         case EntityMIBView.COLUMN_VENDOR:
+         case EntityMibTreeViewer.COLUMN_VENDOR:
 				return c.getVendor();
 		}
 		return null;
@@ -130,7 +130,7 @@ public class ComponentTreeLabelProvider extends LabelProvider implements ITableL
 	   int ifIndex = c.getIfIndex();
 	   if (ifIndex <= 0)
 	      return "";
-	   
+
 	   Interface iface = interfaces.get(ifIndex);
 	   return (iface != null) ? iface.getObjectName() : null;
 	}
