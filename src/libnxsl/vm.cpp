@@ -2293,14 +2293,24 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                         pVal1 = nullptr;
                         break;
                      case OPCODE_DIV:
-                     case OPCODE_IDIV:
                         pRes = getNonSharedValue(pVal1);
                         pRes->div(pVal2);
                         pVal1 = nullptr;
                         break;
+                     case OPCODE_IDIV:
+                        pRes = getNonSharedValue(pVal1);
+                        if (pVal2->getValueAsInt64() != 0)
+                           pRes->div(pVal2);
+                        else
+                           error(NXSL_ERR_DIVIDE_BY_ZERO);
+                        pVal1 = nullptr;
+                        break;
                      case OPCODE_REM:
                         pRes = getNonSharedValue(pVal1);
-                        pRes->rem(pVal2);
+                        if (pVal2->getValueAsInt64() != 0)
+                           pRes->rem(pVal2);
+                        else
+                           error(NXSL_ERR_DIVIDE_BY_ZERO);
                         pVal1 = nullptr;
                         break;
                      case OPCODE_EQ:
