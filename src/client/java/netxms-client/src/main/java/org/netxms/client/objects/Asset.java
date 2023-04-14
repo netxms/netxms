@@ -46,7 +46,7 @@ public class Asset extends GenericObject
 	}
 
    /**
-    * @see org.netxms.client.NXCObject#getObjectClassName()
+    * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
     */
 	@Override
 	public String getObjectClassName()

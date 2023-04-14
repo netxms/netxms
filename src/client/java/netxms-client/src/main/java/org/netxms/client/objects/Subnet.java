@@ -85,7 +85,7 @@ public class Subnet extends GenericObject implements ZoneMember
 	}
 
    /**
-    * @see org.netxms.client.NXCObject#getObjectClassName()
+    * @see org.netxms.client.objects.AbstractObject#getObjectClassName()
     */
 	@Override
 	public String getObjectClassName()
@@ -112,7 +112,7 @@ public class Subnet extends GenericObject implements ZoneMember
    }
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneId()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneId()
     */
    @Override
 	public int getZoneId()
@@ -121,7 +121,7 @@ public class Subnet extends GenericObject implements ZoneMember
 	}
 
    /**
-    * @see org.netxms.client.objects.ZoneMember#getZoneName()
+    * @see org.netxms.client.objects.interfaces.ZoneMember#getZoneName()
     */
    @Override
    public String getZoneName()
