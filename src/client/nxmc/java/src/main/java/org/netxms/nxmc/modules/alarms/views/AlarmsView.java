@@ -84,6 +84,15 @@ public class AlarmsView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof AbstractObject) && ((AbstractObject)context).isAlarmsVisible();
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#getContextName()
     */
    @Override
