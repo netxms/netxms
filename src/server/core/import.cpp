@@ -456,7 +456,8 @@ static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
 uint32_t ImportConfig(const Config& config, uint32_t flags)
 {
    ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot,
-      *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *webServiceDefRoot, *actionsRoot;
+      *scriptsRoot, *objectToolsRoot, *summaryTablesRoot, *webServiceDefRoot,
+      *actionsRoot, *assetsRoot;
    uint32_t rcc = RCC_SUCCESS;
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() called, flags=0x%04X"), flags);
@@ -646,7 +647,15 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
       {
          ImportWebServiceDefinition(*webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0);
       }
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): DCI summary tables imported"));
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): web service definitions imported"));
+   }
+
+   //Import web service definitions
+   assetsRoot = config.getEntry(_T("/assetAttributes"));
+   if (assetsRoot != nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): asset attribute definitions imported"));
+      ImportAssetAttributeDefinitions(*assetsRoot, (flags & CFG_IMPORT_REPLACE_AM_DEFINITIONS) != 0);
    }
 
 stop_processing:

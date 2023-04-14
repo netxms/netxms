@@ -8955,7 +8955,7 @@ public class NXCSession
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
-         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webService) throws IOException, NXCException
+         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webService, String[] assetDefinitions) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -8975,6 +8975,7 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_ACTION_LIST, actions);
       msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_DEF_COUNT, webService.length);
       msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST, webService);
+      msg.setField(NXCPCodes.VID_ASSET_ATTRIBUTE_NAMES, assetDefinitions);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;

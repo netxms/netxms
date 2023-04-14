@@ -2266,6 +2266,7 @@ public:
    StringList(const StringList &src);
 	StringList(const TCHAR *src, const TCHAR *separator);
    StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
+   StringList(const NXCPMessage& msg, uint32_t fieldId);
 	~StringList();
 
 	void add(const TCHAR *value);
@@ -2297,6 +2298,7 @@ public:
    void insertAll(int pos, const StringList& src) { insertAll(pos, &src); }
 
    void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId);
+   void addAllFromMessage(const NXCPMessage& msg, uint32_t fieldId);
 
    void merge(const StringList *src, bool matchCase);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
@@ -2396,6 +2398,7 @@ public:
 
    void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const;
    void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId, bool clearBeforeAdd = false, bool toUppercase = false);
+   void addAllFromMessage(const NXCPMessage &msg, uint32_t fieldId, bool clearBeforeAdd = false, bool toUppercase = false);
 
    String join(const TCHAR *separator);
 
@@ -3039,9 +3042,9 @@ public:
 /**
  * Byte stream
  */
-class LIBNETXMS_EXPORTABLE ByteStream
+class LIBNETXMS_EXPORTABLE ConstByteStream
 {
-private:
+protected:
    BYTE *m_data;
    size_t m_size;
    size_t m_allocated;
@@ -3053,20 +3056,13 @@ private:
    WCHAR* readStringWCore(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
    char* readStringAsUTF8Core(const char* codepage, ssize_t byteCount, bool isLenPrepended, bool isNullTerminated);
    ssize_t readStringU(WCHAR* buffer, const char* codepage, ssize_t byteCount);
-   ssize_t writeStringU(const WCHAR* str, size_t length, const char* codepage);
+
+   ConstByteStream() {}
 
 public:
-   ByteStream(size_t initial = 8192);
-   ByteStream(const void *data, size_t size);
-   ByteStream(const ByteStream& src) = delete;
-   virtual ~ByteStream();
-
-   static ByteStream *load(const TCHAR *file);
-
-   /**
-    * Callback for writing data received from cURL to provided byte stream
-    */
-   static size_t curlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data);
+   ConstByteStream(const BYTE *data, size_t size);
+   ConstByteStream(const ConstByteStream& src) = delete;
+   virtual ~ConstByteStream() {}
 
    off_t seek(off_t offset, int origin = SEEK_SET);
 
@@ -3075,57 +3071,17 @@ public:
     * @return Position in the stream. Returns -1 on failure.
     */
    template<typename T> off_t find(T value)
-   { 
+   {
       auto p = static_cast<BYTE*>(memmem(&m_data[m_pos], m_size - m_pos, &value, sizeof(T)));
       return p != nullptr ? p - m_data : -1;
    }
 
    size_t pos() const { return m_pos; }
    size_t size() const { return m_size; }
-   bool eos() { return m_pos == m_size; }
-
-   void setAllocationStep(size_t s) { m_allocationStep = s; }
+   bool eos() const { return m_pos == m_size; }
 
    const BYTE *buffer(size_t *size) const { *size = m_size; return m_data; }
    const BYTE *buffer() const { return m_data; }
-
-   BYTE *takeBuffer();
-
-   void clear() { m_size = 0; m_pos = 0; }
-
-   void write(const void *data, size_t size);
-   void write(char c) { write(&c, 1); }
-   void write(BYTE b) { write(&b, 1); }
-
-   void writeB(uint16_t n) { n = HostToBigEndian16(n); write(&n, 2); }
-   void writeB(int16_t n) { writeB(static_cast<uint16_t>(n)); }
-   void writeB(uint32_t n) { n = HostToBigEndian32(n); write(&n, 4); }
-   void writeB(int32_t n) { writeB(static_cast<uint32_t>(n)); }
-   void writeB(uint64_t n) { n = HostToBigEndian64(n); write(&n, 8); }
-   void writeB(int64_t n) { writeB(static_cast<uint64_t>(n)); }
-   void writeB(double n) { n = HostToBigEndianD(n); write(&n, 8); }
-
-   void writeL(uint16_t n) { n = HostToLittleEndian16(n); write(&n, 2); }
-   void writeL(int16_t n) { writeL(static_cast<uint16_t>(n)); }
-   void writeL(uint32_t n) { n = HostToLittleEndian32(n); write(&n, 4); }
-   void writeL(int32_t n) { writeL(static_cast<uint32_t>(n)); }
-   void writeL(uint64_t n) { n = HostToLittleEndian64(n); write(&n, 8); }
-   void writeL(int64_t n) { writeL(static_cast<uint64_t>(n)); }
-   void writeL(double n) { n = HostToLittleEndianD(n); write(&n, 8); }
-
-   size_t writeString(const WCHAR *str, const char *codepage, ssize_t length, bool prependLength, bool nullTerminate);
-   size_t writeString(const char *str, ssize_t length, bool prependLength, bool nullTerminate);
-
-   /**
-    * Write string. No length indicators are written.
-    * @param str the input string
-    * @param codepage encoding of the in-stream string
-    * @return Count of bytes written.
-    */
-   size_t writeString(const WCHAR* str, const char* codepage = "UTF-8")
-   {
-      return writeString(str, codepage, -1, false, false);
-   }
 
    size_t read(void *buffer, size_t count);
 
@@ -3138,7 +3094,7 @@ public:
       read(&n, 2);
       return BigEndianToHost16(n);
    }
-   
+
    uint32_t readUInt32B()
    {
       uint32_t n = 0;
@@ -3152,7 +3108,7 @@ public:
       read(&n, 8);
       return BigEndianToHost64(n);
    }
-   
+
    double readDoubleB()
    {
       double n = 0;
@@ -3170,7 +3126,7 @@ public:
       read(&n, 2);
       return LittleEndianToHost16(n);
    }
-   
+
    uint32_t readUInt32L()
    {
       uint32_t n = 0;
@@ -3184,7 +3140,7 @@ public:
       read(&n, 8);
       return LittleEndianToHost64(n);
    }
-   
+
    double readDoubleL()
    {
       double n = 0;
@@ -3259,7 +3215,78 @@ public:
     */
    char* readCStringA() { return readStringCore(-1, false, true); }
 
+   /**
+    * Read string from NXCP message
+    */
+   TCHAR *readNXCPString(MemoryPool *pool);
+
    bool save(int f);
+};
+
+/**
+ * Byte stream
+ */
+class LIBNETXMS_EXPORTABLE ByteStream : public ConstByteStream
+{
+private:
+   size_t m_allocated;
+   size_t m_allocationStep;
+   ssize_t writeStringU(const WCHAR* str, size_t length, const char* codepage);
+
+public:
+   ByteStream(size_t initial = 8192);
+   ByteStream(const void *data, size_t size);
+   ByteStream(const ByteStream& src) = delete;
+   virtual ~ByteStream();
+
+   static ByteStream *load(const TCHAR *file);
+
+   /**
+    * Callback for writing data received from cURL to provided byte stream
+    */
+   static size_t curlWriteFunction(char *ptr, size_t size, size_t nmemb, ByteStream *data);
+
+   void setAllocationStep(size_t s) { m_allocationStep = s; }
+
+   BYTE *takeBuffer();
+
+   void clear() { m_size = 0; m_pos = 0; }
+
+   void write(const void *data, size_t size);
+   void write(char c) { write(&c, 1); }
+   void write(BYTE b) { write(&b, 1); }
+
+   void writeB(uint16_t n) { n = HostToBigEndian16(n); write(&n, 2); }
+   void writeB(int16_t n) { writeB(static_cast<uint16_t>(n)); }
+   void writeB(uint32_t n) { n = HostToBigEndian32(n); write(&n, 4); }
+   void writeB(int32_t n) { writeB(static_cast<uint32_t>(n)); }
+   void writeB(uint64_t n) { n = HostToBigEndian64(n); write(&n, 8); }
+   void writeB(int64_t n) { writeB(static_cast<uint64_t>(n)); }
+   void writeB(double n) { n = HostToBigEndianD(n); write(&n, 8); }
+
+   void writeL(uint16_t n) { n = HostToLittleEndian16(n); write(&n, 2); }
+   void writeL(int16_t n) { writeL(static_cast<uint16_t>(n)); }
+   void writeL(uint32_t n) { n = HostToLittleEndian32(n); write(&n, 4); }
+   void writeL(int32_t n) { writeL(static_cast<uint32_t>(n)); }
+   void writeL(uint64_t n) { n = HostToLittleEndian64(n); write(&n, 8); }
+   void writeL(int64_t n) { writeL(static_cast<uint64_t>(n)); }
+   void writeL(double n) { n = HostToLittleEndianD(n); write(&n, 8); }
+
+   size_t writeString(const WCHAR *str, const char *codepage, ssize_t length, bool prependLength, bool nullTerminate);
+   size_t writeString(const char *str, ssize_t length, bool prependLength, bool nullTerminate);
+
+   /**
+    * Write string. No length indicators are written.
+    * @param str the input string
+    * @param codepage encoding of the in-stream string
+    * @return Count of bytes written.
+    */
+   size_t writeString(const WCHAR* str, const char* codepage = "UTF-8")
+   {
+      return writeString(str, codepage, -1, false, false);
+   }
+
+   size_t writeNXCPString(const TCHAR *string);
 };
 
 class NXCPMessage;

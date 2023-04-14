@@ -286,6 +286,36 @@ void StringSet::addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint3
 }
 
 /**
+ * Add all strings from NXCP message
+ *
+ * @param msg NXCP message
+ * @param baseId base ID for data fields
+ * @param countId ID of field with number of strings
+ * @param clearBeforeAdd if set to true, existing content will be deleted
+ * @param toUppercase if set to true, all strings will be converted to upper case before adding
+ */
+void StringSet::addAllFromMessage(const NXCPMessage &msg, uint32_t fieldId, bool clearBeforeAdd, bool toUppercase)
+{
+   if (clearBeforeAdd)
+      clear();
+
+   size_t size;
+   const BYTE *data = msg.getBinaryFieldPtr(fieldId, &size);
+   ConstByteStream in(data, size);
+   int count = in.readUInt16B();
+   for(int i = 0; i < count; i++)
+   {
+      TCHAR *str = in.readNXCPString(nullptr);
+      if (str != nullptr)
+      {
+         if (toUppercase)
+            _tcsupr(str);
+         addPreallocated(str);
+      }
+   }
+}
+
+/**
  * Get all entries as one string, optionally separated by given separator
  *
  * @parm separator optional separator, may be NULL

@@ -1279,6 +1279,35 @@ void NXCPMessage::deleteAllFields()
 
 #ifdef UNICODE
 
+
+/**
+ * set binary field to a string list UTF8 encoded
+ */
+void NXCPMessage::setField(uint32_t fieldId, const StringList &data)
+{
+   ByteStream stream(32768);
+   stream.writeB(static_cast<uint16_t>(data.size()));
+   for (int i = 0; i < data.size(); i++)
+   {
+      stream.writeNXCPString(data.get(i));
+   }
+   set(fieldId, NXCP_DT_BINARY, stream.buffer(), false, stream.size());
+}
+
+/**
+ * set binary field to a string set UTF8 encoded
+ */
+void NXCPMessage::setField(uint32_t fieldId, const StringSet &data)
+{
+   ByteStream stream(32768);
+   stream.writeB(static_cast<uint16_t>(data.size()));
+   for (const TCHAR *item : data)
+   {
+      stream.writeNXCPString(item);
+   }
+   set(fieldId, NXCP_DT_BINARY, stream.buffer(), false, stream.size());
+}
+
 /**
  * Set field from multibyte string
  */

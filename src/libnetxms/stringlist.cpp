@@ -96,6 +96,25 @@ StringList::StringList(const NXCPMessage& msg, uint32_t baseId, uint32_t countId
 }
 
 /**
+ * Constructor: create string list from NXCP message
+ */
+StringList::StringList(const NXCPMessage& msg, uint32_t fieldId)
+{
+   size_t size;
+   const BYTE *data = msg.getBinaryFieldPtr(fieldId, &size);
+   ConstByteStream in(data, size);
+   m_count = in.readUInt16B();
+   m_allocated = m_count;
+   m_values = m_pool.allocateArray<TCHAR*>(m_allocated);
+   for(int i = 0; i < m_count; i++)
+   {
+      m_values[i] = in.readNXCPString(&m_pool);
+      if (m_values[i] == nullptr)
+         m_values[i] = m_pool.copyString(_T(""));
+   }
+}
+
+/**
  * Destructor
  */
 StringList::~StringList()
@@ -483,6 +502,22 @@ void StringList::addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint
    for(int i = 0; i < count; i++)
    {
       addPreallocated(msg.getFieldAsString(id++));
+   }
+}
+
+/**
+ * Constructor: create string list from NXCP message
+ */
+void StringList::addAllFromMessage(const NXCPMessage& msg, uint32_t fieldId)
+{
+   size_t size;
+   const BYTE *data = msg.getBinaryFieldPtr(fieldId, &size);
+   ConstByteStream in(data, size);
+   uint16_t count = in.readUInt16B();
+   for(int i = 0; i < count; i++)
+   {
+      TCHAR *item = in.readNXCPString(nullptr);
+      addPreallocated(item);
    }
 }
 

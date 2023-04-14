@@ -1310,6 +1310,7 @@ public class NXCPCodes
    public static final long VID_LINKED_OBJECT = 825;
    public static final long VID_NUM_ASSET_ATTRIBUTES = 826;
    public static final long VID_ASSET_ID = 827;
+   public static final long VID_ASSET_ATTRIBUTE_NAMES = 828;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

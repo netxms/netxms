@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ServerAction;
+import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.WebServiceDefinition;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -77,6 +78,7 @@ import org.netxms.nxmc.modules.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.dialogs.ObjectToolSelectionDialog;
+import org.netxms.nxmc.modules.serverconfig.dialogs.SelectAssetAttributeDlg;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SummaryTableSelectionDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.helpers.TrapListLabelProvider;
@@ -113,8 +115,9 @@ public class ExportFileBuilder extends ConfigurationView
    private TableViewer toolsViewer;
 	private TableViewer trapViewer;
    private TableViewer webServiceViewer;
+   private TableViewer assetAttributeViewer;
 	private Action actionExport;
-   private Action actionClear;
+	private Action actionClear;
    private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
    private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
@@ -124,6 +127,7 @@ public class ExportFileBuilder extends ConfigurationView
    private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
    private Map<Integer, WebServiceDefinition> webServices = new HashMap<Integer, WebServiceDefinition>();
+   private Map<String, AssetAttribute> assetAttributes = new HashMap<String, AssetAttribute>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
@@ -173,7 +177,7 @@ public class ExportFileBuilder extends ConfigurationView
       createSummaryTablesSection();
       createActionsSection();
       createWebServiceSection();
-      
+      createAssetAttributeSection();
 		createActions();
 	}
 	
@@ -963,6 +967,83 @@ public class ExportFileBuilder extends ConfigurationView
          }
       });
    }
+   
+   /**
+    * Create "Asset Attribute Definitions" section
+    */
+   private void createAssetAttributeSection()
+   {
+      Section section = new Section(content, i18n.tr("Asset Attribute Definitions"), false);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      section.setLayoutData(gd);
+
+      Composite clientArea = section.getClient();
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      clientArea.setBackground(content.getBackground());
+      
+      assetAttributeViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      assetAttributeViewer.getTable().setLayoutData(gd);
+      assetAttributeViewer.setContentProvider(new ArrayContentProvider());
+      assetAttributeViewer.setLabelProvider(new LabelProvider() {
+         @Override
+         public String getText(Object element)
+         {
+            return ((AssetAttribute)element).getActualName();
+         }
+      });
+      assetAttributeViewer.setComparator(new ViewerComparator() {
+         @Override
+         public int compare(Viewer viewer, Object e1, Object e2)
+         {
+            return ((AssetAttribute)e1).getActualName().compareToIgnoreCase(((AssetAttribute)e2).getActualName());
+         }
+      });
+      assetAttributeViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(i18n.tr("Add..."));
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addAssetAttributes();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(i18n.tr("Remove"));
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            IStructuredSelection selection = (IStructuredSelection)assetAttributeViewer.getSelection();
+            if (selection.size() > 0)
+            {
+               removeObjects(assetAttributeViewer, assetAttributes);
+            }
+         }
+      });
+   }
 
 	/**
 	 * Create actions
@@ -1061,13 +1142,18 @@ public class ExportFileBuilder extends ConfigurationView
       for(WebServiceDefinition a : webServices.values())
          webServiceList[i++] = a.getId();
       
+      final String[] assetAttributesList = new String[assetAttributes.size()];
+      i = 0;
+      for(AssetAttribute a : assetAttributes.values())
+         assetAttributesList[i++] = a.getName();
+      
       final String descriptionText = description.getText();
       
       new Job(i18n.tr("Exporting and saving configuration"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList);
+            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList, assetAttributesList);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -1096,7 +1182,8 @@ public class ExportFileBuilder extends ConfigurationView
          @Override
          public void exportCompleted(final String xml)
          {
-            WidgetHelper.saveTextToFile(ExportFileBuilder.this, "export.xml", xml);           
+            WidgetHelper.saveTextToFile(ExportFileBuilder.this, "export.xml", xml);      
+            modified = false;
          }
       });
 	}
@@ -1125,6 +1212,8 @@ public class ExportFileBuilder extends ConfigurationView
 	      return ((Template)o).getObjectId();
       if (o instanceof WebServiceDefinition)
          return ((WebServiceDefinition)o).getId();
+      if (o instanceof AssetAttribute)
+         return ((AssetAttribute)o).getName();
       return null;
 	}
 
@@ -1375,6 +1464,21 @@ public class ExportFileBuilder extends ConfigurationView
          setModified();
       }
    }
+   
+   /**
+    * Add asset attributes to list
+    */
+   private void addAssetAttributes()
+   {
+      SelectAssetAttributeDlg dlg = new SelectAssetAttributeDlg(getWindow().getShell());
+      if (dlg.open() == Window.OK)
+      {
+         for(AssetAttribute service : dlg.getSelection())
+            assetAttributes.put(service.getName(), service);
+         assetAttributeViewer.setInput(assetAttributes.values().toArray());
+         setModified();
+      }
+   }
 
    /**
     * Clear configuration
@@ -1392,6 +1496,7 @@ public class ExportFileBuilder extends ConfigurationView
       traps.clear();
       tools.clear();
       webServices.clear();
+      assetAttributes.clear();
 
       actionViewer.setInput(new Object[0]);
       eventViewer.setInput(new Object[0]);
@@ -1402,6 +1507,7 @@ public class ExportFileBuilder extends ConfigurationView
       toolsViewer.setInput(new Object[0]);
       trapViewer.setInput(new Object[0]);
       webServiceViewer.setInput(new Object[0]);
+      assetAttributeViewer.setInput(new Object[0]);
 
       modified = false;
       actionExport.setEnabled(false);

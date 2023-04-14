@@ -504,6 +504,17 @@ public class NXCPMessage
    }
 
    /**
+    * Set binary field from array of Strings.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public void setField(final long fieldId, final String[] value)
+   {
+      setField(new NXCPMessageField(fieldId, value));
+   }
+
+   /**
     * Set byte field from MacAddress object value. If value is null, field will not be set.
     * 
     * @param fieldId field ID

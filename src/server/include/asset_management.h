@@ -82,6 +82,7 @@ private:
 public:
    AssetAttribute(const NXCPMessage &msg);
    AssetAttribute(DB_RESULT result, int row);
+   AssetAttribute(const TCHAR *name, const ConfigEntry& entry);
    ~AssetAttribute();
 
    void loadEnumValues(DB_RESULT result);
@@ -91,6 +92,7 @@ public:
    bool deleteFromDatabase();
 
    json_t *toJson() const;
+   void fillEntry(StringBuffer &xml, int id);
 
    const TCHAR *getName() const { return m_name; }
    AMDataType getDataType() const { return m_dataType; }

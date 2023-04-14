@@ -298,6 +298,36 @@ public class NXCPMessageField
 		realValue = (double)0;
 	}
 
+   /**
+    * Create binary field from array of strings integers. 
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public NXCPMessageField(final long fieldId, final String[] value)
+   {
+      id = fieldId;
+      type = TYPE_BINARY;
+
+      final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+      final DataOutputStream out = new DataOutputStream(byteStream);
+      try
+      {
+         out.writeShort(value.length);
+         for(int i = 0; i < value.length; i++)
+         {
+            out.writeUTF(value[i]);
+         }
+      }
+      catch(IOException e)
+      {
+      }
+      binaryValue = byteStream.toByteArray();
+      stringValue = "";
+      integerValue = (long)0;
+      realValue = (double)0;
+   }
+
 	/**
     * Create field object from NXCP message data field
     *
@@ -578,6 +608,41 @@ public class NXCPMessageField
 		in.close();
 		return value;
 	}
+   
+   /**
+    * Get field's value as array of strings. 
+    * 
+    * @return Field's value as array of strings
+    */
+   public String[] getAsStringArrayEx()
+   {
+      if ((type != TYPE_BINARY) || (binaryValue == null))
+         return null;
+      
+      NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
+
+      int numElements;
+      try
+      {
+         numElements = in.readShort();
+      }
+      catch(IOException e)
+      {
+         numElements = 0;
+      }
+      
+      String[] value = new String[numElements];
+      try
+      {
+         for(int i = 0; i < numElements; i++)
+            value[i] = in.readUTF();
+      }
+      catch(IOException e)
+      {
+      }
+      in.close();
+      return value;
+   }
 
 	/**
 	 * Get this field ID

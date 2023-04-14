@@ -59,6 +59,35 @@ AssetAttribute::AssetAttribute(const NXCPMessage &msg) : m_enumValues(msg, VID_A
 }
 
 /**
+ * Create asset attribute from config entry
+ */
+AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry)
+{
+   m_name = MemCopyString(name);
+   m_displayName = MemCopyString(entry.getSubEntryValue(_T("displayName")));
+   m_dataType = static_cast<AMDataType>(entry.getSubEntryValueAsInt(_T("dataType"), 0 , 0));
+   m_isMandatory = entry.getSubEntryValueAsBoolean(_T("isMandatory"), 0, false);
+   m_isUnique = entry.getSubEntryValueAsBoolean(_T("isUnique"), 0, false);
+   m_autofillScriptSource = nullptr;
+   m_autofillScript = nullptr;
+   setScript(MemCopyString(entry.getSubEntryValue(_T("script"))));
+   m_rangeMin = entry.getSubEntryValueAsInt(_T("rangeMin"), 0 , 0);
+   m_rangeMax = entry.getSubEntryValueAsInt(_T("rangeMax"), 0 , 0);
+   m_systemType = static_cast<AMSystemType>(entry.getSubEntryValueAsInt(_T("systemType"), 0 , 0));
+
+   ConfigEntry *headerRoot = entry.findEntry(_T("enumValues"));
+   if (headerRoot != nullptr)
+   {
+      unique_ptr<ObjectArray<ConfigEntry>> enumValues = headerRoot->getSubEntries(_T("enumValue#*"));
+      for(int i = 0; i < enumValues->size(); i++)
+      {
+         const ConfigEntry *config = enumValues->get(i);
+         m_enumValues.set(config->getSubEntryValue(_T("name")), config->getSubEntryValue(_T("value")));
+      }
+   }
+}
+
+/**
  * Asset attribute destructor
  */
 AssetAttribute::~AssetAttribute()
@@ -261,6 +290,55 @@ json_t *AssetAttribute::toJson() const
    json_object_set_new(root, "systemType", json_integer(static_cast<uint32_t>(m_systemType)));
    json_object_set_new(root, "enumMap", m_enumValues.toJson());
    return root;
+}
+
+/**
+ * Create asset attribute entry in XML
+ */
+void AssetAttribute::fillEntry(StringBuffer &xml, int id)
+{
+   xml.append(_T("\t\t<assetAttribute id=\""));
+   xml.append(id);
+   xml.append(_T("\">\n\t\t\t<name>"));
+   xml.append(m_name);
+   xml.append(_T("</name>\n\t\t\t<displayName>"));
+   xml.append(m_displayName);
+   xml.append(_T("</displayName>\n\t\t\t<dataType>"));
+   xml.append(static_cast<int32_t>(m_dataType));
+   xml.append(_T("</dataType>\n\t\t\t<isMandatory>"));
+   xml.append(m_isMandatory);
+   xml.append(_T("</isMandatory>\n\t\t\t<isUnique>"));
+   xml.append(m_isUnique);
+   xml.append(_T("</isUnique>\n\t\t\t<script>"));
+   xml.append(m_autofillScriptSource);
+   xml.append(_T("</script>\n\t\t\t<rangeMin>"));
+   xml.append(m_rangeMin);
+   xml.append(_T("</rangeMin>\n\t\t\t<rangeMax>"));
+   xml.append(m_rangeMax);
+   xml.append(_T("</rangeMax>\n\t\t\t<systemType>"));
+   xml.append(static_cast<int32_t>(m_systemType));
+   xml.append(_T("</systemType>\n"));
+
+   if (m_enumValues.size() > 0)
+   {
+      xml.append(_T("\t\t\t<enumValues>\n"));
+      int i = 1;
+      for(KeyValuePair<const TCHAR> *v : m_enumValues)
+      {
+         xml.append(_T("\t\t\t\t<enumValue id=\""));
+         xml.append(i);
+         xml.append(_T("\">\n\t\t\t\t\t<name>"));
+         xml.append(v->key);
+         xml.append(_T("</name>\n\t\t\t\t\t<value>"));
+         xml.append(v->value);
+         xml.append(_T("</value>\n"));
+         xml.append(_T("\t\t\t\t</enumValue>\n"));
+         i++;
+      }
+      xml.append(_T("\t\t\t</enumValues>\n"));
+   }
+
+   xml.append(_T("\t\t</assetAttribute>\n"));
 }
 
 /**
@@ -730,4 +808,74 @@ void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session)
       session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link with asset %s [%u] removed"), asset->getName(), asset->getId());
       session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with object %s [%u] removed"), object->getName(), object->getId());
    }
+}
+
+/**
+ * Create asset attribute record
+ */
+void CreateAssetAttributeDefinitions(StringBuffer &xml, const StringList &names)
+{
+   s_schemaLock.writeLock();
+   for (int i = 0; i < names.size(); i++)
+   {
+      AssetAttribute *attribute = s_schema.get(names.get(i));
+      if (attribute != nullptr)
+      {
+         attribute->fillEntry(xml, i + 1);
+      }
+   }
+   s_schemaLock.unlock();
+}
+
+/**
+ * Import web service definition configuration
+ */
+void ImportAssetAttributeDefinitions(const ConfigEntry& root, bool overwrite)
+{
+   s_schemaLock.writeLock();
+
+   unique_ptr<ObjectArray<ConfigEntry>> assetAttrDef = root.getSubEntries(_T("assetAttribute#*"));
+   for(int i = 0; i < assetAttrDef->size(); i++)
+   {
+      const ConfigEntry *config = assetAttrDef->get(i);
+      const TCHAR *name = config->getSubEntryValue(_T("name"));
+      if (name == nullptr)
+      {
+         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: no name specified"));
+         continue;
+      }
+      else if (!RegexpMatch(name, _T("^[A-Za-z$_][A-Za-z0-9$_]*$"), true))
+      {
+         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: invalid name format"));
+         continue;
+      }
+
+      AssetAttribute *attribute = s_schema.get(name);
+      if (attribute == nullptr || overwrite)
+      {
+         if (attribute == nullptr)
+         {
+            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: asset attribute definition \"%s\" created"), name);
+         }
+         else
+         {
+            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: found existing asset attribute definition \"%s\" (overwrite)"), name);
+         }
+
+         attribute = new AssetAttribute(name, *config);
+         if (attribute->saveToDatabase())
+         {
+            s_schema.set(name, attribute);
+
+            NXCPMessage notificationMessage(CMD_UPDATE_ASSET_ATTRIBUTE, 0);
+            attribute->fillMessage(&notificationMessage, VID_AM_ATTRIBUTES_BASE);
+            NotifyClientSessions(notificationMessage);
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: found existing asset attribute definition \"%s\" (skipping)"), name);
+      }
+   }
+   s_schemaLock.unlock();
 }
