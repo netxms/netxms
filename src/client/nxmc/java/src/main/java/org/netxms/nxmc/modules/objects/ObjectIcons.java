@@ -53,6 +53,9 @@ public final class ObjectIcons
    {
       images = new HashMap<Integer, Image>();
       images.put(AbstractObject.OBJECT_ACCESSPOINT, ResourceManager.getImage(display, "icons/objects/access_point.png"));
+      images.put(AbstractObject.OBJECT_ASSET, ResourceManager.getImage(display, "icons/objects/asset.png"));
+      images.put(AbstractObject.OBJECT_ASSETGROUP, ResourceManager.getImage(display, "icons/objects/asset-group.png"));
+      images.put(AbstractObject.OBJECT_ASSETROOT, ResourceManager.getImage(display, "icons/objects/asset-root.png"));
       images.put(AbstractObject.OBJECT_BUSINESSSERVICE, ResourceManager.getImage(display, "icons/objects/business_service.png"));
       images.put(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE, ResourceManager.getImage(display, "icons/objects/business_service.png"));
       images.put(AbstractObject.OBJECT_BUSINESSSERVICEROOT, ResourceManager.getImage(display, "icons/objects/business_service.png"));

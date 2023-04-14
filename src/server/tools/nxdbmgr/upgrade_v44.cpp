@@ -28,6 +28,14 @@
  */
 static bool H_UpgradeFromV6()
 {
+   static const TCHAR *batch =
+      _T("INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,1073741825,524287)\n")
+      _T("ALTER TABLE object_properties ADD asset_id integer\n")
+      _T("UPDATE object_properties SET asset_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("asset_id")));
+
    CHK_EXEC(DBRenameColumn(g_dbHandle, _T("am_enum_values"), _T("attr_value"), _T("value")));
 
    CHK_EXEC(CreateTable(
@@ -47,13 +55,6 @@ static bool H_UpgradeFromV6()
    {
       CHK_EXEC(SQLQuery(_T("DROP TABLE am_object_data")));
    }
-
-   static const TCHAR *batch =
-      _T("ALTER TABLE object_properties ADD asset_id integer\n")
-      _T("UPDATE object_properties SET asset_id=0\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("object_properties"), _T("asset_id")));
 
    CHK_EXEC(SetMinorSchemaVersion(7));
    return true;

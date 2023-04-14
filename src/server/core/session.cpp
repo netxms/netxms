@@ -5811,6 +5811,11 @@ void ClientSession::createObject(const NXCPMessage& request)
                   TCHAR deviceId[MAX_OBJECT_NAME];
                   switch(objectClass)
                   {
+                     case OBJECT_ASSETGROUP:
+                        object = make_shared<AssetGroup>(objectName);
+                        NetObjInsert(object, true, false);
+                        object->calculateCompoundStatus();  // Force status change to NORMAL
+                        break;
                      case OBJECT_BUSINESSSERVICEPROTO:
                         object = make_shared<BusinessServicePrototype>(objectName, request.getFieldAsUInt32(VID_INSTD_METHOD));
                         NetObjInsert(object, true, false);

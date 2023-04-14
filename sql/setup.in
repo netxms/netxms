@@ -424,6 +424,7 @@ INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,1073741825,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,1073741825,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,1073741825,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (4,1073741825,524287);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,1073741825,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,1073741825,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,1073741825,524287);
 INSERT INTO acl (object_id,user_id,access_rights) VALUES (8,1073741825,524287);

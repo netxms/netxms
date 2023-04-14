@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,25 +16,23 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.businessservice;
+package org.netxms.nxmc.modules.objects;
 
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.ObjectsPerspective;
-import org.netxms.nxmc.modules.objects.SubtreeType;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * "Dashboards" perspective
  */
-public class BusinessServicesPerspective extends ObjectsPerspective
+public class AssetsPerspective extends ObjectsPerspective
 {
-   public static final I18n i18n = LocalizationHelper.getI18n(BusinessServicesPerspective.class);
+   public static final I18n i18n = LocalizationHelper.getI18n(AssetsPerspective.class);
 
-   public BusinessServicesPerspective()
+   public AssetsPerspective()
    {
-      super("Business Services", i18n.tr("Business Services"), ResourceManager.getImage("icons/perspective-business-services.png"), SubtreeType.BUSINESS_SERVICES);
+      super("Assets", i18n.tr("Assets"), ResourceManager.getImage("icons/perspective-assets.png"), SubtreeType.ASSETS);
    }
 
    /**
@@ -44,6 +42,6 @@ public class BusinessServicesPerspective extends ObjectsPerspective
    protected void configurePerspective(PerspectiveConfiguration configuration)
    {
       super.configurePerspective(configuration);
-      configuration.priority = 35;
+      configuration.priority = 30;
    }
 }

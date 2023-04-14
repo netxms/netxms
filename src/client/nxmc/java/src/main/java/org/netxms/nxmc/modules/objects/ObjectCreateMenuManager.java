@@ -27,6 +27,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AssetGroup;
+import org.netxms.client.objects.AssetRoot;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.BusinessServiceRoot;
@@ -44,6 +46,7 @@ import org.netxms.client.objects.TemplateRoot;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServicePrototype;
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
@@ -67,6 +70,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private AbstractObject parent;
    private long parentId;
 
+   private Action actionCreateAssetGroup;
    private Action actionCreateBusinessService;
    private Action actionCreateBusinessServicePrototype;
    private Action actionCreateChassis;
@@ -103,6 +107,7 @@ public class ObjectCreateMenuManager extends MenuManager
 
       createActions();
 
+      addAction(this, actionCreateAssetGroup, (AbstractObject o) -> (o instanceof AssetGroup) || (o instanceof AssetRoot));
       addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
       addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
       addAction(this, actionCreateChassis, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
@@ -128,6 +133,8 @@ public class ObjectCreateMenuManager extends MenuManager
     */
    protected void createActions()
    {
+      actionCreateAssetGroup = new GenericObjectCreationAction(i18n.tr("Asset &group..."), AbstractObject.OBJECT_ASSETGROUP, i18n.tr("Asset Group"));
+
       actionCreateBusinessService = new GenericObjectCreationAction(i18n.tr("&Business service..."), AbstractObject.OBJECT_BUSINESSSERVICE, i18n.tr("Business Service"));
 
       actionCreateBusinessServicePrototype = new Action(i18n.tr("Business service &prototype...")) {
@@ -142,7 +149,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating business service prototype"), view, null) {
+            new Job(i18n.tr("Creating business service prototype"), view, getMessageArea(view)) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -180,7 +187,7 @@ public class ObjectCreateMenuManager extends MenuManager
                cd.setControllerId(dlg.getControllerId());
                cd.setObjectAlias(dlg.getObjectAlias());
 
-               new Job(i18n.tr("Creating chassis"), view) {
+               new Job(i18n.tr("Creating chassis"), view, getMessageArea(view)) {
                   @Override
                   protected void run(IProgressMonitor monitor) throws Exception
                   {
@@ -215,7 +222,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating interface"), view, null) {
+            new Job(i18n.tr("Creating interface"), view, getMessageArea(view)) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -250,7 +257,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating mobile device"), view, null) {
+            new Job(i18n.tr("Creating mobile device"), view, getMessageArea(view)) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -281,7 +288,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating network map"), view) {
+            new Job(i18n.tr("Creating network map"), view, getMessageArea(view)) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -337,7 +344,7 @@ public class ObjectCreateMenuManager extends MenuManager
                cd.setObjectAlias(dlg.getObjectAlias());
 
                final NXCSession session = Registry.getSession();
-               new Job(i18n.tr("Creating node"), view, null) {
+               new Job(i18n.tr("Creating node"), view, getMessageArea(view)) {
                   @Override
                   protected void run(IProgressMonitor monitor) throws Exception
                   {
@@ -371,7 +378,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating zone"), view, null) {
+            new Job(i18n.tr("Creating zone"), view, getMessageArea(view)) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {
@@ -433,7 +440,7 @@ public class ObjectCreateMenuManager extends MenuManager
             return;
 
          final NXCSession session = Registry.getSession();
-         new Job(String.format(i18n.tr("Creating %s"), className), view, null) {
+         new Job(String.format(i18n.tr("Creating %s"), className), view, getMessageArea(view)) {
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
@@ -445,9 +452,20 @@ public class ObjectCreateMenuManager extends MenuManager
             @Override
             protected String getErrorMessage()
             {
-               return String.format(i18n.tr("Cannot create %s object %s"), objectClass, dlg.getObjectName());
+               return i18n.tr("Cannot create {0} object \"{1}\"", objectClass, dlg.getObjectName());
             }
          }.start();
       }
+   }
+
+   /**
+    * Get message area from view
+    *
+    * @param view view
+    * @return message area or null
+    */
+   private static MessageAreaHolder getMessageArea(View view)
+   {
+      return ((view != null) && (view.getPerspective() != null)) ? view.getPerspective().getMessageArea() : null;
    }
 }

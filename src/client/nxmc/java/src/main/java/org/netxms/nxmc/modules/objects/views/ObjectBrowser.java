@@ -211,6 +211,21 @@ public class ObjectBrowser extends NavigationView
       Set<Integer> classFilter = new HashSet<Integer>();
       switch(subtreeType)
       {
+         case ASSETS:
+            classFilter.add(AbstractObject.OBJECT_ASSET);
+            classFilter.add(AbstractObject.OBJECT_ASSETGROUP);
+            classFilter.add(AbstractObject.OBJECT_ASSETROOT);
+            break;
+         case BUSINESS_SERVICES:
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE);
+            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
+            break;
+         case DASHBOARDS:
+            classFilter.add(AbstractObject.OBJECT_DASHBOARD);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
+            classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
+            break;
          case INFRASTRUCTURE:
             classFilter.add(AbstractObject.OBJECT_SERVICEROOT);
             classFilter.add(AbstractObject.OBJECT_CONTAINER);
@@ -246,16 +261,6 @@ public class ObjectBrowser extends NavigationView
             classFilter.add(AbstractObject.OBJECT_TEMPLATE);
             classFilter.add(AbstractObject.OBJECT_TEMPLATEGROUP);
             classFilter.add(AbstractObject.OBJECT_TEMPLATEROOT);
-            break;
-         case DASHBOARDS:
-            classFilter.add(AbstractObject.OBJECT_DASHBOARD);
-            classFilter.add(AbstractObject.OBJECT_DASHBOARDGROUP);
-            classFilter.add(AbstractObject.OBJECT_DASHBOARDROOT);
-            break;
-         case BUSINESS_SERVICES:
-            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICE);
-            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE);
-            classFilter.add(AbstractObject.OBJECT_BUSINESSSERVICEROOT);
             break;
       }
       return classFilter;
