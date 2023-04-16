@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,9 @@ import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
+/**
+ * Dialog for creating business service prototype
+ */
 public class CreateBusinessServicePrototype extends Dialog
 {
    private I18n i18n = LocalizationHelper.getI18n(CreateBusinessServicePrototype.class);
@@ -45,6 +48,11 @@ public class CreateBusinessServicePrototype extends Dialog
    private String alias;
    private String instanceDiscoveyMethod;
 
+   /**
+    * Create dialog.
+    *
+    * @param parentShell parent shell
+    */
    public CreateBusinessServicePrototype(Shell parentShell)
    {
       super(parentShell);
@@ -121,7 +129,9 @@ public class CreateBusinessServicePrototype extends Dialog
    }
 
    /**
-    * @return the name
+    * Get name for new object
+    *
+    * @return name for new object
     */
    public String getName()
    {
@@ -129,7 +139,9 @@ public class CreateBusinessServicePrototype extends Dialog
    }
 
    /**
-    * @return the alias
+    * Get alias for new object
+    *
+    * @return alias for new object
     */
    public String getAlias()
    {
@@ -137,7 +149,9 @@ public class CreateBusinessServicePrototype extends Dialog
    }
 
    /**
-    * @return the instanceDiscoveyMethod
+    * Get instance discovery method.
+    *
+    * @return instance discovery method
     */
    public int getInstanceDiscoveyMethod()
    {
