@@ -852,7 +852,7 @@ public class WidgetHelper
 	{
 		if (!control.isEnabled())
 			return true;	// Ignore validation for disabled controls
-		
+
 		boolean ok = validator.validate(text);
       control.setBackground(ok ? null : ThemeEngine.getBackgroundColor("TextInput.Error"));
 		if (ok)
