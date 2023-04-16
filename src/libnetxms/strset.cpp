@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -246,7 +246,7 @@ void StringSet::addAllPreallocated(TCHAR **strings, int count)
  * @param baseId base ID for data fields
  * @param countId ID of field where number of strings should be placed
  */
-void StringSet::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const
+void StringSet::fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const
 {
    uint32_t fieldId = baseId;
    StringSetEntry *entry, *tmp;
@@ -266,16 +266,16 @@ void StringSet::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) con
  * @param clearBeforeAdd if set to true, existing content will be deleted
  * @param toUppercase if set to true, all strings will be converted to upper case before adding
  */
-void StringSet::addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase)
+void StringSet::addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId, bool clearBeforeAdd, bool toUppercase)
 {
    if (clearBeforeAdd)
       clear();
 
-   int count = (int)msg->getFieldAsUInt32(countId);
+   int count = msg.getFieldAsInt32(countId);
    uint32_t fieldId = baseId;
    for(int i = 0; i < count; i++)
    {
-      TCHAR *str = msg->getFieldAsString(fieldId++);
+      TCHAR *str = msg.getFieldAsString(fieldId++);
       if (str != nullptr)
       {
          if (toUppercase)
