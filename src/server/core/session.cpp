@@ -5770,293 +5770,317 @@ void ClientSession::createObject(const NXCPMessage& request)
             parent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE) :
             g_entireNetwork->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
       {
+         TCHAR objectName[MAX_OBJECT_NAME];
+         request.getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
+
+         // Do additional checks
+         uint32_t rcc = RCC_SUCCESS;
+
          // Parent object should be of valid type
-         // If asset ID is set then class should be valid taget for linking asset
-         if ((parentAlwaysValid || IsValidParentClass(objectClass, (parent != nullptr) ? parent->getObjectClass() : -1)) &&
-             ((assetId == 0) || IsValidAssetLinkTargetClass(objectClass)))
+         // If asset ID is set then class should be valid target for linking asset
+         if ((!parentAlwaysValid && !IsValidParentClass(objectClass, (parent != nullptr) ? parent->getObjectClass() : -1)) ||
+             ((assetId != 0) && !IsValidAssetLinkTargetClass(objectClass)))
          {
-				// Check zone
-				bool zoneIsValid;
-				if (IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE))
-				{
-					zoneIsValid = (FindZoneByUIN(zoneUIN) != nullptr);
-				}
-				else
-				{
-					zoneIsValid = true;
-				}
+            debugPrintf(4, _T("Creation of object \"%s\" of class %d under %s [%u] failed (incompatible operation)"), objectName, objectClass,
+                  (parent != nullptr) ? parent->getName() : _T("<no parent>"), (parent != nullptr) ? parent->getId() : 0);
+            rcc = RCC_INCOMPATIBLE_OPERATION;
+         }
 
-				if (zoneIsValid)
-				{
-				   TCHAR objectName[MAX_OBJECT_NAME];
-					request.getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
+         // Check zone
+         if ((rcc == RCC_SUCCESS) && IsZoningEnabled() && (zoneUIN != 0) && (objectClass != OBJECT_ZONE) && (FindZoneByUIN(zoneUIN) == nullptr))
+         {
+            debugPrintf(4, _T("Creation of object \"%s\" of class %d under %s [%u] failed (invalid zone UIN %d)"), objectName, objectClass,
+                  (parent != nullptr) ? parent->getName() : _T("<no parent>"), (parent != nullptr) ? parent->getId() : 0, zoneUIN);
+            rcc = RCC_INVALID_ZONE_ID;
+         }
 
-					// Do additional validation by modules
-               uint32_t moduleRCC = RCC_SUCCESS;
-               ENUMERATE_MODULES(pfValidateObjectCreation)
+         // Check if all mandatory asset properties are set
+         StringMap assetProperties;
+         if ((rcc == RCC_SUCCESS) && (objectClass == OBJECT_ASSET))
+         {
+            assetProperties.addAllFromMessage(request, VID_ASSET_PROPERTIES_BASE, VID_NUM_ASSET_PROPERTIES);
+            unique_ptr<StringSet> mandatoryAttributes = GetAssetAttributeNames(true);
+            for(const TCHAR *a : *mandatoryAttributes)
+            {
+               if (!assetProperties.contains(a))
                {
-                  moduleRCC = CURRENT_MODULE.pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
-                  if (moduleRCC != RCC_SUCCESS)
-                  {
-                     debugPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"),
-                              objectName, objectClass, CURRENT_MODULE.szName, moduleRCC);
-                     break;
-                  }
+                  debugPrintf(4, _T("Creation of asset object \"%s\" under %s [%u] failed (mandatory attribute \"%s\" missing)"), objectName,
+                        (parent != nullptr) ? parent->getName() : _T("<no parent>"), (parent != nullptr) ? parent->getId() : 0, a);
+                  rcc = RCC_MANDATORY_ATTRIBUTE_MISSING;
+                  break;
                }
+            }
+         }
 
-               if (moduleRCC == RCC_SUCCESS)
+         // Do additional validation by modules
+         if (rcc == RCC_SUCCESS)
+         {
+            ENUMERATE_MODULES(pfValidateObjectCreation)
+            {
+               rcc = CURRENT_MODULE.pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneUIN, request);
+               if (rcc != RCC_SUCCESS)
                {
-                  // Create new object
-                  shared_ptr<NetObj> object;
-                  TCHAR deviceId[MAX_OBJECT_NAME];
-                  switch(objectClass)
-                  {
-                     case OBJECT_ASSETGROUP:
-                        object = make_shared<AssetGroup>(objectName);
-                        NetObjInsert(object, true, false);
-                        object->calculateCompoundStatus();  // Force status change to NORMAL
-                        break;
-                     case OBJECT_BUSINESSSERVICEPROTO:
-                        object = make_shared<BusinessServicePrototype>(objectName, request.getFieldAsUInt32(VID_INSTD_METHOD));
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_BUSINESSSERVICE:
-                        object = make_shared<BusinessService>(objectName);
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_CHASSIS:
-                        object = make_shared<Chassis>(objectName, request.getFieldAsUInt32(VID_CONTROLLER_ID));
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_CLUSTER:
-                        object = make_shared<Cluster>(objectName, zoneUIN);
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_CONDITION:
-                        object = make_shared<ConditionObject>(true);
-                        object->setName(objectName);
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_CONTAINER:
-                        object = make_shared<Container>(objectName, request.getFieldAsUInt32(VID_CATEGORY));
-                        NetObjInsert(object, true, false);
-                        object->calculateCompoundStatus();  // Force status change to NORMAL
-                        break;
-                     case OBJECT_DASHBOARD:
-                        object = make_shared<Dashboard>(objectName);
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_DASHBOARDGROUP:
-                        object = make_shared<DashboardGroup>(objectName);
-                        NetObjInsert(object, true, false);
-                        object->calculateCompoundStatus();
-                        break;
-                     case OBJECT_INTERFACE:
-                        {
-                           InterfaceInfo ifInfo(request.getFieldAsUInt32(VID_IF_INDEX));
-                           _tcslcpy(ifInfo.name, objectName, MAX_DB_STRING);
-                           InetAddress addr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
-                           if (addr.isValidUnicast())
-                              ifInfo.ipAddrList.add(addr);
-                           ifInfo.type = request.getFieldAsUInt32(VID_IF_TYPE);
-                           request.getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
-                           ifInfo.location.chassis = request.getFieldAsUInt32(VID_PHY_CHASSIS);
-                           ifInfo.location.module = request.getFieldAsUInt32(VID_PHY_MODULE);
-                           ifInfo.location.pic = request.getFieldAsUInt32(VID_PHY_PIC);
-                           ifInfo.location.port = request.getFieldAsUInt32(VID_PHY_PORT);
-                           ifInfo.isPhysicalPort = request.getFieldAsBoolean(VID_IS_PHYS_PORT);
-                           object = static_cast<Node&>(*parent).createNewInterface(&ifInfo, true, false);
-                        }
-                        break;
-                     case OBJECT_MOBILEDEVICE:
-                        request.getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
-                        object = make_shared<MobileDevice>(objectName, deviceId);
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_SENSOR:
-                        object = Sensor::create(objectName, request);
-                        if (object != nullptr)
-                           NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_NETWORKMAP:
-                        {
-                           IntegerArray<uint32_t> seeds;
-                           request.getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
-                           object = make_shared<NetworkMap>((int)request.getFieldAsUInt16(VID_MAP_TYPE), seeds);
-                           object->setName(objectName);
-                           NetObjInsert(object, true, false);
-                        }
-                        break;
-                     case OBJECT_NETWORKMAPGROUP:
-                        object = make_shared<NetworkMapGroup>(objectName);
-                        NetObjInsert(object, true, false);
-                        object->calculateCompoundStatus();  // Force status change to NORMAL
-                        break;
-                     case OBJECT_NETWORKSERVICE:
-                        object = make_shared<NetworkService>(request.getFieldAsInt16(VID_SERVICE_TYPE),
-                                                    request.getFieldAsUInt16(VID_IP_PROTO),
-                                                    request.getFieldAsUInt16(VID_IP_PORT),
-                                                    request.getFieldAsString(VID_SERVICE_REQUEST),
-                                                    request.getFieldAsString(VID_SERVICE_RESPONSE),
-                                                    static_pointer_cast<Node>(parent));
-                        object->setName(objectName);
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_NODE:
-                     {
-                        NewNodeData newNodeData(request, ipAddr);
-                        if ((parent != nullptr) && (parent->getObjectClass() == OBJECT_CLUSTER))
-                           newNodeData.cluster = static_pointer_cast<Cluster>(parent);
-                        object = PollNewNode(&newNodeData);
-                        if (object != nullptr)
-                        {
-                           static_cast<Node&>(*object).setPrimaryHostName(nodePrimaryName);
-                        }
-                        break;
-                     }
-                     case OBJECT_RACK:
-                        object = make_shared<Rack>(objectName, (int)request.getFieldAsUInt16(VID_HEIGHT));
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_SUBNET:
-                     {
-                        auto ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
-                        IntegerArray<uint32_t> objects = CheckSubnetOverlap(ipAddr, zoneUIN);
-                        if (objects.size() > 0)
-                        {
-                           response.setFieldFromInt32Array(VID_OBJECT_LIST, objects);
-                        }
-                        else
-                        {
-                           object = make_shared<Subnet>(objectName, ipAddr, zoneUIN);
-                           NetObjInsert(object, true, false);
-                        }
-                        break;
-                     }
-                     case OBJECT_TEMPLATE:
-                        object = make_shared<Template>(objectName);
-                        NetObjInsert(object, true, false);
-                        object->calculateCompoundStatus();  // Force status change to NORMAL
-                        break;
-                     case OBJECT_TEMPLATEGROUP:
-                        object = make_shared<TemplateGroup>(objectName);
-                        NetObjInsert(object, true, false);
-                        object->calculateCompoundStatus();	// Force status change to NORMAL
-                        break;
-                     case OBJECT_VPNCONNECTOR:
-                        object = make_shared<VPNConnector>(true);
-                        object->setName(objectName);
-                        NetObjInsert(object, true, false);
-                        break;
-                     case OBJECT_ZONE:
-                        if (zoneUIN == 0)
-                           zoneUIN = FindUnusedZoneUIN();
-                        if ((zoneUIN > 0) && (zoneUIN != ALL_ZONES) && (FindZoneByUIN(zoneUIN) == nullptr))
-                        {
-                           object = make_shared<Zone>(zoneUIN, objectName);
-                           NetObjInsert(object, true, false);
-                        }
-                        break;
-                     default:
-                        // Try to create unknown classes by modules
-                        ENUMERATE_MODULES(pfCreateObject)
-                        {
-                           object = CURRENT_MODULE.pfCreateObject(objectClass, objectName, parent, request);
-                           if (object != nullptr)
-                              break;
-                        }
-                        break;
-                  }
+                  debugPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%u)"), objectName, objectClass, CURRENT_MODULE.szName, rcc);
+                  break;
+               }
+            }
+         }
 
-                  // If creation was successful do binding and set comments if needed
+         if (rcc == RCC_SUCCESS)
+         {
+            // Create new object
+            shared_ptr<NetObj> object;
+            TCHAR deviceId[MAX_OBJECT_NAME];
+            switch(objectClass)
+            {
+               case OBJECT_ASSET:
+                  object = make_shared<Asset>(objectName, assetProperties);
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();  // Force status change to NORMAL
+                  break;
+               case OBJECT_ASSETGROUP:
+                  object = make_shared<AssetGroup>(objectName);
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();  // Force status change to NORMAL
+                  break;
+               case OBJECT_BUSINESSSERVICEPROTO:
+                  object = make_shared<BusinessServicePrototype>(objectName, request.getFieldAsUInt32(VID_INSTD_METHOD));
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_BUSINESSSERVICE:
+                  object = make_shared<BusinessService>(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_CHASSIS:
+                  object = make_shared<Chassis>(objectName, request.getFieldAsUInt32(VID_CONTROLLER_ID));
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_CLUSTER:
+                  object = make_shared<Cluster>(objectName, zoneUIN);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_CONDITION:
+                  object = make_shared<ConditionObject>(true);
+                  object->setName(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_CONTAINER:
+                  object = make_shared<Container>(objectName, request.getFieldAsUInt32(VID_CATEGORY));
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();  // Force status change to NORMAL
+                  break;
+               case OBJECT_DASHBOARD:
+                  object = make_shared<Dashboard>(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_DASHBOARDGROUP:
+                  object = make_shared<DashboardGroup>(objectName);
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();
+                  break;
+               case OBJECT_INTERFACE:
+                  {
+                     InterfaceInfo ifInfo(request.getFieldAsUInt32(VID_IF_INDEX));
+                     _tcslcpy(ifInfo.name, objectName, MAX_DB_STRING);
+                     InetAddress addr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
+                     if (addr.isValidUnicast())
+                        ifInfo.ipAddrList.add(addr);
+                     ifInfo.type = request.getFieldAsUInt32(VID_IF_TYPE);
+                     request.getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
+                     ifInfo.location.chassis = request.getFieldAsUInt32(VID_PHY_CHASSIS);
+                     ifInfo.location.module = request.getFieldAsUInt32(VID_PHY_MODULE);
+                     ifInfo.location.pic = request.getFieldAsUInt32(VID_PHY_PIC);
+                     ifInfo.location.port = request.getFieldAsUInt32(VID_PHY_PORT);
+                     ifInfo.isPhysicalPort = request.getFieldAsBoolean(VID_IS_PHYS_PORT);
+                     object = static_cast<Node&>(*parent).createNewInterface(&ifInfo, true, false);
+                  }
+                  break;
+               case OBJECT_MOBILEDEVICE:
+                  request.getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+                  object = make_shared<MobileDevice>(objectName, deviceId);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_SENSOR:
+                  object = Sensor::create(objectName, request);
+                  if (object != nullptr)
+                     NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_NETWORKMAP:
+                  {
+                     IntegerArray<uint32_t> seeds;
+                     request.getFieldAsInt32Array(VID_SEED_OBJECTS, &seeds);
+                     object = make_shared<NetworkMap>((int)request.getFieldAsUInt16(VID_MAP_TYPE), seeds);
+                     object->setName(objectName);
+                     NetObjInsert(object, true, false);
+                  }
+                  break;
+               case OBJECT_NETWORKMAPGROUP:
+                  object = make_shared<NetworkMapGroup>(objectName);
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();  // Force status change to NORMAL
+                  break;
+               case OBJECT_NETWORKSERVICE:
+                  object = make_shared<NetworkService>(request.getFieldAsInt16(VID_SERVICE_TYPE),
+                                              request.getFieldAsUInt16(VID_IP_PROTO),
+                                              request.getFieldAsUInt16(VID_IP_PORT),
+                                              request.getFieldAsString(VID_SERVICE_REQUEST),
+                                              request.getFieldAsString(VID_SERVICE_RESPONSE),
+                                              static_pointer_cast<Node>(parent));
+                  object->setName(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_NODE:
+               {
+                  NewNodeData newNodeData(request, ipAddr);
+                  if ((parent != nullptr) && (parent->getObjectClass() == OBJECT_CLUSTER))
+                     newNodeData.cluster = static_pointer_cast<Cluster>(parent);
+                  object = PollNewNode(&newNodeData);
                   if (object != nullptr)
                   {
-                     json_t *objData = object->toJson();
-                     WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), nullptr, objData,
-                        _T("Object %s created (class %s)"), object->getName(), object->getObjectClassName());
-                     json_decref(objData);
-                     if ((parent != nullptr) &&          // parent can be nullptr for nodes
-                         (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
-                     {
-                        parent->addChild(object);
-                        object->addParent(parent);
-                        parent->calculateCompoundStatus();
-                        if (parent->getObjectClass() == OBJECT_CLUSTER)
-                        {
-                           static_cast<Cluster&>(*parent).applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
-                        }
-                        else if ((object->getObjectClass() == OBJECT_NETWORKSERVICE) && request.getFieldAsBoolean(VID_CREATE_STATUS_DCI))
-                        {
-                           TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
-                           _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
-                           _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), object->getName());
-                           static_cast<Node&>(*parent).addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
-                                 DC_POLLING_SCHEDULE_DEFAULT, nullptr, DC_RETENTION_DEFAULT, nullptr, static_pointer_cast<Node>(parent),
-                                 dciDescription));
-                        }
-                     }
-
-                     TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
-                     if (comments != nullptr)
-                     {
-                        object->setComments(comments);
-                        MemFree(comments);
-                     }
-
-                     if (request.isFieldExist(VID_ALIAS))
-                     {
-                        TCHAR alias[MAX_OBJECT_ALIAS_LEN];
-                        request.getFieldAsString(VID_ALIAS, alias, MAX_OBJECT_ALIAS_LEN);
-                        object->setAlias(alias);
-                     }
-
-                     object->unhide();
-                     response.setField(VID_RCC, RCC_SUCCESS);
-                     response.setField(VID_OBJECT_ID, object->getId());
+                     static_cast<Node&>(*object).setPrimaryHostName(nodePrimaryName);
+                  }
+                  break;
+               }
+               case OBJECT_RACK:
+                  object = make_shared<Rack>(objectName, (int)request.getFieldAsUInt16(VID_HEIGHT));
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_SUBNET:
+               {
+                  auto ipAddr = request.getFieldAsInetAddress(VID_IP_ADDRESS);
+                  IntegerArray<uint32_t> objects = CheckSubnetOverlap(ipAddr, zoneUIN);
+                  if (objects.size() > 0)
+                  {
+                     response.setFieldFromInt32Array(VID_OBJECT_LIST, objects);
                   }
                   else
                   {
-                     // :DIRTY HACK:
-                     // PollNewNode will return nullptr only if IP already
-                     // in use. some new() can fail there too, but server will
-                     // crash in that case
-                     if (objectClass == OBJECT_NODE)
-                     {
-                        response.setField(VID_RCC, RCC_IP_ADDRESS_CONFLICT);
-                        // Add to description IP of new created node and name of node with the same IP
-                        SetNodesConflictString(&response, zoneUIN, ipAddr);
-                     }
-                     else if (objectClass == OBJECT_ZONE)
-                     {
-                        response.setField(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
-                     }
-                     else if (objectClass == OBJECT_SUBNET)
-                     {
-                        response.setField(VID_RCC, RCC_SUBNET_OVERLAP);
-                     }
-                     else
-                     {
-                        response.setField(VID_RCC, RCC_OBJECT_CREATION_FAILED);
-                     }
+                     object = make_shared<Subnet>(objectName, ipAddr, zoneUIN);
+                     NetObjInsert(object, true, false);
                   }
+                  break;
+               }
+               case OBJECT_TEMPLATE:
+                  object = make_shared<Template>(objectName);
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();  // Force status change to NORMAL
+                  break;
+               case OBJECT_TEMPLATEGROUP:
+                  object = make_shared<TemplateGroup>(objectName);
+                  NetObjInsert(object, true, false);
+                  object->calculateCompoundStatus();	// Force status change to NORMAL
+                  break;
+               case OBJECT_VPNCONNECTOR:
+                  object = make_shared<VPNConnector>(true);
+                  object->setName(objectName);
+                  NetObjInsert(object, true, false);
+                  break;
+               case OBJECT_ZONE:
+                  if (zoneUIN == 0)
+                     zoneUIN = FindUnusedZoneUIN();
+                  if ((zoneUIN > 0) && (zoneUIN != ALL_ZONES) && (FindZoneByUIN(zoneUIN) == nullptr))
+                  {
+                     object = make_shared<Zone>(zoneUIN, objectName);
+                     NetObjInsert(object, true, false);
+                  }
+                  break;
+               default:
+                  // Try to create unknown classes by modules
+                  ENUMERATE_MODULES(pfCreateObject)
+                  {
+                     object = CURRENT_MODULE.pfCreateObject(objectClass, objectName, parent, request);
+                     if (object != nullptr)
+                        break;
+                  }
+                  break;
+            }
+
+            // If creation was successful do binding and set comments if needed
+            if (object != nullptr)
+            {
+               if ((parent != nullptr) &&          // parent can be nullptr for nodes
+                   (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
+               {
+                  parent->addChild(object);
+                  object->addParent(parent);
+                  parent->calculateCompoundStatus();
+                  if (parent->getObjectClass() == OBJECT_CLUSTER)
+                  {
+                     static_cast<Cluster&>(*parent).applyToTarget(static_pointer_cast<DataCollectionTarget>(object));
+                  }
+                  else if ((object->getObjectClass() == OBJECT_NETWORKSERVICE) && request.getFieldAsBoolean(VID_CREATE_STATUS_DCI))
+                  {
+                     TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
+                     _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
+                     _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), object->getName());
+                     static_cast<Node&>(*parent).addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
+                           DC_POLLING_SCHEDULE_DEFAULT, nullptr, DC_RETENTION_DEFAULT, nullptr, static_pointer_cast<Node>(parent),
+                           dciDescription));
+                  }
+               }
+
+               TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
+               if (comments != nullptr)
+               {
+                  object->setComments(comments);
+                  MemFree(comments);
+               }
+
+               if (request.isFieldExist(VID_ALIAS))
+               {
+                  TCHAR alias[MAX_OBJECT_ALIAS_LEN];
+                  request.getFieldAsString(VID_ALIAS, alias, MAX_OBJECT_ALIAS_LEN);
+                  object->setAlias(alias);
+               }
+
+               json_t *objData = object->toJson();
+               WriteAuditLogWithJsonValues(AUDIT_OBJECTS, true, m_dwUserId, m_workstation, m_id, object->getId(), nullptr, objData,
+                     _T("Object %s created (class %s)"), object->getName(), object->getObjectClassName());
+               json_decref(objData);
+
+               if (asset != nullptr)
+               {
+                  LinkAsset(asset, object, this);
+               }
+
+               object->unhide();
+               response.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_OBJECT_ID, object->getId());
+            }
+            else
+            {
+               // :DIRTY HACK:
+               // PollNewNode will return nullptr only if IP already
+               // in use. some new() can fail there too, but server will
+               // crash in that case
+               if (objectClass == OBJECT_NODE)
+               {
+                  response.setField(VID_RCC, RCC_IP_ADDRESS_CONFLICT);
+                  // Add to description IP of new created node and name of node with the same IP
+                  SetNodesConflictString(&response, zoneUIN, ipAddr);
+               }
+               else if (objectClass == OBJECT_ZONE)
+               {
+                  response.setField(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
+               }
+               else if (objectClass == OBJECT_SUBNET)
+               {
+                  response.setField(VID_RCC, RCC_SUBNET_OVERLAP);
                }
                else
                {
-                  response.setField(VID_RCC, moduleRCC);
+                  response.setField(VID_RCC, RCC_OBJECT_CREATION_FAILED);
                }
-				}
-				else
-				{
-					response.setField(VID_RCC, RCC_INVALID_ZONE_ID);
-				}
+            }
          }
          else
          {
-            response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            response.setField(VID_RCC, rcc);
          }
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, (parent != nullptr) ? parent->getId() : 0, _T("Access denied on new object creation"));
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }

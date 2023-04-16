@@ -728,6 +728,7 @@ enum SessionState
 #define RCC_MANDATORY_ATTRIBUTE           ((uint32_t)160)
 #define RCC_UNKNOWN_ATTRIBUTE             ((uint32_t)161)
 #define RCC_ATTRIBUTE_ALREADY_EXISTS      ((uint32_t)162)
+#define RCC_MANDATORY_ATTRIBUTE_MISSING   ((uint32_t)163)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

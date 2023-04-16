@@ -659,12 +659,15 @@ bool IsValidAssetPropertyName(const TCHAR *name)
 /**
  * Get all asset attribute names
  */
-unique_ptr<StringSet> GetAssetAttributeNames()
+unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly)
 {
    unique_ptr<StringSet> names = make_unique<StringSet>();
    s_schemaLock.readLock();
    for (KeyValuePair<AssetAttribute> *a : s_schema)
-      names->add(a->key);
+   {
+      if (!mandatoryOnly || a->value->isMandatory())
+         names->add(a->key);
+   }
    s_schemaLock.unlock();
    return names;
 }
@@ -694,4 +697,37 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
    }
    s_schemaLock.unlock();
    return contexts;
+}
+
+/**
+ * Link asset to object
+ */
+void LinkAsset(const shared_ptr<Asset>& asset, const shared_ptr<NetObj>& object, ClientSession *session)
+{
+   if (asset->getLinkedObjectId() == object->getId())
+      return;
+
+   UnlinkAsset(asset, session);
+
+   asset->setLinkedObjectId(object->getId());
+   object->setAssetId(asset->getId());
+   session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Asset linked with object %s [%u]"), object->getName(), object->getId());
+   session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object linked with asset %s [%u]"), asset->getName(), asset->getId());
+}
+
+/**
+ * Unlink asset from object it is currently linked to
+ */
+void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session)
+{
+   if (asset->getLinkedObjectId() == 0)
+      return;
+
+   shared_ptr<NetObj> object = FindObjectById(asset->getLinkedObjectId());
+   if (object != nullptr)
+   {
+      object->setAssetId(0);
+      session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link with asset %s [%u] removed"), asset->getName(), asset->getId());
+      session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with object %s [%u] removed"), object->getName(), object->getId());
+   }
 }

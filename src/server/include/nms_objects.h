@@ -1342,8 +1342,7 @@ public:
 
    void executeHookScript(const TCHAR *hookName);
 
-   bool linkAsset(uint32_t assetId);
-   bool unlinkAsset(uint32_t assetId);
+   void setAssetId(uint32_t assetId)  { lockProperties(); m_assetId = assetId; setModified(MODIFY_COMMON_PROPERTIES); unlockProperties(); }
    uint32_t getAssetId() const { return m_assetId; }
 
    bool addDashboard(uint32_t id);
@@ -4321,6 +4320,7 @@ public:
 
    void autoFillProperties();
 
+   void setLinkedObjectId(uint32_t objectId)  { lockProperties(); m_linkedObjectId = objectId; setModified(MODIFY_ASSET_PROPERTIES); unlockProperties(); }
    uint32_t getLinkedObjectId() const { return m_linkedObjectId; }
 
    std::pair<uint32_t, String> setProperty(const TCHAR *attr, const TCHAR *value);

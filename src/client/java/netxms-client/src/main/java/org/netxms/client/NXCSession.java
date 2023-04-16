@@ -5820,6 +5820,10 @@ public class NXCSession
       // Class-specific attributes
       switch(data.getObjectClass())
       {
+         case AbstractObject.OBJECT_ASSET:
+            if (data.getAssetProperties() != null)
+               msg.setFieldsFromStringMap(data.getAssetProperties(), NXCPCodes.VID_ASSET_PROPERTIES_BASE, NXCPCodes.VID_NUM_ASSET_PROPERTIES);
+            break;
          case AbstractObject.OBJECT_CHASSIS:
             msg.setFieldInt32(NXCPCodes.VID_CONTROLLER_ID, (int)data.getControllerId());
             break;

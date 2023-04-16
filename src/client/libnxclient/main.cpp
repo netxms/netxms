@@ -220,9 +220,36 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
       _T("Invalid notification channel name"),
       _T("Endpoint is already in use"),
       _T("Invalid driver name"),
-      _T("Invalid web service definition ID")
+      _T("Invalid web service definition ID"),
+      _T("No such record"),
+      _T("Record details unavailable"),
+      _T("Invalid geographical area ID"),
+      _T("Geographical area name is empty"),
+      _T("Geographical area is in use and cannot be deleted"),
+      _T("Invalid SSH key ID"),
+      _T("SSH key in use"),
+      _T("Socket read error on remote end of TCP proxy session"),
+      _T("Invalid object query ID"),
+      _T("Subnet overlaps with other subnet"),
+      _T("Two-factor authentication required"),
+      _T("Validation phase of two-factor authentication failed"),
+      _T("Preparation phase of two-factor authentication failed"),
+      _T("No such two-factor authentication method"),
+      _T("No such two-factor authentication driver"),
+      _T("Invalid two-factor authentication method binding configuration"),
+      _T("No such two-factor authentication method binding"),
+      _T("Invalid time interval"),
+      _T("Invalid business check ID"),
+      _T("Image is protected"),
+      _T("Invalid SSH proxy id"),
+      _T("File append is not possible"),
+      _T("Validation error"),
+      _T("Attribute is mandatory and cannot be deleted"),
+      _T("Unknown attribute"),
+      _T("Attribute already exists"),
+      _T("Missing mandatory attribute")
    };
-	return (error <= RCC_INVALID_WEB_SERVICE_ID) ? errorText[error] : _T("No text message for this error");
+	return (error <= RCC_MANDATORY_ATTRIBUTE_MISSING) ? errorText[error] : _T("No message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

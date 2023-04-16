@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.MacAddress;
 import org.netxms.client.objects.AbstractObject;
@@ -102,6 +103,7 @@ public class NXCObjectCreationData
    private long sensorProxy;
    private int instanceDiscoveryMethod;
    private long assetId;
+   private Map<String, String> assetProperties;
 
 	/**
 	 * Constructor.
@@ -1170,6 +1172,22 @@ public class NXCObjectCreationData
    }
 
    /**
+    * @return the assetProperties
+    */
+   public Map<String, String> getAssetProperties()
+   {
+      return assetProperties;
+   }
+
+   /**
+    * @param assetProperties the assetProperties to set
+    */
+   public void setAssetProperties(Map<String, String> assetProperties)
+   {
+      this.assetProperties = assetProperties;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -1184,6 +1202,6 @@ public class NXCObjectCreationData
             physicalPort + ", createStatusDci=" + createStatusDci + ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" +
             chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" + sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", commProtocol=" + commProtocol + ", xmlConfig=" +
             xmlConfig + ", xmlRegConfig=" + xmlRegConfig + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", metaType=" + metaType + ", description=" + description +
-            ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + "]";
+            ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + "]";
    }
 }
