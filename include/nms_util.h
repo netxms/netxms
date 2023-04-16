@@ -2394,8 +2394,8 @@ public:
       forEach(reinterpret_cast<bool (*)(const TCHAR*, void*)>(cb), context);
    }
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
-   void addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
+   void fillMessage(NXCPMessage *msg, uint32_t baseId, uint32_t countId) const;
+   void addAllFromMessage(const NXCPMessage& msg, uint32_t baseId, uint32_t countId, bool clearBeforeAdd = false, bool toUppercase = false);
 
    String join(const TCHAR *separator);
 
