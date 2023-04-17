@@ -1095,7 +1095,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList);
+            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList, actionList, webServiceList, null);
             runInUIThread(new Runnable() {
                @Override
                public void run()

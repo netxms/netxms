@@ -511,7 +511,7 @@ public class NXCPMessage
     */
    public void setField(final long fieldId, final String[] value)
    {
-      setField(new NXCPMessageField(fieldId, value));
+      setField(new NXCPMessageField(fieldId, (value != null) ? value : new String[0]));
    }
 
    /**
