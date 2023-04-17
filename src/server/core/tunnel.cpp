@@ -1782,6 +1782,12 @@ void TunnelListenerThread()
 {
    ThreadSetName("TunnelListener");
 
+   if (!IsServerCertificateLoaded())
+   {
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG, _T("Tunnel listener cannot start because server certificate is not loaded"));
+      return;
+   }
+
    s_maxTunnelsPerPoller = ConfigReadULong(_T("AgentTunnels.MaxTunnelsPerPoller"), s_maxTunnelsPerPoller);
    if (s_maxTunnelsPerPoller > SOCKET_POLLER_MAX_SOCKETS - 1)
       s_maxTunnelsPerPoller = SOCKET_POLLER_MAX_SOCKETS - 1;

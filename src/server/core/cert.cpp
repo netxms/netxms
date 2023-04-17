@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2007-2022 Raden Solutions
+** Copyright (C) 2007-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -599,7 +599,10 @@ static int CertVerifyCallback(int success, X509_STORE_CTX *ctx)
 bool SetupServerTlsContext(SSL_CTX *context)
 {
    if ((s_serverCertificate == nullptr) || (s_serverCertificateKey == nullptr))
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("SetupServerTlsContext: server certificate not loaded"));
       return false;
+   }
 
    X509_STORE *store = CreateTrustedCertificatesStore(g_trustedCertificates, true);
    if (store == nullptr)
@@ -676,6 +679,14 @@ time_t GetServerCertificateExpirationTime()
    return GetCertificateExpirationTime(s_serverCertificate);
 }
 
+/**
+ * Check if server certificate is loaded
+ */
+bool IsServerCertificateLoaded()
+{
+   return (s_serverCertificate != nullptr) && (s_serverCertificateKey != nullptr);
+}
+
 #else		/* _WITH_ENCRYPTION */
 
 /**
@@ -716,6 +727,14 @@ int GetServerCertificateDaysUntilExpiration()
 time_t GetServerCertificateExpirationTime()
 {
    return 0;
+}
+
+/**
+ * Check if server certificate is loaded
+ */
+bool IsServerCertificateLoaded()
+{
+   return false;
 }
 
 #endif	/* _WITH_ENCRYPTION */

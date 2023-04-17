@@ -1438,6 +1438,7 @@ void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 
 String GetServerCertificateExpirationDate();
 int GetServerCertificateDaysUntilExpiration();
 time_t GetServerCertificateExpirationTime();
+bool IsServerCertificateLoaded();
 
 #ifndef _WIN32
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
