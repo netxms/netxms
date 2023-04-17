@@ -10060,7 +10060,7 @@ void ClientSession::importConfiguration(const NXCPMessage& request)
       if (content != nullptr)
       {
          Config config(false);
-         if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration"))
+         if (config.loadXmlConfigFromMemory(content, strlen(content), nullptr, "configuration", false))
          {
             finalizeConfigurationImport(config, request.getFieldAsUInt32(VID_FLAGS), &response);
          }
@@ -10106,7 +10106,7 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
             NXCPMessage response2(CMD_REQUEST_COMPLETED, requestId);
 
             Config config(false);
-            if (config.loadXmlConfig(fileName, "configuration"))
+            if (config.loadXmlConfig(fileName, "configuration", false))
             {
                finalizeConfigurationImport(config, uploadData, &response2);
             }
