@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.objectmanager.propertypages;
 
 import java.util.Arrays;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,7 +36,6 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
-import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -53,11 +51,10 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class StatusCalculation extends PropertyPage
 {
 	private AbstractObject object;
-	
+
 	private NXCObjectModificationData currentState;
 	private int calculationMethod;
-	private int propagationMethod;
-	
+   private int propagationMethod;
 	private Button radioCalcDefault;
 	private Button radioCalcMostCritical;
 	private Button radioCalcSingle;
@@ -73,7 +70,7 @@ public class StatusCalculation extends PropertyPage
 	private Text textSingleThreshold;
 	private Text[] textThresholds = new Text[4];
 	
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -82,7 +79,7 @@ public class StatusCalculation extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
 		object = (AbstractObject)getElement().getAdapter(AbstractObject.class);
-		
+
 		currentState = new NXCObjectModificationData(object.getObjectId());
 		currentState.setStatusCalculationMethod(object.getStatusCalculationMethod());
 		currentState.setStatusPropagationMethod(object.getStatusPropagationMethod());
@@ -345,9 +342,9 @@ public class StatusCalculation extends PropertyPage
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
@@ -422,21 +419,16 @@ public class StatusCalculation extends PropertyPage
 	 */
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (!WidgetHelper.validateTextInput(textRelativeStatus, Messages.get().StatusCalculation_Validate_RelativeStatus, new NumericTextFieldValidator(-4, 4), this) ||
-		    !WidgetHelper.validateTextInput(textSingleThreshold, Messages.get().StatusCalculation_Validate_SingleThreshold, new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[0], 
-		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.WARNING)), 
-		          new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[1], 
-		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.MINOR)),
-		          new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[2], 
-		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.MAJOR)), 
-		          new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[3], 
-		          String.format(Messages.get().StatusCalculation_Validate_Threshold, StatusDisplayInfo.getStatusText(Severity.CRITICAL)), 
-		          new NumericTextFieldValidator(0, 100), this))
+		if (!WidgetHelper.validateTextInput(textRelativeStatus, new NumericTextFieldValidator(-4, 4)) ||
+		    !WidgetHelper.validateTextInput(textSingleThreshold, new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[0], new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[1], new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[2], new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[3], new NumericTextFieldValidator(0, 100)))
+      {
+         WidgetHelper.adjustWindowSize(this);
 			return false;
+      }
 
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setStatusCalculationMethod(calculationMethod);
@@ -452,7 +444,7 @@ public class StatusCalculation extends PropertyPage
 		for(int i = 0; i < 4; i++)
 			thresholds[i] = Integer.parseInt(textThresholds[i].getText());
 		md.setStatusThresholds(thresholds);
-		
+
 		if (!hasChanges(md))
 			return true;	// Nothing to apply
 		currentState = md;
@@ -460,7 +452,7 @@ public class StatusCalculation extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().StatusCalculation_JobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -489,7 +481,7 @@ public class StatusCalculation extends PropertyPage
 				}
 			}
 		}.start();
-		
+
 		return true;
 	}
 

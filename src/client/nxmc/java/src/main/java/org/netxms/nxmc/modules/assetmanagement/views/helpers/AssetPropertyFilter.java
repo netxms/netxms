@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views.helpers;
+package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;

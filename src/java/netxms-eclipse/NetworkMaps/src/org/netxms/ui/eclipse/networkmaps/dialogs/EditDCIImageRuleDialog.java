@@ -63,9 +63,19 @@ public class EditDCIImageRuleDialog extends Dialog
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
-   /* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
+   @Override
+   protected void configureShell(Shell newShell)
+   {
+      super.configureShell(newShell);
+      newShell.setText(Messages.get().EditDCIImageRuleDialog_EditImageRule);
+   }
+
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(final Composite parent)
 	{
@@ -76,7 +86,7 @@ public class EditDCIImageRuleDialog extends Dialog
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
       
-   // Condition area
+      // Condition area
       conditionGroup = new Group(dialogArea, SWT.NONE);
       conditionGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       conditionGroup.setText(Messages.get().EditDCIImageRuleDialog_Condition);
@@ -85,7 +95,8 @@ public class EditDCIImageRuleDialog extends Dialog
       condLayout.numColumns = 2;
       conditionGroup.setLayout(condLayout);
 		
-	   operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditDCIImageRuleDialog_Operation, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditDCIImageRuleDialog_Operation, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
       operation.add(Messages.get().EditDCIImageRuleDialog_OpLess);
       operation.add(Messages.get().EditDCIImageRuleDialog_OpLessEq);
       operation.add(Messages.get().EditDCIImageRuleDialog_OpEq);
@@ -95,13 +106,13 @@ public class EditDCIImageRuleDialog extends Dialog
       operation.add(Messages.get().EditDCIImageRuleDialog_OpLike);
       operation.add(Messages.get().EditDCIImageRuleDialog_OpNotLike);
       operation.select((rule.getComparisonType() != -1) ? rule.getComparisonType() : 0);
-      
+
       value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, Messages.get().EditDCIImageRuleDialog_Value, 
             rule.getCompareValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+
       comment = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 120, Messages.get().EditDCIImageRuleDialog_Comment, 
             rule.getComment(), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+
       image = new ImageSelector(dialogArea, SWT.NONE);
       image.setLabel(Messages.get().EditDCIImageRuleDialog_Image);
       GridData gd = new GridData();
@@ -116,32 +127,21 @@ public class EditDCIImageRuleDialog extends Dialog
       catch (Exception e) 
       {
       }
-      
+
       image.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
          {
-            getShell().setSize(getShell().computeSize(SWT.DEFAULT, SWT.DEFAULT, true));
-            getShell().layout(true, true);
+            WidgetHelper.adjustWindowSize(EditDCIImageRuleDialog.this);
          }
       });
       
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
-	@Override
-	protected void configureShell(Shell newShell)
-	{
-		super.configureShell(newShell);
-		newShell.setText(Messages.get().EditDCIImageRuleDialog_EditImageRule);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{

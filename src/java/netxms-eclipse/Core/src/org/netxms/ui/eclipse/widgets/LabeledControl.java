@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,17 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -33,10 +37,14 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public abstract class LabeledControl extends Composite
 {
+   private static final Image ERROR_ICON = Activator.getImageDescriptor("icons/labeled-control-alert.png").createImage();
+
 	protected Label label;
 	protected Control control;
    protected int controlWidthHint;
-	protected FormToolkit toolkit;
+   protected FormToolkit toolkit;
+
+   private CLabel errorMessage;
 
 	/**
 	 * @param parent
@@ -143,12 +151,12 @@ public abstract class LabeledControl extends Composite
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		setLayout(layout);
-		
+
 		label = (toolkit != null) ? toolkit.createLabel(this, "") : new Label(this, SWT.NONE); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
-		
+
       control = createControl(controlStyle, parameters);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -209,7 +217,7 @@ public abstract class LabeledControl extends Composite
 	 * @return Text
 	 */
 	public abstract String getText();
-	
+
 	/**
 	 * Get encapsulated control
 	 * 
@@ -219,6 +227,34 @@ public abstract class LabeledControl extends Composite
 	{
 		return control;
 	}
+
+   /**
+    * Set error message inside control.
+    *
+    * @param message message to show or null to hide existing message
+    */
+   public void setErrorMessage(String message)
+   {
+      if (message == null)
+      {
+         if (errorMessage != null)
+         {
+            errorMessage.dispose();
+            errorMessage = null;
+            layout(true, true);
+         }
+         return;
+      }
+
+      if (errorMessage == null)
+      {
+         errorMessage = new CLabel(this, SWT.NONE);
+         errorMessage.setForeground(ThemeEngine.getForegroundColor("List.Error"));
+         errorMessage.setText(message);
+         errorMessage.setImage(ERROR_ICON);
+         layout(true, true);
+      }
+   }
 
    /**
     * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)

@@ -243,7 +243,7 @@ public class ScriptEditor extends CompositeWithMessageArea
                toggleHints();
          }
       });
-      
+
       hintsExpandButton = new Label(hintArea, SWT.NONE);
       hintsExpandButton.setBackground(hintArea.getBackground());
       hintsExpandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));

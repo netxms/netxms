@@ -33,8 +33,6 @@ public class Messages extends NLS
    public static String FilterText_CloseFilter;
 	public static String FilterText_Filter;
 	public static String FilterText_FilterIsEmpty;
-	public static String NumericTextFieldValidator_ErrorMessage;
-   public static String NumericTextFieldValidator_RangeSeparator;
 	public static String RefreshAction_Name;
 	public static String WidgetHelper_Action_Copy;
 	public static String WidgetHelper_Action_Cut;

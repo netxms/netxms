@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.assetmanagement.dialogs.CreateAssetDialog;
 import org.netxms.nxmc.modules.businessservice.dialogs.CreateBusinessServicePrototype;
 import org.netxms.nxmc.modules.objects.dialogs.CreateChassisDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
@@ -70,6 +71,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private AbstractObject parent;
    private long parentId;
 
+   private Action actionCreateAsset;
    private Action actionCreateAssetGroup;
    private Action actionCreateBusinessService;
    private Action actionCreateBusinessServicePrototype;
@@ -107,6 +109,7 @@ public class ObjectCreateMenuManager extends MenuManager
 
       createActions();
 
+      addAction(this, actionCreateAsset, (AbstractObject o) -> (o instanceof AssetGroup) || (o instanceof AssetRoot));
       addAction(this, actionCreateAssetGroup, (AbstractObject o) -> (o instanceof AssetGroup) || (o instanceof AssetRoot));
       addAction(this, actionCreateBusinessService, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot) && !(o instanceof BusinessServicePrototype));
       addAction(this, actionCreateBusinessServicePrototype, (AbstractObject o) -> (o instanceof BusinessService) || (o instanceof BusinessServiceRoot));
@@ -133,6 +136,36 @@ public class ObjectCreateMenuManager extends MenuManager
     */
    protected void createActions()
    {
+      actionCreateAsset = new Action(i18n.tr("&Asset...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateAssetDialog dlg = new CreateAssetDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating asset"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_ASSET, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create asset object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+
       actionCreateAssetGroup = new GenericObjectCreationAction(i18n.tr("Asset &group..."), AbstractObject.OBJECT_ASSETGROUP, i18n.tr("Asset Group"));
 
       actionCreateBusinessService = new GenericObjectCreationAction(i18n.tr("&Business service..."), AbstractObject.OBJECT_BUSINESSSERVICE, i18n.tr("Business Service"));

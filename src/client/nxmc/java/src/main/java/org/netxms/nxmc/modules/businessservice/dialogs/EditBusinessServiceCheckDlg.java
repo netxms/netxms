@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package org.netxms.nxmc.modules.businessservice.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -48,8 +48,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class EditBusinessServiceCheckDlg extends Dialog
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(EditBusinessServiceCheckDlg.class);
-   private static final String[] TYPES = { i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status") };
+   private final I18n i18n = LocalizationHelper.getI18n(EditBusinessServiceCheckDlg.class);
+   private final String[] TYPES = { i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status") };
 
    private BusinessServiceCheck check;
    private boolean createNew;
@@ -117,17 +117,11 @@ public class EditBusinessServiceCheckDlg extends Dialog
       typeCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Check type"), gd);
       for (String type : TYPES)
          typeCombo.add(type);   
-      typeCombo.addSelectionListener(new SelectionListener() {
+      typeCombo.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             updateElementVisibility();
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
 
@@ -240,8 +234,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       else if (type == BusinessServiceCheckType.SCRIPT)
          objectOrDciSelector.setLabel(i18n.tr("Related object"));
 
-      getShell().layout(true, true);
-      getShell().pack();
+      WidgetHelper.adjustWindowSize(this);
    }
 
    /**

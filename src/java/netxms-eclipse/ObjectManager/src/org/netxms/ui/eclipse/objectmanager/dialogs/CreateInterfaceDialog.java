@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,9 +78,9 @@ public class CreateInterfaceDialog extends Dialog
 		super(parentShell);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -88,9 +88,9 @@ public class CreateInterfaceDialog extends Dialog
 		newShell.setText(Messages.get().CreateInterfaceDialog_Title);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -188,22 +188,25 @@ public class CreateInterfaceDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
 		physicalPort = checkIsPhy.getSelection();
 		
-      if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator(), null) ||
-		    !WidgetHelper.validateTextInput(macAddrField, new MacAddressValidator(true), null) ||
-		    !WidgetHelper.validateTextInput(ipAddrField, new IPAddressValidator(true), null) ||
-		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true, ipAddrField.getText().trim()), null) ||
-		    (physicalPort && !WidgetHelper.validateTextInput(slotField, new NumericTextFieldValidator(0, 4096), null)) ||
-		    (physicalPort && !WidgetHelper.validateTextInput(portField, new NumericTextFieldValidator(0, 4096), null)))
+		if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator()) ||
+		    !WidgetHelper.validateTextInput(macAddrField, new MacAddressValidator(true)) ||
+		    !WidgetHelper.validateTextInput(ipAddrField, new IPAddressValidator(true)) ||
+          !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true, ipAddrField.getText())) ||
+		    (physicalPort && !WidgetHelper.validateTextInput(slotField, new NumericTextFieldValidator(0, 4096))) ||
+		    (physicalPort && !WidgetHelper.validateTextInput(portField, new NumericTextFieldValidator(0, 4096))))
+      {
+         WidgetHelper.adjustWindowSize(this);
 			return;
-		
+      }
+
 		try
 		{
 			name = nameField.getText().trim();
@@ -213,15 +216,16 @@ public class CreateInterfaceDialog extends Dialog
 			ipAddress = new InetAddressEx(addr, getMaskBits(ipMaskField.getText().trim(), addr instanceof Inet4Address ? 32 : 128));
 			slot = physicalPort ? Integer.parseInt(slotField.getText()) : 0;
 			port = physicalPort ? Integer.parseInt(portField.getText()) : 0;
-			
+
 			super.okPressed();
 		}
 		catch(Exception e)
 		{
 			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDialog_Error, String.format("Internal error: %s", e.getMessage())); //$NON-NLS-1$
+         WidgetHelper.adjustWindowSize(this);
 		}
 	}
-	
+
 	/**
 	 * @param mask
 	 * @param maxBits
@@ -231,7 +235,7 @@ public class CreateInterfaceDialog extends Dialog
 	{
 	   if (mask.isEmpty())
 	      return DEFAULT_MASK_BITS;
-	   
+
 	   try
 	   {
 	      int bits = Integer.parseInt(mask);

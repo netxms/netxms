@@ -1672,9 +1672,9 @@ bool LoadObjects()
    // All data collection targets must be loaded at this point.
    ThreadCreate(CacheLoadingThread);
 
-   LoadObjectsFromTable<Cluster>(_T("asset"), hdb, _T("assets"));
+   LoadObjectsFromTable<Asset>(_T("asset"), hdb, _T("assets"));
    g_idxAssetById.setStartupMode(false);
-   LoadObjectsFromTable<DashboardGroup>(_T("asset group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_ASSETGROUP));
+   LoadObjectsFromTable<AssetGroup>(_T("asset group"), hdb, _T("object_containers WHERE object_class=") AS_STRING(OBJECT_ASSETGROUP));
 
    LoadObjectsFromTable<Template>(_T("template"), hdb, _T("templates"), nullptr, [](const shared_ptr<Template>& t) { t->calculateCompoundStatus(); });
    LoadObjectsFromTable<NetworkMap>(_T("network map"), hdb, _T("network_maps"));

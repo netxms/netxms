@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.propertypages.InstanceDiscovery;
-import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.ObjectNameValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -117,14 +117,16 @@ public class CreateBusinessServicePrototype extends Dialog
    @Override
    protected void okPressed()
    {
+      if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator()))
+      {
+         WidgetHelper.adjustWindowSize(this);
+         return;
+      }
+
       instanceDiscoveyMethod = instanceDiscoveyMethodCombo.getText();
       alias = aliasField.getText().trim();
       name = nameField.getText().trim();
-      if (name.isEmpty())
-      {
-         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Object name cannot be empty"));
-         return;
-      }
+
       super.okPressed();
    }
 

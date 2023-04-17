@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,11 +96,11 @@ public class IPNetMaskValidator implements TextFieldValidator
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
+    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String)
     */
 	@Override
-	public String getErrorMessage(String text, String label)
+   public String getErrorMessage(String text)
 	{
-      return String.format(Messages.get().IPNetMaskValidator_ErrorMessage, label);
+      return Messages.get().IPNetMaskValidator_ErrorMessage;
 	}
 }

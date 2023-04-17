@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,11 +53,11 @@ public class IPAddressValidator implements TextFieldValidator
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
+    * @see org.netxms.nxmc.tools.TextFieldValidator#getErrorMessage(java.lang.String)
     */
 	@Override
-	public String getErrorMessage(String text, String label)
+   public String getErrorMessage(String text)
 	{
-      return String.format(i18n.tr("Please enter valid IP address in \"%s\" field"), label);
+      return i18n.tr("Invalid IP address");
 	}
 }

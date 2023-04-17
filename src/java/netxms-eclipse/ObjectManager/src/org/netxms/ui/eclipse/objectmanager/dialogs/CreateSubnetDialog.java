@@ -31,7 +31,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.InetAddressEx;
 import org.netxms.ui.eclipse.tools.IPAddressValidator;
 import org.netxms.ui.eclipse.tools.IPNetMaskValidator;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -76,7 +75,7 @@ public class CreateSubnetDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -85,7 +84,7 @@ public class CreateSubnetDialog extends Dialog
       layout.numColumns = 2;
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
-      
+
       objectNameText = new LabeledText(dialogArea, SWT.NONE);
       objectNameText.setLabel("Name (leave empty to construct from address and mask)");
       objectNameText.getTextControl().setTextLimit(255);
@@ -115,7 +114,7 @@ public class CreateSubnetDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       ipAddressText.setLayoutData(gd);
       ipAddressText.setText("");
-      
+
       maskText = new LabeledText(dialogArea, SWT.NONE);
       maskText.setLabel("Network mask");
       maskText.getTextControl().setTextLimit(16);
@@ -124,7 +123,7 @@ public class CreateSubnetDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       maskText.setLayoutData(gd);
       maskText.setText("");
-      
+
       return dialogArea;
    }
 
@@ -134,12 +133,12 @@ public class CreateSubnetDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      if (!WidgetHelper.validateTextInput(ipAddressText, new IPAddressValidator(false), null) || 
-          !WidgetHelper.validateTextInput(maskText, new IPNetMaskValidator(false, ipAddressText.getText()), null))
+      if (!WidgetHelper.validateTextInput(ipAddressText, new IPAddressValidator(false)) || !WidgetHelper.validateTextInput(maskText, new IPNetMaskValidator(false, ipAddressText.getText())))
       {
+         WidgetHelper.adjustWindowSize(this);
          return;
       }
-      
+
       try
       {
          objectName = objectNameText.getText().trim();
@@ -157,7 +156,8 @@ public class CreateSubnetDialog extends Dialog
          }
          if (maskBits > (addr instanceof Inet4Address ? 31 : 127))
          {
-            MessageDialogHelper.openError(getShell(), "Invalid network mask", "Please enter valid network mask");
+            maskText.setErrorMessage("Invalid network mask");
+            WidgetHelper.adjustWindowSize(this);
             return;
          }
          ipAddress = new InetAddressEx(addr, maskBits);
@@ -165,8 +165,9 @@ public class CreateSubnetDialog extends Dialog
       catch (Exception e)
       {
          MessageDialog.openError(getShell(), "Error", String.format("Internal error: %s", e.getMessage()));
+         return;
       }
-      
+
       super.okPressed();
    }
 

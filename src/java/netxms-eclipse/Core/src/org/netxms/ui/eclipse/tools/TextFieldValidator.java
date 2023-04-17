@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,12 +32,10 @@ public interface TextFieldValidator
 	public abstract boolean validate(String text);
 	
 	/**
-	 * Get error message for failed validation. This method always called
-	 * immediately after failed validation.
-	 * 
-	 * @param text
-	 * @param label
-	 * @return
-	 */
-	public abstract String getErrorMessage(String text, String label);
+    * Get error message for failed validation. This method always called immediately after failed validation.
+    * 
+    * @param text text that vas just validated
+    * @return error message to be displayed to the user
+    */
+   public abstract String getErrorMessage(String text);
 }

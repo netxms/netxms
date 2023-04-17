@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,15 @@
  */
 package org.netxms.ui.eclipse.tools;
 
-import org.netxms.ui.eclipse.console.Messages;
-
 /**
- * Concrete implementation of TextFieldValidator interface
- * for validating numeric fields 
+ * Concrete implementation of TextFieldValidator interface for validating integer fields
  */
 public class NumericTextFieldValidator implements TextFieldValidator
 {
-	private long min;
-	private long max;
-	private String range;
-	
+   private double min;
+   private double max;
+   private boolean wholeNumber;
+
 	/**
 	 * @param min minimal allowed value
 	 * @param max maximal allowed value
@@ -38,18 +35,29 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	{
 		this.min = min;
 		this.max = max;
-		range = Long.toString(min) + Messages.get().NumericTextFieldValidator_RangeSeparator + Long.toString(max);
+      wholeNumber = true;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
-	 */
+
+   /**
+    * @param min minimal allowed value
+    * @param max maximal allowed value
+    */
+   public NumericTextFieldValidator(double min, double max)
+   {
+      this.min = min;
+      this.max = max;
+      wholeNumber = false;
+   }
+
+   /**
+    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
+    */
 	@Override
 	public boolean validate(String text)
 	{
 		try
 		{
-			long value = Long.parseLong(text);
+         double value = wholeNumber ? Long.parseLong(text) : Double.parseDouble(text);
 			return ((value >= min) && (value <= max));
 		}
 		catch(NumberFormatException e)
@@ -58,12 +66,13 @@ public class NumericTextFieldValidator implements TextFieldValidator
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String)
+    */
 	@Override
-	public String getErrorMessage(String text, String label)
+   public String getErrorMessage(String text)
 	{
-		return String.format(Messages.get().NumericTextFieldValidator_ErrorMessage, range, label);
+      return wholeNumber ? String.format("Must be whole number in range %s..%s", Long.toString((long)min), Long.toString((long)max)) :
+            String.format("Must be number between %s and %s", Double.toString(min), Double.toString(max));
 	}
 }

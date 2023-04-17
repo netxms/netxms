@@ -359,8 +359,11 @@ public class EditThresholdDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		if (!WidgetHelper.validateTextInput(samples, Messages.get().EditThresholdDialog_Samples, new NumericTextFieldValidator(1, 1000), null))
+      if (!WidgetHelper.validateTextInput(samples, new NumericTextFieldValidator(1, 1000)))
+      {
+         WidgetHelper.adjustWindowSize(this);
 			return;
+      }
 
 		int rpt;
 		if (repeatDefault.getSelection())
@@ -373,8 +376,11 @@ public class EditThresholdDialog extends Dialog
 		}
 		else
 		{
-			if (!WidgetHelper.validateTextInput(repeatInterval, Messages.get().EditThresholdDialog_RepeatInterval, new NumericTextFieldValidator(1, 1000000), null))
+         if (!WidgetHelper.validateTextInput(repeatInterval, new NumericTextFieldValidator(1, 1000000)))
+         {
+            WidgetHelper.adjustWindowSize(this);
 				return;
+         }
 			rpt = Integer.parseInt(repeatInterval.getText());
 		}
 

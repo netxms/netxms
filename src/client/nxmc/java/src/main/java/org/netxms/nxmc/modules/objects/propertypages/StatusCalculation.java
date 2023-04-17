@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
-import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -359,9 +358,9 @@ public class StatusCalculation extends ObjectPropertyPage
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
@@ -435,21 +434,16 @@ public class StatusCalculation extends ObjectPropertyPage
    @Override
 	protected boolean applyChanges(final boolean isApply)
 	{
-		if (!WidgetHelper.validateTextInput(textRelativeStatus, i18n.tr("Relative status"), new NumericTextFieldValidator(-4, 4), this) ||
-		    !WidgetHelper.validateTextInput(textSingleThreshold, i18n.tr("Single threshold"), new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[0], 
-		          String.format(i18n.tr("Threshold - %s"), StatusDisplayInfo.getStatusText(Severity.WARNING)), 
-		          new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[1], 
-		          String.format(i18n.tr("Threshold - %s"), StatusDisplayInfo.getStatusText(Severity.MINOR)),
-		          new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[2], 
-		          String.format(i18n.tr("Threshold - %s"), StatusDisplayInfo.getStatusText(Severity.MAJOR)), 
-		          new NumericTextFieldValidator(0, 100), this) ||
-		    !WidgetHelper.validateTextInput(textThresholds[3], 
-		          String.format(i18n.tr("Threshold - %s"), StatusDisplayInfo.getStatusText(Severity.CRITICAL)), 
-		          new NumericTextFieldValidator(0, 100), this))
+		if (!WidgetHelper.validateTextInput(textRelativeStatus, new NumericTextFieldValidator(-4, 4)) ||
+		    !WidgetHelper.validateTextInput(textSingleThreshold, new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[0], new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[1], new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[2], new NumericTextFieldValidator(0, 100)) ||
+		    !WidgetHelper.validateTextInput(textThresholds[3], new NumericTextFieldValidator(0, 100)))
+      {
+         WidgetHelper.adjustWindowSize(this);
 			return false;
+      }
 
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setStatusCalculationMethod(calculationMethod);
@@ -465,7 +459,7 @@ public class StatusCalculation extends ObjectPropertyPage
 		for(int i = 0; i < 4; i++)
 			thresholds[i] = Integer.parseInt(textThresholds[i].getText());
 		md.setStatusThresholds(thresholds);
-		
+
 		if (!hasChanges(md))
 			return true;	// Nothing to apply
 		currentState = md;
@@ -502,7 +496,7 @@ public class StatusCalculation extends ObjectPropertyPage
 				}
 			}
 		}.start();
-		
+
 		return true;
 	}
 }

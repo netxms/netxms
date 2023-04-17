@@ -45,6 +45,7 @@ bool AssetGroup::showThresholdSummary() const
 Asset::Asset() : NetObj()
 {
    m_linkedObjectId = 0;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -54,6 +55,7 @@ Asset::Asset(const TCHAR *name, const StringMap& properties) : NetObj(), m_prope
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    m_linkedObjectId = 0;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -68,8 +70,6 @@ Asset::~Asset()
  */
 bool Asset::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-   bool success = false;
-
    m_id = id;
 
    if (!loadCommonProperties(hdb))
@@ -78,26 +78,26 @@ bool Asset::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT linked_object_id FROM assets WHERE id=?"));
    if (hStmt == nullptr)
       return false;
+
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
+   bool success = false;
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult == nullptr)
+   if (hResult != nullptr)
    {
-      DBFreeStatement(hStmt);
-      return false;     // Query failed
-   }
-
-   if (DBGetNumRows(hResult) != 0)
-   {
-      m_linkedObjectId = DBGetFieldULong(hResult, 0, 0);
-      success = true;
+      if (DBGetNumRows(hResult) != 0)
+      {
+         m_linkedObjectId = DBGetFieldULong(hResult, 0, 0);
+         success = true;
+      }
+      DBFreeResult(hResult);
    }
    DBFreeStatement(hStmt);
 
    if (success)
    {
       success = false;
-      hStmt = DBPrepare(hdb, _T("SELECT attr_name,value FROM asset_properties WHERE object_id=?"));
+      hStmt = DBPrepare(hdb, _T("SELECT attr_name,value FROM asset_properties WHERE asset_id=?"));
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -143,11 +143,11 @@ bool Asset::saveToDatabase(DB_HANDLE hdb)
       }
 
       if (success)
-         success = executeQueryOnObject(hdb, _T("DELETE FROM asset_properties WHERE object_id=?"));
+         success = executeQueryOnObject(hdb, _T("DELETE FROM asset_properties WHERE asset_id=?"));
 
       if (success)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO asset_properties (object_id,attr_name,value) VALUES (?,?,?)"), m_properties.size() > 1);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO asset_properties (asset_id,attr_name,value) VALUES (?,?,?)"), m_properties.size() > 1);
          if (hStmt != nullptr)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -180,7 +180,7 @@ bool Asset::deleteFromDatabase(DB_HANDLE hdb)
 {
    bool success = super::deleteFromDatabase(hdb);
    if (success)
-      success = executeQueryOnObject(hdb, _T("DELETE FROM asset_properties WHERE object_id=?"));
+      success = executeQueryOnObject(hdb, _T("DELETE FROM asset_properties WHERE asset_id=?"));
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM assets WHERE id=?"));
    return success;
@@ -191,6 +191,7 @@ bool Asset::deleteFromDatabase(DB_HANDLE hdb)
  */
 void Asset::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
+   super::fillMessageInternal(msg, userId);
    msg->setField(VID_LINKED_OBJECT, m_linkedObjectId);
    m_properties.fillMessage(msg, VID_ASSET_PROPERTIES_BASE, VID_NUM_ASSET_PROPERTIES);
 }

@@ -40,6 +40,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Asset;
+import org.netxms.client.objects.AssetGroup;
+import org.netxms.client.objects.AssetRoot;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
@@ -295,12 +298,17 @@ public class ObjectBrowser extends NavigationView
    {
       if (selection[i].getParentItem() == null)
          return false;
-      
+
       final AbstractObject currentObject = (AbstractObject)selection[i].getData();
       final AbstractObject parentObject = (AbstractObject)selection[i].getParentItem().getData();
-      
+
       switch(subtree)
       {
+         case ASSETS:
+            return ((currentObject instanceof Asset) ||
+                    (currentObject instanceof AssetGroup)) &&
+                   ((parentObject instanceof AssetGroup) ||
+                    (parentObject instanceof AssetRoot)) ? true : false;
          case INFRASTRUCTURE:
             return ((currentObject instanceof Node) ||
                     (currentObject instanceof Cluster) ||

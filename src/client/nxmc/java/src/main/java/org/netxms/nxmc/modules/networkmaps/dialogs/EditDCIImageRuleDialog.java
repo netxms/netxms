@@ -98,7 +98,7 @@ public class EditDCIImageRuleDialog extends Dialog
       conditionGroup.setLayout(condLayout);
 		
       operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, i18n.tr("Operation"), WidgetHelper.DEFAULT_LAYOUT_DATA);
-      
+
       operation.add(i18n.tr("< : less then"));
       operation.add(i18n.tr("<= : less then or equals"));
       operation.add(i18n.tr("== : equals"));
@@ -126,8 +126,7 @@ public class EditDCIImageRuleDialog extends Dialog
          @Override
          public void modifyText(ModifyEvent e)
          {
-            getShell().setSize(getShell().computeSize(SWT.DEFAULT, SWT.DEFAULT, true));
-            getShell().layout(true, true);
+            WidgetHelper.adjustWindowSize(EditDCIImageRuleDialog.this);
          }
       });
       

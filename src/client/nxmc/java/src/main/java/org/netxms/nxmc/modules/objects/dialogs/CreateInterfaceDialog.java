@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -199,14 +199,17 @@ public class CreateInterfaceDialog extends Dialog
 	{
 		physicalPort = checkIsPhy.getSelection();
 		
-		if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator(), null) ||
-		    !WidgetHelper.validateTextInput(macAddrField, new MacAddressValidator(true), null) ||
-		    !WidgetHelper.validateTextInput(ipAddrField, new IPAddressValidator(true), null) ||
-		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true), null) ||
-		    (physicalPort && !WidgetHelper.validateTextInput(slotField, new NumericTextFieldValidator(0, 4096), null)) ||
-		    (physicalPort && !WidgetHelper.validateTextInput(portField, new NumericTextFieldValidator(0, 4096), null)))
+		if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator()) ||
+		    !WidgetHelper.validateTextInput(macAddrField, new MacAddressValidator(true)) ||
+		    !WidgetHelper.validateTextInput(ipAddrField, new IPAddressValidator(true)) ||
+		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true)) ||
+		    (physicalPort && !WidgetHelper.validateTextInput(slotField, new NumericTextFieldValidator(0, 4096))) ||
+		    (physicalPort && !WidgetHelper.validateTextInput(portField, new NumericTextFieldValidator(0, 4096))))
+      {
+         WidgetHelper.adjustWindowSize(this);
 			return;
-		
+      }
+
 		try
 		{
 			name = nameField.getText().trim();
@@ -216,15 +219,16 @@ public class CreateInterfaceDialog extends Dialog
 			ipAddress = new InetAddressEx(addr, getMaskBits(ipMaskField.getText().trim(), addr instanceof Inet4Address ? 32 : 128));
 			slot = physicalPort ? Integer.parseInt(slotField.getText()) : 0;
 			port = physicalPort ? Integer.parseInt(portField.getText()) : 0;
-			
+
 			super.okPressed();
 		}
 		catch(Exception e)
 		{
          MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Internal error: %s"), e.getLocalizedMessage()));
+         WidgetHelper.adjustWindowSize(this);
 		}
 	}
-	
+
 	/**
 	 * @param mask
 	 * @param maxBits
@@ -234,7 +238,7 @@ public class CreateInterfaceDialog extends Dialog
 	{
 	   if (mask.isEmpty())
 	      return DEFAULT_MASK_BITS;
-	   
+
 	   try
 	   {
 	      int bits = Integer.parseInt(mask);

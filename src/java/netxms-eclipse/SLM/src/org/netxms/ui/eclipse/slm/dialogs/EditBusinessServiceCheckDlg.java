@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.slm.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -114,17 +114,11 @@ public class EditBusinessServiceCheckDlg extends Dialog
       typeCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Check type", gd);
       for (String type : TYPES)
          typeCombo.add(type);   
-      typeCombo.addSelectionListener(new SelectionListener() {
+      typeCombo.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
             updateElementVisibility();
-         }
-
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
          }
       });
 
@@ -237,8 +231,7 @@ public class EditBusinessServiceCheckDlg extends Dialog
       else if (type == BusinessServiceCheckType.SCRIPT)
          objectOrDciSelector.setLabel("Related object");
 
-      getShell().layout(true, true);
-      getShell().pack();
+      WidgetHelper.adjustWindowSize(this);
    }
 
    /**

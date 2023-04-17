@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,10 +29,10 @@ public class ObjectNameValidator implements TextFieldValidator
 	                                             0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
 	                                             0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
 	                                             '|', '"', '\'', '*', '%', '#', '\\', '`', ';', '?', '<', '>', '=' };
-	
+
 	private boolean isEmpty = false;
-	
-	/* (non-Javadoc)
+
+	/**
 	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
 	 */
 	@Override
@@ -41,7 +41,7 @@ public class ObjectNameValidator implements TextFieldValidator
 		isEmpty = text.trim().isEmpty();
 		if (isEmpty)
 			return false;
-		
+
 		for(char c : text.toCharArray())
 		{
 			for(char tc : INVALID_CHARACTERS)
@@ -53,14 +53,12 @@ public class ObjectNameValidator implements TextFieldValidator
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String)
+    */
 	@Override
-	public String getErrorMessage(String text, String label)
+   public String getErrorMessage(String text)
 	{
-		return isEmpty ? 
-		      String.format(Messages.get().ObjectNameValidator_ErrorMessage1, label) : 
-		         String.format(Messages.get().ObjectNameValidator_ErrorMessage2, label);
+      return isEmpty ? Messages.get().ObjectNameValidator_ErrorMessage1 : Messages.get().ObjectNameValidator_ErrorMessage2;
 	}
 }

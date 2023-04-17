@@ -26,7 +26,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.scripting.ClientListener;
 import org.eclipse.rap.rwt.widgets.WidgetUtil;
 import org.eclipse.swt.SWT;
@@ -46,18 +48,19 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scrollable;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.LabeledControl;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
@@ -90,6 +93,30 @@ public class WidgetHelper
    public static String getNewLineCharacters()
    {
       return "\r\n";
+   }
+
+   /**
+    * Redo window layout and resize it to accommodate possible layout changes.
+    * 
+    * @param window window to resize
+    */
+   public static void adjustWindowSize(Window window)
+   {
+      Shell shell = window.getShell();
+      shell.layout(true, true);
+      shell.pack();
+   }
+
+   /**
+    * Redo property dialog layout and resize it to accommodate possible layout changes.
+    * 
+    * @param window window to resize
+    */
+   public static void adjustWindowSize(PreferencePage page)
+   {
+      Shell shell = page.getShell();
+      shell.layout(true, true);
+      shell.pack();
    }
 
 	/**
@@ -230,10 +257,10 @@ public class WidgetHelper
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		combo.setLayoutData(gridData);
-		
+
 		if (toolkit != null)
 			toolkit.adapt(combo);
-		
+
 		return combo;
 	}
 
@@ -784,24 +811,24 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-	private static boolean validateTextInputInternal(Control control, String text, String label, TextFieldValidator validator, PropertyPage page)
+   private static boolean validateTextInputInternal(LabeledControl parentControl, Control control, String text, TextFieldValidator validator)
 	{
 		if (!control.isEnabled())
 			return true;	// Ignore validation for disabled controls
-		
+
 		boolean ok = validator.validate(text);
       control.setBackground(ok ? null : ThemeEngine.getBackgroundColor("TextInput.Error"));
 		if (ok)
 		{
-			if (page != null)
-				page.setErrorMessage(null);
+         if (parentControl != null)
+            parentControl.setErrorMessage(null);
 		}
 		else
 		{
-			if (page != null)
-				page.setErrorMessage(validator.getErrorMessage(text, label));
+         if (parentControl != null)
+            parentControl.setErrorMessage(validator.getErrorMessage(text));
 			else	
-				MessageDialogHelper.openError(control.getShell(), Messages.get().WidgetHelper_InputValidationError, validator.getErrorMessage(text, label));
+				MessageDialogHelper.openError(control.getShell(), Messages.get().WidgetHelper_InputValidationError, validator.getErrorMessage(text));
 		}
 		return ok;
 	}
@@ -813,11 +840,11 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-	public static boolean validateTextInput(Text text, String label, TextFieldValidator validator, PropertyPage page)
+   public static boolean validateTextInput(Text text, TextFieldValidator validator)
 	{
-		return validateTextInputInternal(text, text.getText(), label, validator, page);
+      return validateTextInputInternal(null, text, text.getText(), validator);
 	}
-	
+
 	/**
 	 * Validate text input
 	 * 
@@ -825,11 +852,11 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-	public static boolean validateTextInput(LabeledText text, TextFieldValidator validator, PropertyPage page)
+   public static boolean validateTextInput(LabeledText text, TextFieldValidator validator)
 	{
-		return validateTextInputInternal(text.getTextControl(), text.getText(), text.getLabel(), validator, page);
+      return validateTextInputInternal(text, text.getTextControl(), text.getText(), validator);
 	}
-	
+
 	/**
 	 * Convert font size in pixels to platform-dependent (DPI dependent actually) points
 	 * @param device

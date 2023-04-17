@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,16 +22,16 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Concrete implementation of TextFieldValidator interface
- * for validating numeric fields 
+ * Concrete implementation of TextFieldValidator interface for validating integer fields
  */
 public class NumericTextFieldValidator implements TextFieldValidator
 {
-   private I18n i18n = LocalizationHelper.getI18n(NumericTextFieldValidator.class);
-	private long min;
-	private long max;
-	private String range;
-	
+   private final I18n i18n = LocalizationHelper.getI18n(NumericTextFieldValidator.class);
+
+   private double min;
+   private double max;
+   private boolean wholeNumber;
+
 	/**
 	 * @param min minimal allowed value
 	 * @param max maximal allowed value
@@ -40,9 +40,20 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	{
 		this.min = min;
 		this.max = max;
-      range = Long.toString(min) + i18n.tr("..") + Long.toString(max);
+      wholeNumber = true;
 	}
-	
+
+   /**
+    * @param min minimal allowed value
+    * @param max maximal allowed value
+    */
+   public NumericTextFieldValidator(double min, double max)
+   {
+      this.min = min;
+      this.max = max;
+      wholeNumber = false;
+   }
+
    /**
     * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
     */
@@ -51,7 +62,7 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	{
 		try
 		{
-			long value = Long.parseLong(text);
+         double value = wholeNumber ? Long.parseLong(text) : Double.parseDouble(text);
 			return ((value >= min) && (value <= max));
 		}
 		catch(NumberFormatException e)
@@ -61,11 +72,12 @@ public class NumericTextFieldValidator implements TextFieldValidator
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
+    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String)
     */
 	@Override
-	public String getErrorMessage(String text, String label)
+   public String getErrorMessage(String text)
 	{
-      return String.format(i18n.tr("Please enter number in range %s in field \"%s\""), range, label);
+      return wholeNumber ? i18n.tr("Must be whole number in range {0}..{1}", Long.toString((long)min), Long.toString((long)max)) :
+            i18n.tr("Must be number between {0} and {1}", Double.toString(min), Double.toString(max));
 	}
 }

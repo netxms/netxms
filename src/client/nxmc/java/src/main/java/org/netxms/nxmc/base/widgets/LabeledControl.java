@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,16 @@
 package org.netxms.nxmc.base.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
@@ -32,10 +36,14 @@ import org.netxms.nxmc.tools.WidgetHelper;
  */
 public abstract class LabeledControl extends Composite
 {
+   private static final Image ERROR_ICON = ResourceManager.getImage("icons/labeled-control-alert.png");
+
 	protected Label label;
 	protected Control control;
    protected int controlWidthHint;
-	
+
+   private CLabel errorMessage;
+
 	/**
 	 * @param parent
 	 * @param style
@@ -127,12 +135,12 @@ public abstract class LabeledControl extends Composite
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		setLayout(layout);
-		
+
       label = new Label(this, SWT.NONE);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
-		
+
       control = createControl(controlStyle, parameters);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -205,6 +213,34 @@ public abstract class LabeledControl extends Composite
 	}
 
    /**
+    * Set error message inside control.
+    *
+    * @param message message to show or null to hide existing message
+    */
+   public void setErrorMessage(String message)
+   {
+      if (message == null)
+      {
+         if (errorMessage != null)
+         {
+            errorMessage.dispose();
+            errorMessage = null;
+            layout(true, true);
+         }
+         return;
+      }
+
+      if (errorMessage == null)
+      {
+         errorMessage = new CLabel(this, SWT.NONE);
+         errorMessage.setForeground(ThemeEngine.getForegroundColor("List.Error"));
+         errorMessage.setText(message);
+         errorMessage.setImage(ERROR_ICON);
+         layout(true, true);
+      }
+   }
+
+   /**
     * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
     */
 	@Override
@@ -240,6 +276,6 @@ public abstract class LabeledControl extends Composite
    @Override
    public String toString()
    {
-      return getClass().getName() + " [label=" + label.getText() + ", control=" + control + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      return getClass().getName() + " [label=" + label.getText() + ", control=" + control + "]";
    }
 }

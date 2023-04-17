@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2023 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.slm.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -9,10 +27,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.slm.propertypages.InstanceDiscovery;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.ObjectNameValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
+/**
+ * Dialog for creating business service prototype
+ */
 public class CreateBusinessServicePrototypeDialog extends Dialog
 {
    private LabeledText nameField;
@@ -23,6 +44,11 @@ public class CreateBusinessServicePrototypeDialog extends Dialog
    private String alias;
    private String instanceDiscoveyMethod;
 
+   /**
+    * Create dialog.
+    *
+    * @param parentShell parent shell
+    */
    public CreateBusinessServicePrototypeDialog(Shell parentShell)
    {
       super(parentShell);
@@ -87,19 +113,23 @@ public class CreateBusinessServicePrototypeDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      instanceDiscoveyMethod = instanceDiscoveyMethodCombo.getText();
-      name = nameField.getText().trim();
-      if (name.isEmpty())
+      if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator()))
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Object name cannot be empty");
+         WidgetHelper.adjustWindowSize(this);
          return;
       }
+
+      instanceDiscoveyMethod = instanceDiscoveyMethodCombo.getText();
       alias = aliasField.getText().trim();
+      name = nameField.getText().trim();
+
       super.okPressed();
    }
 
    /**
-    * @return the name
+    * Get name for new object
+    *
+    * @return name for new object
     */
    public String getName()
    {
@@ -107,7 +137,9 @@ public class CreateBusinessServicePrototypeDialog extends Dialog
    }
 
    /**
-    * @return the alias
+    * Get alias for new object
+    *
+    * @return alias for new object
     */
    public String getAlias()
    {
@@ -115,7 +147,9 @@ public class CreateBusinessServicePrototypeDialog extends Dialog
    }
 
    /**
-    * @return the instanceDiscoveyMethod
+    * Get instance discovery method.
+    *
+    * @return instance discovery method
     */
    public int getInstanceDiscoveyMethod()
    {

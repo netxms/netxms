@@ -65,6 +65,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Scrollable;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -76,6 +77,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.LabeledControl;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
@@ -115,6 +117,30 @@ public class WidgetHelper
    public static String getNewLineCharacters()
    {
       return SystemUtils.IS_OS_WINDOWS ? "\r\n" : "\n";
+   }
+
+   /**
+    * Redo window layout and resize it to accommodate possible layout changes.
+    * 
+    * @param window window to resize
+    */
+   public static void adjustWindowSize(Window window)
+   {
+      Shell shell = window.getShell();
+      shell.layout(true, true);
+      shell.pack();
+   }
+
+   /**
+    * Redo property dialog layout and resize it to accommodate possible layout changes.
+    * 
+    * @param window window to resize
+    */
+   public static void adjustWindowSize(PreferencePage page)
+   {
+      Shell shell = page.getShell();
+      shell.layout(true, true);
+      shell.pack();
    }
 
 	/**
@@ -692,7 +718,7 @@ public class WidgetHelper
             curr = first + (last - first) / 2;
          }
       }
-      
+
       gc.setFont(originalFont);
       return font;
    }
@@ -822,7 +848,7 @@ public class WidgetHelper
          font = fonts[0];
 
       gc.setFont(originalFont);
-		return font;
+      return font;
 	}
 
 	/**
@@ -848,7 +874,7 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-	private static boolean validateTextInputInternal(Control control, String text, String label, TextFieldValidator validator, PreferencePage page)
+   private static boolean validateTextInputInternal(LabeledControl parentControl, Control control, String text, TextFieldValidator validator)
 	{
 		if (!control.isEnabled())
 			return true;	// Ignore validation for disabled controls
@@ -857,17 +883,17 @@ public class WidgetHelper
       control.setBackground(ok ? null : ThemeEngine.getBackgroundColor("TextInput.Error"));
 		if (ok)
 		{
-			if (page != null)
-				page.setErrorMessage(null);
+         if (parentControl != null)
+            parentControl.setErrorMessage(null);
 		}
 		else
 		{
-			if (page != null)
-				page.setErrorMessage(validator.getErrorMessage(text, label));
+         if (parentControl != null)
+            parentControl.setErrorMessage(validator.getErrorMessage(text));
 			else	
             MessageDialogHelper.openError(control.getShell(),
                   LocalizationHelper.getI18n(WidgetHelper.class).tr("Input Validation Error"),
-                  validator.getErrorMessage(text, label));
+                  validator.getErrorMessage(text));
 		}
 		return ok;
 	}
@@ -879,11 +905,11 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-   public static boolean validateTextInput(Text text, String label, TextFieldValidator validator, PreferencePage page)
+   public static boolean validateTextInput(Text text, TextFieldValidator validator)
 	{
-		return validateTextInputInternal(text, text.getText(), label, validator, page);
+      return validateTextInputInternal(null, text, text.getText(), validator);
 	}
-	
+
 	/**
 	 * Validate text input
 	 * 
@@ -891,11 +917,11 @@ public class WidgetHelper
 	 * @param validator validator
 	 * @return true if text is valid
 	 */
-   public static boolean validateTextInput(LabeledText text, TextFieldValidator validator, PreferencePage page)
+   public static boolean validateTextInput(LabeledText text, TextFieldValidator validator)
 	{
-		return validateTextInputInternal(text.getTextControl(), text.getText(), text.getLabel(), validator, page);
+      return validateTextInputInternal(text, text.getTextControl(), text.getText(), validator);
 	}
-	
+
 	/**
 	 * Convert font size in pixels to platform-dependent (DPI dependent actually) points
 	 * @param device

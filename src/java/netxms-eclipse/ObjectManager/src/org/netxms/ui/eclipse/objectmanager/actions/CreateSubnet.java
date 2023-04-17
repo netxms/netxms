@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2021 Raden Solutions
+ * Copyright (C) 2021-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,11 +67,11 @@ public class CreateSubnet extends AbstractHandler
       {
          parentId = ((AbstractObject)obj).getObjectId();
       }
-      
+
       CreateSubnetDialog dlg = new CreateSubnetDialog(window.getShell());
       if (dlg.open() != Window.OK)
          return null;
-      
+
       final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_SUBNET, dlg.getObjectName(), parentId);
       cd.setObjectAlias(dlg.getObjectAlias());
       cd.setIpAddress(dlg.getIpAddress());

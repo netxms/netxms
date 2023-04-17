@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views;
+package org.netxms.nxmc.modules.assetmanagement.views;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,10 +46,11 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.dialogs.EditAssetPropertyDialog;
-import org.netxms.nxmc.modules.objects.views.helpers.AssetPropertyComparator;
-import org.netxms.nxmc.modules.objects.views.helpers.AssetPropertyFilter;
-import org.netxms.nxmc.modules.objects.views.helpers.AssetPropertyListLabelProvider;
+import org.netxms.nxmc.modules.assetmanagement.dialogs.EditAssetPropertyDialog;
+import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyComparator;
+import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyFilter;
+import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyListLabelProvider;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -84,6 +85,24 @@ public class AssetView extends ObjectView
    public AssetView()
    {
       super(i18n.tr("Asset"), ResourceManager.getImageDescriptor("icons/object-views/asset.png"), "Asset", true);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && ((context instanceof Asset) || (((AbstractObject)context).getAssetId() != 0));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 70;
    }
 
    /**
@@ -397,24 +416,6 @@ public class AssetView extends ObjectView
       }
       mgr.add(actionEdit);
       mgr.add(actionDelete);
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && ((context instanceof Asset) || (((AbstractObject)context).getAssetId() != 0));
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#getPriority()
-    */
-   @Override
-   public int getPriority()
-   {
-      return 70;
    }
 
    /**

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views.helpers;
+package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -28,7 +28,7 @@ import org.netxms.client.constants.AMDataType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.views.AssetView;
+import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeListLabelProvider;
 import org.slf4j.Logger;

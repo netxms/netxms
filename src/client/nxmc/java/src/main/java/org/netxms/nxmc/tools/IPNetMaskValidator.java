@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.xnap.commons.i18n.I18n;
 public class IPNetMaskValidator implements TextFieldValidator
 {
 	private static final String IP_ADDRESS_PATTERN = "^([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}|[A-Fa-f0-9:]+)$"; //$NON-NLS-1$
-	
+
    private I18n i18n = LocalizationHelper.getI18n(IPNetMaskValidator.class);
 	private boolean allowEmpty;
 	
@@ -42,7 +42,7 @@ public class IPNetMaskValidator implements TextFieldValidator
 	{
 		this.allowEmpty = allowEmpty;
 	}
-	
+
    /**
     * @see org.netxms.ui.eclipse.tools.TextFieldValidator#validate(java.lang.String)
     */
@@ -51,7 +51,7 @@ public class IPNetMaskValidator implements TextFieldValidator
 	{
 		if (allowEmpty && text.trim().isEmpty())
 			return true;
-		
+
 		if (!text.matches(IP_ADDRESS_PATTERN))
 			return false;
 		
@@ -77,11 +77,11 @@ public class IPNetMaskValidator implements TextFieldValidator
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.tools.TextFieldValidator#getErrorMessage(java.lang.String, java.lang.String)
+    * @see org.netxms.nxmc.tools.TextFieldValidator#getErrorMessage(java.lang.String)
     */
 	@Override
-	public String getErrorMessage(String text, String label)
+   public String getErrorMessage(String text)
 	{
-      return String.format(i18n.tr("Please enter valid IP network mask in \"%s\" field"), label);
+      return i18n.tr("Invalid network mask");
 	}
 }
