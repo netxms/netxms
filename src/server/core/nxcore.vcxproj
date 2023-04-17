@@ -207,6 +207,7 @@
     <ClCompile Include="agent_policy.cpp" />
     <ClCompile Include="alarm.cpp" />
     <ClCompile Include="alarm_category.cpp" />
+    <ClCompile Include="asset.cpp" />
     <ClCompile Include="asset_management.cpp" />
     <ClCompile Include="audit.cpp" />
     <ClCompile Include="authtokens.cpp" />
@@ -379,6 +380,9 @@
     <ClInclude Include="..\..\..\include\nxsnmp.h" />
     <ClInclude Include="..\..\..\include\rwlock.h" />
     <ClInclude Include="..\..\..\include\unicode.h" />
+    <ClInclude Include="..\include\agent_tunnel.h" />
+    <ClInclude Include="..\include\asset_management.h" />
+    <ClInclude Include="..\include\entity_mib.h" />
     <ClInclude Include="..\include\hdlink.h" />
     <ClInclude Include="..\include\local_admin.h" />
     <ClInclude Include="..\include\nddrv.h" />

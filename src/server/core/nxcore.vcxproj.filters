@@ -501,6 +501,9 @@
     <ClCompile Include="asset_management.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="asset.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\dbdrv.h">
@@ -636,6 +639,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\unicode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\agent_tunnel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\asset_management.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\entity_mib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
