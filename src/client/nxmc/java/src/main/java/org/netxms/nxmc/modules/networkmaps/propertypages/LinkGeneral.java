@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,12 @@ import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -36,6 +36,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.networkmaps.views.helpers.LinkEditor;
@@ -65,7 +66,7 @@ public class LinkGeneral extends PreferencePage
 	private List list;
 	private Button add;
 	private Button remove;
-	private Combo routingAlgorithm;
+   private LabeledCombo routingAlgorithm;
 	private Button checkUseThresholds;
 
    /**
@@ -127,8 +128,8 @@ public class LinkGeneral extends PreferencePage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		colorGroup.setLayoutData(gd);
-		
-		final SelectionListener listener = new SelectionListener() {
+
+      final SelectionListener listener = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -138,12 +139,6 @@ public class LinkGeneral extends PreferencePage
 				add.setEnabled(radioColorObject.getSelection());
 				remove.setEnabled(radioColorObject.getSelection());
 				checkUseThresholds.setEnabled(radioColorObject.getSelection());
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		};
 
@@ -268,16 +263,18 @@ public class LinkGeneral extends PreferencePage
 		gd.horizontalIndent = 20;
 		color.getButton().setLayoutData(gd);
 
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-      routingAlgorithm = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Routing algorithm"), gd);
+      routingAlgorithm = new LabeledCombo(dialogArea, SWT.NONE);
+      routingAlgorithm.setLabel(i18n.tr("Routing algorithm"));
       routingAlgorithm.add(i18n.tr("Map default"));
       routingAlgorithm.add(i18n.tr("Direct"));
       routingAlgorithm.add(i18n.tr("Manhattan"));
       routingAlgorithm.add(i18n.tr("Bend points"));
-		routingAlgorithm.select(object.getRoutingAlgorithm());
-		
+      routingAlgorithm.select(object.getRoutingAlgorithm());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      routingAlgorithm.setLayoutData(gd);
+
 		return dialogArea;
 	}
 

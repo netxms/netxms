@@ -193,7 +193,7 @@ public abstract class LabeledControl extends Composite
 	 * @return Text
 	 */
 	public abstract String getText();
-	
+
 	/**
 	 * Get encapsulated control
 	 * 
