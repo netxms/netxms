@@ -1067,13 +1067,12 @@ public class NXCPMessage
    }
 
    /**
-    * Get string list from fields
+    * Get string list from field
     * 
-    * @param baseId base (first element) field ID
-    * @param countId ID of field containing number of elements
+    * @param fieldId field ID
     * @return list of strings
     */
-   public List<String> getStringListFromFields(long fieldId)
+   public List<String> getStringListFromField(long fieldId)
    {
       final NXCPMessageField var = findField(fieldId);
       String[] array = (var != null) ? var.getAsStringArrayEx() : null;
