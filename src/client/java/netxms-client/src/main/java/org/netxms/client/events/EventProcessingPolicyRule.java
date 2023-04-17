@@ -180,7 +180,7 @@ public class EventProcessingPolicyRule
          actions.add(new ActionExecutionConfiguration(msg, fieldId));
          fieldId += 10;
       }
-      timerCancellations = msg.getStringListFromFields(NXCPCodes.VID_TIMER_LIST_BASE, NXCPCodes.VID_TIMER_COUNT);
+      timerCancellations = msg.getStringListFromFields(NXCPCodes.VID_TIMER_LIST);
 
       persistentStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       persistentStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
@@ -210,7 +210,7 @@ public class EventProcessingPolicyRule
          d.fillMessage(msg, fieldId);
          fieldId += 10;
       }
-      msg.setFieldsFromStringCollection(timerCancellations, NXCPCodes.VID_TIMER_LIST_BASE, NXCPCodes.VID_TIMER_COUNT);
+      msg.setFieldStringCollection(NXCPCodes.VID_TIMER_LIST, timerCancellations);
 
       msg.setField(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
       msg.setField(NXCPCodes.VID_RULE_SOURCES, sources.toArray(new Long[sources.size()]));

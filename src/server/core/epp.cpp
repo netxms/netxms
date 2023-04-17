@@ -311,10 +311,9 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, timerKey, blockingTimerKey));
       }
    }
-   if (msg.isFieldExist(VID_TIMER_COUNT))
+   if (msg.isFieldExist(VID_TIMER_LIST))
    {
-      StringList list(msg, VID_TIMER_LIST_BASE, VID_TIMER_COUNT);
-      m_timerCancellations.addAll(&list);
+      m_timerCancellations.addAllFromMessage(msg, VID_TIMER_LIST);
    }
 
    msg.getFieldAsInt32Array(VID_RULE_EVENTS, &m_events);
@@ -1446,7 +1445,7 @@ void EPRule::createMessage(NXCPMessage *msg) const
       msg->setField(fieldId++, a->snoozeTime);
       fieldId += 5;
    }
-   m_timerCancellations.fillMessage(msg, VID_TIMER_LIST_BASE, VID_TIMER_COUNT);
+   msg->setField(VID_TIMER_LIST, m_timerCancellations);
    msg->setFieldFromInt32Array(VID_RULE_EVENTS, &m_events);
    msg->setFieldFromInt32Array(VID_RULE_SOURCES, &m_sources);
    msg->setFieldFromInt32Array(VID_RULE_SOURCE_EXCLUSIONS, &m_sourceExclusions);

@@ -511,7 +511,8 @@ public class NXCPMessage
     */
    public void setField(final long fieldId, final String[] value)
    {
-      setField(new NXCPMessageField(fieldId, (value != null) ? value : new String[0]));
+      if (value != null)
+         setField(new NXCPMessageField(fieldId, value));
    }
 
    /**
@@ -1005,6 +1006,33 @@ public class NXCPMessage
    }
 
    /**
+    * Set binary field from Strings collection.
+    * 
+    * @param fieldId field ID
+    * @param value value to be encoded
+    */
+   public void setFieldStringCollection(final long fieldId, Collection<String> value)
+   {
+      if (value != null)
+      {
+         final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+         final DataOutputStream out = new DataOutputStream(byteStream);
+         try
+         {
+            out.writeShort(value.size());
+            for(String s: value)
+            {
+               out.writeUTF(s);
+            }
+            setField(new NXCPMessageField(fieldId, byteStream.toByteArray()));
+         }
+         catch(IOException e)
+         {
+         }
+      }
+   }
+
+   /**
     * Set fields in message from string map
     * 
     * @param strings string map
@@ -1036,6 +1064,32 @@ public class NXCPMessage
       for(int i = 0; i < count; i++)
          list.add(getFieldAsString(baseId + i));
       return list;
+   }
+
+   /**
+    * Get string list from fields
+    * 
+    * @param baseId base (first element) field ID
+    * @param countId ID of field containing number of elements
+    * @return list of strings
+    */
+   public List<String> getStringListFromFields(long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      String[] array = (var != null) ? var.getAsStringArrayEx() : null;
+      return Arrays.asList(array);      
+   }
+   
+   /**
+    * Get field as array of 32 bit integers
+    * 
+    * @param fieldId field ID
+    * @return field value as array of Long objects
+    */
+   public String[] getFieldAsStringArrayEx(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? var.getAsStringArrayEx() : null;
    }
    
    /**
