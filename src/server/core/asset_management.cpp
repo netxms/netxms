@@ -78,7 +78,7 @@ AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry)
    ConfigEntry *headerRoot = entry.findEntry(_T("enumValues"));
    if (headerRoot != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> enumValues = headerRoot->getSubEntries(_T("enumValue#*"));
+      unique_ptr<ObjectArray<ConfigEntry>> enumValues = headerRoot->getSubEntries(_T("enumValue*"));
       for(int i = 0; i < enumValues->size(); i++)
       {
          const ConfigEntry *config = enumValues->get(i);
@@ -325,9 +325,7 @@ void AssetAttribute::fillEntry(StringBuffer &xml, int id)
       int i = 1;
       for(KeyValuePair<const TCHAR> *v : m_enumValues)
       {
-         xml.append(_T("\t\t\t\t<enumValue id=\""));
-         xml.append(i);
-         xml.append(_T("\">\n\t\t\t\t\t<name>"));
+         xml.append(_T("\t\t\t\t<enumValue>\n\t\t\t\t\t<name>"));
          xml.append(v->key);
          xml.append(_T("</name>\n\t\t\t\t\t<value>"));
          xml.append(v->value);
