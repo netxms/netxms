@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2022 Raden Solutions
+ * Copyright (C) 2022-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.packages.PackageInfo;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledCombo;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -42,7 +42,7 @@ public class EditPackageMetadataDialog extends Dialog
    private LabeledText version;
    private LabeledText platform;
    private LabeledText command;
-   private Combo type;
+   private LabeledCombo type;
 
    /**
     * @param parentShell
@@ -100,7 +100,9 @@ public class EditPackageMetadataDialog extends Dialog
       platform.getTextControl().setTextLimit(63);
       platform.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
 
-      type = WidgetHelper.createLabeledCombo(dialogArea, SWT.NONE, "Type", new GridData(SWT.FILL, SWT.BOTTOM, true, false));
+      type = new LabeledCombo(dialogArea, SWT.NONE, SWT.BORDER | SWT.DROP_DOWN);
+      type.setLabel("Type");
+      type.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, true, false));
       type.add("agent-installer");
       type.add("deb");
       type.add("executable");

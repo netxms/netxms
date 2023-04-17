@@ -30,7 +30,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -45,6 +44,7 @@ import org.netxms.ui.eclipse.actionmanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledCombo;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -58,7 +58,7 @@ public class EditActionDlg extends Dialog
 	private LabeledText recipient;
 	private LabeledText subject;
 	private LabeledText data;
-   private Combo channelName;
+   private LabeledCombo channelName;
 	private Button typeLocalExec;
 	private Button typeRemoteExec;
 	private Button typeRemoteSshExec;
@@ -173,10 +173,12 @@ public class EditActionDlg extends Dialog
 		markDisabled.setText(Messages.get().EditActionDlg_ActionDisabled);
 		markDisabled.setSelection(action.isDisabled());
 
+      channelName = new LabeledCombo(dialogArea, SWT.NONE);
+      channelName.setLabel("Channel name");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-		channelName = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Channel name", gd);
+      channelName.setLayoutData(gd);
       channelName.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -185,7 +187,7 @@ public class EditActionDlg extends Dialog
             subject.setEnabled(notificationChannels.get(channelName.getSelectionIndex()).getConfigurationTemplate().needSubject);
          }
       });
-		
+
 		recipient = new LabeledText(dialogArea, SWT.NONE);
 		recipient.setLabel(getRcptLabel(action.getType()));
 		recipient.setText(action.getRecipientAddress());

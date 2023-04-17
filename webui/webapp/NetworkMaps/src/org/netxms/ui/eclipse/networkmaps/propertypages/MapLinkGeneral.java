@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@ package org.netxms.ui.eclipse.networkmaps.propertypages;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledCombo;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -62,9 +63,9 @@ public class MapLinkGeneral extends PropertyPage
 	private List list;
 	private Button add;
 	private Button remove;
-	private Combo routingAlgorithm;
+   private LabeledCombo routingAlgorithm;
 	private Button checkUseThresholds;
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -105,7 +106,7 @@ public class MapLinkGeneral extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		connector2.setLayoutData(gd);
-		
+
 		final Group colorGroup = new Group(dialogArea, SWT.NONE);
 		colorGroup.setText(Messages.get().MapLinkGeneral_Color);
 		layout = new GridLayout();
@@ -115,8 +116,8 @@ public class MapLinkGeneral extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		colorGroup.setLayoutData(gd);
-		
-		final SelectionListener listener = new SelectionListener() {
+
+      final SelectionListener listener = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -126,12 +127,6 @@ public class MapLinkGeneral extends PropertyPage
 				add.setEnabled(radioColorObject.getSelection());
 				remove.setEnabled(radioColorObject.getSelection());
 				checkUseThresholds.setEnabled(radioColorObject.getSelection());
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		};
 
@@ -243,7 +238,7 @@ public class MapLinkGeneral extends PropertyPage
       script.setLayoutData(gd);
 
 		radioColorCustom = new Button(colorGroup, SWT.RADIO);
-		radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
+      radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
       radioColorCustom.setSelection(object.getColorSource() == NetworkMapLink.COLOR_SOURCE_CUSTOM_COLOR);
 		radioColorCustom.addSelectionListener(listener);
 
@@ -256,16 +251,18 @@ public class MapLinkGeneral extends PropertyPage
 		gd.horizontalIndent = 20;
 		color.getButton().setLayoutData(gd);
 
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		routingAlgorithm = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().MapLinkGeneral_RoutingAlg, gd);
-		routingAlgorithm.add(Messages.get().MapLinkGeneral_MapDefault);
-		routingAlgorithm.add(Messages.get().MapLinkGeneral_Direct);
-		routingAlgorithm.add(Messages.get().MapLinkGeneral_Manhattan);
-		routingAlgorithm.add(Messages.get().MapLinkGeneral_BendPoints);
-		routingAlgorithm.select(object.getRoutingAlgorithm());
-		
+      routingAlgorithm = new LabeledCombo(dialogArea, SWT.NONE);
+      routingAlgorithm.setLabel(Messages.get().MapLinkGeneral_RoutingAlg);
+      routingAlgorithm.add(Messages.get().MapLinkGeneral_MapDefault);
+      routingAlgorithm.add(Messages.get().MapLinkGeneral_Direct);
+      routingAlgorithm.add(Messages.get().MapLinkGeneral_Manhattan);
+      routingAlgorithm.add(Messages.get().MapLinkGeneral_BendPoints);
+      routingAlgorithm.select(object.getRoutingAlgorithm());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      routingAlgorithm.setLayoutData(gd);
+
 		return dialogArea;
 	}
 
@@ -299,7 +296,7 @@ public class MapLinkGeneral extends PropertyPage
       list.remove(index);
       object.removeStatusObjectByIndex(index);
    }
-	  
+
 	/**
 	 * Apply changes
 	 * 
@@ -344,7 +341,7 @@ public class MapLinkGeneral extends PropertyPage
 		return applyChanges(false);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override

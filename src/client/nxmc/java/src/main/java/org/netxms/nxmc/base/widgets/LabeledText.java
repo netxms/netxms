@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,16 +68,16 @@ public class LabeledText extends LabeledControl
    }
 
    /**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#getDefaultControlStyle()
+    * @see org.netxms.nxmc.base.widgets.LabeledControl#getDefaultControlStyle()
     */
    @Override
    protected int getDefaultControlStyle()
    {
       return SWT.BORDER | SWT.SINGLE;
    }
-	
+
    /**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#isExtraVerticalSpaceNeeded(int)
+    * @see org.netxms.nxmc.base.widgets.LabeledControl#isExtraVerticalSpaceNeeded(int)
     */
    @Override
    protected boolean isExtraVerticalSpaceNeeded(int controlStyle)
@@ -89,6 +89,7 @@ public class LabeledText extends LabeledControl
     * Sets the editable state.
     * 
     * @param editable the new editable state
+    * @see org.eclipse.swt.widgets.Text#setEditable(boolean)
     */
    public void setEditable(boolean editable)
    {
@@ -99,14 +100,15 @@ public class LabeledText extends LabeledControl
     * Returns the editable state.
     * 
     * @return whether or not the receiver is editable
+    * @see org.eclipse.swt.widgets.Text#getEditable()
     */
    public boolean isEditable()
    {
       return ((Text)control).getEditable();
    }
-	
+
    /**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#setText(java.lang.String)
+    * @see org.netxms.nxmc.base.widgets.LabeledControl#setText(java.lang.String)
     */
    @Override
 	public void setText(final String newText)
@@ -115,13 +117,24 @@ public class LabeledText extends LabeledControl
 	}
 
    /**
-    * @see org.netxms.ui.eclipse.widgets.LabeledControl#getText()
+    * @see org.netxms.nxmc.base.widgets.LabeledControl#getText()
     */
    @Override
 	public String getText()
 	{
 		return ((Text)control).getText();
 	}
+
+   /**
+    * Set text length limit.
+    *
+    * @param limit max text length
+    * @see org.eclipse.swt.widgets.Text#setTextLimit(int)
+    */
+   public void setTextLimit(int limit)
+   {
+      ((Text)control).setTextLimit(limit);
+   }
 
 	/**
 	 * Get text control
