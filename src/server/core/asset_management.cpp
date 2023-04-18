@@ -750,7 +750,7 @@ unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly)
 /**
  * Prepare contexts for asset property autofill
  */
-unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const shared_ptr<Asset>& asset)
+unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const Asset& asset, const shared_ptr<NetObj>& linkedObject)
 {
    auto contexts = make_unique<ObjectArray<AssetPropertyAutofillContext>>(0, 16, Ownership::True);
    s_schemaLock.readLock();
@@ -759,15 +759,15 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
       if (!a->value->hasScript())
          continue;
 
-      NXSL_VM *vm = CreateServerScriptVM(a->value->getScript(), asset);
+      NXSL_VM *vm = CreateServerScriptVM(a->value->getScript(), linkedObject);
       if (vm != nullptr)
       {
          contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), vm));
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("PrepareAssetPropertyAutofill(%s [%u]): Script load failed"), asset->getName(), asset->getId());
-         ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, asset.get(), 0, _T("Script load failed"), _T("AssetAttribute::%s::autoFill"), a->key);
+         nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("PrepareAssetPropertyAutofill(%s [%u]): Script load failed"), asset.getName(), asset.getId());
+         ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, &asset, 0, _T("Script load failed"), _T("AssetAttribute::%s::autoFill"), a->key);
       }
    }
    s_schemaLock.unlock();

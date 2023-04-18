@@ -379,7 +379,14 @@ void Asset::autoFillProperties()
 {
    nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): start asset auto fill"), m_name, m_id);
 
-   unique_ptr<ObjectArray<AssetPropertyAutofillContext>> autoFillContexts = PrepareAssetPropertyAutofill(self());
+   shared_ptr<NetObj> object = FindObjectById(m_linkedObjectId);
+   if (object == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): asset auto fill aborted - linked object [%u] not found"), m_name, m_id, m_linkedObjectId);
+      return;
+   }
+
+   unique_ptr<ObjectArray<AssetPropertyAutofillContext>> autoFillContexts = PrepareAssetPropertyAutofill(*this, object);
 
    lockProperties();
    StringMap propertiesCopy(m_properties);
@@ -388,6 +395,7 @@ void Asset::autoFillProperties()
    for (AssetPropertyAutofillContext *context : *autoFillContexts)
    {
       NXSL_VM *vm = context->vm;
+      vm->setGlobalVariable("$asset", createNXSLObject(vm));
       vm->setGlobalVariable("$name", vm->createValue(context->name));
       vm->setGlobalVariable("$value", vm->createValue(propertiesCopy.get(context->name)));
       if (vm->run())
@@ -419,5 +427,5 @@ void Asset::autoFillProperties()
          }
       }
    }
-   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): finish"), m_name, m_id);
+   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): asset auto fill completed"), m_name, m_id);
 }

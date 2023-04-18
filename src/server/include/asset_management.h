@@ -145,7 +145,7 @@ bool IsMandatoryAssetProperty(const TCHAR *name);
 bool IsBooleanAssetProperty(const TCHAR *name);
 bool IsValidAssetPropertyName(const TCHAR *name);
 unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly = false);
-unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const shared_ptr<Asset>& asset);
+unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const Asset& asset, const shared_ptr<NetObj>& linkedObject);
 void LinkAsset(const shared_ptr<Asset>& asset, const shared_ptr<NetObj>& object, ClientSession *session);
 void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session);
 void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames);
