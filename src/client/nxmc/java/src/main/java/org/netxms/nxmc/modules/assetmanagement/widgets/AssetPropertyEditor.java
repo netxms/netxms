@@ -198,14 +198,14 @@ public class AssetPropertyEditor extends Composite
                text.setErrorMessage(i18n.tr("This property is mandatory"));
                return false;
             }
-            return WidgetHelper.validateTextInput(text, new IPAddressValidator(false));
+            return WidgetHelper.validateTextInput(text, new IPAddressValidator(true));
          case MAC_ADDRESS:
             if (attribute.isMandatory() && text.getText().isBlank())
             {
                text.setErrorMessage(i18n.tr("This property is mandatory"));
                return false;
             }
-            return WidgetHelper.validateTextInput(text, new MacAddressValidator(false));
+            return WidgetHelper.validateTextInput(text, new MacAddressValidator(true));
          case NUMBER:
             if (attribute.isMandatory() && text.getText().isBlank())
             {
@@ -222,6 +222,10 @@ public class AssetPropertyEditor extends Composite
             if (attribute.getRangeMax() != 0 && attribute.getRangeMin() != 0)
             {
                String value = text.getText().trim();
+               if (value.isEmpty())
+               {
+                  return true; // Explicitly allow empty values
+               }
                if (value.length() < attribute.getRangeMin())
                {
                   text.setErrorMessage(i18n.tr("Value is too short"));
@@ -239,6 +243,10 @@ public class AssetPropertyEditor extends Composite
             {
                text.setErrorMessage(i18n.tr("This property is mandatory"));
                return false;
+            }
+            if (text.getText().isBlank())
+            {
+               return true; // Explicitly allow empty values
             }
             try
             {
