@@ -70,11 +70,12 @@ public abstract class ObjectView extends ViewWithContext
    protected void postContentCreate()
    {
       super.postContentCreate();
+
       clientListener = new SessionListener() {         
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if (n.getCode() == SessionNotification.OBJECT_CHANGED && getObjectId() == n.getSubCode())
+            if ((n.getCode() == SessionNotification.OBJECT_CHANGED) && ((n.getSubCode() == getObjectId()) || isRelatedObject(n.getSubCode())))
             {
                getDisplay().asyncExec(new Runnable() {
                   @Override
@@ -87,7 +88,6 @@ public abstract class ObjectView extends ViewWithContext
             }
          }
       };
-
       session.addListener(clientListener);
    }
 
@@ -98,6 +98,17 @@ public abstract class ObjectView extends ViewWithContext
     */
    protected void onObjectUpdate(AbstractObject object)
    {
+   }
+
+   /**
+    * Check if object with given ID is related and changes to that object should be passed to <code>onObjectUpdate</code>.
+    * 
+    * @param objectId object ID to test
+    * @return true if object is related
+    */
+   protected boolean isRelatedObject(long objectId)
+   {
+      return false;
    }
 
    /**

@@ -1917,6 +1917,12 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_DELETE_ASSET_PROPERTY:
          deleteAssetProperty(*request);
          break;
+      case CMD_LINK_ASSET:
+         linkAsset(*request);
+         break;
+      case CMD_UNLINK_ASSET:
+         unlinkAsset(*request);
+         break;
       default:
          if ((code >> 8) == 0x11)
          {
@@ -16736,6 +16742,119 @@ void ClientSession::deleteAssetProperty(const NXCPMessage& request)
       {
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
          writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on deleting asset property %s"), name.cstr());
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Link asset with another object
+ *
+ * Called by:
+ * CMD_LINK_ASSET
+ *
+ * Expected input parameters:
+ * VID_ASSET_ID      asset object id
+ * VID_OBJECT_ID     other object id
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::linkAsset(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(request.getFieldAsUInt32(VID_ASSET_ID), OBJECT_ASSET));
+   shared_ptr<NetObj> newTarget = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID));
+   if ((asset != nullptr) && (newTarget != nullptr))
+   {
+      shared_ptr<NetObj> oldTarget = FindObjectById(asset->getLinkedObjectId());
+      if ((asset->getLinkedObjectId() == 0) || (oldTarget != nullptr))
+      {
+         if (asset->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) && newTarget->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
+             ((oldTarget == nullptr) || oldTarget->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+         {
+            if (IsValidAssetLinkTargetClass(newTarget->getObjectClass()))
+            {
+               LinkAsset(asset, newTarget, this);
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               response.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+            }
+         }
+         else
+         {
+            writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), _T("Access denied on linking this asset to object \"%s\" [%u]"), newTarget->getName(), newTarget->getId());
+            writeAuditLog(AUDIT_OBJECTS, false, newTarget->getId(), _T("Access denied on linking this object to asset \"%s\" [%u]"), asset->getName(), asset->getId());
+            if (oldTarget != nullptr)
+               writeAuditLog(AUDIT_OBJECTS, false, oldTarget->getId(), _T("Access denied on unlinking this object from asset \"%s\" [%u]"), asset->getName(), asset->getId());
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+      }
+   }
+   else
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Remove asset's with another object
+ *
+ * Called by:
+ * CMD_UNLINK_ASSET
+ *
+ * Expected input parameters:
+ * VID_ASSET_ID      asset object id
+ *
+ * Return values:
+ * VID_RCC                          Request completion code
+ */
+void ClientSession::unlinkAsset(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(request.getFieldAsUInt32(VID_ASSET_ID), OBJECT_ASSET));
+   if (asset != nullptr)
+   {
+      if (asset->getLinkedObjectId() != 0)
+      {
+         shared_ptr<NetObj> target = FindObjectById(asset->getLinkedObjectId());
+         if (target != nullptr)
+         {
+            if (asset->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) && target->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+            {
+               UnlinkAsset(asset, this);
+               response.setField(VID_RCC, RCC_SUCCESS);
+            }
+            else
+            {
+               writeAuditLog(AUDIT_OBJECTS, false, asset->getId(), _T("Access denied on unlinking this asset from object \"%s\" [%u]"), target->getName(), target->getId());
+               writeAuditLog(AUDIT_OBJECTS, false, target->getId(), _T("Access denied on unlinking this object from asset \"%s\" [%u]"), asset->getName(), asset->getId());
+               response.setField(VID_RCC, RCC_ACCESS_DENIED);
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_INTERNAL_ERROR);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_SUCCESS);
       }
    }
    else

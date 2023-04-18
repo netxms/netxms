@@ -13874,9 +13874,41 @@ public class NXCSession
    public void deleteAssetProperty(long objectId, String name) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_ASSET_PROPERTY);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
       msg.setField(NXCPCodes.VID_NAME, name);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());         
-   }   
+   }
+
+   /**
+    * Link asset object to given object. If asset is already linked to another object, that link will be removed.
+    * 
+    * @param assetId asset object ID
+    * @param objectId other object ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void linkAsset(long assetId, long objectId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_LINK_ASSET);
+      msg.setFieldUInt32(NXCPCodes.VID_ASSET_ID, assetId);
+      msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Unlink asset from object it is currently linked to. Will do nothing if asset is not linked.
+    * 
+    * @param assetId asset object ID
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void unlinkAsset(long assetId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UNLINK_ASSET);
+      msg.setFieldUInt32(NXCPCodes.VID_ASSET_ID, assetId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 }

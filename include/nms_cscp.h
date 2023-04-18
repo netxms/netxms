@@ -403,8 +403,8 @@ typedef struct
 #define CMD_DELETE_ASSET_ATTRIBUTE        0x00A6
 #define CMD_SET_ASSET_PROPERTY            0x00A7
 #define CMD_DELETE_ASSET_PROPERTY         0x00A8
-// unused: #define CMD_UPLOAD_SUBMAP_BK_IMAGE        0x00A9
-// unused: #define CMD_GET_SUBMAP_BK_IMAGE           0x00AA
+#define CMD_LINK_ASSET                    0x00A9
+#define CMD_UNLINK_ASSET                  0x00AA
 // unused: #define CMD_GET_MODULE_LIST               0x00AB
 // unused: #define CMD_UPDATE_MODULE_INFO            0x00AC
 #define CMD_COPY_USER_VARIABLE            0x00AD

@@ -67,6 +67,7 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
+import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
@@ -134,7 +135,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Image imageEditConfig;
    private Image imageExecuteScript;
    private Image imageTakeScreenshot;
-   private ObjectAction<?> actionForcePolicyDeployment;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
    private Set<ISelectionChangedListener> selectionListeners = new HashSet<>();
 
@@ -153,8 +153,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       imageEditConfig = ResourceManager.getImage("icons/object-views/agent-config.png");
       imageExecuteScript = ResourceManager.getImage("icons/object-views/script-executor.png");
       imageTakeScreenshot = ResourceManager.getImage("icons/screenshot.png");
-
-      actionForcePolicyDeployment = new ForcedPolicyDeploymentAction(new ViewPlacement(this), this);
    }
 
    /**
@@ -228,6 +226,10 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          if ((componentId == null) || session.isServerComponentRegistered(componentId))
             addMainView(v.createView());
       }
+
+      // Standard action contributions
+      actionContributions.add(new ForcedPolicyDeploymentAction(new ViewPlacement(this), this));
+      actionContributions.add(new LinkAssetToObjectAction(new ViewPlacement(this), this));
 
       ViewPlacement viewPlacement = new ViewPlacement(this);
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -346,11 +348,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
                }
             });
          }
-      }
-
-      if (actionForcePolicyDeployment.isValidForSelection(selection))
-      {
-         addObjectToolBarItem(actionForcePolicyDeployment);
       }
 
       for(ObjectAction<?> a : actionContributions)

@@ -122,7 +122,7 @@ public class AssetView extends ObjectView
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();
+            updateAttribute();
          }
       });
 
@@ -267,7 +267,7 @@ public class AssetView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.setAssetProperty(getObjectId(), name, value);
+            session.setAssetProperty(getAssetId(), name, value);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -310,7 +310,7 @@ public class AssetView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.setAssetProperty(getObjectId(), name, value);
+            session.setAssetProperty(getAssetId(), name, value);
          }
 
          @Override
@@ -343,7 +343,7 @@ public class AssetView extends ObjectView
          protected void run(IProgressMonitor monitor) throws Exception
          {
             for(String a : attributes)
-               session.deleteAssetProperty(getObjectId(), a);
+               session.deleteAssetProperty(getAssetId(), a);
          }
 
          @Override
@@ -419,12 +419,35 @@ public class AssetView extends ObjectView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isRelatedObject(long)
+    */
+   @Override
+   protected boolean isRelatedObject(long objectId)
+   {
+      return objectId == getAssetId();
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      super.onObjectChange(object);
       refresh();
-   }   
+   }
+
+   /**
+    * Get ID of asset object this view works with.
+    *
+    * @return ID of asset object this view works with
+    */
+   private long getAssetId()
+   {
+      AbstractObject object = getObject();
+      if (object == null)
+         return 0;
+      if (object instanceof Asset)
+         return object.getObjectId();
+      return object.getAssetId();
+   }
 }

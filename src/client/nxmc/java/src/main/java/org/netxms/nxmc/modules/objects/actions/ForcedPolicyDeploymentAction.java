@@ -41,7 +41,6 @@ public class ForcedPolicyDeploymentAction extends ObjectAction<Template>
    /**
     * Create action for forced policy deployment.
     *
-    * @param text action's text
     * @param viewPlacement view placement information
     * @param selectionProvider associated selection provider
     */
@@ -60,7 +59,7 @@ public class ForcedPolicyDeploymentAction extends ObjectAction<Template>
 		final NXCSession session = Registry.getSession();		
 		for(final Template template : objects)
 		{
-         new Job(String.format(i18n.tr("Force agent policy deployment"), template.getObjectName()), null, getMessageArea()) {
+         new Job(String.format(i18n.tr("Running forced agent policy deployment for template \"%s\""), template.getObjectName()), null, getMessageArea()) {
 				@Override
 				protected void run(IProgressMonitor monitor) throws Exception
 				{

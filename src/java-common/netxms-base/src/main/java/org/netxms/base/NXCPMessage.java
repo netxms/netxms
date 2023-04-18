@@ -470,6 +470,17 @@ public class NXCPMessage
 		setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INTEGER, (long)value));
 	}
 
+   /**
+    * Set field of type INT32 (unsigned)
+    * 
+    * @param fieldId field ID
+    * @param value integer value to encode
+    */
+   public void setFieldUInt32(final long fieldId, final long value)
+   {
+      setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INTEGER, value));
+   }
+
 	/**
     * Set field of type INT16
     * 

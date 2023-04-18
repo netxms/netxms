@@ -24,6 +24,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
@@ -71,7 +72,7 @@ public class GeneralInfo extends TableElement
 	{
 		final AbstractObject object = getObject();
       final NXCSession session = Registry.getSession();
-		
+
       addPair(i18n.tr("ID"), Long.toString(object.getObjectId()));
 		if (object.getGuid() != null)
          addPair(i18n.tr("GUID"), object.getGuid().toString());
@@ -312,6 +313,11 @@ public class GeneralInfo extends TableElement
             Cluster cluster = (Cluster)object;
             if (session.isZoningEnabled())
                addPair(i18n.tr("Zone UIN"), getZoneName(cluster.getZoneId()));
+            break;
+         case AbstractObject.OBJECT_ASSET:
+            Asset asset = (Asset)object;
+            if (asset.getLinkedObjectId() != 0)
+               addPair(i18n.tr("Linked to"), session.getObjectNameWithAlias(asset.getLinkedObjectId()));
             break;
 			default:
 				break;
