@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1139,7 +1139,7 @@ BOOL Initialize()
 
    if (!InitCryptoLib(s_enabledCiphers))
    {
-      nxlog_write(NXLOG_ERROR, _T("Failed to initialize cryptografy module"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Failed to initialize cryptography module"));
       return FALSE;
    }
 
@@ -1154,7 +1154,7 @@ BOOL Initialize()
 #else /* not _WITH_ENCRYPTION */
    if ((g_dwFlags & AF_REQUIRE_ENCRYPTION) && !(g_dwFlags & AF_SUBAGENT_LOADER))
    {
-      nxlog_write(NXLOG_ERROR, _T("Encryption set as required in configuration but agent was build without encryption support"));
+      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Encryption set as required in configuration but agent was build without encryption support"));
       return false;
    }
 #endif
@@ -1205,19 +1205,19 @@ BOOL Initialize()
          g_agentId = uuid::generate();
          WriteMetadata(_T("AgentId"), g_agentId.toString(agentIdText));
          SaveAgentIdToFile();
-         nxlog_write(NXLOG_INFO, _T("New agent ID generated"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("New agent ID generated"));
       }
       else
       {
          g_agentId = backupAgentId;
-         nxlog_write(NXLOG_INFO, _T("Agent ID recovered from backup file"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Agent ID recovered from backup file"));
       }
    }
    else if (backupAgentId.isNull() || !g_agentId.equals(backupAgentId))
    {
       SaveAgentIdToFile();
    }
-   nxlog_write(NXLOG_INFO, _T("Agent ID is %s"), g_agentId.toString(agentIdText));
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Agent ID is %s"), g_agentId.toString(agentIdText));
 
    TCHAR hostname[256];
    if (GetLocalHostName(hostname, 256, true) == nullptr)
@@ -1225,12 +1225,12 @@ BOOL Initialize()
       // Fallback to non-FQDN host name
       GetLocalHostName(hostname, 256, false);
    }
-   nxlog_write(NXLOG_INFO, _T("Local host name is \"%s\""), hostname);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Local host name is \"%s\""), hostname);
 
    // Set system name to host name if not set in config
    if (g_systemName[0] == 0)
       GetLocalHostName(g_systemName, MAX_OBJECT_NAME, false);
-   nxlog_write(NXLOG_INFO, _T("Using system name \"%s\""), g_systemName);
+   nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Using system name \"%s\""), g_systemName);
 
    shared_ptr<Config> config = g_config;
 
@@ -1293,7 +1293,7 @@ BOOL Initialize()
       }
       else
       {
-         nxlog_write(NXLOG_INFO, _T("Arbitrary command execution disabled"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Arbitrary command execution disabled"));
       }
 
 	   // Load platform subagents
@@ -1309,19 +1309,19 @@ BOOL Initialize()
    // Wait for external process if requested
 	if (s_processToWaitFor[0] != 0)
 	{
-	   DebugPrintf(1, _T("Waiting for process %s"), s_processToWaitFor);
+	   nxlog_debug_tag(DEBUG_TAG_STARTUP, 1, _T("Waiting for process %s"), s_processToWaitFor);
 		if (!WaitForProcess(s_processToWaitFor))
-	      nxlog_write(NXLOG_ERROR, _T("Call to WaitForProcess failed for process %s"), s_processToWaitFor);
+	      nxlog_write_tag(NXLOG_ERROR, DEBUG_TAG_STARTUP, _T("Call to WaitForProcess failed for process %s"), s_processToWaitFor);
 	}
 
 	// Load other subagents
    if (m_pszSubagentList != nullptr)
    {
       TCHAR *curr, *next;
-      for(curr = next = m_pszSubagentList; next != NULL && *curr != 0; curr = next + 1)
+      for(curr = next = m_pszSubagentList; next != nullptr && *curr != 0; curr = next + 1)
       {
          next = _tcschr(curr, _T('\n'));
-         if (next != NULL)
+         if (next != nullptr)
             *next = 0;
          Trim(curr);
          LoadSubAgent(curr);
@@ -1334,7 +1334,7 @@ BOOL Initialize()
    {
       const TCHAR *action = s_actionList->get(i);
       if (!AddActionFromConfig(action))
-         nxlog_write(NXLOG_WARNING, _T("Unable to add action \"%s\""), action);
+         nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add action \"%s\""), action);
    }
    delete s_actionList;
 
@@ -1404,7 +1404,7 @@ BOOL Initialize()
             *next = 0;
          Trim(curr);
          if (!AddExternalTable(curr))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external table \"%s\""), curr);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external table \"%s\""), curr);
       }
       MemFree(s_externalTablesConfig);
    }
@@ -1417,7 +1417,7 @@ BOOL Initialize()
       {
          ConfigEntry *e = extTables->get(i);
          if (!AddExternalTable(e))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external table \"%s\""), e->getName());
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external table \"%s\""), e->getName());
       }
    }
 
@@ -1432,7 +1432,7 @@ BOOL Initialize()
             *next = 0;
          Trim(curr);
          if (!AddParametersProvider(curr))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external parameters provider \"%s\""), curr);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external parameters provider \"%s\""), curr);
       }
       MemFree(s_externalMetricProviders);
    }
@@ -1450,7 +1450,7 @@ BOOL Initialize()
                *next = 0;
             Trim(curr);
             if (!AddExternalSubagent(curr))
-               nxlog_write(NXLOG_WARNING, _T("Unable to add external subagent \"%s\""), curr);
+               nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external subagent \"%s\""), curr);
          }
          MemFree(s_externalSubAgentsList);
       }
@@ -1461,7 +1461,7 @@ BOOL Initialize()
       {
          const TCHAR *name = entries->get(i)->getName() + 4;
          if (!AddExternalSubagent(name))
-            nxlog_write(NXLOG_WARNING, _T("Unable to add external subagent \"%s\""), name);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Unable to add external subagent \"%s\""), name);
       }
 
       // Parse application agents list
@@ -1481,9 +1481,9 @@ BOOL Initialize()
 
 	   BYTE hwid[HARDWARE_ID_LENGTH];
 	   if (GetSystemHardwareId(hwid))
-	      nxlog_write(NXLOG_INFO, _T("System hardware ID is %s"), BinToStr(hwid, HARDWARE_ID_LENGTH, agentIdText));
+	      nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("System hardware ID is %s"), BinToStr(hwid, HARDWARE_ID_LENGTH, agentIdText));
 	   else
-         nxlog_write(NXLOG_INFO, _T("System hardware ID is unknown"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("System hardware ID is unknown"));
    }
 
    ThreadSleep(1);
@@ -1542,7 +1542,7 @@ BOOL Initialize()
       }
       else
       {
-         nxlog_write(NXLOG_INFO, _T("TCP listener is disabled"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("TCP listener is disabled"));
       }
       StartSessionAgentConnector();
       if (s_startupFlags & SF_ENABLE_PUSH_CONNECTOR)
@@ -1551,7 +1551,7 @@ BOOL Initialize()
       }
       else
       {
-         nxlog_write(NXLOG_INFO, _T("Push connector is disabled"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Push connector is disabled"));
       }
       if (s_startupFlags & SF_ENABLE_EVENT_CONNECTOR)
       {
@@ -1559,7 +1559,7 @@ BOOL Initialize()
       }
       else
       {
-         nxlog_write(NXLOG_INFO, _T("Event connector is disabled"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Event connector is disabled"));
       }
       if (s_startupFlags & SF_ENABLE_CONTROL_CONNECTOR)
 	   {
@@ -1567,7 +1567,7 @@ BOOL Initialize()
       }
       else
       {
-         nxlog_write(NXLOG_INFO, _T("Control connector is disabled"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_COMM, _T("Control connector is disabled"));
       }
 
    	if (s_startupFlags & SF_REGISTER)
@@ -1607,7 +1607,7 @@ BOOL Initialize()
 #ifdef _WIN32
       if (g_config->getValueAsBoolean(_T("/CORE/AutoStartUserAgent"), false))
       {
-         nxlog_debug(NXLOG_INFO, _T("Starting user agents for all logged in users"));
+         nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Starting user agents for all logged in users"));
 
          TCHAR binDir[MAX_PATH];
          GetNetXMSDirectory(nxDirBin, binDir);
@@ -1623,7 +1623,7 @@ BOOL Initialize()
          }
          else
          {
-            nxlog_write(NXLOG_WARNING, _T("Signature validation failed for user agent executable \"%s\""), command.cstr() + 1);
+            nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_STARTUP, _T("Signature validation failed for user agent executable \"%s\""), command.cstr() + 1);
          }
       }
       if (g_config->getValueAsBoolean(_T("/CORE/UserAgentWatchdog"), false))
@@ -1641,7 +1641,7 @@ BOOL Initialize()
  */
 void Shutdown()
 {
-	DebugPrintf(2, _T("Shutdown() called"));
+	nxlog_debug_tag(_T("shutdown"), 2, _T("Shutdown() called"));
 	if (s_startupFlags & SF_ENABLE_WATCHDOG)
 		StopWatchdog();
 
@@ -1764,7 +1764,7 @@ static void DoRestartActions(uint32_t oldPID)
       HANDLE hProcess;
 
       hProcess = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, oldPID);
-      if (hProcess != NULL)
+      if (hProcess != nullptr)
       {
          if (WaitForSingleObject(hProcess, 60000) == WAIT_TIMEOUT)
          {

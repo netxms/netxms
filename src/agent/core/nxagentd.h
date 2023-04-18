@@ -67,7 +67,9 @@
 #define NXAGENTD_SYSLOG_NAME          _T("nxagentd")
 #endif
 
+#define DEBUG_TAG_COMM           _T("comm")
 #define DEBUG_TAG_LOCALDB        _T("db.agent")
+#define DEBUG_TAG_STARTUP        _T("startup")
 
 #define DEFAULT_CONFIG_SECTION   _T("CORE")
 
