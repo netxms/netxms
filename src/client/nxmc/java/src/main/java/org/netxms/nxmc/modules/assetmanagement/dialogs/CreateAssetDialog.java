@@ -154,7 +154,11 @@ public class CreateAssetDialog extends Dialog
 
       properties = new HashMap<>();
       for(AssetPropertyEditor e : propertyEditors)
-         properties.put(e.getAttribute().getName(), e.getValue());
+      {
+         String value = e.getValue();
+         if (!value.isEmpty())
+            properties.put(e.getAttribute().getName(), e.getValue());
+      }
 
       super.okPressed();
    }

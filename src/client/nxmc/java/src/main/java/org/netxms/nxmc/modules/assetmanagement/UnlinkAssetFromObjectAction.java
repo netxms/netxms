@@ -22,29 +22,24 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.window.Window;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.client.objects.Rack;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
-import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Action for linking asset to object
+ * Action for unlinking asset from object
  */
-public class LinkAssetToObjectAction extends ObjectAction<Asset>
+public class UnlinkAssetFromObjectAction extends ObjectAction<Asset>
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(LinkAssetToObjectAction.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(UnlinkAssetFromObjectAction.class);
 
    /**
     * Create action for linking asset to object.
@@ -52,39 +47,35 @@ public class LinkAssetToObjectAction extends ObjectAction<Asset>
     * @param viewPlacement view placement information
     * @param selectionProvider associated selection provider
     */
-   public LinkAssetToObjectAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
+   public UnlinkAssetFromObjectAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Asset.class, i18n.tr("&Link to..."), viewPlacement, selectionProvider);
-      setImageDescriptor(ResourceManager.getImageDescriptor("icons/link-objects.png"));
+      super(Asset.class, i18n.tr("&Unlink"), viewPlacement, selectionProvider);
+      setImageDescriptor(ResourceManager.getImageDescriptor("icons/disconnect.png"));
    }
 
    /**
     * @see org.netxms.nxmc.modules.objects.actions.ObjectAction#run(java.util.List)
     */
    @Override
-   protected void run(List<Asset> objects)
+   protected void run(final List<Asset> objects)
    {
-      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createDataCollectionTargetSelectionFilter());
-      if (dlg.open() != Window.OK)
+      if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Unlink Asset"),
+            (objects.size() == 1) ? i18n.tr("Asset \"{0}\" will be unlinked. Are you sure?", objects.get(0).getObjectName()) :
+                  i18n.tr("{0} assets will be uninked. Are you sure?", Integer.toString(objects.size()))))
          return;
 
-      final AbstractObject object = dlg.getSelectedObjects().get(0);
-      if ((!(object instanceof Rack) && !(object instanceof DataCollectionTarget)) || (object instanceof Cluster))
-         return; // Incompatible object selected
-
-      final Asset asset = objects.get(0);
       final NXCSession session = Registry.getSession();
-      new Job(i18n.tr("Linking asset \"{0}\" to object \"{1}\"", asset.getObjectName(), object.getObjectName()), null, getMessageArea()) {
+      new Job(i18n.tr("Unlinking assets"), null, getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.linkAsset(asset.getObjectId(), object.getObjectId());
+            for(Asset a : objects)
+               session.unlinkAsset(a.getObjectId());
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  getMessageArea().addMessage(MessageArea.SUCCESS,
-                        i18n.tr("{0} \"{1}\" successfully linked with asset \"{2}\"", object.getObjectClassName(), object.getObjectName(), asset.getObjectName()));
+                  getMessageArea().addMessage(MessageArea.SUCCESS, i18n.tr("Assets unlinked"));
                }
             });
          }
@@ -92,7 +83,7 @@ public class LinkAssetToObjectAction extends ObjectAction<Asset>
          @Override
          protected String getErrorMessage()
          {
-            return i18n.tr("Cannot link asset \"{0}\"", asset.getObjectName());
+            return i18n.tr("Cannot unlink asset");
          }
       }.start();
    }
@@ -103,6 +94,18 @@ public class LinkAssetToObjectAction extends ObjectAction<Asset>
    @Override
    public boolean isValidForSelection(IStructuredSelection selection)
    {
-      return (selection.size() == 1) && (selection.getFirstElement() instanceof Asset);
+      if (selection.isEmpty())
+         return false;
+
+      int linkedAssets = 0;
+      for(Object e : selection.toList())
+      {
+         if (!(e instanceof Asset))
+            return false;
+         if (((Asset)e).getLinkedObjectId() != 0)
+            linkedAssets++;
+      }
+
+      return linkedAssets > 0;
    }
 }

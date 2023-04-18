@@ -280,7 +280,7 @@ public class AssetPropertyEditor extends Composite
          case OBJECT_REFERENCE:
             return Long.toString(objectSelector.getObjectId());
          default:
-            return text.getText();
+            return text.getText().trim();
       }
    }
 

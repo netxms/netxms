@@ -11944,7 +11944,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
 /**
  * Get all ICMP statistics for given target
  */
-bool Node::getIcmpStatistics(const TCHAR *target, UINT32 *last, UINT32 *min, UINT32 *max, UINT32 *avg, UINT32 *loss) const
+bool Node::getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss) const
 {
    lockProperties();
    IcmpStatCollector *collector = (m_icmpStatCollectors != nullptr) ? m_icmpStatCollectors->get(target) : nullptr;

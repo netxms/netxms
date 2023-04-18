@@ -354,6 +354,25 @@ NXSL_Value *Asset::getPropertyValueForNXSL(NXSL_VM *vm, const TCHAR *name) const
 }
 
 /**
+ * Dump properties to server console
+ */
+void Asset::dumpProperties(ServerConsole *console) const
+{
+   lockProperties();
+   if (!m_properties.isEmpty())
+   {
+      console->print(_T("   Properties:\n"));
+      for(KeyValuePair<const TCHAR> *p : m_properties)
+         console->printf(_T("      %-24s = %s\n"), p->key, p->value);
+   }
+   else
+   {
+      console->print(_T("   No properties defined\n"));
+   }
+   unlockProperties();
+}
+
+/**
  * Fill asset properties with autofill scripts
  */
 void Asset::autoFillProperties()

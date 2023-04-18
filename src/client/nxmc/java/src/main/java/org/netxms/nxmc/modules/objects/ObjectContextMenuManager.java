@@ -46,6 +46,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
@@ -65,6 +66,8 @@ import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
+import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
+import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
@@ -112,6 +115,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemoveNode;
    private ObjectAction<?> actionCreateInterfaceDCI;
    private ObjectAction<?> actionForcePolicyInstall;
+   private ObjectAction<?> actionLinkAssetToObject;
+   private ObjectAction<?> actionUnlinkAssetFromObject;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -326,6 +331,8 @@ public class ObjectContextMenuManager extends MenuManager
       ViewPlacement viewPlacement = new ViewPlacement(view);
       actionCreateInterfaceDCI = new CreateInterfaceDciAction(viewPlacement, selectionProvider);
       actionForcePolicyInstall = new ForcedPolicyDeploymentAction(viewPlacement, selectionProvider);
+      actionLinkAssetToObject = new LinkAssetToObjectAction(viewPlacement, selectionProvider);
+      actionUnlinkAssetFromObject = new UnlinkAssetFromObjectAction(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -357,6 +364,12 @@ public class ObjectContextMenuManager extends MenuManager
             add(createMenu);
             add(new Separator());
          }
+         if (object instanceof Asset)
+         {
+            add(actionLinkAssetToObject);
+            add(actionUnlinkAssetFromObject);
+            add(new Separator());
+         }
          if ((object instanceof Container) || (object instanceof ServiceRoot))
          {
             add(actionBind);
@@ -381,6 +394,11 @@ public class ObjectContextMenuManager extends MenuManager
       else if (actionForcePolicyInstall.isValidForSelection(selection))
       {
          add(actionForcePolicyInstall);
+         add(new Separator());
+      }
+      else if (actionUnlinkAssetFromObject.isValidForSelection(selection))
+      {
+         add(actionUnlinkAssetFromObject);
          add(new Separator());
       }
       if (isBindToMenuAllowed(selection))

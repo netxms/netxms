@@ -1853,7 +1853,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
             StringList *collectors = static_cast<const Node&>(object).getIcmpStatCollectors();
             for(int i = 0; i < collectors->size(); i++)
             {
-               UINT32 last, min, max, avg, loss;
+               uint32_t last, min, max, avg, loss;
                if (static_cast<const Node&>(object).getIcmpStatistics(collectors->get(i), &last, &min, &max, &avg, &loss))
                {
                   ConsolePrintf(console, _T("   ICMP statistics (%s):\n"), collectors->get(i));
@@ -1911,25 +1911,18 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
                   static_cast<const Zone&>(object).getUIN());
          static_cast<const Zone&>(object).dumpState(console);
          break;
-   }
-}
-
-/**
- * Enumeration callback for DumpObjects
- */
-static void DumpObjectCallback(NetObj *object, void *data)
-{
-	struct __dump_objects_data *dd = static_cast<__dump_objects_data*>(data);
-   if ((dd->filter == nullptr) || MatchString(dd->filter, object->getName(), false))
-   {
-      DumpObject(dd->console, *object);
+      case OBJECT_ASSET:
+         ConsolePrintf(console, _T("   Linked object.......: %u\n"),
+                  static_cast<const Asset&>(object).getLinkedObjectId());
+         static_cast<const Asset&>(object).dumpProperties(console);
+         break;
    }
 }
 
 /**
  * Dump objects to debug console
  */
-void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
+void DumpObjects(ServerConsole *console, const TCHAR *filter)
 {
    bool findById = false;
    if (filter != nullptr)
@@ -1941,11 +1934,27 @@ void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
          shared_ptr<NetObj> object = FindObjectByGUID(guid);
          if (object != nullptr)
          {
-            DumpObject(pCtx, *object);
+            DumpObject(console, *object);
          }
          else
          {
-            pCtx->printf(_T("Object with GUID %s not found\n"), filter);
+            console->printf(_T("Object with GUID %s not found\n"), filter);
+         }
+      }
+
+      TCHAR *eptr;
+      uint32_t id = _tcstol(filter, &eptr, 0);
+      if ((id != 0) && (*eptr == 0))
+      {
+         findById = true;
+         shared_ptr<NetObj> object = FindObjectById(id);
+         if (object != nullptr)
+         {
+            DumpObject(console, *object);
+         }
+         else
+         {
+            console->printf(_T("Object with ID %u not found\n"), id);
          }
       }
    }
@@ -1953,9 +1962,14 @@ void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
    if (!findById)
    {
       __dump_objects_data data;
-      data.console = pCtx;
+      data.console = console;
       data.filter = filter;
-      g_idxObjectById.forEach(DumpObjectCallback, &data);
+      g_idxObjectById.forEach(
+         [console, filter] (NetObj *object) -> void
+         {
+            if ((filter == nullptr) || MatchString(filter, object->getName(), false))
+               DumpObject(console, *object);
+         });
    }
 }
 

@@ -3638,7 +3638,7 @@ public:
 
    unique_ptr<NetworkMapObjectList> buildInternalCommunicationTopology();
 
-   bool getIcmpStatistics(const TCHAR *target, UINT32 *last, UINT32 *min, UINT32 *max, UINT32 *avg, UINT32 *loss) const;
+   bool getIcmpStatistics(const TCHAR *target, uint32_t *last, uint32_t *min, uint32_t *max, uint32_t *avg, uint32_t *loss) const;
    DataCollectionError getIcmpStatistic(const TCHAR *param, IcmpStatFunction function, TCHAR *value) const;
    StringList *getIcmpStatCollectors() const;
    void updateIcmpStatisticPeriod(uint32_t period);
@@ -4329,6 +4329,7 @@ public:
 
    bool isSamePropertyValue(const TCHAR *attr, const TCHAR *value) const;
    NXSL_Value *getPropertyValueForNXSL(NXSL_VM *vm, const TCHAR *name) const;
+   void dumpProperties(ServerConsole *console) const;
 };
 
 /**
@@ -4971,7 +4972,7 @@ uint32_t ModifyObjectQuery(const NXCPMessage& msg, uint32_t *queryId);
 uint32_t DeleteObjectQuery(uint32_t queryId);
 
 bool LoadObjects();
-void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
+void DumpObjects(ServerConsole *console, const TCHAR *filter);
 
 bool NXCORE_EXPORTABLE CreateObjectAccessSnapshot(uint32_t userId, int objClass);
 

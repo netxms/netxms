@@ -801,6 +801,7 @@ void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session)
    shared_ptr<NetObj> object = FindObjectById(asset->getLinkedObjectId());
    if (object != nullptr)
    {
+      asset->setLinkedObjectId(0);
       object->setAssetId(0);
       session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link with asset %s [%u] removed"), asset->getName(), asset->getId());
       session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with object %s [%u] removed"), object->getName(), object->getId());
