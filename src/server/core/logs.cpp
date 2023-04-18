@@ -55,6 +55,20 @@ static NXCORE_LOG s_logs[] =
 			{ nullptr, nullptr, 0, 0 }
 		}
 	},
+   { _T("AssetChaneLog"), _T("asset_change_log"), _T("record_id"), _T("asset_id"), SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG,
+      {
+         { _T("record_id"), _T("Record ID"), LC_INTEGER, 0 },
+         { _T("operation_timestamp"), _T("Timestamp"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { _T("asset_id"), _T("Asset"), LC_OBJECT_ID, 0 },
+         { _T("attribute_name"), _T("Attribute name"), LC_TEXT, 0 },
+         { _T("operation"), _T("Operation"), LC_ASSET_OPERATION, 0 },
+         { _T("old_value"), _T("Old value"), LC_TEXT, 0 },
+         { _T("new_value"), _T("New value"), LC_TEXT, 0 },
+         { _T("user_id"), _T("User"), LC_USER_ID, 0 },
+         { _T("linked_object_id"), _T("Linked object"), LC_OBJECT_ID, 0 },
+         { nullptr, nullptr, 0, 0 }
+      }
+   },
 	{ _T("AuditLog"), _T("audit_log"), _T("record_id"), _T("object_id"), SYSTEM_ACCESS_VIEW_AUDIT_LOG,
 		{
 			{ _T("record_id"), _T("Record ID"), LC_INTEGER, 0 },

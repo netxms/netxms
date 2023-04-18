@@ -339,6 +339,8 @@ static void HouseKeeper()
          break;
       if (!DeleteExpiredLogRecords(_T("maintenance journal"), _T("maintenance_journal"), _T("creation_time"), _T("MaintenanceJournal.RetentionTime"), hdb, cycleStartTime))
          break;
+      if (!DeleteExpiredLogRecords(_T("asset change log"), _T("asset_change_log"), _T("operation_timestamp"), _T("AssetChangeLog.RetentionTime"), hdb, cycleStartTime))
+         break;
 
 		// Remove outdated audit log records
 		int32_t retentionTime = ConfigReadULong(_T("AuditLog.RetentionTime"), 90);

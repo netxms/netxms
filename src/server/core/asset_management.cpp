@@ -338,6 +338,105 @@ void AssetAttribute::createExportRecord(StringBuffer &xml)
    xml.append(_T("\t\t</attribute>\n"));
 }
 
+/****************
+ * Asset logging
+ ****************/
+
+static VolatileCounter64 s_assetChangeLogId = 0; // Last used asset log ID
+
+/**
+ * Get last SNMP Trap id
+ */
+uint64_t GetLastAssetChangeLogId()
+{
+   return s_assetChangeLogId;
+}
+
+/**
+ * Initialize trap handling
+ */
+static void InitAssetChangeLogId()
+{
+   uint64_t id = ConfigReadInt64(_T("LastAssetChangeLogId"), 0);
+   if (id > s_assetChangeLogId)
+      s_assetChangeLogId = id;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM asset_change_log"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_assetChangeLogId = std::max(DBGetFieldUInt64(hResult, 0, 0), static_cast<uint64_t>(s_assetChangeLogId));
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Asset data to be logged
+ */
+struct AssetChangeLogData
+{
+   uint32_t assetId;
+   String attributeName;
+   AssetOperation operation;
+   String oldValue;
+   String newValue;
+   uint32_t userId;
+   uint32_t objectId;
+
+   AssetChangeLogData(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation,
+         const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
+};
+
+/**
+ * Constructor
+ */
+AssetChangeLogData::AssetChangeLogData(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation,
+      const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId) : attributeName(attributeName), oldValue(oldValue), newValue(newValue)
+{
+   this->assetId = assetId;
+   this->operation = operation;
+   this->userId = userId;
+   this->objectId = objectId;
+}
+
+/**
+ * Saves operation with asset to log
+ */
+static void WriteAssetChangeLogInternal(AssetChangeLogData *data)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+         g_dbSyntax == DB_SYNTAX_TSDB ?
+            _T("INSERT INTO asset_change_log (record_id,operation_timestamp,asset_id,attribute_name,operation,old_value,new_value,user_id,linked_object_id) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?)") :
+            _T("INSERT INTO asset_change_log (record_id,operation_timestamp,asset_id,attribute_name,operation,old_value,new_value,user_id,linked_object_id) VALUES (?,?,?,?,?,?,?,?,?)"));
+
+   if (hStmt != nullptr)
+   {
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, InterlockedIncrement64(&s_assetChangeLogId));
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(time(nullptr)));
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, data->assetId);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, data->attributeName, DB_BIND_STATIC, 63);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(data->operation));
+      DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, data->oldValue, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, data->newValue, DB_BIND_STATIC, 2000);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, data->userId);
+      DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, data->objectId);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
+
+   delete data;
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation,
+                           const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId)
+{
+   AssetChangeLogData *data = new AssetChangeLogData(assetId, attributeName, operation, oldValue, newValue, userId, objectId);
+   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("AssetChaneLog"), WriteAssetChangeLogInternal, data);
+}
+
 /**
  * Asset management schema
  */
@@ -384,6 +483,8 @@ void LoadAssetManagementSchema()
 
    DBConnectionPoolReleaseConnection(db);
    nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 2, _T("%d asset attributes loaded"), s_schema.size());
+
+   InitAssetChangeLogId();
 }
 
 /**
@@ -786,6 +887,7 @@ void LinkAsset(const shared_ptr<Asset>& asset, const shared_ptr<NetObj>& object,
 
    asset->setLinkedObjectId(object->getId());
    object->setAssetId(asset->getId());
+   WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Link, nullptr, nullptr, session->getUserId(), object->getId());
    session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Asset linked with object %s [%u]"), object->getName(), object->getId());
    session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Object linked with asset %s [%u]"), asset->getName(), asset->getId());
 }
@@ -803,6 +905,7 @@ void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session)
    {
       asset->setLinkedObjectId(0);
       object->setAssetId(0);
+      WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Unlink, nullptr, nullptr, session->getUserId(), object->getId());
       session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link with asset %s [%u] removed"), asset->getName(), asset->getId());
       session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with object %s [%u] removed"), object->getName(), object->getId());
    }

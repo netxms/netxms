@@ -42,6 +42,7 @@ public class LogColumn
    public static final int LC_COMPLETION_STATUS = 13;
    public static final int LC_ACTION_CODE       = 14;
    public static final int LC_ATM_TXN_CODE      = 15;
+   public static final int LC_ASSET_OPERATION   = 16;
 
 	private String name;
 	private String description;

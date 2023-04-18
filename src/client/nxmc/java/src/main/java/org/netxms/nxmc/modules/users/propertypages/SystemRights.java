@@ -77,7 +77,7 @@ public class SystemRights extends PropertyPage
 	protected Control createContents(Composite parent)
 	{
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, i18n.tr("Manage all scheduled tasks")));
-      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, i18n.tr("Assert management attributes")));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_AM_ATTRIBUTE_MANAGE, i18n.tr("Asset management attributes")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_CONFIGURE_TRAPS, i18n.tr("Configure SNMP traps")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, i18n.tr("Configure event templates")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_EPP, i18n.tr("Edit event processing policy")));
@@ -116,6 +116,7 @@ public class SystemRights extends PropertyPage
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, i18n.tr("Unlink helpdesk tickets")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, i18n.tr("Manage user scheduled tasks")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, "View all alarm categories"));
+      attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG, i18n.tr("View asset change log")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, i18n.tr("View audit log")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, i18n.tr("View event templates configuration")));
       attributes.add(new AccessAttribute(UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, i18n.tr("View event log")));

@@ -52,6 +52,7 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
    private final String[] ALARM_STATE_TEXTS = getAlarmStateTexts(i18n);
    private final String[] ALARM_HD_STATE_TEXTS = getAlarmHDStateTexts(i18n);
    private final String[] EVENT_ORIGIN_TEXTS = getEventOriginTexts(i18n);
+   private final String[] ASSET_OPERATION_TEXTS = getAssetOperationTexts(i18n);
 
 	private LogColumn[] columns;
 	private NXCSession session;
@@ -257,6 +258,16 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
             {
                return null;
             }
+         case LogColumn.LC_ASSET_OPERATION:
+            try
+            {
+               int operation = Integer.parseInt(value);
+               return ASSET_OPERATION_TEXTS[operation];               
+            }
+            catch(Exception e)
+            {
+               return value;
+            }
 			default:
 				return value;
 		}
@@ -312,5 +323,18 @@ public class LogLabelProvider extends LabelProvider implements ITableLabelProvid
       if (i18n == null)
          i18n = LocalizationHelper.getI18n(LogLabelProvider.class);
       return new String[] { i18n.tr("System"), i18n.tr("Agent"), i18n.tr("Client"), i18n.tr("Syslog"), i18n.tr("SNMP"), i18n.tr("Script"), i18n.tr("Remote Server"), i18n.tr("Windows Event") };
+   }
+
+   /**
+    * Get event origin texts
+    *
+    * @param i18n i18n object or null
+    * @return event origin texts
+    */
+   public static final String[] getAssetOperationTexts(I18n i18n)
+   {
+      if (i18n == null)
+         i18n = LocalizationHelper.getI18n(LogLabelProvider.class);
+      return new String[] { i18n.tr("Create"), i18n.tr("Delete"), i18n.tr("Update"), i18n.tr("Link"), i18n.tr("Unlink") };
    }
 }

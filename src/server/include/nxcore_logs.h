@@ -44,6 +44,7 @@
 #define LC_COMPLETION_STATUS  13
 #define LC_ACTION_CODE        14
 #define LC_ATM_TXN_CODE       15
+#define LC_ASSET_OPERATION    16
 
 /**
  * Column filter types

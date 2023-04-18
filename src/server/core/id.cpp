@@ -32,6 +32,7 @@ int64_t GetLastNotificationId();
 int64_t GetLastSnmpTrapId();
 uint64_t GetNextSyslogId();
 uint64_t GetNextWinEventId();
+uint64_t GetLastAssetChangeLogId();
 void LoadLastEventId(DB_HANDLE hdb);
 
 /**
@@ -475,4 +476,5 @@ void SaveCurrentFreeId()
    ConfigWriteUInt64(_T("FirstFreeWinEventId"), GetNextWinEventId(), true, false, true);
    ConfigWriteInt64(_T("LastActionExecutionLogRecordId"), GetLastActionExecutionLogId(), true, false, true);
    ConfigWriteInt64(_T("LastNotificationId"), GetLastNotificationId(), true, false, true);
+   ConfigWriteUInt64(_T("LastAssetChangeLogId"), GetLastAssetChangeLogId(), true, false, true);
 }

@@ -2652,3 +2652,35 @@ CREATE TABLE asset_properties
    value varchar(2000) null,
    PRIMARY KEY(asset_id,attr_name)
 ) TABLE_TYPE;
+
+/**
+ * Asset change log
+ */
+CREATE TABLE asset_change_log (
+   record_id SQL_INT64 not null,
+#ifdef DB_TSDB
+   operation_timestamp timestamptz not null,
+#else
+   operation_timestamp integer not null,
+#endif
+   asset_id integer not null,
+   attribute_name varchar(63) null,
+   operation integer not null,
+   old_value varchar(2000) null,
+   new_value varchar(2000) null,
+   user_id integer not null,
+   linked_object_id integer not null,
+#ifdef DB_TSDB
+  PRIMARY KEY(record_id,operation_timestamp)
+#else
+  PRIMARY KEY(record_id)
+#endif
+) TABLE_TYPE;
+
+CREATE INDEX idx_srv_asset_change_log_timestamp ON asset_change_log(operation_timestamp);
+CREATE INDEX idx_srv_asset_change_log_asset_id ON asset_change_log(asset_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('asset_change_log', 'operation_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
+

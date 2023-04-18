@@ -151,4 +151,20 @@ void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session);
 void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames);
 void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite);
 
+/*
+ * Operation with asset
+ */
+enum class AssetOperation
+{
+   Create = 0,
+   Delete = 1,
+   Update = 2,
+   Link = 3,
+   Unlink = 4
+};
+
+//Logging function
+void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation,
+                           const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
+
 #endif

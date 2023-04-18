@@ -6023,6 +6023,11 @@ void ClientSession::createObject(const NXCPMessage& request)
                            DC_POLLING_SCHEDULE_DEFAULT, nullptr, DC_RETENTION_DEFAULT, nullptr, static_pointer_cast<Node>(parent),
                            dciDescription));
                   }
+                  else if (object->getObjectClass() == OBJECT_ASSET)
+                  {
+                     for (KeyValuePair<const TCHAR> *pair : assetProperties)
+                        WriteAssetChangeLog(object->getId(), pair->key, AssetOperation::Create, nullptr, pair->value, m_dwUserId, 0);
+                  }
                }
 
                TCHAR *comments = request.getFieldAsString(VID_COMMENTS);
@@ -16659,20 +16664,22 @@ void ClientSession::setAssetProperty(const NXCPMessage& request)
       {
          if (object->getObjectClass() == OBJECT_ASSET)
          {
-            json_t *oldValue = object->toJson();
+            json_t *oldObjectValues = object->toJson();
             SharedString value = request.getFieldAsSharedString(VID_VALUE);
+            SharedString oldValue = static_cast<Asset&>(*object).getProperty(name);
             std::pair<uint32_t, String> result = static_cast<Asset&>(*object).setProperty(name, value);
             if (result.first == RCC_SUCCESS)
             {
-               json_t *newValue = object->toJson();
-               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Asset property %s changed"), name.cstr());
-               json_decref(newValue);
+               json_t *newObjectValues = object->toJson();
+               WriteAssetChangeLog(object->getId(), name, oldValue.isNull() ? AssetOperation::Create : AssetOperation::Update, oldValue, value, m_dwUserId, static_cast<Asset&>(*object).getLinkedObjectId());
+               writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldObjectValues, newObjectValues, _T("Asset property %s changed"), name.cstr());
+               json_decref(newObjectValues);
             }
             else
             {
                response.setField(VID_ERROR_TEXT, result.second);
             }
-            json_decref(oldValue);
+            json_decref(oldObjectValues);
             response.setField(VID_RCC, result.first);
          }
          else
@@ -16725,6 +16732,7 @@ void ClientSession::deleteAssetProperty(const NXCPMessage& request)
                json_t *newValue = object->toJson();
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Asset property %s deleted"), name.cstr());
                json_decref(newValue);
+               WriteAssetChangeLog(object->getId(), name, AssetOperation::Delete, nullptr, nullptr, m_dwUserId, static_cast<Asset&>(*object).getLinkedObjectId());
             }
             else
             {

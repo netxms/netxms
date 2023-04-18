@@ -204,12 +204,6 @@ uint32_t Asset::modifyFromMessageInternal(const NXCPMessage& msg)
    if (msg.isFieldExist(VID_LINKED_OBJECT))
       m_linkedObjectId = msg.getFieldAsUInt32(VID_LINKED_OBJECT);
 
-   if (msg.isFieldExist(VID_NUM_ASSET_PROPERTIES))
-   {
-      m_properties.clear();
-      m_properties.addAllFromMessage(msg, VID_ASSET_PROPERTIES_BASE, VID_NUM_ASSET_PROPERTIES);
-   }
-
    return super::modifyFromMessageInternal(msg);
 }
 
@@ -250,6 +244,17 @@ json_t *Asset::toJson()
 void Asset::calculateCompoundStatus(bool forcedRecalc)
 {
    m_status = STATUS_NORMAL;
+}
+
+/**
+ * Get property
+ */
+SharedString Asset::getProperty(const TCHAR *attr)
+{
+   lockProperties();
+   SharedString result = m_properties.get(attr);
+   unlockProperties();
+   return result;
 }
 
 /**
@@ -310,7 +315,9 @@ void Asset::deleteCachedProperty(const TCHAR *name)
       m_properties.remove(name);
    unlockProperties();
    if (changed)
+   {
       setModified(MODIFY_RUNTIME);  // Will initiate notification of clients
+   }
 }
 
 /**
@@ -401,6 +408,7 @@ void Asset::autoFillProperties()
       if (vm->run())
       {
          const TCHAR *newValue = vm->getResult()->getValueAsCString();
+         SharedString oldValue = getProperty(context->name);
          std::pair<uint32_t, String> result = setProperty(context->name, newValue);
          if ((result.first != RCC_SUCCESS) && (result.first != RCC_UNKNOWN_ATTRIBUTE))
          {
@@ -410,6 +418,10 @@ void Asset::autoFillProperties()
             String displayName = GetAssetAttributeDisplayName(context->name);
             PostSystemEventWithNames(EVENT_ASSET_AUTO_UPDATE_FAILED, m_id, "ssisss", parameterNames, context->name,
                   displayName.cstr(), context->dataType, propertiesCopy.get(context->name), newValue, result.second.cstr());
+         }
+         if (result.first == RCC_SUCCESS && _tcscmp(oldValue, newValue))
+         {
+            WriteAssetChangeLog(m_id, context->name, oldValue.isNull() ? AssetOperation::Create : AssetOperation::Update, oldValue, newValue, 0, getLinkedObjectId());
          }
       }
       else

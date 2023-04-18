@@ -24,6 +24,77 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 44.7 to 44.8
+ */
+static bool H_UpgradeFromV7()
+{
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE asset_change_log (")
+         _T("   record_id $SQL:INT64 not null,")
+         _T("   operation_timestamp timestamptz not null,")
+         _T("   asset_id integer not null,")
+         _T("   attribute_name varchar(63) null,")
+         _T("   operation integer not null,")
+         _T("   old_value varchar(2000) null,")
+         _T("   new_value varchar(2000) null,")
+         _T("   user_id integer not null,")
+         _T("   linked_object_id integer not null,")
+         _T("PRIMARY KEY(record_id,operation_timestamp))")));
+      CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('asset_change_log', 'operation_timestamp', chunk_time_interval => interval '86400 seconds')")));
+   }
+   else
+   {
+      CHK_EXEC(CreateTable(
+         _T("CREATE TABLE asset_change_log (")
+         _T("   record_id $SQL:INT64 not null,")
+         _T("   operation_timestamp integer not null,")
+         _T("   asset_id integer not null,")
+         _T("   attribute_name varchar(63) null,")
+         _T("   operation integer not null,")
+         _T("   old_value varchar(2000) null,")
+         _T("   new_value varchar(2000) null,")
+         _T("   user_id integer not null,")
+         _T("   linked_object_id integer not null,")
+         _T("PRIMARY KEY(record_id))")));
+   }
+
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_srv_asset_change_log_timestamp ON asset_change_log(operation_timestamp)")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_srv_asset_change_log_asset_id ON asset_change_log(asset_id)")));
+
+   CHK_EXEC(CreateConfigParam(_T("AssetChangeLog.RetentionTime"),
+         _T("90"),
+         _T("Retention time in days for the records in asset change log. All records older than specified will be deleted by housekeeping process."),
+         _T("days"),
+         'I', true, false, false, false));
+
+
+   // Update access rights for predefined "Admins" group
+   DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=1073741825"));
+   if (hResult != nullptr)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         uint64_t access = DBGetFieldUInt64(hResult, 0, 0);
+         access |= SYSTEM_ACCESS_VIEW_ASSET_CHANGE_LOG;
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("UPDATE user_groups SET system_access=") UINT64_FMT _T(" WHERE id=1073741825"), access);
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_ignoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SetMinorSchemaVersion(8));
+   return true;
+}
+
+/**
  * Upgrade from 44.6 to 44.7
  */
 static bool H_UpgradeFromV6()
@@ -233,6 +304,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 7,  44, 8,  H_UpgradeFromV7  },
    { 6,  44, 7,  H_UpgradeFromV6  },
    { 5,  44, 6,  H_UpgradeFromV5  },
    { 4,  44, 5,  H_UpgradeFromV4  },

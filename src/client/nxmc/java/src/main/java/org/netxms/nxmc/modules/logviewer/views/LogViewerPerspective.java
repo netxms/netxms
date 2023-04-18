@@ -50,6 +50,7 @@ public class LogViewerPerspective extends Perspective
       super("Logs", i18n.tr("Logs"), ResourceManager.getImage("icons/perspective-logs.png"));
 
       // Register default logs
+      registerStandardLogViewer(i18n.tr("Asset Changes"), "AssetChaneLog");
       registerStandardLogViewer(i18n.tr("Audit"), "AuditLog");
       registerStandardLogViewer(i18n.tr("Events"), "EventLog");
       registerStandardLogViewer(i18n.tr("Maintenance Journal"), "MaintenanceJournal");

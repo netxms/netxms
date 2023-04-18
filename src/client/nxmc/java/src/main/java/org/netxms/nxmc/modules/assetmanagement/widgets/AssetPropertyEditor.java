@@ -192,6 +192,12 @@ public class AssetPropertyEditor extends Composite
                combo.setErrorMessage(i18n.tr("This property is mandatory"));
             }
             return true;
+         case BOOLEAN:
+            if ((combo.getSelectionIndex() == -1) && attribute.isMandatory())
+            {
+               combo.setErrorMessage(i18n.tr("This property is mandatory"));
+            }
+            return true;
          case IP_ADDRESS:
             if (attribute.isMandatory() && text.getText().isBlank())
             {
