@@ -1434,5 +1434,5 @@ public class NXCPCodes
    public static final long VID_OSPF_AREA_LIST_BASE = 0x20000000L;
    public static final long VID_OSPF_NEIGHBOR_LIST_BASE = 0x30000000L;
    public static final long VID_AM_ATTRIBUTES_BASE = 0x10000000L;
-   public static final long VID_AM_ENUM_MAP_BASE = 0x10000000L;
+   public static final long VID_AM_ENUM_MAP_BASE = 0x20000000L;
 }

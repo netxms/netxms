@@ -16,41 +16,42 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.serverconfig.dialogs;
+package org.netxms.nxmc.modules.assetmanagement.dialogs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.NXCSession;
 import org.netxms.client.asset.AssetAttribute;
-import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Dialog for selecting asset attributes definition
  */
 public class SelectAssetAttributeDlg extends Dialog 
 {
-   private TableViewer viewer;
-   private List<AssetAttribute> selection;
+   private final I18n i18n = LocalizationHelper.getI18n(SelectAssetAttributeDlg.class);
+
+   private SortableTableViewer viewer;
+   private List<AssetAttribute> selectedAttributes;
 
    /**
     * @param parentShell
@@ -59,20 +60,6 @@ public class SelectAssetAttributeDlg extends Dialog
    public SelectAssetAttributeDlg(Shell parentShell)
    {
       super(parentShell);
-      setShellStyle(getShellStyle() | SWT.RESIZE);
-   }
-
-   /**
-    * Save dialog settings
-    */
-   private void saveSettings()
-   {
-      Point size = getShell().getSize();
-      Point location = getShell().getLocation();
-      PreferenceStore settings = PreferenceStore.getInstance();
-
-      settings.set("SelectAssetAttributeDlg.location", location); 
-      settings.set("SelectAssetAttributeDlg.size", size); 
    }
 
    /**
@@ -82,10 +69,7 @@ public class SelectAssetAttributeDlg extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Asset Attribute Definition Selection");
-      PreferenceStore settings = PreferenceStore.getInstance();
-      newShell.setSize(settings.getAsPoint("SelectAssetAttributeDlg.size", 400, 250)); 
-      newShell.setLocation(settings.getAsPoint("SelectAssetAttributeDlg.location", 100, 100));
+      newShell.setText("Select Asset Attributes");
    }
 
    /**
@@ -95,80 +79,42 @@ public class SelectAssetAttributeDlg extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       final Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogArea.setLayout(layout);
-      
-      viewer = new TableViewer(dialogArea, SWT.FULL_SELECTION | SWT.BORDER | SWT.MULTI);
+
+      final String[] names = { i18n.tr("Name"), i18n.tr("Display name") };
+      final int[] widths = { 200, 300 };
+      viewer = new SortableTableViewer(dialogArea, names, widths, 0, SWT.UP, SWT.FULL_SELECTION | SWT.BORDER | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setLabelProvider(new LabelProvider() {
-         @Override
-         public String getText(Object element)
-         {
-            return ((AssetAttribute)element).getName();
-         }
-      });
+      viewer.setLabelProvider(new AttributeListLabelProvider());
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((AssetAttribute)e1).getName().compareToIgnoreCase(((AssetAttribute)e2).getName());
+            int columnIndex = (Integer)((TableViewer)viewer).getTable().getSortColumn().getData("ID");
+            int result = (columnIndex == 0) ?
+               ((AssetAttribute)e1).getName().compareToIgnoreCase(((AssetAttribute)e2).getName()) :
+               ((AssetAttribute)e1).getEffectiveDisplayName().compareToIgnoreCase(((AssetAttribute)e2).getEffectiveDisplayName());
+            return (((TableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
          }
       });
-      
+
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
+      gd.minimumWidth = 300;
       gd.heightHint = 400;
       viewer.getControl().setLayoutData(gd);
-      
-      getAssetManagementAttributes();
-      
+
+      viewer.setInput(Registry.getSession().getAssetManagementSchema().values());
+      viewer.packColumns();
+
       return dialogArea;
-   }
-
-   /**
-    * Get all web service definitions
-    */
-   private void getAssetManagementAttributes()
-   {
-      final NXCSession session = Registry.getSession();
-      Job job = new Job("Get web service definitions", null) {
-         @Override
-         protected void run(IProgressMonitor monitor) throws Exception
-         {
-            final Map<String, AssetAttribute> definitions = session.getAssetManagementSchema();
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  viewer.setInput(definitions.values().toArray());
-               }
-            });
-         }
-
-         @Override
-         protected String getErrorMessage()
-         {
-            return "Cannot get web service definitions";
-         }
-      };
-      job.setUser(false);
-      job.start();
-   }
-
-   /**
-    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-    */
-   @Override
-   protected void cancelPressed()
-   {
-      saveSettings();
-      super.cancelPressed();
    }
 
    /**
@@ -177,18 +123,17 @@ public class SelectAssetAttributeDlg extends Dialog
    @Override
    protected void okPressed()
    {
-      IStructuredSelection viewerSelection = viewer.getStructuredSelection();
-      if (viewerSelection.isEmpty())
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.isEmpty())
       {
-         MessageDialogHelper.openWarning(getShell(), "Warning", "Web service definition should be selected");
+         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please select at least one attribute"));
          return;
       }
 
-      selection = new ArrayList<AssetAttribute>();
-      for(Object o : viewerSelection.toList())
-         selection.add((AssetAttribute)o);
+      selectedAttributes = new ArrayList<AssetAttribute>(selection.size());
+      for(Object o : selection.toList())
+         selectedAttributes.add((AssetAttribute)o);
 
-      saveSettings();
       super.okPressed();
    }
 
@@ -197,8 +142,33 @@ public class SelectAssetAttributeDlg extends Dialog
     * 
     * @return
     */
-   public List<AssetAttribute> getSelection()
+   public List<AssetAttribute> getSelectedAttributes()
    {      
-      return selection;
+      return selectedAttributes;
+   }
+
+   /**
+    * Label provider for attribute list
+    */
+   private static class AttributeListLabelProvider extends LabelProvider implements ITableLabelProvider
+   {
+      /**
+       * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+       */
+      @Override
+      public Image getColumnImage(Object element, int columnIndex)
+      {
+         return null;
+      }
+
+      /**
+       * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+       */
+      @Override
+      public String getColumnText(Object element, int columnIndex)
+      {
+         AssetAttribute attribute = (AssetAttribute)element;
+         return (columnIndex == 0) ? attribute.getName() : attribute.getEffectiveDisplayName();
+      }
    }
 }

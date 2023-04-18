@@ -16,12 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.serverconfig;
+package org.netxms.nxmc.modules.assetmanagement;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.serverconfig.views.AssetManagementSchemaManager;
+import org.netxms.nxmc.modules.assetmanagement.views.AssetManagementSchemaManager;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.services.ConfigurationPerspectiveElement;
 import org.xnap.commons.i18n.I18n;

@@ -4,6 +4,7 @@ org.netxms.nxmc.modules.agentmanagement.PackagesConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.TunnelConfigurationElement
 org.netxms.nxmc.modules.agentmanagement.UserAgentNotificationElement
 org.netxms.nxmc.modules.alarms.AlarmCategoryConfiguratorElement
+org.netxms.nxmc.modules.assetmanagement.AssetManagementSchemaElement
 org.netxms.nxmc.modules.datacollection.GraphTemplateElement
 org.netxms.nxmc.modules.datacollection.SummaryTablesElement
 org.netxms.nxmc.modules.datacollection.WebServiceDefinitionsElement
@@ -20,7 +21,6 @@ org.netxms.nxmc.modules.objects.ObjectCategoriesConfigurationElement
 org.netxms.nxmc.modules.objects.ObjectQueriesConfigurationElement
 org.netxms.nxmc.modules.objects.PhysicalLinksConfigurationElement
 org.netxms.nxmc.modules.objecttools.ObjectToolsEditorElement
-org.netxms.nxmc.modules.serverconfig.AssetManagementSchemaElement
 org.netxms.nxmc.modules.serverconfig.ExportFileBuilderElement
 org.netxms.nxmc.modules.serverconfig.NetworkCredentialsElement
 org.netxms.nxmc.modules.serverconfig.NetworkDiscoveryElement

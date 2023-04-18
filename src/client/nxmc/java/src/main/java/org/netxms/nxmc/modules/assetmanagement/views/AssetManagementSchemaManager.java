@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.serverconfig.views;
+package org.netxms.nxmc.modules.assetmanagement.views;
 
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -48,12 +48,12 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.serverconfig.propertypages.AssetAttributeAutoFillScript;
-import org.netxms.nxmc.modules.serverconfig.propertypages.AssetAttributeEnums;
-import org.netxms.nxmc.modules.serverconfig.propertypages.AssetAttributeGeneral;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeComparator;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeFilter;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeListLabelProvider;
+import org.netxms.nxmc.modules.assetmanagement.propertypages.AssetAttributeAutoFillScript;
+import org.netxms.nxmc.modules.assetmanagement.propertypages.AssetAttributeEnums;
+import org.netxms.nxmc.modules.assetmanagement.propertypages.AssetAttributeGeneral;
+import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetAttributeComparator;
+import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetAttributeFilter;
+import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetAttributeListLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -77,7 +77,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
    public static final int COLUMN_RANGE_MAX = 7;
    public static final int COLUMN_SYSTEM_TYPE = 8;
 
-   Map<String, AssetAttribute> attributes = null;
+   Map<String, AssetAttribute> schema = null;
    private NXCSession session;
    private SessionListener listener;
    private SortableTableViewer viewer;
@@ -141,7 +141,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
                   public void run()
                   {
                      AssetAttribute attr = (AssetAttribute)n.getObject();
-                     attributes.put(attr.getName(), attr);
+                     schema.put(attr.getName(), attr);
                      viewer.refresh();
                   }
                });
@@ -153,7 +153,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
                   public void run()
                   {
                      String attrName = (String)n.getObject();
-                     attributes.remove(attrName);
+                     schema.remove(attrName);
                      viewer.refresh();
                   }
                });
@@ -161,7 +161,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          }
       };
       session.addListener(listener);
-      
+
       createActions();
       createContextMenu();
       refresh();
@@ -257,7 +257,6 @@ public class AssetManagementSchemaManager extends ConfigurationView
             return i18n.tr("Cannot update asset management schema");
          }
       }.start();
-      
    }
 
    /**
@@ -267,7 +266,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
    {
       final AssetAttribute attr = new AssetAttribute();
       if (!showAttributePropertyPage(attr, true))
-         return;      
+         return;
 
       new Job(i18n.tr("Updating asset management schema"), this) {
          @Override
@@ -367,8 +366,8 @@ public class AssetManagementSchemaManager extends ConfigurationView
    public void refresh()
    {
       // getAssetManagementSchema() will return cached schema so background job is not needed
-      attributes = session.getAssetManagementSchema();
-      viewer.setInput(attributes.values());
+      schema = session.getAssetManagementSchema();
+      viewer.setInput(schema.values());
    }
 
    /**

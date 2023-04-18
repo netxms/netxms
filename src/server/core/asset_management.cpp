@@ -50,6 +50,9 @@ AssetAttribute::AssetAttribute(const NXCPMessage &msg) : m_enumValues(msg, VID_A
 {
    m_name = msg.getFieldAsString(VID_NAME);
    m_displayName = msg.getFieldAsString(VID_DISPLAY_NAME);
+   m_dataType = static_cast<AMDataType>(msg.getFieldAsUInt32(VID_DATA_TYPE));
+   m_isMandatory = msg.getFieldAsBoolean(VID_IS_MANDATORY);
+   m_isUnique = msg.getFieldAsBoolean(VID_IS_UNIQUE);
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
    setScript(msg.getFieldAsString(VID_SCRIPT));
@@ -75,10 +78,10 @@ AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry)
    m_rangeMax = entry.getSubEntryValueAsInt(_T("rangeMax"), 0 , 0);
    m_systemType = static_cast<AMSystemType>(entry.getSubEntryValueAsInt(_T("systemType"), 0 , 0));
 
-   ConfigEntry *headerRoot = entry.findEntry(_T("enumValues"));
-   if (headerRoot != nullptr)
+   ConfigEntry *enumValuesRoot = entry.findEntry(_T("enumValues"));
+   if (enumValuesRoot != nullptr)
    {
-      unique_ptr<ObjectArray<ConfigEntry>> enumValues = headerRoot->getSubEntries(_T("enumValue*"));
+      unique_ptr<ObjectArray<ConfigEntry>> enumValues = enumValuesRoot->getSubEntries(_T("enumValue"));
       for(int i = 0; i < enumValues->size(); i++)
       {
          const ConfigEntry *config = enumValues->get(i);
@@ -293,22 +296,20 @@ json_t *AssetAttribute::toJson() const
 }
 
 /**
- * Create asset attribute entry in XML
+ * Create asset attribute entry in export XML document
  */
-void AssetAttribute::fillEntry(StringBuffer &xml, int id)
+void AssetAttribute::createExportRecord(StringBuffer &xml)
 {
-   xml.append(_T("\t\t<assetAttribute id=\""));
-   xml.append(id);
-   xml.append(_T("\">\n\t\t\t<name>"));
+   xml.append(_T("\t\t<attribute>\n\t\t\t<name>"));
    xml.append(m_name);
    xml.append(_T("</name>\n\t\t\t<displayName>"));
    xml.append(m_displayName);
    xml.append(_T("</displayName>\n\t\t\t<dataType>"));
    xml.append(static_cast<int32_t>(m_dataType));
    xml.append(_T("</dataType>\n\t\t\t<isMandatory>"));
-   xml.append(m_isMandatory);
+   xml.append(m_isMandatory ? 1 : 0);
    xml.append(_T("</isMandatory>\n\t\t\t<isUnique>"));
-   xml.append(m_isUnique);
+   xml.append(m_isUnique ? 1 : 0);
    xml.append(_T("</isUnique>\n\t\t\t<script>"));
    xml.append(m_autofillScriptSource);
    xml.append(_T("</script>\n\t\t\t<rangeMin>"));
@@ -322,7 +323,6 @@ void AssetAttribute::fillEntry(StringBuffer &xml, int id)
    if (m_enumValues.size() > 0)
    {
       xml.append(_T("\t\t\t<enumValues>\n"));
-      int i = 1;
       for(KeyValuePair<const TCHAR> *v : m_enumValues)
       {
          xml.append(_T("\t\t\t\t<enumValue>\n\t\t\t\t\t<name>"));
@@ -331,12 +331,11 @@ void AssetAttribute::fillEntry(StringBuffer &xml, int id)
          xml.append(v->value);
          xml.append(_T("</value>\n"));
          xml.append(_T("\t\t\t\t</enumValue>\n"));
-         i++;
       }
       xml.append(_T("\t\t\t</enumValues>\n"));
    }
 
-   xml.append(_T("\t\t</assetAttribute>\n"));
+   xml.append(_T("\t\t</attribute>\n"));
 }
 
 /**
@@ -809,42 +808,42 @@ void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session)
 }
 
 /**
- * Create asset attribute record
+ * Export asset management schema
  */
-void CreateAssetAttributeDefinitions(StringBuffer &xml, const StringList &names)
+void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames)
 {
-   s_schemaLock.writeLock();
-   for (int i = 0; i < names.size(); i++)
+   s_schemaLock.readLock();
+   for (int i = 0; i < attributeNames.size(); i++)
    {
-      AssetAttribute *attribute = s_schema.get(names.get(i));
+      AssetAttribute *attribute = s_schema.get(attributeNames.get(i));
       if (attribute != nullptr)
       {
-         attribute->fillEntry(xml, i + 1);
+         attribute->createExportRecord(xml);
       }
    }
    s_schemaLock.unlock();
 }
 
 /**
- * Import web service definition configuration
+ * Import asset attributes
  */
-void ImportAssetAttributeDefinitions(const ConfigEntry& root, bool overwrite)
+void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite)
 {
    s_schemaLock.writeLock();
 
-   unique_ptr<ObjectArray<ConfigEntry>> assetAttrDef = root.getSubEntries(_T("assetAttribute#*"));
+   unique_ptr<ObjectArray<ConfigEntry>> assetAttrDef = root.getSubEntries(_T("attribute"));
    for(int i = 0; i < assetAttrDef->size(); i++)
    {
       const ConfigEntry *config = assetAttrDef->get(i);
       const TCHAR *name = config->getSubEntryValue(_T("name"));
       if (name == nullptr)
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: no name specified"));
+         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: no name specified"));
          continue;
       }
       else if (!RegexpMatch(name, _T("^[A-Za-z$_][A-Za-z0-9$_]*$"), true))
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: invalid name format"));
+         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: invalid name format"));
          continue;
       }
 
@@ -853,11 +852,11 @@ void ImportAssetAttributeDefinitions(const ConfigEntry& root, bool overwrite)
       {
          if (attribute == nullptr)
          {
-            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: asset attribute definition \"%s\" created"), name);
+            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: asset attribute \"%s\" created"), name);
          }
          else
          {
-            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: found existing asset attribute definition \"%s\" (overwrite)"), name);
+            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: found existing asset attribute \"%s\" (overwrite)"), name);
          }
 
          attribute = new AssetAttribute(name, *config);
@@ -872,8 +871,9 @@ void ImportAssetAttributeDefinitions(const ConfigEntry& root, bool overwrite)
       }
       else
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetAttributeDefinitions: found existing asset attribute definition \"%s\" (skipping)"), name);
+         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: found existing asset attribute \"%s\" (skipping)"), name);
       }
    }
+
    s_schemaLock.unlock();
 }

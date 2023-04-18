@@ -67,7 +67,7 @@ public class AssetPropertyEditor extends Composite
 
       setLayout(new FillLayout());
 
-      String attributeDisplayName = attribute.getActualName();
+      String attributeDisplayName = attribute.getEffectiveDisplayName();
       switch(attribute.getDataType())
       {
          case INTEGER:
@@ -292,5 +292,15 @@ public class AssetPropertyEditor extends Composite
    public Control getEditorControl()
    {
       return editorControl;
+   }
+
+   /**
+    * Get attribute for the property being edited
+    *
+    * @return attribute for the property being edited
+    */
+   public AssetAttribute getAttribute()
+   {
+      return attribute;
    }
 }

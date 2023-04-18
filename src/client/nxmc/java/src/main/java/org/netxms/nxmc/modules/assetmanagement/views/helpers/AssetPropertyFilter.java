@@ -56,7 +56,7 @@ public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerF
       @SuppressWarnings("unchecked")
       Entry<String, String> entry = (Entry<String, String>)element;
 
-      return session.getAssetManagementSchema().get(entry.getKey()).getActualName().toUpperCase().contains(filterString) || labelProvider.getPropertyValue(entry).toUpperCase().contains(filterString);
+      return session.getAssetManagementSchema().get(entry.getKey()).getEffectiveDisplayName().toUpperCase().contains(filterString) || labelProvider.getPropertyValue(entry).toUpperCase().contains(filterString);
    }
 
    /**

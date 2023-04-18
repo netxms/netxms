@@ -154,6 +154,7 @@ public class ObjectCreateMenuManager extends MenuManager
                {
                   NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_ASSET, dlg.getName(), parentId);
                   cd.setObjectAlias(dlg.getAlias());
+                  cd.setAssetProperties(dlg.getProperties());
                   session.createObject(cd);
                }
 

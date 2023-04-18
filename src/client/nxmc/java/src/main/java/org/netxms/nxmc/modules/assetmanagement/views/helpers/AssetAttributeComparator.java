@@ -16,14 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.serverconfig.views.helpers;
+package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
-import org.netxms.nxmc.modules.serverconfig.views.AssetManagementSchemaManager;
+import org.netxms.nxmc.modules.assetmanagement.views.AssetManagementSchemaManager;
 
 /**
  * Asset attribute comparator

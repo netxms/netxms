@@ -30,7 +30,6 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
-import org.netxms.nxmc.modules.serverconfig.views.helpers.AssetAttributeListLabelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -179,7 +178,7 @@ public class AssetPropertyListLabelProvider extends LabelProvider implements ITa
     */
    public String getName(String name)
    {
-      return session.getAssetManagementSchema().get(name).getActualName();
+      return session.getAssetManagementSchema().get(name).getEffectiveDisplayName();
    }
 
    /**

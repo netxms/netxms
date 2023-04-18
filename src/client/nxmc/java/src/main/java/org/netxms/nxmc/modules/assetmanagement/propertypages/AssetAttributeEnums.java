@@ -16,31 +16,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.serverconfig.propertypages;
+package org.netxms.nxmc.modules.assetmanagement.propertypages;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.base.widgets.KeyValueSetEditor;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Auto Fill Script" property page for asset attribute
+ * Asset attribute "Enum Values" property page
  */
-public class AssetAttributeAutoFillScript extends PropertyPage
+public class AssetAttributeEnums extends PropertyPage
 {
-   final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeAutoFillScript.class);
+   final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeEnums.class);
+   
+   AssetAttribute attribute = null;
+   KeyValueSetEditor enumEditor;
 
-   AssetAttribute attribute;
-   ScriptEditor script;
-
-   public AssetAttributeAutoFillScript(AssetAttribute attribute)
+   public AssetAttributeEnums(AssetAttribute attribute)
    {
-      super("Auto Fill Script");
+      super(i18n.tr("Enum Values"));
       this.attribute = attribute;
       noDefaultAndApplyButton();
    }
@@ -50,12 +52,25 @@ public class AssetAttributeAutoFillScript extends PropertyPage
     */
    @Override
    protected Control createContents(Composite parent)
-   {
+   {    
       Composite dialogArea = new Composite(parent, SWT.NONE);
-      dialogArea.setLayout(new FillLayout());
 
-      script = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, "Should return new value for asset property");
-      script.setText(attribute.getAutofillScript());
+      GridLayout layout = new GridLayout();
+      layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      dialogArea.setLayout(layout);
+
+      enumEditor = new KeyValueSetEditor(dialogArea, SWT.NONE, i18n.tr("Name"));
+      GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+      gd.horizontalSpan = 2;
+      gd.heightHint = 150;
+      gd.verticalIndent = WidgetHelper.OUTER_SPACING * 2;
+      enumEditor.setLayoutData(gd);
+      enumEditor.addAll(attribute.getEnumValues());
+      System.out.println(">IN> " + attribute.getEnumValues());
+      //TODO: enumEditor.setEnabled(attr.getDataType() == AMDataType.ENUM);
+
       return dialogArea;
    }
 
@@ -65,7 +80,8 @@ public class AssetAttributeAutoFillScript extends PropertyPage
    @Override
    protected boolean applyChanges(boolean isApply)
    {
-      attribute.setAutofillScript(script.getText());
+      attribute.setEnumValues(enumEditor.getContent());
+      System.out.println(">>> " + attribute.getEnumValues());
       return true;
    }
 }

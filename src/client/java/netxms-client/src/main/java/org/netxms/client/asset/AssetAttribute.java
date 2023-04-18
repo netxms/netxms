@@ -126,7 +126,7 @@ public class AssetAttribute
     * 
     * @return name that should be used as a display name
     */
-   public String getActualName()
+   public String getEffectiveDisplayName()
    {
       return displayName.isEmpty() ? name : displayName;
    }

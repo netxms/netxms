@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 **/
 
 #include "nxcore.h"
-#include "nxcore_websvc.h"
+#include <nxcore_websvc.h>
+#include <asset_management.h>
 
 #define DEBUG_TAG _T("import")
 
@@ -638,7 +639,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): DCI summary tables imported"));
 	}
 
-	//Import web service definitions
+	// Import web service definitions
    webServiceDefRoot = config.getEntry(_T("/webServiceDefinitions"));
    if (webServiceDefRoot != nullptr)
    {
@@ -650,16 +651,16 @@ uint32_t ImportConfig(const Config& config, uint32_t flags)
       nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): web service definitions imported"));
    }
 
-   //Import web service definitions
-   assetsRoot = config.getEntry(_T("/assetAttributes"));
+   // Import asset management schema
+   assetsRoot = config.getEntry(_T("/assetManagementSchema"));
    if (assetsRoot != nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): asset attribute definitions imported"));
-      ImportAssetAttributeDefinitions(*assetsRoot, (flags & CFG_IMPORT_REPLACE_AM_DEFINITIONS) != 0);
+      ImportAssetManagementSchema(*assetsRoot, (flags & CFG_IMPORT_REPLACE_AM_DEFINITIONS) != 0);
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): asset management schema imported"));
    }
 
 stop_processing:
-   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() finished, rcc = %d"), rcc);
+   nxlog_debug_tag(DEBUG_TAG, 4, _T("ImportConfig() finished, rcc = %u"), rcc);
    return rcc;
 }
 

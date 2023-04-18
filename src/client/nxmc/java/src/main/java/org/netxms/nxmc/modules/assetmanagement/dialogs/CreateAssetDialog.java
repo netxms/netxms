@@ -18,7 +18,9 @@
  */
 package org.netxms.nxmc.modules.assetmanagement.dialogs;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
@@ -27,8 +29,11 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.asset.AssetAttribute;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.assetmanagement.widgets.AssetPropertyEditor;
 import org.netxms.nxmc.tools.ObjectNameValidator;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
@@ -40,9 +45,10 @@ public class CreateAssetDialog extends Dialog
 {
    private I18n i18n = LocalizationHelper.getI18n(CreateAssetDialog.class);
 
+   private Map<String, AssetAttribute> schema = Registry.getSession().getAssetManagementSchema();
    private LabeledText nameField;
    private LabeledText aliasField;
-
+   private List<AssetPropertyEditor> propertyEditors = new ArrayList<AssetPropertyEditor>(schema.size());
    private String name;
    private String alias;
    private Map<String, String> properties;
@@ -79,6 +85,8 @@ public class CreateAssetDialog extends Dialog
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
 
       nameField = new LabeledText(dialogArea, SWT.NONE);
@@ -88,6 +96,7 @@ public class CreateAssetDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.widthHint = 300;
+      gd.horizontalSpan = 2;
       nameField.setLayoutData(gd);
 
       aliasField = new LabeledText(dialogArea, SWT.NONE);
@@ -96,9 +105,30 @@ public class CreateAssetDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       aliasField.setLayoutData(gd);
+      
+      schema.values().stream().sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName())).forEach((a) -> createPropertyEditor(dialogArea, a));
 
       return dialogArea;
+   }
+
+   /**
+    * Create property editor.
+    *
+    * @param dialogArea dialog area
+    * @param attribute attribute to create editor for
+    */
+   private void createPropertyEditor(Composite dialogArea, AssetAttribute attribute)
+   {
+      AssetPropertyEditor editor = new AssetPropertyEditor(dialogArea, SWT.NONE, attribute);
+      GridData gd = new GridData();
+      gd.widthHint = 300;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+      editor.setLayoutData(gd);
+      propertyEditors.add(editor);
    }
 
    /**
@@ -107,7 +137,13 @@ public class CreateAssetDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator()))
+      boolean success = WidgetHelper.validateTextInput(nameField, new ObjectNameValidator());
+      for(AssetPropertyEditor e : propertyEditors)
+      {
+         if (!e.validateInput())
+            success = false;
+      }
+      if (!success)
       {
          WidgetHelper.adjustWindowSize(this);
          return;
@@ -117,6 +153,8 @@ public class CreateAssetDialog extends Dialog
       name = nameField.getText().trim();
 
       properties = new HashMap<>();
+      for(AssetPropertyEditor e : propertyEditors)
+         properties.put(e.getAttribute().getName(), e.getValue());
 
       super.okPressed();
    }

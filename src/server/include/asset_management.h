@@ -92,7 +92,7 @@ public:
    bool deleteFromDatabase();
 
    json_t *toJson() const;
-   void fillEntry(StringBuffer &xml, int id);
+   void createExportRecord(StringBuffer &xml);
 
    const TCHAR *getName() const { return m_name; }
    AMDataType getDataType() const { return m_dataType; }
@@ -148,5 +148,7 @@ unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly = false);
 unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const shared_ptr<Asset>& asset);
 void LinkAsset(const shared_ptr<Asset>& asset, const shared_ptr<NetObj>& object, ClientSession *session);
 void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session);
+void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames);
+void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite);
 
 #endif

@@ -70,6 +70,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.actions.dialogs.ActionSelectionDialog;
 import org.netxms.nxmc.modules.actions.views.helpers.ActionComparator;
 import org.netxms.nxmc.modules.actions.views.helpers.ActionLabelProvider;
+import org.netxms.nxmc.modules.assetmanagement.dialogs.SelectAssetAttributeDlg;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectWebServiceDlg;
 import org.netxms.nxmc.modules.events.dialogs.EventSelectionDialog;
 import org.netxms.nxmc.modules.events.dialogs.RuleSelectionDialog;
@@ -78,7 +79,6 @@ import org.netxms.nxmc.modules.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.widgets.helpers.DecoratingObjectLabelProvider;
 import org.netxms.nxmc.modules.serverconfig.dialogs.ObjectToolSelectionDialog;
-import org.netxms.nxmc.modules.serverconfig.dialogs.SelectAssetAttributeDlg;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.SummaryTableSelectionDialog;
 import org.netxms.nxmc.modules.serverconfig.dialogs.helpers.TrapListLabelProvider;
@@ -166,7 +166,7 @@ public class ExportFileBuilder extends ConfigurationView
       content.setBackground(content.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 
       scroller.setContent(content);
-		
+
 		createDescriptionSection();		
 		createTemplatesSection();
 		createEventSection();
@@ -177,10 +177,10 @@ public class ExportFileBuilder extends ConfigurationView
       createSummaryTablesSection();
       createActionsSection();
       createWebServiceSection();
-      createAssetAttributeSection();
+      createAssetAttributesSection();
 		createActions();
 	}
-	
+
 	/**
     * Create "Description" section
     */
@@ -969,11 +969,11 @@ public class ExportFileBuilder extends ConfigurationView
    }
    
    /**
-    * Create "Asset Attribute Definitions" section
+    * Create "Asset Attributes" section
     */
-   private void createAssetAttributeSection()
+   private void createAssetAttributesSection()
    {
-      Section section = new Section(content, i18n.tr("Asset Attribute Definitions"), false);
+      Section section = new Section(content, i18n.tr("Asset Attributes"), false);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -985,7 +985,7 @@ public class ExportFileBuilder extends ConfigurationView
       layout.numColumns = 2;
       clientArea.setLayout(layout);
       clientArea.setBackground(content.getBackground());
-      
+
       assetAttributeViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -1000,14 +1000,14 @@ public class ExportFileBuilder extends ConfigurationView
          @Override
          public String getText(Object element)
          {
-            return ((AssetAttribute)element).getActualName();
+            return ((AssetAttribute)element).getEffectiveDisplayName();
          }
       });
       assetAttributeViewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((AssetAttribute)e1).getActualName().compareToIgnoreCase(((AssetAttribute)e2).getActualName());
+            return ((AssetAttribute)e1).getEffectiveDisplayName().compareToIgnoreCase(((AssetAttribute)e2).getEffectiveDisplayName());
          }
       });
       assetAttributeViewer.getTable().setSortDirection(SWT.UP);
@@ -1015,6 +1015,7 @@ public class ExportFileBuilder extends ConfigurationView
       final ImageHyperlink linkAdd = new ImageHyperlink(clientArea, SWT.NONE);
       linkAdd.setText(i18n.tr("Add..."));
       linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      linkAdd.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkAdd.setLayoutData(gd);
@@ -1025,10 +1026,11 @@ public class ExportFileBuilder extends ConfigurationView
             addAssetAttributes();
          }
       });
-      
+
       final ImageHyperlink linkRemove = new ImageHyperlink(clientArea, SWT.NONE);
       linkRemove.setText(i18n.tr("Remove"));
       linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      linkRemove.setBackground(clientArea.getBackground());
       gd = new GridData();
       gd.verticalAlignment = SWT.TOP;
       linkRemove.setLayoutData(gd);
@@ -1473,7 +1475,7 @@ public class ExportFileBuilder extends ConfigurationView
       SelectAssetAttributeDlg dlg = new SelectAssetAttributeDlg(getWindow().getShell());
       if (dlg.open() == Window.OK)
       {
-         for(AssetAttribute service : dlg.getSelection())
+         for(AssetAttribute service : dlg.getSelectedAttributes())
             assetAttributes.put(service.getName(), service);
          assetAttributeViewer.setInput(assetAttributes.values().toArray());
          setModified();

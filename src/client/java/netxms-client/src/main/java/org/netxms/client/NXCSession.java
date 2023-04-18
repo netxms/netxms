@@ -13785,14 +13785,14 @@ public class NXCSession
    /**
     * Create asset attribute (definition in asset management schema)..
     * 
-    * @param attr attribute to create
+    * @param attribute attribute to create
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void createAssetAttribute(AssetAttribute attr) throws IOException, NXCException
+   public void createAssetAttribute(AssetAttribute attribute) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_ASSET_ATTRIBUTE);
-      attr.fillMessage(msg);
+      attribute.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
@@ -13800,14 +13800,14 @@ public class NXCSession
    /**
     * Update asset attribute (definition in asset management schema).
     * 
-    * @param attr attribute to update
+    * @param attribute attribute to update
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void updateAssetAttribute(AssetAttribute attr) throws IOException, NXCException
+   public void updateAssetAttribute(AssetAttribute attribute) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ASSET_ATTRIBUTE);
-      attr.fillMessage(msg);
+      attribute.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }

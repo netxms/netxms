@@ -189,7 +189,7 @@ public class AssetView extends ObjectView
             {
                if (!properties.containsKey(definition.getName()))
                {
-                  attributeSelectionMenu.add(new Action(definition.getActualName()) {
+                  attributeSelectionMenu.add(new Action(definition.getEffectiveDisplayName()) {
                      @Override
                      public void run()
                      {

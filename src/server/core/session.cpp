@@ -10103,10 +10103,10 @@ void ClientSession::exportConfiguration(const NXCPMessage& request)
          xml.append(_T("\t</webServiceDefinitions>\n"));
 
          // Asset attributes
-         xml.append(_T("\t<assetAttributes>\n"));
+         xml.append(_T("\t<assetManagementSchema>\n"));
          StringList names(request, VID_ASSET_ATTRIBUTE_NAMES);
-         CreateAssetAttributeDefinitions(xml, names);
-         xml.append(_T("\t</assetAttributes>\n"));
+         ExportAssetManagementSchema(xml, names);
+         xml.append(_T("\t</assetManagementSchema>\n"));
 
 			// Close document
 			xml += _T("</configuration>\n");

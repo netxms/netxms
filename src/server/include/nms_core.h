@@ -1366,9 +1366,6 @@ void CreateTrapExportRecord(StringBuffer &xml, UINT32 id);
 UINT32 ResolveTrapGuid(const uuid& guid);
 void AddTrapCfgToList(SNMPTrapConfiguration* trapCfg);
 
-void CreateAssetAttributeDefinitions(StringBuffer &xml, const StringList &names);
-void ImportAssetAttributeDefinitions(const ConfigEntry& root, bool overwrite);
-
 bool IsTableTool(uint32_t toolId);
 bool CheckObjectToolAccess(uint32_t toolId, uint32_t userId);
 uint32_t ExecuteTableTool(uint32_t toolId, const shared_ptr<Node>& node, uint32_t requestId, ClientSession *session);
