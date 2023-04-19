@@ -115,6 +115,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 #define DEBUG_TAG_BIZSVC            _T("bizsvc")
 #define DEBUG_TAG_CONF_POLL         _T("poll.conf")
 #define DEBUG_TAG_GEOLOCATION       _T("geolocation")
+#define DEBUG_TAG_MAINTENANCE       _T("obj.maint")
 #define DEBUG_TAG_STATUS_POLL       _T("poll.status")
 
 /**

@@ -2527,7 +2527,7 @@ void NetObj::setGeoLocation(const GeoLocation& geoLocation)
  */
 void NetObj::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
 {
-   DbgPrintf(4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
+   nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
@@ -2544,7 +2544,7 @@ void NetObj::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
  */
 void NetObj::leaveMaintenanceMode(uint32_t userId)
 {
-   DbgPrintf(4, _T("Leaving maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
+   nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Leaving maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
