@@ -2694,6 +2694,9 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id) override;
    virtual bool showThresholdSummary() const override;
 
+   virtual void enterMaintenanceMode(uint32_t userId, const TCHAR *comments) override;
+   virtual void leaveMaintenanceMode(uint32_t userId) override;
+
    virtual void onTemplateRemove(const shared_ptr<DataCollectionOwner>& templateObject, bool removeDCI) override;
    virtual NXSL_Value *createNXSLObject(NXSL_VM *vm) override;
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }

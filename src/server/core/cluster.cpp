@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -911,14 +911,14 @@ NXSL_Value *Cluster::createNXSLObject(NXSL_VM *vm)
 NXSL_Value *Cluster::getNodesForNXSL(NXSL_VM *vm)
 {
    NXSL_Array *nodes = new NXSL_Array(vm);
-   int index = 0;
 
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
    {
-      if (getChildList().get(i)->getObjectClass() == OBJECT_NODE)
+      NetObj *object = getChildList().get(i);
+      if (object->getObjectClass() == OBJECT_NODE)
       {
-         nodes->set(index++, getChildList().get(i)->createNXSLObject(vm));
+         nodes->append(object->createNXSLObject(vm));
       }
    }
    unlockChildList();
@@ -1033,4 +1033,38 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
 
    pollerUnlock();
    nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 5, _T("Finished autobind poll of container %s [%u])"), m_name, m_id);
+}
+
+/**
+ * Enter maintenance mode
+ */
+void Cluster::enterMaintenanceMode(uint32_t userId, const TCHAR *comments)
+{
+   super::enterMaintenanceMode(userId, comments);
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if ((object->getObjectClass() == OBJECT_NODE) && (object->getStatus() != STATUS_UNMANAGED))
+         object->enterMaintenanceMode(userId, comments);
+   }
+   unlockChildList();
+}
+
+/**
+ * Leave maintenance mode
+ */
+void Cluster::leaveMaintenanceMode(uint32_t userId)
+{
+   super::leaveMaintenanceMode(userId);
+
+   readLockChildList();
+   for(int i = 0; i < getChildList().size(); i++)
+   {
+      NetObj *object = getChildList().get(i);
+      if ((object->getObjectClass() == OBJECT_NODE) && (object->getStatus() != STATUS_UNMANAGED))
+         object->leaveMaintenanceMode(userId);
+   }
+   unlockChildList();
 }

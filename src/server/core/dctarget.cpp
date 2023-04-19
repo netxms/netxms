@@ -1738,7 +1738,7 @@ void DataCollectionTarget::enterMaintenanceMode(uint32_t userId, const TCHAR *co
    TCHAR userName[MAX_USER_NAME];
    ResolveUserId(userId, userName, true);
 
-   DbgPrintf(4, _T("Entering maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
+   nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Entering maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
    uint64_t eventId = PostSystemEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, "sds", CHECK_NULL_EX(comments), userId, userName);
 
    readLockDciAccess();
@@ -1768,7 +1768,7 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
    TCHAR userName[MAX_USER_NAME];
    ResolveUserId(userId, userName, true);
 
-   DbgPrintf(4, _T("Leaving maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
+   nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Leaving maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
    PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, "ds", userId, userName);
 
    readLockDciAccess();
