@@ -371,7 +371,13 @@ TCHAR *ConstByteStream::readNXCPString(MemoryPool *pool)
       return nullptr;
 
    TCHAR* buffer = pool != nullptr ? pool->allocateString(byteCount + 1) : MemAllocString(byteCount + 1);
+
+#ifdef UNICODE
    size_t chars = utf8_to_wchar(reinterpret_cast<char*>(&m_data[m_pos]), byteCount, buffer, byteCount + 1);
+#else
+   size_t chars = utf8_to_mb(reinterpret_cast<char*>(&m_data[m_pos]), byteCount, buffer, byteCount + 1);
+#endif
+
    buffer[chars] = 0;
    m_pos += byteCount;
    return buffer;
@@ -570,7 +576,7 @@ size_t ByteStream::writeString(const char* str, ssize_t length, bool prependLeng
  */
 size_t ByteStream::writeNXCPString(const TCHAR *string)
 {
-   size_t length = wcslen(string);
+   size_t length = _tcslen(string);
    size_t byteCount = length * 4;
    size_t writeStartPos = m_pos;
 
@@ -582,10 +588,14 @@ size_t ByteStream::writeNXCPString(const TCHAR *string)
       m_data = MemRealloc(m_data, m_allocated);
    }
 
+#ifdef UNICODE
 #if UNICODE_UCS4
    ssize_t bytesWritten = ucs4_to_utf8(string, length, reinterpret_cast<char*>(&m_data[m_pos]), byteCount);
 #else
    ssize_t bytesWritten = ucs2_to_utf8(string, length, reinterpret_cast<char*>(&m_data[m_pos]), byteCount);
+#endif
+#else    /* not UNICODE */
+   ssize_t bytesWritten = mb_to_utf8(string, length, reinterpret_cast<char*>(&m_data[m_pos]), byteCount);
 #endif
    m_pos += bytesWritten;
 
