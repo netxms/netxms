@@ -133,6 +133,7 @@ public abstract class Job
    {
       if (monitor == null)
          monitor = new JobProgressMonitor();
+      this.monitor = monitor;
 
       state = JobState.RUNNING;
 
