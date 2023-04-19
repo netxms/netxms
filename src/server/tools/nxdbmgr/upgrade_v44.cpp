@@ -60,8 +60,8 @@ static bool H_UpgradeFromV7()
          _T("PRIMARY KEY(record_id))")));
    }
 
-   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_srv_asset_change_log_timestamp ON asset_change_log(operation_timestamp)")));
-   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_srv_asset_change_log_asset_id ON asset_change_log(asset_id)")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_srv_asset_log_timestamp ON asset_change_log(operation_timestamp)")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_srv_asset_log_asset_id ON asset_change_log(asset_id)")));
 
    CHK_EXEC(CreateConfigParam(_T("AssetChangeLog.RetentionTime"),
          _T("90"),

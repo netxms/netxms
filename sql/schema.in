@@ -2677,8 +2677,8 @@ CREATE TABLE asset_change_log (
 #endif
 ) TABLE_TYPE;
 
-CREATE INDEX idx_srv_asset_change_log_timestamp ON asset_change_log(operation_timestamp);
-CREATE INDEX idx_srv_asset_change_log_asset_id ON asset_change_log(asset_id);
+CREATE INDEX idx_srv_asset_log_timestamp ON asset_change_log(operation_timestamp);
+CREATE INDEX idx_srv_asset_log_asset_id ON asset_change_log(asset_id);
 
 #ifdef DB_TSDB
 SELECT create_hypertable('asset_change_log', 'operation_timestamp', chunk_time_interval => interval '86400 seconds');
