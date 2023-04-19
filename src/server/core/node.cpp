@@ -24,6 +24,7 @@
 #include <agent_tunnel.h>
 #include <entity_mib.h>
 #include <ethernet_ip.h>
+#include <asset_management.h>
 #include <ncdrv.h>
 
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
@@ -4439,6 +4440,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Node is marked as unreachable, configuration poll aborted"));
    }
 
+   UpdateAssetLinkage(this);
    autoFillAssetProperties();
 
    // Finish configuration poll

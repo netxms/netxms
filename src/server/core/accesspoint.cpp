@@ -20,6 +20,7 @@
 **/
 
 #include "nxcore.h"
+#include <asset_management.h>
 
 /**
  * Default constructor
@@ -566,6 +567,7 @@ void AccessPoint::configurationPoll(PollerInfo *poller, ClientSession *session, 
 
    sendPollerMsg(_T("Finished configuration poll of access point %s\r\n"), m_name);
 
+   UpdateAssetLinkage(this);
    autoFillAssetProperties();
 
    lockProperties();

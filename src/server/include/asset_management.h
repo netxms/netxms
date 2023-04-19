@@ -26,7 +26,8 @@
 #ifndef _asset_management_h_
 #define _asset_management_h_
 
-#define DEBUG_TAG_ASSET_MGMT _T("am")
+#define DEBUG_TAG_ASSET_MGMT        _T("am")
+#define DEBUG_TAG_ASSET_MGMT_LINK   DEBUG_TAG_ASSET_MGMT _T(".link")
 
 /**
  * Asset management attribute data types
@@ -55,6 +56,18 @@ enum class AMSystemType
    MacAddress = 3,
    Vendor = 4,
    Model = 5
+};
+
+/*
+ * Operation with asset
+ */
+enum class AssetOperation
+{
+   Create = 0,
+   Delete = 1,
+   Update = 2,
+   Link = 3,
+   Unlink = 4
 };
 
 /**
@@ -96,6 +109,7 @@ public:
 
    const TCHAR *getName() const { return m_name; }
    AMDataType getDataType() const { return m_dataType; }
+   AMSystemType getSystemType() const { return m_systemType; }
    bool isMandatory() const { return m_isMandatory; }
    bool isUnique() const { return m_isUnique; }
    int32_t getMinRange() const { return m_rangeMin; }
@@ -134,7 +148,7 @@ struct AssetPropertyAutofillContext
    }
 };
 
-// Attribute management finctions
+// Asset management functions
 void AssetManagementSchemaToMessage(NXCPMessage *msg);
 uint32_t CreateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
 uint32_t UpdateAssetAttribute(const NXCPMessage& msg, const ClientSession& session);
@@ -146,25 +160,23 @@ bool IsBooleanAssetProperty(const TCHAR *name);
 bool IsValidAssetPropertyName(const TCHAR *name);
 unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly = false);
 unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const Asset& asset, const shared_ptr<NetObj>& linkedObject);
-void LinkAsset(const shared_ptr<Asset>& asset, const shared_ptr<NetObj>& object, ClientSession *session);
-void UnlinkAsset(const shared_ptr<Asset>& asset, ClientSession *session);
+void LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
+void UnlinkAsset(Asset *asset, ClientSession *session);
+void UpdateAssetLinkage(NetObj *object);
 void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames);
 void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite);
+void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation, const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
 
-/*
- * Operation with asset
+/**
+ * Find asset object by value of one of it's properties
  */
-enum class AssetOperation
+static inline shared_ptr<Asset> FindAssetByPropertyValue(const TCHAR *attribute, const TCHAR *value)
 {
-   Create = 0,
-   Delete = 1,
-   Update = 2,
-   Link = 3,
-   Unlink = 4
-};
-
-//Logging function
-void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation,
-                           const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
+   return static_pointer_cast<Asset>(FindObject(
+      [attribute, value] (NetObj *object) -> bool
+      {
+         return (object->getObjectClass() == OBJECT_ASSET) && static_cast<Asset*>(object)->isSamePropertyValue(attribute, value);
+      }, OBJECT_ASSET));
+}
 
 #endif

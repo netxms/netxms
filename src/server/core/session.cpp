@@ -6051,7 +6051,7 @@ void ClientSession::createObject(const NXCPMessage& request)
 
                if (asset != nullptr)
                {
-                  LinkAsset(asset, object, this);
+                  LinkAsset(asset.get(), object.get(), this);
                }
 
                object->unhide();
@@ -16789,7 +16789,7 @@ void ClientSession::linkAsset(const NXCPMessage& request)
          {
             if (IsValidAssetLinkTargetClass(newTarget->getObjectClass()))
             {
-               LinkAsset(asset, newTarget, this);
+               LinkAsset(asset.get(), newTarget.get(), this);
                response.setField(VID_RCC, RCC_SUCCESS);
             }
             else
@@ -16845,7 +16845,7 @@ void ClientSession::unlinkAsset(const NXCPMessage& request)
          {
             if (asset->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) && target->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
-               UnlinkAsset(asset, this);
+               UnlinkAsset(asset.get(), this);
                response.setField(VID_RCC, RCC_SUCCESS);
             }
             else

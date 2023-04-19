@@ -476,5 +476,5 @@ void SaveCurrentFreeId()
    ConfigWriteUInt64(_T("FirstFreeWinEventId"), GetNextWinEventId(), true, false, true);
    ConfigWriteInt64(_T("LastActionExecutionLogRecordId"), GetLastActionExecutionLogId(), true, false, true);
    ConfigWriteInt64(_T("LastNotificationId"), GetLastNotificationId(), true, false, true);
-   ConfigWriteUInt64(_T("LastAssetChangeLogId"), GetLastAssetChangeLogId(), true, false, true);
+   ConfigWriteUInt64(_T("LastAssetChangeLogRecordId"), GetLastAssetChangeLogId(), true, false, true);
 }

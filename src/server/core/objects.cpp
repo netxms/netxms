@@ -1771,18 +1771,9 @@ void DeleteUserFromAllObjects(uint32_t userId)
 }
 
 /**
- * User data for DumpObjectCallback
- */
-struct __dump_objects_data
-{
-	CONSOLE_CTX console;
-   const TCHAR *filter;
-};
-
-/**
  * Print object information
  */
-static void PrintObjectInfo(ServerConsole *console, UINT32 objectId, const TCHAR *prefix)
+static void PrintObjectInfo(ServerConsole *console, uint32_t objectId, const TCHAR *prefix)
 {
    if (objectId == 0)
       return;
@@ -1965,9 +1956,6 @@ void DumpObjects(ServerConsole *console, const TCHAR *filter)
 
    if (!findById)
    {
-      __dump_objects_data data;
-      data.console = console;
-      data.filter = filter;
       g_idxObjectById.forEach(
          [console, filter] (NetObj *object) -> void
          {

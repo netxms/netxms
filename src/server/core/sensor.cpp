@@ -20,6 +20,7 @@
 **/
 
 #include "nxcore.h"
+#include <asset_management.h>
 
 /**
  * Default empty Sensor class constructior
@@ -592,6 +593,7 @@ void Sensor::configurationPoll(PollerInfo *poller, ClientSession *session, uint3
    sendPollerMsg(_T("Finished configuration poll of sensor %s\r\n"), m_name);
    sendPollerMsg(_T("Sensor configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
+   UpdateAssetLinkage(this);
    autoFillAssetProperties();
 
    lockProperties();
