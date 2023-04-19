@@ -131,10 +131,10 @@ public abstract class Job
     */
    protected final void execute(IProgressMonitor monitor)
    {
-      state = JobState.RUNNING;
-
       if (monitor == null)
          monitor = new JobProgressMonitor();
+
+      state = JobState.RUNNING;
 
       try
       {
@@ -351,16 +351,15 @@ public abstract class Job
    }
 
    /**
-    * A hook method indicating that this job is running and {@link #cancel()}
-    * is being called for the first time.
-    * <p>
-    * Subclasses may override this method to perform additional work when
-    * a cancelation request is made.  This default implementation does nothing.
+    * Cancel this job. Will have no effect if job is not in running state.
     */
    public void cancel() 
    {
-      canceling();
-      monitor.setCanceled(true);
+      if (state == JobState.RUNNING)
+      {
+         canceling();
+         monitor.setCanceled(true);
+      }
    }
 
    /**
