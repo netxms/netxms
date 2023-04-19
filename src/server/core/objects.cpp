@@ -1112,20 +1112,20 @@ bool AdjustSubnetBaseAddress(InetAddress& baseAddr, int32_t zoneUIN)
 /**
  * Find object by ID
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objectClassHint)
 {
    ObjectIndex *index;
-   switch(objClass)
+   switch(objectClassHint)
    {
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
+      case OBJECT_ASSET:
+         index = &g_idxAssetById;
+         break;
       case OBJECT_BUSINESSSERVICE:
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1148,9 +1148,9 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectById(uint32_t id, int objClass)
    }
 
    shared_ptr<NetObj> object = index->get(id);
-	if ((object == nullptr) || (objClass == -1))
+	if ((object == nullptr) || (objectClassHint == -1))
 		return object;
-	return (objClass == object->getObjectClass()) ? object : shared_ptr<NetObj>();
+	return (objectClassHint == object->getObjectClass()) ? object : shared_ptr<NetObj>();
 }
 
 /**
@@ -1176,7 +1176,7 @@ static bool ObjectNameRegexAndClassFilter(NetObj *object, std::pair<int, PCRE*> 
  * @param objClass
  * @return
  */
-unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const TCHAR *regex, int objClass)
+unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const TCHAR *regex, int objectClassHint)
 {
    const char *eptr;
    int eoffset;
@@ -1185,17 +1185,17 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
       return unique_ptr<SharedObjectArray<NetObj>>();
 
    ObjectIndex *index;
-   switch(objClass)
+   switch(objectClassHint)
    {
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
+      case OBJECT_ASSET:
+         index = &g_idxAssetById;
+         break;
       case OBJECT_BUSINESSSERVICE:
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1217,7 +1217,7 @@ unique_ptr<SharedObjectArray<NetObj>> NXCORE_EXPORTABLE FindObjectsByRegex(const
          break;
    }
 
-   std::pair<int, PCRE*> context(objClass, preg);
+   std::pair<int, PCRE*> context(objectClassHint, preg);
    unique_ptr<SharedObjectArray<NetObj>> result = index->getObjects(ObjectNameRegexAndClassFilter, &context);
    _pcre_free_t(preg);
    return result;
@@ -1233,22 +1233,22 @@ const TCHAR NXCORE_EXPORTABLE *GetObjectName(uint32_t id, const TCHAR *defaultNa
 }
 
 /**
- * Generic object finding method
+ * Generic object search function
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, void *), void *context, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (*comparator)(NetObj*, void*), void *context, int objectClassHint)
 {
    ObjectIndex *index;
-   switch(objClass)
+   switch(objectClassHint)
    {
       case OBJECT_ACCESSPOINT:
          index = &g_idxAccessPointById;
          break;
+      case OBJECT_ASSET:
+         index = &g_idxAssetById;
+         break;
       case OBJECT_BUSINESSSERVICE:
       case OBJECT_BUSINESSSERVICEPROTO:
          index = &g_idxBusinessServicesById;
-         break;
-      case OBJECT_ASSET:
-         index = &g_idxAssetById;
          break;
       case OBJECT_CLUSTER:
          index = &g_idxClusterById;
@@ -1273,54 +1273,72 @@ shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(bool (* comparator)(NetObj *, vo
          break;
    }
    shared_ptr<NetObj> object = index->find(comparator, context);
-   return ((object == nullptr) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : shared_ptr<NetObj>());
+   return ((object == nullptr) || (objectClassHint == -1)) ? object : ((object->getObjectClass() == objectClassHint) ? object : shared_ptr<NetObj>());
 }
 
 /**
- * Callback data for FindObjectByName
+ * Generic object search function
  */
-struct __find_object_by_name_data
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObject(std::function<bool (NetObj*)> comparator, int objectClassHint)
 {
-	int objClass;
-	const TCHAR *name;
-};
-
-/**
- * Object name comparator for FindObjectByName
- */
-static bool ObjectNameComparator(NetObj *object, void *data)
-{
-	struct __find_object_by_name_data *fd = (struct __find_object_by_name_data *)data;
-	return ((fd->objClass == -1) || (fd->objClass == object->getObjectClass())) &&
-	       !object->isDeleted() && !_tcsicmp(object->getName(), fd->name);
+   ObjectIndex *index;
+   switch(objectClassHint)
+   {
+      case OBJECT_ACCESSPOINT:
+         index = &g_idxAccessPointById;
+         break;
+      case OBJECT_ASSET:
+         index = &g_idxAssetById;
+         break;
+      case OBJECT_BUSINESSSERVICE:
+      case OBJECT_BUSINESSSERVICEPROTO:
+         index = &g_idxBusinessServicesById;
+         break;
+      case OBJECT_CLUSTER:
+         index = &g_idxClusterById;
+         break;
+      case OBJECT_MOBILEDEVICE:
+         index = &g_idxMobileDeviceById;
+         break;
+      case OBJECT_NODE:
+         index = &g_idxNodeById;
+         break;
+      case OBJECT_ZONE:
+         index = &g_idxZoneByUIN;
+         break;
+      case OBJECT_SENSOR:
+         index = &g_idxSensorById;
+         break;
+      case OBJECT_SUBNET:
+         index = &g_idxSubnetById;
+         break;
+      default:
+         index = &g_idxObjectById;
+         break;
+   }
+   shared_ptr<NetObj> object = index->find(comparator);
+   return ((object == nullptr) || (objectClassHint == -1)) ? object : ((object->getObjectClass() == objectClassHint) ? object : shared_ptr<NetObj>());
 }
 
 /**
  * Find object by name
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByName(const TCHAR *name, int objectClassHint)
 {
-	struct __find_object_by_name_data data;
-	data.objClass = objClass;
-	data.name = name;
-	return FindObject(ObjectNameComparator, &data, objClass);
+	return FindObject(
+	   [name, objectClassHint] (NetObj *object) -> bool
+	   {
+         return ((objectClassHint == -1) || (objectClassHint == object->getObjectClass())) && !object->isDeleted() && !_tcsicmp(object->getName(), name);
+	   }, objectClassHint);
 }
 
 /**
  * Find object by GUID
  */
-shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objClass)
+shared_ptr<NetObj> NXCORE_EXPORTABLE FindObjectByGUID(const uuid& guid, int objectClassHint)
 {
    shared_ptr<NetObj> object = g_idxObjectByGUID.get(guid);
-   return ((object == nullptr) || (objClass == -1)) ? object : ((object->getObjectClass() == objClass) ? object : shared_ptr<NetObj>());
-}
-
-/**
- * Template name comparator for FindTemplateByName
- */
-static bool TemplateNameComparator(NetObj *object, void *name)
-{
-	return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->getName(), (const TCHAR *)name);
+   return ((object == nullptr) || (objectClassHint == -1)) ? object : ((object->getObjectClass() == objectClassHint) ? object : shared_ptr<NetObj>());
 }
 
 /**
@@ -1328,28 +1346,11 @@ static bool TemplateNameComparator(NetObj *object, void *name)
  */
 shared_ptr<Template> NXCORE_EXPORTABLE FindTemplateByName(const TCHAR *name)
 {
-	return static_pointer_cast<Template>(g_idxObjectById.find(TemplateNameComparator, (void *)name));
-}
-
-/**
- * Data structure for IsClusterIP callback
- */
-struct __cluster_ip_data
-{
-	InetAddress ipAddr;
-	int32_t zoneUIN;
-};
-
-/**
- * Cluster IP comparator - returns true if given address in given zone is cluster IP address
- */
-static bool ClusterIPComparator(NetObj *object, void *data)
-{
-	struct __cluster_ip_data *d = (struct __cluster_ip_data *)data;
-	return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() &&
-	       (((Cluster *)object)->getZoneUIN() == d->zoneUIN) &&
-			 (((Cluster *)object)->isVirtualAddr(d->ipAddr) ||
-			  ((Cluster *)object)->isSyncAddr(d->ipAddr));
+	return static_pointer_cast<Template>(g_idxObjectById.find(
+	   [name] (NetObj *object) -> bool
+	   {
+	      return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->getName(), (const TCHAR *)name);
+	   }));
 }
 
 /**
@@ -1358,10 +1359,13 @@ static bool ClusterIPComparator(NetObj *object, void *data)
  */
 bool NXCORE_EXPORTABLE IsClusterIP(int32_t zoneUIN, const InetAddress& ipAddr)
 {
-	struct __cluster_ip_data data;
-	data.zoneUIN = zoneUIN;
-	data.ipAddr = ipAddr;
-	return g_idxObjectById.find(ClusterIPComparator, &data) != nullptr;
+	return g_idxObjectById.find(
+	   [zoneUIN, ipAddr] (NetObj *object) -> bool
+	   {
+         return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() &&
+                (static_cast<Cluster*>(object)->getZoneUIN() == zoneUIN) &&
+                (static_cast<Cluster*>(object)->isVirtualAddr(ipAddr) || static_cast<Cluster*>(object)->isSyncAddr(ipAddr));
+	   }) != nullptr;
 }
 
 /**
