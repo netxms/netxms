@@ -25,6 +25,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -47,6 +48,7 @@ import org.netxms.nxmc.base.widgets.events.HyperlinkEvent;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -61,10 +63,13 @@ public class AbstractSelector extends Composite
 	public static final int SHOW_CLEAR_BUTTON = 0x0008;
    public static final int EDITABLE_TEXT = 0x0010;
 
+   private static final Image ERROR_ICON = ResourceManager.getImage("icons/labeled-control-alert.png");
+
    private I18n i18n = LocalizationHelper.getI18n(AbstractSelector.class);
 
 	private Label label;
    private CText text;
+   private CLabel errorMessage;
 	private Button buttonSelect;
    private Button buttonContext;
 	private Button buttonClear;
@@ -512,4 +517,32 @@ public class AbstractSelector extends Composite
 		for(ModifyListener l : modifyListeners)
 			l.modifyText(me);
 	}
+
+   /**
+    * Set error message inside control.
+    *
+    * @param message message to show or null to hide existing message
+    */
+   public void setErrorMessage(String message)
+   {
+      if (message == null)
+      {
+         if (errorMessage != null)
+         {
+            errorMessage.dispose();
+            errorMessage = null;
+            layout(true, true);
+         }
+         return;
+      }
+
+      if (errorMessage == null)
+      {
+         errorMessage = new CLabel(this, SWT.NONE);
+         errorMessage.setForeground(ThemeEngine.getForegroundColor("List.Error"));
+         errorMessage.setText(message);
+         errorMessage.setImage(ERROR_ICON);
+         layout(true, true);
+      }
+   }
 }

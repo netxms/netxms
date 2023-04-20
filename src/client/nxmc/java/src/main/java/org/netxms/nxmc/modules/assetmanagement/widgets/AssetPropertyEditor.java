@@ -73,15 +73,6 @@ public class AssetPropertyEditor extends Composite
 
       switch(attribute.getDataType())
       {
-         case INTEGER:
-            spinner = new LabeledSpinner(this, SWT.NONE);
-            spinner.setLabel(label);
-            if (attribute.getRangeMax() != 0 || attribute.getRangeMin() != 0)
-            {
-               spinner.setRange(attribute.getRangeMin(), attribute.getRangeMax());
-            }
-            editorControl = spinner.getControl();
-            break;
          case BOOLEAN:
             combo = new LabeledCombo(this, SWT.NONE);
             combo.setLabel(label);
@@ -95,6 +86,15 @@ public class AssetPropertyEditor extends Composite
             for(Entry<String, String> element : attribute.getEnumValues().entrySet())
                combo.add(element.getValue().isBlank() ? element.getKey() : element.getValue());
             editorControl = combo.getControl();
+            break;
+         case INTEGER:
+            spinner = new LabeledSpinner(this, SWT.NONE);
+            spinner.setLabel(label);
+            if (attribute.getRangeMax() != 0 || attribute.getRangeMin() != 0)
+            {
+               spinner.setRange(attribute.getRangeMin(), attribute.getRangeMax());
+            }
+            editorControl = spinner.getControl();
             break;
          case OBJECT_REFERENCE:
             objectSelector = new ObjectSelector(this, SWT.NONE, false);
@@ -119,6 +119,19 @@ public class AssetPropertyEditor extends Composite
    {
       switch(attribute.getDataType())
       {
+         case BOOLEAN:
+            combo.select(LogParser.stringToBoolean(value) ? 0 : 1);
+            break;
+         case ENUM:
+            int currentIndex = 0;
+            for(Entry<String, String> element : attribute.getEnumValues().entrySet())
+            {
+               if (value != null && value.equals(element.getKey()))
+                  break;
+               currentIndex++;
+            }
+            combo.select(currentIndex);
+            break;
          case INTEGER:
             if (value != null)
             {
@@ -139,18 +152,8 @@ public class AssetPropertyEditor extends Composite
                spinner.setSelection(attribute.getRangeMin());
             }
             break;
-         case BOOLEAN:
-            combo.select(LogParser.stringToBoolean(value) ? 0 : 1);
-            break;
-         case ENUM:
-            int currentIndex = 0;
-            for(Entry<String, String> element : attribute.getEnumValues().entrySet())
-            {
-               if (value != null && value.equals(element.getKey()))
-                  break;
-               currentIndex++;
-            }
-            combo.select(currentIndex);
+         case NUMBER:
+            text.setText((value != null) ? value : "0");
             break;
          case OBJECT_REFERENCE:
             if (value != null)
@@ -171,9 +174,6 @@ public class AssetPropertyEditor extends Composite
                objectSelector.setObjectId(0);
             }
             break;
-         case NUMBER:
-            text.setText((value != null) ? value : "0");
-            break;
          default:
             text.setText((value != null) ? value : "");
             break;
@@ -189,13 +189,13 @@ public class AssetPropertyEditor extends Composite
    {
       switch(attribute.getDataType())
       {
-         case ENUM:
+         case BOOLEAN:
             if ((combo.getSelectionIndex() == -1) && attribute.isMandatory())
             {
                combo.setErrorMessage(i18n.tr("This property is mandatory"));
             }
             return true;
-         case BOOLEAN:
+         case ENUM:
             if ((combo.getSelectionIndex() == -1) && attribute.isMandatory())
             {
                combo.setErrorMessage(i18n.tr("This property is mandatory"));
@@ -222,6 +222,13 @@ public class AssetPropertyEditor extends Composite
                return false;
             }
             return WidgetHelper.validateTextInput(text, new NumericTextFieldValidator((double)attribute.getRangeMin(), (double)attribute.getRangeMax()));
+         case OBJECT_REFERENCE:
+            if (attribute.isMandatory() && (objectSelector.getObjectId() == 0))
+            {
+               objectSelector.setErrorMessage(i18n.tr("This property is mandatory"));
+               return false;
+            }
+            return true;
          case STRING:
             if (attribute.isMandatory() && text.getText().isBlank())
             {
@@ -286,16 +293,18 @@ public class AssetPropertyEditor extends Composite
    {
       switch(attribute.getDataType())
       {
-         case INTEGER:
-            return Integer.toString(spinner.getSelection());
          case BOOLEAN:
+            if (combo.getSelectionIndex() == -1)
+               return "";
             return (combo.getSelectionIndex() == 0) ? "true" : "false";
          case ENUM:
             if (combo.getSelectionIndex() == -1)
                return "";
             return (String)attribute.getEnumValues().keySet().toArray()[combo.getSelectionIndex()];
+         case INTEGER:
+            return Integer.toString(spinner.getSelection());
          case OBJECT_REFERENCE:
-            return Long.toString(objectSelector.getObjectId());
+            return (objectSelector.getObjectId() == 0) ? "" : Long.toString(objectSelector.getObjectId());
          default:
             return text.getText().trim();
       }

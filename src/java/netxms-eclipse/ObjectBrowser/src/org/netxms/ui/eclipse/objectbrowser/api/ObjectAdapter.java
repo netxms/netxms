@@ -66,6 +66,12 @@ public class ObjectAdapter implements IWorkbenchAdapter
 		{
          case AbstractObject.OBJECT_ACCESSPOINT:
             return Activator.getImageDescriptor("icons/access_point.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_ASSET:
+            return Activator.getImageDescriptor("icons/asset.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_ASSETGROUP:
+            return Activator.getImageDescriptor("icons/asset-group.png"); //$NON-NLS-1$
+         case AbstractObject.OBJECT_ASSETROOT:
+            return Activator.getImageDescriptor("icons/asset-root.png"); //$NON-NLS-1$
          case AbstractObject.OBJECT_BUSINESSSERVICE:
          case AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE:
          case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
