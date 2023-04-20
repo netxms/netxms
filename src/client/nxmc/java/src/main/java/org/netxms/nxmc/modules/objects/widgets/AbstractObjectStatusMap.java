@@ -50,8 +50,9 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.modules.alarms.views.AdHocAlarmsView;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.WidgetHelper;
 
@@ -60,7 +61,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
  */
 public abstract class AbstractObjectStatusMap extends Composite implements ISelectionProvider
 {
-   protected View view;
+   protected ObjectView view;
    protected long rootObjectId = 0;
    protected NXCSession session;
    protected ISelection selection = null;
@@ -83,7 +84,7 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     * @param parent parent composite
     * @param style widget's style
     */
-   public AbstractObjectStatusMap(View view, Composite parent, int style)
+   public AbstractObjectStatusMap(ObjectView view, Composite parent, int style)
    {
       super(parent, style);
 
@@ -243,7 +244,9 @@ public abstract class AbstractObjectStatusMap extends Composite implements ISele
     */
    protected void showObjectDetails(AbstractObject object)
    {
-      // TODO: implement switch to object
+      // TODO: implement custom handlers
+      // Default implementation will show alarm list for object
+      view.openView(new AdHocAlarmsView(view.getObjectId(), object));
    }
 
    /**

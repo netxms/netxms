@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,31 +16,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.modules.objects.views;
+package org.netxms.nxmc.modules.alarms.views;
 
-import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Chassis;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
- * Ad-hoc chassis view
+ * Ad-hoc alarms view - display alarms for object X in context of object Y
  */
-public class AdHocChassisView extends ChassisView
+public class AdHocAlarmsView extends AlarmsView
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(AdHocAlarmsView.class);
+
    private long contextObjectId;
-   private Chassis chassis;
+   private long alarmSourceId;
 
    /**
-    * Create ad-hoc chassis view.
-    * 
-    * @param contextObjectId ID of object that is context for this view
-    * @param chassis chassis object to be shown
+    * Create new ad-hoc alarms view.
+    *
+    * @param contextObjectId context object ID
+    * @param alarmSource alarm source (object to display alarms for)
     */
-   public AdHocChassisView(long contextObjectId, Chassis chassis)
+   public AdHocAlarmsView(long contextObjectId, AbstractObject alarmSource)
    {
-      super(chassis.getGuid().toString());
+      super(i18n.tr("Alarms - {0}", alarmSource.getObjectName()), "Alarms." + contextObjectId + "." + alarmSource.getObjectId());
       this.contextObjectId = contextObjectId;
-      this.chassis = chassis;
+      this.alarmSourceId = alarmSource.getObjectId();
    }
 
    /**
@@ -53,7 +56,7 @@ public class AdHocChassisView extends ChassisView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#getPriority()
+    * @see org.netxms.nxmc.modules.alarms.views.AlarmsView#getPriority()
     */
    @Override
    public int getPriority()
@@ -71,30 +74,30 @@ public class AdHocChassisView extends ChassisView
    }
 
    /**
-    * @see org.netxms.nxmc.base.views.View#getName()
-    */
-   @Override
-   public String getName()
-   {
-      return super.getName() + " - " + chassis.getObjectName();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#createContent(org.eclipse.swt.widgets.Composite)
-    */
-   @Override
-   protected void createContent(Composite parent)
-   {
-      super.createContent(parent);
-      buildViewForChassis(chassis);
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    * @see org.netxms.nxmc.modules.alarms.views.AlarmsView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      // Ignore object change - this view always show chassis set at construction
+      // Ignore object change
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.alarms.views.AlarmsView#getContextName()
+    */
+   @Override
+   protected String getContextName()
+   {
+      return Registry.getSession().getObjectName(alarmSourceId);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#postContentCreate()
+    */
+   @Override
+   protected void postContentCreate()
+   {
+      super.postContentCreate();
+      alarmList.setRootObject(alarmSourceId);
    }
 }

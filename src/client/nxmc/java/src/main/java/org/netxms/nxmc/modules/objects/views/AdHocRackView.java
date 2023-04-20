@@ -44,7 +44,7 @@ public class AdHocRackView extends RackView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    * @see org.netxms.nxmc.modules.objects.views.RackView#isValidForContext(java.lang.Object)
     */
    @Override
    public boolean isValidForContext(Object context)
@@ -58,7 +58,7 @@ public class AdHocRackView extends RackView
    @Override
    public int getPriority()
    {
-      return 10000;
+      return DEFAULT_PRIORITY;
    }
 
    /**
@@ -80,7 +80,7 @@ public class AdHocRackView extends RackView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#createContent(org.eclipse.swt.widgets.Composite)
+    * @see org.netxms.nxmc.modules.objects.views.RackView#createContent(org.eclipse.swt.widgets.Composite)
     */
    @Override
    protected void createContent(Composite parent)
@@ -90,7 +90,7 @@ public class AdHocRackView extends RackView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    * @see org.netxms.nxmc.modules.objects.views.RackView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void onObjectChange(AbstractObject object)

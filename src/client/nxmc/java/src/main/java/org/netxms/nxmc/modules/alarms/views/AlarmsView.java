@@ -35,7 +35,7 @@ public class AlarmsView extends ObjectView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(AlarmsView.class);
 
-   private AlarmList alarmList;
+   protected AlarmList alarmList;
 
    /**
     * Create alarm view
@@ -43,6 +43,17 @@ public class AlarmsView extends ObjectView
    public AlarmsView()
    {
       super(i18n.tr("Alarms"), ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), "Alarms", true);
+   }
+
+   /**
+    * Create alarm view with given name and ID.
+    *
+    * @param name view name
+    * @param id view ID
+    */
+   protected AlarmsView(String name, String id)
+   {
+      super(name, ResourceManager.getImageDescriptor("icons/object-views/alarms.png"), id, true);
    }
 
    /**
