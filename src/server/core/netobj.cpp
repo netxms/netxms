@@ -533,7 +533,7 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
    if (success && isPollable())
       success = executeQueryOnObject(hdb, _T("DELETE FROM pollable_objects WHERE id=?"));
 
-   if (success)
+   if (success && (g_dbSyntax != DB_SYNTAX_TSDB))
       success = executeQueryOnObject(hdb, _T("DELETE FROM maintenance_journal WHERE object_id=?"));
 
    return success;

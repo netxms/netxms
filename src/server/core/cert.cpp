@@ -745,7 +745,10 @@ bool IsServerCertificateLoaded()
 void LogCertificateAction(CertificateOperation operation, UINT32 userId, UINT32 nodeId, const uuid& nodeGuid, CertificateType type, const TCHAR *subject, INT32 serial)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO certificate_action_log (record_id,timestamp,operation,user_id,node_id,node_guid,cert_type,subject,serial) VALUES (?,?,?,?,?,?,?,?,?)"));
+   DB_STATEMENT hStmt = DBPrepare(hdb,
+      (g_dbSyntax == DB_SYNTAX_TSDB) ?
+         _T("INSERT INTO certificate_action_log (record_id,operation_timestamp,operation,user_id,node_id,node_guid,cert_type,subject,serial) VALUES (?,to_timestamp(?),?,?,?,?,?,?,?)") :
+         _T("INSERT INTO certificate_action_log (record_id,operation_timestamp,operation,user_id,node_id,node_guid,cert_type,subject,serial) VALUES (?,?,?,?,?,?,?,?,?)"));
    if (hStmt != nullptr)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, InterlockedIncrement(&s_logRecordId));
