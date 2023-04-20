@@ -35,7 +35,7 @@ public class AssetAttributeListLabelProvider extends LabelProvider implements IT
 
    public final static String[] DATA_TYPES = { i18n.tr("String"), i18n.tr("Integer"), i18n.tr("Number"), 
          i18n.tr("Boolean"), i18n.tr("Enum"), i18n.tr("MAC address"), i18n.tr("IP address"), 
-         i18n.tr("UUID"), i18n.tr("Object reference") };
+         i18n.tr("UUID"), i18n.tr("Object reference"), i18n.tr("Date") };
    public final static String[] SYSTEM_TYPE = { i18n.tr("None"), i18n.tr("Serial"), i18n.tr("IP address"), 
          i18n.tr("MAC address"), i18n.tr("Vendor"), i18n.tr("Model") };
 

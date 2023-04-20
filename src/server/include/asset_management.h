@@ -42,7 +42,8 @@ enum class AMDataType
    MacAddress = 5,
    IPAddress = 6,
    UUID = 7,
-   ObjectReference = 8
+   ObjectReference = 8,
+   Date = 9
 };
 
 /**

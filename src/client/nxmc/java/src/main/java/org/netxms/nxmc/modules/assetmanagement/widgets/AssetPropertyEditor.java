@@ -18,12 +18,16 @@
  */
 package org.netxms.nxmc.modules.assetmanagement.widgets;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Map.Entry;
 import java.util.UUID;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DateTime;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
@@ -35,6 +39,7 @@ import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.IPAddressValidator;
 import org.netxms.nxmc.tools.MacAddressValidator;
 import org.netxms.nxmc.tools.NumericTextFieldValidator;
+import org.netxms.nxmc.tools.WidgetFactory;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +60,7 @@ public class AssetPropertyEditor extends Composite
    private LabeledText text;
    private LabeledCombo combo;
    private ObjectSelector objectSelector;
+   private DateTime dateSelector;
 
    /**
     * @param parent
@@ -101,6 +107,17 @@ public class AssetPropertyEditor extends Composite
             objectSelector.setLabel(label);
             objectSelector.setObjectClass(GenericObject.class);
             editorControl = objectSelector;
+            break;
+         case DATE:
+            final WidgetFactory factory = new WidgetFactory() {
+               @Override
+               public Control createControl(Composite parent, int style)
+               {
+                  return new DateTime(parent, style);
+               }
+            };
+            dateSelector = (DateTime)WidgetHelper.createLabeledControl(this, SWT.DATE | SWT.DROP_DOWN, factory, attributeDisplayName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+            editorControl = dateSelector;
             break;
          default:
             text = new LabeledText(this, SWT.NONE);
@@ -172,6 +189,22 @@ public class AssetPropertyEditor extends Composite
             else
             {
                objectSelector.setObjectId(0);
+            }
+            break;
+         case DATE:
+            if (value != null)
+            {
+               final Calendar c = Calendar.getInstance();
+               SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+               try
+               {
+                  c.setTime(sdf.parse(value));
+               }
+               catch(ParseException e)
+               {
+                  logger.error("Cannot parse date", e);
+               }
+               dateSelector.setDate(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
             }
             break;
          default:
@@ -274,6 +307,8 @@ public class AssetPropertyEditor extends Composite
                return false;
             }
             return true;
+         case DATE:
+            return true;
          default:
             if (attribute.isMandatory() && text.getText().isBlank())
             {
@@ -305,6 +340,8 @@ public class AssetPropertyEditor extends Composite
             return Integer.toString(spinner.getSelection());
          case OBJECT_REFERENCE:
             return (objectSelector.getObjectId() == 0) ? "" : Long.toString(objectSelector.getObjectId());
+         case DATE:
+            return Integer.toString(dateSelector.getYear() * 10000 + (dateSelector.getMonth() + 1) * 100 + dateSelector.getDay());
          default:
             return text.getText().trim();
       }

@@ -36,7 +36,8 @@ public enum AMDataType
    MAC_ADDRESS(5),
    IP_ADDRESS(6),
    UUID(7),
-   OBJECT_REFERENCE(8);
+   OBJECT_REFERENCE(8),
+   DATE(9);
    
    private static Logger logger = LoggerFactory.getLogger(AMDataType.class);
    private static Map<Integer, AMDataType> lookupTable = new HashMap<Integer, AMDataType>();

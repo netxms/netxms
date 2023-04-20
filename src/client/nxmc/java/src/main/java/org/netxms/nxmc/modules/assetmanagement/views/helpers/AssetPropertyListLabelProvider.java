@@ -18,6 +18,9 @@
  */
 package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -27,6 +30,7 @@ import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.constants.AMDataType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
@@ -133,7 +137,22 @@ public class AssetPropertyListLabelProvider extends LabelProvider implements ITa
       {
          String displayName = asetAttribute.getEnumValues().get(element.getValue());
          return displayName == null || displayName.isBlank() ? element.getValue() : displayName;
-      }         
+      }    
+      else if (asetAttribute.getDataType() == AMDataType.DATE)
+      {
+         final Calendar c = Calendar.getInstance();
+         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+         try
+         {
+            c.setTime(sdf.parse(element.getValue()));
+         }
+         catch(ParseException e)
+         {
+            log.error("Cannot parse date", e);
+            return "<Error>";
+         }
+         return DateFormatFactory.getDateFormat().format(c.getTime());
+      }      
 
       return element.getValue();
    }

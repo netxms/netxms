@@ -627,6 +627,37 @@ uint32_t DeleteAssetAttribute(const NXCPMessage &msg, const ClientSession &sessi
 }
 
 /**
+ * Validate date
+ */
+bool isValidDate(uint32_t formatedDate)
+{
+   int year = formatedDate / 10000 - 1900;
+   if (year > 0)
+      return false;
+
+   int day = formatedDate % 100;
+   int month = (formatedDate % 10000) / 100 - 1;
+
+   struct tm tmp;
+   memset(&tmp, 0, sizeof(struct tm));
+   tmp.tm_year = year;
+   tmp.tm_mon = month;
+   tmp.tm_mday = day;
+   tmp.tm_hour = 12; // to prevent unexpected results when DST changes
+   tmp.tm_isdst = -1;
+
+   time_t t = mktime(&tmp);
+#if HAVE_LOCALTIME_R
+   struct tm tmBuff;
+   struct tm *ltm = localtime_r(&t, &tmBuff);
+#else
+   struct tm *ltm = localtime(&t);
+#endif
+
+   return (day == ltm->tm_mday) && (month == ltm->tm_mon) && (year == ltm->tm_year);
+}
+
+/**
  * Validate value for asset property
  */
 std::pair<uint32_t, String> ValidateAssetPropertyValue(const TCHAR *name, const TCHAR *value)
@@ -762,6 +793,23 @@ std::pair<uint32_t, String> ValidateAssetPropertyValue(const TCHAR *name, const 
          else
          {
             resultText = _T("Invalid object reference");
+         }
+         break;
+      }
+      case AMDataType::Date:
+      {
+         TCHAR *error;
+         uint32_t date = _tcstoul(value, &error, 0);
+         if ((date != 0) && (*error == 0))
+         {
+            if (isValidDate(date))
+            {
+               resultText = _T("Invalid date");
+            }
+         }
+         else
+         {
+            resultText = _T("Invalid date format");
          }
          break;
       }
