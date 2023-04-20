@@ -2,46 +2,46 @@
 <configuration>
 	<formatVersion>4</formatVersion>
 	<server>
-		<version>4.2.327</version>
-		<buildTag>4.2-327-g5b8c7b6629</buildTag>
-		<operatingSystem>Linux 5.4.0-125-generic</operatingSystem>
+		<version>4.4.0-rc111</version>
+		<buildTag>4.4-111-g73f2966e6c</buildTag>
+		<operatingSystem>Linux 5.15.0-69-generic</operatingSystem>
 	</server>
 	<description></description>
 	<events>
-		<event id="100032">
+		<event id="100003">
 			<guid>3484ed17-df55-4209-ac42-3e6e7f52f219</guid>
 			<name>OS_HIGH_SWAP_USAGE</name>
-			<code>100032</code>
+			<code>100003</code>
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
 			<message>High swap space usage (%&lt;{multipliers, units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
-		<event id="100025">
-			<guid>10dd5d6f-57c3-4da7-8a7c-0d02b949f0df</guid>
-			<name>FS_NO_FREE_SPACE</name>
-			<code>100025</code>
-			<description></description>
-			<severity>4</severity>
-			<flags>1</flags>
-			<message>No free space left on file system %&lt;instance&gt;</message>
-			<tags></tags>
-		</event>
-		<event id="100027">
+		<event id="100005">
 			<guid>5619fef8-521e-46df-b8b5-882541c0112c</guid>
 			<name>OS_HIGH_CPU_UTILIZATION</name>
-			<code>100027</code>
+			<code>100005</code>
 			<description></description>
 			<severity>2</severity>
 			<flags>1</flags>
 			<message>High CPU utilization (%&lt;{multipliers, units}currentValue&gt;)</message>
 			<tags></tags>
 		</event>
-		<event id="100026">
+		<event id="100004">
+			<guid>10dd5d6f-57c3-4da7-8a7c-0d02b949f0df</guid>
+			<name>FS_NO_FREE_SPACE</name>
+			<code>100004</code>
+			<description></description>
+			<severity>4</severity>
+			<flags>1</flags>
+			<message>No free space left on file system %&lt;instance&gt;</message>
+			<tags></tags>
+		</event>
+		<event id="100006">
 			<guid>73a523df-93b7-4072-8ef7-06afcd9e476f</guid>
 			<name>FS_LOW_FREE_SPACE</name>
-			<code>100026</code>
+			<code>100006</code>
 			<description></description>
 			<severity>3</severity>
 			<flags>1</flags>
@@ -50,7 +50,7 @@
 		</event>
 	</events>
 	<templates>
-		<template id="461">
+		<template id="124">
 			<guid>11dcd1de-e7c8-449c-919a-7ca19161f5f7</guid>
 			<name>Generic UNIX</name>
 			<comments></comments>
@@ -58,7 +58,7 @@
 				<element id="1">Operating Systems</element>
 			</path>
 			<dataCollection>
-				<dci id="1787">
+				<dci id="76">
 					<guid>6fe0556d-4977-45b9-bc54-d8533c2c2478</guid>
 					<name>System.Memory.Physical.Used</name>
 					<description>System: used physical memory</description>
@@ -85,7 +85,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1788">
+				<dci id="77">
 					<guid>98bfe0c0-112b-4586-b7ed-af12f2c4ac94</guid>
 					<name>System.CPU.Usage</name>
 					<description>CPU: usage</description>
@@ -124,7 +124,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1789">
+				<dci id="78">
 					<guid>05e0ca41-ab2f-4f36-8a11-3c2b9c221cc7</guid>
 					<name>System.Memory.Swap.Used</name>
 					<description>System: used swap space</description>
@@ -151,7 +151,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1790">
+				<dci id="79">
 					<guid>044b1528-0022-4211-b1f2-661dd72ab865</guid>
 					<name>System.Memory.Swap.Free</name>
 					<description>System: free swap space</description>
@@ -178,7 +178,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1791">
+				<dci id="80">
 					<guid>77d3e9a2-912c-4ff9-8b5a-d5f0585564b0</guid>
 					<name>System.Memory.Swap.UsedPerc</name>
 					<description>System: used swap space</description>
@@ -217,7 +217,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1792">
+				<dci id="81">
 					<guid>f4a56127-af7d-4175-8c4d-a102460e2e2a</guid>
 					<name>System.CPU.LoadAvg</name>
 					<description>CPU: load average (1 minute)</description>
@@ -244,7 +244,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1793">
+				<dci id="82">
 					<guid>1f46027c-b195-43d1-a821-bd853c459994</guid>
 					<name>System.CPU.LoadAvg5</name>
 					<description>CPU: load average (5 minutes)</description>
@@ -271,7 +271,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1794">
+				<dci id="83">
 					<guid>b52d33b7-13c9-4df9-b42c-bf1728fd6ed3</guid>
 					<name>System.CPU.LoadAvg15</name>
 					<description>CPU: load average (15 minutes)</description>
@@ -298,7 +298,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1795">
+				<dci id="84">
 					<guid>719bb8fc-f5ce-4c75-bd82-be79ed3707b4</guid>
 					<name>System.Memory.Physical.Free</name>
 					<description>System: free physical memory</description>
@@ -325,7 +325,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1796">
+				<dci id="85">
 					<guid>430a3257-c726-4d0b-8d1a-2eb2b0243011</guid>
 					<name>System.ProcessCount</name>
 					<description>System: total processes</description>
@@ -352,7 +352,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1797">
+				<dci id="86">
 					<guid>1d3df98c-f639-449a-a38c-26a152b7c7ec</guid>
 					<name>System.ThreadCount</name>
 					<description>System: total threads</description>
@@ -379,7 +379,7 @@
 					<instance></instance>
 					<instanceDiscoveryData></instanceDiscoveryData>
 				</dci>
-				<dci id="1798">
+				<dci id="87">
 					<guid>5647149c-f9b7-4008-8fc4-9b98f9c703eb</guid>
 					<name>FileSystem.FreePerc({instance})</name>
 					<description>File system: free space on {instance}</description>
@@ -427,9 +427,9 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>FileSystem.MountPoints</instanceDiscoveryData>
-					<instanceFilter>type=AgentReadParameter($node, &quot;FileSystem.Type(&quot; . $1 . &quot;)&quot;);&#x0A;if (&#x0A;&#x09;type != null &amp;&amp; (&#x0A;&#x09;&#x09;type == &quot;aufs&quot; ||&#x0A;&#x09;&#x09;type == &quot;autofs&quot; ||&#x0A;&#x09;&#x09;type == &quot;cgroup&quot; ||&#x0A;&#x09;&#x09;type == &quot;configfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;debugfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;devpts&quot; ||&#x0A;&#x09;&#x09;type == &quot;devtmpfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;fusectl&quot; ||&#x0A;&#x09;&#x09;type == &quot;fuse.gvfsd-fuse&quot; ||&#x0A;&#x09;&#x09;type == &quot;fuse.lxcfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;hugetlbfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;iso9660&quot; ||&#x0A;&#x09;&#x09;type == &quot;mqueue&quot; ||&#x0A;&#x09;&#x09;type == &quot;nfsd&quot; ||&#x0A;&#x09;&#x09;type == &quot;overlay&quot; ||&#x0A;&#x09;&#x09;type == &quot;proc&quot; ||&#x0A;&#x09;&#x09;type == &quot;pstore&quot; ||&#x0A;&#x09;&#x09;type == &quot;rpc_pipefs&quot; ||&#x0A;&#x09;&#x09;type == &quot;securityfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;selinuxfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;squashfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;sysfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;tmpfs&quot;&#x0A;&#x09;)) {&#x0A;&#x09;return false;&#x0A;}&#x0A;&#x0A;if (($1 == &quot;/proc&quot;) ||&#x0A;    ($1 like &quot;/proc/*&quot;) ||&#x0A;    ($1 == &quot;/sys&quot;) ||&#x0A;    ($1 like &quot;/sys/*&quot;) ||&#x0A;    ($1 == &quot;/run&quot;) ||&#x0A;    ($1 like &quot;/run/*&quot;) ||&#x0A;    ($1 == &quot;/dev&quot;) ||&#x0A;    ($1 like &quot;/dev/*&quot;))&#x0A;   return false;&#x0A;return true;</instanceFilter>
+					<instanceFilter>if (($1 == &quot;/proc&quot;) or&#x0A;    ($1 like &quot;/proc/*&quot;) or&#x0A;    ($1 == &quot;/sys&quot;) or&#x0A;    ($1 like &quot;/sys/*&quot;) or&#x0A;    ($1 == &quot;/run&quot;) or&#x0A;    ($1 like &quot;/run/*&quot;) or&#x0A;    ($1 == &quot;/dev&quot;) or&#x0A;    ($1 like &quot;/dev/*&quot;))&#x0A;   return false;&#x0A;&#x0A;excludedFSTypes = %(&#x0A;   &quot;ahafs&quot;,&#x0A;   &quot;aufs&quot;,&#x0A;   &quot;autofs&quot;,&#x0A;   &quot;cgroup&quot;,&#x0A;   &quot;configfs&quot;,&#x0A;   &quot;debugfs&quot;,&#x0A;   &quot;devpts&quot;,&#x0A;   &quot;devtmpfs&quot;,&#x0A;   &quot;fusectl&quot;,&#x0A;   &quot;fuse.gvfsd-fuse&quot;,&#x0A;   &quot;fuse.lxcfs&quot;,&#x0A;   &quot;hugetlbfs&quot;,&#x0A;   &quot;iso9660&quot;,&#x0A;   &quot;mqueue&quot;,&#x0A;   &quot;namefs&quot;,&#x0A;   &quot;nfsd&quot;,&#x0A;   &quot;overlay&quot;,&#x0A;   &quot;proc&quot;,&#x0A;   &quot;pstore&quot;,&#x0A;   &quot;rpc_pipefs&quot;,&#x0A;   &quot;securityfs&quot;,&#x0A;   &quot;selinuxfs&quot;,&#x0A;   &quot;squashfs&quot;,&#x0A;   &quot;sysfs&quot;,&#x0A;   &quot;tmpfs&quot;&#x0A;);&#x0A;&#x0A;fsType = AgentReadParameter($node, f&quot;FileSystem.Type({$1})&quot;);&#x0A;if (fsType in excludedFSTypes)&#x0A;&#x09;return false;&#x0A;&#x0A;return true;</instanceFilter>
 				</dci>
-				<dci id="1799">
+				<dci id="88">
 					<guid>d1b18436-c28c-4d41-a909-b2107f7f2201</guid>
 					<name>FileSystem.UsedPerc({instance})</name>
 					<description>File system: used space on {instance}</description>
@@ -455,7 +455,7 @@
 					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;1.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
 					<instance></instance>
 					<instanceDiscoveryData>FileSystem.MountPoints</instanceDiscoveryData>
-					<instanceFilter>type=AgentReadParameter($node, &quot;FileSystem.Type(&quot; . $1 . &quot;)&quot;);&#x0A;if (&#x0A;&#x09;type != null &amp;&amp; (&#x0A;&#x09;&#x09;type == &quot;aufs&quot; ||&#x0A;&#x09;&#x09;type == &quot;autofs&quot; ||&#x0A;&#x09;&#x09;type == &quot;cgroup&quot; ||&#x0A;&#x09;&#x09;type == &quot;configfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;debugfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;devpts&quot; ||&#x0A;&#x09;&#x09;type == &quot;devtmpfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;fusectl&quot; ||&#x0A;&#x09;&#x09;type == &quot;fuse.gvfsd-fuse&quot; ||&#x0A;&#x09;&#x09;type == &quot;fuse.lxcfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;hugetlbfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;iso9660&quot; ||&#x0A;&#x09;&#x09;type == &quot;mqueue&quot; ||&#x0A;&#x09;&#x09;type == &quot;nfsd&quot; ||&#x0A;&#x09;&#x09;type == &quot;overlay&quot; ||&#x0A;&#x09;&#x09;type == &quot;proc&quot; ||&#x0A;&#x09;&#x09;type == &quot;pstore&quot; ||&#x0A;&#x09;&#x09;type == &quot;rpc_pipefs&quot; ||&#x0A;&#x09;&#x09;type == &quot;securityfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;selinuxfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;squashfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;sysfs&quot; ||&#x0A;&#x09;&#x09;type == &quot;tmpfs&quot;&#x0A;&#x09;)) {&#x0A;&#x09;return false;&#x0A;}&#x0A;&#x0A;if (($1 == &quot;/proc&quot;) ||&#x0A;    ($1 like &quot;/proc/*&quot;) ||&#x0A;    ($1 == &quot;/sys&quot;) ||&#x0A;    ($1 like &quot;/sys/*&quot;) ||&#x0A;    ($1 == &quot;/run&quot;) ||&#x0A;    ($1 like &quot;/run/*&quot;) ||&#x0A;    ($1 == &quot;/dev&quot;) ||&#x0A;    ($1 like &quot;/dev/*&quot;))&#x0A;   return false;&#x0A;return true;</instanceFilter>
+					<instanceFilter>if (($1 == &quot;/proc&quot;) or&#x0A;    ($1 like &quot;/proc/*&quot;) or&#x0A;    ($1 == &quot;/sys&quot;) or&#x0A;    ($1 like &quot;/sys/*&quot;) or&#x0A;    ($1 == &quot;/run&quot;) or&#x0A;    ($1 like &quot;/run/*&quot;) or&#x0A;    ($1 == &quot;/dev&quot;) or&#x0A;    ($1 like &quot;/dev/*&quot;))&#x0A;   return false;&#x0A;&#x0A;excludedFSTypes = %(&#x0A;   &quot;ahafs&quot;,&#x0A;   &quot;aufs&quot;,&#x0A;   &quot;autofs&quot;,&#x0A;   &quot;cgroup&quot;,&#x0A;   &quot;configfs&quot;,&#x0A;   &quot;debugfs&quot;,&#x0A;   &quot;devpts&quot;,&#x0A;   &quot;devtmpfs&quot;,&#x0A;   &quot;fusectl&quot;,&#x0A;   &quot;fuse.gvfsd-fuse&quot;,&#x0A;   &quot;fuse.lxcfs&quot;,&#x0A;   &quot;hugetlbfs&quot;,&#x0A;   &quot;iso9660&quot;,&#x0A;   &quot;mqueue&quot;,&#x0A;   &quot;namefs&quot;,&#x0A;   &quot;nfsd&quot;,&#x0A;   &quot;overlay&quot;,&#x0A;   &quot;proc&quot;,&#x0A;   &quot;pstore&quot;,&#x0A;   &quot;rpc_pipefs&quot;,&#x0A;   &quot;securityfs&quot;,&#x0A;   &quot;selinuxfs&quot;,&#x0A;   &quot;squashfs&quot;,&#x0A;   &quot;sysfs&quot;,&#x0A;   &quot;tmpfs&quot;&#x0A;);&#x0A;&#x0A;fsType = AgentReadParameter($node, f&quot;FileSystem.Type({$1})&quot;);&#x0A;if (fsType in excludedFSTypes)&#x0A;&#x09;return false;&#x0A;&#x0A;return true;</instanceFilter>
 				</dci>
 			</dataCollection>
 			<agentPolicies>
