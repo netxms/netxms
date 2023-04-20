@@ -8948,25 +8948,26 @@ public class NXCSession
    }
 
    /**
-    * Export server configuration. Returns requested configuration elements
-    * exported into XML.
+    * Export server configuration. Returns requested configuration elements exported into XML.
     *
-    * @param description      Description of exported configuration
-    * @param events           List of event codes
-    * @param traps            List of trap identifiers
-    * @param templates        List of template object identifiers
-    * @param rules            List of event processing rule GUIDs
-    * @param scripts          List of library script identifiers
-    * @param objectTools      List of object tool identifiers
+    * @param description Description of exported configuration
+    * @param events List of event codes
+    * @param traps List of trap identifiers
+    * @param templates List of template object identifiers
+    * @param rules List of event processing rule GUIDs
+    * @param scripts List of library script identifiers
+    * @param objectTools List of object tool identifiers
     * @param dciSummaryTables List of DCI summary table identifiers
-    * @param actions          List of action codes
-    * @param webService       List of web service definition id's
+    * @param actions List of action codes
+    * @param webServices List of web service definition id's
+    * @param assetAttributes List of asset management atributes to be exported
     * @return resulting XML document
-    * @throws IOException  if socket I/O error occurs
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules,
-         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webService, String[] assetDefinitions) throws IOException, NXCException
+         long[] scripts, long[] objectTools, long[] dciSummaryTables, long[] actions, long[] webServices,
+         String[] assetAttributes) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -8984,9 +8985,9 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_SUMMARY_TABLE_LIST, dciSummaryTables);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ACTIONS, actions.length);
       msg.setField(NXCPCodes.VID_ACTION_LIST, actions);
-      msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_DEF_COUNT, webService.length);
-      msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST, webService);
-      msg.setField(NXCPCodes.VID_ASSET_ATTRIBUTE_NAMES, assetDefinitions);
+      msg.setFieldInt32(NXCPCodes.VID_WEB_SERVICE_DEF_COUNT, webServices.length);
+      msg.setField(NXCPCodes.VID_WEB_SERVICE_DEF_LIST, webServices);
+      msg.setField(NXCPCodes.VID_ASSET_ATTRIBUTE_NAMES, assetAttributes);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;
