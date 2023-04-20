@@ -28,6 +28,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.nxmc.Registry;
@@ -109,6 +110,12 @@ public class CreateAssetDialog extends Dialog
       aliasField.setLayoutData(gd);
       
       schema.values().stream().sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName())).forEach((a) -> createPropertyEditor(dialogArea, a));
+
+      Label label = new Label(dialogArea, SWT.NONE);
+      label.setText(i18n.tr("* denotes mandatory fields"));
+      gd = new GridData();
+      gd.verticalIndent = WidgetHelper.OUTER_SPACING * 2;
+      label.setLayoutData(gd);
 
       return dialogArea;
    }

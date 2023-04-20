@@ -67,12 +67,15 @@ public class AssetPropertyEditor extends Composite
 
       setLayout(new FillLayout());
 
-      String attributeDisplayName = attribute.getEffectiveDisplayName();
+      String label = attribute.getEffectiveDisplayName();
+      if (attribute.isMandatory())
+         label = label + " *";
+
       switch(attribute.getDataType())
       {
          case INTEGER:
             spinner = new LabeledSpinner(this, SWT.NONE);
-            spinner.setLabel(attributeDisplayName);
+            spinner.setLabel(label);
             if (attribute.getRangeMax() != 0 || attribute.getRangeMin() != 0)
             {
                spinner.setRange(attribute.getRangeMin(), attribute.getRangeMax());
@@ -81,27 +84,27 @@ public class AssetPropertyEditor extends Composite
             break;
          case BOOLEAN:
             combo = new LabeledCombo(this, SWT.NONE);
-            combo.setLabel(attributeDisplayName);
+            combo.setLabel(label);
             combo.add("Yes");
             combo.add("No");
             editorControl = combo.getControl();
             break;
          case ENUM:
             combo = new LabeledCombo(this, SWT.NONE);
-            combo.setLabel(attributeDisplayName);
+            combo.setLabel(label);
             for(Entry<String, String> element : attribute.getEnumValues().entrySet())
                combo.add(element.getValue().isBlank() ? element.getKey() : element.getValue());
             editorControl = combo.getControl();
             break;
          case OBJECT_REFERENCE:
             objectSelector = new ObjectSelector(this, SWT.NONE, false);
-            objectSelector.setLabel(attributeDisplayName);
+            objectSelector.setLabel(label);
             objectSelector.setObjectClass(GenericObject.class);
             editorControl = objectSelector;
             break;
          default:
             text = new LabeledText(this, SWT.NONE);
-            text.setLabel(attributeDisplayName);
+            text.setLabel(label);
             editorControl = text.getControl();
             break;
       }
