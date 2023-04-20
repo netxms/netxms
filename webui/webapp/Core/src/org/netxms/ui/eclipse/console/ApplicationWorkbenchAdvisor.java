@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,9 +45,11 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.model.ContributionComparator;
 import org.eclipse.ui.model.IContributionService;
 import org.eclipse.ui.progress.UIJob;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.dialogs.SelectPerspectiveDialog;
@@ -187,12 +189,16 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		}
 		catch(InvocationTargetException e)
 		{
-		   e.printStackTrace();
-			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
+		   Throwable cause = e.getCause();
+		   Activator.logError("Login job failed", cause);
+         if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
+         {
+            MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, cause.getLocalizedMessage());
+         }
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         Activator.logError("Error running login job", e);
 			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
 		}
 		return success;

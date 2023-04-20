@@ -187,6 +187,12 @@ public final class RCC
    public static final int PROTECTED_IMAGE = 156;
    public static final int INVALID_SSH_PROXY_ID = 157;
    public static final int FILE_APPEND_POSSIBLE = 158;
+   public static final int VALIDATION_ERROR = 159;
+   public static final int MANDATORY_ATTRIBUTE = 160;
+   public static final int UNKNOWN_ATTRIBUTE = 161;
+   public static final int ATTRIBUTE_ALREADY_EXISTS = 162;
+   public static final int MANDATORY_ATTRIBUTE_MISSING = 163;
+   public static final int OPERATION_CANCELLED = 164;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

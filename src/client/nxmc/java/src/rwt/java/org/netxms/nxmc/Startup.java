@@ -206,8 +206,12 @@ public class Startup implements EntryPoint, StartupParameters
          }
          catch(InvocationTargetException e)
          {
-            logger.error("Login job failed", e.getCause());
-            MessageDialog.openError(null, i18n.tr("Connection Error"), e.getCause().getLocalizedMessage());
+            Throwable cause = e.getCause();
+            logger.error("Login job failed", cause);
+            if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
+            {
+               MessageDialog.openError(null, i18n.tr("Connection Error"), cause.getLocalizedMessage());
+            }
          }
          catch(Exception e)
          {

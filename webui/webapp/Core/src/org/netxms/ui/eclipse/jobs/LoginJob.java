@@ -95,31 +95,32 @@ public class LoginJob implements IRunnableWithProgress
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
       monitor.beginTask(Messages.get(display).LoginJob_connecting, 100);
+
+      final String hostName;
+      int port = NXCSession.DEFAULT_CONN_PORT;
+      final String[] split = server.split(":"); //$NON-NLS-1$
+      if (split.length == 2)
+      {
+         hostName = split[0];
+         try
+         {
+            port = Integer.valueOf(split[1]);
+         }
+         catch(NumberFormatException e)
+         {
+            // ignore
+         }
+      }
+      else
+      {
+         hostName = server;
+      }
+
+      Activator.logInfo("Connecting to " + hostName + " port " + port);
+
+      final NXCSession session = createSession(hostName, port);
       try
       {
-         final String hostName;
-         int port = NXCSession.DEFAULT_CONN_PORT;
-         final String[] split = server.split(":"); //$NON-NLS-1$
-         if (split.length == 2)
-         {
-            hostName = split[0];
-            try
-            {
-               port = Integer.valueOf(split[1]);
-            }
-            catch(NumberFormatException e)
-            {
-               // ignore
-            }
-         }
-         else
-         {
-            hostName = server;
-         }
-         
-         Activator.logInfo("Connecting to " + hostName + " port " + port);
-
-         final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(language);
 
          session.setClientInfo("nxmc-webui/" + VersionInfo.version()); //$NON-NLS-1$
@@ -261,7 +262,7 @@ public class LoginJob implements IRunnableWithProgress
          monitor.setTaskName(Messages.get(display).LoginJob_init_extensions);
          callLoginListeners(session);
          monitor.worked(5);
-         
+
          setupSessionListener(session, display);
 
          Activator.logInfo("Creating keepalive timer");
@@ -269,6 +270,7 @@ public class LoginJob implements IRunnableWithProgress
       }
       catch(Exception e)
       {
+         session.disconnect();
          throw new InvocationTargetException(e);
       }
       finally

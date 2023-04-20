@@ -49,7 +49,7 @@ public class DateTimeSelector extends Composite
       layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
 		setLayout(layout);
 
-		datePicker = new DateTime(this, SWT.DATE | SWT.DROP_DOWN);
+      datePicker = new DateTime(this, SWT.DATE | SWT.DROP_DOWN);
       datePicker.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		timePicker = new DateTime(this, SWT.TIME);
       timePicker.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));

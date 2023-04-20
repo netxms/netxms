@@ -87,31 +87,31 @@ public class LoginJob implements IRunnableWithProgress
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
       monitor.beginTask(i18n.tr("Connecting..."), 8);
+      final String hostName;
+      int port = NXCSession.DEFAULT_CONN_PORT;
+      final String[] split = server.split(":");
+      if (split.length == 2)
+      {
+         hostName = split[0];
+         try
+         {
+            port = Integer.valueOf(split[1]);
+         }
+         catch(NumberFormatException e)
+         {
+            // ignore
+         }
+      }
+      else
+      {
+         hostName = server;
+      }
+
+      logger.info("Connecting to " + hostName + " port " + port);
+
+      final NXCSession session = createSession(hostName, port);
       try
       {
-         final String hostName;
-         int port = NXCSession.DEFAULT_CONN_PORT;
-         final String[] split = server.split(":"); //$NON-NLS-1$
-         if (split.length == 2)
-         {
-            hostName = split[0];
-            try
-            {
-               port = Integer.valueOf(split[1]);
-            }
-            catch(NumberFormatException e)
-            {
-               // ignore
-            }
-         }
-         else
-         {
-            hostName = server;
-         }
-         
-         logger.info("Connecting to " + hostName + " port " + port);
-
-         final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(Locale.getDefault().getLanguage());
          
          session.setClientInfo("nxmc/" + VersionInfo.version()); //$NON-NLS-1$
@@ -207,6 +207,7 @@ public class LoginJob implements IRunnableWithProgress
       }
       catch(Exception e)
       {
+         session.disconnect();
          throw new InvocationTargetException(e);
       }
       finally

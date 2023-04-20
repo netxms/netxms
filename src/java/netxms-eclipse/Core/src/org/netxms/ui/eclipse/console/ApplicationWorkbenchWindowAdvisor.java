@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -456,21 +456,25 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
             }
             else
             {
-               e.getCause().printStackTrace();
-               MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
+               Throwable cause = e.getCause();
+               Activator.logError("Login job failed", cause);
+               if (!(cause instanceof NXCException) || (((NXCException)cause).getErrorCode() != RCC.OPERATION_CANCELLED))
+               {
+                  MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, cause.getLocalizedMessage());
+               }
             }
          }
          catch(Exception e)
          {
-            e.printStackTrace();
-            MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString()); //$NON-NLS-1$
+            Activator.logError("Error running login job", e);
+            MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Exception, e.toString());
          }
       }
 
       CertificateManagerProvider.dispose();
 
       // Suggest user to change password if it is expired
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final NXCSession session = ConsoleSharedData.getSession();
       if ((session.getAuthenticationMethod() == AuthenticationType.PASSWORD) && session.isPasswordExpired())
       {
          requestPasswordChange(loginDialog.getPassword(), session);
