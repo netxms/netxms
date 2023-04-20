@@ -24,6 +24,69 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade form 44.8 to 44.9
+ */
+static bool H_UpgradeFromV8()
+{
+   if (GetSchemaLevelForMajorVersion(43) < 9)
+   {
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+      {
+         CHK_EXEC(SQLQuery(_T("ALTER TABLE maintenance_journal RENAME TO maintenance_journal_v43_9")));
+         CHK_EXEC(CreateTable(
+               _T("CREATE TABLE maintenance_journal (")
+               _T("   record_id integer not null,")
+               _T("   object_id integer not null,")
+               _T("   author integer not null,")
+               _T("   last_edited_by integer not null,")
+               _T("   description $SQL:TEXT null,")
+               _T("   creation_time timestamptz not null,")
+               _T("   modification_time timestamptz not null,")
+               _T("   PRIMARY KEY(record_id,creation_time))")));
+         CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_maintjrn_creation_time ON maintenance_journal(creation_time)")));
+         CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_maintjrn_object_id ON maintenance_journal(object_id)")));
+         CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('maintenance_journal', 'creation_time', chunk_time_interval => interval '86400 seconds')")));
+
+         CHK_EXEC(SQLQuery(_T("ALTER TABLE certificate_action_log RENAME TO certificate_action_log_v43_9")));
+         CHK_EXEC(CreateTable(
+               _T("CREATE TABLE certificate_action_log (")
+               _T("   record_id integer not null,")
+               _T("   operation_timestamp timestamptz not null,")
+               _T("   operation integer not null,")
+               _T("   user_id integer not null,")
+               _T("   node_id integer not null,")
+               _T("   node_guid varchar(36) null,")
+               _T("   cert_type integer not null,")
+               _T("   subject varchar(36) null,")
+               _T("   serial integer null,")
+               _T("   PRIMARY KEY(record_id,operation_timestamp))")));
+         CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_cert_action_log_timestamp ON certificate_action_log(operation_timestamp)")));
+         CHK_EXEC(SQLQuery(_T("SELECT create_hypertable('certificate_action_log', 'operation_timestamp', chunk_time_interval => interval '86400 seconds')")));
+
+         RegisterOnlineUpgrade(43, 9);
+      }
+      else
+      {
+         CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_maintjrn_creation_time ON maintenance_journal(creation_time)")));
+         CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_maintjrn_object_id ON maintenance_journal(object_id)")));
+
+         CHK_EXEC(DBRenameColumn(g_dbHandle, _T("certificate_action_log"), _T("timestamp"), _T("operation_timestamp")));
+         CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_cert_action_log_timestamp ON certificate_action_log(operation_timestamp)")));
+      }
+
+      CHK_EXEC(CreateConfigParam(_T("CertificateActionLog.RetentionTime"),
+            _T("370"),
+            _T("Retention time in days for certificate action log. All records older than specified will be deleted by housekeeping process."),
+            _T("days"),
+            'I', true, false, false, false));
+
+      CHK_EXEC(SetSchemaLevelForMajorVersion(43, 9));
+   }
+   CHK_EXEC(SetMinorSchemaVersion(9));
+   return true;
+}
+
+/**
  * Upgrade form 44.7 to 44.8
  */
 static bool H_UpgradeFromV7()
@@ -68,7 +131,6 @@ static bool H_UpgradeFromV7()
          _T("Retention time in days for the records in asset change log. All records older than specified will be deleted by housekeeping process."),
          _T("days"),
          'I', true, false, false, false));
-
 
    // Update access rights for predefined "Admins" group
    DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE id=1073741825"));
@@ -304,6 +366,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 8,  44, 9,  H_UpgradeFromV8  },
    { 7,  44, 8,  H_UpgradeFromV7  },
    { 6,  44, 7,  H_UpgradeFromV6  },
    { 5,  44, 6,  H_UpgradeFromV5  },

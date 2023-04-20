@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2020 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -485,6 +485,25 @@ static bool Upgrade_35_2()
 }
 
 /**
+ * Online upgrade for version 43.9
+ */
+static bool Upgrade_43_9()
+{
+   if (g_dbSyntax != DB_SYNTAX_TSDB)
+      return true;   // not needed
+
+   WriteToTerminalEx(_T("Converting table \x1b[1mmaintenance_journal\x1b[0m\n"));
+   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO maintenance_journal (record_id,object_id,author,last_edited_by,description,creation_time,modification_time) SELECT record_id,object_id,author,last_edited_by,description,to_timestamp(creation_time),to_timestamp(modification_time) FROM maintenance_journal_v43_9")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE maintenance_journal_v43_9 CASCADE")));
+
+   WriteToTerminalEx(_T("Converting table \x1b[1mcertificate_action_log\x1b[0m\n"));
+   CHK_EXEC_NO_SP(SQLQuery(_T("INSERT INTO certificate_action_log (record_id,operation_timestamp,operation,user_id,node_id,node_guid,cert_type,subject,serial) SELECT record_id,to_timestamp(timestamp),operation,user_id,node_id,node_guid,cert_type,subject,serial FROM certificate_action_log_v43_9")));
+   CHK_EXEC_NO_SP(SQLQuery(_T("DROP TABLE certificate_action_log_v43_9 CASCADE")));
+
+   return true;
+}
+
+/**
  * Online upgrade registry
  */
 struct
@@ -494,6 +513,7 @@ struct
    bool (*handler)();
 } s_handlers[] =
 {
+   { 43, 9,  Upgrade_43_9  },
    { 35, 2,  Upgrade_35_2  },
    { 33, 6,  Upgrade_33_6  },
    { 30, 87, Upgrade_30_87 },

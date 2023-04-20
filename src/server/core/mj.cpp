@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2022 Raden Solutions
+** Copyright (C) 2022-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,13 @@
  */
 static void BuildFieldListAndCondition(StringBuffer* query, const SharedObjectArray<NetObj>& sources, time_t startTime, time_t endTime)
 {
-   query->append(_T(" record_id,object_id,author,last_edited_by,description,creation_time,modification_time FROM maintenance_journal WHERE object_id IN ("));
+   //date_part('epoch',%s_timestamp)::int
+   query->append(_T(" record_id,object_id,author,last_edited_by,description,"));
+   if (g_dbSyntax == DB_SYNTAX_TSDB)
+      query->append(_T("date_part('epoch',creation_time)::int,date_part('epoch',modification_time)::int"));
+   else
+      query->append(_T("creation_time,modification_time"));
+   query->append(_T(" FROM maintenance_journal WHERE object_id IN ("));
    for (const shared_ptr<NetObj>& o : sources)
    {
       query->append(o->getId());
@@ -39,12 +45,20 @@ static void BuildFieldListAndCondition(StringBuffer* query, const SharedObjectAr
    if (startTime != 0)
    {
       query->append(_T(" AND creation_time>="));
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+         query->append(_T("to_timestamp("));
       query->append(static_cast<int64_t>(startTime));
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+         query->append(_T(")"));
    }
    if (endTime != 0)
    {
       query->append(_T(" AND creation_time<="));
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+         query->append(_T("to_timestamp("));
       query->append(static_cast<int64_t>(endTime));
+      if (g_dbSyntax == DB_SYNTAX_TSDB)
+         query->append(_T(")"));
    }
 
    query->append(_T(" ORDER BY record_id DESC"));
@@ -133,7 +147,10 @@ bool AddMaintenanceJournalRecord(uint32_t objectId, uint32_t userId, const TCHAR
 {
    bool success = false;
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT stmt = DBPrepare(db, _T("INSERT INTO maintenance_journal (record_id, object_id, author, last_edited_by, description, creation_time, modification_time) VALUES (?, ?, ?, ?, ?, ?, ?)"));
+   DB_STATEMENT stmt = DBPrepare(db,
+      (g_dbSyntax == DB_SYNTAX_TSDB) ?
+         _T("INSERT INTO maintenance_journal (record_id, object_id, author, last_edited_by, description, creation_time, modification_time) VALUES (?, ?, ?, ?, ?, to_timestamp(?), to_timestamp(?))") :
+         _T("INSERT INTO maintenance_journal (record_id, object_id, author, last_edited_by, description, creation_time, modification_time) VALUES (?, ?, ?, ?, ?, ?, ?)"));
    if (stmt != nullptr)
    {
       DBBind(stmt, 1, DB_SQLTYPE_INTEGER, CreateUniqueId(IDG_MAINTENANCE_JOURNAL));
@@ -178,7 +195,10 @@ uint32_t UpdateMaintenanceJournalRecord(const NXCPMessage& request, uint32_t use
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
 
    uint32_t rcc;
-   DB_STATEMENT stmt = DBPrepare(db, _T("UPDATE maintenance_journal SET last_edited_by=?, description=?, modification_time=? WHERE record_id=?"));
+   DB_STATEMENT stmt = DBPrepare(db,
+      (g_dbSyntax == DB_SYNTAX_TSDB) ?
+      _T("UPDATE maintenance_journal SET last_edited_by=?, description=?, modification_time=to_timestamp(?) WHERE record_id=?") :
+      _T("UPDATE maintenance_journal SET last_edited_by=?, description=?, modification_time=? WHERE record_id=?"));
    if (stmt != nullptr)
    {
       DBBind(stmt, 1, DB_SQLTYPE_INTEGER, userId); // last edited by

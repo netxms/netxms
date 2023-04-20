@@ -1833,7 +1833,11 @@ CREATE TABLE graph_acl
 CREATE TABLE certificate_action_log
 (
   record_id integer not null,
-  timestamp integer not null,
+#ifdef DB_TSDB
+  operation_timestamp timestamptz not null,
+#else
+  operation_timestamp integer not null,
+#endif
   operation integer not null,
   user_id integer not null,
   node_id integer not null,
@@ -1841,8 +1845,17 @@ CREATE TABLE certificate_action_log
   cert_type integer not null,
   subject varchar(255) null,
   serial integer null,
-  PRIMARY KEY(record_id)
+#ifdef DB_TSDB
+#else
+  PRIMARY KEY(record_id,operation_timestamp)
+#endif
 ) TABLE_TYPE;
+
+CREATE INDEX idx_cert_action_log_timestamp ON certificate_action_log(operation_timestamp);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('certificate_action_log', 'operation_timestamp', chunk_time_interval => interval '86400 seconds');
+#endif
 
 /**
  * Audit log
@@ -2599,10 +2612,23 @@ CREATE TABLE maintenance_journal
    author integer not null,
    last_edited_by integer not null,
    description SQL_TEXT null,
+#ifdef DB_TSDB
+   creation_time timestamptz not null,
+   modification_time timestamptz not null,
+   PRIMARY KEY(record_id,creation_time)
+#else
    creation_time integer not null,
    modification_time integer not null,
    PRIMARY KEY(record_id)
+#endif
 ) TABLE_TYPE;
+
+CREATE INDEX idx_maintjrn_creation_time ON maintenance_journal(creation_time);
+CREATE INDEX idx_maintjrn_object_id ON maintenance_journal(object_id);
+
+#ifdef DB_TSDB
+SELECT create_hypertable('maintenance_journal', 'creation_time', chunk_time_interval => interval '86400 seconds');
+#endif
 
 /**
  * Asset management attributes

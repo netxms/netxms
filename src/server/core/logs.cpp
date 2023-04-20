@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,8 +111,8 @@ static NXCORE_LOG s_logs[] =
          { _T("author"), _T("Author"), LC_USER_ID, 0 },
          { _T("last_edited_by"), _T("Last edited dy"), LC_USER_ID, 0 },
          { _T("description"), _T("Description"), LC_TEXT, 0 },
-         { _T("creation_time"), _T("Creation time"), LC_TIMESTAMP, 0 },
-         { _T("modification_time"), _T("Modification time"), LC_TIMESTAMP, 0 },
+         { _T("creation_time"), _T("Creation time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
+         { _T("modification_time"), _T("Modification time"), LC_TIMESTAMP, LCF_TSDB_TIMESTAMPTZ },
          { nullptr, nullptr, 0, 0 }
       }
    },
