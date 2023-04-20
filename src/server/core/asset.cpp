@@ -379,6 +379,25 @@ void Asset::dumpProperties(ServerConsole *console) const
    unlockProperties();
 }
 
+void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, const StringMap *propertiesCopy, const TCHAR *newValue)
+{
+   SharedString oldValue = asset->getProperty(context->name);
+   std::pair<uint32_t, String> result = asset->setProperty(context->name, newValue);
+   if ((result.first != RCC_SUCCESS) && (result.first != RCC_UNKNOWN_ATTRIBUTE))
+   {
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" with value \"%s\" failed (%s)"),
+            asset->getName(), asset->getId(), context->name, newValue,  static_cast<const TCHAR *>(result.second));
+      static const TCHAR *parameterNames[] = { _T("name"), _T("displayName"), _T("dataType"), _T("currValue"), _T("newValue"), _T("reason") };
+      String displayName = GetAssetAttributeDisplayName(context->name);
+      PostSystemEventWithNames(EVENT_ASSET_AUTO_UPDATE_FAILED, asset->getId(), "ssisss", parameterNames, context->name,
+            displayName.cstr(), context->dataType, propertiesCopy->get(context->name), newValue, result.second.cstr());
+   }
+   if (result.first == RCC_SUCCESS && _tcscmp(oldValue, newValue))
+   {
+      WriteAssetChangeLog(asset->getId(), context->name, oldValue.isNull() ? AssetOperation::Create : AssetOperation::Update, oldValue, newValue, 0, asset->getLinkedObjectId());
+   }
+}
+
 /**
  * Fill asset properties with autofill scripts
  */
@@ -401,42 +420,37 @@ void Asset::autoFillProperties()
 
    for (AssetPropertyAutofillContext *context : *autoFillContexts)
    {
-      NXSL_VM *vm = context->vm;
-      vm->setGlobalVariable("$asset", createNXSLObject(vm));
-      vm->setGlobalVariable("$name", vm->createValue(context->name));
-      vm->setGlobalVariable("$value", vm->createValue(propertiesCopy.get(context->name)));
-      if (vm->run())
+      if (context->vm != nullptr)
       {
-         const TCHAR *newValue = vm->getResult()->getValueAsCString();
-         SharedString oldValue = getProperty(context->name);
-         std::pair<uint32_t, String> result = setProperty(context->name, newValue);
-         if ((result.first != RCC_SUCCESS) && (result.first != RCC_UNKNOWN_ATTRIBUTE))
+         NXSL_VM *vm = context->vm;
+         vm->setGlobalVariable("$asset", createNXSLObject(vm));
+         vm->setGlobalVariable("$name", vm->createValue(context->name));
+         vm->setGlobalVariable("$value", vm->createValue(propertiesCopy.get(context->name)));
+         if (vm->run())
          {
-            nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" with value \"%s\" failed (%s)"),
-                  m_name, m_id, context->name, newValue,  static_cast<const TCHAR *>(result.second));
-            static const TCHAR *parameterNames[] = { _T("name"), _T("displayName"), _T("dataType"), _T("currValue"), _T("newValue"), _T("reason") };
-            String displayName = GetAssetAttributeDisplayName(context->name);
-            PostSystemEventWithNames(EVENT_ASSET_AUTO_UPDATE_FAILED, m_id, "ssisss", parameterNames, context->name,
-                  displayName.cstr(), context->dataType, propertiesCopy.get(context->name), newValue, result.second.cstr());
+            const TCHAR *newValue = vm->getResult()->getValueAsCString();
+            UpdateProperty(context, this, &propertiesCopy, newValue);
          }
-         if (result.first == RCC_SUCCESS && _tcscmp(oldValue, newValue))
+         else
          {
-            WriteAssetChangeLog(m_id, context->name, oldValue.isNull() ? AssetOperation::Create : AssetOperation::Update, oldValue, newValue, 0, getLinkedObjectId());
+            if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
+            {
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" aborted"),
+                     m_name, m_id, context->name);
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" failed (%s)"),
+                     m_name, m_id, context->name, vm->getErrorText());
+               ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, this, 0, vm->getErrorText(), _T("AssetAttribute::%s::autoFill"), context->name);
+            }
          }
       }
       else
       {
-         if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
-         {
-            nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" aborted"),
-                  m_name, m_id, context->name);
-         }
-         else
-         {
-            nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" failed (%s)"),
-                  m_name, m_id, context->name, vm->getErrorText());
-            ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, this, 0, vm->getErrorText(), _T("AssetAttribute::%s::autoFill"), context->name);
-         }
+         SharedString oldValue = getProperty(context->name);
+         if (oldValue.isEmpty())
+            UpdateProperty(context, this, &propertiesCopy, context->newValue);
       }
    }
    nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): asset auto fill completed"), m_name, m_id);

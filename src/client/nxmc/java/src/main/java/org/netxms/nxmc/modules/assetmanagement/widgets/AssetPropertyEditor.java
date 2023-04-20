@@ -116,7 +116,7 @@ public class AssetPropertyEditor extends Composite
                   return new DateTime(parent, style);
                }
             };
-            dateSelector = (DateTime)WidgetHelper.createLabeledControl(this, SWT.DATE | SWT.DROP_DOWN, factory, attributeDisplayName, WidgetHelper.DEFAULT_LAYOUT_DATA);
+            dateSelector = (DateTime)WidgetHelper.createLabeledControl(this, SWT.DATE | SWT.DROP_DOWN, factory, label, WidgetHelper.DEFAULT_LAYOUT_DATA);
             editorControl = dateSelector;
             break;
          default:

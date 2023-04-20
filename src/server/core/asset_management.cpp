@@ -907,13 +907,63 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
    s_schemaLock.readLock();
    for (KeyValuePair<AssetAttribute> *a : s_schema)
    {
+      if (a->value->getSystemType() != AMSystemType::None)
+      {
+         SharedString newValue;
+         switch (a->value->getSystemType())
+         {
+            case AMSystemType::IPAddress:
+               if (linkedObject->getObjectClass() == OBJECT_NODE && static_pointer_cast<Node>(linkedObject)->getIpAddress().isValid())
+               {
+                  newValue = SharedString(static_pointer_cast<Node>(linkedObject)->getIpAddress().toString());
+               }
+               break;
+            case AMSystemType::Model:
+               if (linkedObject->getObjectClass() == OBJECT_NODE)
+               {
+                  newValue = static_pointer_cast<Node>(linkedObject)->getProductName();
+               }
+               if (linkedObject->getObjectClass() == OBJECT_MOBILEDEVICE)
+               {
+                  newValue = static_pointer_cast<MobileDevice>(linkedObject)->getModel();
+               }
+               if (linkedObject->getObjectClass() == OBJECT_ACCESSPOINT)
+               {
+                  newValue = static_pointer_cast<AccessPoint>(linkedObject)->getModel();
+               }
+               break;
+            case AMSystemType::Vendor:
+               if (linkedObject->getObjectClass() == OBJECT_NODE)
+               {
+                  newValue = static_pointer_cast<Node>(linkedObject)->getVendor();
+               }
+               if (linkedObject->getObjectClass() == OBJECT_MOBILEDEVICE)
+               {
+                  newValue = static_pointer_cast<MobileDevice>(linkedObject)->getVendor();
+               }
+               if (linkedObject->getObjectClass() == OBJECT_ACCESSPOINT)
+               {
+                  newValue = static_pointer_cast<AccessPoint>(linkedObject)->getVendor();
+               }
+               if (linkedObject->getObjectClass() == OBJECT_SENSOR)
+               {
+                  newValue = static_pointer_cast<Sensor>(linkedObject)->getVendor();
+               }
+               break;
+         }
+
+         if (!newValue.isNull())
+            contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), nullptr, newValue));
+         continue;
+      }
+
       if (!a->value->hasScript())
          continue;
 
       NXSL_VM *vm = CreateServerScriptVM(a->value->getScript(), linkedObject);
       if (vm != nullptr)
       {
-         contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), vm));
+         contexts->add(new AssetPropertyAutofillContext(a->key, a->value->getDataType(), vm, nullptr));
       }
       else
       {
@@ -924,6 +974,7 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
    s_schemaLock.unlock();
    return contexts;
 }
+
 
 /**
  * Link asset to object

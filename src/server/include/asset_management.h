@@ -135,12 +135,14 @@ struct AssetPropertyAutofillContext
    TCHAR name[MAX_OBJECT_NAME];
    AMDataType dataType;
    NXSL_VM *vm;
+   SharedString newValue;
 
-   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, NXSL_VM *vm)
+   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, NXSL_VM *vm, SharedString newValue)
    {
       _tcslcpy(this->name, name, MAX_OBJECT_NAME);
       this->dataType = dataType;
       this->vm = vm;
+      this->newValue = newValue;
    }
 
    ~AssetPropertyAutofillContext()
