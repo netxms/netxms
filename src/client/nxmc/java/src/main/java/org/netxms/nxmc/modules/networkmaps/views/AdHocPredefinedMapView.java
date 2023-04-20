@@ -43,7 +43,7 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#isValidForContext(java.lang.Object)
     */
    @Override
    public boolean isValidForContext(Object context)
@@ -52,12 +52,12 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.RackView#getPriority()
+    * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#getPriority()
     */
    @Override
    public int getPriority()
    {
-      return 10000;
+      return DEFAULT_PRIORITY;
    }
 
    /**
@@ -79,12 +79,12 @@ public class AdHocPredefinedMapView extends PredefinedMapView
    }
 
    /**
-    * @see org.netxms.nxmc.modules.objects.views.ChassisView#onObjectChange(org.netxms.client.objects.AbstractObject)
+    * @see org.netxms.nxmc.modules.networkmaps.views.PredefinedMapView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
    protected void onObjectChange(AbstractObject object)
    {
-      // Ignore object change - this view always show rack set at construction
+      // Ignore object change - this view always show map set at construction
    }
 
    /**

@@ -55,6 +55,8 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class View implements MessageAreaHolder
 {
+   protected static final int DEFAULT_PRIORITY = 65535;
+
    private static final Logger logger = LoggerFactory.getLogger(View.class);
 
    private String baseId;
@@ -474,7 +476,7 @@ public abstract class View implements MessageAreaHolder
     */
    public int getPriority()
    {
-      return 65535;
+      return DEFAULT_PRIORITY;
    }
 
    /**

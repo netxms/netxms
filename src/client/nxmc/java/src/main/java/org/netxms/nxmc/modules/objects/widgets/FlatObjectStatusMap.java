@@ -44,7 +44,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
-import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.modules.objects.views.ObjectView;
 
 /**
  * Widget showing "heat" map of nodes under given root object
@@ -64,7 +64,7 @@ public class FlatObjectStatusMap extends AbstractObjectStatusMap
     * @param parent parent composite
     * @param style widget's style
     */
-   public FlatObjectStatusMap(View view, Composite parent, int style)
+   public FlatObjectStatusMap(ObjectView view, Composite parent, int style)
 	{
       super(view, parent, style);
       titleFont = JFaceResources.getFontRegistry().getBold(JFaceResources.BANNER_FONT);

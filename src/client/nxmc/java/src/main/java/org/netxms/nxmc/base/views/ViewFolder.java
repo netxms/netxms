@@ -614,7 +614,8 @@ public class ViewFolder extends ViewContainer
       int priority = view.getPriority();
       for(CTabItem i : tabFolder.getItems())
       {
-         if (((View)i.getData("view")).getPriority() > priority)
+         View v = (View)i.getData("view");
+         if (v.getPriority() > priority)
             break;
          index++;
       }
