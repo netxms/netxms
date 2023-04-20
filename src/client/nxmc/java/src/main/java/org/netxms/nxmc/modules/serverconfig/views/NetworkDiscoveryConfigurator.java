@@ -860,7 +860,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
     */
    private void addTargetAddressListElement()
    {
-      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, null);
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, true, null);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getTargets();
@@ -883,7 +883,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       if (selection.size() != 1)
          return;
 
-      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, (InetAddressListElement)selection.getFirstElement());
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), true, true, (InetAddressListElement)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getTargets();
@@ -962,7 +962,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
     */
    private void addAddressFilterElement()
    {
-      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), false, null);
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), false, false, null);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getAddressFilter();
@@ -985,7 +985,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       if (selection.size() != 1)
          return;
 
-      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), false, (InetAddressListElement)selection.getFirstElement());
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getWindow().getShell(), false, false, (InetAddressListElement)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getAddressFilter();

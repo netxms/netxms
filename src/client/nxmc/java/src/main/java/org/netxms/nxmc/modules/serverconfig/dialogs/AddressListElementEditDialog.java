@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -44,7 +44,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Dialog for adding address list element
+ * Dialog for adding or editing address list element
  */
 public class AddressListElementEditDialog extends Dialog
 {
@@ -59,15 +59,17 @@ public class AddressListElementEditDialog extends Dialog
 	private ObjectSelector proxySelector;
 	private InetAddressListElement element;
 	private boolean enableProxySelection;
+   private boolean warnOnWideMask;
 
 	/**
 	 * @param parentShell
 	 * @param inetAddressListElement 
 	 */
-	public AddressListElementEditDialog(Shell parentShell, boolean enableProxySelection, InetAddressListElement inetAddressListElement)
+   public AddressListElementEditDialog(Shell parentShell, boolean enableProxySelection, boolean warnOnWideMask, InetAddressListElement inetAddressListElement)
 	{
 		super(parentShell);
 		this.enableProxySelection = enableProxySelection;
+      this.warnOnWideMask = warnOnWideMask;
 		element = inetAddressListElement;
 	}
 
@@ -88,17 +90,17 @@ public class AddressListElementEditDialog extends Dialog
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
-		
+
 		radioSubnet = new Button(dialogArea, SWT.RADIO);
       radioSubnet.setText(i18n.tr("&Subnet"));
 		radioSubnet.setSelection(true);
-		radioSubnet.addSelectionListener(new SelectionListener() {
+      radioSubnet.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -107,17 +109,11 @@ public class AddressListElementEditDialog extends Dialog
             if (textAddr2.getText().equals("0.0.0.0"))
                textAddr2.setText("0");
 			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
 		});
 
 		radioRange = new Button(dialogArea, SWT.RADIO);
       radioRange.setText(i18n.tr("Address &range"));
-		radioRange.addSelectionListener(new SelectionListener() {
+      radioRange.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -125,12 +121,6 @@ public class AddressListElementEditDialog extends Dialog
             textAddr2.setLabel(i18n.tr("End address"));
             if (textAddr2.getText().equals("0"))
                textAddr2.setText("0.0.0.0");
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		});
 
@@ -156,7 +146,7 @@ public class AddressListElementEditDialog extends Dialog
          if (Registry.getSession().isZoningEnabled())
 		   {
 		      zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, true);
-		      zoneSelector.setLabel("Zone");
+            zoneSelector.setLabel(i18n.tr("Zone"));
 		      gd = new GridData();
 		      gd.horizontalAlignment = SWT.FILL;
 		      gd.grabExcessHorizontalSpace = true;
@@ -164,7 +154,7 @@ public class AddressListElementEditDialog extends Dialog
 		   }
 
 		   proxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		   proxySelector.setLabel("Proxy node");
+         proxySelector.setLabel(i18n.tr("Proxy node"));
 		   proxySelector.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
@@ -224,31 +214,50 @@ public class AddressListElementEditDialog extends Dialog
 	         if ((maskBits < 0) ||
 	             ((baseAddress instanceof Inet4Address) && (maskBits > 32)) ||
                 ((baseAddress instanceof Inet6Address) && (maskBits > 128)))
+            {
 	            throw new NumberFormatException("Invalid network mask");
-	         if(element == null)
+            }
+
+            if (warnOnWideMask && (maskBits < 16))
+            {
+               if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Warning"), i18n.tr("You have specified network mask that includes more than 65536 IP addresses. Do you really intend it?")))
+                  return;
+            }
+
+            if (element == null)
 	            element = new InetAddressListElement(baseAddress, maskBits, zoneUIN, proxyId, comments.getText());
 	         else
 	            element.update(baseAddress, maskBits, zoneUIN, proxyId, comments.getText());
 	      }
 	      else
 	      {
-	         if(element == null)
-	            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comments.getText());
+            InetAddress addr1 = InetAddress.getByName(textAddr1.getText().trim());
+            InetAddress addr2 = InetAddress.getByName(textAddr2.getText().trim());
+
+            if (warnOnWideMask && (addr1 instanceof Inet4Address) && (addr2 instanceof Inet4Address))
+            {
+               byte[] bytes1 = addr1.getAddress();
+               byte[] bytes2 = addr2.getAddress();
+
+               if ((bytes1[0] != bytes2[0]) || (bytes1[1] != bytes2[1]))
+               {
+                  if (!MessageDialogHelper.openQuestion(getShell(), i18n.tr("Warning"),
+                        i18n.tr("You have specified address range that includes more than 65536 IP addresses. Do you really intend it?")))
+                     return;
+               }
+            }
+
+            if (element == null)
+               element = new InetAddressListElement(addr1, addr2, zoneUIN, proxyId, comments.getText());
 	         else
-               element.update(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()), zoneUIN, proxyId, comments.getText());
-	            
+               element.update(addr1, addr2, zoneUIN, proxyId, comments.getText());
 	      }
 		}
-		catch(UnknownHostException e)
+      catch(UnknownHostException | NumberFormatException e)
 		{
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid IP address/mask"));
 			return;
 		}
-      catch(NumberFormatException e)
-      {
-         MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid IP address/mask"));
-         return;
-      }
 		super.okPressed();
 	}
 

@@ -63,7 +63,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptSelector;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
-import org.netxms.ui.eclipse.serverconfig.dialogs.AddAddressListElementDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.AddressListElementEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.NetworkDiscoveryConfig;
@@ -118,7 +118,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    @Override
    public void init(IViewSite site, IMemento memento) throws PartInitException
    {
-      super.init(site, memento);         
+      super.init(site, memento);
    }
 
    /**
@@ -158,7 +158,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 
       // Restoring, load config
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob(Messages.get().NetworkDiscoveryConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().NetworkDiscoveryConfigurator_LoadJobName, this, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -298,7 +298,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       });
       gd = new GridData();
       gd.verticalIndent = 10;
-      checkEnableTCPProbing.setLayoutData(gd);     
+      checkEnableTCPProbing.setLayoutData(gd);
 
       checkUseSnmpTraps = new Button(clientArea, SWT.CHECK);
       checkUseSnmpTraps.setText(Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery);
@@ -933,7 +933,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void addTargetAddressListElement()
    {
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), true, null);
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getSite().getShell(), true, true, null);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getTargets();
@@ -956,7 +956,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       if (selection.size() != 1)
          return;
       
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), true, (InetAddressListElement)selection.getFirstElement());
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getSite().getShell(), true, true, (InetAddressListElement)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getTargets();
@@ -1038,7 +1038,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void addAddressFilterElement()
    {
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), false, null);
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getSite().getShell(), false, false, null);
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getAddressFilter();
@@ -1061,7 +1061,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       if (selection.size() != 1)
          return;
 
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell(), false, (InetAddressListElement)selection.getFirstElement());
+      AddressListElementEditDialog dlg = new AddressListElementEditDialog(getSite().getShell(), false, false, (InetAddressListElement)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
          final List<InetAddressListElement> list = config.getAddressFilter();
