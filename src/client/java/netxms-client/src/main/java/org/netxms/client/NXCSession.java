@@ -2403,7 +2403,12 @@ public class NXCSession
          List<String> methods = response.getStringListFromFields(NXCPCodes.VID_2FA_METHOD_LIST_BASE, NXCPCodes.VID_2FA_METHOD_COUNT);
          boolean trustedDevicesAllowed = response.getFieldAsBoolean(NXCPCodes.VID_TRUSTED_DEVICES_ALLOWED);
          int selectedMethod = twoFactorAuthenticationCallback.selectMethod(methods);
-         logger.debug("Selected method " + selectedMethod);
+         if (selectedMethod < 0)
+         {
+            logger.debug("2FA method selection cancelled by user");
+            throw new NXCException(RCC.OPERATION_CANCELLED);
+         }
+         logger.debug("Selected 2FA method " + selectedMethod);
 
          if ((selectedMethod >= 0) && (selectedMethod < methods.size()))
          {
@@ -2420,6 +2425,12 @@ public class NXCSession
                String challenge = response.getFieldAsString(NXCPCodes.VID_CHALLENGE);
                String qrLabel = response.getFieldAsString(NXCPCodes.VID_QR_LABEL);
                String userResponse = twoFactorAuthenticationCallback.getUserResponse(challenge, qrLabel, trustedDevicesAllowed);
+               if (userResponse == null)
+               {
+                  logger.debug("2FA response read cancelled by user");
+                  throw new NXCException(RCC.OPERATION_CANCELLED);
+               }
+
                request = newMessage(NXCPCodes.CMD_2FA_VALIDATE_RESPONSE);
                request.setField(NXCPCodes.VID_2FA_RESPONSE, userResponse);
                sendMessage(request);

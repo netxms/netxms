@@ -93,31 +93,32 @@ public class LoginJob implements IRunnableWithProgress
    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
    {
       monitor.beginTask(Messages.get().LoginJob_connecting, 100);
+
+      final String hostName;
+      int port = NXCSession.DEFAULT_CONN_PORT;
+      final String[] split = server.split(":"); //$NON-NLS-1$
+      if (split.length == 2)
+      {
+         hostName = split[0];
+         try
+         {
+            port = Integer.valueOf(split[1]);
+         }
+         catch(NumberFormatException e)
+         {
+            // ignore
+         }
+      }
+      else
+      {
+         hostName = server;
+      }
+
+      Activator.logInfo("Connecting to " + hostName + " port " + port);
+
+      final NXCSession session = createSession(hostName, port);
       try
       {
-         final String hostName;
-         int port = NXCSession.DEFAULT_CONN_PORT;
-         final String[] split = server.split(":"); //$NON-NLS-1$
-         if (split.length == 2)
-         {
-            hostName = split[0];
-            try
-            {
-               port = Integer.valueOf(split[1]);
-            }
-            catch(NumberFormatException e)
-            {
-               // ignore
-            }
-         }
-         else
-         {
-            hostName = server;
-         }
-
-         Activator.logInfo("Connecting to " + hostName + " port " + port);
-
-         final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(Locale.getDefault().getLanguage());
 
          session.setClientInfo("nxmc/" + VersionInfo.version()); //$NON-NLS-1$
@@ -223,7 +224,7 @@ public class LoginJob implements IRunnableWithProgress
                         if (doFullSync)
                         {
                            Activator.logInfo("Full object synchronization triggered by preference change");
-                           ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID, null) {
+                           ConsoleJob job = new ConsoleJob("Synchronize all objects", null, Activator.PLUGIN_ID) {
                               @Override
                               protected void runInternal(IProgressMonitor monitor) throws Exception
                               {
@@ -301,6 +302,7 @@ public class LoginJob implements IRunnableWithProgress
       }
       catch(Exception e)
       {
+         session.disconnect();
          throw new InvocationTargetException(e);
       }
       finally
