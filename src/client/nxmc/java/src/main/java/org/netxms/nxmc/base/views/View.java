@@ -668,6 +668,8 @@ public abstract class View implements MessageAreaHolder
    {
       this.viewer = viewer;
       this.filter = filter;
+      if ((filterText != null) && !filterText.getText().isEmpty())
+         defaultOnFilterModify();
    }
 
    /**

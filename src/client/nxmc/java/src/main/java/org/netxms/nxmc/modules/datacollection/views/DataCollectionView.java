@@ -1057,8 +1057,7 @@ public class DataCollectionView extends BaseDataCollectionView
          createLastValuesViewer(parent, validator);
       }
 
-      viewer.getTable().layout();  
-      parent.layout();       
+      parent.layout(true, true);
 
       updateToolBar();
       updateMenu();
