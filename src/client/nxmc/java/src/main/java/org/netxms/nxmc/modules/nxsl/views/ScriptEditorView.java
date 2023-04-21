@@ -20,7 +20,11 @@ package org.netxms.nxmc.modules.nxsl.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.window.Window;
@@ -34,6 +38,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.ScriptCompilationResult;
@@ -41,6 +46,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
 import org.netxms.nxmc.base.widgets.MessageArea;
+import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -118,6 +124,7 @@ public class ScriptEditorView extends ConfigurationView
       });
 
       createActions();
+      createContextMenu();
    }
 
    /**
@@ -181,8 +188,9 @@ public class ScriptEditorView extends ConfigurationView
          }
       };
       addKeyBinding("M1+A", actionSelectAll);
-
-      actionCut = new Action(i18n.tr("C&ut"), SharedIcons.CUT) {
+      
+      //Do not require key bindings (already part of Styles text)
+      actionCut = new Action(i18n.tr("C&ut") + "\t" + KeyStroke.parse("M1+X").toString(), SharedIcons.CUT) {
          @Override
          public void run()
          {
@@ -192,7 +200,7 @@ public class ScriptEditorView extends ConfigurationView
       actionCut.setEnabled(false);
       addKeyBinding("M1+X", actionCut);
 
-      actionCopy = new Action(i18n.tr("&Copy"), SharedIcons.COPY) {
+      actionCopy = new Action(i18n.tr("&Copy") + "\t" + KeyStroke.parse("M1+C").toString(), SharedIcons.COPY) {
          @Override
          public void run()
          {
@@ -200,9 +208,8 @@ public class ScriptEditorView extends ConfigurationView
          }
       };
       actionCopy.setEnabled(false);
-      addKeyBinding("M1+C", actionCopy);
 
-      actionPaste = new Action(i18n.tr("&Paste"), SharedIcons.PASTE) {
+      actionPaste = new Action(i18n.tr("&Paste") + "\t" + KeyStroke.parse("M1+P").toString(), SharedIcons.PASTE) {
          @Override
          public void run()
          {
@@ -210,7 +217,42 @@ public class ScriptEditorView extends ConfigurationView
          }
       };
       actionPaste.setEnabled(canPaste());
-      addKeyBinding("M1+V", actionPaste);
+   }
+
+   /**
+    * Create context menu
+    */
+   private void createContextMenu()
+   {
+      // Create menu manager.
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(editor.getTextWidget());
+      editor.getTextWidget().setMenu(menu);
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param mgr Menu manager
+    */
+   protected void fillContextMenu(final IMenuManager mgr)
+   {
+      mgr.add(actionCopy);
+      mgr.add(actionCut);
+      mgr.add(actionPaste);
+      mgr.add(new Separator());      
+      mgr.add(actionSelectAll);
+      mgr.add(new Separator());
+      mgr.add(actionCompile);
    }
 
    /**
