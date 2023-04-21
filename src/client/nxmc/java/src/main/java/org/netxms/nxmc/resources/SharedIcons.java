@@ -42,6 +42,7 @@ public class SharedIcons
    public static ImageDescriptor COPY_TO_CLIPBOARD;
 	public static ImageDescriptor CSV;
    public static ImageDescriptor CUT;
+   public static ImageDescriptor DATES;
    public static ImageDescriptor DELETE_OBJECT;
    public static ImageDescriptor DISABLE;
    public static ImageDescriptor DOWN;
@@ -99,6 +100,7 @@ public class SharedIcons
    public static Image IMG_COPY_TO_CLIPBOARD;
 	public static Image IMG_CSV;
    public static Image IMG_CUT;
+   public static Image IMG_DATES;
    public static Image IMG_DELETE_OBJECT;
    public static Image IMG_DISABLE;
    public static Image IMG_DOWN;
@@ -161,6 +163,7 @@ public class SharedIcons
       COPY_TO_CLIPBOARD = ResourceManager.getImageDescriptor("icons/copy-to-clipboard.png");
       CSV = ResourceManager.getImageDescriptor("icons/csv.png");
       CUT = ResourceManager.getImageDescriptor("icons/cut.gif");
+      DATES = ResourceManager.getImageDescriptor("icons/dates.png");
       DELETE_OBJECT = ResourceManager.getImageDescriptor("icons/delete_obj.png");
       DISABLE = ResourceManager.getImageDescriptor("icons/disable.png");
       DOWN = ResourceManager.getImageDescriptor("icons/down.png");
@@ -218,6 +221,7 @@ public class SharedIcons
       IMG_COPY_TO_CLIPBOARD = COPY_TO_CLIPBOARD.createImage();
 		IMG_CSV = CSV.createImage();
       IMG_CUT = CUT.createImage();
+      IMG_DATES = DATES.createImage();
 		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
       IMG_DISABLE = DISABLE.createImage();
 		IMG_DOWN = DOWN.createImage();

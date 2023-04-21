@@ -25,7 +25,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
@@ -49,6 +51,7 @@ import org.netxms.nxmc.modules.datacollection.views.helpers.HistoricalDataCompar
 import org.netxms.nxmc.modules.datacollection.views.helpers.HistoricalDataFilter;
 import org.netxms.nxmc.modules.datacollection.views.helpers.HistoricalDataLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -202,7 +205,7 @@ public class HistoricalDataView extends ViewWithContext
 		setFilterClient(viewer, filter);
 
 		createActions();
-		createPopupMenu();
+		createContextMenu();
 		
 		refresh();
 	}
@@ -212,15 +215,16 @@ public class HistoricalDataView extends ViewWithContext
 	 */
 	private void createActions()
 	{		
-		actionSelectRange = new Action(i18n.tr("Select data &range...")) {
+      actionSelectRange = new Action(i18n.tr("Select data &range..."), SharedIcons.DATES) {
 			@Override
 			public void run()
 			{
 				selectRange();
 			}
 		};
-		
-      actionDeleteDciEntry = new Action("&Delete value") {
+      addKeyBinding("M1+R", actionSelectRange);
+
+      actionDeleteDciEntry = new Action(i18n.tr("&Delete value"), SharedIcons.DELETE_OBJECT) {
 		   @Override
 		   public void run ()
 		   {
@@ -231,11 +235,35 @@ public class HistoricalDataView extends ViewWithContext
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
-	
+
 	/**
-	 * Create pop-up menu
-	 */
-	private void createPopupMenu()
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionSelectRange);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCsv);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionSelectRange);
+      manager.add(new Separator());
+      manager.add(actionExportAllToCsv);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
+    * Create pop-up menu
+    */
+	private void createContextMenu()
 	{
 		// Create menu manager.
 		MenuManager menuMgr = new MenuManager();
@@ -258,10 +286,12 @@ public class HistoricalDataView extends ViewWithContext
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-      manager.add(actionDeleteDciEntry);
 		manager.add(actionSelectRange);
+      manager.add(new Separator());
 		manager.add(actionExportToCsv);
       manager.add(actionExportAllToCsv);		
+      manager.add(new Separator());
+      manager.add(actionDeleteDciEntry);
 	}
 
 	/**
