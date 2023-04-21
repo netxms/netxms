@@ -46,6 +46,7 @@ import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
@@ -388,8 +389,9 @@ public abstract class BaseDataCollectionView extends ObjectView
    {
       DataCollectionObjectEditor dce = new DataCollectionObjectEditor(object);
       PreferenceManager pm = new PreferenceManager();  
-      pm.addToRoot(new PreferenceNode("general", new General(dce)));          
-      pm.addToRoot(new PreferenceNode("clisterOptions", new ClusterOptions(dce)));    
+      pm.addToRoot(new PreferenceNode("general", new General(dce)));       
+      if (getObject() instanceof Cluster)
+         pm.addToRoot(new PreferenceNode("clisterOptions", new ClusterOptions(dce)));    
       pm.addToRoot(new PreferenceNode("customSchedule", new CustomSchedule(dce)));
       if (dce.getObject() instanceof DataCollectionTable)
          pm.addToRoot(new PreferenceNode("columns", new TableColumns(dce)));    
