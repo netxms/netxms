@@ -59,7 +59,7 @@ public class UserLabelDecorator implements ILabelDecorator
          overlays[IDecoration.TOP_LEFT] = StatusDisplayInfo.getStatusOverlayImageDescriptor(ObjectStatus.MINOR);
       DecorationOverlayIcon icon = new DecorationOverlayIcon(image, overlays);
       decoratedImages[index] = icon.createImage();
-      return null;
+      return decoratedImages[index];
    }
 
    /**
