@@ -1669,4 +1669,39 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Default event for discarded SNMP traps.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) SNMP trap OID'
-	);
+	);   
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+	EVENT_ASSET_LINK, 'SYS_ASSET_LINK', '8dae7b06-b854-4d88-9eb7-721b6110c200',
+	EVENT_SEVERITY_NORMAL, 1,
+   'Asset %<assetName> linked',
+   'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
+   'Parameters:'  CONCAT CRLF CONCAT
+   '   assetId - asset id'  CONCAT CRLF CONCAT
+   '   assetName - asset name'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+	EVENT_ASSET_UNLINK, 'SYS_ASSET_UNLINK', 'f149433b-ea2f-4bfd-bf23-35e7778b1b55',
+   EVENT_SEVERITY_NORMAL, 1,
+   'Asset %<assetName> unlinked',
+   'Generated when asset is unlinked from node.'  CONCAT CRLF CONCAT
+   'Parameters:'  CONCAT CRLF CONCAT
+   '   assetId - asset id'  CONCAT CRLF CONCAT
+   '   assetName - asset name'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+	EVENT_ASSET_LINK_CONFLICT, 'SYS_ASSET_LINK_CONFLICT', '2bfd6557-1b88-4cf0-801b-78cffb2afc3c',
+   EVENT_SEVERITY_MINOR, 1, 
+   'Asset %<assetName> already linked with %<nodeName> node',
+   'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
+   'Parameters:'  CONCAT CRLF CONCAT
+   '   assetId - asset id found by auto linking'  CONCAT CRLF CONCAT
+   '   assetName - asset name found by auto linking'  CONCAT CRLF CONCAT
+   '   currentNodeId - currently linked node id'  CONCAT CRLF CONCAT
+   '   currentNodeName - currently linked node name'
+   ));
+

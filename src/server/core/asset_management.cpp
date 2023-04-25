@@ -989,6 +989,9 @@ void LinkAsset(Asset *asset, NetObj *object, ClientSession *session)
    asset->setLinkedObjectId(object->getId());
    object->setAssetId(asset->getId());
    WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Link, nullptr, nullptr, (session != nullptr) ? session->getUserId() : 0, object->getId());
+   EventBuilder(EVENT_ASSET_LINK, object->getId()).
+                  param(_T("assetId"), asset->getId()).
+                  param(_T("assetName"), asset->getName()).post();
    if (session != nullptr)
    {
       session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Asset linked with object %s [%u]"), object->getName(), object->getId());
@@ -1010,6 +1013,9 @@ void UnlinkAsset(Asset *asset, ClientSession *session)
       asset->setLinkedObjectId(0);
       object->setAssetId(0);
       WriteAssetChangeLog(asset->getId(), nullptr, AssetOperation::Unlink, nullptr, nullptr, (session != nullptr) ? session->getUserId() : 0, object->getId());
+      EventBuilder(EVENT_ASSET_UNLINK, object->getId()).
+                     param(_T("assetId"), asset->getId()).
+                     param(_T("assetName"), asset->getName()).post();
       if (session != nullptr)
       {
          session->writeAuditLog(AUDIT_OBJECTS, true, object->getId(), _T("Link with asset %s [%u] removed"), asset->getName(), asset->getId());
@@ -1120,7 +1126,11 @@ void UpdateAssetLinkage(NetObj *object)
                else
                {
                   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: asset linkage conflict with object %s [%u]"), object->getName(), object->getId(), otherObject->getName(), otherObject->getId());
-                  // TODO: register conflict
+                  EventBuilder(EVENT_ASSET_LINK_CONFLICT, object->getId()).
+                        param(_T("assetId"), asset->getId()).
+                        param(_T("assetName"), asset->getName()).
+                        param(_T("currentNodeId"), otherObject->getId()).
+                        param(_T("currentNodeName"), otherObject->getName()).post();
                }
             }
             else

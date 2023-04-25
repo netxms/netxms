@@ -247,7 +247,6 @@ Event::Event()
 	m_customMessage = nullptr;
 	m_queueTime = 0;
 	m_queueBinding = nullptr;
-	m_parameters.setOwner(Ownership::True);
 }
 
 /**
@@ -273,11 +272,7 @@ Event::Event(const Event *src) : m_lastAlarmKey(src->m_lastAlarmKey), m_lastAlar
 	m_customMessage = MemCopyString(src->m_customMessage);
    m_queueTime = src->m_queueTime;
    m_queueBinding = src->m_queueBinding;
-	m_parameters.setOwner(Ownership::True);
-   for(int i = 0; i < src->m_parameters.size(); i++)
-   {
-      m_parameters.add(MemCopyString((TCHAR *)src->m_parameters.get(i)));
-   }
+   m_parameters.addAll(src->m_parameters);
    m_parameterNames.addAll(&src->m_parameterNames);
 }
 
@@ -406,16 +401,16 @@ Event *Event::createFromJson(json_t *json)
          if (json_unpack(p, "{s:s, s:s}", "name", &name, "value", &value) != -1)
          {
 #ifdef UNICODE
-            event->m_parameters.add(WideStringFromUTF8String(CHECK_NULL_EX_A(value)));
+            event->m_parameters.addPreallocated(WideStringFromUTF8String(CHECK_NULL_EX_A(value)));
             event->m_parameterNames.addPreallocated(WideStringFromUTF8String(CHECK_NULL_EX_A(name)));
 #else
-            event->m_parameters.add(MBStringFromUTF8String(CHECK_NULL_EX_A(value)));
+            event->m_parameters.addPreallocated(MBStringFromUTF8String(CHECK_NULL_EX_A(value)));
             event->m_parameterNames.addPreallocated(MBStringFromUTF8String(CHECK_NULL_EX_A(name)));
 #endif
          }
          else
          {
-            event->m_parameters.add(MemCopyString(_T("")));
+            event->m_parameters.add(_T(""));
             event->m_parameterNames.add(_T(""));
          }
       }
@@ -445,16 +440,16 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
             case 's':
                {
                   const TCHAR *s = va_arg(args, const TCHAR *);
-					   m_parameters.add(MemCopyString(CHECK_NULL_EX(s)));
+					   m_parameters.add(CHECK_NULL_EX(s));
                }
                break;
             case 'm':	// multibyte string
                {
                   const char *s = va_arg(args, const char *);
 #ifdef UNICODE
-                  m_parameters.add((s != nullptr) ? WideStringFromMBString(s) : MemCopyStringW(L""));
+                  m_parameters.addPreallocated((s != nullptr) ? WideStringFromMBString(s) : MemCopyStringW(L""));
 #else
-					   m_parameters.add(MemCopyStringA(CHECK_NULL_EX_A(s)));
+					   m_parameters.add(CHECK_NULL_EX_A(s));
 #endif
                }
                break;
@@ -462,59 +457,51 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
                {
                   const WCHAR *s = va_arg(args, const WCHAR *);
 #ifdef UNICODE
-		   			m_parameters.add(MemCopyStringW(CHECK_NULL_EX_W(s)));
+		   			m_parameters.add(CHECK_NULL_EX_W(s));
 #else
-                  m_parameters.add((s != nullptr) ? MBStringFromWideString(s) : MemCopyStringA(""));
+                  m_parameters.addPreallocated((s != nullptr) ? MBStringFromWideString(s) : MemCopyStringA(""));
 #endif
                }
                break;
             case 'd':
-					m_parameters.add(IntegerToString(va_arg(args, int32_t), MemAllocString(16)));
+					m_parameters.add(va_arg(args, int32_t));
                break;
             case 'D':
-               m_parameters.add(IntegerToString(va_arg(args, int64_t), MemAllocString(32)));
+               m_parameters.add(va_arg(args, int64_t));
                break;
             case 't':
-               m_parameters.add(IntegerToString(static_cast<uint64_t>(va_arg(args, time_t)), MemAllocString(32)));
+               m_parameters.add(static_cast<uint64_t>(va_arg(args, time_t)));
                break;
             case 'x':
             case 'i':
                buffer = MemAllocString(16);
                _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, uint32_t));
-					m_parameters.add(buffer);
+					m_parameters.addPreallocated(buffer);
                break;
             case 'f':
-               buffer = MemAllocString(32);
-               _sntprintf(buffer, 32, _T("%f"), va_arg(args, double));
-               m_parameters.add(buffer);
+               m_parameters.add(va_arg(args, double));
                break;
             case 'a':   // IPv4 address
-					m_parameters.add(IpToStr(va_arg(args, uint32_t), MemAllocString(16)));
+					m_parameters.addPreallocated(IpToStr(va_arg(args, uint32_t), MemAllocString(16)));
                break;
-            case 'A':   // InetAddress object
-               buffer = MemAllocString(64);
-               (va_arg(args, InetAddress *))->toString(buffer);
-					m_parameters.add(buffer);
+            case 'A':
+					m_parameters.add((va_arg(args, InetAddress *))->toString());
                break;
             case 'h':
                buffer = MemAllocString(64);
                MACToStr(va_arg(args, BYTE *), buffer);
-					m_parameters.add(buffer);
+					m_parameters.addPreallocated(buffer);
                break;
             case 'H':
-               buffer = MemAllocString(64);
-               (va_arg(args, MacAddress *))->toString(buffer);
-               m_parameters.add(buffer);
+               m_parameters.add((va_arg(args, MacAddress *))->toString());
                break;
             case 'G':   // uuid object (GUID)
-               buffer = MemAllocString(48);
-               (va_arg(args, uuid *))->toString(buffer);
-               m_parameters.add(buffer);
+               m_parameters.add((va_arg(args, uuid *))->toString());
                break;
             default:
                buffer = MemAllocString(64);
                _sntprintf(buffer, 64, _T("BAD FORMAT \"%c\" [value = 0x%08X]"), format[i], va_arg(args, UINT32));
-					m_parameters.add(buffer);
+					m_parameters.addPreallocated(buffer);
                break;
          }
 			m_parameterNames.add(((names != nullptr) && (names[i] != nullptr)) ? names[i] : _T(""));
@@ -533,7 +520,7 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
    {
       auto p = it.next();
       m_parameterNames.add(p->key);
-      m_parameters.add(MemCopyString(p->value));
+      m_parameters.add(p->value);
    }
 }
 
@@ -542,29 +529,26 @@ Event::Event(const EventTemplate *eventTemplate, EventOrigin origin, time_t orig
  */
 void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId)
 {
+   initFromTemplate(eventTemplate);
    m_origin = origin;
-   _tcscpy(m_name, eventTemplate->getName());
-   m_timestamp = time(nullptr);
    m_originTimestamp = (originTimestamp != 0) ? originTimestamp : m_timestamp;
-   m_id = InterlockedIncrement64(&s_eventId);
-   m_rootId = 0;
-   m_code = eventTemplate->getCode();
-   m_severity = eventTemplate->getSeverity();
-   m_flags = eventTemplate->getFlags();
-   m_sourceId = sourceId;
    m_dciId = dciId;
    m_queueTime = 0;
    m_queueBinding = nullptr;
    m_messageText = nullptr;
-   m_messageTemplate = MemCopyString(eventTemplate->getMessageTemplate());
-
-   if ((eventTemplate->getTags() != nullptr) && (eventTemplate->getTags()[0] != 0))
-      m_tags.splitAndAdd(eventTemplate->getTags(), _T(","));
-
+   m_rootId = 0;
    m_customMessage = nullptr;
-   m_parameters.setOwner(Ownership::True);
+   initSource(sourceId);
+}
 
-   // Zone UIN
+
+/**
+ * Common initialization code
+ */
+void Event::initSource(uint32_t sourceId)
+{
+   m_sourceId = sourceId;
+
    shared_ptr<NetObj> source = FindObjectById(sourceId);
    if (source != nullptr)
    {
@@ -591,6 +575,24 @@ void Event::init(const EventTemplate *eventTemplate, EventOrigin origin, time_t 
    {
       m_zoneUIN = 0;
    }
+}
+
+/**
+ * Common initialization code
+ */
+void Event::initFromTemplate(const EventTemplate *eventTemplate)
+{
+   _tcscpy(m_name, eventTemplate->getName());
+   m_timestamp = time(nullptr);
+   m_id = InterlockedIncrement64(&s_eventId);
+   m_code = eventTemplate->getCode();
+   m_severity = eventTemplate->getSeverity();
+   m_flags = eventTemplate->getFlags();
+   m_messageTemplate = MemCopyString(eventTemplate->getMessageTemplate());
+
+   if ((eventTemplate->getTags() != nullptr) && (eventTemplate->getTags()[0] != 0))
+      m_tags.splitAndAdd(eventTemplate->getTags(), _T(","));
+
 }
 
 /**
@@ -640,7 +642,7 @@ StringBuffer Event::expandText(const TCHAR *textTemplate, const Alarm *alarm) co
  */
 void Event::addParameter(const TCHAR *name, const TCHAR *value)
 {
-	m_parameters.add(MemCopyString(value));
+	m_parameters.add(value);
 	m_parameterNames.add(name);
 }
 
@@ -655,11 +657,11 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 	int index = m_parameterNames.indexOfIgnoreCase(name);
 	if (index != -1)
 	{
-		m_parameters.replace(index, MemCopyString(value));
+		m_parameters.replace(index, value);
 	}
 	else
 	{
-		m_parameters.add(MemCopyString(value));
+		m_parameters.add(value);
 		m_parameterNames.add(name);
 	}
 }
@@ -679,18 +681,18 @@ void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
    int addup = index - m_parameters.size();
    for(int i = 0; i < addup; i++)
    {
-		m_parameters.add(MemCopyString(_T("")));
+		m_parameters.add(_T(""));
 		m_parameterNames.add(_T(""));
    }
    if (index < m_parameters.size())
    {
-		m_parameters.replace(index, MemCopyString(value));
+		m_parameters.replace(index,value);
 		if (name != nullptr)
 		   m_parameterNames.replace(index, name);
    }
    else
    {
-		m_parameters.add(MemCopyString(value));
+		m_parameters.add(value);
 		m_parameterNames.add(CHECK_NULL_EX(name));
    }
 }
@@ -713,7 +715,7 @@ void Event::prepareMessage(NXCPMessage *msg) const
 	msg->setField(id++, getTagsAsList());
 	msg->setField(id++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
-	   msg->setField(id++, (TCHAR *)m_parameters.get(i));
+	   msg->setField(id++, m_parameters.get(i));
 	msg->setField(id++, m_dciId);
 }
 
@@ -785,7 +787,7 @@ json_t *Event::toJson()
    {
       json_t *p = json_object();
       json_object_set_new(p, "name", json_string_t(m_parameterNames.get(i)));
-      json_object_set_new(p, "value", json_string_t(static_cast<TCHAR*>(m_parameters.get(i))));
+      json_object_set_new(p, "value", json_string_t(m_parameters.get(i)));
       json_array_append_new(parameters, p);
    }
    json_object_set_new(root, "parameters", parameters);
@@ -1539,7 +1541,64 @@ bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(uint32_t eventCode, uint32_t 
 }
 
 /**
- * Resend events from specific queue to system event queue
+ * Post built event
+ */
+bool EventBuilder::post(ObjectQueue<Event> *queue)
+{
+   // Check that source object exists
+      if ((m_event->m_sourceId == 0) || (FindObjectById(m_event->m_sourceId) == nullptr))
+      {
+         nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u for event with code %u and origin %d"),
+               m_event->m_sourceId, m_eventCode, (int)m_event->m_origin);
+         return false;
+      }
+
+      s_eventTemplatesLock.readLock();
+      shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(m_eventCode);
+      s_eventTemplatesLock.unlock();
+
+      bool success;
+      if (eventTemplate != nullptr)
+      {
+
+         m_event->initFromTemplate(eventTemplate.get());
+
+         if (m_event->m_originTimestamp != 0)
+            m_event->m_originTimestamp = m_event->m_timestamp;
+
+         // Using transformation within PostEvent may cause deadlock if called from within locked object or DCI
+         // Caller of PostEvent should make sure that it does not held object, object index, or DCI locks
+         if (m_vm != nullptr)
+         {
+            m_vm->setGlobalVariable("$event", m_vm->createValue(m_vm->createObject(&g_nxslEventClass, m_event, true)));
+            if (!m_vm->run())
+            {
+               nxlog_debug(6, _T("RealPostEvent: Script execution error (%s)"), m_vm->getErrorText());
+            }
+         }
+
+         // Add new event to m_queue
+         if (queue == nullptr)
+         {
+            g_eventQueue.put(m_event);
+         }
+         else
+         {
+            queue->put(m_event);
+         }
+         m_event = nullptr;
+         success = true;
+      }
+      else
+      {
+         nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: event with code %u not defined"), m_eventCode);
+         success = false;
+      }
+      return success;
+}
+
+/**
+ * Resend events from specific m_queue to system event m_queue
  */
 void NXCORE_EXPORTABLE ResendEvents(ObjectQueue<Event> *queue)
 {

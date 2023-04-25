@@ -379,7 +379,7 @@ void Asset::dumpProperties(ServerConsole *console) const
    unlockProperties();
 }
 
-void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, const StringMap *propertiesCopy, const TCHAR *newValue)
+void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, shared_ptr<NetObj> object, const StringMap *propertiesCopy, const TCHAR *newValue)
 {
    SharedString oldValue = asset->getProperty(context->name);
    std::pair<uint32_t, String> result = asset->setProperty(context->name, newValue);
@@ -389,7 +389,7 @@ void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, c
             asset->getName(), asset->getId(), context->name, newValue,  static_cast<const TCHAR *>(result.second));
       static const TCHAR *parameterNames[] = { _T("name"), _T("displayName"), _T("dataType"), _T("currValue"), _T("newValue"), _T("reason") };
       String displayName = GetAssetAttributeDisplayName(context->name);
-      PostSystemEventWithNames(EVENT_ASSET_AUTO_UPDATE_FAILED, asset->getId(), "ssisss", parameterNames, context->name,
+      PostSystemEventWithNames(EVENT_ASSET_AUTO_UPDATE_FAILED, object->getId(), "ssisss", parameterNames, context->name,
             displayName.cstr(), context->dataType, propertiesCopy->get(context->name), newValue, result.second.cstr());
    }
    if (result.first == RCC_SUCCESS && _tcscmp(oldValue, newValue))
@@ -429,7 +429,7 @@ void Asset::autoFillProperties()
          if (vm->run())
          {
             const TCHAR *newValue = vm->getResult()->getValueAsCString();
-            UpdateProperty(context, this, &propertiesCopy, newValue);
+            UpdateProperty(context, this, object, &propertiesCopy, newValue);
          }
          else
          {
@@ -450,7 +450,7 @@ void Asset::autoFillProperties()
       {
          SharedString oldValue = getProperty(context->name);
          if (oldValue.isEmpty())
-            UpdateProperty(context, this, &propertiesCopy, context->newValue);
+            UpdateProperty(context, this, object, &propertiesCopy, context->newValue);
       }
    }
    nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): asset auto fill completed"), m_name, m_id);

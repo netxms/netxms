@@ -105,10 +105,26 @@ public:
 struct EventQueueBinding;
 
 /**
+ * Stats for event processing thread
+ */
+struct EventProcessingThreadStats
+{
+   uint64_t processedEvents;
+   uint32_t averageWaitTime;
+   uint32_t maxWaitTime;
+   uint32_t queueSize;
+   uint32_t bindings;
+};
+
+class EventBuilder;
+
+/**
  * Event
  */
 class NXCORE_EXPORTABLE Event
 {
+   friend EventBuilder;
+
 private:
    uint64_t m_id;
    uint64_t m_rootId;    // Root event id
@@ -126,7 +142,7 @@ private:
    time_t m_originTimestamp;
    StringSet m_tags;
 	TCHAR *m_customMessage;
-	Array m_parameters;
+	StringList m_parameters;
 	StringList m_parameterNames;
 	MutableString m_lastAlarmKey;
 	MutableString m_lastAlarmMessage;
@@ -134,6 +150,8 @@ private:
 	EventQueueBinding *m_queueBinding;
 
 	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId);
+	void initFromTemplate(const EventTemplate *eventTemplate);
+   void initSource(uint32_t sourceId);
 
 public:
    Event();
@@ -160,7 +178,7 @@ public:
    time_t getOriginTimestamp() const { return m_originTimestamp; }
    const TCHAR *getLastAlarmKey() const { return m_lastAlarmKey.cstr(); }
    const TCHAR *getLastAlarmMessage() const { return m_lastAlarmMessage.cstr(); }
-   const Array *getParameterList() const { return &m_parameters; }
+   const StringList *getParameterList() const { return &m_parameters; }
    const StringList *getParameterNames() const { return &m_parameterNames; }
 
    void setLogWriteFlag(bool flag) { if (flag) m_flags |= EF_LOG; else m_flags &= ~EF_LOG; }
@@ -190,28 +208,28 @@ public:
    int getParametersCount() const { return m_parameters.size(); }
    const TCHAR *getParameter(int index, const TCHAR *defaultValue = nullptr) const
    {
-      const TCHAR *v = static_cast<TCHAR*>(m_parameters.get(index));
+      const TCHAR *v = m_parameters.get(index);
       return (v != nullptr) ? v : defaultValue;
    }
    const TCHAR *getParameterName(int index) const { return m_parameterNames.get(index); }
    int32_t getParameterAsInt32(int index, int32_t defaultValue = 0) const
    {
-      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      const TCHAR *v = m_parameters.get(index);
       return (v != nullptr) ? _tcstol(v, nullptr, 0) : defaultValue;
    }
    uint32_t getParameterAsUInt32(int index, uint32_t defaultValue = 0) const
    {
-      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      const TCHAR *v = m_parameters.get(index);
       return (v != nullptr) ? _tcstoul(v, nullptr, 0) : defaultValue;
    }
    int64_t getParameterAsInt64(int index, int64_t defaultValue = 0) const
    {
-      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      const TCHAR *v = m_parameters.get(index);
       return (v != nullptr) ? _tcstoll(v, nullptr, 0) : defaultValue;
    }
    uint64_t getParameterAsUInt64(int index, uint64_t defaultValue = 0) const
    {
-      const TCHAR *v = static_cast<const TCHAR*>(m_parameters.get(index));
+      const TCHAR *v = m_parameters.get(index);
       return (v != nullptr) ? _tcstoull(v, nullptr, 0) : defaultValue;
    }
 
@@ -230,6 +248,109 @@ public:
 
    json_t *toJson();
    static Event *createFromJson(json_t *json);
+};
+
+/**
+ * Class to build event
+ */
+class EventBuilder
+{
+   Event *m_event;
+   uint32_t m_eventCode;
+   NXSL_VM *m_vm;
+
+   //TODO: use event destroy event
+   //Post null event
+   //ADD parameter
+   //cehck que on null in post
+
+public:
+
+   EventBuilder(uint32_t eventCode, uint32_t source)
+   {
+      m_event = new Event();
+      m_event->initSource(source);
+      m_eventCode = eventCode;
+      m_vm = nullptr;
+   }
+   ~EventBuilder()
+   {
+      delete m_event;
+   }
+   EventBuilder(const EventBuilder &src) = delete;
+
+   EventBuilder &dci(uint32_t dciId)
+   {
+      m_event->m_dciId = dciId;
+      return *this;
+   }
+
+   EventBuilder &sourceId(uint32_t sourceId)
+   {
+      m_event->initSource(sourceId);
+      return *this;
+   }
+
+   EventBuilder &vm(NXSL_VM *vm)
+   {
+      m_vm = vm;
+      return *this;
+   }
+
+   EventBuilder &origin(EventOrigin origin)
+   {
+      m_event->m_origin = origin;
+      return *this;
+   }
+
+   EventBuilder &originTimestamp(time_t originTimestamp)
+   {
+      m_event->m_originTimestamp = originTimestamp;
+      return *this;
+   }
+
+   EventBuilder &tag(const TCHAR *tag)
+   {
+      m_event->m_tags.add(tag);
+      return *this;
+   }
+
+   EventBuilder &param(const TCHAR *name, const TCHAR *value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
+   EventBuilder &param(const TCHAR *name, uint32_t value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
+   EventBuilder &param(const TCHAR *name, const InetAddress &value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value.toString());
+      return *this;
+   }
+
+   EventBuilder &param(const TCHAR *name, const MacAddress &value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value.toString());
+      return *this;
+   }
+
+   EventBuilder &param(const TCHAR *name, const uuid &value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value.toString());
+      return *this;
+   }
+
+   bool post(ObjectQueue<Event> *queue = nullptr);
 };
 
 /**
@@ -525,18 +646,6 @@ public:
    bool isCategoryInUse(uint32_t categoryId) const;
 
    void getEventReferences(uint32_t eventCode, ObjectArray<EventReference>* eventReferences) const;
-};
-
-/**
- * Stats for event processing thread
- */
-struct EventProcessingThreadStats
-{
-   uint64_t processedEvents;
-   uint32_t averageWaitTime;
-   uint32_t maxWaitTime;
-   uint32_t queueSize;
-   uint32_t bindings;
 };
 
 /**

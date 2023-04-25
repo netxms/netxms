@@ -24,27 +24,77 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.10 to 44.11
+ */
+static bool H_UpgradeFromV10()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_ASSET_LINK, _T("SYS_ASSET_LINK"),
+                                EVENT_SEVERITY_NORMAL, EF_LOG, _T("8dae7b06-b854-4d88-9eb7-721b6110c200"),
+                                _T("Asset %<assetName> linked"),
+                                _T("Generated when asset is linked with node.\r\n")
+                                _T("Parameters:\r\n")
+                                _T("   assetId - asset id\r\n")
+                                _T("   assetName - asset name")
+                                ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_ASSET_UNLINK, _T("SYS_ASSET_UNLINK"),
+                                EVENT_SEVERITY_NORMAL, EF_LOG, _T("f149433b-ea2f-4bfd-bf23-35e7778b1b55"),
+                                _T("Asset %<assetName> unlinked"),
+                                _T("Generated when asset is unlinked from node.\r\n")
+                                _T("Parameters:\r\n")
+                                _T("   assetId - asset id\r\n")
+                                _T("   assetName - asset name")
+                                ));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_ASSET_LINK_CONFLICT, _T("SYS_ASSET_LINK_CONFLICT"),
+                                EVENT_SEVERITY_MINOR, EF_LOG, _T("2bfd6557-1b88-4cf0-801b-78cffb2afc3c"),
+                                _T("Asset %<assetName> already linked with %<currentNodeId> node"),
+                                _T("Generated when asset is linked with node.\r\n")
+                                _T("Parameters:\r\n")
+                                _T("   assetId - asset id found by auto linking\r\n")
+                                _T("   assetName - asset name found by auto linking\r\n")
+                                _T("   currentNodeId - currently linked node id\r\n")
+                                _T("   currentNodeName - currently linked node name")
+                                ));
+
+   int ruleId = NextFreeEPPruleID();
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event) ")
+                           _T("VALUES (%d,'acbf02d5-3ff1-4235-a8a8-f85755b9a06b',7944,'Generate alarm when asset linking conflict occurs','%%m',5,'ASSET_LINK_CONFLICT_%%i_%%<assetId>','',0,%d)"),
+         ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_ASSET_LINK_CONFLICT);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SetMinorSchemaVersion(11));
+   return true;
+}
+
+/**
  * Upgrade from 44.9 to 44.10
  */
 static bool H_UpgradeFromV9()
 {
    DB_RESULT result = SQLSelect(_T("SELECT id FROM clusters"));
-  if (result != nullptr)
-  {
-     int count = DBGetNumRows(result);
-     for (int i = 0; i < count; i++)
-     {
-        uint32_t clusterId = DBGetFieldULong(result, i, 0);
+   if (result != nullptr)
+   {
+      int count = DBGetNumRows(result);
+      for (int i = 0; i < count; i++)
+      {
+         uint32_t clusterId = DBGetFieldULong(result, i, 0);
 
-        TCHAR query[1024];
-        _sntprintf(query, 1024, _T("UPDATE clusters SET zone_guid="
-              "(SELECT zone_guid FROM nodes WHERE id="
-              "(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)) WHERE id=%d"), clusterId, clusterId);
-        if (!SQLQuery(query) && !g_ignoreErrors)
-           return false;
-     }
-     DBFreeResult(result);
-  }
+         TCHAR query[1024];
+         _sntprintf(query, 1024,
+               _T("UPDATE clusters SET zone_guid="
+                     "(SELECT zone_guid FROM nodes WHERE id="
+                     "(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)) WHERE id=%d"),
+               clusterId, clusterId);
+         if (!SQLQuery(query) && !g_ignoreErrors)
+            return false;
+      }
+      DBFreeResult(result);
+   }
 
    CHK_EXEC(SetMinorSchemaVersion(10));
    return true;
@@ -393,6 +443,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 10,  44, 11,  H_UpgradeFromV10  },
    { 9,  44, 10,  H_UpgradeFromV9  },
    { 8,  44, 9,  H_UpgradeFromV8  },
    { 7,  44, 8,  H_UpgradeFromV7  },

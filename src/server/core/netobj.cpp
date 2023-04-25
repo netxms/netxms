@@ -2867,7 +2867,7 @@ StringBuffer NetObj::expandText(const TCHAR *textTemplate, const Alarm *alarm, c
                      buffer[1] = 0;
                   }
                   if (event != nullptr)
-                     output.append(static_cast<TCHAR*>(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1)));
+                     output.append(event->getParameterList()->get(_tcstol(buffer, nullptr, 10) - 1));
                   else if (args != nullptr)
                      output.append(args->get(_tcstol(buffer, nullptr, 10) - 1));
                   break;
