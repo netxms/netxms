@@ -19,19 +19,22 @@
 package org.netxms.nxmc.modules.users.views.helpers;
 
 import org.eclipse.jface.viewers.DecoratingLabelProvider;
+import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.users.views.UserManagementView;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Label provider for user manager
  */
-public class DecoratingUserLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
+public class DecoratingUserLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider, ITableColorProvider
 {
    private static final I18n i18n = LocalizationHelper.getI18n(DecoratingUserLabelProvider.class);
 
@@ -43,6 +46,8 @@ public class DecoratingUserLabelProvider extends DecoratingLabelProvider impleme
          i18n.tr("Certificate or RADIUS"),
          i18n.tr("LDAP")
    };
+
+   private final Color disabledElementColor = ThemeEngine.getForegroundColor("List.DisabledItem");
 
    /**
     * Constructor
@@ -105,4 +110,24 @@ public class DecoratingUserLabelProvider extends DecoratingLabelProvider impleme
 		}
 		return null;
 	}
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)
+    */
+   @Override
+   public Color getForeground(Object element, int columnIndex)
+   {
+      if (((AbstractUserObject)element).isDisabled())
+         return disabledElementColor;
+      return null;
+   }
+
+   /**
+    * @see org.eclipse.jface.viewers.ITableColorProvider#getBackground(java.lang.Object, int)
+    */
+   @Override
+   public Color getBackground(Object element, int columnIndex)
+   {
+      return null;
+   }
 }
