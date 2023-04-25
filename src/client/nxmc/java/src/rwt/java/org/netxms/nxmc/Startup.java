@@ -113,7 +113,6 @@ public class Startup implements EntryPoint, StartupParameters
 
       Window window;
       String popoutId = getParameter("pop-out-id");
-      System.out.println(RWT.getRequest().getParameterMap());
       if (popoutId != null)
       {
          window = PopOutViewWindow.create(popoutId);
