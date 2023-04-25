@@ -83,10 +83,18 @@ public class AddClusterNode implements IObjectActionDelegate
 					   }
 					   catch (NXCException exception)
 					   {
-					      if(exception.getErrorCode() != RCC.CLUSTER_MEMBER_ALREADY)
-					      {
-					         throw(exception);
-					      }
+	                  if(exception.getErrorCode() == RCC.CLUSTER_MEMBER_ALREADY)
+	                  {
+	                     AbstractObject cluster = session.findObjectById(clusterId);
+	                     if (!cluster.isParentOf(o.getObjectId()))
+	                     {
+	                        throw(exception);                        
+	                     }                     
+	                  }
+	                  else
+	                  {
+	                     throw(exception);
+	                  }
 					   }					
 					}
 				}

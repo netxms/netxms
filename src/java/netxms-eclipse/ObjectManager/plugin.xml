@@ -832,6 +832,13 @@
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeZone_Node"
+               label="%action.label.ChangeZone"
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/additions">
+         </action>
       </objectContribution>
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.EntireNetwork"

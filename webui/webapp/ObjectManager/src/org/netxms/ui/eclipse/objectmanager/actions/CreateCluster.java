@@ -28,13 +28,13 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.Container;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.objectmanager.dialogs.CreateClusterDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -62,7 +62,7 @@ public class CreateCluster implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CreateCluster_Cluster);
+		final CreateClusterDialog dlg = new CreateClusterDialog(window.getShell());
 		if (dlg.open() != Window.OK)
 			return;
 		
@@ -71,15 +71,16 @@ public class CreateCluster implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CLUSTER, dlg.getObjectName(), parentId);
-            cd.setObjectAlias(dlg.getObjectAlias());
+				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_CLUSTER, dlg.getName(), parentId);
+            cd.setObjectAlias(dlg.getAlias());
+            cd.setZoneUIN(dlg.getZoneUIN());
 				session.createObject(cd);
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.get().CreateCluster_JobError, dlg.getObjectName());
+				return String.format(Messages.get().CreateCluster_JobError, dlg.getName());
 			}
 		}.start();
 	}

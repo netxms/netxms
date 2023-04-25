@@ -2713,8 +2713,9 @@ public:
    uint32_t collectAggregatedData(DCTable *table, shared_ptr<Table> *result);
 
    NXSL_Value *getNodesForNXSL(NXSL_VM *vm);
-   void addNode(const shared_ptr<Node>& node);
+   bool addNode(const shared_ptr<Node>& node);
    void removeNode(const shared_ptr<Node>& node);
+   void changeZone(uint32_t newZoneUIN);
 };
 
 #ifdef _WIN32

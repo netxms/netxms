@@ -193,6 +193,8 @@ public final class RCC
    public static final int ATTRIBUTE_ALREADY_EXISTS = 162;
    public static final int MANDATORY_ATTRIBUTE_MISSING = 163;
    public static final int OPERATION_CANCELLED = 164;
+   public static final int ZONE_CHANGE_FORBIDDEN = 165;
+   public static final int ZONE_MISMATCH = 166;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

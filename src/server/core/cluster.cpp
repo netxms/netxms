@@ -355,6 +355,28 @@ void Cluster::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    AutoBindTarget::fillMessage(msg);
 }
 
+
+/**
+ * Change cluster's zone
+ */
+void Cluster::changeZone(uint32_t newZoneUIN)
+{
+   lockProperties();
+   m_zoneUIN = newZoneUIN;
+   setModified(MODIFY_OTHER);
+   unlockProperties();
+
+   readLockChildList();
+   SharedObjectArray<NetObj> childList = SharedObjectArray<NetObj>(getChildList());
+   unlockChildList();
+
+   for(int i = 0; i < childList.size(); i++)
+   {
+      Node *node = static_cast<Node*>(childList.get(i));
+      node->changeZone(newZoneUIN);
+   }
+}
+
 /**
  * Modify object from message
  */
@@ -956,13 +978,17 @@ json_t *Cluster::toJson()
 }
 
 /**
- * ADd node to the cluster
+ * Add node to the cluster
  */
-void Cluster::addNode(const shared_ptr<Node>& node)
+bool Cluster::addNode(const shared_ptr<Node>& node)
 {
+   if (m_zoneUIN != node->getZoneUIN())
+      return false;
+
    applyToTarget(node);
    node->setRecheckCapsFlag();
    node->forceConfigurationPoll();
+   return true;
 }
 
 /**
@@ -1015,15 +1041,23 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
       if ((decision == AutoBindDecision_Bind) && !isDirectChild(node->getId()))
       {
          sendPollerMsg(_T("   Adding node %s\r\n"), node->getName());
-         nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): binding node \"%s\" [%u] to cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
-         addNode(static_pointer_cast<Node>(node));
-         PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
-         calculateCompoundStatus();
+         if (addNode(static_pointer_cast<Node>(node)))
+         {
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): binding node \"%s\" [%u] to cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
+            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
+            calculateCompoundStatus();
+         }
+         else
+         {
+            sendPollerMsg(_T("   Node not added - node and cluster are in different zones\r\n"), node->getName());
+            nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): node \"%s\" [%u] not added to cluster \"%s\" [%u] due to zone mismatch"), node->getName(), node->getId(), m_name, m_id);
+         }
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(node->getId()))
       {
          sendPollerMsg(_T("   Removing node %s\r\n"), node->getName());
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): removing node \"%s\" [%u] from cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
+
          removeNode(static_pointer_cast<Node>(node));
          PostSystemEvent(EVENT_CLUSTER_AUTOREMOVE, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
          calculateCompoundStatus();

@@ -24,6 +24,33 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.9 to 44.10
+ */
+static bool H_UpgradeFromV9()
+{
+   DB_RESULT result = SQLSelect(_T("SELECT id FROM clusters"));
+  if (result != nullptr)
+  {
+     int count = DBGetNumRows(result);
+     for (int i = 0; i < count; i++)
+     {
+        uint32_t clusterId = DBGetFieldULong(result, i, 0);
+
+        TCHAR query[1024];
+        _sntprintf(query, 1024, _T("UPDATE clusters SET zone_guid="
+              "(SELECT zone_guid FROM nodes WHERE id="
+              "(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)) WHERE id=%d"), clusterId, clusterId);
+        if (!SQLQuery(query) && !g_ignoreErrors)
+           return false;
+     }
+     DBFreeResult(result);
+  }
+
+   CHK_EXEC(SetMinorSchemaVersion(10));
+   return true;
+}
+
+/**
  * Upgrade form 44.8 to 44.9
  */
 static bool H_UpgradeFromV8()
@@ -366,6 +393,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 9,  44, 10,  H_UpgradeFromV9  },
    { 8,  44, 9,  H_UpgradeFromV8  },
    { 7,  44, 8,  H_UpgradeFromV7  },
    { 6,  44, 7,  H_UpgradeFromV6  },

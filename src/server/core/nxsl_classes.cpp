@@ -3046,9 +3046,8 @@ NXSL_METHOD_DEFINITION(Cluster, add)
       return NXSL_ERR_BAD_CLASS;
 
    shared_ptr<Cluster> thisObject = *static_cast<shared_ptr<Cluster>*>(object->getData());
-   thisObject->addNode(static_pointer_cast<Node>(child));
 
-   *result = vm->createValue();
+   *result = vm->createValue(thisObject->addNode(static_pointer_cast<Node>(child)));
    return 0;
 }
 

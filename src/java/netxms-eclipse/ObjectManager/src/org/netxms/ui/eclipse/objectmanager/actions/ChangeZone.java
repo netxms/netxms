@@ -28,6 +28,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ZoneSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -42,7 +44,7 @@ public class ChangeZone implements IObjectActionDelegate
 	private boolean zoningEnabled;
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
-	private AbstractNode node;
+	private AbstractObject object;
 	
 	/**
 	 * The constructor
@@ -73,17 +75,17 @@ public class ChangeZone implements IObjectActionDelegate
 			return;
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.get().ChangeZone_JobTitle, node.getObjectName(), node.getObjectId()), part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().ChangeZone_JobTitle, object.getObjectName(), object.getObjectId()), part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				session.changeObjectZone(node.getObjectId(), dlg.getZoneUIN());
+				session.changeObjectZone(object.getObjectId(), dlg.getZoneUIN());
 			}
 
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format(Messages.get().ChangeZone_JobError, node.getObjectName(), node.getObjectId());
+				return String.format(Messages.get().ChangeZone_JobError, object.getObjectName(), object.getObjectId());
 			}
 		}.start();
 	}
@@ -97,20 +99,20 @@ public class ChangeZone implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
 		{
 			final Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if (obj instanceof AbstractNode)
+			if ((obj instanceof AbstractNode) || (obj instanceof Cluster))
 			{
-				node = (AbstractNode)obj;
+				object = (AbstractObject)obj;
 			}
 			else
 			{
-				node = null;
+				object = null;
 			}
 		}
 		else
 		{
-			node = null;
+			object = null;
 		}
 
-		action.setEnabled((node != null) && zoningEnabled);
+		action.setEnabled((object != null) && zoningEnabled);
 	}
 }

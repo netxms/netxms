@@ -6121,12 +6121,17 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 				if (cluster->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
 					 node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
 				{
-					static_cast<Cluster&>(*cluster).addNode(static_pointer_cast<Node>(node));
-
-					response.setField(VID_RCC, RCC_SUCCESS);
-					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, cluster->getId(),
-									  _T("Node %s [%d] added to cluster %s [%d]"),
-									  node->getName(), node->getId(), cluster->getName(), cluster->getId());
+				   if (static_cast<Cluster&>(*cluster).addNode(static_pointer_cast<Node>(node)))
+				   {
+                  response.setField(VID_RCC, RCC_SUCCESS);
+                  WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, cluster->getId(),
+                                _T("Node %s [%d] added to cluster %s [%d]"),
+                                node->getName(), node->getId(), cluster->getName(), cluster->getId());
+				   }
+				   else
+				   {
+	               response.setField(VID_RCC, RCC_ZONE_MISMATCH);
+				   }
 				}
 				else
 				{
@@ -8115,24 +8120,38 @@ void ClientSession::changeObjectZone(const NXCPMessage& request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-			if (object->getObjectClass() == OBJECT_NODE)
+			if (object->getObjectClass() == OBJECT_NODE || object->getObjectClass() == OBJECT_CLUSTER)
 			{
 			   int32_t zoneUIN = request.getFieldAsUInt32(VID_ZONE_UIN);
 				shared_ptr<Zone> zone = FindZoneByUIN(zoneUIN);
 				if (zone != nullptr)
 				{
 					// Check if target zone already have object with same primary IP
-					if ((static_cast<Node&>(*object).getFlags() & NF_EXTERNAL_GATEWAY) ||
-					    ((FindNodeByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr) &&
-						  (FindSubnetByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr)))
-					{
-					   static_cast<Node&>(*object).changeZone(zoneUIN);
-						response.setField(VID_RCC, RCC_SUCCESS);
-					}
-					else
-					{
-						response.setField(VID_RCC, RCC_ADDRESS_IN_USE);
-					}
+				   if (object->getObjectClass() == OBJECT_NODE)
+				   {
+                  if ((static_cast<Node&>(*object).getFlags() & NF_EXTERNAL_GATEWAY) ||
+                      ((FindNodeByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr) &&
+                       (FindSubnetByIP(zoneUIN, static_cast<Node&>(*object).getIpAddress()) == nullptr)))
+                  {
+                     if (static_cast<Node&>(*object).getMyCluster() == nullptr)
+                     {
+                        static_cast<Node&>(*object).changeZone(zoneUIN);
+                        response.setField(VID_RCC, RCC_SUCCESS);
+                     }
+                     else
+                     {
+                        response.setField(VID_RCC, RCC_ZONE_CHANGE_FORBIDDEN);
+                     }
+                  }
+                  else
+                  {
+                     response.setField(VID_RCC, RCC_ADDRESS_IN_USE);
+                  }
+				   }
+				   else
+				   {
+                  static_cast<Cluster&>(*object).changeZone(zoneUIN);
+				   }
 				}
 				else
 				{
