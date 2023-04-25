@@ -80,7 +80,7 @@ SmtpDriver *SmtpDriver::createInstance(Config *config)
       { _T("IsHTML"), CT_BOOLEAN, 0, 0, 1, 0, &driver->m_isHtml },
       { _T("Login"), CT_MB_STRING, 0, 0, sizeof(driver->m_login), 0, driver->m_login },
       { _T("Password"), CT_MB_STRING, 0, 0, sizeof(driver->m_password), 0, driver->m_password },
-      { _T("Port"), CT_LONG, 0, 0, 0, 0, &(driver->m_port) },
+      { _T("Port"), CT_WORD, 0, 0, 0, 0, &driver->m_port },
       { _T("Server"), CT_MB_STRING, 0, 0, sizeof(driver->m_server), 0, driver->m_server },
       { _T("TLSMode"), CT_STRING, 0, 0, 9, 0, tlsModeBuff },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
