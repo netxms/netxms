@@ -1846,8 +1846,9 @@ CREATE TABLE certificate_action_log
   subject varchar(255) null,
   serial integer null,
 #ifdef DB_TSDB
-#else
   PRIMARY KEY(record_id,operation_timestamp)
+#else
+  PRIMARY KEY(record_id)
 #endif
 ) TABLE_TYPE;
 
