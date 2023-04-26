@@ -272,4 +272,4 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (46,EVENT_ICMP_OK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (47,EVENT_NOTIFICATION_CHANNEL_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (48,EVENT_NOTIFICATION_CHANNEL_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (49,EVENT_ASSET_AUTO_UPDATE_FAILED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (50,EVENT_ASSET_LINK_CONFLICT)
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (50,EVENT_ASSET_LINK_CONFLICT);
