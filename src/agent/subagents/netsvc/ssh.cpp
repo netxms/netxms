@@ -82,23 +82,24 @@ LONG NetworkServiceStatus_SSH(const char *host, const char *port, const OptionLi
  */
 LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   LONG nRet = SYSINFO_RC_SUCCESS;
+   char host[256];
+   TCHAR portText[256];
+   if (!AgentGetParameterArgA(param, 1, host, sizeof(host)) ||
+       !AgentGetParameterArg(param, 2, portText, sizeof(portText)))
+      return SYSINFO_RC_UNSUPPORTED;
 
-   char szHost[256];
-   TCHAR szPort[256];
-   AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
-   AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
+   if (host[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
 
-   if (szHost[0] == 0)
-      return SYSINFO_RC_ERROR;
-
-   uint16_t nPort = static_cast<uint16_t>(_tcstoul(szPort, nullptr, 10));
-   if (nPort == 0)
-      nPort = 22;
+   uint16_t port = static_cast<uint16_t>(_tcstoul(portText, nullptr, 10));
+   if (port == 0)
+      port = 22;
 
    uint32_t timeout = GetTimeoutFromArgs(param, 3);
+
    int64_t start = GetCurrentTimeMs();
-   int result = CheckSSH(szHost, InetAddress::INVALID, nPort, timeout);
+   LONG ret = SYSINFO_RC_SUCCESS;
+   int result = CheckSSH(host, InetAddress::INVALID, port, timeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -106,11 +107,11 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
       else if (g_netsvcFlags & NETSVC_AF_NEGATIVE_TIME_ON_ERROR)
          ret_int64(value, -(GetCurrentTimeMs() - start));
       else
-         nRet = SYSINFO_RC_ERROR;
+         ret = SYSINFO_RC_ERROR;
    }
    else
    {
       ret_int(value, result);
    }
-   return nRet;
+   return ret;
 }

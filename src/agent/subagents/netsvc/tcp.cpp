@@ -64,15 +64,16 @@ LONG H_CheckTCP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 {
    char host[1024];
    TCHAR portText[32];
-   AgentGetParameterArgA(param, 1, host, sizeof(host));
-   AgentGetParameterArg(param, 2, portText, sizeof(portText) / sizeof(TCHAR));
+   if (!AgentGetParameterArgA(param, 1, host, sizeof(host)) ||
+       !AgentGetParameterArg(param, 2, portText, sizeof(portText) / sizeof(TCHAR)))
+      return SYSINFO_RC_UNSUPPORTED;
 
    if (host[0] == 0 || portText[0] == 0)
-      return SYSINFO_RC_ERROR;
+      return SYSINFO_RC_UNSUPPORTED;
 
    uint16_t port = static_cast<uint16_t>(_tcstol(portText, nullptr, 10));
    if (port == 0)
-      return SYSINFO_RC_ERROR;
+      return SYSINFO_RC_UNSUPPORTED;
 
    uint32_t timeout = GetTimeoutFromArgs(param, 3);
 
