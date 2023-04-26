@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
       this.viewer = viewer;
    }
    
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
@@ -54,7 +54,7 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
       return null;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
     */
    @Override
@@ -82,7 +82,17 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
                return ""; //$NON-NLS-1$
             return Integer.toString(e.getVlanId());
          case SwitchForwardingDatabaseView.COLUMN_TYPE:
-            return (e.getType() == 3) ? Messages.get().FDBLabelProvider_Dynamic : ((e.getType() == 5) ? Messages.get().FDBLabelProvider_Static : Messages.get().FDBLabelProvider_Unknown);
+            switch(e.getType())
+            {
+               case 3:
+                  return Messages.get().FDBLabelProvider_Dynamic;
+               case 5:
+                  return Messages.get().FDBLabelProvider_Static;
+               case 6:
+                  return "Secure";
+               default:
+                  return Messages.get().FDBLabelProvider_Unknown;
+            }
       }
       return null;
    }
