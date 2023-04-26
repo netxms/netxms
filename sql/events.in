@@ -1703,5 +1703,5 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
    '   assetName - asset name found by auto linking'  CONCAT CRLF CONCAT
    '   currentNodeId - currently linked node id'  CONCAT CRLF CONCAT
    '   currentNodeName - currently linked node name'
-   ));
+   );
 
