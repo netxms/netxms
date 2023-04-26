@@ -1,6 +1,6 @@
 /*
  ** NetXMS Network Service check subagent
- ** Copyright (C) 2013-2022 Alex Kirhenshtein
+ ** Copyright (C) 2013-2023 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -179,14 +179,15 @@ int CheckHTTP(const char *hostname, const InetAddress& addr, uint16_t port, bool
 LONG H_CheckHTTP(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char hostname[1024], portText[32], uri[1024], hostHeader[256], match[1024];
-   AgentGetParameterArgA(metric, 1, hostname, sizeof(hostname));
-   AgentGetParameterArgA(metric, 2, portText, sizeof(portText));
-   AgentGetParameterArgA(metric, 3, uri, sizeof(uri));
-   AgentGetParameterArgA(metric, 4, hostHeader, sizeof(hostHeader));
-   AgentGetParameterArgA(metric, 5, match, sizeof(match));
+   if (!AgentGetParameterArgA(metric, 1, hostname, sizeof(hostname)) ||
+       !AgentGetParameterArgA(metric, 2, portText, sizeof(portText)) ||
+       !AgentGetParameterArgA(metric, 3, uri, sizeof(uri)) ||
+       !AgentGetParameterArgA(metric, 4, hostHeader, sizeof(hostHeader)) ||
+       !AgentGetParameterArgA(metric, 5, match, sizeof(match)))
+      return SYSINFO_RC_UNSUPPORTED;
 
    if (hostname[0] == 0 || uri[0] == 0)
-      return SYSINFO_RC_ERROR;
+      return SYSINFO_RC_UNSUPPORTED;
 
    uint16_t port = 0;
    if (portText[0] == 0)
@@ -273,6 +274,11 @@ LONG H_HTTPChecksum(const TCHAR *metric, const TCHAR *arg, TCHAR *value, Abstrac
    }
 
    const OptionList options(metric, 2);
+   if (!options.isValid())
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("H_HTTPChecksum(%hs): error parsing options"), url);
+      return SYSINFO_RC_UNSUPPORTED;
+   }
 
    CURL *curl = curl_easy_init();
    if (curl == nullptr)

@@ -96,16 +96,16 @@ LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, const char
 LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    char host[256], recipient[256], portAsChar[256];
-   uint16_t port;
 
-   AgentGetParameterArgA(param, 1, host, sizeof(host));
-   AgentGetParameterArgA(param, 2, recipient, sizeof(recipient));
-   uint32_t timeout = GetTimeoutFromArgs(param, 3);
-   AgentGetParameterArgA(param, 4, portAsChar, sizeof(portAsChar));
+   if (!AgentGetParameterArgA(param, 1, host, sizeof(host)) ||
+       !AgentGetParameterArgA(param, 2, recipient, sizeof(recipient)) ||
+       !AgentGetParameterArgA(param, 4, portAsChar, sizeof(portAsChar)))
+      return SYSINFO_RC_UNSUPPORTED;
 
    if ((host[0] == 0) || (recipient[0] == 0))
       return SYSINFO_RC_UNSUPPORTED;
 
+   uint16_t port;
    if (portAsChar[0] == 0)
    {
       port = (arg[1] == 'S') ? 465 : 25;
@@ -116,6 +116,8 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
       if (port == 0)
          return SYSINFO_RC_UNSUPPORTED;
    }
+
+   uint32_t timeout = GetTimeoutFromArgs(param, 3);
 
    LONG rc = SYSINFO_RC_SUCCESS;
    int64_t start = GetCurrentTimeMs();

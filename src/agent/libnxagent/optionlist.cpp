@@ -28,10 +28,17 @@
  */
 OptionList::OptionList(const TCHAR *metric, int offset)
 {
+   m_valid = true;
    int index = offset;
    TCHAR buffer[256] = _T("");
-   while (AgentGetParameterArg(metric, index++, buffer, 256))
+   while (true)
    {
+      if (!AgentGetParameterArg(metric, index++, buffer, 256))
+      {
+         m_valid = false;
+         break;
+      }
+
       Trim(buffer);
 
       if (buffer[0] == 0)

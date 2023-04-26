@@ -91,6 +91,9 @@ static LONG H_NetworkServiceStatus(const TCHAR *metric, const TCHAR *arg, TCHAR 
    // Legacy version requires pattern as second argument
    // For new version pattern should be set as named option
    const OptionList options(metric, (arg[1] == 'L') ? 3 : 2);
+   if (!options.isValid())
+      return SYSINFO_RC_UNSUPPORTED;
+
    TCHAR pattern[256];
    if (arg[1] == 'L')
    {

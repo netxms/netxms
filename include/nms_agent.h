@@ -1271,9 +1271,15 @@ class LIBNXAGENT_EXPORTABLE OptionList
 {
 private:
    StringMap m_options;
+   bool m_valid;
 
 public:
    OptionList(const TCHAR *parameters, int offset = 1);
+
+   bool isValid() const
+   {
+      return m_valid;
+   }
 
    bool exists(const TCHAR *key) const
    {

@@ -135,19 +135,24 @@ LONG H_CheckTLS(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, Abstrac
 {
    char host[1024];
    TCHAR portText[32];
-   AgentGetParameterArgA(parameters, 1, host, sizeof(host));
-   AgentGetParameterArg(parameters, 2, portText, sizeof(portText) / sizeof(TCHAR));
+
+   if (!AgentGetParameterArgA(parameters, 1, host, sizeof(host)) ||
+       !AgentGetParameterArg(parameters, 2, portText, sizeof(portText) / sizeof(TCHAR)))
+      return SYSINFO_RC_UNSUPPORTED;
 
    if (host[0] == 0 || portText[0] == 0)
-      return SYSINFO_RC_ERROR;
+      return SYSINFO_RC_UNSUPPORTED;
 
    uint16_t port = static_cast<uint16_t>(_tcstol(portText, nullptr, 10));
    if (port == 0)
-      return SYSINFO_RC_ERROR;
+      return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_SUCCESS;
 
    const OptionList options(parameters, 3);
+   if (!options.isValid())
+      return SYSINFO_RC_UNSUPPORTED;
+
    uint32_t timeout = options.getAsUInt32(_T("timeout"), g_netsvcTimeout);
 
    int64_t start = GetCurrentTimeMs();
@@ -196,9 +201,11 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
 {
    char host[1024], sniServerName[1024];
    TCHAR portText[32];
-   AgentGetParameterArgA(parameters, 1, host, sizeof(host));
-   AgentGetParameterArg(parameters, 2, portText, sizeof(portText) / sizeof(TCHAR));
-   AgentGetParameterArgA(parameters, 3, sniServerName, sizeof(sniServerName));
+
+   if (!AgentGetParameterArgA(parameters, 1, host, sizeof(host)) ||
+       !AgentGetParameterArg(parameters, 2, portText, sizeof(portText) / sizeof(TCHAR)) ||
+       !AgentGetParameterArgA(parameters, 3, sniServerName, sizeof(sniServerName)))
+      return SYSINFO_RC_UNSUPPORTED;
 
    if (host[0] == 0 || portText[0] == 0)
       return SYSINFO_RC_ERROR;
@@ -208,6 +215,9 @@ LONG H_TLSCertificateInfo(const TCHAR *parameters, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_ERROR;
 
    const OptionList options(parameters, 4);
+   if (!options.isValid())
+      return SYSINFO_RC_UNSUPPORTED;
+
    uint32_t timeout = options.getAsUInt32(_T("timeout"), g_netsvcTimeout);
 
    SOCKET hSocket = NetConnectTCP(host, InetAddress::INVALID, port, timeout);
