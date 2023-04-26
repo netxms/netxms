@@ -19,20 +19,18 @@
 package org.netxms.ui.eclipse.objectmanager.actions;
 
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.RCC;
-import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Cluster;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -77,25 +75,7 @@ public class AddClusterNode implements IObjectActionDelegate
 					List<AbstractObject> objects = dlg.getSelectedObjects();
 					for(AbstractObject o : objects)
 					{
-					   try 
-					   {
-	                  session.addClusterNode(clusterId, o.getObjectId());					      
-					   }
-					   catch (NXCException exception)
-					   {
-	                  if(exception.getErrorCode() == RCC.CLUSTER_MEMBER_ALREADY)
-	                  {
-	                     AbstractObject cluster = session.findObjectById(clusterId);
-	                     if (!cluster.isParentOf(o.getObjectId()))
-	                     {
-	                        throw(exception);                        
-	                     }                     
-	                  }
-	                  else
-	                  {
-	                     throw(exception);
-	                  }
-					   }					
+                  session.addClusterNode(clusterId, o.getObjectId());								
 					}
 				}
 			}.start();

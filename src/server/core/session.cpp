@@ -6116,7 +6116,8 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 	{
 		if ((cluster->getObjectClass() == OBJECT_CLUSTER) && (node->getObjectClass() == OBJECT_NODE))
 		{
-			if (static_cast<Node&>(*node).getMyCluster() == nullptr)
+		   shared_ptr<Cluster> currentCluster = static_cast<Node&>(*node).getMyCluster();
+			if (currentCluster == nullptr)
 			{
 				if (cluster->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
 					 node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
@@ -6143,7 +6144,14 @@ void ClientSession::addClusterNode(const NXCPMessage& request)
 			}
 			else
 			{
-				response.setField(VID_RCC, RCC_CLUSTER_MEMBER_ALREADY);
+			   if (currentCluster->getId() == cluster->getId())
+			   {
+               response.setField(VID_RCC, RCC_SUCCESS);
+			   }
+			   else
+			   {
+			      response.setField(VID_RCC, RCC_CLUSTER_MEMBER_ALREADY);
+			   }
 			}
 		}
 		else

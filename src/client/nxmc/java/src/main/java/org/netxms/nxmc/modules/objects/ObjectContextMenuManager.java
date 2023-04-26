@@ -41,10 +41,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
-import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Chassis;
@@ -985,25 +983,7 @@ public class ObjectContextMenuManager extends MenuManager
             List<AbstractObject> objects = dlg.getSelectedObjects();
             for(AbstractObject o : objects)
             {
-               try 
-               {
-                  session.addClusterNode(clusterId, o.getObjectId());                     
-               }
-               catch (NXCException exception)
-               {
-                  if(exception.getErrorCode() == RCC.CLUSTER_MEMBER_ALREADY)
-                  {
-                     AbstractObject cluster = session.findObjectById(clusterId);
-                     if (!cluster.isParentOf(o.getObjectId()))
-                     {
-                        throw(exception);                        
-                     }                     
-                  }
-                  else
-                  {
-                     throw(exception);
-                  }
-               }              
+               session.addClusterNode(clusterId, o.getObjectId());          
             }
          }
          
