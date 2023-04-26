@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,18 +73,28 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
             return session.getVendorByMac(e.getAddress(), new ViewerElementUpdater(viewer, element));
          case SwitchForwardingDatabaseView.COLUMN_NODE:
             if (e.getNodeId() == 0)
-               return ""; //$NON-NLS-1$
-            return session.getObjectName(e.getNodeId());
+               return "";
+            return session.getObjectNameWithAlias(e.getNodeId());
          case SwitchForwardingDatabaseView.COLUMN_PORT:
             if (e.getPort() == 0)
-               return ""; //$NON-NLS-1$
+               return "";
             return Integer.toString(e.getPort());
          case SwitchForwardingDatabaseView.COLUMN_VLAN:
             if (e.getVlanId() == 0)
-               return ""; //$NON-NLS-1$
+               return "";
             return Integer.toString(e.getVlanId());
          case SwitchForwardingDatabaseView.COLUMN_TYPE:
-            return (e.getType() == 3) ? i18n.tr("Dynamic") : ((e.getType() == 5) ? i18n.tr("Static") : i18n.tr("Unknown"));
+            switch(e.getType())
+            {
+               case 3:
+                  return i18n.tr("Dynamic");
+               case 5:
+                  return i18n.tr("Static");
+               case 6:
+                  return i18n.tr("Secure");
+               default:
+                  return i18n.tr("Unknown");
+            }
       }
       return null;
    }
