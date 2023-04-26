@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -167,7 +167,7 @@ void ForwardingDatabase::print(ServerConsole *console, const Node& owner)
       shared_ptr<Interface> iface = owner.findInterfaceByIndex(e->ifIndex);
       console->printf(_T("%s | %7d | %-20s | %4d | %-7s | %5d | %s\n"), e->macAddr.toString(macAddrStr),
          e->ifIndex, (iface != nullptr) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"),
-         e->port, (e->type == 3) ? _T("dynamic") : ((e->type == 5) ? _T("static") : _T("unknown")),
+         e->port, (e->type == 3) ? _T("dynamic") : ((e->type == 5) ? _T("static") : ((e->type == 6) ? _T("secure") : _T("unknown"))),
          e->nodeObject, (node != nullptr) ? node->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
    }
 	console->printf(_T("\n%d entries\n\n"), m_fdb.size());
@@ -281,7 +281,7 @@ shared_ptr<Table> ForwardingDatabase::getAsTable()
          result->set(7, _T(""));
          result->set(8, _T(""));
       }
-      result->set(9, (e->type) == 3 ? _T("Dynamic") : ((e->type == 5) ? _T("Static") : _T("Unknown")));
+      result->set(9, (e->type) == 3 ? _T("Dynamic") : ((e->type == 5) ? _T("Static") : ((e->type == 6) ? _T("Secure") : _T("Unknown"))));
    }
 
    return result;
@@ -321,7 +321,7 @@ static uint32_t FDBHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, Forw
       {
          int port = varPort->getValueAsInt();
          int status = varStatus->getValueAsInt();
-         if ((port > 0) && ((status == 3) || (status == 5)))  // status: 3 == learned, 5 == static
+         if ((port > 0) && ((status == 3) || (status == 5) || (status == 6)))  // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
          {
             FDB_ENTRY entry;
             memset(&entry, 0, sizeof(FDB_ENTRY));
@@ -361,7 +361,7 @@ static uint32_t Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTranspor
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 		int status = response->getVariable(0)->getValueAsInt();
-		if ((status == 3) || (status == 5)) // status: 3 == learned, 5 == static
+		if ((status == 3) || (status == 5) || (status == 6)) // status: 3 == learned, 5 == static, 6 == secure (possibly H3C specific)
 		{
 			FDB_ENTRY entry;
 			memset(&entry, 0, sizeof(FDB_ENTRY));
