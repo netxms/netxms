@@ -912,11 +912,84 @@ void AgentConnection::setSharedSecret(const TCHAR *secret)
  */
 InterfaceList *AgentConnection::getInterfaceList()
 {
-   StringList *data;
-   if (getList(_T("Net.InterfaceList"), &data) != ERR_SUCCESS)
+   Table *ifTable;
+   if (getTable(_T("Net.Interfaces"), &ifTable) == ERR_SUCCESS)
+      return parseInterfaceTable(ifTable);
+
+   StringList *ifList;
+   if (getList(_T("Net.InterfaceList"), &ifList) == ERR_SUCCESS)
+      return parseInterfaceList(ifList);
+
+   return nullptr;
+}
+
+/**
+ * Parse interface table received from agent (via Net.Interfaces)
+ */
+InterfaceList *AgentConnection::parseInterfaceTable(Table *data)
+{
+   int cIndex = data->getColumnIndex(_T("INDEX"));
+   int cName = data->getColumnIndex(_T("NAME"));
+   int cAlias = data->getColumnIndex(_T("ALIAS"));
+   int cType = data->getColumnIndex(_T("TYPE"));
+   int cMTU = data->getColumnIndex(_T("MTU"));
+   int cMAC = data->getColumnIndex(_T("MAC_ADDRESS"));
+   int cIPList = data->getColumnIndex(_T("IP_ADDRESSES"));
+
+   if ((cIndex == -1) || (cName == -1) || (cMAC == -1) || (cIPList == -1))
       return nullptr;
 
-   InterfaceList *pIfList = new InterfaceList(data->size());
+   InterfaceList *ifList = new InterfaceList(data->getNumRows());
+
+   for(int i = 0; i < data->getNumRows(); i++)
+   {
+      uint32_t ifIndex = data->getAsUInt(i, cIndex);
+      if (ifIndex == 0)
+         continue;
+
+      auto iface = new InterfaceInfo(ifIndex);
+      _tcslcpy(iface->name, data->getAsString(i, cName, _T("")), MAX_DB_STRING);
+      _tcslcpy(iface->alias, data->getAsString(i, cAlias, _T("")), MAX_DB_STRING);
+      iface->type = data->getAsUInt(i, cType);
+      if (iface->type == 0)
+         iface->type = IFTYPE_OTHER;
+      iface->mtu = data->getAsUInt(i, cMTU);
+      StrToBin(data->getAsString(i, cMAC, _T("000000000000")), iface->macAddr, MAC_ADDR_LENGTH);
+
+      StringBuffer::split(data->getAsString(i, cIPList, _T("")), _T(","), true,
+         [iface] (const String& element) -> void
+         {
+            InetAddress addr;
+            ssize_t slashIndex = element.find(_T("/"));
+            if (slashIndex != String::npos)
+            {
+               addr = InetAddress::parse(element.substring(0, slashIndex));
+               addr.setMaskBits(_tcstol(element.substring(slashIndex + 1, -1), nullptr, 10));
+            }
+            else
+            {
+               addr = InetAddress::parse(element);
+               addr.setMaskBits(24);
+            }
+            if (addr.isValid())
+            {
+               iface->ipAddrList.add(addr);
+            }
+         });
+
+      ifList->add(iface);
+   }
+
+   delete data;
+   return ifList;
+}
+
+/**
+ * Parse interface list received from agent (via Net.InterfaceList)
+ */
+InterfaceList *AgentConnection::parseInterfaceList(StringList *data)
+{
+   InterfaceList *ifList = new InterfaceList(data->size());
 
    // Parse result set. Each line should have the following format:
    // index ip_address/mask_bits iftype mac_address name
@@ -928,16 +1001,16 @@ InterfaceList *AgentConnection::getInterfaceList()
       uint32_t ifIndex = 0;
 
       // Index
-      TCHAR *pChar = _tcschr(pBuf, ' ');
-      if (pChar != nullptr)
+      TCHAR *ch = _tcschr(pBuf, ' ');
+      if (ch != nullptr)
       {
-         *pChar = 0;
+         *ch = 0;
          ifIndex = _tcstoul(pBuf, nullptr, 10);
-         pBuf = pChar + 1;
+         pBuf = ch + 1;
       }
 
       bool newInterface = false;
-      InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
+      InterfaceInfo *iface = ifList->findByIfIndex(ifIndex);
       if (iface == nullptr)
       {
          iface = new InterfaceInfo(ifIndex);
@@ -945,41 +1018,40 @@ InterfaceList *AgentConnection::getInterfaceList()
       }
 
       // Address and mask
-      pChar = _tcschr(pBuf, _T(' '));
-      if (pChar != nullptr)
+      ch = _tcschr(pBuf, _T(' '));
+      if (ch != nullptr)
       {
-         TCHAR *pSlash;
          static TCHAR defaultMask[] = _T("24");
 
-         *pChar = 0;
-         pSlash = _tcschr(pBuf, _T('/'));
-         if (pSlash != nullptr)
+         *ch = 0;
+         TCHAR *slash = _tcschr(pBuf, _T('/'));
+         if (slash != nullptr)
          {
-            *pSlash = 0;
-            pSlash++;
+            *slash = 0;
+            slash++;
          }
-         else     // Just a paranoia protection, should'n happen if agent working correctly
+         else     // Just a paranoia protection, shouldn't happen if agent working correctly
          {
-            pSlash = defaultMask;
+            slash = defaultMask;
          }
          InetAddress addr = InetAddress::parse(pBuf);
          if (addr.isValid())
          {
-            addr.setMaskBits(_tcstol(pSlash, nullptr, 10));
+            addr.setMaskBits(_tcstol(slash, nullptr, 10));
             // Agent may return 0.0.0.0/0 for interfaces without IP address
             if ((addr.getFamily() != AF_INET) || (addr.getAddressV4() != 0))
                iface->ipAddrList.add(addr);
          }
-         pBuf = pChar + 1;
+         pBuf = ch + 1;
       }
 
       if (newInterface)
       {
          // Interface type
-         pChar = _tcschr(pBuf, ' ');
-         if (pChar != nullptr)
+         ch = _tcschr(pBuf, ' ');
+         if (ch != nullptr)
          {
-            *pChar = 0;
+            *ch = 0;
 
             TCHAR *eptr;
             iface->type = _tcstoul(pBuf, &eptr, 10);
@@ -996,29 +1068,29 @@ InterfaceList *AgentConnection::getInterfaceList()
                }
             }
 
-            pBuf = pChar + 1;
+            pBuf = ch + 1;
          }
 
          // MAC address
-         pChar = _tcschr(pBuf, ' ');
-         if (pChar != nullptr)
+         ch = _tcschr(pBuf, ' ');
+         if (ch != nullptr)
          {
-            *pChar = 0;
+            *ch = 0;
             StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
-            pBuf = pChar + 1;
+            pBuf = ch + 1;
          }
 
          // Name (set description to name)
          _tcslcpy(iface->name, pBuf, MAX_DB_STRING);
          _tcslcpy(iface->description, pBuf, MAX_DB_STRING);
 
-         pIfList->add(iface);
+         ifList->add(iface);
       }
       MemFree(line);
    }
 
    delete data;
-   return pIfList;
+   return ifList;
 }
 
 /**
@@ -1808,31 +1880,37 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
       if (sendMessage(&msg))
       {
          NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
-         rcc = response->getFieldAsInt32(VID_RCC);
-
-         if (rcc == ERR_FILE_APPEND_POSSIBLE)
+         if (response != nullptr)
          {
-            BYTE localHash[MD5_DIGEST_SIZE];
-            BYTE remoteHash[MD5_DIGEST_SIZE];
-            memset(localHash, 0, sizeof(localHash));
-            memset(remoteHash, 0, sizeof(remoteHash));
-            response->getFieldAsBinary(VID_HASH_MD5, remoteHash, MD5_DIGEST_SIZE);
-            uint64_t remoteSize = response->getFieldAsUInt64(VID_FILE_SIZE);
-            CalculateFileMD5Hash(localFile, localHash, remoteSize);
-            if (!memcmp(remoteHash, localHash, MD5_DIGEST_SIZE))
+            rcc = response->getFieldAsInt32(VID_RCC);
+            if (rcc == ERR_FILE_APPEND_POSSIBLE)
             {
-               resumeMode = FileTransferResumeMode::RESUME;
-               messageResendRequired = true;
-               offset = remoteSize;
-               // Even if files are equals .part file might need to be renamed
+               BYTE localHash[MD5_DIGEST_SIZE];
+               BYTE remoteHash[MD5_DIGEST_SIZE];
+               memset(localHash, 0, sizeof(localHash));
+               memset(remoteHash, 0, sizeof(remoteHash));
+               response->getFieldAsBinary(VID_HASH_MD5, remoteHash, MD5_DIGEST_SIZE);
+               uint64_t remoteSize = response->getFieldAsUInt64(VID_FILE_SIZE);
+               CalculateFileMD5Hash(localFile, localHash, remoteSize);
+               if (!memcmp(remoteHash, localHash, MD5_DIGEST_SIZE))
+               {
+                  resumeMode = FileTransferResumeMode::RESUME;
+                  messageResendRequired = true;
+                  offset = remoteSize;
+                  // Even if files are equals .part file might need to be renamed
+               }
+               else
+               {
+                  resumeMode = FileTransferResumeMode::OVERWRITE;
+                  messageResendRequired = true;
+               }
             }
-            else
-            {
-               resumeMode = FileTransferResumeMode::OVERWRITE;
-               messageResendRequired = true;
-            }
+            delete response;
          }
-         delete response;
+         else
+         {
+            rcc = ERR_REQUEST_TIMEOUT;
+         }
       }
       else
       {

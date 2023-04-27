@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2022 Raden Solutions
+ ** Copyright (C) 2004-2023 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -181,7 +181,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 
    char szLine[256];
 
-   if (fgets(szLine, sizeof(szLine), hFile) != NULL)
+   if (fgets(szLine, sizeof(szLine), hFile) != nullptr)
    {
       if (!strncmp(szLine,
          "Iface\tDestination\tGateway \tFlags\tRefCnt\t"
@@ -189,7 +189,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
       {
          nRet = SYSINFO_RC_SUCCESS;
 
-         while(fgets(szLine, sizeof(szLine), hFile) != NULL)
+         while(fgets(szLine, sizeof(szLine), hFile) != nullptr)
          {
             char szIF[64];
             int nType = 0;
@@ -205,7 +205,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
                int nIndex;
                struct ifreq irq;
 
-               strncpy(irq.ifr_name, szIF, IFNAMSIZ);
+               strlcpy(irq.ifr_name, szIF, IFNAMSIZ);
                if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
                {
                   AgentWriteDebugLog(4, _T("H_NetRoutingTable: ioctl() failed (%s)"), _tcserror(errno));
@@ -335,7 +335,8 @@ struct LinuxInterfaceInfo
    int type;
    int mtu;
    BYTE macAddr[8];
-   char name[16];
+   char name[IFNAMSIZ];
+   char alias[256];
    ObjectArray<InetAddress> addrList;
 
    LinuxInterfaceInfo() : addrList(16, 16, Ownership::True)
@@ -345,6 +346,7 @@ struct LinuxInterfaceInfo
       mtu = 0;
       memset(macAddr, 0, sizeof(macAddr));
       name[0] = 0;
+      alias[0] = 0;
    }
 };
 
@@ -363,7 +365,7 @@ static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
       switch(attribute->rta_type)
       {
          case IFLA_IFNAME:
-            strncpy(ifInfo->name, (char *)RTA_DATA(attribute), sizeof(ifInfo->name));
+            strlcpy(ifInfo->name, (char *)RTA_DATA(attribute), sizeof(ifInfo->name));
             break;
          case IFLA_ADDRESS:
             if (RTA_PAYLOAD(attribute) > 0)
@@ -373,6 +375,9 @@ static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
             break;
          case IFLA_MTU:
             ifInfo->mtu = *((unsigned int *)RTA_DATA(attribute));
+            break;
+         case IFLA_IFALIAS:
+            strlcpy(ifInfo->alias, (char *)RTA_DATA(attribute), sizeof(ifInfo->alias));
             break;
       }
    }
@@ -625,6 +630,56 @@ LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, Abstr
 }
 
 /**
+ * Handler for Net.Interfaces table
+ */
+LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
+   if (ifList == nullptr)
+   {
+      AgentWriteDebugLog(4, _T("H_NetIfTable: failed to get interface list"));
+      return SYSINFO_RC_ERROR;
+   }
+
+   value->addColumn(_T("INDEX"), DCI_DT_UINT, _T("Index"), true);
+   value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+   value->addColumn(_T("ALIAS"), DCI_DT_STRING, _T("Alias"));
+   value->addColumn(_T("TYPE"), DCI_DT_UINT, _T("Type"));
+   value->addColumn(_T("MTU"), DCI_DT_UINT, _T("MTU"));
+   value->addColumn(_T("MAC_ADDRESS"), DCI_DT_STRING, _T("MAC address"));
+   value->addColumn(_T("IP_ADDRESSES"), DCI_DT_STRING, _T("IP addresses"));
+
+   TCHAR macAddr[32];
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      value->addRow();
+
+      LinuxInterfaceInfo *iface = ifList->get(i);
+      value->set(0, iface->index);
+      value->set(1, iface->name);
+      value->set(2, iface->alias);
+      value->set(3, iface->type);
+      value->set(4, iface->mtu);
+      value->set(5, BinToStr(iface->macAddr, 6, macAddr));
+
+      StringBuffer sb;
+      for(int j = 0; j < iface->addrList.size(); j++)
+      {
+         if (j > 0)
+            sb.append(_T(", "));
+         InetAddress *addr = iface->addrList.get(j);
+         sb.append(addr->toString());
+         sb.append(_T('/'));
+         sb.append(addr->getMaskBits());
+      }
+      value->set(6, sb);
+   }
+
+   delete ifList;
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for interface parameters (using ioctl)
  */
 LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
@@ -654,7 +709,7 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
    else
    {
       // Name passed as argument
-      strncpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
+      strlcpy(ifr.ifr_name, szBuffer, IFNAMSIZ);
    }
 
    // Get interface information
@@ -703,50 +758,44 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 /**
  * Extract 32 bit value from line
  */
-static LONG ValueFromLine(char *pszLine, int nPos, TCHAR *pValue)
+static LONG ValueFromLine(char *line, int pos, TCHAR *value)
 {
-   int i;
-   char *eptr, szBuffer[256];
-   const char *pszWord;
-   LONG nRet = SYSINFO_RC_ERROR;
+   char buffer[256];
+   const char *curr = line;
+   for(int i = 0; i <= pos; i++)
+      curr = ExtractWordA(curr, buffer);
 
-   for(i = 0, pszWord = pszLine; i <= nPos; i++)
-      pszWord = ExtractWordA(pszWord, szBuffer);
-
+   char *eptr;
    // On 64 bit systems interface counters are 64 bit
 #if SIZEOF_LONG > 4
-   UINT32 value = (UINT32)(strtoull(szBuffer, &eptr, 0) & _ULL(0xFFFFFFFF));
+   uint32_t n = (uint32_t)(strtoull(buffer, &eptr, 0) & _ULL(0xFFFFFFFF));
 #else
-   UINT32 value = strtoul(szBuffer, &eptr, 0);
+   uint32_t n = strtoul(buffer, &eptr, 0);
 #endif
-   if (*eptr == 0)
-   {
-      ret_uint(pValue, value);
-      nRet = SYSINFO_RC_SUCCESS;
-   }
-   return nRet;
+   if (*eptr != 0)
+      return SYSINFO_RC_ERROR;
+
+   ret_uint(value, n);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Extract 64 bit value from line
  */
-static LONG ValueFromLine64(char *pszLine, int nPos, TCHAR *pValue)
+static LONG ValueFromLine64(char *line, int pos, TCHAR *value)
 {
-   int i;
-   char *eptr, szBuffer[256];
-   const char *pszWord;
-   LONG nRet = SYSINFO_RC_ERROR;
+   char buffer[256];
+   const char *curr = line;
+   for(int i = 0; i <= pos; i++)
+      curr = ExtractWordA(curr, buffer);
 
-   for(i = 0, pszWord = pszLine; i <= nPos; i++)
-      pszWord = ExtractWordA(pszWord, szBuffer);
+   char *eptr;
+   uint64_t n = strtoull(buffer, &eptr, 0);
+   if (*eptr != 0)
+      return SYSINFO_RC_ERROR;
 
-   UINT64 value = strtoull(szBuffer, &eptr, 0);
-   if (*eptr == 0)
-   {
-      ret_uint64(pValue, value);
-      nRet = SYSINFO_RC_SUCCESS;
-   }
-   return nRet;
+   ret_uint64(value, n);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

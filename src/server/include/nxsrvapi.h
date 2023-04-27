@@ -941,6 +941,9 @@ private:
    void postRawMessageCallback(NXCP_MESSAGE *msg);
    void getSshKeysCallback(NXCPMessage *msg);
 
+   InterfaceList *parseInterfaceTable(Table *data);
+   InterfaceList *parseInterfaceList(StringList *data);
+
 protected:
    virtual shared_ptr<AbstractCommChannel> createChannel();
    virtual void onTrap(NXCPMessage *pMsg);

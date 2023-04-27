@@ -204,6 +204,7 @@ LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSessi
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfNames(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_NetworkAdaptersTable(const TCHAR* cmd, const TCHAR* arg, Table* value, AbstractCommSession* session);
 
 LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
