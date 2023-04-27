@@ -509,11 +509,11 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
 			// Get interface description
 		   TCHAR oid[128];
-	      _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->index);
+	      _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%u"), iface->index);
 	      if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
          {
             // Try to get name from ifXTable
-	         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
+	         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%u"), iface->index);
 	         if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
 	         {
 	            nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p): cannot read interface description for interface %u"), snmp, iface->index);
@@ -522,7 +522,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          }
 
          // Get interface alias
-	      _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), iface->index);  // ifAlias
+	      _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%u"), iface->index);  // ifAlias
 			if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0) == SNMP_ERR_SUCCESS)
          {
             Trim(iface->alias);
@@ -540,7 +540,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifDescr from ifTable
          TCHAR buffer[256];
-         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%u"), iface->index);
          if (!useIfXTable ||
 				 (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, sizeof(buffer), 0) != SNMP_ERR_SUCCESS))
          {
@@ -589,21 +589,21 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          }
 
          // Interface type
-         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->index);
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%u"), iface->index);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &iface->type, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->type = IFTYPE_OTHER;
 			}
 
          // Interface MTU
-         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%d"), iface->index);
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%u"), iface->index);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &iface->mtu, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
 			{
 				iface->mtu = 0;
 			}
 
          // Interface speed
-         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.15.%d"), iface->index);  // try ifHighSpeed first
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.15.%u"), iface->index);  // try ifHighSpeed first
          uint32_t speed;
          if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &speed, sizeof(uint32_t), 0) != SNMP_ERR_SUCCESS)
 			{
@@ -611,7 +611,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 			}
          if (speed < 2000)  // ifHighSpeed not supported or slow interface
          {
-            _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.5.%d"), iface->index);  // ifSpeed
+            _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.5.%u"), iface->index);  // ifSpeed
             if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &speed, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS)
             {
                iface->speed = speed;
@@ -627,7 +627,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
          }
 
          // MAC address
-         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->index);
+         _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%u"), iface->index);
          memset(buffer, 0, MAC_ADDR_LENGTH);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
 			{
@@ -703,7 +703,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, NObject *node,
    if (ifTableSuffixLen > 0)
       _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7%s"), SnmpConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128)); // Interface administrative state
    else
-      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
+      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%u"), ifIndex); // Interface administrative state
    SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, &state, sizeof(uint32_t), 0);
 
    switch(state)

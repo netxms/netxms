@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Drivers for Cambium devices
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -159,7 +159,7 @@ static UINT32 HandlerRadioInterfaces(SNMP_Variable *var, SNMP_Transport *snmp, v
    ri.index = oid.getLastElement() + 1;
    TCHAR macAddrText[64] = _T("");
    memcpy(ri.macAddr, MacAddress::parse(var->getValueAsString(macAddrText, 64)).value(), MAC_ADDR_LENGTH);
-   _sntprintf(ri.name, sizeof(ri.name) / sizeof(TCHAR), _T("radio%d"), ri.index - 1);
+   _sntprintf(ri.name, sizeof(ri.name) / sizeof(TCHAR), _T("radio%u"), ri.index - 1);
    ri.channel = _tcstol(response->getVariable(0)->getValueAsString(macAddrText, 64), nullptr, 10);
    ri.powerDBm = response->getVariable(1)->getValueAsInt();
    ri.powerMW = (int)pow(10.0, (double)ri.powerDBm / 10.0);

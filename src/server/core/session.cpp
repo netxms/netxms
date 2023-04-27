@@ -11578,9 +11578,9 @@ void ClientSession::findNodeConnection(const NXCPMessage& request)
 				   response.setField(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
 				   response.setField(VID_CONNECTION_TYPE, (UINT16)type);
                if (cp->getObjectClass() == OBJECT_INTERFACE)
-                  debugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), static_cast<Interface&>(*cp).getIfIndex());
+                  debugPrintf(5, _T("findNodeConnection: nodeId=%u ifId=%u ifName=%s ifIndex=%u"), node->getId(), cp->getId(), cp->getName(), static_cast<Interface&>(*cp).getIfIndex());
                else
-                  debugPrintf(5, _T("findNodeConnection: nodeId=%d apId=%d apName=%s"), node->getId(), cp->getId(), cp->getName());
+                  debugPrintf(5, _T("findNodeConnection: nodeId=%u apId=%u apName=%s"), node->getId(), cp->getId(), cp->getName());
             }
             else
             {
@@ -11701,13 +11701,12 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 			   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
             if (cp->getObjectClass() == OBJECT_INTERFACE)
             {
-               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifName=%s ifIndex=%d"), ipAddr.toString(ipAddrText),
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%u ifId=%u ifName=%s ifIndex=%u"), ipAddr.toString(ipAddrText),
                         node->getId(), cp->getId(), cp->getName(), static_cast<Interface&>(*cp).getIfIndex());
             }
             else
             {
-               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d apId=%d apName=%s"), ipAddr.toString(ipAddrText),
-                        node->getId(), cp->getId(), cp->getName());
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%u apId=%u apName=%s"), ipAddr.toString(ipAddrText), node->getId(), cp->getId(), cp->getName());
             }
          }
 		}

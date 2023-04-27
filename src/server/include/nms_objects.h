@@ -2637,9 +2637,9 @@ public:
    uint32_t getIndex() const { return m_index; }
    const MacAddress& getMacAddr() const { return m_macAddr; }
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
-   bool isMyRadio(int rfIndex);
+   bool isMyRadio(uint32_t rfIndex);
    bool isMyRadio(const BYTE *macAddr);
-   void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
+   void getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getApState() const { return m_apState; }
    shared_ptr<Node> getParentNode() const;
    String getParentNodeName() const;
@@ -3522,7 +3522,7 @@ public:
    shared_ptr<Interface> findBridgePort(UINT32 bridgePortNumber) const;
    shared_ptr<AccessPoint> findAccessPointByMAC(const MacAddress& macAddr) const;
    shared_ptr<AccessPoint> findAccessPointByBSSID(const BYTE *bssid) const;
-   shared_ptr<AccessPoint> findAccessPointByRadioId(int rfIndex) const;
+   shared_ptr<AccessPoint> findAccessPointByRadioId(uint32_t rfIndex) const;
    ObjectArray<WirelessStationInfo> *getWirelessStations() const;
    bool isMyIP(const InetAddress& addr) const;
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, uint32_t index, int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);

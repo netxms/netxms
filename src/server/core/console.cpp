@@ -130,7 +130,7 @@ static void ShowNodeOSPFData(ServerConsole *console, const Node& node)
          console->printf(_T("---------+--------------------------------+-----------------+-----------+-----------\n"));
       }
 
-      console->printf(_T(" %7d | %-30s | %-15s | %-9s | %s\n"), iface->getIfIndex(), iface->getName(), IpToStr(iface->getOSPFArea(), idText),
+      console->printf(_T(" %7u | %-30s | %-15s | %-9s | %s\n"), iface->getIfIndex(), iface->getName(), IpToStr(iface->getOSPFArea(), idText),
          OSPFInterfaceTypeToText(iface->getOSPFType()), OSPFInterfaceStateToText(iface->getOSPFState()));
    }
    if (count == 0)

@@ -1844,7 +1844,7 @@ shared_ptr<AccessPoint> Node::findAccessPointByMAC(const MacAddress& macAddr) co
 /**
  * Find access point by radio ID (radio interface index)
  */
-shared_ptr<AccessPoint> Node::findAccessPointByRadioId(int rfIndex) const
+shared_ptr<AccessPoint> Node::findAccessPointByRadioId(uint32_t rfIndex) const
 {
    shared_ptr<AccessPoint> ap;
    readLockChildList();
@@ -9405,7 +9405,7 @@ void Node::checkInterfaceNames(InterfaceList *pIfList)
    {
       pIfList->get(i)->name[MAX_OBJECT_NAME - 1] = 0;
       if (pIfList->get(i)->name[0] == 0)
-         _sntprintf(pIfList->get(i)->name, MAX_OBJECT_NAME, _T("%d"), pIfList->get(i)->index);
+         _sntprintf(pIfList->get(i)->name, MAX_OBJECT_NAME, _T("%u"), pIfList->get(i)->index);
    }
 }
 
@@ -10661,12 +10661,12 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
                   if (_tcscmp(ifInfo->name, pInterface->getName()))
                   {
                      pInterface->setName(ifInfo->name);
-                     sendPollerMsg(POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->name);
+                     sendPollerMsg(POLLER_WARNING _T("   Name of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->name);
                   }
                   if (_tcscmp(ifInfo->description, pInterface->getDescription()))
                   {
                      pInterface->setDescription(ifInfo->description);
-                     sendPollerMsg(POLLER_WARNING _T("   Description of interface %d changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->description);
+                     sendPollerMsg(POLLER_WARNING _T("   Description of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->description);
                   }
                   if (_tcscmp(ifInfo->alias, pInterface->getIfAlias()))
                   {
