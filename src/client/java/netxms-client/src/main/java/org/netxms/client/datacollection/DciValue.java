@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ public abstract class DciValue
    protected Threshold activeThreshold;
    protected int flags;
    protected MeasurementUnit measurementUnit;
+   protected int multiplier;
 
    /**
     * Factory method to create correct DciValue subclass from NXCP message.
@@ -100,15 +101,14 @@ public abstract class DciValue
 		dcObjectType = msg.getFieldAsInt32(fieldId++);
 		errorCount = msg.getFieldAsInt32(fieldId++);
 		templateDciId = msg.getFieldAsInt64(fieldId++);
-      measurementUnit = new MeasurementUnit(msg, fieldId);
-      fieldId += 2;
+      measurementUnit = new MeasurementUnit(msg, fieldId++);
+      multiplier = msg.getFieldAsInt32(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
 			activeThreshold = null;
-				
 	}
-	
+
    /**
 	 * Returns formated DCI value or string with format error and correct type of DCI value;
 	 * 
@@ -285,6 +285,14 @@ public abstract class DciValue
    }
 
    /**
+    * @return the multiplier
+    */
+   public int getMultiplier()
+   {
+      return multiplier;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
@@ -292,6 +300,6 @@ public abstract class DciValue
    {
       return "DciValue [id=" + id + ", nodeId=" + nodeId + ", templateDciId=" + templateDciId + ", name=" + name + ", description=" + description + ", value=" + value + ", source=" + source +
             ", dataType=" + dataType + ", status=" + status + ", errorCount=" + errorCount + ", dcObjectType=" + dcObjectType + ", timestamp=" + timestamp + ", activeThreshold=" + activeThreshold +
-            ", flags=" + flags + ", measurementUnit=" + measurementUnit + "]";
+            ", flags=" + flags + ", measurementUnit=" + measurementUnit + ", multiplier=" + multiplier + "]";
    }
 }

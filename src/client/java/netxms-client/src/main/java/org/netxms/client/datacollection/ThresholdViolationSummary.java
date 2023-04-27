@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,11 +42,13 @@ public class ThresholdViolationSummary
 		nodeId = msg.getFieldAsInt64(baseId);
 		int count = msg.getFieldAsInt32(baseId + 1);
 		dciList = new ArrayList<DciValue>(count);
-		long varId = baseId + 2;
+		long fieldId = baseId + 2;
 		for(int i = 0; i < count; i++)
 		{
-			dciList.add(DciValue.createFromMessage(msg, varId));
-			varId += 50;
+         DciValue v = DciValue.createFromMessage(msg, fieldId);
+         if (v.getActiveThreshold() != null)
+            dciList.add(v);
+			fieldId += 50;
 		}
 	}
 
