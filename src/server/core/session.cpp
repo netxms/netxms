@@ -16808,10 +16808,12 @@ void ClientSession::linkAsset(const NXCPMessage& request)
    if ((asset != nullptr) && (newTarget != nullptr))
    {
       shared_ptr<NetObj> oldTarget = FindObjectById(asset->getLinkedObjectId());
+      shared_ptr<Asset> oldAsset = (newTarget->getAssetId() != 0) ? static_pointer_cast<Asset>(FindObjectById(newTarget->getAssetId(), OBJECT_ASSET)) : shared_ptr<Asset>();
       if ((asset->getLinkedObjectId() == 0) || (oldTarget != nullptr))
       {
          if (asset->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) && newTarget->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY) &&
-             ((oldTarget == nullptr) || oldTarget->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
+             ((oldTarget == nullptr) || oldTarget->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)) &&
+             ((oldAsset == nullptr) || oldAsset->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
          {
             if (IsValidAssetLinkTargetClass(newTarget->getObjectClass()))
             {

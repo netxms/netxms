@@ -975,7 +975,6 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
    return contexts;
 }
 
-
 /**
  * Link asset to object
  */
@@ -985,6 +984,15 @@ void LinkAsset(Asset *asset, NetObj *object, ClientSession *session)
       return;
 
    UnlinkAsset(asset, session);
+
+   if (object->getAssetId() != 0)
+   {
+      shared_ptr<Asset> oldAsset = static_pointer_cast<Asset>(FindObjectById(object->getAssetId(), OBJECT_ASSET));
+      if (oldAsset != nullptr)
+      {
+         UnlinkAsset(oldAsset.get(), session);
+      }
+   }
 
    asset->setLinkedObjectId(object->getId());
    object->setAssetId(asset->getId());
