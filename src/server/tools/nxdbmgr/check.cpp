@@ -1526,6 +1526,123 @@ static void CheckBusinessServices()
 }
 
 /**
+ * Check assets
+ */
+static void CheckAssets()
+{
+   StartStage(_T("Assets"));
+   CheckMissingObjectProperties(_T("assets"), _T("assets"), 0);
+   EndStage();
+}
+
+/**
+ * Check asset to node and node to asset linking
+ */
+static void CheckAssetNodeLinks()
+{
+   TCHAR name[256], query[512];
+   StartStage(_T("Asset to node links"));
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,linked_object_id FROM assets WHERE linked_object_id!=0"));
+   if (hResult != nullptr)
+   {
+      int numRows = DBGetNumRows(hResult);
+      SetStageWorkTotal(numRows);
+      for(int i = 0; i < numRows; i++)
+      {
+         uint32_t assetId = DBGetFieldULong(hResult, i, 0);
+         uint32_t nodeId = DBGetFieldULong(hResult, i, 1);
+
+         // Check node existence
+         if (IsDatabaseRecordExist(g_dbHandle, _T("object_properties"), _T("object_id"), nodeId))
+         {
+            _sntprintf(query, 512, _T("SELECT object_id FROM object_properties WHERE asset_id=%u and object_id=%u"), assetId, nodeId);
+            DB_RESULT checkResult = SQLSelect(query);
+            if (checkResult != nullptr)
+            {
+               if (DBGetNumRows(checkResult) == 0)
+               {
+                  g_dbCheckErrors++;
+                  if (GetYesNoEx(_T("Found possibly misplaced asset linking %u to object %u. Fix it?"), assetId, nodeId))
+                  {
+                     _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0 WHERE id=%u"), assetId);
+                     if (SQLQuery(query))
+                     {
+                        g_dbCheckFixes++;
+                     }
+                  }
+               }
+               DBFreeResult(checkResult);
+            }
+         }
+         else
+         {
+            g_dbCheckErrors++;
+            DBMgrGetObjectName(assetId, name);
+            if (GetYesNoEx(_T("Asset %u [%s] linked to non-existent node %d. Delete this mapping?"), assetId, name, nodeId))
+            {
+               _sntprintf(query, 512, _T("UPDATE assets SET linked_object_id=0 WHERE id=%u"), assetId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+
+   StartStage(_T("Node to asset links"));
+   hResult = SQLSelect(_T("SELECT object_id,asset_id FROM object_properties WHERE asset_id!=0"));
+   if (hResult != nullptr)
+   {
+      int numRows = DBGetNumRows(hResult);
+      SetStageWorkTotal(numRows);
+      for(int i = 0; i < numRows; i++)
+      {
+         uint32_t nodeId = DBGetFieldULong(hResult, i, 0);
+         uint32_t assetId = DBGetFieldULong(hResult, i, 1);
+
+         // Check asset existence
+         if (IsDatabaseRecordExist(g_dbHandle, _T("assets"), _T("id"), assetId))
+         {
+            _sntprintf(query, 512, _T("SELECT id FROM assets WHERE id=%u and linked_object_id=%u"), assetId, nodeId);
+            DB_RESULT checkResult = SQLSelect(query);
+            if (checkResult != nullptr)
+            {
+               if (DBGetNumRows(checkResult) == 0)
+               {
+                  g_dbCheckErrors++;
+                  if (GetYesNoEx(_T("Found possibly misplaced object linking %u to asset %u. Fix it?"), nodeId, assetId))
+                  {
+                     _sntprintf(query, 512, _T("UPDATE object_properties SET asset_id=0 WHERE object_id=%u"), nodeId);
+                     if (SQLQuery(query))
+                     {
+                        g_dbCheckFixes++;
+                     }
+                  }
+               }
+               DBFreeResult(checkResult);
+            }
+         }
+         else
+         {
+            g_dbCheckErrors++;
+            DBMgrGetObjectName(nodeId, name);
+            if (GetYesNoEx(_T("Node %u [%s] linked to non-existent asset %d. Delete this mapping?"), nodeId, name, assetId))
+            {
+               _sntprintf(query, 512, _T("UPDATE object_properties SET asset_id=0 WHERE object_id=%u"), nodeId);
+               if (SQLQuery(query))
+                  g_dbCheckFixes++;
+            }
+         }
+         UpdateStageProgress(1);
+      }
+      DBFreeResult(hResult);
+   }
+   EndStage();
+}
+
+/**
  * Lock database
  */
 static bool LockDatabase()
@@ -1652,6 +1769,8 @@ void CheckDatabase()
          CheckBusinessServiceTicketHierarchy();
          CheckBusinessServiceCheckState();
          CheckBusinessServiceDowntime();
+         CheckAssets();
+         CheckAssetNodeLinks();
          if (g_checkData)
          {
             if (DBMgrMetaDataReadInt32(_T("SingeTablePerfData"), 0))

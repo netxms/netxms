@@ -1738,6 +1738,45 @@ bool LoadObjects()
    nxlog_debug_tag(_T("obj.comments"), 2, _T("Updating all objects comments macros"));
    g_idxObjectById.forEach([](NetObj *object, void *context) { object->expandCommentMacros(); }, nullptr);
 
+   //check linking between assets and nodes
+   g_idxAssetById.forEach([]
+                           (NetObj *object, void *context)
+                           {
+                              Asset *asset = static_cast<Asset *>(object);
+                              if (asset->getLinkedObjectId() != 0)
+                              {
+                                  shared_ptr<NetObj> node = g_idxNodeById.get(asset->getLinkedObjectId());
+                                  if (node == nullptr)
+                                  {
+                                     nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping asset %s[%u] link to non existing object [%u]"), asset->getName(), asset->getId(), asset->getLinkedObjectId());
+                                     asset->setLinkedObjectId(0);
+                                  }
+                                  if (asset->getId() != node->getAssetId())
+                                  {
+                                     nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping asset %s[%u] link to %s[%u] object linked with other asset [%d]"), asset->getName(), asset->getId(), node->getName(), node->getId(), node->getAssetId());
+                                     asset->setLinkedObjectId(0);
+                                  }
+                               }
+                            }, nullptr);
+   g_idxNodeById.forEach([]
+                           (NetObj *object, void *context)
+                           {
+                              if((object->getAssetId() != 0))
+                              {
+                                 shared_ptr<Asset> asset = static_pointer_cast<Asset>(g_idxAssetById.get(object->getAssetId()));
+                                 if (asset == nullptr)
+                                 {
+                                    nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping node %s[%u] link to non existing asset [%u]"), object->getName(), object->getId(), object->getAssetId());
+                                    object->setAssetId(0);
+                                 }
+                                 if (asset->getLinkedObjectId() != object->getId())
+                                 {
+                                    nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping object %s[%u] link to %s[%u] asset linked with other asset [%d]"), object->getName(), object->getId(), asset->getName(), asset->getId(), asset->getLinkedObjectId());
+                                    object->setAssetId(0);
+                                 }
+                              }
+                           }, nullptr);
+
    if (cachedb != nullptr)
       DBCloseInMemoryDatabase(cachedb);
 
