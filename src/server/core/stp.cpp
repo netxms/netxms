@@ -89,25 +89,25 @@ static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport
                   }
                   else
                   {
-                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%d]"), (uint32_t)designatedPort[1], bridge->getName(), bridge->getId());
+                     nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%u]"), (uint32_t)designatedPort[1], bridge->getName(), bridge->getId());
                   }
                }
                else
                {
-                  nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%d]"), oid[11], node->getName(), node->getId());
+                  nxlog_debug_tag(DEBUG_TAG, 6, _T("Bridge port number %u is invalid for node %s [%u]"), oid[11], node->getName(), node->getId());
                }
             }
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 6, _T("Designated bridge or designated port is invalid for port %d on node %s [%d]"), oid[11], node->getName(), node->getId());
+            nxlog_debug_tag(DEBUG_TAG, 6, _T("Designated bridge or designated port is invalid for port %d on node %s [%u]"), oid[11], node->getName(), node->getId());
          }
       }
 		delete response;
 	}
 	else
 	{
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP failure reading additional STP data for node %s [%d]"), node->getName(), node->getId());
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("SNMP failure reading additional STP data for node %s [%u]"), node->getName(), node->getId());
 	}
 
 	return SNMP_ERR_SUCCESS;

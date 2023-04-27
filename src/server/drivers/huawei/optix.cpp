@@ -138,7 +138,7 @@ static UINT32 HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, void 
    iface->ifTableSuffixLength = 3;
    memcpy(iface->ifTableSuffix, oid.value() + oid.length() - 3, 3 * sizeof(UINT32));
 
-   _sntprintf(iface->name, MAX_DB_STRING, _T("%d/%d/%d"), iface->location.module, iface->location.pic, iface->location.port);
+   _sntprintf(iface->name, MAX_DB_STRING, _T("%u/%u/%u"), iface->location.module, iface->location.pic, iface->location.port);
    _tcscpy(iface->description, iface->name);
 
    TCHAR macAddrText[64];
@@ -198,19 +198,17 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
 	InterfaceList *ifList = new InterfaceList();
 
 	// Walk ethernet ports
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.52.1.1.1.23"), // optixEthPortMac
-                HandlerEthPortList, ifList) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.52.1.1.1.23"), HandlerEthPortList, ifList) != SNMP_ERR_SUCCESS) // optixEthPortMac
    {
       delete ifList;
-      return NULL;
+      return nullptr;
    }
 
    // Walk IP addresses
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.52.1.5.1.3"), // optixL3PortIpAddr
-                HandlerIpAddrList, ifList) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.52.1.5.1.3"), HandlerIpAddrList, ifList) != SNMP_ERR_SUCCESS) // optixL3PortIpAddr
    {
       delete ifList;
-      return NULL;
+      return nullptr;
    }
 
 	return ifList;

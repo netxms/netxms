@@ -136,8 +136,7 @@ static uint32_t HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp,
 ObjectArray<AccessPointInfo> *UbiquitiAirMaxDriver::getAccessPoints(SNMP_Transport *snmp, NObject *node, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, Ownership::True);
-   if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.1"),   // dot11StationID
-                HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.1"), HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)  // dot11StationID
    {
       delete apList;
       return nullptr;
@@ -148,10 +147,8 @@ ObjectArray<AccessPointInfo> *UbiquitiAirMaxDriver::getAccessPoints(SNMP_Transpo
 /**
  * Handler for mobile units enumeration
  */
-static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static uint32_t HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, ObjectArray<WirelessStationInfo> *wsList)
 {
-   ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
-
    const SNMP_ObjectId& name = var->getName();
    uint32_t apIndex = name.getElement(name.length() - 1);
 

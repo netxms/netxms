@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco (former Airespace) wireless switches
-** Copyright (C) 2013-2020 Raden Solutions
+** Copyright (C) 2013-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by

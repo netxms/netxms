@@ -77,7 +77,7 @@ void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool
          shared_ptr<Interface> ifRemote = static_pointer_cast<Interface>(FindObjectById(info->ifRemote, OBJECT_INTERFACE));
          uint32_t ifLocalIndex = ifLocal->getIfIndex();
          uint32_t ifRemoteIndex = ifRemote->getIfIndex();
-         nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL1Topology: root=%s [%d], node=%s [%d], ifLocal=%d %s, ifRemote=%d %s"),
+         nxlog_debug_tag(_T("topo.layer2"), 5, _T("BuildL1Topology: root=%s [%u], node=%s [%u], ifLocal=%u %s, ifRemote=%u %s"),
                root->getName(), root->getId(), node->getName(), node->getId(), ifLocalIndex,
                (ifLocal != nullptr) ? ifLocal->getName() : _T("(null)"), ifRemoteIndex,
                (ifRemote != nullptr) ? ifRemote->getName() : _T("(null)"));
@@ -116,8 +116,7 @@ shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *
       shared_ptr<ForwardingDatabase> fdb = node->getSwitchForwardingDatabase();
 		if (fdb != nullptr)
 		{
-			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
-			          macAddrText, node->getName(), (int)node->getId());
+			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%u]"), macAddrText, node->getName(), (int)node->getId());
          bool isStatic;
          uint32_t ifIndex = fdb->findMacAddress(macAddr, &isStatic);
 			if (ifIndex != 0)

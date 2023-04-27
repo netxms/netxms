@@ -67,7 +67,7 @@ void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
          for (int j = 0; j < interfaces->size(); j++)
          {
             RadioInterfaceInfo *rif = interfaces->get(j);
-            _tprintf(_T("         %2d - %s - %s\n"),
+            _tprintf(_T("         %2u - %s - %s\n"),
                   rif->index,
                   MACToStr(rif->macAddr, buff),
                   rif->name);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,12 +199,12 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
       for(int i = 0; i < m_radioInterfaces->size(); i++)
       {
          RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
-         msg->setField(varId++, (UINT32)rif->index);
+         msg->setField(varId++, rif->index);
          msg->setField(varId++, rif->name);
          msg->setField(varId++, rif->macAddr, MAC_ADDR_LENGTH);
          msg->setField(varId++, rif->channel);
-         msg->setField(varId++, (UINT32)rif->powerDBm);
-         msg->setField(varId++, (UINT32)rif->powerMW);
+         msg->setField(varId++, rif->powerDBm);
+         msg->setField(varId++, rif->powerMW);
          varId += 4;
       }
    }
@@ -280,7 +280,7 @@ void AccessPoint::updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *r
 /**
  * Check if given radio interface index (radio ID) is on this access point
  */
-bool AccessPoint::isMyRadio(int rfIndex)
+bool AccessPoint::isMyRadio(uint32_t rfIndex)
 {
 	bool result = false;
 	lockProperties();
@@ -324,7 +324,7 @@ bool AccessPoint::isMyRadio(const BYTE *macAddr)
 /**
  * Get radio name
  */
-void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
+void AccessPoint::getRadioName(uint32_t rfIndex, TCHAR *buffer, size_t bufSize)
 {
 	buffer[0] = 0;
 	lockProperties();

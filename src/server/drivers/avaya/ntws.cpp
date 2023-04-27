@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Nortel WLAN Security Switch series
-** Copyright (C) 2013-2020 Raden Solutions
+** Copyright (C) 2013-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -177,20 +177,20 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
 /**
  * Handler for radios enumeration
  */
-static UINT32 HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    AccessPointInfo *ap = (AccessPointInfo *)arg;
 
    const SNMP_ObjectId& name = var->getName();
    size_t nameLen = name.length();
 
-   UINT32 oid[128];
+   uint32_t oid[128];
    memcpy(oid, name.value(), nameLen * sizeof(UINT32));
 
    RadioInterfaceInfo rif;
    memcpy(rif.macAddr, var->getValue(), MAC_ADDR_LENGTH);
-   rif.index = (int)oid[nameLen - 1];
-   _sntprintf(rif.name, sizeof(rif.name) / sizeof(TCHAR), _T("Radio%d"), rif.index);
+   rif.index = oid[nameLen - 1];
+   _sntprintf(rif.name, sizeof(rif.name) / sizeof(TCHAR), _T("Radio%u"), rif.index);
    
    SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    

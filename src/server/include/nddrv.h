@@ -174,12 +174,12 @@ struct InterfaceId
  */
 struct LIBNXSRV_EXPORTABLE RadioInterfaceInfo
 {
-	int index;
+	uint32_t index;
 	TCHAR name[64];
 	BYTE macAddr[MAC_ADDR_LENGTH];
-   UINT32 channel;
-   INT32 powerDBm;
-   INT32 powerMW;
+   uint32_t channel;
+   int32_t powerDBm;
+   int32_t powerMW;
 
    json_t *toJson() const;
 };

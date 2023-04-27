@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Avaya ERS switches (except ERS 8xxx) (former Nortel/Bay Networks BayStack)
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -82,7 +82,7 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObje
 
 	node->setCustomAttribute(_T(".baystack.slotSize"), slotSize);
 
-	UINT32 numVlans;
+	uint32_t numVlans;
 	if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.1.0"), nullptr, 0, &numVlans, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
 		node->setCustomAttribute(_T(".baystack.rapidCity.vlan"), numVlans);
 	else
@@ -162,8 +162,8 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
 		getVlanInterfaces(snmp, ifList);
 
 	uint32_t mgmtIpAddr, mgmtNetMask;
-	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), nullptr, 0, &mgmtIpAddr, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS) &&
-	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), nullptr, 0, &mgmtNetMask, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS))
+	if ((SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.2.1"), nullptr, 0, &mgmtIpAddr, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS) &&
+	    (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.1.6.4.2.2.1.3.1"), nullptr, 0, &mgmtNetMask, sizeof(uint32_t), 0) == SNMP_ERR_SUCCESS))
 	{
 		// Get switch base MAC address
 		BYTE baseMacAddr[MAC_ADDR_LENGTH];
