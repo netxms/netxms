@@ -684,8 +684,6 @@ static bool PeerNodeIsRunning(const InetAddress& addr)
  */
 static void DBEventHandler(uint32_t event, const WCHAR *arg1, const WCHAR *arg2, bool connLost, void *context)
 {
-   static const TCHAR *names[] = { _T("query"), _T("message"), _T("connectionLost"), _T("hash") };
-
 	if (!(g_flags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
 
@@ -705,7 +703,12 @@ static void DBEventHandler(uint32_t event, const WCHAR *arg1, const WCHAR *arg2,
 			break;
 		case DBEVENT_QUERY_FAILED:
 		   CalculateMD5Hash(arg1, wcslen(arg1) * sizeof(WCHAR), queryHash);
-			PostSystemEventWithNames(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uuds", names, arg1, arg2, connLost ? 1 : 0, BinToStr(queryHash, MD5_DIGEST_SIZE, queryHashText));
+		   EventBuilder(EVENT_DB_QUERY_FAILED, g_dwMgmtNode)
+		      .param(_T("query"), arg1)
+		      .param(_T("message"), arg2)
+		      .param(_T("connectionLost"), connLost ? 1 : 0)
+		      .param(_T("hash"), BinToStr(queryHash, MD5_DIGEST_SIZE, queryHashText))
+		      .post();
 			break;
 		default:
 			break;

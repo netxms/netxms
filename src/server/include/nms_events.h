@@ -255,102 +255,169 @@ public:
  */
 class EventBuilder
 {
+private:
    Event *m_event;
    uint32_t m_eventCode;
    NXSL_VM *m_vm;
 
-   //TODO: use event destroy event
-   //Post null event
-   //ADD parameter
-   //cehck que on null in post
-
 public:
-
-   EventBuilder(uint32_t eventCode, uint32_t source)
+   EventBuilder(uint32_t eventCode, uint32_t sourceId)
    {
       m_event = new Event();
-      m_event->initSource(source);
+      m_event->initSource(sourceId);
       m_eventCode = eventCode;
       m_vm = nullptr;
    }
+
+   EventBuilder(uint32_t eventCode, const NetObj& source)
+   {
+      m_event = new Event();
+      m_event->initSource(source.getId());
+      m_eventCode = eventCode;
+      m_vm = nullptr;
+   }
+
+   EventBuilder(const EventBuilder&) = delete;
+
    ~EventBuilder()
    {
       delete m_event;
    }
-   EventBuilder(const EventBuilder &src) = delete;
 
-   EventBuilder &dci(uint32_t dciId)
+   EventBuilder& operator=(const EventBuilder&) = delete;
+
+   EventBuilder& dci(uint32_t dciId)
    {
       m_event->m_dciId = dciId;
       return *this;
    }
 
-   EventBuilder &sourceId(uint32_t sourceId)
+   EventBuilder& sourceId(uint32_t sourceId)
    {
       m_event->initSource(sourceId);
       return *this;
    }
 
-   EventBuilder &vm(NXSL_VM *vm)
+   EventBuilder& vm(NXSL_VM *vm)
    {
       m_vm = vm;
       return *this;
    }
 
-   EventBuilder &origin(EventOrigin origin)
+   EventBuilder& origin(EventOrigin origin)
    {
       m_event->m_origin = origin;
       return *this;
    }
 
-   EventBuilder &originTimestamp(time_t originTimestamp)
+   EventBuilder& originTimestamp(time_t originTimestamp)
    {
       m_event->m_originTimestamp = originTimestamp;
       return *this;
    }
 
-   EventBuilder &tag(const TCHAR *tag)
+   EventBuilder& tag(const TCHAR *tag)
    {
-      m_event->m_tags.add(tag);
+      if ((tag != nullptr) && (*tag != 0))
+         m_event->m_tags.add(tag);
       return *this;
    }
 
-   EventBuilder &param(const TCHAR *name, const TCHAR *value)
-   {
-      m_event->m_parameterNames.add(name);
-      m_event->m_parameters.add(value);
-      return *this;
-   }
-
-   EventBuilder &param(const TCHAR *name, uint32_t value)
+   EventBuilder& param(const TCHAR *name, const TCHAR *value)
    {
       m_event->m_parameterNames.add(name);
       m_event->m_parameters.add(value);
       return *this;
    }
 
-   EventBuilder &param(const TCHAR *name, const InetAddress &value)
+   EventBuilder& param(const TCHAR *name, int32_t value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
+   EventBuilder& param(const TCHAR *name, uint32_t value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
+   EventBuilder& param(const TCHAR *name, uint32_t value, const TCHAR *format)
+   {
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, format, value);
+      m_event->m_parameters.add(buffer);
+      m_event->m_parameterNames.add(name);
+      return *this;
+   }
+
+   EventBuilder& param(const TCHAR *name, int64_t value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
+   EventBuilder& param(const TCHAR *name, uint64_t value)
+   {
+      m_event->m_parameterNames.add(name);
+      m_event->m_parameters.add(value);
+      return *this;
+   }
+
+   EventBuilder& param(const TCHAR *name, uint64_t value, const TCHAR *format)
+   {
+      TCHAR buffer[64];
+      _sntprintf(buffer, 64, format, value);
+      m_event->m_parameters.add(buffer);
+      m_event->m_parameterNames.add(name);
+      return *this;
+   }
+
+   EventBuilder& param(const TCHAR *name, const InetAddress &value)
    {
       m_event->m_parameterNames.add(name);
       m_event->m_parameters.add(value.toString());
       return *this;
    }
 
-   EventBuilder &param(const TCHAR *name, const MacAddress &value)
+   EventBuilder& param(const TCHAR *name, const MacAddress &value)
    {
       m_event->m_parameterNames.add(name);
       m_event->m_parameters.add(value.toString());
       return *this;
    }
 
-   EventBuilder &param(const TCHAR *name, const uuid &value)
+   EventBuilder& param(const TCHAR *name, const uuid &value)
    {
       m_event->m_parameterNames.add(name);
       m_event->m_parameters.add(value.toString());
       return *this;
    }
 
-   bool post(ObjectQueue<Event> *queue = nullptr);
+   bool post(ObjectQueue<Event> *queue, std::function<void (Event*)> callback);
+
+   bool post()
+   {
+      return post(nullptr, nullptr);
+   }
+
+   bool post(ObjectQueue<Event> *queue)
+   {
+      return post(queue, nullptr);
+   }
+
+   bool post(std::function<void (Event*)> callback)
+   {
+      return post(nullptr, callback);
+   }
+
+   // Format strings for integer parameters
+   static const TCHAR OBJECT_ID_FORMAT[];
+   static const TCHAR HEX_32BIT_FORMAT[];
+   static const TCHAR HEX_64BIT_FORMAT[];
 };
 
 /**
@@ -673,18 +740,14 @@ bool NXCORE_EXPORTABLE PostEvent(uint32_t eventCode, EventOrigin origin, time_t 
 bool NXCORE_EXPORTABLE PostEvent(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const StringList& parameters);
 bool NXCORE_EXPORTABLE PostSystemEvent(uint32_t eventCode, uint32_t sourceId, const char *format, ...);
 bool NXCORE_EXPORTABLE PostDciEvent(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, const char *format, ...);
-uint64_t NXCORE_EXPORTABLE PostEvent2(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, ...);
 uint64_t NXCORE_EXPORTABLE PostSystemEvent2(uint32_t eventCode, uint32_t sourceId, const char *format, ...);
 bool NXCORE_EXPORTABLE PostEventWithNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, const TCHAR **names, ...);
 bool NXCORE_EXPORTABLE PostEventWithNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, StringMap *parameters);
 bool NXCORE_EXPORTABLE PostSystemEventWithNames(uint32_t eventCode, uint32_t sourceId, const char *format, const TCHAR **names, ...);
 bool NXCORE_EXPORTABLE PostSystemEventWithNames(uint32_t eventCode, uint32_t sourceId, StringMap *parameters);
 bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, const char *format, const TCHAR **names, ...);
-bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, StringMap *parameters);
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const char *format, const TCHAR **names, ...);
 bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const StringMap *parameters);
 bool NXCORE_EXPORTABLE PostEventWithTagsAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const StringSet *tags, const StringMap *parameters);
-bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const char *format, ...);
 bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const TCHAR *tag, const StringList& parameters);
 bool NXCORE_EXPORTABLE PostEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, ...);
 bool NXCORE_EXPORTABLE PostSystemEventEx(ObjectQueue<Event> *queue, uint32_t eventCode, uint32_t sourceId, const char *format, ...);

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -445,8 +445,10 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
 {
    SNMPTrapConfiguration *trapCfg = m_trapCfgList.get(dwIndex);
 
-   StringMap parameters;
-   parameters.set(_T("oid"), pdu->getTrapId().toString());
+   EventBuilder event(trapCfg->getEventCode(), *node);
+   event.origin(EventOrigin::SNMP);
+   event.tag(trapCfg->getEventTag());
+   event.param(_T("oid"), pdu->getTrapId().toString());
 
 	// Extract varbinds from trap and add them as event's parameters
    int numMaps = trapCfg->getParameterMappingCount();
@@ -466,7 +468,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
 				bool convertToHex = true;
             TCHAR name[64], buffer[3072];
             _sntprintf(name, 64, _T("%d"), pm->getPosition());
-				parameters.set(name,
+            event.param(name,
                ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                   varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
                   varbind->getValueAsString(buffer, 3072));
@@ -483,7 +485,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
             {
 					bool convertToHex = true;
 					TCHAR buffer[3072];
-					parameters.set(varbind->getName().toString(),
+					event.param(varbind->getName().toString(),
                   ((g_flags & AF_ALLOW_TRAP_VARBIND_CONVERSION) && !(pm->getFlags() & TRAP_VARBIND_FORCE_TEXT)) ?
                      varbind->getValueAsPrintableString(buffer, 3072, &convertToHex) :
                      varbind->getValueAsString(buffer, 3072));
@@ -493,7 +495,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
       }
    }
 
-   parameters.set(_T("sourcePort"), sourcePort);
+   event.param(_T("sourcePort"), sourcePort);
 
    NXSL_VM *vm;
    if ((trapCfg->getScript() != nullptr) && !trapCfg->getScript()->isEmpty())
@@ -508,6 +510,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
             varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(pdu->getVariable(i)))));
          }
          vm->setGlobalVariable("$varbinds", vm->createValue(varbinds));
+         event.vm(vm);
       }
       else
       {
@@ -518,7 +521,7 @@ static void GenerateTrapEvent(const shared_ptr<Node>& node, UINT32 dwIndex, SNMP
    {
       vm = nullptr;
    }
-   TransformAndPostEvent(trapCfg->getEventCode(), EventOrigin::SNMP, 0, node->getId(), trapCfg->getEventTag(), &parameters, vm);
+   event.post();
    delete vm;
 }
 
@@ -695,10 +698,13 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int32_t zoneUIN, int
             else if (!processedByModule)    // Process unmatched traps not processed by module
             {
                // Generate default event for unmatched traps
-               const TCHAR *names[3] = { _T("oid"), nullptr, _T("sourcePort") };
                TCHAR oidText[1024];
-               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, EventOrigin::SNMP, 0, node->getId(), "ssd", names,
-                  pdu->getTrapId().toString(oidText, 1024), (const TCHAR *)varbinds, srcPort);
+               EventBuilder(EVENT_SNMP_UNMATCHED_TRAP, *node)
+                  .origin(EventOrigin::SNMP)
+                  .param(_T("oid"), pdu->getTrapId().toString(oidText, 1024))
+                  .param(_T("varbinds"), varbinds)
+                  .param(_T("sourcePort"), srcPort)
+                  .post();
             }
             s_trapCfgLock.unlock();
          }

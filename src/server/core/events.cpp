@@ -1129,40 +1129,6 @@ bool NXCORE_EXPORTABLE PostDciEvent(uint32_t eventCode, uint32_t sourceId, uint3
 }
 
 /**
- * Post event to system event queue and return ID of new event (0 in case of failure).
- *
- * @param eventCode Event code
- * @param origin event origin
- * @param originTimestamp event origin's timestamp
- * @param sourceId Event source object ID
- * @param format Parameter format string, each parameter represented by one character.
- *    The following format characters can be used:
- *        s - String
- *        m - Multibyte string
- *        u - UNICODE string
- *        d - Decimal integer
- *        D - 64-bit decimal integer
- *        x - Hex integer
- *        a - IPv4 address
- *        A - InetAddress object
- *        h - MAC (hardware) address as byte array
- *        H - MAC (hardware) address as MacAddress object
- *        G - uuid object (GUID)
- *        i - Object ID
- *        t - timestamp (time_t) as raw value (seconds since epoch)
- *        f - floating point number (double)
- */
-uint64_t NXCORE_EXPORTABLE PostEvent2(uint32_t eventCode, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, const char *format, ...)
-{
-   va_list args;
-   uint64_t eventId;
-   va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, &eventId, eventCode, origin, originTimestamp, sourceId, 0, nullptr, nullptr, nullptr, format, nullptr, args, nullptr);
-   va_end(args);
-   return success ? eventId : 0;
-}
-
-/**
  * Post event with origin SYSTEM to system event queue and return ID of new event (0 in case of failure).
  *
  * @param eventCode Event code
@@ -1315,52 +1281,6 @@ bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t source
 }
 
 /**
- * Post DCI-related event to system event queue.
- *
- * @param eventCode Event code
- * @param sourceId Event source object ID
- * @param dciId DCI ID
- * @param parameters event parameters list
- */
-bool NXCORE_EXPORTABLE PostDciEventWithNames(uint32_t eventCode, uint32_t sourceId, uint32_t dciId, StringMap *parameters)
-{
-   return RealPostEvent(&g_eventQueue, nullptr, eventCode, EventOrigin::SYSTEM, 0, sourceId, dciId, nullptr, nullptr, parameters, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
-}
-
-/**
- * Post event to system event queue.
- *
- * @param eventCode Event code
- * @param origin event origin
- * @param originTimestamp event origin's timestamp
- * @param sourceId Event source object ID
- * @param format Parameter format string, each parameter represented by one character.
- *    The following format characters can be used:
- *        s - String
- *        m - Multibyte string
- *        u - UNICODE string
- *        d - Decimal integer
- *        D - 64-bit decimal integer
- *        x - Hex integer
- *        a - IPv4 address
- *        A - InetAddress object
- *        h - MAC (hardware) address as byte array
- *        H - MAC (hardware) address as MacAddress object
- *        G - uuid object (GUID)
- *        i - Object ID
- * @param names names for parameters (nullptr if parameters are unnamed)
- */
-bool NXCORE_EXPORTABLE PostEventWithTagAndNames(uint32_t eventCode, EventOrigin origin, time_t originTimestamp,
-         uint32_t sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
-{
-   va_list args;
-   va_start(args, names);
-   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, userTag, nullptr, nullptr, format, names, args, nullptr);
-   va_end(args);
-   return success;
-}
-
-/**
  * Post event to system event queue.
  *
  * @param eventCode Event code
@@ -1390,39 +1310,6 @@ bool NXCORE_EXPORTABLE PostEventWithTagsAndNames(uint32_t eventCode, EventOrigin
          uint32_t sourceId, const StringSet *tags, const StringMap *parameters)
 {
    return RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, nullptr, tags, parameters, nullptr, nullptr, DUMMY_VA_LIST, nullptr);
-}
-
-/**
- * Post event to system event queue.
- *
- * @param eventCode Event code
- * @param origin event origin
- * @param originTimestamp event origin's timestamp
- * @param sourceId Event source object ID
- * @param userTag event's user tag
- * @param format Parameter format string, each parameter represented by one character.
- *    The following format characters can be used:
- *        s - String
- *        m - Multibyte string
- *        u - UNICODE string
- *        d - Decimal integer
- *        D - 64-bit decimal integer
- *        x - Hex integer
- *        a - IPv4 address
- *        A - InetAddress object
- *        h - MAC (hardware) address as byte array
- *        H - MAC (hardware) address as MacAddress object
- *        G - uuid object (GUID)
- *        i - Object ID
- */
-bool NXCORE_EXPORTABLE PostEventWithTag(uint32_t eventCode, EventOrigin origin, time_t originTimestamp,
-         uint32_t sourceId, const TCHAR *userTag, const char *format, ...)
-{
-   va_list args;
-   va_start(args, format);
-   bool success = RealPostEvent(&g_eventQueue, nullptr, eventCode, origin, originTimestamp, sourceId, 0, userTag, nullptr, nullptr, format, nullptr, args, nullptr);
-   va_end(args);
-   return success;
 }
 
 /**
@@ -1543,59 +1430,66 @@ bool NXCORE_EXPORTABLE TransformAndPostSystemEvent(uint32_t eventCode, uint32_t 
 /**
  * Post built event
  */
-bool EventBuilder::post(ObjectQueue<Event> *queue)
+bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> callback)
 {
    // Check that source object exists
-      if ((m_event->m_sourceId == 0) || (FindObjectById(m_event->m_sourceId) == nullptr))
+   if ((m_event->m_sourceId == 0) || (FindObjectById(m_event->m_sourceId) == nullptr))
+   {
+      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u for event with code %u and origin %d"),
+            m_event->m_sourceId, m_eventCode, (int)m_event->m_origin);
+      return false;
+   }
+
+   s_eventTemplatesLock.readLock();
+   shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(m_eventCode);
+   s_eventTemplatesLock.unlock();
+
+   if (eventTemplate == nullptr)
+   {
+      nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: event with code %u not defined"), m_eventCode);
+      return false;
+   }
+
+   m_event->initFromTemplate(eventTemplate.get());
+
+   if (m_event->m_originTimestamp != 0)
+      m_event->m_originTimestamp = m_event->m_timestamp;
+
+   // Using transformation within PostEvent may cause deadlock if called from within locked object or DCI
+   // Caller of PostEvent should make sure that it does not held object, object index, or DCI locks
+   if (m_vm != nullptr)
+   {
+      m_vm->setGlobalVariable("$event", m_vm->createValue(m_vm->createObject(&g_nxslEventClass, m_event, true)));
+      if (!m_vm->run())
       {
-         nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: invalid event source object ID %u for event with code %u and origin %d"),
-               m_event->m_sourceId, m_eventCode, (int)m_event->m_origin);
-         return false;
+         nxlog_debug(6, _T("RealPostEvent: Script execution error (%s)"), m_vm->getErrorText());
       }
+   }
 
-      s_eventTemplatesLock.readLock();
-      shared_ptr<EventTemplate> eventTemplate = s_eventTemplates.getShared(m_eventCode);
-      s_eventTemplatesLock.unlock();
+   // Execute pre-send callback
+   if (callback != nullptr)
+      callback(m_event);
 
-      bool success;
-      if (eventTemplate != nullptr)
-      {
+   // Add new event to m_queue
+   if (queue == nullptr)
+   {
+      g_eventQueue.put(m_event);
+   }
+   else
+   {
+      queue->put(m_event);
+   }
 
-         m_event->initFromTemplate(eventTemplate.get());
-
-         if (m_event->m_originTimestamp != 0)
-            m_event->m_originTimestamp = m_event->m_timestamp;
-
-         // Using transformation within PostEvent may cause deadlock if called from within locked object or DCI
-         // Caller of PostEvent should make sure that it does not held object, object index, or DCI locks
-         if (m_vm != nullptr)
-         {
-            m_vm->setGlobalVariable("$event", m_vm->createValue(m_vm->createObject(&g_nxslEventClass, m_event, true)));
-            if (!m_vm->run())
-            {
-               nxlog_debug(6, _T("RealPostEvent: Script execution error (%s)"), m_vm->getErrorText());
-            }
-         }
-
-         // Add new event to m_queue
-         if (queue == nullptr)
-         {
-            g_eventQueue.put(m_event);
-         }
-         else
-         {
-            queue->put(m_event);
-         }
-         m_event = nullptr;
-         success = true;
-      }
-      else
-      {
-         nxlog_debug_tag(_T("event.proc"), 3, _T("RealPostEvent: event with code %u not defined"), m_eventCode);
-         success = false;
-      }
-      return success;
+   m_event = nullptr;
+   return true;
 }
+
+/**
+ * Integer formats for EventBuilder
+ */
+const TCHAR EventBuilder::OBJECT_ID_FORMAT[8] = _T("0x%08X");
+const TCHAR EventBuilder::HEX_32BIT_FORMAT[8] = _T("0x%08X");
+const TCHAR EventBuilder::HEX_64BIT_FORMAT[8] = _T("0x%16X");
 
 /**
  * Resend events from specific m_queue to system event m_queue

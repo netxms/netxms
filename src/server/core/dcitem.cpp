@@ -24,12 +24,6 @@
 #include <npe.h>
 
 /**
- * Event parameter names
- */
-static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent"), _T("dciValue"), _T("operation"), _T("function"), _T("pollCount"), _T("thresholdDefinition") };
-static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue"), _T("dciValue"), _T("operation"), _T("function"), _T("pollCount"), _T("thresholdDefinition") };
-
-/**
  * Create DCItem from another DCItem
  */
 DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
@@ -434,26 +428,40 @@ void DCItem::checkThresholds(ItemValue &value)
       switch(result)
       {
          case ThresholdCheckResult::ACTIVATED:
-            {
-               PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisdsddds",
-                     s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
-                     checkValue.getString(), m_id, m_instanceName.cstr(), 0, value.getString(),
-                     t->getOperation(), t->getFunction(), t->getSampleCount(), t->getTextualDefinition().cstr());
-				   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-				   if (evt != nullptr)
-				   {
-					   t->markLastEvent(evt->getSeverity());
-				   }
-               if (!(m_flags & DCF_ALL_THRESHOLDS))
-                  i = m_thresholds->size();  // Stop processing
-            }
+            EventBuilder(t->getEventCode(), m_ownerId)
+               .dci(m_id)
+               .param(_T("dciName"), m_name)
+               .param(_T("dciDescription"), m_description)
+               .param(_T("thresholdValue"), thresholdValue.getString())
+               .param(_T("currentValue"), checkValue.getString())
+               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("instance"), m_instanceName)
+               .param(_T("isRepeatedEvent"), _T("0"))
+               .param(_T("dciValue"), value.getString())
+               .param(_T("operation"), t->getOperation())
+               .param(_T("function"), t->getFunction())
+               .param(_T("pollCount"), t->getSampleCount())
+               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
+               i = m_thresholds->size();  // Stop processing
             NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::DEACTIVATED:
-            PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissssddds",
-                  s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instanceName.cstr(),
-                  thresholdValue.getString(), checkValue.getString(), value.getString(),
-                  t->getOperation(), t->getFunction(), t->getSampleCount(), t->getTextualDefinition().cstr());
+            EventBuilder(t->getRearmEventCode(), m_ownerId)
+               .dci(m_id)
+               .param(_T("dciName"), m_name)
+               .param(_T("dciDescription"), m_description)
+               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("instance"), m_instanceName)
+               .param(_T("thresholdValue"), thresholdValue.getString())
+               .param(_T("currentValue"), checkValue.getString())
+               .param(_T("dciValue"), value.getString())
+               .param(_T("operation"), t->getOperation())
+               .param(_T("function"), t->getFunction())
+               .param(_T("pollCount"), t->getSampleCount())
+               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .post();
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
                // this flag used to re-send activation event for next active threshold
@@ -468,15 +476,21 @@ void DCItem::checkThresholds(ItemValue &value)
 	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
 				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
 				   {
-                  PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisdsddds",
-                        s_paramNamesReach, m_name.cstr(), m_description.cstr(), thresholdValue.getString(),
-                        checkValue.getString(), m_id, m_instanceName.cstr(), 1, value.getString(),
-                        t->getOperation(), t->getFunction(), t->getSampleCount(), t->getTextualDefinition().cstr());
-                  shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-					   if (evt != nullptr)
-					   {
-						   t->markLastEvent(evt->getSeverity());
-					   }
+		            EventBuilder(t->getEventCode(), m_ownerId)
+		               .dci(m_id)
+		               .param(_T("dciName"), m_name)
+		               .param(_T("dciDescription"), m_description)
+		               .param(_T("thresholdValue"), thresholdValue.getString())
+		               .param(_T("currentValue"), checkValue.getString())
+		               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+		               .param(_T("instance"), m_instanceName)
+		               .param(_T("isRepeatedEvent"), _T("1"))
+		               .param(_T("dciValue"), value.getString())
+		               .param(_T("operation"), t->getOperation())
+		               .param(_T("function"), t->getFunction())
+		               .param(_T("pollCount"), t->getSampleCount())
+		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+		               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
 				   }
             }
 				if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -798,41 +812,65 @@ void DCItem::processNewError(bool noInstance, time_t now)
       switch(result)
       {
          case ThresholdCheckResult::ACTIVATED:
+            EventBuilder(t->getEventCode(), m_ownerId)
+               .dci(m_id)
+               .param(_T("dciName"), m_name)
+               .param(_T("dciDescription"), m_description)
+               .param(_T("thresholdValue"), _T(""))
+               .param(_T("currentValue"), _T(""))
+               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("instance"), m_instanceName)
+               .param(_T("isRepeatedEvent"), _T("0"))
+               .param(_T("dciValue"), _T(""))
+               .param(_T("operation"), t->getOperation())
+               .param(_T("function"), t->getFunction())
+               .param(_T("pollCount"), t->getSampleCount())
+               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
+            if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
-               PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
-					   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
-                  m_id, m_instanceName.cstr(), 0, _T(""));
-               shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-				   if (evt != nullptr)
-				   {
-					   t->markLastEvent(evt->getSeverity());
-				   }
-               if (!(m_flags & DCF_ALL_THRESHOLDS))
-               {
-                  i = m_thresholds->size();  // Stop processing
-               }
+               i = m_thresholds->size();  // Stop processing
             }
             NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::DEACTIVATED:
-            PostDciEventWithNames(t->getRearmEventCode(), m_ownerId, m_id, "ssissss",
-					s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instanceName.cstr(), _T(""), _T(""), _T(""));
+            EventBuilder(t->getRearmEventCode(), m_ownerId)
+               .dci(m_id)
+               .param(_T("dciName"), m_name)
+               .param(_T("dciDescription"), m_description)
+               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("instance"), m_instanceName)
+               .param(_T("thresholdValue"), _T(""))
+               .param(_T("currentValue"), _T(""))
+               .param(_T("dciValue"), _T(""))
+               .param(_T("operation"), t->getOperation())
+               .param(_T("function"), t->getFunction())
+               .param(_T("pollCount"), t->getSampleCount())
+               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .post();
             NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
             {
    				// Check if we need to re-sent threshold violation event
-               UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
-				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
+               time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
+				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < now))
 				   {
-					   PostDciEventWithNames(t->getEventCode(), m_ownerId, m_id, "ssssisds",
-						   s_paramNamesReach, m_name.cstr(), m_description.cstr(), _T(""), _T(""),
-						   m_id, m_instanceName.cstr(), 1, _T(""));
-					   shared_ptr<EventTemplate> evt = FindEventTemplateByCode(t->getEventCode());
-					   if (evt != nullptr)
-					   {
-						   t->markLastEvent(evt->getSeverity());
-					   }
+		            EventBuilder(t->getEventCode(), m_ownerId)
+		               .dci(m_id)
+		               .param(_T("dciName"), m_name)
+		               .param(_T("dciDescription"), m_description)
+		               .param(_T("thresholdValue"), _T(""))
+		               .param(_T("currentValue"), _T(""))
+		               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+		               .param(_T("instance"), m_instanceName)
+		               .param(_T("isRepeatedEvent"), _T("1"))
+		               .param(_T("dciValue"), _T(""))
+		               .param(_T("operation"), t->getOperation())
+		               .param(_T("function"), t->getFunction())
+		               .param(_T("pollCount"), t->getSampleCount())
+		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+		               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
 				   }
             }
 				if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -876,17 +914,38 @@ void DCItem::generateEventsBasedOnThrDiff()
       {
          if (t->isReached())
          {
-            PostDciEventWithNames(t->getEventCode(), ownerId, m_id, "ssssisds",
-                              s_paramNamesReach, m_name.cstr(), m_description.cstr(), t->getStringValue(),
-                              t->getLastCheckValue().getString(), m_id, m_instanceName.cstr(), 0,
-                              (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
+            EventBuilder(t->getEventCode(), ownerId)
+               .dci(m_id)
+               .param(_T("dciName"), m_name)
+               .param(_T("dciDescription"), m_description)
+               .param(_T("thresholdValue"), t->getStringValue())
+               .param(_T("currentValue"), t->getLastCheckValue().getString())
+               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("instance"), m_instanceName)
+               .param(_T("isRepeatedEvent"), _T("0"))
+               .param(_T("dciValue"), (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""))
+               .param(_T("operation"), t->getOperation())
+               .param(_T("function"), t->getFunction())
+               .param(_T("pollCount"), t->getSampleCount())
+               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
          }
          else
          {
-            PostDciEventWithNames(t->getRearmEventCode(), ownerId, m_id, "ssissss",
-                              s_paramNamesRearm, m_name.cstr(), m_description.cstr(), m_id, m_instanceName.cstr(), t->getStringValue(),
-                              t->getLastCheckValue().getString(),
-                              (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""));
+            EventBuilder(t->getRearmEventCode(), ownerId)
+               .dci(m_id)
+               .param(_T("dciName"), m_name)
+               .param(_T("dciDescription"), m_description)
+               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+               .param(_T("instance"), m_instanceName)
+               .param(_T("thresholdValue"), t->getStringValue())
+               .param(_T("currentValue"), t->getLastCheckValue().getString())
+               .param(_T("dciValue"), (m_bCacheLoaded && (m_cacheSize > 0)) ? m_ppValueCache[0]->getString() : _T(""))
+               .param(_T("operation"), t->getOperation())
+               .param(_T("function"), t->getFunction())
+               .param(_T("pollCount"), t->getSampleCount())
+               .param(_T("thresholdDefinition"), t->getTextualDefinition())
+               .post();
          }
       }
    }

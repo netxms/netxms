@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,14 +57,6 @@ static const TCHAR *s_eventParamNamesHostDataMismatch[] =
       _T("tunnelId"), _T("oldIPAddress"), _T("newIPAddress"), _T("oldSystemName"),
       _T("newSystemName"), _T("oldHostName"), _T("newHostName"), _T("oldHardwareId"),
       _T("newHardwareId")
-   };
-
-/**
- * Event parameter names for SYS_UNBOUND_TUNNEL, SYS_TUNNEL_OPEN, and SYS_TUNNEL_CLOSED events
- */
-static const TCHAR *s_eventParamNamesError[] =
-   {
-      _T("ipAddress"), _T("error")
    };
 
 /**
@@ -1413,6 +1405,9 @@ static long DecodeTLSVersion(int version)
    return protoVersion;
 }
 
+/**
+ * Report tunnel error
+ */
 static inline void ReportError(const TCHAR *debugPrefix, const InetAddress& origin, const TCHAR *format, ...)
 {
    TCHAR text[4096];
@@ -1422,8 +1417,10 @@ static inline void ReportError(const TCHAR *debugPrefix, const InetAddress& orig
    va_end(args);
 
    nxlog_debug_tag(DEBUG_TAG, 4, _T("SetupTunnel(%s): %s"), debugPrefix, text);
-   PostSystemEventWithNames(EVENT_TUNNEL_SETUP_ERROR, g_dwMgmtNode, "As", s_eventParamNamesError,
-         &origin, text);
+   EventBuilder(EVENT_TUNNEL_SETUP_ERROR, g_dwMgmtNode)
+      .param(_T("ipAddress"), origin)
+      .param(_T("error"), text)
+      .post();
 }
 
 /**

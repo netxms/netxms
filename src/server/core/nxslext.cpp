@@ -680,20 +680,25 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM
 	bool success;
 	if (eventCode > 0)
 	{
+	   EventBuilder event(eventCode, *node);
+	   event.origin(EventOrigin::NXSL);
+
 		// User tag
-		const TCHAR *userTag = nullptr;
 		if ((argc > 2) && !argv[2]->isNull())
 		{
 			if (!argv[2]->isString())
 				return NXSL_ERR_NOT_STRING;
-			userTag = argv[2]->getValueAsCString();
+			event.tag(argv[2]->getValueAsCString());
 		}
 
-		// Post event
-		StringList parameters;
+		// Parameters
+		TCHAR name[16] = _T("P");
 		for(int i = 3; i < argc; i++)
-			parameters.add(argv[i]->getValueAsCString());
-		success = PostEventWithTag(eventCode, EventOrigin::NXSL, 0, node->getId(), userTag, parameters);
+		{
+		   IntegerToString(i - 2, &name[1]);
+			event.param(name, argv[i]->getValueAsCString());
+		}
+		success = event.post();
 	}
 	else
 	{

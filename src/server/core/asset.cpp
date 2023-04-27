@@ -387,10 +387,14 @@ void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, s
    {
       nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" with value \"%s\" failed (%s)"),
             asset->getName(), asset->getId(), context->name, newValue,  static_cast<const TCHAR *>(result.second));
-      static const TCHAR *parameterNames[] = { _T("name"), _T("displayName"), _T("dataType"), _T("currValue"), _T("newValue"), _T("reason") };
-      String displayName = GetAssetAttributeDisplayName(context->name);
-      PostSystemEventWithNames(EVENT_ASSET_AUTO_UPDATE_FAILED, object->getId(), "ssisss", parameterNames, context->name,
-            displayName.cstr(), context->dataType, propertiesCopy->get(context->name), newValue, result.second.cstr());
+      EventBuilder(EVENT_ASSET_AUTO_UPDATE_FAILED, *object)
+         .param(_T("name"), context->name)
+         .param(_T("displayName"), GetAssetAttributeDisplayName(context->name))
+         .param(_T("dataType"), static_cast<int32_t>(context->dataType))
+         .param(_T("currValue"), propertiesCopy->get(context->name))
+         .param(_T("newValue"), newValue)
+         .param(_T("reason"), result.second)
+         .post();
    }
    if (result.first == RCC_SUCCESS && _tcscmp(oldValue, newValue))
    {
