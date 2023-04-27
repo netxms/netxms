@@ -1808,31 +1808,38 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
       if (sendMessage(&msg))
       {
          NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, requestId, m_commandTimeout);
-         rcc = response->getFieldAsInt32(VID_RCC);
-
-         if (rcc == ERR_FILE_APPEND_POSSIBLE)
+         if (response != nullptr)
          {
-            BYTE localHash[MD5_DIGEST_SIZE];
-            BYTE remoteHash[MD5_DIGEST_SIZE];
-            memset(localHash, 0, sizeof(localHash));
-            memset(remoteHash, 0, sizeof(remoteHash));
-            response->getFieldAsBinary(VID_HASH_MD5, remoteHash, MD5_DIGEST_SIZE);
-            uint64_t remoteSize = response->getFieldAsUInt64(VID_FILE_SIZE);
-            CalculateFileMD5Hash(localFile, localHash, remoteSize);
-            if (!memcmp(remoteHash, localHash, MD5_DIGEST_SIZE))
+            rcc = response->getFieldAsInt32(VID_RCC);
+
+            if (rcc == ERR_FILE_APPEND_POSSIBLE)
             {
-               resumeMode = FileTransferResumeMode::RESUME;
-               messageResendRequired = true;
-               offset = remoteSize;
-               // Even if files are equals .part file might need to be renamed
+               BYTE localHash[MD5_DIGEST_SIZE];
+               BYTE remoteHash[MD5_DIGEST_SIZE];
+               memset(localHash, 0, sizeof(localHash));
+               memset(remoteHash, 0, sizeof(remoteHash));
+               response->getFieldAsBinary(VID_HASH_MD5, remoteHash, MD5_DIGEST_SIZE);
+               uint64_t remoteSize = response->getFieldAsUInt64(VID_FILE_SIZE);
+               CalculateFileMD5Hash(localFile, localHash, remoteSize);
+               if (!memcmp(remoteHash, localHash, MD5_DIGEST_SIZE))
+               {
+                  resumeMode = FileTransferResumeMode::RESUME;
+                  messageResendRequired = true;
+                  offset = remoteSize;
+                  // Even if files are equals .part file might need to be renamed
+               }
+               else
+               {
+                  resumeMode = FileTransferResumeMode::OVERWRITE;
+                  messageResendRequired = true;
+               }
             }
-            else
-            {
-               resumeMode = FileTransferResumeMode::OVERWRITE;
-               messageResendRequired = true;
-            }
+            delete response;
          }
-         delete response;
+         else
+         {
+            rcc = ERR_REQUEST_TIMEOUT;
+         }
       }
       else
       {
