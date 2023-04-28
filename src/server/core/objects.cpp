@@ -1615,10 +1615,12 @@ bool LoadObjects()
       g_entireNetwork->addZone(zone);
 
       // Load zones from database
-      LoadObjectsFromTable<Zone>(_T("zone"), hdb, _T("zones WHERE id<>4"), nullptr, [](const shared_ptr<Zone>& zone) {
-         if (!zone->isDeleted())
-            g_entireNetwork->addZone(zone);
-      });
+      LoadObjectsFromTable<Zone>(_T("zone"), hdb, _T("zones WHERE id<>4"), nullptr,
+         [] (const shared_ptr<Zone>& zone)
+         {
+            if (!zone->isDeleted())
+               g_entireNetwork->addZone(zone);
+         });
    }
    g_idxZoneByUIN.setStartupMode(false);
 
@@ -1629,21 +1631,25 @@ bool LoadObjects()
 
    if (IsZoningEnabled())
    {
-      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"), [](const shared_ptr<Subnet>& subnet) {
-         if (!subnet->isDeleted())
+      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"),
+         [] (const shared_ptr<Subnet>& subnet)
          {
-            shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
-            if (zone != nullptr)
-               zone->addSubnet(subnet);
-         }
-      });
+            if (!subnet->isDeleted())
+            {
+               shared_ptr<Zone> zone = FindZoneByUIN(subnet->getZoneUIN());
+               if (zone != nullptr)
+                  zone->addSubnet(subnet);
+            }
+         });
    }
    else
    {
-      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"), [](const shared_ptr<Subnet>& subnet) {
-         if (!subnet->isDeleted())
-            g_entireNetwork->addSubnet(subnet);
-      });
+      LoadObjectsFromTable<Subnet>(_T("subnet"), hdb, _T("subnets"),
+         [] (const shared_ptr<Subnet>& subnet)
+         {
+            if (!subnet->isDeleted())
+               g_entireNetwork->addSubnet(subnet);
+         });
    }
    g_idxSubnetById.setStartupMode(false);
 
@@ -1655,13 +1661,17 @@ bool LoadObjects()
    LoadObjectsFromTable<Sensor>(_T("sensor"), hdb, _T("sensors"));
    g_idxSensorById.setStartupMode(false);
 
-   LoadObjectsFromTable<Node>(_T("node"), hdb, _T("nodes"), nullptr, IsZoningEnabled() ? [](const shared_ptr<Node>& node) {
-      shared_ptr<Zone> zone = FindZoneByProxyId(node->getId());
-      if (zone != nullptr)
-      {
-         zone->updateProxyStatus(node, false);
-      }
-   } : static_cast<void (*)(const std::shared_ptr<Node>&)>(nullptr));
+   LoadObjectsFromTable<Node>(_T("node"), hdb, _T("nodes"), nullptr,
+      IsZoningEnabled() ?
+         [] (const shared_ptr<Node>& node)
+         {
+            shared_ptr<Zone> zone = FindZoneByProxyId(node->getId());
+            if (zone != nullptr)
+            {
+               zone->updateProxyStatus(node, false);
+            }
+         }
+      : static_cast<void (*)(const std::shared_ptr<Node>&)>(nullptr));
    g_idxNodeById.setStartupMode(false);
 
    LoadObjectsFromTable<AccessPoint>(_T("access point"), hdb, _T("access_points"));
@@ -1715,6 +1725,9 @@ bool LoadObjects()
    }
    DBConnectionPoolReleaseConnection(mainDB);
 
+   if (cachedb != nullptr)
+      DBCloseInMemoryDatabase(cachedb);
+
    // Recalculate status for built-in objects
    g_entireNetwork->calculateCompoundStatus();
    g_infrastructureServiceRoot->calculateCompoundStatus();
@@ -1738,47 +1751,47 @@ bool LoadObjects()
    nxlog_debug_tag(_T("obj.comments"), 2, _T("Updating all objects comments macros"));
    g_idxObjectById.forEach([](NetObj *object, void *context) { object->expandCommentMacros(); }, nullptr);
 
-   //check linking between assets and nodes
-   g_idxAssetById.forEach([]
-                           (NetObj *object, void *context)
-                           {
-                              Asset *asset = static_cast<Asset *>(object);
-                              if (asset->getLinkedObjectId() != 0)
-                              {
-                                  shared_ptr<NetObj> node = g_idxNodeById.get(asset->getLinkedObjectId());
-                                  if (node == nullptr)
-                                  {
-                                     nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping asset %s[%u] link to non existing object [%u]"), asset->getName(), asset->getId(), asset->getLinkedObjectId());
-                                     asset->setLinkedObjectId(0);
-                                  }
-                                  if (asset->getId() != node->getAssetId())
-                                  {
-                                     nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping asset %s[%u] link to %s[%u] object linked with other asset [%d]"), asset->getName(), asset->getId(), node->getName(), node->getId(), node->getAssetId());
-                                     asset->setLinkedObjectId(0);
-                                  }
-                               }
-                            }, nullptr);
-   g_idxNodeById.forEach([]
-                           (NetObj *object, void *context)
-                           {
-                              if((object->getAssetId() != 0))
-                              {
-                                 shared_ptr<Asset> asset = static_pointer_cast<Asset>(g_idxAssetById.get(object->getAssetId()));
-                                 if (asset == nullptr)
-                                 {
-                                    nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping node %s[%u] link to non existing asset [%u]"), object->getName(), object->getId(), object->getAssetId());
-                                    object->setAssetId(0);
-                                 }
-                                 if (asset->getLinkedObjectId() != object->getId())
-                                 {
-                                    nxlog_debug_tag(_T("obj.init"), 2, _T("Dropping object %s[%u] link to %s[%u] asset linked with other asset [%d]"), object->getName(), object->getId(), asset->getName(), asset->getId(), asset->getLinkedObjectId());
-                                    object->setAssetId(0);
-                                 }
-                              }
-                           }, nullptr);
-
-   if (cachedb != nullptr)
-      DBCloseInMemoryDatabase(cachedb);
+   // check links between assets and other objects
+   g_idxAssetById.forEach(
+      [] (NetObj *object) -> void
+      {
+         Asset *asset = static_cast<Asset*>(object);
+         if (asset->getLinkedObjectId() != 0)
+         {
+             shared_ptr<NetObj> linkedObject = g_idxNodeById.get(asset->getLinkedObjectId());
+             if (linkedObject == nullptr)
+             {
+                nxlog_debug_tag(_T("obj.init"), 2, _T("Link between asset \"%s\" [%u] and non-existing object [%u] deleted"),
+                   asset->getName(), asset->getId(), asset->getLinkedObjectId());
+                asset->setLinkedObjectId(0);
+             }
+             else if (asset->getId() != linkedObject->getAssetId())
+             {
+                nxlog_debug_tag(_T("obj.init"), 2, _T("Invalid link between asset \"%s\" [%u] and object \"%s\" [%u] deleted (asset ID mismatch: [%u], expected [%u])"),
+                   asset->getName(), asset->getId(), linkedObject->getName(), linkedObject->getId(), linkedObject->getAssetId(), asset->getId());
+                asset->setLinkedObjectId(0);
+             }
+          }
+       });
+   g_idxObjectById.forEach(
+      [] (NetObj *object) -> void
+      {
+         if (object->getAssetId() != 0)
+         {
+            shared_ptr<Asset> asset = static_pointer_cast<Asset>(g_idxAssetById.get(object->getAssetId()));
+            if (asset == nullptr)
+            {
+               nxlog_debug_tag(_T("obj.init"), 2, _T("Link between object \"%s\" [%u] and non-existing asset [%u] deleted"), object->getName(), object->getId(), object->getAssetId());
+               object->setAssetId(0);
+            }
+            else if (asset->getLinkedObjectId() != object->getId())
+            {
+               nxlog_debug_tag(_T("obj.init"), 2, _T("Invalid link between object \"%s\" [%u] and asset \"%s\" [%u] deleted (linked object ID mismatch: [%u], expected [%u])"),
+                  object->getName(), object->getId(), asset->getName(), asset->getId(), asset->getLinkedObjectId(), object->getId());
+               object->setAssetId(0);
+            }
+         }
+      });
 
    return true;
 }
