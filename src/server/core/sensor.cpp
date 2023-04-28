@@ -360,9 +360,6 @@ void Sensor::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
  */
 uint32_t Sensor::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   if (msg.isFieldExist(VID_FLAGS))
-      m_flags = msg.getFieldAsUInt32(VID_FLAGS);
-
    if (msg.isFieldExist(VID_MAC_ADDR))
       m_macAddress = msg.getFieldAsMacAddress(VID_MAC_ADDR);
    if (msg.isFieldExist(VID_VENDOR))

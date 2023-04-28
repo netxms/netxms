@@ -680,13 +680,6 @@ uint32_t NetworkMap::modifyFromMessageInternal(const NXCPMessage& msg)
 	if (msg.isFieldExist(VID_LAYOUT))
 		m_layout = msg.getFieldAsInt16(VID_LAYOUT);
 
-	if (msg.isFieldExist(VID_FLAGS))
-	{
-	   uint32_t mask = msg.isFieldExist(VID_FLAGS_MASK) ? msg.getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
-	   m_flags &= ~mask;
-		m_flags |= (msg.getFieldAsUInt32(VID_FLAGS) & mask);
-	}
-
 	if (msg.isFieldExist(VID_SEED_OBJECTS))
 		msg.getFieldAsInt32Array(VID_SEED_OBJECTS, &m_seedObjects);
 

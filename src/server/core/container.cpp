@@ -94,17 +94,6 @@ void AbstractContainer::calculateCompoundStatus(bool forcedRecalc)
 }
 
 /**
- * Modify object from message
- */
-uint32_t AbstractContainer::modifyFromMessageInternal(const NXCPMessage& msg)
-{
-   if (msg.isFieldExist(VID_FLAGS))
-		m_flags = msg.getFieldAsUInt32(VID_FLAGS);
-
-   return super::modifyFromMessageInternal(msg);
-}
-
-/**
  * Serialize object to JSON
  */
 json_t *AbstractContainer::toJson()

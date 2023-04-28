@@ -382,9 +382,6 @@ void Cluster::changeZone(uint32_t newZoneUIN)
  */
 uint32_t Cluster::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   if (msg.isFieldExist(VID_FLAGS))
-      m_flags = msg.getFieldAsUInt32(VID_FLAGS);
-
    // Change cluster type
    if (msg.isFieldExist(VID_CLUSTER_TYPE))
       m_clusterType = msg.getFieldAsUInt32(VID_CLUSTER_TYPE);

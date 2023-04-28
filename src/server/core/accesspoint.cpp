@@ -216,20 +216,6 @@ void AccessPoint::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
- * Modify object from message
- */
-uint32_t AccessPoint::modifyFromMessageInternal(const NXCPMessage& msg)
-{
-   if (msg.isFieldExist(VID_FLAGS))
-   {
-      uint32_t mask = msg.isFieldExist(VID_FLAGS_MASK) ? msg.getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
-      m_flags &= ~mask;
-      m_flags |= msg.getFieldAsUInt32(VID_FLAGS) & mask;
-   }
-   return super::modifyFromMessageInternal(msg);
-}
-
-/**
  * Attach access point to node
  */
 void AccessPoint::attachToNode(UINT32 nodeId)

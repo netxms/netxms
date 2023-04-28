@@ -8068,64 +8068,58 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 }
 
 /**
+ * Update flags
+ */
+void Node::updateFlags(uint32_t flags, uint32_t mask)
+{
+   bool wasRemoteAgent = ((m_flags & NF_EXTERNAL_GATEWAY) != 0);
+   super::updateFlags(flags, mask);
+
+   if (wasRemoteAgent && !(m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast())
+   {
+      if (IsZoningEnabled())
+      {
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != nullptr)
+         {
+            zone->addToIndex(m_ipAddress, self());
+         }
+         else
+         {
+            nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"), m_zoneUIN, m_name, m_id);
+         }
+      }
+      else
+      {
+         g_idxNodeByAddr.put(m_ipAddress, self());
+      }
+   }
+   else if (!wasRemoteAgent && (m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast())
+   {
+      if (IsZoningEnabled())
+      {
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         if (zone != nullptr)
+         {
+            zone->removeFromNodeIndex(m_ipAddress);
+         }
+         else
+         {
+            nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"), m_zoneUIN, m_name, m_id);
+         }
+      }
+      else
+      {
+         g_idxNodeByAddr.remove(m_ipAddress);
+      }
+   }
+}
+
+/**
  * Modify object from NXCP message
  */
 uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   // Change flags
-   if (msg.isFieldExist(VID_FLAGS))
-   {
-      bool wasRemoteAgent = ((m_flags & NF_EXTERNAL_GATEWAY) != 0);
-      if (msg.isFieldExist(VID_FLAGS_MASK))
-      {
-         uint32_t mask = msg.getFieldAsUInt32(VID_FLAGS_MASK);
-         m_flags &= ~mask;
-         m_flags |= msg.getFieldAsUInt32(VID_FLAGS);
-      }
-      else
-      {
-         m_flags = msg.getFieldAsUInt32(VID_FLAGS);
-      }
-      if (wasRemoteAgent && !(m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast())
-      {
-         if (IsZoningEnabled())
-         {
-            shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-            if (zone != nullptr)
-            {
-               zone->addToIndex(m_ipAddress, self());
-            }
-            else
-            {
-               nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"), m_zoneUIN, m_name, m_id);
-            }
-         }
-         else
-         {
-            g_idxNodeByAddr.put(m_ipAddress, self());
-         }
-      }
-      else if (!wasRemoteAgent && (m_flags & NF_EXTERNAL_GATEWAY) && m_ipAddress.isValidUnicast())
-      {
-         if (IsZoningEnabled())
-         {
-            shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-            if (zone != nullptr)
-            {
-               zone->removeFromNodeIndex(m_ipAddress);
-            }
-            else
-            {
-               nxlog_write(NXLOG_WARNING, _T("Cannot find zone object with UIN %u for node object %s [%u]"), m_zoneUIN, m_name, m_id);
-            }
-         }
-         else
-         {
-            g_idxNodeByAddr.remove(m_ipAddress);
-         }
-      }
-   }
-
    // Change primary IP address
    if (msg.isFieldExist(VID_IP_ADDRESS))
    {

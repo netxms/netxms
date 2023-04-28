@@ -1404,6 +1404,15 @@ uint32_t NetObj::modifyFromMessage(const NXCPMessage& msg)
 }
 
 /**
+ * Update flags field
+ */
+void NetObj::updateFlags(uint32_t flags, uint32_t mask)
+{
+   m_flags &= ~mask;
+   m_flags |= flags;
+}
+
+/**
  * Modify object from NXCP message
  */
 uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
@@ -1428,6 +1437,12 @@ uint32_t NetObj::modifyFromMessageInternal(const NXCPMessage& msg)
 
    if (msg.isFieldExist(VID_ALIAS))
       m_alias = msg.getFieldAsSharedString(VID_ALIAS);
+
+   // Change flags
+   if (msg.isFieldExist(VID_FLAGS))
+   {
+      updateFlags(msg.getFieldAsUInt32(VID_FLAGS), msg.isFieldExist(VID_FLAGS_MASK) ? msg.getFieldAsUInt32(VID_FLAGS_MASK) : UINT_MAX);
+   }
 
    if (msg.isFieldExist(VID_NAME_ON_MAP))
       m_nameOnMap = msg.getFieldAsSharedString(VID_NAME_ON_MAP);

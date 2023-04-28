@@ -1208,6 +1208,7 @@ protected:
    virtual void fillMessageInternalStage2(NXCPMessage *msg, uint32_t userId);
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg);
    virtual uint32_t modifyFromMessageInternalStage2(const NXCPMessage& msg);
+   virtual void updateFlags(uint32_t flags, uint32_t mask);
 
    bool isGeoLocationHistoryTableExists(DB_HANDLE hdb) const;
    bool createGeoLocationHistoryTable(DB_HANDLE hdb);
@@ -2607,7 +2608,6 @@ protected:
    AccessPointState m_prevState;
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
-   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
 
@@ -3258,6 +3258,7 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
    virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
+   virtual void updateFlags(uint32_t flags, uint32_t mask) override;
 
    virtual void onDataCollectionChange() override;
 
@@ -3773,9 +3774,6 @@ private:
 
    UINT32 *m_pdwChildIdList;
    UINT32 m_dwChildIdListSize;
-
-protected:
-   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
 public:
    AbstractContainer();

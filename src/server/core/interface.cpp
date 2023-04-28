@@ -975,14 +975,6 @@ void Interface::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
  */
 uint32_t Interface::modifyFromMessageInternal(const NXCPMessage& msg)
 {
-   // Flags
-   if (msg.isFieldExist(VID_FLAGS))
-   {
-      uint32_t mask = msg.isFieldExist(VID_FLAGS_MASK) ? (msg.getFieldAsUInt32(VID_FLAGS_MASK) & IF_USER_FLAGS_MASK) : IF_USER_FLAGS_MASK;
-      m_flags &= ~mask;
-      m_flags |= msg.getFieldAsUInt32(VID_FLAGS) & mask;
-   }
-
    // Number of required polls
    if (msg.isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = msg.getFieldAsInt16(VID_REQUIRED_POLLS);
