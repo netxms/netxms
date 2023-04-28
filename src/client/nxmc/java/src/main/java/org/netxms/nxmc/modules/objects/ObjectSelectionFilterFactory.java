@@ -278,4 +278,18 @@ public class ObjectSelectionFilterFactory
       classFilter.add(AbstractObject.OBJECT_CHASSIS);
       return classFilter;
    }
+
+   /**
+    * Create filter for asset selection
+    * 
+    * @return Class filter for asset selection
+    */
+   public Set<Integer> createAssetSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(4);
+      classFilter.add(AbstractObject.OBJECT_ASSETROOT);
+      classFilter.add(AbstractObject.OBJECT_ASSETGROUP);
+      classFilter.add(AbstractObject.OBJECT_ASSET);
+      return classFilter;
+   }
 }

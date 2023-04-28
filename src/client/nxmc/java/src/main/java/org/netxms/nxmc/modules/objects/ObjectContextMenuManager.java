@@ -65,7 +65,9 @@ import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
 import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
+import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
+import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
@@ -115,6 +117,8 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionForcePolicyInstall;
    private ObjectAction<?> actionLinkAssetToObject;
    private ObjectAction<?> actionUnlinkAssetFromObject;
+   private ObjectAction<?> actionLinkObjectToAsset;
+   private ObjectAction<?> actionUnlinkObjectFromAsset;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -331,6 +335,8 @@ public class ObjectContextMenuManager extends MenuManager
       actionForcePolicyInstall = new ForcedPolicyDeploymentAction(viewPlacement, selectionProvider);
       actionLinkAssetToObject = new LinkAssetToObjectAction(viewPlacement, selectionProvider);
       actionUnlinkAssetFromObject = new UnlinkAssetFromObjectAction(viewPlacement, selectionProvider);
+      actionLinkObjectToAsset = new LinkObjectToAssetAction(viewPlacement, selectionProvider);
+      actionUnlinkObjectFromAsset = new UnlinkObjectFromAssetAction(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -388,6 +394,12 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionRemoveNode);
             add(new Separator());
          }
+         if (((object instanceof Rack) || (object instanceof DataCollectionTarget)) && !(object instanceof Cluster))
+         {
+            add(actionLinkObjectToAsset);
+            add(actionUnlinkObjectFromAsset);
+            add(new Separator());            
+         }
       }
       else if (actionForcePolicyInstall.isValidForSelection(selection))
       {
@@ -397,6 +409,11 @@ public class ObjectContextMenuManager extends MenuManager
       else if (actionUnlinkAssetFromObject.isValidForSelection(selection))
       {
          add(actionUnlinkAssetFromObject);
+         add(new Separator());
+      }
+      else if (actionUnlinkObjectFromAsset.isValidForSelection(selection))
+      {
+         add(actionUnlinkObjectFromAsset);
          add(new Separator());
       }
       if (isBindToMenuAllowed(selection))

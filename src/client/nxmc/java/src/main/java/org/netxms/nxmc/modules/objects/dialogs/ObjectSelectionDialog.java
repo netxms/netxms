@@ -209,7 +209,17 @@ public class ObjectSelectionDialog extends Dialog
    {
       return ObjectSelectionFilterFactory.getInstance().createRackOrChassisSelectionFilter();
    }
-	
+
+
+   /**
+    * Create filter for asset selection
+    * 
+    * @return
+    */
+   public static Set<Integer> createAssetSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createAssetSelectionFilter();
+   }
    /**
     * Create object selection dialog without class filtering.
     * 

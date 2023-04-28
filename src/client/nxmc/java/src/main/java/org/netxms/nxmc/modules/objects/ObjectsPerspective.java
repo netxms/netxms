@@ -68,7 +68,9 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
 import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
+import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
+import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
@@ -232,6 +234,8 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       actionContributions.add(new ForcedPolicyDeploymentAction(new ViewPlacement(this), this));
       actionContributions.add(new LinkAssetToObjectAction(new ViewPlacement(this), this));
       actionContributions.add(new UnlinkAssetFromObjectAction(new ViewPlacement(this), this));
+      actionContributions.add(new LinkObjectToAssetAction(new ViewPlacement(this), this));
+      actionContributions.add(new UnlinkObjectFromAssetAction(new ViewPlacement(this), this));
 
       ViewPlacement viewPlacement = new ViewPlacement(this);
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
