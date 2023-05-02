@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,12 @@ import org.netxms.ui.eclipse.eventmanager.widgets.EventTemplateList;
 public class EventTemplateLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
    boolean isDialog;
-   
+
+   /**
+    * Create label provider.
+    *
+    * @param isDialog true if owning widget is part of dialog
+    */
 	public EventTemplateLabelProvider(boolean isDialog)
    {
 	   this.isDialog = isDialog;
@@ -43,9 +48,7 @@ public class EventTemplateLabelProvider extends WorkbenchLabelProvider implement
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-	   if ((columnIndex != 0))
-	      return null;
-		return getImage(element);
+      return (columnIndex == 0) ? getImage(element) : null;
 	}
 
 	/**
@@ -62,13 +65,12 @@ public class EventTemplateLabelProvider extends WorkbenchLabelProvider implement
 			case EventTemplateList.COLUMN_NAME:
             return eventTemplate.getName();
 			case EventTemplateList.COLUMN_SEVERITY:
-			   if(isDialog)
+            if (isDialog)
                return eventTemplate.getTagList();
 			   else
                return StatusDisplayInfo.getStatusText(eventTemplate.getSeverity());
 			case EventTemplateList.COLUMN_FLAGS:
-            return (((eventTemplate.getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0) ? "L" : "-") + //$NON-NLS-1$ //$NON-NLS-2$
-                   (((eventTemplate.getFlags() & EventTemplate.FLAG_DO_NOT_MONITOR) != 0) ? "H" : "-"); //$NON-NLS-1$ //$NON-NLS-2$
+            return buildFlagString(eventTemplate);
 			case EventTemplateList.COLUMN_MESSAGE:
             return eventTemplate.getMessage();
          case EventTemplateList.COLUMN_TAGS:
@@ -76,4 +78,26 @@ public class EventTemplateLabelProvider extends WorkbenchLabelProvider implement
 		}
 		return null;
 	}
+
+   /**
+    * Build flag string for given event template.
+    *
+    * @param eventTemplate event template
+    * @return flag string
+    */
+   private static String buildFlagString(EventTemplate eventTemplate)
+   {
+      StringBuilder sb = new StringBuilder();
+      if ((eventTemplate.getFlags() & EventTemplate.FLAG_WRITE_TO_LOG) != 0)
+      {
+         sb.append("log");
+      }
+      if ((eventTemplate.getFlags() & EventTemplate.FLAG_DO_NOT_MONITOR) != 0)
+      {
+         if (sb.length() > 0)
+            sb.append(", ");
+         sb.append("hide");
+      }
+      return sb.toString();
+   }
 }
