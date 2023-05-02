@@ -247,6 +247,15 @@ void Asset::calculateCompoundStatus(bool forcedRecalc)
 }
 
 /**
+ * Prepare object for deletion. Method should return only
+ * when object deletion is safe
+ */
+void Asset::prepareForDeletion()
+{
+   UnlinkAsset(this, nullptr);
+}
+
+/**
  * Get property
  */
 SharedString Asset::getProperty(const TCHAR *attr)

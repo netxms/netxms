@@ -4319,6 +4319,7 @@ public:
    virtual json_t *toJson() override;
 
    virtual void calculateCompoundStatus(bool forcedRecalc = false) override;
+   virtual void prepareForDeletion() override;
 
    void autoFillProperties();
 
