@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,8 +37,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
- * @author Victor
- *
+ * Event template editing dialog
  */
 public class EditEventTemplateDialog extends Dialog
 {
@@ -53,7 +52,7 @@ public class EditEventTemplateDialog extends Dialog
 	private Combo severity;
 	private Button optionLog;
    private Button optionDoNotMonitor;
-	
+
 	/**
 	 * Default constructor.
 	 * 
@@ -82,12 +81,12 @@ public class EditEventTemplateDialog extends Dialog
       layout.numColumns = 3;
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING * 2;
       dialogArea.setLayout(layout);
-      
+
       id = new LabeledText(dialogArea, SWT.NONE);
       id.setLabel(Messages.get().EditEventTemplateDialog_EventCode);
       id.setText(Long.toString(eventTemplate.getCode()));
       id.getTextControl().setEditable(false);
-      
+
       guid = new LabeledText(dialogArea, SWT.NONE);
       guid.setLabel("GUID");
       guid.setText(eventTemplate.getGuid().toString());
