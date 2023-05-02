@@ -431,13 +431,19 @@ public class ObjectContextMenuManager extends MenuManager
          maintenanceMenu.add(actionScheduleMaintenance);
          add(maintenanceMenu);
       }
-      add(actionManage);
-      add(actionUnmanage);
+      if (isManagedMenuAllowed(selection))
+      {
+         add(actionManage);
+         add(actionUnmanage);
+      }
       if (singleObject && (objectViewer != null))
       {
          add(actionRename);
       }
-      add(actionDelete);
+      if (isDeleteMenuAllowed(selection))
+      {
+         add(actionDelete);
+      }
       add(new Separator());
 
       // Agent/package management
@@ -568,7 +574,47 @@ public class ObjectContextMenuManager extends MenuManager
          if ((objectClass == AbstractObject.OBJECT_BUSINESSSERVICE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEPROTOTYPE) || (objectClass == AbstractObject.OBJECT_BUSINESSSERVICEROOT) ||
              (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) ||
              (objectClass == AbstractObject.OBJECT_NETWORKMAP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPGROUP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) ||
-             (objectClass == AbstractObject.OBJECT_TEMPLATE) || (objectClass == AbstractObject.OBJECT_TEMPLATEGROUP) || (objectClass == AbstractObject.OBJECT_TEMPLATEROOT))
+             (objectClass == AbstractObject.OBJECT_TEMPLATE) || (objectClass == AbstractObject.OBJECT_TEMPLATEGROUP) || (objectClass == AbstractObject.OBJECT_TEMPLATEROOT) ||
+             (objectClass == AbstractObject.OBJECT_ASSET) || (objectClass == AbstractObject.OBJECT_ASSETGROUP) || (objectClass == AbstractObject.OBJECT_ASSETROOT))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if manage/unmanage menu items are allowed.
+    *
+    * @param selection current object selection
+    * @return true if manage/unmanage menu items are allowed
+    */
+   private static boolean isManagedMenuAllowed(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof AbstractObject))
+            return false;
+         int objectClass = ((AbstractObject)o).getObjectClass();
+         if ((objectClass == AbstractObject.OBJECT_ASSET) || (objectClass == AbstractObject.OBJECT_ASSETGROUP) || (objectClass == AbstractObject.OBJECT_ASSETROOT))
+            return false;
+      }
+      return true;
+   }
+
+   /**
+    * Check if delete menu item is allowed.
+    *
+    * @param selection current object selection
+    * @return true if maintenance menu is allowed
+    */
+   private static boolean isDeleteMenuAllowed(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof AbstractObject))
+            return false;
+         int objectClass = ((AbstractObject)o).getObjectClass();
+         if ((objectClass == AbstractObject.OBJECT_BUSINESSSERVICEROOT) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) || 
+               (objectClass == AbstractObject.OBJECT_TEMPLATEROOT) || (objectClass == AbstractObject.OBJECT_ASSETROOT))
             return false;
       }
       return true;

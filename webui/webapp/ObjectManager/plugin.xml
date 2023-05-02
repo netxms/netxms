@@ -1132,6 +1132,15 @@
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">
                                  </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Asset">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetRoot">
+                                 </instanceof>
                               </or>
                            </not>
                         </and>
@@ -1173,6 +1182,15 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.DashboardGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Asset">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetRoot">
                                  </instanceof>
                               </or>
                            </not>
@@ -1224,6 +1242,9 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.BusinessServiceRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetRoot">
                                  </instanceof>
                               </or>
                            </not>
@@ -1289,6 +1310,15 @@
                                  <instanceof
                                        value="org.netxms.client.objects.BusinessServiceRoot">
                                  </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Asset">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetRoot">
+                                 </instanceof>
                               </or>
                            </not>
                         </and>
@@ -1348,6 +1378,15 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.BusinessServiceRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Asset">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetRoot">
                                  </instanceof>
                               </or>
                            </not>
@@ -1411,6 +1450,15 @@
                                  </instanceof>
                                  <instanceof
                                        value="org.netxms.client.objects.BusinessServiceRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Asset">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AssetRoot">
                                  </instanceof>
                               </or>
                            </not>
