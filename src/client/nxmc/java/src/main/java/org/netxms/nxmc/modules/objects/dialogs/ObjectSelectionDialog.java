@@ -97,6 +97,16 @@ public class ObjectSelectionDialog extends Dialog
 	{
 		return ObjectSelectionFilterFactory.getInstance().createNetworkMapGroupsSelectionFilter();
 	}
+
+   /**
+    * Create filter for network map groups selection.
+    * 
+    * @return Class filter for network map groups selection
+    */
+   public static Set<Integer> createAssetGroupsSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createAssetGroupsSelectionFilter();
+   }
 	
    /**
     * Create filter for dashboard group selection.

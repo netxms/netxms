@@ -105,6 +105,19 @@ public class ObjectSelectionFilterFactory
    }
 
    /**
+    * Create filter for asset group selection.
+    * 
+    * @return Class filter for asset group selection
+    */
+   public Set<Integer> createAssetGroupsSelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(2);
+      classFilter.add(AbstractObject.OBJECT_ASSETROOT);
+      classFilter.add(AbstractObject.OBJECT_ASSETGROUP);
+      return classFilter;
+   }
+
+   /**
     * Create filter for dashboard group selection.
     * 
     * @return Class filter for dashboard group selection

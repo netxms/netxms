@@ -840,6 +840,8 @@ public class ObjectTree extends Composite
                      subtree = SubtreeType.DASHBOARDS;
                   else if (obj.isValidSelectionForMove(SubtreeType.MAPS))
                      subtree = SubtreeType.MAPS;
+                  else if (obj.isValidSelectionForMove(SubtreeType.ASSETS))
+                     subtree = SubtreeType.ASSETS;
                }
 
                if (subtree == null)
@@ -865,6 +867,9 @@ public class ObjectTree extends Composite
                      break;
                   case MAPS:
                      filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
+                     break;
+                  case ASSETS:
+                     filter = ObjectSelectionDialog.createAssetGroupsSelectionFilter();
                      break;
                   default:
                      filter = null;
