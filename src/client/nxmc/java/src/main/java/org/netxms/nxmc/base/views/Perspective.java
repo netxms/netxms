@@ -105,10 +105,7 @@ public abstract class Perspective
     */
    protected void navigationSelectionChanged(IStructuredSelection selection)
    {
-      if (mainFolder != null)
-         mainFolder.setContext(selection.getFirstElement());
-      else if (mainArea != null)
-         mainArea.setContext(selection.getFirstElement());
+      setContext(selection.getFirstElement());
       if (configuration.enableNavigationHistory)
       {
          NavigationHistory navigationHistory = (navigationArea != null) ? navigationArea.getNavigationHistory() : navigationFolder.getNavigationHistory();
@@ -121,6 +118,48 @@ public abstract class Perspective
                navigationFolder.updateNavigationControls();
          }
       }
+   }
+
+   /**
+    * Get current context.
+    *
+    * @return
+    */
+   protected Object getContext()
+   {
+      if (mainFolder != null)
+         return mainFolder.getContext();
+      if (mainArea != null)
+         return mainArea.getContext();
+      return null;
+   }
+
+   /**
+    * Set current context.
+    *
+    * @param context new context
+    */
+   protected void setContext(Object context)
+   {
+      if (mainFolder != null)
+         mainFolder.setContext(context);
+      else if (mainArea != null)
+         mainArea.setContext(context);
+   }
+
+   /**
+    * Update current context.
+    *
+    * @param context updated context
+    * @see org.netxms.nxmc.base.views.ViewFolder#updateContext(Object)
+    * @see org.netxms.nxmc.base.views.ViewStack#updateContext(Object)
+    */
+   protected void updateContext(Object context)
+   {
+      if (mainFolder != null)
+         mainFolder.updateContext(context);
+      else if (mainArea != null)
+         mainArea.updateContext(context);
    }
 
    /**

@@ -48,6 +48,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
@@ -245,6 +247,21 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          if ((componentId == null) || session.isServerComponentRegistered(componentId))
             actionContributions.add(a.createAction(viewPlacement, this));
       }
+
+      // Add session listener
+      session.addListener(new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() != SessionNotification.OBJECT_CHANGED)
+               return;
+            AbstractObject context = (AbstractObject)getContext();
+            if ((context != null) && (n.getSubCode() == context.getObjectId()))
+            {
+               getWindow().getShell().getDisplay().asyncExec(() -> updateContext(n.getObject()));
+            }
+         }
+      });
    }
 
    /**
