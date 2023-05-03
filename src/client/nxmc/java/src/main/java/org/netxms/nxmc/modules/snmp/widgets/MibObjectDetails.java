@@ -49,6 +49,7 @@ public class MibObjectDetails extends Composite
 	private Text access;
 	private MibBrowser mibTree;
 	private boolean updateObjectId = true;
+   private boolean updateTreeSelection = true;
 
 	/**
 	 * Create MIB object details widget.
@@ -61,31 +62,32 @@ public class MibObjectDetails extends Composite
 	public MibObjectDetails(Composite parent, int style, boolean showOID, MibBrowser mibTree)
 	{
 		super(parent, style);
-		
+
 		this.mibTree = mibTree;
-		
+
 		GridLayout layout = new GridLayout();
 		setLayout(layout);
-		
+
 		if (showOID)
 		{
-			oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, i18n.tr("Object identifier (OID)"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+         oid = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, i18n.tr("Object identifier (OID)"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
 			oid.addModifyListener(new ModifyListener() {
 				@Override
 				public void modifyText(ModifyEvent e)
 				{
-					onManualOidChange();
+               if (updateTreeSelection)
+                  onManualOidChange();
 				}
 			});
 
-			oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, i18n.tr("OID as text"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
+         oidText = WidgetHelper.createLabeledText(this, SWT.BORDER, 500, i18n.tr("OID as text"), "", WidgetHelper.DEFAULT_LAYOUT_DATA);
 			oidText.setEditable(false);
 		}
 		else
 		{
 			oid = null;
 		}
-		
+
 		/* MIB object information: status, type, etc. */
 		Composite infoGroup = new Composite(this, SWT.NONE);
 		layout = new GridLayout();
@@ -99,11 +101,11 @@ public class MibObjectDetails extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		infoGroup.setLayoutData(gd);
-		
+
 		type = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Type"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		status = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Status"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
 		access = WidgetHelper.createLabeledText(infoGroup, SWT.BORDER | SWT.READ_ONLY, SWT.DEFAULT, i18n.tr("Access"), "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
-		
+
 		/* MIB object's description */
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -162,8 +164,10 @@ public class MibObjectDetails extends Composite
 		{
 			if ((oid != null) && updateObjectId)
 			{
-				SnmpObjectId objectId = object.getObjectId(); 
-				oid.setText((objectId != null) ? objectId.toString() : ""); //$NON-NLS-1$
+            SnmpObjectId objectId = object.getObjectId();
+            updateTreeSelection = false;
+            oid.setText((objectId != null) ? objectId.toString() : "");
+            updateTreeSelection = true;
 			}
 			if (oidText != null)
 			{
@@ -178,14 +182,14 @@ public class MibObjectDetails extends Composite
 		else
 		{
 			if (oid != null)
-				oid.setText(""); //$NON-NLS-1$
+            oid.setText("");
 			if (oidText != null)
-				oidText.setText(""); //$NON-NLS-1$
-			description.setText(""); //$NON-NLS-1$
-			textualConvention.setText(""); //$NON-NLS-1$
-			type.setText(""); //$NON-NLS-1$
-			status.setText(""); //$NON-NLS-1$
-			access.setText(""); //$NON-NLS-1$
+            oidText.setText("");
+         description.setText("");
+         textualConvention.setText("");
+         type.setText("");
+         status.setText("");
+         access.setText("");
 		}
 	}
 }

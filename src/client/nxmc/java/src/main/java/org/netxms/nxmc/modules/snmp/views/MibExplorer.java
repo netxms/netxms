@@ -94,7 +94,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 
 	private Composite resultArea;
 	private SnmpWalkFilter filter;
-   
+
    /**
     * Constructor
     * 
