@@ -280,20 +280,13 @@ InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *n
             int32_t mode;
             if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.17713.21.3.4.1.0"), nullptr, 0, &mode, sizeof(mode), 0, nullptr) == SNMP_ERR_SUCCESS) // networkMode
             {
-               if ((mode == 1) || (mode == 2))
+               if ((mode == 1) || (mode == 2))  // NAT or bridge mode
                {
                   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-                  if (mode == 1) // NAT
-                  {
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.2.0")));   // networkLanIPAddr
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.3.0")));   // networkLanNetmask
-                  }
-                  else
-                  {
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.2.0")));   // networkBridgeIPAddr
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.3.0")));   // networkBridgeNetmask
-                  }
+                  request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.2.0")));   // networkLanIPAddr
+                  request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.3.0")));   // networkLanNetmask
 
+                  bool addressRetrieved = false;
                   SNMP_PDU *response;
                   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
                   {
@@ -308,10 +301,36 @@ InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *n
                            {
                               addr.setMaskBits(BitsInMask(mask));
                               iface->ipAddrList.add(addr);
+                              addressRetrieved = true;
                            }
                         }
                      }
                      delete response;
+                  }
+
+                  if (!addressRetrieved && (mode == 2))
+                  {
+                     SNMP_PDU request2(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+                     request2.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.2.0")));   // networkBridgeIPAddr
+                     request2.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.3.0")));   // networkBridgeNetmask
+                     if (snmp->doRequest(&request2, &response) == SNMP_ERR_SUCCESS)
+                     {
+                        if (response->getNumVariables() == 2)
+                        {
+                           TCHAR buffer[256];
+                           InetAddress addr = InetAddress::parse(response->getVariable(0)->getValueAsString(buffer, 256));
+                           if (addr.isValid())
+                           {
+                              uint32_t mask = InetAddress::parse(response->getVariable(1)->getValueAsString(buffer, 256)).getAddressV4();
+                              if (mask != 0)
+                              {
+                                 addr.setMaskBits(BitsInMask(mask));
+                                 iface->ipAddrList.add(addr);
+                              }
+                           }
+                        }
+                        delete response;
+                     }
                   }
                }
             }

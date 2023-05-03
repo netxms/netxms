@@ -4328,7 +4328,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if (g_flags & AF_RESOLVE_NODE_NAMES)
       {
          InetAddress addr = InetAddress::parse(m_name);
-         if (addr.isValidUnicast() && isMyIP(addr))
+         if (addr.isValidUnicast())
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name is an IP address and need to be resolved"), m_name, m_id);
             sendPollerMsg(_T("Node name is an IP address and need to be resolved\r\n"));
@@ -4349,7 +4349,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          else
          {
             nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s [%u]): node name cannot be interpreted as valid IP address"), m_name, m_id);
-            sendPollerMsg(_T("Node name %s, no need to resolve to host name\r\n"), addr.isValidUnicast() ? _T("is a valid IP address but cannot be found in interface configuration") : _T("cannot be interpreted as valid IP address"));
+            sendPollerMsg(_T("Node name cannot be interpreted as valid IP address, no need to resolve to host name\r\n"));
          }
       }
       else if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
@@ -9627,28 +9627,36 @@ bool Node::resolveName(bool useOnlyDNS, const TCHAR* *const facility)
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 4, _T("Resolving name for node %s [%u]"), m_name, m_id);
 
    TCHAR name[MAX_OBJECT_NAME];
-   if (m_zoneUIN != 0)
+   if (isMyIP(m_ipAddress))
    {
-      shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
-      shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : shared_ptr<AgentConnectionEx>();
-      if (conn != nullptr)
+      if (m_zoneUIN != 0)
       {
-         resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
-         *facility = _T("proxy agent");
+         shared_ptr<Zone> zone = FindZoneByUIN(m_zoneUIN);
+         shared_ptr<AgentConnectionEx> conn = (zone != nullptr) ? zone->acquireConnectionToProxy() : shared_ptr<AgentConnectionEx>();
+         if (conn != nullptr)
+         {
+            resolved = (conn->getHostByAddr(m_ipAddress, name, MAX_OBJECT_NAME) != nullptr);
+            *facility = _T("proxy agent");
+         }
+      }
+      else
+      {
+         resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr);
+         *facility = _T("system resolver");
+      }
+
+      // Check for systemd synthetic record
+      if (resolved && (name[0] == '_'))
+      {
+         TCHAR buffer[64];
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("IP address %s on node %s [%u] was resolved to \"%s\" which looks like systemd synthetic record and therefore ignored"), m_ipAddress.toString(buffer), m_name, m_id, name);
+         resolved = false;
       }
    }
    else
    {
-      resolved = (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != nullptr);
-      *facility = _T("system resolver");
-   }
-
-   // Check for systemd synthetic record
-   if (resolved && (name[0] == '_'))
-   {
       TCHAR buffer[64];
-      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("IP address %s was resolved to \"%s\" which looks like systemd synthetic record and therefore ignored"), m_ipAddress.toString(buffer), name);
-      resolved = false;
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Primary IP address %s of node %s [%u] cannot be found on any of node's interfaces and therefore ignored"), m_ipAddress.toString(buffer), m_name, m_id);
    }
 
    // Use primary IP if resolved successfully
