@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.modules.objects.views.elements;
 
+import java.util.Collections;
+import java.util.List;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
@@ -108,8 +110,26 @@ public class GeneralInfo extends TableElement
             addPair(i18n.tr("Extended device status"), ((AbstractNode)object).getCipExtendedStatusText(), false);
       }
       if (object.getCreationTime() != null && object.getCreationTime().getTime() != 0)
-         addPair(i18n.tr("Creation time"), DateFormatFactory.getDateTimeFormat().format(object.getCreationTime()), false);
-		switch(object.getObjectClass())
+         addPair(i18n.tr("Creation time"), DateFormatFactory.getDateTimeFormat().format(object.getCreationTime()), false);		
+      if (object.getAssetId() != 0)
+      {
+         AbstractObject asset = session.findObjectById(object.getAssetId(), Asset.class);
+         if (asset != null)
+         {
+            List<AbstractObject> parents = asset.getParentChain(null);
+            Collections.reverse(parents);
+            StringBuilder sb = new StringBuilder();
+            for(AbstractObject parent : parents)
+            {
+               sb.append(parent.getObjectName());
+               sb.append("/"); //$NON-NLS-1$
+            }
+            sb.append(asset.getObjectName());
+            addPair(i18n.tr("Asset"), sb.toString(), false);
+         }
+      }
+      
+      switch(object.getObjectClass())
 		{
          case AbstractObject.OBJECT_CHASSIS:
             Chassis chassis = (Chassis)object;
