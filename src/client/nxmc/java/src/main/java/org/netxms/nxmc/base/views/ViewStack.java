@@ -422,9 +422,19 @@ public class ViewStack extends ViewContainer
    }
 
    /**
+    * Get current context.
+    *
+    * @return current context
+    */
+   public Object getContext()
+   {
+      return context;
+   }
+
+   /**
     * Set context for containing view
     *
-    * @param context
+    * @param context new context
     */
    public void setContext(Object context)
    {
@@ -435,6 +445,16 @@ public class ViewStack extends ViewContainer
       View view = getActiveView();
       if (contextAware && (view != null) && (view instanceof ViewWithContext))
          ((ViewWithContext)view).setContext(context);
+   }
+
+   /**
+    * Update context.
+    *
+    * @param context updated context
+    */
+   public void updateContext(Object context)
+   {
+      this.context = context;
    }
 
    /**

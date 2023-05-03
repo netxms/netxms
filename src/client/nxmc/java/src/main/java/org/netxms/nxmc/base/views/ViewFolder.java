@@ -696,6 +696,16 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
+    * Get current context.
+    *
+    * @return current context
+    */
+   public Object getContext()
+   {
+      return context;
+   }
+
+   /**
     * Set current context. Will update context in all context-sensitive views and hide/show views as necessary.
     *
     * @param context new context
@@ -709,6 +719,43 @@ public class ViewFolder extends ViewContainer
          activeView.deactivate();
 
       this.context = context;
+      updateViewSet();
+
+      if (activeView != null)
+      {
+         if (activeView instanceof ViewWithContext)
+            ((ViewWithContext)activeView).setContext(context);
+         activeView.activate();
+      }
+   }
+
+   /**
+    * Update current context. Will not trigger context change for avctive view if it is still valid after context change.
+    *
+    * @param context updated context
+    */
+   public void updateContext(Object context)
+   {
+      if (context == this.context)
+         return;
+
+      View currentActiveView = activeView;
+      this.context = context;
+      updateViewSet();
+
+      if ((activeView != null) && (activeView != currentActiveView))
+      {
+         if (activeView instanceof ViewWithContext)
+            ((ViewWithContext)activeView).setContext(context);
+         activeView.activate();
+      }
+   }
+
+   /**
+    * Update view set after context change.
+    */
+   private void updateViewSet()
+   {
       contextChange = true;
 
       boolean invalidActiveView = false;
@@ -762,13 +809,6 @@ public class ViewFolder extends ViewContainer
       }
 
       contextChange = false;
-
-      if (activeView != null)
-      {
-         if (activeView instanceof ViewWithContext)
-            ((ViewWithContext)activeView).setContext(context);
-         activeView.activate();
-      }
    }
 
    /**
