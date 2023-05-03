@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ public class MibBrowser extends Composite
 		mibTree.setComparator(new MibObjectComparator());
 		mibTree.setInput(MibCache.getMibTree());
 	}
-	
+
 	/**
 	 * Get currently selected MIB object.
 	 * 
@@ -99,7 +99,7 @@ public class MibBrowser extends Composite
 	{
 		mibTree.setInput(MibCache.getMibTree());
 	}
-	
+
 	/**
 	 * Get underlying tree control
 	 * 
