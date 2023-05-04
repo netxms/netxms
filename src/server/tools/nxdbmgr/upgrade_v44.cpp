@@ -57,6 +57,14 @@ static bool H_UpgradeFromV10()
                                 _T("   currentNodeName - currently linked node name")
                                 ));
 
+   CHK_EXEC(CreateEventTemplate(EVENT_CONFIGURATION_ERROR, _T("SYS_CONFIGURATION_ERROR"),
+                                EVENT_SEVERITY_MINOR, EF_LOG, _T("762c581c-e9bf-11ed-a05b-0242ac120003"),
+                                _T("Configuration error in event processing policy rule #%1"),
+                                _T("Generated when event processing policy has and error in rule.\r\n")
+                                _T("Parameters:\r\n")
+                                _T("   ruleId - rule id in event procesing policy\r\n")
+                                ));
+                                
    int ruleId = NextFreeEPPruleID();
    TCHAR query[1024];
    _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,filter_script,alarm_timeout,alarm_timeout_event) ")

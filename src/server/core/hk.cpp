@@ -487,6 +487,12 @@ static void HouseKeeper()
                static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
 		   });
 
+      uint32_t invalidRuleId;
+      if (!g_pEventPolicy->isConfigValid(invalidRuleId))
+      {
+         PostSystemEvent(EVENT_CONFIGURATION_ERROR, g_dwMgmtNode, "d", invalidRuleId);
+      }
+
       PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
