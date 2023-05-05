@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectmanager.dialogs;
+package org.netxms.nxmc.modules.objects.dialogs;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -29,16 +29,20 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.base.InetAddressEx;
-import org.netxms.ui.eclipse.tools.IPAddressValidator;
-import org.netxms.ui.eclipse.tools.IPNetMaskValidator;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.tools.IPAddressValidator;
+import org.netxms.nxmc.tools.IPNetMaskValidator;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * New subnet creation dialog
  */
 public class CreateSubnetDialog extends Dialog
 {
+   private final I18n i18n = LocalizationHelper.getI18n(CreateSubnetDialog.class);
+
    private String objectName = "";
    private String objectAlias = "";
    private InetAddressEx ipAddress;
@@ -65,7 +69,7 @@ public class CreateSubnetDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Create Subnet");
+      newShell.setText(i18n.tr("Create Subnet"));
    }
 
    /**
@@ -86,7 +90,7 @@ public class CreateSubnetDialog extends Dialog
       dialogArea.setLayout(layout);
 
       objectNameText = new LabeledText(dialogArea, SWT.NONE);
-      objectNameText.setLabel("Name (leave empty to construct from address and mask)");
+      objectNameText.setLabel(i18n.tr("Name (leave empty to construct from address and mask)"));
       objectNameText.getTextControl().setTextLimit(255);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -97,7 +101,7 @@ public class CreateSubnetDialog extends Dialog
       objectNameText.setText(objectName);
       
       objectAliasText = new LabeledText(dialogArea, SWT.NONE);
-      objectAliasText.setLabel("Alias");
+      objectAliasText.setLabel(i18n.tr("Alias"));
       objectAliasText.getTextControl().setTextLimit(255);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -107,7 +111,7 @@ public class CreateSubnetDialog extends Dialog
       objectAliasText.setText(objectAlias);
 
       ipAddressText = new LabeledText(dialogArea, SWT.NONE);
-      ipAddressText.setLabel("IP address");
+      ipAddressText.setLabel(i18n.tr("IP address"));
       ipAddressText.getTextControl().setTextLimit(64);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -116,7 +120,7 @@ public class CreateSubnetDialog extends Dialog
       ipAddressText.setText("");
 
       maskText = new LabeledText(dialogArea, SWT.NONE);
-      maskText.setLabel("Network mask");
+      maskText.setLabel(i18n.tr("Network mask"));
       maskText.getTextControl().setTextLimit(16);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

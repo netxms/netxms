@@ -43,6 +43,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.TemplateGroup;
 import org.netxms.client.objects.TemplateRoot;
+import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
@@ -57,6 +58,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateSubnetDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateZoneDialog;
 import org.xnap.commons.i18n.I18n;
 
@@ -88,6 +90,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateNetworkMapGroup;
    private Action actionCreateNode;
    private Action actionCreateRack;
+   private Action actionCreateSubnet;
    private Action actionCreateTemplate;
    private Action actionCreateTemplateGroup;
    private Action actionCreateVpnConnector;
@@ -126,6 +129,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateNetworkMapGroup, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
       addAction(this, actionCreateNode, (AbstractObject o) -> (o instanceof Cluster) || (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateRack, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
+      addAction(this, actionCreateSubnet, (AbstractObject o) -> (o instanceof Zone) || ((o instanceof EntireNetwork) && !Registry.getSession().isZoningEnabled()));
       addAction(this, actionCreateTemplate, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateTemplateGroup, (AbstractObject o) -> (o instanceof TemplateGroup) || (o instanceof TemplateRoot));
       addAction(this, actionCreateVpnConnector, (AbstractObject o) -> o instanceof Node);
@@ -427,6 +431,43 @@ public class ObjectCreateMenuManager extends MenuManager
       };
 
       actionCreateRack = new GenericObjectCreationAction(i18n.tr("&Rack..."), AbstractObject.OBJECT_RACK, i18n.tr("Rack"));
+
+      actionCreateSubnet = new Action(i18n.tr("&Subnet...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateSubnetDialog dlg = new CreateSubnetDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating subnet"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_SUBNET, dlg.getObjectName(), parentId);
+                  cd.setObjectAlias(dlg.getObjectAlias());
+                  cd.setIpAddress(dlg.getIpAddress());
+                  if (parent instanceof Zone)
+                     cd.setZoneUIN(((Zone)parent).getUIN());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  String name = dlg.getObjectName();
+                  if (name.isEmpty())
+                     name = dlg.getIpAddress().toString();
+                  return String.format(i18n.tr("Cannot create subnet object %s"), name);
+               }
+            }.start();
+         }
+      };
+
       actionCreateTemplate = new GenericObjectCreationAction(i18n.tr("&Template..."), AbstractObject.OBJECT_TEMPLATE, i18n.tr("Template"));
       actionCreateTemplateGroup = new GenericObjectCreationAction(i18n.tr("Template &group..."), AbstractObject.OBJECT_TEMPLATEGROUP, i18n.tr("Template Group"));
       actionCreateVpnConnector = new GenericObjectCreationAction(i18n.tr("&VPN connector..."), AbstractObject.OBJECT_VPNCONNECTOR, i18n.tr("VPN Connector"));

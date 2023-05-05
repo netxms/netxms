@@ -188,7 +188,7 @@ public class VPNSubnets extends PropertyPage
          }
       });
    }
-   
+
    /**
     * Add element to subnet list
     */
@@ -206,7 +206,7 @@ public class VPNSubnets extends PropertyPage
          }
       }
    }
-   
+
    /**
     * Remove element(s) from subnet list
     */
