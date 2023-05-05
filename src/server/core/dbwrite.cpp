@@ -383,9 +383,7 @@ static void IDataWriteThread(IDataWriter *writer)
 				// For other databases it will actually slow down inserts
 				if (g_dbSyntax == DB_SYNTAX_ORACLE)
 				{
-				   query.append(_T("INSERT INTO idata_"));
-				   query.append(rq->nodeId);
-				   query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"));
+				   query.append(_T("INSERT INTO idata_")).append(rq->nodeId).append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES (?,?,?,?)"));
                DB_STATEMENT hStmt = DBPrepare(hdb, query);
                if (hStmt != nullptr)
                {
@@ -403,17 +401,18 @@ static void IDataWriteThread(IDataWriter *writer)
 				}
 				else
 				{
-               query.append(_T("INSERT INTO idata_"));
-               query.append(rq->nodeId);
-               query.append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES ("));
-               query.append(rq->dciId);
-               query.append(_T(','));
-               query.append(static_cast<int64_t>(rq->timestamp));
-               query.append(_T(','));
-               query.append(DBPrepareString(hdb, rq->transformedValue));
-               query.append(_T(','));
-               query.append(DBPrepareString(hdb, rq->rawValue));
-               query.append(_T(')'));
+               query
+                  .append(_T("INSERT INTO idata_"))
+                  .append(rq->nodeId)
+                  .append(_T(" (item_id,idata_timestamp,idata_value,raw_value) VALUES ("))
+                  .append(rq->dciId)
+                  .append(_T(','))
+                  .append(static_cast<int64_t>(rq->timestamp))
+                  .append(_T(','))
+                  .append(DBPrepareString(hdb, rq->transformedValue))
+                  .append(_T(','))
+                  .append(DBPrepareString(hdb, rq->rawValue))
+                  .append(_T(')'));
                success = DBQuery(hdb, query);
 				}
 

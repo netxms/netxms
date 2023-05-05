@@ -146,10 +146,11 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
             for(int i  = 0; i < entry->objects.size(); i++)
             {
                NetObj *o = entry->objects.get(i);
-               objects.append(GetParentName(*o));
-               objects.append(_T("/"));
-               objects.append(o->getName());
-               objects.append(_T(", "));
+               objects
+                  .append(GetParentName(*o))
+                  .append(_T("/"))
+                  .append(o->getName())
+                  .append(_T(", "));
             }
             objects.shrink(2);
 

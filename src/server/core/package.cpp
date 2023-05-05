@@ -64,11 +64,7 @@ bool IsValidPackageId(uint32_t packageId)
  */
 bool IsPackageFileExist(const TCHAR *fileName)
 {
-   StringBuffer fullPath(g_netxmsdDataDir);
-   fullPath.append(DDIR_PACKAGES);
-   fullPath.append(FS_PATH_SEPARATOR);
-   fullPath.append(fileName);
-   return (_taccess(fullPath, F_OK) == 0);
+   return (_taccess(StringBuffer(g_netxmsdDataDir).append(DDIR_PACKAGES).append(FS_PATH_SEPARATOR).append(fileName), F_OK) == 0);
 }
 
 /**

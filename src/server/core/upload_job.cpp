@@ -221,13 +221,11 @@ const TCHAR *FileUploadJob::getAdditionalInfo()
  */
 const String FileUploadJob::serializeParameters()
 {
-   StringBuffer params;
-   params.append(m_localFile);
-   params.append(_T(','));
-   params.append(CHECK_NULL_EX(m_remoteFile));
-   params.append(_T(','));
-   params.append(m_retryCount);
-   return params;
+   return StringBuffer(m_localFile)
+      .append(_T(','))
+      .append(CHECK_NULL_EX(m_remoteFile))
+      .append(_T(','))
+      .append(m_retryCount);
 }
 
 /**

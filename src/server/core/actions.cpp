@@ -783,10 +783,8 @@ void SendActionsToClient(ClientSession *session, uint32_t requestId)
 void CreateActionExportRecord(StringBuffer &xml, uint32_t id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,")
-                                       _T("rcpt_addr,email_subject,action_data,")
-                                       _T("channel_name FROM actions WHERE action_id=?"));
-   if (hStmt == NULL)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT guid,action_name,action_type,rcpt_addr,email_subject,action_data,channel_name FROM actions WHERE action_id=?"));
+   if (hStmt == nullptr)
    {
       DBConnectionPoolReleaseConnection(hdb);
       return;
@@ -794,28 +792,28 @@ void CreateActionExportRecord(StringBuffer &xml, uint32_t id)
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
-   if (hResult != NULL)
+   if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         xml.append(_T("\t\t<action id=\""));
-         xml.append(id);
-         xml.append(_T("\">\n\t\t\t<guid>"));
-         xml.append(DBGetFieldGUID(hResult, 0, 0));
-         xml.append(_T("</guid>\n\t\t\t<name>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 1));
-         xml.append(_T("</name>\n\t\t\t<type>"));
-         xml.append(DBGetFieldULong(hResult, 0, 2));
-         xml.append(_T("</type>\n\t\t\t<recipientAddress>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 3));
-         xml.append(_T("</recipientAddress>\n\t\t\t<emailSubject>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 4));
-         xml.append(_T("</emailSubject>\n\t\t\t<data>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 5));
-         xml.append(_T("</data>\n\t\t\t<channelName>"));
-         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 6));
-         xml.append(_T("</channelName>\n"));
-         xml.append(_T("\t\t</action>\n"));
+         xml.append(_T("\t\t<action id=\""))
+            .append(id)
+            .append(_T("\">\n\t\t\t<guid>"))
+            .append(DBGetFieldGUID(hResult, 0, 0))
+            .append(_T("</guid>\n\t\t\t<name>"))
+            .appendPreallocated(DBGetFieldForXML(hResult, 0, 1))
+            .append(_T("</name>\n\t\t\t<type>"))
+            .append(DBGetFieldULong(hResult, 0, 2))
+            .append(_T("</type>\n\t\t\t<recipientAddress>"))
+            .appendPreallocated(DBGetFieldForXML(hResult, 0, 3))
+            .append(_T("</recipientAddress>\n\t\t\t<emailSubject>"))
+            .appendPreallocated(DBGetFieldForXML(hResult, 0, 4))
+            .append(_T("</emailSubject>\n\t\t\t<data>"))
+            .appendPreallocated(DBGetFieldForXML(hResult, 0, 5))
+            .append(_T("</data>\n\t\t\t<channelName>"))
+            .appendPreallocated(DBGetFieldForXML(hResult, 0, 6))
+            .append(_T("</channelName>\n"))
+            .append(_T("\t\t</action>\n"));
       }
       DBFreeResult(hResult);
    }

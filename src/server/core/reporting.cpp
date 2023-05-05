@@ -259,9 +259,7 @@ static void ViewBuilderCallback(NetObj *object, ViewBuilderContext *context)
 {
    if (object->isDataCollectionTarget() && object->checkAccessRights(context->userId, OBJECT_ACCESS_READ) && (static_cast<DataCollectionTarget*>(object)->getItemCount() > 0))
    {
-      context->query->append(_T("SELECT * FROM idata_"));
-      context->query->append(object->getId());
-      context->query->append(_T(" UNION ALL "));
+      context->query->append(_T("SELECT * FROM idata_")).append(object->getId()).append(_T(" UNION ALL "));
       context->tableCount++;
    }
 }
@@ -273,8 +271,7 @@ static bool PrepareReportingDataView(uint32_t userId, TCHAR *viewName)
 {
    _sntprintf(viewName, MAX_OBJECT_NAME, _T("idata_view_") INT64_FMT, GetCurrentTimeMs());
    StringBuffer query(_T("CREATE VIEW "));
-   query.append(viewName);
-   query.append(_T(" AS "));
+   query.append(viewName).append(_T(" AS "));
 
    if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
    {

@@ -1304,27 +1304,35 @@ public:
    StringBuffer& operator +=(const String &str) { append(str.cstr()); return *this; }
    StringBuffer& operator +=(const SharedString &str) { append(str.cstr()); return *this; }
 
-   void append(const String& str) { insert(m_length, str.cstr(), str.length()); }
-   void append(const TCHAR *str) { if (str != nullptr) append(str, _tcslen(str)); }
-   void append(const TCHAR *str, size_t len) { insert(m_length, str, len); }
-   void append(const TCHAR c) { append(&c, 1); }
-   void append(int32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
-   void append(uint32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
-   void append(int64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
-   void append(uint64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); }
-   void append(double d, const TCHAR *format = nullptr) { insert(m_length, d, format); }
-   void append(const uuid& guid) { insert(m_length, guid); }
+   StringBuffer& append(const String& str) { insert(m_length, str.cstr(), str.length()); return *this; }
+   StringBuffer& append(const TCHAR *str) { if (str != nullptr) append(str, _tcslen(str)); return *this; }
+   StringBuffer& append(const TCHAR *str, size_t len) { insert(m_length, str, len); return *this; }
+   StringBuffer& append(const TCHAR c) { return append(&c, 1); }
+   StringBuffer& append(int32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
+   StringBuffer& append(uint32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
+   StringBuffer& append(int64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
+   StringBuffer& append(uint64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
+   StringBuffer& append(double d, const TCHAR *format = nullptr) { insert(m_length, d, format); return *this; }
+   StringBuffer& append(const uuid& guid) { insert(m_length, guid); return *this; }
 
-   void appendPreallocated(TCHAR *str) { if (str != nullptr) { append(str); MemFree(str); } }
+   StringBuffer& appendPreallocated(TCHAR *str)
+   {
+      if (str != nullptr)
+      {
+         append(str);
+         MemFree(str);
+      }
+      return *this;
+   }
 
-   void appendMBString(const char *str, ssize_t len = -1) { insertMBString(m_length, str, len); }
-   void appendUtf8String(const char *str, ssize_t len = -1) { insertUtf8String(m_length, str, len); }
-   void appendWideString(const WCHAR *str, ssize_t len = -1) { insertWideString(m_length, str, len); }
+   StringBuffer& appendMBString(const char *str, ssize_t len = -1) { insertMBString(m_length, str, len); return *this; }
+   StringBuffer& appendUtf8String(const char *str, ssize_t len = -1) { insertUtf8String(m_length, str, len); return *this; }
+   StringBuffer& appendWideString(const WCHAR *str, ssize_t len = -1) { insertWideString(m_length, str, len); return *this; }
 
-   void appendFormattedString(const TCHAR *format, ...);
-   void appendFormattedStringV(const TCHAR *format, va_list args) { insertFormattedStringV(m_length, format, args); }
+   StringBuffer& appendFormattedString(const TCHAR *format, ...);
+   StringBuffer& appendFormattedStringV(const TCHAR *format, va_list args) { insertFormattedStringV(m_length, format, args); return *this; }
 
-   void appendAsHexString(const void *data, size_t len) { insertAsHexString(m_length, data, len); }
+   StringBuffer& appendAsHexString(const void *data, size_t len) { insertAsHexString(m_length, data, len); return *this; }
 
    void insert(size_t index, const String& str)  { insert(index, str.cstr(), str.length()); }
    void insert(size_t index, const TCHAR *str)  { if (str != nullptr) insert(index, str, _tcslen(str)); }
@@ -1350,14 +1358,14 @@ public:
 
    void clear(bool releaseBuffer = true);
 
-   void escapeCharacter(int ch, int esc);
-   void replace(const TCHAR *src, const TCHAR *dst);
-   void trim();
-   void shrink(size_t chars = 1);
-   void removeRange(size_t start, ssize_t len = -1);
+   StringBuffer& escapeCharacter(int ch, int esc);
+   StringBuffer& replace(const TCHAR *src, const TCHAR *dst);
+   StringBuffer& trim();
+   StringBuffer& shrink(size_t chars = 1);
+   StringBuffer& removeRange(size_t start, ssize_t len = -1);
 
-   void toUppercase();
-   void toLowercase();
+   StringBuffer& toUppercase();
+   StringBuffer& toLowercase();
 };
 
 /**
