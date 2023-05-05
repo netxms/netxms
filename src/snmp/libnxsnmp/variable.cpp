@@ -31,7 +31,6 @@ SNMP_Variable::SNMP_Variable()
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
-   m_codepage = nullptr;
 }
 
 /**
@@ -43,7 +42,6 @@ SNMP_Variable::SNMP_Variable(const TCHAR *name)
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
-   m_codepage = nullptr;
 }
 
 /**
@@ -54,7 +52,6 @@ SNMP_Variable::SNMP_Variable(const uint32_t *name, size_t nameLen) : m_name(name
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
-   m_codepage = nullptr;
 }
 
 /**
@@ -65,13 +62,12 @@ SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
    m_value = nullptr;
    m_type = ASN_NULL;
    m_valueLength = 0;
-   m_codepage = nullptr;
 }
 
 /**
  * Copy constructor
  */
-SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
+SNMP_Variable::SNMP_Variable(const SNMP_Variable *src) : m_name(src->m_name), m_codepage(src->m_codepage)
 {
    m_valueLength = src->m_valueLength;
    if ((m_valueLength <= SNMP_VARBIND_INTERNAL_BUFFER_SIZE) && (src->m_value != nullptr))
@@ -84,8 +80,6 @@ SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
       m_value = (src->m_value != nullptr) ? MemCopyBlock(src->m_value, src->m_valueLength) : nullptr;
    }
    m_type = src->m_type;
-   m_name = src->m_name;
-   m_codepage = nullptr;
 }
 
 /**
@@ -423,7 +417,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize, const c
          if (length > 0)
          {
 #ifdef UNICODE
-            size_t cch = mbcp_to_wchar(reinterpret_cast<const char *>(m_value), length, buffer, bufferSize, (codepage != nullptr) ? codepage : m_codepage);
+            size_t cch = mbcp_to_wchar(reinterpret_cast<const char *>(m_value), length, buffer, bufferSize, m_codepage.effectiveValue(codepage));
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -496,7 +490,7 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
          if (!conversionNeeded)
          {
 #ifdef UNICODE
-            size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, (codepage != nullptr) ? codepage : m_codepage);
+            size_t cch = mbcp_to_wchar((char *)m_value, length, buffer, bufferSize, m_codepage.effectiveValue(codepage));
             if (cch > 0)
             {
                length = cch;  // length can be different for multibyte character set
@@ -684,7 +678,7 @@ void SNMP_Variable::setValueFromString(uint32_t type, const TCHAR *value, const 
          length = wcslen(value) * 3;
          reallocValueBuffer(length);
          // wchar_to_mbcp returns number of characters in converted string including terminating \0 which should be excluded from value being sent
-         m_valueLength = wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, (codepage != nullptr) ? codepage : m_codepage) - 1;
+         m_valueLength = wchar_to_mbcp(value, -1, reinterpret_cast<char*>(m_value), length, m_codepage.effectiveValue(codepage)) - 1;
 #else
          length = strlen(value);
          reallocValueBuffer(length);

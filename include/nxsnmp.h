@@ -342,6 +342,43 @@ enum SNMP_EncryptionMethod
 class ZFile;
 
 /**
+ * SNMP codepage
+ */
+struct LIBNXSNMP_EXPORTABLE SNMP_Codepage
+{
+   char codepage[16];
+
+   SNMP_Codepage()
+   {
+      codepage[0] = 0;
+   }
+
+   SNMP_Codepage(const char *cp)
+   {
+      if (cp != nullptr)
+         strlcpy(codepage, cp, 16);
+      else
+         codepage[0] = 0;
+   }
+
+   /**
+    * Check if this codepage object represents null value
+    */
+   bool isNull()
+   {
+      return codepage[0] == 0;
+   }
+
+   /**
+    * Get effective codepage value: use override if it is not null and not empty, otherwise own value if it is not empty, otherwise null
+    */
+   const char *effectiveValue(const char *overrideValue) const
+   {
+      return ((overrideValue != nullptr) && (*overrideValue != 0)) ? overrideValue : ((codepage[0] != 0) ? codepage : nullptr);
+   }
+};
+
+/**
  * MIB tree node
  */
 class LIBNXSNMP_EXPORTABLE SNMP_MIBObject
@@ -453,7 +490,7 @@ private:
    size_t m_valueLength;
    BYTE *m_value;
    BYTE m_valueBuffer[SNMP_VARBIND_INTERNAL_BUFFER_SIZE];
-   const char* m_codepage;
+   SNMP_Codepage m_codepage;
 
    bool decodeContent(const BYTE *data, size_t dataLength, bool enclosedInOpaque);
    void reallocValueBuffer(size_t length)
@@ -519,7 +556,7 @@ public:
    void setValueFromByteArray(uint32_t type, const BYTE* buffer, size_t size);
    void setValueFromByteStream(uint32_t type, const ByteStream& bs) { setValueFromByteArray(type, bs.buffer(), bs.size()); }
 
-   void setCodepage(const char* codepage) { m_codepage = codepage; }
+   void setCodepage(const SNMP_Codepage& codepage) { m_codepage = codepage; }
 };
 
 /**
@@ -672,7 +709,7 @@ private:
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 	BYTE m_salt[8];
 	bool m_reportable;
-   char m_codepage[16];
+	SNMP_Codepage m_codepage;
 
 	// The following attributes only used by parser and
 	// valid only for received PDUs
@@ -743,12 +780,12 @@ public:
 	size_t getContextEngineIdLength() const { return m_contextEngineIdLen; }
 	const BYTE *getContextEngineId() const { return m_contextEngineId; }
 
-   void setCodepage(const char *codepage);
+   void setCodepage(const SNMP_Codepage& codepage);
 
    void bindVariable(SNMP_Variable *var)
    {
       m_variables.add(var);
-      var->setCodepage((m_codepage[0] != 0) ? m_codepage : nullptr);
+      var->setCodepage(m_codepage);
    }
    void unlinkVariables();
 };
@@ -766,7 +803,7 @@ protected:
 	bool m_updatePeerOnRecv;
 	bool m_reliable;
 	SNMP_Version m_snmpVersion;
-   char m_codepage[16];
+	SNMP_Codepage m_codepage;
 
 	uint32_t doEngineIdDiscovery(SNMP_PDU *originalRequest, uint32_t timeout, int numRetries);
 
@@ -799,7 +836,7 @@ public:
 	void setSnmpVersion(SNMP_Version version) { m_snmpVersion = version; }
 	SNMP_Version getSnmpVersion() const { return m_snmpVersion; }
 
-   void setCodepage(const char* codepage) { strlcpy(m_codepage, codepage, 16); }
+   void setCodepage(const char* codepage) { strlcpy(m_codepage.codepage, codepage, 16); }
 };
 
 /**
