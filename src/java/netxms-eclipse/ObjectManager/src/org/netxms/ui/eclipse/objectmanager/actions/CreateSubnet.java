@@ -53,7 +53,7 @@ public class CreateSubnet extends AbstractHandler
       ISelection selection = window.getActivePage().getSelection();
       if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
          return null;
-      
+
       long parentId = -1;
       int zoneUin = 0;
       Object obj = ((IStructuredSelection)selection).getFirstElement();

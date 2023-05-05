@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -202,11 +202,11 @@ public class CreateInterfaceDialog extends Dialog
 		if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator(), null) ||
 		    !WidgetHelper.validateTextInput(macAddrField, new MacAddressValidator(true), null) ||
 		    !WidgetHelper.validateTextInput(ipAddrField, new IPAddressValidator(true), null) ||
-		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true), null) ||
+		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true, ipAddrField.getText().trim()), null) ||
 		    (physicalPort && !WidgetHelper.validateTextInput(slotField, new NumericTextFieldValidator(0, 4096), null)) ||
 		    (physicalPort && !WidgetHelper.validateTextInput(portField, new NumericTextFieldValidator(0, 4096), null)))
 			return;
-		
+
 		try
 		{
 			name = nameField.getText().trim();
@@ -216,7 +216,7 @@ public class CreateInterfaceDialog extends Dialog
 			ipAddress = new InetAddressEx(addr, getMaskBits(ipMaskField.getText().trim(), addr instanceof Inet4Address ? 32 : 128));
 			slot = physicalPort ? Integer.parseInt(slotField.getText()) : 0;
 			port = physicalPort ? Integer.parseInt(portField.getText()) : 0;
-			
+
 			super.okPressed();
 		}
 		catch(Exception e)
@@ -224,7 +224,7 @@ public class CreateInterfaceDialog extends Dialog
          MessageDialogHelper.openError(getShell(), i18n.tr("Error"), String.format(i18n.tr("Internal error: %s"), e.getLocalizedMessage()));
 		}
 	}
-	
+
 	/**
 	 * @param mask
 	 * @param maxBits
@@ -234,7 +234,7 @@ public class CreateInterfaceDialog extends Dialog
 	{
 	   if (mask.isEmpty())
 	      return DEFAULT_MASK_BITS;
-	   
+
 	   try
 	   {
 	      int bits = Integer.parseInt(mask);
