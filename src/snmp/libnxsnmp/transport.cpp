@@ -78,7 +78,6 @@ SNMP_Transport::SNMP_Transport()
 	m_updatePeerOnRecv = false;
 	m_reliable = false;
 	m_snmpVersion = SNMP_VERSION_2C;
-   m_codepage[0] = 0;
 }
 
 /**
@@ -191,10 +190,8 @@ retry_wait:
       {
          if (*response != nullptr)
          {
-            if (m_codepage[0] != 0)
-            {
+            if (!m_codepage.isNull())
                (*response)->setCodepage(m_codepage);
-            }
             if (request->getVersion() == SNMP_VERSION_3)
             {
                if ((*response)->getMessageId() == request->getMessageId())
