@@ -129,7 +129,7 @@ public class BarGauge extends GenericGauge
                break;
          }
       }
-      
+
       if (config.isTransposed())
       {
          if (rect.height > MAX_BAR_THICKNESS)
@@ -150,9 +150,9 @@ public class BarGauge extends GenericGauge
          }
          rect.x -= SCALE_TEXT_WIDTH / 2;
       }
-      
-      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale")); //$NON-NLS-1$
+
+      gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
+      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
       gc.fillRectangle(rect);
       gc.drawRectangle(rect);
 
@@ -160,7 +160,7 @@ public class BarGauge extends GenericGauge
       rect.y += 2;
       rect.width -= 3;
       rect.height -= 3;
-      
+
       double maxValue = config.getMaxYScaleValue();
       double minValue = config.getMinYScaleValue();
       final double pointValue = config.isTransposed() ? (maxValue - minValue) / rect.width : (maxValue - minValue) / rect.height;
@@ -169,30 +169,37 @@ public class BarGauge extends GenericGauge
          if (config.getGaugeColorMode() == GaugeColorMode.ZONE.getValue())
          {
             double left, right = minValue;
-            
+
             if (config.getLeftRedZone() > minValue)
             {
                right = config.getLeftRedZone() + (config.getLeftYellowZone() - config.getLeftRedZone()) / 2;
                drawZone(gc, rect, minValue, right, minValue, pointValue, RED_ZONE_COLOR, YELLOW_ZONE_COLOR, config.isTransposed());
             }
-            
+
             left = right;
-            right = config.getLeftYellowZone() + (config.getRightYellowZone() - config.getLeftYellowZone()) / 2;
-            drawZone(gc, rect, left, right, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, GREEN_ZONE_COLOR, config.isTransposed());
-            
-            left = right;
-            right = config.getRightYellowZone() + (config.getRightRedZone() - config.getRightYellowZone()) / 2;
-            if (config.getRightYellowZone() < config.getRightRedZone())
+            if (config.getRightYellowZone() < maxValue)
             {
-               drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, YELLOW_ZONE_COLOR, config.isTransposed());
+               right = config.getLeftYellowZone() + (config.getRightYellowZone() - config.getLeftYellowZone()) / 2;
+               drawZone(gc, rect, left, right, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, GREEN_ZONE_COLOR, config.isTransposed());
+
                left = right;
-               drawZone(gc, rect, left, maxValue, minValue, pointValue, YELLOW_ZONE_COLOR, (config.getRightRedZone() < maxValue) ? RED_ZONE_COLOR : YELLOW_ZONE_COLOR, config.isTransposed());
+               right = config.getRightYellowZone() + (config.getRightRedZone() - config.getRightYellowZone()) / 2;
+               if (config.getRightYellowZone() < config.getRightRedZone())
+               {
+                  drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, YELLOW_ZONE_COLOR, config.isTransposed());
+                  left = right;
+                  drawZone(gc, rect, left, maxValue, minValue, pointValue, YELLOW_ZONE_COLOR, (config.getRightRedZone() < maxValue) ? RED_ZONE_COLOR : YELLOW_ZONE_COLOR, config.isTransposed());
+               }
+               else if (config.getRightRedZone() < maxValue)
+               {
+                  drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, RED_ZONE_COLOR, config.isTransposed());
+               }
             }
-            else if (config.getRightRedZone() < maxValue)
+            else
             {
-               drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, RED_ZONE_COLOR, config.isTransposed());
+               drawZone(gc, rect, left, maxValue, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, GREEN_ZONE_COLOR, config.isTransposed());
             }
-            
+
             double v = data.getCurrentValue();
             if (v < maxValue)
             {
