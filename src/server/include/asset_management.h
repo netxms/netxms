@@ -116,6 +116,7 @@ public:
    int32_t getMinRange() const { return m_rangeMin; }
    int32_t getMaxRange() const { return m_rangeMax; }
    NXSL_Program *getScript() const { return m_autofillScript; }
+   StringList *getEnumValues() const { return (m_dataType == AMDataType::Enum) ? m_enumValues.keys() : nullptr; }
 
    const TCHAR *getActualDisplayName() const
    {
@@ -134,19 +135,22 @@ struct AssetPropertyAutofillContext
 {
    TCHAR name[MAX_OBJECT_NAME];
    AMDataType dataType;
+   StringList *enumValues;
    NXSL_VM *vm;
    SharedString newValue;
 
-   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, NXSL_VM *vm, SharedString newValue)
+   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, StringList *enumValues, NXSL_VM *vm, SharedString newValue)
    {
       _tcslcpy(this->name, name, MAX_OBJECT_NAME);
       this->dataType = dataType;
+      this->enumValues = enumValues;
       this->vm = vm;
       this->newValue = newValue;
    }
 
    ~AssetPropertyAutofillContext()
    {
+      delete enumValues;
       delete vm;
    }
 };
