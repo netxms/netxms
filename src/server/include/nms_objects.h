@@ -4570,6 +4570,7 @@ public:
    bool saveToDatabase(DB_HANDLE hdb) const;
 
    void updateFromPrototype(const BusinessServiceCheck& prototype);
+   void setThreshold(int statusThreshold) { m_statusThreshold = statusThreshold; }
 };
 
 /**
@@ -4704,6 +4705,7 @@ protected:
    Mutex m_stateChangeMutex;
 
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
+   virtual uint32_t modifyFromMessageInternal(const NXCPMessage& msg) override;
 
    virtual void configurationPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
    virtual void statusPoll(PollerInfo *poller, ClientSession *session, uint32_t rqId) override;
@@ -4722,6 +4724,8 @@ protected:
 
    void addTicketToParents(shared_ptr<BusinessServiceTicketData> data);
    void addChildTicket(DB_STATEMENT hStmt, const shared_ptr<BusinessServiceTicketData>& data);
+
+   void updateThresholds(int statusThreshold, BusinessServiceCheckType type);
 
 public:
    BusinessService();

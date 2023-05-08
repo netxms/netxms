@@ -159,6 +159,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 
       StringBuilder name = new StringBuilder();
       AbstractObject object = session.findObjectById(check.getPrototypeServiceId());
+      System.out.println(check.getPrototypeServiceId()+" "+check.getServiceId());
       if (object != null)
       {
          name.append(object.getObjectName());

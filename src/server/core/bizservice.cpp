@@ -87,10 +87,16 @@ void BusinessService::updateFromPrototype(const BusinessServicePrototype& protot
 {
    nxlog_debug_tag(DEBUG_TAG_BIZSVC, 5, _T("Updating business service \"%s\" [%u] from prototype \"%s\" [%u]"), m_name, m_id, prototype.getName(), prototype.getId());
 
+   if (m_objectStatusThreshhold != prototype.getObjectStatusThreshhold())
+      updateThresholds(prototype.getObjectStatusThreshhold(), BusinessServiceCheckType::OBJECT);
+   if (m_dciStatusThreshhold != prototype.getDciStatusThreshhold())
+      updateThresholds(prototype.getDciStatusThreshhold(), BusinessServiceCheckType::OBJECT);
+
    lockProperties();
    m_objectStatusThreshhold = prototype.getObjectStatusThreshhold();
    m_dciStatusThreshhold = prototype.getDciStatusThreshhold();
    unlockProperties();
+
 
    m_autoBindFlags = prototype.getAutoBindFlags();
    for(int i = 0; i < MAX_AUTOBIND_TARGET_FILTERS; i++)
@@ -137,6 +143,40 @@ void BusinessService::updateFromPrototype(const BusinessServicePrototype& protot
    checksUnlock();
 
    setModified(MODIFY_BIZSVC_CHECKS);
+}
+
+/**
+ * Modify business service from request
+ */
+uint32_t BusinessService::modifyFromMessageInternal(const NXCPMessage& msg)
+{
+   AutoBindTarget::modifyFromMessage(msg);
+   if (msg.isFieldExist(VID_OBJECT_STATUS_THRESHOLD) && m_objectStatusThreshhold != msg.getFieldAsUInt32(VID_OBJECT_STATUS_THRESHOLD))
+   {
+      updateThresholds(msg.getFieldAsUInt32(VID_OBJECT_STATUS_THRESHOLD), BusinessServiceCheckType::OBJECT);
+   }
+   if (msg.isFieldExist(VID_DCI_STATUS_THRESHOLD) && m_dciStatusThreshhold != msg.getFieldAsUInt32(VID_DCI_STATUS_THRESHOLD))
+   {
+      updateThresholds(msg.getFieldAsUInt32(VID_DCI_STATUS_THRESHOLD), BusinessServiceCheckType::OBJECT);
+   }
+   return super::modifyFromMessageInternal(msg);
+}
+
+
+/**
+ * Update checks form service on threshold change
+ */
+void BusinessService::updateThresholds(int statusThreshold, BusinessServiceCheckType type)
+{
+   checksLock();
+   SharedPtrIterator<BusinessServiceCheck> it = m_checks.begin();
+   while(it.hasNext())
+   {
+      const shared_ptr<BusinessServiceCheck>& c = it.next();
+      if (c->getPrototypeServiceId() == m_id && c->getType() == type)
+         c->setThreshold(statusThreshold);
+   }
+   checksUnlock();
 }
 
 /**

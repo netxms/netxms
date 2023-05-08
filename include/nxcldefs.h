@@ -732,6 +732,7 @@ enum SessionState
 #define RCC_OPERATION_CANCELLED           ((uint32_t)164)
 #define RCC_ZONE_CHANGE_FORBIDDEN         ((uint32_t)165)
 #define RCC_ZONE_MISMATCH                 ((uint32_t)166)
+#define RCC_AUTO_CREATED_CHECK            ((uint32_t)167)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

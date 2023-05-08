@@ -147,7 +147,14 @@ uint32_t BaseBusinessService::modifyCheckFromMessage(const NXCPMessage& request)
       {
          if (c->getId() == checkId)
          {
-            check = c;
+            if (c->getPrototypeServiceId() != 0)
+            {
+               rcc = RCC_AUTO_CREATED_CHECK;
+            }
+            else
+            {
+               check = c;
+            }
             break;
          }
       }
