@@ -372,7 +372,7 @@ public class ObjectCreateMenuManager extends MenuManager
                return;
 
             final NXCSession session = Registry.getSession();
-            new Job(i18n.tr("Creating subnet"), view, getMessageArea(view)) {
+            new Job(i18n.tr("Creating subnet"), view, null) {
                @Override
                protected void run(IProgressMonitor monitor) throws Exception
                {

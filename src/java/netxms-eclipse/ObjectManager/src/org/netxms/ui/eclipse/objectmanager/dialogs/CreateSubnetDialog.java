@@ -76,7 +76,7 @@ public class CreateSubnetDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
-      
+
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -85,7 +85,7 @@ public class CreateSubnetDialog extends Dialog
       layout.numColumns = 2;
       layout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(layout);
-      
+
       objectNameText = new LabeledText(dialogArea, SWT.NONE);
       objectNameText.setLabel("Name (leave empty to construct from address and mask)");
       objectNameText.getTextControl().setTextLimit(255);
@@ -115,7 +115,7 @@ public class CreateSubnetDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       ipAddressText.setLayoutData(gd);
       ipAddressText.setText("");
-      
+
       maskText = new LabeledText(dialogArea, SWT.NONE);
       maskText.setLabel("Network mask");
       maskText.getTextControl().setTextLimit(16);
@@ -124,7 +124,7 @@ public class CreateSubnetDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       maskText.setLayoutData(gd);
       maskText.setText("");
-      
+
       return dialogArea;
    }
 
@@ -139,7 +139,7 @@ public class CreateSubnetDialog extends Dialog
       {
          return;
       }
-      
+
       try
       {
          objectName = objectNameText.getText().trim();
@@ -165,8 +165,9 @@ public class CreateSubnetDialog extends Dialog
       catch (Exception e)
       {
          MessageDialog.openError(getShell(), "Error", String.format("Internal error: %s", e.getMessage()));
+         return;
       }
-      
+
       super.okPressed();
    }
 

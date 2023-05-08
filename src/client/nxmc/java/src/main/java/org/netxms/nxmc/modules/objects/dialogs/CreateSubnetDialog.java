@@ -33,6 +33,7 @@ import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.IPAddressValidator;
 import org.netxms.nxmc.tools.IPNetMaskValidator;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -137,9 +138,9 @@ public class CreateSubnetDialog extends Dialog
    @Override
    protected void okPressed()
    {
-      if (!WidgetHelper.validateTextInput(ipAddressText, new IPAddressValidator(false)) || !WidgetHelper.validateTextInput(maskText, new IPNetMaskValidator(false, ipAddressText.getText())))
+      if (!WidgetHelper.validateTextInput(ipAddressText, new IPAddressValidator(false), null) || 
+          !WidgetHelper.validateTextInput(maskText, new IPNetMaskValidator(false, ipAddressText.getText()), null))
       {
-         WidgetHelper.adjustWindowSize(this);
          return;
       }
 
@@ -160,8 +161,7 @@ public class CreateSubnetDialog extends Dialog
          }
          if (maskBits > (addr instanceof Inet4Address ? 31 : 127))
          {
-            maskText.setErrorMessage("Invalid network mask");
-            WidgetHelper.adjustWindowSize(this);
+            MessageDialogHelper.openError(getShell(), "Invalid network mask", "Please enter valid network mask");
             return;
          }
          ipAddress = new InetAddressEx(addr, maskBits);
