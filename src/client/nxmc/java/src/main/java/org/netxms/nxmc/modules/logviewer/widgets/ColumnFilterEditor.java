@@ -230,6 +230,9 @@ public class ColumnFilterEditor extends DashboardComposite
          case LogColumn.LC_ZONE_UIN:
             editor = new ZoneConditionEditor(this);
             break;
+         case LogColumn.LC_ASSET_OPERATION:
+            editor = new AssetOperationConditionEditor(this);
+            break;
 			default:
             editor = new TextConditionEditor(this);
             break;

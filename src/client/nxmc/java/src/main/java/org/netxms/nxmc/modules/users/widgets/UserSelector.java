@@ -37,7 +37,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class UserSelector extends AbstractSelector
 {
-   private final I18n i18n = LocalizationHelper.getI18n(UserSelector.class);
+   private final static I18n i18n = LocalizationHelper.getI18n(UserSelector.class);
 
    private long userId = 0;
    private Image imageUser;
