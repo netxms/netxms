@@ -344,7 +344,7 @@ public class PackageManager extends ConfigurationView
                Matcher matcher = pattern.matcher(name);
                if (matcher.matches())
                {
-                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", "windows-" + ((matcher.group(3) == null) ? "i386" : "x64"), matcher.group(1), "");
+                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", "windows-" + ((matcher.group(3) == null) ? "i386" : "x64"), matcher.group(1) + ((matcher.group(2) == null) ? "" : matcher.group(2)), "");
                   showMetadataDialog = false;
                }
                else
@@ -353,7 +353,7 @@ public class PackageManager extends ConfigurationView
                   matcher = pattern.matcher(name);
                   if (matcher.matches())
                   {
-                     packageInfo = new PackageInfo("nxagent-atm", "NetXMS Agent for ATM", name, "agent-installer", "windows-" + ((matcher.group(4) == null) ? "i386" : "x64"), matcher.group(1), "");
+                     packageInfo = new PackageInfo("nxagent-atm", "NetXMS Agent for ATM", name, "agent-installer", "windows-" + ((matcher.group(4) == null) ? "i386" : "x64"), matcher.group(1) + ((matcher.group(2) == null) ? "" : matcher.group(2)), "");
                      showMetadataDialog = false;
                   }
                   else
