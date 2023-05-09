@@ -373,20 +373,20 @@ public class PackageManager extends ViewPart
             }
             else if (packageFileName.endsWith(".exe"))
             {
-               Pattern pattern = Pattern.compile("^nxagent-([0-9]+\\.[0-9]+\\.[0-9]+)(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
+               Pattern pattern = Pattern.compile("^nxagent-([0-9]+\\.[0-9]+\\.[0-9]+)(-[a-zA-Z0-9.]+)?(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
                Matcher matcher = pattern.matcher(name);
                if (matcher.matches())
                {
-                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", "windows-" + ((matcher.group(2) == null) ? "i386" : "x64"), matcher.group(1), "");
+                  packageInfo = new PackageInfo("nxagent", "NetXMS Agent for Windows", name, "agent-installer", "windows-" + ((matcher.group(3) == null) ? "i386" : "x64"), matcher.group(1), "");
                   showMetadataDialog = false;
                }
                else
                {
-                  pattern = Pattern.compile("^nxagent-atm-([0-9]+\\.[0-9]+\\.[0-9]+)(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
+                  pattern = Pattern.compile("^nxagent-atm-([0-9]+\\.[0-9]+\\.[0-9]+)([a-zA-Z0-9.-]+)?(-[a-zA-Z0-9.]+)?(-x64)?\\.exe$", Pattern.CASE_INSENSITIVE);
                   matcher = pattern.matcher(name);
                   if (matcher.matches())
                   {
-                     packageInfo = new PackageInfo("nxagent-atm", "NetXMS Agent for ATM", name, "agent-installer", "windows-" + ((matcher.group(2) == null) ? "i386" : "x64"), matcher.group(1), "");
+                     packageInfo = new PackageInfo("nxagent-atm", "NetXMS Agent for ATM", name, "agent-installer", "windows-" + ((matcher.group(4) == null) ? "i386" : "x64"), matcher.group(1), "");
                      showMetadataDialog = false;
                   }
                   else
