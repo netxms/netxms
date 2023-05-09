@@ -539,7 +539,7 @@ void RunPendingOnlineUpgrades()
    StringList *upgradeList = String(buffer).split(_T(","));
    for(int i = 0; i < upgradeList->size(); i++)
    {
-      UINT32 id = _tcstol(upgradeList->get(i), nullptr, 16);
+      uint32_t id = _tcstol(upgradeList->get(i), nullptr, 16);
       int major = id >> 16;
       int minor = id & 0xFFFF;
       if ((major != 0) || (minor != 0))
