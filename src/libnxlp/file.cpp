@@ -573,7 +573,7 @@ bool LogParser::monitorFile(off_t startOffset)
       TCHAR fname[MAX_PATH];
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
       NX_STAT_STRUCT st;
-      if (CALL_STAT(fname, &st) != 0)
+      if (CALL_STAT_FOLLOW_SYMLINK(fname, &st) != 0)
       {
          if (errno == ENOENT)
             readFromStart = true;
@@ -659,7 +659,7 @@ bool LogParser::monitorFile(off_t startOffset)
 			}
 
          NX_STAT_STRUCT stn;
-         if (CALL_STAT(fname, &stn) < 0)
+         if (CALL_STAT_FOLLOW_SYMLINK(fname, &stn) < 0)
 			{
 				nxlog_debug_tag(DEBUG_TAG, 1, _T("stat(%s) failed, errno=%d"), fname, errno);
 				readFromStart = true;
@@ -785,7 +785,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
       
       NX_STAT_STRUCT st;
-      if (CALL_STAT(fname, &st) != 0)
+      if (CALL_STAT_FOLLOW_SYMLINK(fname, &st) != 0)
       {
          if (errno == ENOENT)
          {

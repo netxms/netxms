@@ -12293,7 +12293,7 @@ void ClientSession::listServerFileStore(const NXCPMessage& request)
 
          struct _tdirent *d;
          NX_STAT_STRUCT st;
-         UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
+         uint32_t count = 0, varId = VID_INSTANCE_LIST_BASE;
          while((d = _treaddir(dir)) != nullptr)
          {
             if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))

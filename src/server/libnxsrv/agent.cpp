@@ -1846,7 +1846,7 @@ uint32_t AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destin
 
    time_t lastModTime = 0;
    NX_STAT_STRUCT st;
-   if (CALL_STAT(localFile, &st) == 0)
+   if (CALL_STAT_FOLLOW_SYMLINK(localFile, &st) == 0)
    {
       lastModTime = st.st_mtime;
    }
