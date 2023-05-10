@@ -380,7 +380,7 @@ static void AddLogwatchPolicyFiles()
             {
                TCHAR buffer[128];
                TCHAR *p = _tcschr(d->d_name, _T('.'));
-               if (p != NULL)
+               if (p != nullptr)
                {
                   size_t len = p - d->d_name;
                   if (len > 127)

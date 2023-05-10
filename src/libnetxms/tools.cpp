@@ -877,12 +877,12 @@ bool LIBNETXMS_EXPORTABLE CreateDirectoryTree(const TCHAR *path)
    if (ptr != nullptr)
    {
       *ptr = 0;
-      if (CALL_STAT(previous, &st) != 0)
+      if (CALL_STAT_FOLLOW_SYMLINK(previous, &st) != 0)
       {
          success = CreateDirectoryTree(previous);
          if (success)
          {
-            success = (CALL_STAT(previous, &st) == 0);
+            success = (CALL_STAT_FOLLOW_SYMLINK(previous, &st) == 0);
          }
       }
       else
@@ -4111,7 +4111,7 @@ int LIBNETXMS_EXPORTABLE CountFilesInDirectoryW(const WCHAR *path, bool (*filter
 bool LIBNETXMS_EXPORTABLE CopyFileOrDirectory(const TCHAR *oldName, const TCHAR *newName)
 {
    NX_STAT_STRUCT st;
-   if (CALL_STAT(oldName, &st) != 0)
+   if (CALL_STAT_FOLLOW_SYMLINK(oldName, &st) != 0)
       return false;
 
    if (!S_ISDIR(st.st_mode))
@@ -4172,7 +4172,7 @@ bool LIBNETXMS_EXPORTABLE MoveFileOrDirectory(const TCHAR *oldName, const TCHAR 
 #endif
 
    NX_STAT_STRUCT st;
-   if (CALL_STAT(oldName, &st) != 0)
+   if (CALL_STAT_FOLLOW_SYMLINK(oldName, &st) != 0)
       return false;
 
    if (S_ISDIR(st.st_mode))
@@ -4468,7 +4468,7 @@ TCHAR LIBNETXMS_EXPORTABLE *GetFileOwner(const TCHAR *file, TCHAR *buffer, size_
    _tcslcat(buffer, acctName, size);
 #else
    NX_STAT_STRUCT st;
-   if (CALL_STAT(file, &st) != 0)
+   if (CALL_STAT_FOLLOW_SYMLINK(file, &st) != 0)
       return nullptr;
 
 #if HAVE_GETPWUID_R
