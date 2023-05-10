@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.netxms.nxmc.modules.logviewer.views.helpers.LogLabelProvider;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Condition editor for object columns
+ * Condition editor for asset operation column
  */
 public class AssetOperationConditionEditor extends ConditionEditor
 {

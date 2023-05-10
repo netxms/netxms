@@ -50,6 +50,7 @@ import org.netxms.nxmc.modules.assetmanagement.dialogs.EditAssetPropertyDialog;
 import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyComparator;
 import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyFilter;
 import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyListLabelProvider;
+import org.netxms.nxmc.modules.assetmanagement.views.helpers.AssetPropertyReader;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -73,7 +74,7 @@ public class AssetView extends ObjectView
    private SortableTableViewer viewer;
    private AssetPropertyFilter filter;
    private Map<String, String> properties;
-   private AssetPropertyListLabelProvider labelProvider;
+   private AssetPropertyReader propertyReader;
    private MenuManager attributeSelectionMenu;
    private Action actionAdd;
    private Action actionEdit;
@@ -111,13 +112,14 @@ public class AssetView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
+      propertyReader = new AssetPropertyReader();
+
       final int[] widths = { 200, 400, 100, 100, 200 };
       final String[] names = { i18n.tr("Property"), i18n.tr("Value"), i18n.tr("Mandatory"), i18n.tr("Unique"), i18n.tr("System type") };
       viewer = new SortableTableViewer(parent, names, widths, NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
-      labelProvider = new AssetPropertyListLabelProvider();
-      viewer.setLabelProvider(labelProvider);
-      viewer.setComparator(new AssetPropertyComparator(labelProvider));
+      viewer.setLabelProvider(new AssetPropertyListLabelProvider(propertyReader));
+      viewer.setComparator(new AssetPropertyComparator(propertyReader));
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -126,7 +128,7 @@ public class AssetView extends ObjectView
          }
       });
 
-      filter = new AssetPropertyFilter(labelProvider);
+      filter = new AssetPropertyFilter(propertyReader);
       viewer.addFilter(filter);
       setFilterClient(viewer, filter);
 
@@ -162,7 +164,7 @@ public class AssetView extends ObjectView
             {
                missingEntries.append(", ");
             }
-            missingEntries.append(labelProvider.getName(definition.getName()));
+            missingEntries.append(propertyReader.getDisplayName(definition.getName()));
          }
       }
 
@@ -434,6 +436,16 @@ public class AssetView extends ObjectView
    protected void onObjectChange(AbstractObject object)
    {
       refresh();
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      propertyReader.dispose();
+      super.dispose();
    }
 
    /**

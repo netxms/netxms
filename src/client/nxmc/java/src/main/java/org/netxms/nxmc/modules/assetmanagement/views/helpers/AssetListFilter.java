@@ -21,14 +21,19 @@ package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
+import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Asset;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
- * Asset property filter
+ * Asset list filter
  */
-public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerFilter
+public class AssetListFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
+   private NXCSession session = Registry.getSession();
    private AssetPropertyReader propertyReader;
 
    /**
@@ -36,7 +41,7 @@ public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerF
     * 
     * @param labelProvider asset instance comparator
     */
-   public AssetPropertyFilter(AssetPropertyReader propertyReader)
+   public AssetListFilter(AssetPropertyReader propertyReader)
    {
       this.propertyReader = propertyReader;
    }
@@ -50,11 +55,33 @@ public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerF
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      @SuppressWarnings("unchecked")
-      Entry<String, String> entry = (Entry<String, String>)element;
+      if (((AbstractObject)element).getObjectName().toLowerCase().contains(filterString))
+         return true;
 
-      return propertyReader.getDisplayName(entry.getKey()).toUpperCase().contains(filterString) || 
-            propertyReader.valueToText(entry.getKey(), entry.getValue()).toUpperCase().contains(filterString);
+      Asset asset = getAsset(element);
+      if (asset == null)
+         return false;
+
+      for(Entry<String, String> p : asset.getProperties().entrySet())
+      {
+         if (propertyReader.valueToText(p.getKey(), p.getValue()).toLowerCase().contains(filterString))
+            return true;
+      }
+
+      return false;
+   }
+
+   /**
+    * Get asset from element
+    *
+    * @param element list element
+    * @return asset object
+    */
+   private Asset getAsset(Object element)
+   {
+      if (element instanceof Asset)
+         return (Asset)element;
+      return session.findObjectById(((AbstractObject)element).getAssetId(), Asset.class);
    }
 
    /**
@@ -63,6 +90,6 @@ public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerF
    @Override
    public void setFilterString(String string)
    {
-      this.filterString = (string != null) ? string.toUpperCase() : null;
+      this.filterString = (string != null) ? string.toLowerCase() : null;
    }
 }

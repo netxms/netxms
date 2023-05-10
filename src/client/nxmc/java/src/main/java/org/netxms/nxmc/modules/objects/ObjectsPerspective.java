@@ -73,6 +73,7 @@ import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
+import org.netxms.nxmc.modules.assetmanagement.views.AssetSummaryView;
 import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
@@ -185,6 +186,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addNavigationView(new ObjectBrowser(getName(), null, subtreeType));
       addMainView(new AgentFileManager());
       addMainView(new AlarmsView());
+      addMainView(new AssetSummaryView());
       addMainView(new AssetView());      
       addMainView(new BusinessServiceAvailabilityView());
       addMainView(new BusinessServiceChecksView());

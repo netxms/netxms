@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -203,6 +203,9 @@ public class ColumnFilterEditor extends DashboardComposite
 			case LogColumn.LC_ALARM_STATE:
             editor = new AlarmStateConditionEditor(this);
             break;
+         case LogColumn.LC_ASSET_OPERATION:
+            editor = new AssetOperationConditionEditor(this);
+            break;
          case LogColumn.LC_COMPLETION_STATUS:
             editor = new CompletionStatusConditionEditor(this);
             break;
@@ -229,9 +232,6 @@ public class ColumnFilterEditor extends DashboardComposite
             break;
          case LogColumn.LC_ZONE_UIN:
             editor = new ZoneConditionEditor(this);
-            break;
-         case LogColumn.LC_ASSET_OPERATION:
-            editor = new AssetOperationConditionEditor(this);
             break;
 			default:
             editor = new TextConditionEditor(this);
