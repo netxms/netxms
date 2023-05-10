@@ -379,7 +379,7 @@ X509_STORE LIBNETXMS_EXPORTABLE *CreateTrustedCertificatesStore(const StringSet&
       {
          const TCHAR *trustedRoot = it.next();
          NX_STAT_STRUCT st;
-         if (CALL_STAT(trustedRoot, &st) != 0)
+         if (CALL_STAT_FOLLOW_SYMLINK(trustedRoot, &st) != 0)
             continue;
 
 #ifdef UNICODE

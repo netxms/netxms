@@ -444,14 +444,14 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       uint32_t type = 0;
       TCHAR accessRights[11];
 #ifndef _WIN32
-      if(S_ISLNK(st.st_mode))
+      if (S_ISLNK(st.st_mode))
       {
          accessRights[0] = _T('l');
          type |= SYMLINK;
-         NX_STAT_STRUCT SYMLINKSt;
-         if (CALL_STAT_FOLLOW_SYMLINK(filePath, &SYMLINKSt) == 0)
+         NX_STAT_STRUCT symlinkStat;
+         if (CALL_STAT_FOLLOW_SYMLINK(filePath, &symlinkStat) == 0)
          {
-            type |= S_ISDIR(SYMLINKSt.st_mode) ? DIRECTORY : 0;
+            type |= S_ISDIR(symlinkStat.st_mode) ? DIRECTORY : 0;
          }
       }
 
@@ -1101,7 +1101,7 @@ static void CH_GetFileSetDetails(const NXCPMessage& request, NXCPMessage *respon
       if (CheckFullPath(fileName, &fullPath, false))
       {
          NX_STAT_STRUCT fs;
-         if (CALL_STAT(fullPath, &fs) == 0)
+         if (CALL_STAT_FOLLOW_SYMLINK(fullPath, &fs) == 0)
          {
             response->setField(fieldId++, ERR_SUCCESS);
             response->setField(fieldId++, static_cast<uint64_t>(fs.st_size));
@@ -1549,7 +1549,7 @@ static void CH_GetFileFingerprint(NXCPMessage *request, NXCPMessage *response, A
    if (CheckFullPath(fileName, &fullPath, false))
    {
       NX_STAT_STRUCT fs;
-      if (CALL_STAT(fullPath, &fs) == 0)
+      if (CALL_STAT_FOLLOW_SYMLINK(fullPath, &fs) == 0)
       {
          response->setField(VID_FILE_SIZE, static_cast<uint64_t>(fs.st_size));
 
