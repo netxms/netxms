@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.dashboards.config;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
@@ -26,6 +27,12 @@ import org.simpleframework.xml.core.Persister;
  */
 public class PieChartConfig extends AbstractChartConfig
 {
+   @Element(required = false)
+   private boolean doughnutRendering = true;
+
+   @Element(required = false)
+   private boolean showTotal = false;
+
 	/**
 	 * Create line chart settings object from XML document
 	 * 
@@ -38,4 +45,36 @@ public class PieChartConfig extends AbstractChartConfig
 		Serializer serializer = new Persister();
 		return serializer.read(PieChartConfig.class, xml);
 	}
+
+   /**
+    * @return the doughnutRendering
+    */
+   public boolean isDoughnutRendering()
+   {
+      return doughnutRendering;
+   }
+
+   /**
+    * @param doughnutRendering the doughnutRendering to set
+    */
+   public void setDoughnutRendering(boolean doughnutRendering)
+   {
+      this.doughnutRendering = doughnutRendering;
+   }
+
+   /**
+    * @return the showTotal
+    */
+   public boolean isShowTotal()
+   {
+      return showTotal;
+   }
+
+   /**
+    * @param showTotal the showTotal to set
+    */
+   public void setShowTotal(boolean showTotal)
+   {
+      this.showTotal = showTotal;
+   }
 }

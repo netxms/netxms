@@ -87,7 +87,13 @@ public class ChartConfiguration
    protected boolean transposed = false;
 
    @Element(required = false)
-   protected boolean translucent = true;
+   protected boolean translucent = false;
+
+   @Element(required = false)
+   protected boolean doughnutRendering = true;
+
+   @Element(required = false)
+   protected boolean showTotal = false;
 
    @Element(required = false)
    protected boolean area = false;
@@ -225,6 +231,8 @@ public class ChartConfiguration
       stacked = src.stacked;
       transposed = src.transposed;
       translucent = src.translucent;
+      doughnutRendering = src.doughnutRendering;
+      showTotal = src.showTotal;
       area = src.area;
       lineWidth = src.lineWidth;
       autoScale = src.autoScale;
@@ -491,6 +499,38 @@ public class ChartConfiguration
    public void setTranslucent(boolean translucent)
    {
       this.translucent = translucent;
+   }
+
+   /**
+    * @return the doughnutRendering
+    */
+   public boolean isDoughnutRendering()
+   {
+      return doughnutRendering;
+   }
+
+   /**
+    * @param doughnutRendering the doughnutRendering to set
+    */
+   public void setDoughnutRendering(boolean doughnutRendering)
+   {
+      this.doughnutRendering = doughnutRendering;
+   }
+
+   /**
+    * @return the showTotal
+    */
+   public boolean isShowTotal()
+   {
+      return showTotal;
+   }
+
+   /**
+    * @param showTotal the showTotal to set
+    */
+   public void setShowTotal(boolean showTotal)
+   {
+      this.showTotal = showTotal;
    }
 
    /**

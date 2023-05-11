@@ -61,6 +61,8 @@ public class AbstractChart extends PropertyPage
 	private Button checkShowGrid;
 	private Button checkTranslucent;
 	private Button checkTransposed;
+   private Button checkDoughnutRendering;
+   private Button checkShowTotal;
    private Button checkLogScale;
    private Button checkUseMultipliers;
    private Button checkStacked;
@@ -179,6 +181,25 @@ public class AbstractChart extends PropertyPage
 			checkTransposed.setLayoutData(gd);
 		}
 
+      if ((config instanceof PieChartConfig) || (config instanceof ScriptedPieChartConfig))
+      {
+         checkDoughnutRendering = new Button(optionsGroup, SWT.CHECK);
+         checkDoughnutRendering.setText("&Doughnut rendering");
+         checkDoughnutRendering.setSelection((config instanceof PieChartConfig) ? ((PieChartConfig)config).isDoughnutRendering() : ((ScriptedPieChartConfig)config).isDoughnutRendering());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkDoughnutRendering.setLayoutData(gd);
+
+         checkShowTotal = new Button(optionsGroup, SWT.CHECK);
+         checkShowTotal.setText("Show &total");
+         checkShowTotal.setSelection((config instanceof PieChartConfig) ? ((PieChartConfig)config).isShowTotal() : ((ScriptedPieChartConfig)config).isShowTotal());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkShowTotal.setLayoutData(gd);
+      }
+
 		if (config instanceof LineChartConfig)
 		{
 			checkShowGrid = new Button(optionsGroup, SWT.CHECK);
@@ -188,14 +209,14 @@ public class AbstractChart extends PropertyPage
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			checkShowGrid.setLayoutData(gd);
-         
+
          checkInteractive = new Button(optionsGroup, SWT.CHECK);
          checkInteractive.setText("&Interactive");
          checkInteractive.setSelection(((LineChartConfig)config).isInteractive());
          gd = new GridData();
          gd.horizontalSpan = layout.numColumns;
          checkInteractive.setLayoutData(gd);
-			
+
 			Composite timeRangeArea = new Composite(dialogArea, SWT.NONE);
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -207,10 +228,10 @@ public class AbstractChart extends PropertyPage
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			timeRangeArea.setLayoutData(gd);
-			
+
 			timeRange = WidgetHelper.createLabeledSpinner(timeRangeArea, SWT.BORDER, Messages.get().AbstractChart_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
 			timeRange.setSelection(((LineChartConfig)config).getTimeRange());
-			
+
 			timeUnits = WidgetHelper.createLabeledCombo(timeRangeArea, SWT.READ_ONLY, Messages.get().AbstractChart_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
 			timeUnits.add(Messages.get().AbstractChart_Minutes);
 			timeUnits.add(Messages.get().AbstractChart_Hours);
@@ -263,8 +284,7 @@ public class AbstractChart extends PropertyPage
 	      gd.horizontalAlignment = SWT.FILL;
 	      gd.grabExcessHorizontalSpace = true;
 	      yAxisRange.setLayoutData(gd);
-	      yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(),
-	                              config.getMinYScaleValue(), config.getMaxYScaleValue());
+         yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       }
 
       if (!(config instanceof LineChartConfig))
@@ -307,9 +327,9 @@ public class AbstractChart extends PropertyPage
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
-	@Override
-	public boolean performOk()
-	{
+   @Override
+   public boolean performOk()
+   {
       title.updateConfiguration(config);
 		config.setLegendPosition(1 << legendPosition.getSelectionIndex());
 		config.setShowLegend(checkShowLegend.getSelection());
@@ -321,11 +341,21 @@ public class AbstractChart extends PropertyPage
          config.setExtendedLegend(checkExtendedLegend.getSelection());
       }
 
-      if (!(config instanceof PieChartConfig) && !(config instanceof ScriptedPieChartConfig))
+      if (config instanceof PieChartConfig)
+      {
+         ((PieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
+         ((PieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+      }
+      else if (config instanceof ScriptedPieChartConfig)
+      {
+         ((ScriptedPieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
+         ((ScriptedPieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+      }
+      else
       {
 	      if (!yAxisRange.validate(true))
 	         return false;
-	      
+
    		config.setAutoScale(yAxisRange.isAuto());
    		config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());

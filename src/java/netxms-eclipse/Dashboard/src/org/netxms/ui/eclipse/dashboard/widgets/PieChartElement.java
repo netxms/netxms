@@ -62,6 +62,8 @@ public class PieChartElement extends ComparisonChartElement
       chartConfig.setLegendVisible(elementConfig.isShowLegend());
       chartConfig.setExtendedLegend(elementConfig.isExtendedLegend());
       chartConfig.setTranslucent(elementConfig.isTranslucent());
+      chartConfig.setDoughnutRendering(elementConfig.isDoughnutRendering());
+      chartConfig.setShowTotal(elementConfig.isShowTotal());
 
       chart = new Chart(getContentArea(), SWT.NONE, ChartType.PIE, chartConfig);
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());

@@ -61,7 +61,7 @@ public class BarGauge extends GenericGauge
       String fontName = chart.getConfiguration().getFontName();
       scaleFonts = new Font[16];
       for(int i = 0; i < scaleFonts.length; i++)
-         scaleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL); //$NON-NLS-1$
+         scaleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL);
    }
 
    /**
@@ -73,9 +73,7 @@ public class BarGauge extends GenericGauge
       if (scaleFonts != null)
       {
          for(int i = 0; i < scaleFonts.length; i++)
-         {
             scaleFonts[i].dispose();
-         }
       }
    }
 
