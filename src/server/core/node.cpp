@@ -6175,14 +6175,13 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                }
                if (macAddr.isValid() && !macAddr.equals(iface->getMacAddr()))
                {
-                  TCHAR szOldMac[32], szNewMac[32];
-                  iface->getMacAddr().toString(szOldMac);
-                  macAddr.toString(szNewMac);
-                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
-                            m_name, m_id, szOldMac, szNewMac);
+                  TCHAR oldMAC[32], newMAC[32];
+                  iface->getMacAddr().toString(oldMAC);
+                  macAddr.toString(newMAC);
+                  nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"), m_name, m_id, oldMAC, newMAC);
                   PostSystemEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                             iface->getId(), iface->getIfIndex(),
-                            iface->getName(), szOldMac, szNewMac);
+                            iface->getName(), oldMAC, newMAC);
                   iface->setMacAddr(macAddr, true);
                }
             }

@@ -76,16 +76,14 @@ Subnet::~Subnet()
  */
 bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
-
    m_id = dwId;
 
    if (!loadCommonProperties(hdb))
       return false;
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid FROM subnets WHERE id=%d"), dwId);
-   hResult = DBSelect(hdb, szQuery);
+   TCHAR szQuery[256];
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT ip_addr,ip_netmask,zone_guid FROM subnets WHERE id=%u"), dwId);
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == 0)
       return false;     // Query failed
 
@@ -248,8 +246,7 @@ MacAddress Subnet::findMacAddress(const InetAddress& ipAddr)
 
    bool success = false;
    MacAddress macAddr(MacAddress::ZERO);
-   int i;
-   for(i = 0; (i < nodes.size()) && !success; i++)
+   for(int i = 0; (i < nodes.size()) && !success; i++)
    {
 		Node *node = nodes.get(i);
 		nxlog_debug_tag(DEBUG_TAG_TOPO_ARP, 6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
@@ -288,27 +285,27 @@ UINT32 *Subnet::buildAddressMap(int *length)
 {
    *length = 1 << (32 - m_ipAddress.getMaskBits());
    if ((*length < 2) || (*length > 65536))
-      return NULL;
+      return nullptr;
    UINT32 *map = MemAllocArrayNoInit<UINT32>(*length);
 
    if (m_ipAddress.getHostBits() > 1)
    {
       map[0] = 0xFFFFFFFF; // subnet
       map[*length - 1] = 0xFFFFFFFF;   // broadcast
-      UINT32 addr = m_ipAddress.getAddressV4() + 1;
+      uint32_t addr = m_ipAddress.getAddressV4() + 1;
       for(int i = 1; i < *length - 1; i++, addr++)
       {
          shared_ptr<Node> node = FindNodeByIP(m_zoneUIN, addr);
-         map[i] = (node != NULL) ? node->getId() : 0;
+         map[i] = (node != nullptr) ? node->getId() : 0;
       }
    }
    else
    {
-      UINT32 addr = m_ipAddress.getAddressV4();
+      uint32_t addr = m_ipAddress.getAddressV4();
       for(int i = 0; i < 2; i++)
       {
          shared_ptr<Node> node = FindNodeByIP(m_zoneUIN, addr++);
-         map[i] = (node != NULL) ? node->getId() : 0;
+         map[i] = (node != nullptr) ? node->getId() : 0;
       }
    }
    return map;
