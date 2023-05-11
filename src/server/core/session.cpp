@@ -6264,15 +6264,19 @@ void ClientSession::deleteObject(const NXCPMessage& request)
          // Check access rights
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
-				if ((object->getObjectClass() != OBJECT_ZONE) || object->isEmpty())
+				if ((object->getObjectClass() == OBJECT_ZONE) && !object->isEmpty())
 				{
-               ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
-					response.setField(VID_RCC, RCC_SUCCESS);
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
+	            response.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
+				}
+				else if((object->getObjectClass() == OBJECT_ASSET) && ConfigReadBoolean(_T("Asset.ForbidLinkedDeletion"), true) && static_pointer_cast<Asset>(object)->getLinkedObjectId() != 0)
+				{
+               response.setField(VID_RCC, RCC_ASSET_LINKED_TO_NODE);
 				}
 				else
 				{
-	            response.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
+               ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
 				}
          }
          else

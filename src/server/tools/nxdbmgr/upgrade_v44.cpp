@@ -24,6 +24,20 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.12 to 44.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(CreateConfigParam(_T("Asset.ForbidLinkedDeletion"),
+         _T("1"),
+         _T("Forbid deletion of assets linked with node."),
+         _T(""),
+         'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
  * Upgrade from 44.11 to 44.12
  */
 static bool H_UpgradeFromV11()
@@ -453,6 +467,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12,  44, 13,  H_UpgradeFromV12  },
    { 11,  44, 12,  H_UpgradeFromV11  },
    { 10,  44, 11,  H_UpgradeFromV10  },
    { 9,  44, 10,  H_UpgradeFromV9  },
