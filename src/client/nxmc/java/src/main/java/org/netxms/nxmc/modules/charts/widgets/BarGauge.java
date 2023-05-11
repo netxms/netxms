@@ -82,17 +82,17 @@ public class BarGauge extends GenericGauge
    /**
     * @see org.netxms.nxmc.modules.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
     *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
-    *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int)
+    *      org.netxms.nxmc.modules.charts.api.DataSeries, int, int, int, int, int)
     */
    @Override
-   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
    {
       Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
       gc.setAntialias(SWT.ON);
 
       if (config.isElementBordersVisible())
       {
-         gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
+         gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
          gc.drawRectangle(rect);
          rect.x += INNER_MARGIN_WIDTH;
          rect.y += INNER_MARGIN_HEIGHT;
@@ -103,7 +103,7 @@ public class BarGauge extends GenericGauge
       // Draw legend
       if (config.areLabelsVisible())
       {
-         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
+         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend"));
          gc.setFont(null);
          Point legendExt = gc.textExtent(dci.getDescription());
          switch(config.getLegendPosition())
@@ -165,7 +165,8 @@ public class BarGauge extends GenericGauge
       final double pointValue = config.isTransposed() ? (maxValue - minValue) / rect.width : (maxValue - minValue) / rect.height;
       if (data.getCurrentValue() > minValue)
       {
-         if (config.getGaugeColorMode() == GaugeColorMode.ZONE.getValue())
+         GaugeColorMode colorMode = GaugeColorMode.getByValue(config.getGaugeColorMode());
+         if (colorMode == GaugeColorMode.ZONE)
          {
             double left, right = minValue;
 
@@ -217,8 +218,10 @@ public class BarGauge extends GenericGauge
          }
          else
          {
-            if (config.getGaugeColorMode() == GaugeColorMode.THRESHOLD.getValue())
+            if (colorMode == GaugeColorMode.THRESHOLD)
                gc.setBackground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
+            else if (colorMode == GaugeColorMode.DATA_SOURCE)
+               gc.setBackground(chart.getColorCache().create(getDataSourceColor(dci, index)));
             else
                gc.setBackground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
             int points = (int)((data.getCurrentValue() - minValue) / pointValue);

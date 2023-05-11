@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.DataSeries;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Abstract gauge widget
@@ -75,10 +76,10 @@ public abstract class GenericGauge extends GenericComparisonChart
             if (renderData != null)
             {
                for(int i = 0; i < items.size(); i++)
-                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h);
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h, i);
             }
             for(int i = 0; i < items.size(); i++)
-               renderElement(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h);
+               renderElement(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h, i);
          }
       }
       else
@@ -92,10 +93,10 @@ public abstract class GenericGauge extends GenericComparisonChart
             if (renderData != null)
             {
                for(int i = 0; i < items.size(); i++)
-                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h);
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h, i);
             }
             for(int i = 0; i < items.size(); i++)
-               renderElement(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h);
+               renderElement(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h, i);
          }
       }
    }
@@ -133,8 +134,9 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param y Y position
     * @param w width
     * @param h height
+    * @param index element index
     */
-   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
    {
    }
 
@@ -150,6 +152,20 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param y Y position
     * @param w width
     * @param h height
+    * @param index element index
     */
-   protected abstract void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h);
+   protected abstract void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index);
+
+   /**
+    * Get color for given data source.
+    *
+    * @param dataSource data source object
+    * @param index index of this data source
+    * @return color for data source
+    */
+   protected RGB getDataSourceColor(GraphItem dataSource, int index)
+   {
+      int c = dataSource.getColor();
+      return (c != -1) ? ColorConverter.rgbFromInt(c) : chart.getPaletteEntry(index).getRGBObject();
+   }
 }

@@ -95,10 +95,10 @@ public class TextGauge extends GenericGauge
    /**
     * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#prepareElementRender(org.eclipse.swt.graphics.GC,
     *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
-    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
+    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int, int)
     */
    @Override
-   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
    {
       if (valueFonts == null)
       {
@@ -144,10 +144,10 @@ public class TextGauge extends GenericGauge
    /**
     * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
     *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
-    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
+    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int, int)
     */
 	@Override
-   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration config, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
 		gc.setAntialias(SWT.ON);
@@ -169,26 +169,29 @@ public class TextGauge extends GenericGauge
 
       switch(GaugeColorMode.getByValue(config.getGaugeColorMode()))
 		{
-		   case ZONE:
-            if ((data.getCurrentValue() <= config.getLeftRedZone()) || (data.getCurrentValue() >= config.getRightRedZone()))
-      		{
-               gc.setForeground(chart.getColorCache().create(RED_ZONE_COLOR));
-      		}
-            else if ((data.getCurrentValue() <= config.getLeftYellowZone()) || (data.getCurrentValue() >= config.getRightYellowZone()))
-      		{
-               gc.setForeground(chart.getColorCache().create(YELLOW_ZONE_COLOR));
-      		}
-      		else
-      		{
-               gc.setForeground(chart.getColorCache().create(GREEN_ZONE_COLOR));
-      		}
-      		break;
 		   case CUSTOM:
             gc.setForeground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
    		   break;
+         case DATA_SOURCE:
+            gc.setForeground(chart.getColorCache().create(getDataSourceColor(dci, index)));
+            break;
 		   case THRESHOLD:
             gc.setForeground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
 		      break;
+         case ZONE:
+            if ((data.getCurrentValue() <= config.getLeftRedZone()) || (data.getCurrentValue() >= config.getRightRedZone()))
+            {
+               gc.setForeground(chart.getColorCache().create(RED_ZONE_COLOR));
+            }
+            else if ((data.getCurrentValue() <= config.getLeftYellowZone()) || (data.getCurrentValue() >= config.getRightYellowZone()))
+            {
+               gc.setForeground(chart.getColorCache().create(YELLOW_ZONE_COLOR));
+            }
+            else
+            {
+               gc.setForeground(chart.getColorCache().create(GREEN_ZONE_COLOR));
+            }
+            break;
          default:
             gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
             break;

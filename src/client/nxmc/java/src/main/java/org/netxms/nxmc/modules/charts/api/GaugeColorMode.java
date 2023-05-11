@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,8 +30,9 @@ public enum GaugeColorMode
 {
    ZONE(0),
    CUSTOM(1),
-   THRESHOLD(2);
-   
+   THRESHOLD(2),
+   DATA_SOURCE(3);
+
    private static final Logger logger = LoggerFactory.getLogger(GaugeColorMode.class);
    private static final Map<Integer, GaugeColorMode> lookupTable = new HashMap<Integer, GaugeColorMode>();
    static
