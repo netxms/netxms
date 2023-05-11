@@ -176,7 +176,7 @@ bool NetworkMapLink::update(const ObjLink& src)
       ssize_t startIndex = config.find(_T("<objectStatusList class=\"java.util.ArrayList\"/>"));
       if (startIndex != -1)
       {
-         ssize_t endIndex = startIndex + 47;
+         size_t endIndex = startIndex + 47;
          while((startIndex > 0) && _istspace(config.charAt(startIndex - 1)))
             startIndex--;
          while((endIndex < config.length()) && _istspace(config.charAt(endIndex)))

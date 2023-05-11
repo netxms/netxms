@@ -115,8 +115,8 @@ int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void)
 	if (s_socket == -1)
 		return NXAPPC_FAIL;
 	
-	addrLocal.sin_family = AF_INET;
-   addrLocal.sin_addr.s_addr = inet_addr("127.0.0.1");
+   addrLocal.sin_family = AF_INET;
+   addrLocal.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
    addrLocal.sin_port = htons(atoi(s_channel));
 	if (connect(s_socket, (struct sockaddr *)&addrLocal, sizeof(addrLocal)) == -1)
    {
