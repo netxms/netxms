@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.charts.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -283,8 +282,8 @@ public class BarGauge extends GenericGauge
     */
    private void drawScale(GC gc, Rectangle rect, double minValue, double maxValue, double pointValue, boolean isTransposed, boolean gridVisible)
    {
-      Color scaleColor = chart.getColorFromPreferences("Chart.Colors.DialScale");
-      Color scaleTextColor = chart.getColorFromPreferences("Chart.Colors.DialScaleText");
+      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
+
       final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", SCALE_TEXT_WIDTH, SCALE_TEXT_HEIGHT); //$NON-NLS-1$
       gc.setFont(markFont);
 
@@ -297,11 +296,9 @@ public class BarGauge extends GenericGauge
          {
             if (gridVisible && (x > 0))
             {
-               gc.setForeground(scaleColor);
                gc.drawLine(rect.x + (int)x, rect.y - 2, rect.x + (int)x, rect.y + rect.height + 1);
             }
             String text = DataFormatter.roundDecimalValue(value, step, 5);
-            gc.setForeground(scaleTextColor);
             gc.drawText(text, rect.x + (int)x, rect.y + rect.height + 4, SWT.DRAW_TRANSPARENT);
          }
       }
@@ -312,11 +309,9 @@ public class BarGauge extends GenericGauge
          {
             if (gridVisible && (y < rect.height))
             {
-               gc.setForeground(scaleColor);
                gc.drawLine(rect.x - 2, rect.y + (int)y, rect.x + rect.width + 1, rect.y + (int)y);
             }
             String text = DataFormatter.roundDecimalValue(value, step, 5);
-            gc.setForeground(scaleTextColor);
             gc.drawText(text, rect.x + rect.width + 4, rect.y + (int)y - textHeight * 3 / 4, SWT.DRAW_TRANSPARENT);
          }
       }

@@ -36,9 +36,9 @@ public abstract class GenericGauge extends GenericComparisonChart
    protected static final int INNER_MARGIN_WIDTH = 5;
    protected static final int INNER_MARGIN_HEIGHT = 5;
 
-   protected static final RGB GREEN_ZONE_COLOR = new RGB(0, 224, 0);
-   protected static final RGB YELLOW_ZONE_COLOR = new RGB(255, 242, 0);
-   protected static final RGB RED_ZONE_COLOR = new RGB(224, 0, 0);
+   protected static final RGB GREEN_ZONE_COLOR = new RGB(20, 156, 74);
+   protected static final RGB YELLOW_ZONE_COLOR = new RGB(253, 200, 14);
+   protected static final RGB RED_ZONE_COLOR = new RGB(226, 13, 52);
 
    /**
     * @param parent
