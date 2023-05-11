@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include <pdh.h>
 #include <pdhmsg.h>
 
-#define WINPERF_DEBUG_TAG  _T("sa.winperf")
+#define WINPERF_DEBUG_TAG  _T("winperf")
 
 //
 // Counter types

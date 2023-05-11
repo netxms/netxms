@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2021 Victor Kirhenshtein
+** Copyright (C) 2004-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,12 +31,12 @@
 /**
  * Subagent shutdown condition
  */
-HANDLE g_winperfShutdownCondition = NULL;
+HANDLE g_winperfShutdownCondition = nullptr;
 
 /**
  * Static variables
  */
-static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
+static uint32_t s_flags = WPF_ENABLE_DEFAULT_COUNTERS;
 static Mutex s_autoCountersLock(MutexType::FAST);
 static StringObjectMap<WINPERF_COUNTER> *s_autoCounters = new StringObjectMap<WINPERF_COUNTER>(Ownership::False);
 
@@ -57,7 +57,7 @@ static struct
    { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0, 60, COUNTER_TYPE_FLOAT, _T("Average CPU load for last minute"), DCI_DT_FLOAT },
    { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0, 300, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 5 minutes"), DCI_DT_FLOAT },
    { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0, 900, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 15 minutes"), DCI_DT_FLOAT },
-   { NULL, NULL, 0, 0, 0, NULL, 0 }
+   { nullptr, nullptr, 0, 0, 0, nullptr, 0 }
 };
 
 /**
@@ -66,7 +66,6 @@ static struct
 static LONG H_PdhVersion(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    DWORD dwVersion;
-
    if (PdhGetDllVersion(&dwVersion) != ERROR_SUCCESS)
       return SYSINFO_RC_ERROR;
    ret_uint(pValue, dwVersion);
@@ -209,21 +208,17 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
    if ((dwType & 0x00000300) == PERF_SIZE_LARGE)
    {
       if (bUseTwoSamples)
-         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
-                                         &rawData2, &rawData1, &counterValue);
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE, &rawData2, &rawData1, &counterValue);
       else
-         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE,
-                                         &rawData1, NULL, &counterValue);
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LARGE, &rawData1, nullptr, &counterValue);
       ret_int64(pValue, counterValue.largeValue);
    }
    else
    {
       if (bUseTwoSamples)
-         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG,
-                                         &rawData2, &rawData1, &counterValue);
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG, &rawData2, &rawData1, &counterValue);
       else
-         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG,
-                                         &rawData1, NULL, &counterValue);
+         PdhCalculateCounterFromRawValue(hCounter, PDH_FMT_LONG, &rawData1, nullptr, &counterValue);
       ret_int(pValue, counterValue.longValue);
    }
    PdhCloseQuery(hQuery);
@@ -263,43 +258,37 @@ static LONG H_PdhObjects(const TCHAR *param, const TCHAR *arg, StringList *value
  */
 static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
-   TCHAR *pszElement, *pszCounterList, *pszInstanceList, szHostName[256], szObject[256];
-   LONG iResult = SYSINFO_RC_ERROR;
-   DWORD dwSize1, dwSize2;
-   PDH_STATUS rc;
+   TCHAR szObject[256];
+   if (!AgentGetParameterArg(pszParam, 1, szObject, 256))
+      return SYSINFO_RC_UNSUPPORTED;
 
-   AgentGetParameterArg(pszParam, 1, szObject, 256);
-   if (szObject[0] != 0)
+   if (szObject[0] == 0)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   DWORD dwSize1 = 256;
+   TCHAR hostName[256];
+   if (!GetComputerName(hostName, &dwSize1))
+      return SYSINFO_RC_ERROR;
+
+   LONG result = SYSINFO_RC_ERROR;
+   dwSize1 = 256000;
+   DWORD dwSize2 = 256000;
+   TCHAR *counterList = MemAllocString(dwSize1);
+   TCHAR *instanceList = MemAllocString(dwSize2);
+   PDH_STATUS rc = PdhEnumObjectItems(nullptr, hostName, szObject, counterList, &dwSize1, instanceList, &dwSize2, PERF_DETAIL_WIZARD, 0);
+   if ((rc == ERROR_SUCCESS) || (rc == PDH_MORE_DATA))
    {
-      dwSize1 = 256;
-      if (GetComputerName(szHostName, &dwSize1))
-      {
-         dwSize1 = dwSize2 = 256000;
-         pszCounterList = MemAllocString(dwSize1);
-         pszInstanceList = MemAllocString(dwSize2);
-         rc = PdhEnumObjectItems(NULL, szHostName, szObject,
-                                 pszCounterList, &dwSize1, pszInstanceList, &dwSize2,
-                                 PERF_DETAIL_WIZARD, 0);
-         if ((rc == ERROR_SUCCESS) || (rc == PDH_MORE_DATA))
-         {
-            for(pszElement = (pArg[0] == _T('C')) ? pszCounterList : pszInstanceList;
-                *pszElement != 0; pszElement += _tcslen(pszElement) + 1)
-               value->add(pszElement);
-            iResult = SYSINFO_RC_SUCCESS;
-         }
-         else
-         {
-            ReportPdhError(_T("H_PdhObjectItems"), _T("PdhEnumObjectItems"), szObject, rc);
-         }
-         MemFree(pszCounterList);
-         MemFree(pszInstanceList);
-      }
+      for(TCHAR *pszElement = (pArg[0] == _T('C')) ? counterList : instanceList; *pszElement != 0; pszElement += _tcslen(pszElement) + 1)
+         value->add(pszElement);
+      result = SYSINFO_RC_SUCCESS;
    }
    else
    {
-      iResult = SYSINFO_RC_UNSUPPORTED;
+      ReportPdhError(_T("H_PdhObjectItems"), _T("PdhEnumObjectItems"), szObject, rc);
    }
-   return iResult;
+   MemFree(counterList);
+   MemFree(instanceList);
+   return result;
 }
 
 /**
@@ -404,9 +393,7 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
    {
       // Extend list
       s_info.numParameters++;
-      s_info.parameters =
-         (NETXMS_SUBAGENT_PARAM *)realloc(s_info.parameters,
-                  sizeof(NETXMS_SUBAGENT_PARAM) * s_info.numParameters);
+      s_info.parameters = MemReallocArray(s_info.parameters, s_info.numParameters);
    }
 
    _tcslcpy(s_info.parameters[i].name, pszName, MAX_PARAM_NAME);
@@ -441,8 +428,8 @@ static TCHAR *s_counterList = nullptr;
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
 {
    { _T("Counter"), CT_STRING_CONCAT, _T('\n'), 0, 0, 0, &s_counterList },
-   { _T("EnableDefaultCounters"), CT_BOOLEAN_FLAG_32, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &m_dwFlags },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("EnableDefaultCounters"), CT_BOOLEAN_FLAG_32, 0, 0, WPF_ENABLE_DEFAULT_COUNTERS, 0, &s_flags },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 };
 
 /**
@@ -463,7 +450,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 		counters = (TCHAR *)realloc(counters, countersBufferSize);
 		DWORD bytes = (DWORD)countersBufferSize;
       DWORD type;
-		status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter 009"), NULL, &type, (BYTE *)counters, &bytes);
+		status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter 009"), nullptr, &type, (BYTE *)counters, &bytes);
 	} while(status == ERROR_MORE_DATA);
    if ((status != ERROR_SUCCESS) || (counters[0] == 0))
    {
@@ -479,7 +466,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 	      while(status == ERROR_MORE_DATA)
 	      {
 		      countersBufferSize += 8192;
-		      counters = (TCHAR *)realloc(counters, countersBufferSize);
+		      counters = MemRealloc(counters, countersBufferSize);
 		      bytes = (DWORD)countersBufferSize;
    	      status = RegQueryValueEx(hKey, _T("Counter"), NULL, &type, (BYTE *)counters, &bytes);
 	      }
@@ -498,11 +485,11 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
       {
 	      DWORD bytes = (DWORD)countersBufferSize;
          DWORD type;
-	      status = RegQueryValueEx(hKey, _T("Counter"), NULL, &type, (BYTE *)localCounters, &bytes);
+	      status = RegQueryValueEx(hKey, _T("Counter"), nullptr, &type, (BYTE *)localCounters, &bytes);
 	      while(status == ERROR_MORE_DATA)
 	      {
 		      countersBufferSize += 8192;
-		      localCounters = (TCHAR *)realloc(localCounters, countersBufferSize);
+		      localCounters = MemRealloc(localCounters, countersBufferSize);
 		      bytes = (DWORD)countersBufferSize;
    	      status = RegQueryValueEx(hKey, _T("Counter"), NULL, &type, (BYTE *)localCounters, &bytes);
 	      }
@@ -520,7 +507,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 
 	// Check counter names for H_CounterAlias
    TCHAR *newName;
-	for(UINT32 i = 0; i < s_info.numParameters; i++)
+	for(size_t i = 0; i < s_info.numParameters; i++)
 	{
 		if (s_info.parameters[i].handler == H_CounterAlias)
 		{
@@ -536,7 +523,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    if (newName != NULL)
       counter = newName;
    TCHAR value[MAX_RESULT_LENGTH];
-   if (H_PdhCounterValue(NULL, counter, value, NULL) == SYSINFO_RC_SUCCESS)
+   if (H_PdhCounterValue(nullptr, counter, value, nullptr) == SYSINFO_RC_SUCCESS)
    {
       nxlog_debug_tag(WINPERF_DEBUG_TAG, 4, _T("\"\\Memory\\Free & Zero Page List Bytes\" is supported"));
       AddParameter(_T("System.Memory.Physical.Free"), H_CounterAlias, (TCHAR *)counter, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE);
@@ -564,14 +551,13 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
             Trim(curr);
             if (!AddCounterFromConfig(curr))
             {
-               nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG,
-                     _T("Unable to add counter from configuration file. Original configuration record: %s"), curr);
+               nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG, _T("Unable to add counter from configuration file. Original configuration record: %s"), curr);
             }
          }
          MemFree(s_counterList);
       }
 
-      if (m_dwFlags & WPF_ENABLE_DEFAULT_COUNTERS)
+      if (s_flags & WPF_ENABLE_DEFAULT_COUNTERS)
          AddPredefinedCounters();
    }
    else
