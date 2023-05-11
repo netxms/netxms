@@ -34,6 +34,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.NodeChild;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.console.resources.ThemeEngine;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.slm.objecttabs.BusinessServiceChecks;
 
@@ -44,6 +45,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 {
    private static final String[] TYPES = { "None", "Script", "DCI threshold", "Object status", };
 
+   private Color prototypeColor = ThemeEngine.getForegroundColor("List.DisabledItem");
    private NXCSession session = ConsoleSharedData.getSession();
    private Map<Long, String> dciNameCache = new HashMap<Long, String>();
    private WorkbenchLabelProvider objectLabelProvider = new WorkbenchLabelProvider();
@@ -222,7 +224,11 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	@Override
 	public Color getBackground(Object element, int columnIndex)
 	{
-		return null;
+      if (((BusinessServiceCheck)element).getPrototypeServiceId() != 0)
+      {
+         return prototypeColor;
+      }
+      return null;
 	}
 
    /**
