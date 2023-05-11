@@ -356,7 +356,7 @@ uint64_t GetLastAssetChangeLogId()
  */
 static void InitAssetChangeLogId()
 {
-   uint64_t id = ConfigReadInt64(_T("LastAssetChangeLogRecordId"), 0);
+   int64_t id = ConfigReadInt64(_T("LastAssetChangeLogRecordId"), 0);
    if (id > s_assetChangeLogId)
       s_assetChangeLogId = id;
 
@@ -365,7 +365,7 @@ static void InitAssetChangeLogId()
    if (hResult != nullptr)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_assetChangeLogId = std::max(DBGetFieldUInt64(hResult, 0, 0), static_cast<uint64_t>(s_assetChangeLogId));
+         s_assetChangeLogId = std::max(DBGetFieldInt64(hResult, 0, 0), static_cast<int64_t>(s_assetChangeLogId));
       DBFreeResult(hResult);
    }
    DBConnectionPoolReleaseConnection(hdb);
@@ -1035,7 +1035,7 @@ void UnlinkAsset(Asset *asset, ClientSession *session)
 /**
  * Get serial number for object
  */
-static SharedString GetSerialNumber(const NetObj& object)
+static inline SharedString GetSerialNumber(const NetObj& object)
 {
    switch(object.getObjectClass())
    {
@@ -1052,21 +1052,14 @@ static SharedString GetSerialNumber(const NetObj& object)
 /**
  * Get MAC address for object
  */
-static MacAddress GetMacAddress(const NetObj& object)
+static inline MacAddress GetMacAddress(const NetObj& object)
 {
    switch(object.getObjectClass())
    {
       case OBJECT_ACCESSPOINT:
          return static_cast<const AccessPoint&>(object).getMacAddr();
       case OBJECT_NODE:
-      {
-         const Node &node = static_cast<const Node&>(object);
-         shared_ptr<Interface> interface = node.findInterfaceByIP(node.getPrimaryIpAddress());
-         if (interface == nullptr)
-            return MacAddress();
-         else
-            return interface->getMacAddr();
-      }
+         return static_cast<const Node&>(object).getPrimaryMacAddress();
       case OBJECT_SENSOR:
          return static_cast<const Sensor&>(object).getMacAddress();
    }
@@ -1163,37 +1156,38 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
 {
    TCHAR serialAttributeName[MAX_OBJECT_NAME] = _T("");
    TCHAR macAttributeName[MAX_OBJECT_NAME] = _T("");
-   int foundAtributes = 0;
    s_schemaLock.readLock();
    for (KeyValuePair<AssetAttribute> *a : s_schema)
    {
       if (a->value->getSystemType() == AMSystemType::Serial)
-      {
          _tcslcpy(serialAttributeName, a->key, MAX_OBJECT_NAME);
-         foundAtributes |= 1;
-      }
       if (a->value->getSystemType() == AMSystemType::MacAddress)
-      {
          _tcslcpy(macAttributeName, a->key, MAX_OBJECT_NAME);
-         foundAtributes |= 2;
-      }
-      if (foundAtributes == 3)
+      if ((serialAttributeName[0] != 0) && (macAttributeName[0] != 0))
          break;
    }
    s_schemaLock.unlock();
-   if (serialAttributeName[0] == 0 && macAttributeName[0] == 0)
+
+   if ((serialAttributeName[0] == 0) && (macAttributeName[0] == 0))
    {
-      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: neither serial number nor MAC address attributes are defined in schema"), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): neither serial number nor MAC address attributes are defined in schema"), object->getName(), object->getId());
       return;
    }
-   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: using serial number attribute \"%s\""), object->getName(), object->getId(), serialAttributeName);
-   nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: using MAC address attribute \"%s\""), object->getName(), object->getId(), macAttributeName);
+
+   if (serialAttributeName[0] != 0)
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): using serial number attribute \"%s\""), object->getName(), object->getId(), serialAttributeName);
+   else
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): serial number attribute not defined in schema"), object->getName(), object->getId());
+   if (macAttributeName[0] != 0)
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): using MAC address attribute \"%s\""), object->getName(), object->getId(), macAttributeName);
+   else
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): MAC address attribute not defined in schema"), object->getName(), object->getId());
 
    SharedString serialNumber = GetSerialNumber(*object);
    MacAddress macAddress = GetMacAddress(*object);
    if (serialNumber.isNull() || serialNumber.isEmpty())
    {
-      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: cannot get serial number from object"), object->getName(), object->getId());
+      nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): cannot get serial number from object"), object->getName(), object->getId());
       if (!macAddress.isNull())
       {
          if (!matchByMacAllowed)
@@ -1201,10 +1195,9 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
             shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(object->getAssetId(), OBJECT_ASSET));
             if (asset != nullptr)
             {
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: unlink asset matched by MAC to this object, but by serial to other object"),
-                     object->getName(), object->getId());
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): unlink asset matched by MAC to this object, but by serial to other object"), object->getName(), object->getId());
                UnlinkAsset(asset.get(), nullptr);
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: unlinked from asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]): unlinked from asset %s [%u]"), object->getName(), object->getId(), asset->getName(), asset->getId());
             }
          }
          else
@@ -1217,7 +1210,6 @@ void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed)
       else
       {
          nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT_LINK, 6, _T("UpdateAssetLinkage(%s [%u]: cannot get MAC address from object"), object->getName(), object->getId());
-         return;
       }
    }
    else

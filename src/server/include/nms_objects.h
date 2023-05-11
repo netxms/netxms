@@ -3375,6 +3375,12 @@ public:
    shared_ptr<Cluster> getMyCluster();
 
    InetAddress getIpAddress() const { lockProperties(); auto a = m_ipAddress; unlockProperties(); return a; }
+   MacAddress getPrimaryMacAddress() const
+   {
+      shared_ptr<Interface> iface = findInterfaceByIP(getPrimaryIpAddress());
+      return (iface != nullptr) ? iface->getMacAddr() : MacAddress();
+   }
+
    NodeType getType() const { return m_type; }
    bool isVirtual() const { return (m_type == NODE_TYPE_VIRTUAL) || (m_type == NODE_TYPE_CONTAINER); }
    const TCHAR *getSubType() { return m_subType; }
@@ -3533,9 +3539,11 @@ public:
    shared_ptr<NetworkPath> getLastKnownNetworkPath() const { return GetAttributeWithLock(m_lastKnownNetworkPath, m_mutexProperties); }
    shared_ptr<LinkLayerNeighbors> getLinkLayerNeighbors() const { return GetAttributeWithLock(m_linkLayerNeighbors, m_topologyMutex); }
    shared_ptr<VlanList> getVlans() const { return GetAttributeWithLock(m_vlans, m_topologyMutex); }
+   shared_ptr<ComponentTree> getComponents();
+
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, InetAddress *route, uint32_t *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, uint32_t *srcIfIndex);
-   shared_ptr<ComponentTree> getComponents();
+
    bool getLldpLocalPortInfo(uint32_t idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
    void showLLDPInfo(ServerConsole *console);
 
