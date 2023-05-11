@@ -107,6 +107,7 @@ public class AssetSummaryView extends ObjectView
          tc.setData("Attribute", a.getName());
       }
 
+      viewer.getTable().setSortColumn(viewer.getTable().getColumn(0));
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new AssetListLabelProvider(viewer, propertyReader));
       viewer.setComparator(new AssetListComparator(propertyReader));
