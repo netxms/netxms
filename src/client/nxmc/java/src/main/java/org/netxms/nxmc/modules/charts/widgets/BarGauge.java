@@ -38,8 +38,8 @@ import org.netxms.nxmc.tools.WidgetHelper;
 public class BarGauge extends GenericGauge
 {
    private static final int MAX_BAR_THICKNESS = 40;
-   private static final int SCALE_TEXT_HEIGHT = 16;
-   private static final int SCALE_TEXT_WIDTH = 20;
+   private static final int SCALE_TEXT_HEIGHT = 20;
+   private static final int SCALE_TEXT_WIDTH = 100;
 
    private Font[] scaleFonts = null;
 
@@ -139,14 +139,7 @@ public class BarGauge extends GenericGauge
       }
 
       gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
-      gc.setForeground(chart.getColorFromPreferences("Chart.Colors.DialScale"));
       gc.fillRectangle(rect);
-      gc.drawRectangle(rect);
-
-      rect.x += 2;
-      rect.y += 2;
-      rect.width -= 3;
-      rect.height -= 3;
 
       double maxValue = config.getMaxYScaleValue();
       double minValue = config.getMinYScaleValue();
@@ -191,11 +184,11 @@ public class BarGauge extends GenericGauge
             double v = data.getCurrentValue();
             if (v < maxValue)
             {
-               gc.setBackground(chart.getColorFromPreferences("Chart.Colors.PlotArea"));
+               gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
                if (config.isTransposed())
                {
                   int points = (int)((v - minValue) / pointValue);
-                  gc.fillRectangle(rect.x + points, rect.y, rect.width - points, rect.height);
+                  gc.fillRectangle(rect.x + points, rect.y, rect.width - points + 1, rect.height);
                }
                else
                {
@@ -206,6 +199,9 @@ public class BarGauge extends GenericGauge
          }
          else
          {
+            gc.setBackground(chart.getColorFromPreferences("Chart.Colors.EmptySection"));
+            gc.fillRectangle(rect);
+
             if (colorMode == GaugeColorMode.THRESHOLD)
                gc.setBackground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
             else if (colorMode == GaugeColorMode.DATA_SOURCE)
@@ -255,7 +251,7 @@ public class BarGauge extends GenericGauge
       else
       {
          gc.setBackground(chart.getColorCache().create(color));
-         int y = rect.y + rect.height - start - points + 1;
+         int y = rect.y + rect.height - start - points;
          if (y + points >= rect.y + rect.height)
             points--;
          gc.fillRectangle(rect.x, y, rect.width, points);
@@ -279,14 +275,16 @@ public class BarGauge extends GenericGauge
       double step = getStepMagnitude(Math.max(Math.abs(minValue), Math.abs(maxValue)));
       double value = minValue;
       float pointsStep = (float)(step / pointValue);
+      if (pointsStep < SCALE_TEXT_HEIGHT * 2)
+      {
+         int factor = Math.round(SCALE_TEXT_HEIGHT * 2 / pointsStep);
+         pointsStep *= factor;
+         step *= factor;
+      }
       if (isTransposed)
       {
          for(float x = 0; x < rect.width; x += pointsStep, value += step)
          {
-            if (gridVisible && (x > 0))
-            {
-               gc.drawLine(rect.x + (int)x, rect.y - 2, rect.x + (int)x, rect.y + rect.height + 1);
-            }
             String text = DataFormatter.roundDecimalValue(value, step, 5);
             gc.drawText(text, rect.x + (int)x, rect.y + rect.height + 4, SWT.DRAW_TRANSPARENT);
          }
@@ -296,10 +294,6 @@ public class BarGauge extends GenericGauge
          int textHeight = gc.textExtent("999MM").y;
          for(float y = rect.height; y > 0; y -= pointsStep, value += step)
          {
-            if (gridVisible && (y < rect.height))
-            {
-               gc.drawLine(rect.x - 2, rect.y + (int)y, rect.x + rect.width + 1, rect.y + (int)y);
-            }
             String text = DataFormatter.roundDecimalValue(value, step, 5);
             gc.drawText(text, rect.x + rect.width + 4, rect.y + (int)y - textHeight * 3 / 4, SWT.DRAW_TRANSPARENT);
          }
