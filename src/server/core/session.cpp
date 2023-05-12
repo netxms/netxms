@@ -6268,9 +6268,9 @@ void ClientSession::deleteObject(const NXCPMessage& request)
 				{
 	            response.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
 				}
-				else if((object->getObjectClass() == OBJECT_ASSET) && ConfigReadBoolean(_T("Asset.ForbidLinkedDeletion"), true) && static_pointer_cast<Asset>(object)->getLinkedObjectId() != 0)
+				else if ((object->getObjectClass() == OBJECT_ASSET) && !ConfigReadBoolean(_T("Objects.Assets.AllowDeleteIfLinked"), false) && (static_cast<Asset&>(*object).getLinkedObjectId() != 0))
 				{
-               response.setField(VID_RCC, RCC_ASSET_LINKED_TO_NODE);
+               response.setField(VID_RCC, RCC_ASSET_IS_LINKED);
 				}
 				else
 				{

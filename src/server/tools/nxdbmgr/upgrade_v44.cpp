@@ -28,11 +28,10 @@
  */
 static bool H_UpgradeFromV12()
 {
-   CHK_EXEC(CreateConfigParam(_T("Asset.ForbidLinkedDeletion"),
-         _T("1"),
-         _T("Forbid deletion of assets linked with node."),
-         _T(""),
-         'B', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("Objects.Assets.AllowDeleteIfLinked"),
+         _T("0"),
+         _T("Enable/disable deletion of linked assets."),
+         nullptr, 'B', true, false, false, false));
    CHK_EXEC(SetMinorSchemaVersion(13));
    return true;
 }
