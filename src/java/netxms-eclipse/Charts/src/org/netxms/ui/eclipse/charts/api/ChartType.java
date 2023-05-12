@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,10 @@ public enum ChartType
    LINE(0),
    PIE(1),
    BAR(2),
-   DIAL(3),
-   GAUGE(4),
-   TEXT(5);
+   DIAL_GAUGE(3),
+   BAR_GAUGE(4),
+   TEXT_GAUGE(5),
+   CIRCULAR_GAUGE(6);
 
    private static final Logger logger = LoggerFactory.getLogger(ChartType.class);
    private static final Map<Integer, ChartType> lookupTable = new HashMap<Integer, ChartType>();

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ public class Chart extends Composite
       colorCache = new ColorCache(this);
 
       createDefaultPalette();
-      setBackground(getColorFromPreferences("Chart.Colors.Background")); //$NON-NLS-1$
+      setBackground(getColorFromPreferences("Chart.Colors.Background"));
 
       this.type = type;
       this.configuration = configuration;
@@ -349,6 +349,7 @@ public class Chart extends Composite
          for(Control c : legend.getChildren())
             c.setMenu(menu);
       }
+      legend.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
    }
 
    /**
@@ -373,12 +374,16 @@ public class Chart extends Composite
             plotAreaComposite = new BarChart(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
-         case DIAL:
-            plotAreaComposite = new DialGauge(this);
+         case BAR_GAUGE:
+            plotAreaComposite = new BarGauge(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
-         case GAUGE:
-            plotAreaComposite = new BarGauge(this);
+         case CIRCULAR_GAUGE:
+            plotAreaComposite = new CircularGauge(this);
+            plotArea = (PlotArea)plotAreaComposite;
+            break;
+         case DIAL_GAUGE:
+            plotAreaComposite = new DialGauge(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
          case LINE:
@@ -389,7 +394,7 @@ public class Chart extends Composite
             plotAreaComposite = new PieChart(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
-         case TEXT:
+         case TEXT_GAUGE:
             plotAreaComposite = new TextGauge(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
@@ -498,7 +503,7 @@ public class Chart extends Composite
     */
    public void clearParameters()
    {
-      for (int i = 0; i < dataSeries.size(); i++)
+      for(int i = 0; i < dataSeries.size(); i++)
          dataSeries.set(i, new DataSeries(0));
    }
 
@@ -587,7 +592,7 @@ public class Chart extends Composite
    {
       if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return;
-      
+
       DataSeries series = dataSeries.get(index);
       if (series != null)
       {

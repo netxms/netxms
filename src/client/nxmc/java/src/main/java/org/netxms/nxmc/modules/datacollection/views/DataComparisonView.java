@@ -492,7 +492,7 @@ public class DataComparisonView extends AdHocObjectView
 				}
 
 				final Threshold[][] thresholds = new Threshold[items.size()][];
-            if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
+            if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
@@ -505,7 +505,7 @@ public class DataComparisonView extends AdHocObjectView
 					@Override
 					public void run()
 					{
-                  if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
+                  if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);

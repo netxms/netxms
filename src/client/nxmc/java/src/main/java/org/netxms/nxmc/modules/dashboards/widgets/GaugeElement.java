@@ -84,15 +84,19 @@ public class GaugeElement extends ComparisonChartElement
 		switch(elementConfig.getGaugeType())
 		{
          case GaugeConfig.BAR:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.GAUGE, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR_GAUGE, chartConfig);
             updateThresholds = true;
             break;
-			case GaugeConfig.TEXT:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT, chartConfig);
-		      updateThresholds = true;
-				break;
+         case GaugeConfig.CIRCULAR:
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.CIRCULAR_GAUGE, chartConfig);
+            updateThresholds = true;
+            break;
+         case GaugeConfig.TEXT:
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT_GAUGE, chartConfig);
+            updateThresholds = true;
+            break;
 			default:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL_GAUGE, chartConfig);
 				break;
 		}
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());

@@ -54,6 +54,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
       ps.setDefault("Chart.Colors.DialNeedle", "51,78,113"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.DialNeedlePin", "27,30,33"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.DialScale", "118,120,122"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.EmptySection", "242,242,242"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.Legend", "0,0,0"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.PlotArea", "255,255,255"); //$NON-NLS-1$ //$NON-NLS-2$
       ps.setDefault("Chart.Colors.Selection", "0,0,128"); //$NON-NLS-1$ //$NON-NLS-2$

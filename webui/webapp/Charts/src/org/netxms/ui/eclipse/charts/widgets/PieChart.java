@@ -165,7 +165,7 @@ public class PieChart extends GenericComparisonChart
          gc.setBackground(plotAreaColor);
          gc.setAlpha(255);
          int width = boxSize / 7;
-         gc.fillArc(x + width, y + width, boxSize - width * 2, boxSize - width * 2, startAngle, 360);
+         gc.fillArc(x + width, y + width, boxSize - width * 2, boxSize - width * 2, 0, 360);
       }
 
       if (chart.getConfiguration().isShowTotal())

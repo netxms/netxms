@@ -101,7 +101,9 @@ public class DialGauge extends GenericGauge
 	@Override
    protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
 	{
-		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+      Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+      int heightAdjustment = rect.height / 6;
+      rect.height += heightAdjustment;
 
       if (configuration.areLabelsVisible() && !configuration.areLabelsInside())
 		{
@@ -240,20 +242,20 @@ public class DialGauge extends GenericGauge
       // Draw labels
       if (configuration.areLabelsVisible())
 		{
-         gc.setFont(configuration.areLabelsInside() ? markFont : null);
+         gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, scaleFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", rect.width - scaleInnerOffset * 2 - 6, rect.height / 8) : null);
          ext = gc.textExtent(dci.getDescription());
-         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
+         gc.setForeground(scaleColor);
          if (configuration.areLabelsInside())
 			{
             gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleCenterOffset / 2 + rect.height / 4, true);
 			}
 			else
 			{
-            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4 - heightAdjustment, true);
 			}
 		}
 	}
-	
+
 	/**
 	 * Draw colored zone.
 	 * 

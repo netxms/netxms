@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ public class DataComparisonView extends ViewPart
 	private Action actionLegendBottom;
 	private Action actionCopyImage;
 	private Action actionSaveAsImage;
-	
+
    /**
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
@@ -321,7 +321,7 @@ public class DataComparisonView extends ViewPart
 				updateChart();
 			}
 		};
-		
+
 		actionAutoRefresh = new Action(Messages.get().DataComparisonView_AutoRefresh) {
 			@Override
 			public void run()
@@ -612,9 +612,9 @@ public class DataComparisonView extends ViewPart
 					DciDataRow value = data.getLastValue();
 					values[i] = (value != null) ? value.getValueAsDouble() : 0.0;
 				}
-				
+
 				final Threshold[][] thresholds = new Threshold[items.size()][];
-            if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
+            if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
 				{
 					for(int i = 0; i < items.size(); i++)
 					{
@@ -627,7 +627,7 @@ public class DataComparisonView extends ViewPart
 					@Override
 					public void run()
 					{
-                  if ((chartType == ChartType.DIAL) || (chartType == ChartType.GAUGE) || (chartType == ChartType.TEXT))
+                  if ((chartType == ChartType.DIAL_GAUGE) || (chartType == ChartType.BAR_GAUGE) || (chartType == ChartType.CIRCULAR_GAUGE) || (chartType == ChartType.TEXT_GAUGE))
 							for(int i = 0; i < thresholds.length; i++)
 								chart.updateParameterThresholds(i, thresholds[i]);
 						setChartData(values);
@@ -653,7 +653,7 @@ public class DataComparisonView extends ViewPart
 		job.setUser(false);
 		job.start();
 	}
-	
+
 	/**
 	 * Set new data for chart items
 	 * 

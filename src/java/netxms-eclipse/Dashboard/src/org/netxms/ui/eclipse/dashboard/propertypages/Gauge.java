@@ -87,6 +87,7 @@ public class Gauge extends PropertyPage
 		gaugeType.add(Messages.get().Gauge_Dial);
 		gaugeType.add(Messages.get().Gauge_Bar);
 		gaugeType.add(Messages.get().Gauge_Text);
+      gaugeType.add("Circular");
 		gaugeType.select(config.getGaugeType());
 
 		fontName = new LabeledText(dialogArea, SWT.NONE);

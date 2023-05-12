@@ -127,6 +127,7 @@ public class Gauge extends DashboardElementPropertyPage
       gaugeType.add(i18n.tr("Dial"));
       gaugeType.add(i18n.tr("Bar"));
       gaugeType.add(i18n.tr("Text"));
+      gaugeType.add(i18n.tr("Circular"));
 		gaugeType.select(config.getGaugeType());
 
 		fontName = new LabeledText(dialogArea, SWT.NONE);
