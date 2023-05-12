@@ -142,12 +142,37 @@ public class ChartDciConfig implements NodeItemPair
 		this.displayFormat = src.displayFormat;
 	}
 
+   /**
+    * Create DCI info from DciValue object
+    * 
+    * @param dci The DciValue
+    */
+   public ChartDciConfig(DciValue dci)
+   {
+      nodeId = dci.getNodeId();
+      dciId = dci.getId();
+      dciName = dci.getName();
+      dciDescription = dci.getDescription();
+      type = dci.getDcObjectType();
+      name = dci.getDescription();
+      color = UNSET_COLOR;
+      lineWidth = 2;
+      lineChartType = DEFAULT;
+      displayType = UNSET;
+      showThresholds = false;
+      invertValues = false;
+      multiMatch = false;
+      instance = "";
+      column = "";
+      displayFormat = "";
+   }
+
 	/**
 	 * Create DCI info from DciValue object
 	 * 
 	 * @param dci The DciValue
 	 */
-	public ChartDciConfig(DciValue dci)
+	public ChartDciConfig(ChartDciConfig src, DciValue dci)
 	{
 		nodeId = dci.getNodeId();
 		dciId = dci.getId();
@@ -155,17 +180,17 @@ public class ChartDciConfig implements NodeItemPair
       dciDescription = dci.getDescription();
 		type = dci.getDcObjectType();
 		name = dci.getDescription();
-		color = UNSET_COLOR;
-		lineWidth = 2;
-      lineChartType = DEFAULT;
-      displayType = UNSET;
-		showThresholds = false;
-		invertValues = false;
-		useRawValues = false;
-		multiMatch = false;
-      instance = "";
-      column = "";
-      displayFormat = "";
+      this.color = src.color;
+      this.lineWidth = src.lineWidth;
+      this.lineChartType = src.lineChartType;
+      this.displayType = src.displayType;
+      this.showThresholds = src.showThresholds;
+      this.invertValues = src.invertValues;
+      this.useRawValues = src.useRawValues;
+      this.multiMatch = src.multiMatch;
+      this.instance = src.instance;
+      this.column = src.column;
+      this.displayFormat = src.displayFormat;
 	}
 
    /**
