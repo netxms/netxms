@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
@@ -119,46 +120,50 @@ public class CircularGauge extends GenericGauge
       double minValue = configuration.getMinYScaleValue();
 
       double value = data.getCurrentValue();
-      int angularSize;
-      if (value < minValue)
-         angularSize = 0;
-      else if (value > maxValue)
-         angularSize = 360;
-      else
-         angularSize = (int)Math.round((value - minValue) / (maxValue - minValue) * 360.0);
-
-      switch(GaugeColorMode.getByValue(configuration.getGaugeColorMode()))
+      GaugeColorMode colorMode = GaugeColorMode.getByValue(configuration.getGaugeColorMode());
+      if (colorMode == GaugeColorMode.ZONE)
       {
-         case CUSTOM:
-            gc.setBackground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
-            break;
-         case DATA_SOURCE:
-            gc.setBackground(chart.getColorCache().create(getDataSourceColor(dci, index)));
-            break;
-         case THRESHOLD:
-            gc.setBackground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
-            break;
-         case ZONE:
-            if ((data.getCurrentValue() <= configuration.getLeftRedZone()) || (data.getCurrentValue() >= configuration.getRightRedZone()))
-            {
-               gc.setBackground(chart.getColorCache().create(RED_ZONE_COLOR));
-            }
-            else if ((data.getCurrentValue() <= configuration.getLeftYellowZone()) || (data.getCurrentValue() >= configuration.getRightYellowZone()))
-            {
-               gc.setBackground(chart.getColorCache().create(YELLOW_ZONE_COLOR));
-            }
-            else
-            {
-               gc.setBackground(chart.getColorCache().create(GREEN_ZONE_COLOR));
-            }
-            break;
-         default:
-            gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION));
-            break;
+         double angleValue = (maxValue - minValue) / 360.0;
+         double startAngle = 90.0;
+         double stopAngle = 90.0 - (value - minValue) / (maxValue - minValue) * 360.0;
+         startAngle = drawZone(gc, rect, startAngle, stopAngle, minValue, configuration.getLeftRedZone(), angleValue, RED_ZONE_COLOR);
+         startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getLeftRedZone(), configuration.getLeftYellowZone(), angleValue, YELLOW_ZONE_COLOR);
+         startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getLeftYellowZone(), configuration.getRightYellowZone(), angleValue, GREEN_ZONE_COLOR);
+         startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getRightYellowZone(), configuration.getRightRedZone(), angleValue, YELLOW_ZONE_COLOR);
+         startAngle = drawZone(gc, rect, startAngle, stopAngle, configuration.getRightRedZone(), maxValue, angleValue, RED_ZONE_COLOR);
+         gc.setBackground(getColorFromPreferences("Chart.Colors.EmptySection"));
+         gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, -(-270 - (int)Math.ceil(startAngle)));
       }
-      gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, -angularSize);
-      gc.setBackground(getColorFromPreferences("Chart.Colors.EmptySection"));
-      gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, 360 - angularSize);
+      else
+      {
+         switch(colorMode)
+         {
+            case CUSTOM:
+               gc.setBackground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
+               break;
+            case DATA_SOURCE:
+               gc.setBackground(chart.getColorCache().create(getDataSourceColor(dci, index)));
+               break;
+            case THRESHOLD:
+               gc.setBackground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
+               break;
+            default:
+               gc.setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_SELECTION));
+               break;
+         }
+
+         int angularSize;
+         if (value < minValue)
+            angularSize = 0;
+         else if (value > maxValue)
+            angularSize = 360;
+         else
+            angularSize = (int)Math.round((value - minValue) / (maxValue - minValue) * 360.0);
+
+         gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, -angularSize);
+         gc.setBackground(getColorFromPreferences("Chart.Colors.EmptySection"));
+         gc.fillArc(rect.x, rect.y, rect.width, rect.height, 90, 360 - angularSize);
+      }
       gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
       int width = rect.width / 7;
       gc.fillArc(rect.x + width, rect.y + width, rect.width - width * 2, rect.height - width * 2, 0, 360);
@@ -169,7 +174,7 @@ public class CircularGauge extends GenericGauge
       {
          gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, legendFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", innerBoxSize, innerBoxSize) : null);
          Point ext = gc.textExtent(dci.getDescription());
-         gc.setForeground(getColorFromPreferences("Chart.Colors.DialScale")); //$NON-NLS-1$
+         gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
          if (configuration.areLabelsInside())
          {
             if ((ext.x <= innerBoxSize) && (ext.y <= innerBoxSize))
@@ -186,11 +191,68 @@ public class CircularGauge extends GenericGauge
       Point ext = gc.textExtent(valueText);
       if ((ext.x <= innerBoxSize) && (ext.y <= innerBoxSize))
       {
-         gc.setForeground(getColorFromPreferences("Chart.Colors.DialScale"));
+         switch(colorMode)
+         {
+            case CUSTOM:
+               gc.setForeground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
+               break;
+            case DATA_SOURCE:
+               gc.setForeground(chart.getColorCache().create(getDataSourceColor(dci, index)));
+               break;
+            case THRESHOLD:
+               gc.setForeground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
+               break;
+            case ZONE:
+               if ((data.getCurrentValue() <= configuration.getLeftRedZone()) || (data.getCurrentValue() >= configuration.getRightRedZone()))
+               {
+                  gc.setForeground(chart.getColorCache().create(RED_ZONE_COLOR));
+               }
+               else if ((data.getCurrentValue() <= configuration.getLeftYellowZone()) || (data.getCurrentValue() >= configuration.getRightYellowZone()))
+               {
+                  gc.setForeground(chart.getColorCache().create(YELLOW_ZONE_COLOR));
+               }
+               else
+               {
+                  gc.setForeground(chart.getColorCache().create(GREEN_ZONE_COLOR));
+               }
+               break;
+            default:
+               gc.setForeground(getColorFromPreferences("Chart.Colors.DialScale"));
+               break;
+         }
          if (configuration.areLabelsInside())
             gc.drawText(valueText, cx - ext.x / 2, cy - ext.y, SWT.DRAW_TRANSPARENT);
          else
             gc.drawText(valueText, cx - ext.x / 2, cy - ext.y / 2, SWT.DRAW_TRANSPARENT);
       }
+   }
+
+   /**
+    * Draw zone of the arc
+    *
+    * @param gc graphical context
+    * @param rect bounding rectangle
+    * @param startAngle start angle for this zone
+    * @param stopAngle stop angle for colored sectors
+    * @param minValue minimum value for zone
+    * @param maxValue maximum value for zone
+    * @param angleValue value of one degree
+    * @param color zone color
+    * @return start angle for next zone
+    */
+   private double drawZone(GC gc, Rectangle rect, double startAngle, double stopAngle, double minValue, double maxValue, double angleValue, RGB color)
+   {
+      if ((minValue >= maxValue) || (startAngle <= stopAngle))
+         return startAngle; // Ignore incorrect zone settings or stop angle reached
+
+      double angle = (maxValue - minValue) / angleValue;
+      if (angle <= 0)
+         return startAngle;
+      if (startAngle - angle < stopAngle)
+         angle = startAngle - stopAngle;
+
+      gc.setBackground(chart.getColorCache().create(color));
+      gc.fillArc(rect.x, rect.y, rect.width, rect.height, (int)Math.ceil(startAngle), (int)-Math.ceil(angle));
+      return startAngle - angle;
    }
 }

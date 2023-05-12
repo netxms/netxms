@@ -244,7 +244,7 @@ public class DialGauge extends GenericGauge
 		{
          gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, scaleFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", rect.width - scaleInnerOffset * 2 - 6, rect.height / 8) : null);
          ext = gc.textExtent(dci.getDescription());
-         gc.setForeground(scaleColor);
+         gc.setForeground(chart.getColorFromPreferences("Chart.Colors.Legend"));
          if (configuration.areLabelsInside())
 			{
             gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleCenterOffset / 2 + rect.height / 4, true);

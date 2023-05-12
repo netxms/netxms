@@ -64,6 +64,20 @@ public abstract class GenericGauge extends GenericComparisonChart
       if ((items.size() == 0) || (size.x < OUTER_MARGIN_WIDTH * 2) || (size.y < OUTER_MARGIN_HEIGHT * 2))
          return;
 
+      // top-left corner offset and width/height corrections
+      int dx, dy, wc, hc;
+      if (config.isElementBordersVisible())
+      {
+         dx = INNER_MARGIN_WIDTH;
+         dy = INNER_MARGIN_HEIGHT;
+         wc = -INNER_MARGIN_WIDTH * 2;
+         hc = -INNER_MARGIN_HEIGHT * 2;
+      }
+      else
+      {
+         dx = dy = wc = hc = 0;
+      }
+
       List<DataSeries> series = chart.getDataSeries();
       if (config.isTransposed())
       {
@@ -76,10 +90,17 @@ public abstract class GenericGauge extends GenericComparisonChart
             if (renderData != null)
             {
                for(int i = 0; i < items.size(); i++)
-                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h, i);
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), dx, top + i * h + dy, w + wc, h + hc, i);
             }
             for(int i = 0; i < items.size(); i++)
-               renderElement(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h, i);
+            {
+               renderElement(gc, config, renderData, items.get(i), series.get(i), dx, top + i * h + dy, w + wc, h + hc, i);
+               if (config.isElementBordersVisible())
+               {
+                  gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.drawRectangle(0, top + i * h, w, h);
+               }
+            }
          }
       }
       else
@@ -93,10 +114,17 @@ public abstract class GenericGauge extends GenericComparisonChart
             if (renderData != null)
             {
                for(int i = 0; i < items.size(); i++)
-                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h, i);
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), i * w + dx, top + dy, w + wc, h + hc, i);
             }
             for(int i = 0; i < items.size(); i++)
-               renderElement(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h, i);
+            {
+               renderElement(gc, config, renderData, items.get(i), series.get(i), i * w + dx, top + dy, w + wc, h + hc, i);
+               if (config.isElementBordersVisible())
+               {
+                  gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.drawRectangle(i * w, top, w, h);
+               }
+            }
          }
       }
    }

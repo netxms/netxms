@@ -28,6 +28,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartType;
+import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.charts.widgets.Chart;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -81,19 +82,17 @@ public class GaugeElement extends ComparisonChartElement
       chartConfig.setExpectedTextWidth(elementConfig.getExpectedTextWidth());
       chartConfig.setGaugeColorMode(elementConfig.getColorMode());
 
+      updateThresholds = (elementConfig.getColorMode() == GaugeColorMode.THRESHOLD.getValue());
 		switch(elementConfig.getGaugeType())
 		{
          case GaugeConfig.BAR:
             chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR_GAUGE, chartConfig);
-            updateThresholds = true;
             break;
          case GaugeConfig.CIRCULAR:
             chart = new Chart(getContentArea(), SWT.NONE, ChartType.CIRCULAR_GAUGE, chartConfig);
-            updateThresholds = true;
             break;
          case GaugeConfig.TEXT:
             chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT_GAUGE, chartConfig);
-            updateThresholds = true;
             break;
 			default:
             chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL_GAUGE, chartConfig);

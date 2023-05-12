@@ -88,16 +88,6 @@ public class BarGauge extends GenericGauge
       Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
       gc.setAntialias(SWT.ON);
 
-      if (config.isElementBordersVisible())
-      {
-         gc.setForeground(chart.getColorFromPreferences("Chart.Axis.Y.Color"));
-         gc.drawRectangle(rect);
-         rect.x += INNER_MARGIN_WIDTH;
-         rect.y += INNER_MARGIN_HEIGHT;
-         rect.width -= INNER_MARGIN_WIDTH * 2;
-         rect.height -= INNER_MARGIN_HEIGHT * 2;
-      }
-
       // Draw legend
       if (config.areLabelsVisible())
       {
@@ -171,31 +161,31 @@ public class BarGauge extends GenericGauge
             if (config.getLeftRedZone() > minValue)
             {
                right = config.getLeftRedZone() + (config.getLeftYellowZone() - config.getLeftRedZone()) / 2;
-               drawZone(gc, rect, minValue, right, minValue, pointValue, RED_ZONE_COLOR, YELLOW_ZONE_COLOR, config.isTransposed());
+               drawZone(gc, rect, minValue, right, minValue, pointValue, RED_ZONE_COLOR, config.isTransposed());
             }
 
             left = right;
             if (config.getRightYellowZone() < maxValue)
             {
                right = config.getLeftYellowZone() + (config.getRightYellowZone() - config.getLeftYellowZone()) / 2;
-               drawZone(gc, rect, left, right, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, GREEN_ZONE_COLOR, config.isTransposed());
+               drawZone(gc, rect, left, right, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, config.isTransposed());
 
                left = right;
                right = config.getRightYellowZone() + (config.getRightRedZone() - config.getRightYellowZone()) / 2;
                if (config.getRightYellowZone() < config.getRightRedZone())
                {
-                  drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, YELLOW_ZONE_COLOR, config.isTransposed());
+                  drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, config.isTransposed());
                   left = right;
-                  drawZone(gc, rect, left, maxValue, minValue, pointValue, YELLOW_ZONE_COLOR, (config.getRightRedZone() < maxValue) ? RED_ZONE_COLOR : YELLOW_ZONE_COLOR, config.isTransposed());
+                  drawZone(gc, rect, left, maxValue, minValue, pointValue, YELLOW_ZONE_COLOR, config.isTransposed());
                }
                else if (config.getRightRedZone() < maxValue)
                {
-                  drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, RED_ZONE_COLOR, config.isTransposed());
+                  drawZone(gc, rect, left, right, minValue, pointValue, GREEN_ZONE_COLOR, config.isTransposed());
                }
             }
             else
             {
-               drawZone(gc, rect, left, maxValue, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, GREEN_ZONE_COLOR, config.isTransposed());
+               drawZone(gc, rect, left, maxValue, minValue, pointValue, (config.getLeftYellowZone() > minValue) ? YELLOW_ZONE_COLOR : GREEN_ZONE_COLOR, config.isTransposed());
             }
 
             double v = data.getCurrentValue();
@@ -244,36 +234,34 @@ public class BarGauge extends GenericGauge
    /**
     * Draw colored zone
     * 
-    * @param gc
-    * @param rect
-    * @param startValue
-    * @param endValue
-    * @param pointValue
-    * @param startColor
-    * @param endColor
-    * @param config
+    * @param gc graphic context
+    * @param rect bounding rectangle
+    * @param startValue start value for zone
+    * @param endValue end value for zone
+    * @param minValue minimal value for gauge
+    * @param pointValue value of single point
+    * @param color zone color
+    * @param isTransposed true if gauge is transposed
     */
-   private void drawZone(GC gc, Rectangle rect, double startValue, double endValue, double minValue, double pointValue, RGB startColor, RGB endColor, boolean isTransposed)
+   private void drawZone(GC gc, Rectangle rect, double startValue, double endValue, double minValue, double pointValue, RGB color, boolean isTransposed)
    {
       int start = (int)((startValue - minValue) / pointValue);
       int points = (int)((endValue - startValue) / pointValue) + 1;
       if (isTransposed)
       {
-         gc.setForeground(chart.getColorCache().create(startColor));
-         gc.setBackground(chart.getColorCache().create(endColor));
-         gc.fillGradientRectangle(rect.x + start, rect.y, points, rect.height, false);
+         gc.setBackground(chart.getColorCache().create(color));
+         gc.fillRectangle(rect.x + start, rect.y, points, rect.height);
       }
       else
       {
-         gc.setBackground(chart.getColorCache().create(startColor));
-         gc.setForeground(chart.getColorCache().create(endColor));
+         gc.setBackground(chart.getColorCache().create(color));
          int y = rect.y + rect.height - start - points + 1;
          if (y + points >= rect.y + rect.height)
             points--;
-         gc.fillGradientRectangle(rect.x, y, rect.width, points, true);
+         gc.fillRectangle(rect.x, y, rect.width, points);
       }
    }
-   
+
    /**
     * Draw bar scale
     * 
