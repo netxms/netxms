@@ -5298,7 +5298,7 @@ public class NXCSession
       List<PerfTabDci> list = new ArrayList<PerfTabDci>(count);
       long baseId = NXCPCodes.VID_SYSDCI_LIST_BASE;
       for(int i = 0; i < count; i++, baseId += 50)
-         list.add(new PerfTabDci(response, baseId));
+         list.add(new PerfTabDci(response, baseId, nodeId));
 
       return list;
    }
