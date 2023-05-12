@@ -19,9 +19,11 @@
 package org.netxms.nxmc.modules.objects;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -46,9 +48,12 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServicePrototype;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.EntireNetwork;
+import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -62,6 +67,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.objects.views.ObjectPollerView;
@@ -254,6 +260,78 @@ public final class ObjectMenuFactory
       }
 
       return toolsMenu;
+   }
+
+   /**
+    * Create tools menu for given selection of objects
+    *
+    * @param selection selection of objects
+    * @param parentMenu parent menu
+    * @param viewPlacement view placement (can be used for displaying messages and selecting perspective for new views)
+    * @return newly constructed menu
+    */
+   public static Menu createDashboardsMenu(IStructuredSelection selection, long contextId, Menu parentMenu, Control parentControl, final ViewPlacement viewPlacement)
+   {
+      if (selection.size() > 1)
+         return null;
+
+      final AbstractObject object = (AbstractObject)selection.getFirstElement();
+      if (!(object instanceof Container) && 
+          !(object instanceof Cluster) && 
+          !(object instanceof Node) && 
+          !(object instanceof MobileDevice) && 
+          !(object instanceof ServiceRoot) && 
+          !(object instanceof Subnet) &&
+          !(object instanceof Zone) &&
+          !(object instanceof Condition) &&
+          !(object instanceof EntireNetwork) &&
+          !(object instanceof Sensor))
+         return null;
+      
+      final Menu dashboardsMenu = (parentMenu != null) ? new Menu(parentMenu) : new Menu(parentControl);
+
+      List<AbstractObject> dashboards = object.getDashboards(true);
+      if (dashboards.isEmpty())
+         return null;
+
+      Collections.sort(dashboards, new Comparator<AbstractObject>() {
+         @Override
+         public int compare(AbstractObject o1, AbstractObject o2)
+         {
+            return o1.getObjectName().compareToIgnoreCase(o2.getObjectName());
+         }
+      });
+
+      for(AbstractObject d : dashboards)
+      {
+         final MenuItem item = new MenuItem(dashboardsMenu, SWT.PUSH);
+         item.setText(d.getObjectName());
+         item.setData(d.getObjectId());
+         item.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+
+               AdHocDashboardView view = new AdHocDashboardView(contextId, (Dashboard)d, object);
+               if (viewPlacement.getPerspective() != null)
+               {
+                  viewPlacement.getPerspective().addMainView(view, true, false);
+               }
+               else
+               {
+                  PopOutViewWindow.open(view);
+               }
+            }
+         });
+      }
+
+      if (dashboardsMenu.getItemCount() == 0)
+      {
+         dashboardsMenu.dispose();
+         return null;
+      }
+
+      return dashboardsMenu;
    }
 
    /**

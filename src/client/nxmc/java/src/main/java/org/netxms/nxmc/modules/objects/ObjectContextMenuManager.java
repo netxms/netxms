@@ -528,6 +528,13 @@ public class ObjectContextMenuManager extends MenuManager
          add(new MenuContributionItem(i18n.tr("S&ummary tables"), summaryTableMenu));
       }
 
+      final Menu dashboardsMenu = ObjectMenuFactory.createDashboardsMenu(selection, contextId, getMenu(), null, new ViewPlacement(view));
+      if (dashboardsMenu != null)
+      {
+         add(new Separator());
+         add(new MenuContributionItem(i18n.tr("&Dashboards"), dashboardsMenu));
+      }
+
       if (actionCreateInterfaceDCI.isValidForSelection(selection))
       {
          add(new Separator());

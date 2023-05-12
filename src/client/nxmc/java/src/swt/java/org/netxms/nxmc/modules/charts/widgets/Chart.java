@@ -591,6 +591,9 @@ public class Chart extends Composite
     */
    public void updateParameterThresholds(int index, Threshold[] thresholds)
    {
+      if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
+         return;
+      
       DataSeries series = dataSeries.get(index);
       if (series != null)
       {
