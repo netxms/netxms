@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.networkmaps.propertypages;
 
 import org.eclipse.jface.preference.ColorSelector;
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -36,6 +35,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -49,7 +49,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "General" property page for map link
  */
-public class LinkGeneral extends PreferencePage
+public class LinkGeneral extends PropertyPage
 {
    private static I18n i18n = LocalizationHelper.getI18n(LinkGeneral.class);
 
@@ -309,12 +309,11 @@ public class LinkGeneral extends PreferencePage
       object.removeStatusObjectByIndex(index);
    }
 
-	/**
-	 * Apply changes
-	 * 
-	 * @param isApply true if update operation caused by "Apply" button
-	 */
-	private boolean applyChanges(final boolean isApply)
+   /**
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
+    */
+   @Override
+   protected boolean applyChanges(final boolean isApply)
 	{
 		object.setName(name.getText());
 		object.setConnectorName1(connector1.getText());
@@ -342,23 +341,5 @@ public class LinkGeneral extends PreferencePage
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
 		object.update();
 		return true;
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-	@Override
-	public boolean performOk()
-	{
-		return applyChanges(false);
-	}
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-	@Override
-	protected void performApply()
-	{
-		applyChanges(true);
 	}
 }
