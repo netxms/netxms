@@ -165,7 +165,7 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                      if ((!dci.dciName.isEmpty() && namePattern.matcher(dciInfo.getName()).find()) ||
                          (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
                      {
-                        ChartDciConfig instance = new ChartDciConfig(dciInfo);
+                        ChartDciConfig instance = new ChartDciConfig(dci, dciInfo);
                         runtimeDciList.add(instance);
                         if (!dci.multiMatch)
                            break;

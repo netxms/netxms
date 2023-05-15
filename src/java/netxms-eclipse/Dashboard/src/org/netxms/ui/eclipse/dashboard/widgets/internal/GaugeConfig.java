@@ -32,6 +32,7 @@ public class GaugeConfig extends AbstractChartConfig
 	public static final int DIAL = 0;
 	public static final int BAR = 1;
 	public static final int TEXT = 2;
+   public static final int CIRCULAR = 3;
 
 	@Element(required = false)
 	private int gaugeType = DIAL;

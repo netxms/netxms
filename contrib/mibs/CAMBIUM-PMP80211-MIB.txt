@@ -1,4 +1,4 @@
---Cambium MIB Release 4.5.0
+--Cambium MIB Release 4.7.0.1
 
 CAMBIUM-PMP80211-MIB DEFINITIONS ::= BEGIN
 
@@ -12,8 +12,6 @@ IMPORTS
 				FROM SNMPv2-TC
 		Ipv6Address
 				FROM IPV6-TC;
-
-cambium					OBJECT IDENTIFIER ::= { enterprises 17713 }
 
 pmpMibTree MODULE-IDENTITY
 	LAST-UPDATED "202002131900Z"
@@ -30,13 +28,15 @@ pmpMibTree MODULE-IDENTITY
 
 ::= { cambium 21 }
 
-cambiumpmp80211SystemTraps		OBJECT IDENTIFIER ::= { pmpMibTree 0 }
-cambiumPmp80211SystemStatus		OBJECT IDENTIFIER ::= { pmpMibTree 1 }
-cambiumPmp80211SystemMonitoring		OBJECT IDENTIFIER ::= { pmpMibTree 2 }
-cambiumpmp80211SystemConfiguration	OBJECT IDENTIFIER ::= { pmpMibTree 3 }
-cambiumpmp80211SystemActions		OBJECT IDENTIFIER ::= { pmpMibTree 4 }
-cambiumpmp80211Tools			OBJECT IDENTIFIER ::= { pmpMibTree 6 }
-cambiumHWGroupInfo			OBJECT IDENTIFIER ::= { pmpMibTree 9 }
+cambium									OBJECT IDENTIFIER ::= { enterprises 17713 }
+
+cambiumpmp80211SystemTraps				OBJECT IDENTIFIER ::= { pmpMibTree 0 }
+cambiumPmp80211SystemStatus				OBJECT IDENTIFIER ::= { pmpMibTree 1 }
+cambiumPmp80211SystemMonitoring			OBJECT IDENTIFIER ::= { pmpMibTree 2 }
+cambiumpmp80211SystemConfiguration		OBJECT IDENTIFIER ::= { pmpMibTree 3 }
+cambiumpmp80211SystemActions			OBJECT IDENTIFIER ::= { pmpMibTree 4 }
+cambiumpmp80211Tools					OBJECT IDENTIFIER ::= { pmpMibTree 6 }
+cambiumHWGroupInfo						OBJECT IDENTIFIER ::= { pmpMibTree 9 }
 ePMPavenger5gconnectorizedsync 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 0 }
 ePMPavenger5gconnectorized 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 1 }
 ePMPavenger5gintegrated 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 2 }
@@ -60,6 +60,8 @@ ePMPelectra25gconnectorizedsync 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 19
 ePMPelectra25gconnectorized 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 20 }
 ePMPforce1305g 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 22 }
 ePMPforce1302g 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 23 }
+ePMPforce200l 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 24 }
+ePMPforce200lv2 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 25 }
 ePMPptp5505gintegratedfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 33 }
 ePMPptp5505gconnectorizedfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 34 }
 ePMPf300fcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 35 }
@@ -80,9 +82,36 @@ ePMPxorn19fcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 49 }
 ePMPxorn19row 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 50 }
 ePMPxorn19rip67row 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 51 }
 ePMPxorn19rip67fcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 52 }
+ePMPhellcowfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53 }
+ePMPhellcowrow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 54 }
+ePMPf300fccv2 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 55 }
+ePMPf30025l 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 58 }
 ePMPf30022l 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 60 }
-ePMPdragonfly 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 61 }
+ePMPf30013l 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 61 }
 ePMPe510 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 62 }
+ePMPepmp60004x46growfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53264 }
+ePMPepmp60004x46gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53272 }
+ePMPepmp40008x85grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53280 }
+ePMPepmp40008x85gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53288 }
+ePMPepmp4000l4x45grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53312 }
+ePMPf400gps5grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53344 }
+ePMPf400gps5gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53352 }
+ePMPcnppilottiger5g 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53376 }
+ePMPf4255grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53504 }
+ePMPf400c5grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53505 }
+ePMPf4255gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53512 }
+ePMPf400c5gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53513 }
+ePMPf600c6growfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53520 }
+ePMPf600c6gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53528 }
+ePMPf4165grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53536 }
+ePMPf425l5grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53537 }
+ePMPf425ulnomcu5grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53538 }
+ePMPf4165gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53544 }
+ePMPf425l5gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53545 }
+ePMPf6166grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53552 }
+ePMPf6256grow 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53553 }
+ePMPf616usbgps6gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53560 }
+ePMPf625usbgps6gfcc 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 53561 }
 ePMPnanostationm5v3xw 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 100 }
 ePMPnanostationlocom5v3 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 110 }
 ePMPnanostationlocom2xw 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 111 }
@@ -97,6 +126,7 @@ ePMPrbsxtlite5 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 140 }
 ePMPintelbras 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 141 }
 ePMPlhg5 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 142 }
 ePMPdisclite5 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 143 }
+ePMPmk911l 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 144 }
 ePMPsextant 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 145 }
 ePMPpowerbeamm5300 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 150 }
 ePMPpowerbeamm5400 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 151 }
@@ -124,6 +154,8 @@ ePMPnanobridgem5nb5g25xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 194 }
 ePMPnanobridgem5nbxm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 195 }
 ePMPnanobridgem2v1xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 196 }
 ePMPnanobridgem2v2xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 197 }
+ePMPintelbraswom5amimo 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 200 }
+ePMPintelbraswom5a23 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 201 }
 ePMPpowerbridgem365xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 210 }
 ePMPpowerbridgem3xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 211 }
 ePMPnanostationm6xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 220 }
@@ -135,82 +167,91 @@ ePMProcketm2v1xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 245 }
 ePMProcketm2v2xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 246 }
 ePMProcketm2v3xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 247 }
 ePMProcketm2v4xm 			OBJECT IDENTIFIER ::= { cambiumHWGroupInfo 248 }
-cambiumGeneralStatus			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 1 }
-cambiumRFStatus				OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 2 }
-cambiumGPSStatus			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 3 }
-cambiumLinkStatus			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 4 }
-cambiumAcsStatus			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 5 }
-cambiumMcastStatus			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 6 }
-cambiumDhcpStatus			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 7 }
-cambiumLicenseInfo			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 8 }
-cambiumRadiusVSAStatus			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 9 }
-cambiumPerformanceMonitoring		OBJECT IDENTIFIER ::= { cambiumPmp80211SystemMonitoring 1 }
-cambiumRealTimeStatsMonitoring		OBJECT IDENTIFIER ::= { cambiumPmp80211SystemMonitoring 2 }
+cambiumGeneralStatus					OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 1 }
+cambiumRFStatus							OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 2 }
+cambiumGPSStatus						OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 3 }
+cambiumLinkStatus						OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 4 }
+cambiumAcsStatus						OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 5 }
+cambiumMcastStatus						OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 6 }
+cambiumDhcpStatus						OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 7 }
+cambiumLicenseInfo						OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 8 }
+cambiumRadiusVSAStatus					OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 9 }
+cambiumCCTVStatus						OBJECT IDENTIFIER ::= { cambiumPmp80211SystemStatus 10 }
+cambiumPerformanceMonitoring			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemMonitoring 1 }
+cambiumRealTimeStatsMonitoring			OBJECT IDENTIFIER ::= { cambiumPmp80211SystemMonitoring 2 }
 cambiumAdvancedPerformanceMonitoring	OBJECT IDENTIFIER ::= { cambiumPmp80211SystemMonitoring 3 }
-wlanMCSPackets				OBJECT IDENTIFIER ::= { cambiumPerformanceMonitoring 114 }
-cambiumSystemLog			OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 1 }
-cambiumDHCP				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 2 }
-cambiumSSHServer			OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 3 }
-network					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 4 }
-networkLan				OBJECT IDENTIFIER ::= { network 2 }
-networkWan				OBJECT IDENTIFIER ::= { network 3 }
-mgmtVLAN				OBJECT IDENTIFIER ::= { network 4 }
-dataVLAN				OBJECT IDENTIFIER ::= { network 5 }
-networkBridge				OBJECT IDENTIFIER ::= { network 7 }
-mcastVLAN				OBJECT IDENTIFIER ::= { network 15 }
-mgmtIF					OBJECT IDENTIFIER ::= { network 20 }
-networkAliases				OBJECT IDENTIFIER ::= { network 27 }
-networkPPPoE				OBJECT IDENTIFIER ::= { network 30 }
-snmp					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 5 }
-cambiumSystem				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 6 }
-systemConfig				OBJECT IDENTIFIER ::= { cambiumSystem 1 }
-systemNtpServer				OBJECT IDENTIFIER ::= { cambiumSystem 2 }
-cambiumWebServer			OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 7 }
-wireless				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 8 }
-wirelessDevice				OBJECT IDENTIFIER ::= { wireless 1 }
-wirelessInterface			OBJECT IDENTIFIER ::= { wireless 2 }
-wirelessPrefList			OBJECT IDENTIFIER ::= { wireless 3 }
-wirelessMIRList				OBJECT IDENTIFIER ::= { wireless 4 }
-wirelessRadius				OBJECT IDENTIFIER ::= { wireless 5 }
-wirelessRadiusServerList		OBJECT IDENTIFIER ::= { wireless 6 }
-wirelessRadiusCertificateList		OBJECT IDENTIFIER ::= { wireless 7 }
-wirelessRadiusCertificateSet		OBJECT IDENTIFIER ::= { wireless 8 }
-wirelessRadiusExtraCertificateSet	OBJECT IDENTIFIER ::= { wireless 9 }
-multicast				OBJECT IDENTIFIER ::= { wireless 10 }
-wirelessInterface2			OBJECT IDENTIFIER ::= { wireless 12 }
-wirelessRadiusCertificateListRow1	OBJECT IDENTIFIER ::= { wirelessRadiusCertificateList 1 }
-wirelessRadiusCertificateListRow2	OBJECT IDENTIFIER ::= { wirelessRadiusCertificateList 2 }
-wirelessRadiusCertificateListRow3	OBJECT IDENTIFIER ::= { wirelessRadiusCertificateList 3 }
-l2Firewall				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 9 }
-l3Firewall				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 10 }
-confQoS					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 11 }
-dmz					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 12 }
-portForwarding				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 13 }
-vlans					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 14 }
-dlkm					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 15 }
-routing					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 16 }
-cambiumTelnetServer			OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 17 }
-cambiumDeviceAgent			OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 20 }
-upnpd					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 21 }
-lldpd					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 23 }
-mactelnet				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 25 }
-licensed				OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 27 }
-bonding					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 30 }
-accelerationEngine			OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 31 }
-cambiumDCS					OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 32 }
-cambiumGPSConfig			OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 33 }
-cambiumLinkTest				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 1 }
-caminfo					OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 2 }
-cambiumToolBar				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 3 }
-cambiumCfg				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 4 }
-cambiumIDM				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 5 }
-cambiumACSCfg				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 6 }
-cambiumSpectral				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 7 }
-cambiumArcher				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 8 }
-cambiumWatchdog				OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 9 }
-cambiumToolBarOpts			OBJECT IDENTIFIER ::= { cambiumToolBar 1 }
-cambiumToolBarStates			OBJECT IDENTIFIER ::= { cambiumToolBar 2 }
-watchdogGPS				OBJECT IDENTIFIER ::= { cambiumWatchdog 10 }
+wlanMCSPackets							OBJECT IDENTIFIER ::= { cambiumPerformanceMonitoring 114 }
+cambiumSystemLog						OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 1 }
+cambiumDHCP								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 2 }
+cambiumSSHServer						OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 3 }
+network									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 4 }
+networkLan								OBJECT IDENTIFIER ::= { network 2 }
+lanSwitch								OBJECT IDENTIFIER ::= { networkLan 100 }
+networkWan								OBJECT IDENTIFIER ::= { network 3 }
+mgmtVLAN								OBJECT IDENTIFIER ::= { network 4 }
+dataVLAN								OBJECT IDENTIFIER ::= { network 5 }
+networkBridge							OBJECT IDENTIFIER ::= { network 7 }
+mcastVLAN								OBJECT IDENTIFIER ::= { network 15 }
+mgmtIF									OBJECT IDENTIFIER ::= { network 20 }
+networkAliases							OBJECT IDENTIFIER ::= { network 27 }
+networkPPPoE							OBJECT IDENTIFIER ::= { network 30 }
+snmp									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 5 }
+cambiumSystem							OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 6 }
+systemConfig							OBJECT IDENTIFIER ::= { cambiumSystem 1 }
+systemNtpServer							OBJECT IDENTIFIER ::= { cambiumSystem 2 }
+cambiumWebServer						OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 7 }
+wireless								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 8 }
+wirelessDevice							OBJECT IDENTIFIER ::= { wireless 1 }
+wirelessInterface						OBJECT IDENTIFIER ::= { wireless 2 }
+wirelessPrefList						OBJECT IDENTIFIER ::= { wireless 3 }
+wirelessMIRList							OBJECT IDENTIFIER ::= { wireless 4 }
+wirelessRadius							OBJECT IDENTIFIER ::= { wireless 5 }
+wirelessRadiusServerList				OBJECT IDENTIFIER ::= { wireless 6 }
+wirelessRadiusCertificateList			OBJECT IDENTIFIER ::= { wireless 7 }
+wirelessRadiusCertificateSet			OBJECT IDENTIFIER ::= { wireless 8 }
+wirelessRadiusExtraCertificateSet		OBJECT IDENTIFIER ::= { wireless 9 }
+multicast								OBJECT IDENTIFIER ::= { wireless 10 }
+wirelessInterface2						OBJECT IDENTIFIER ::= { wireless 12 }
+wirelessRadiusCertificateListRow1		OBJECT IDENTIFIER ::= { wirelessRadiusCertificateList 1 }
+wirelessRadiusCertificateListRow2		OBJECT IDENTIFIER ::= { wirelessRadiusCertificateList 2 }
+wirelessRadiusCertificateListRow3		OBJECT IDENTIFIER ::= { wirelessRadiusCertificateList 3 }
+l2Firewall								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 9 }
+l3Firewall								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 10 }
+confQoS									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 11 }
+dmz										OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 12 }
+portForwarding							OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 13 }
+vlans									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 14 }
+dlkm									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 15 }
+routing									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 16 }
+cambiumTelnetServer						OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 17 }
+cambiumDeviceAgent						OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 20 }
+upnpd									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 21 }
+lldpd									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 23 }
+mactelnet								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 25 }
+licensed								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 27 }
+tr069									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 28 }
+bonding									OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 30 }
+accelerationEngine						OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 31 }
+cambiumDCS								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 32 }
+cambiumGPSConfig						OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 33 }
+vmsagent								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 34 }
+cambiumNSS								OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 35 }
+dpi										OBJECT IDENTIFIER ::= { cambiumpmp80211SystemConfiguration 36 }
+cambiumLinkTest							OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 1 }
+caminfo									OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 2 }
+cambiumToolBar							OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 3 }
+cambiumCfg								OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 4 }
+cambiumIDM								OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 5 }
+cambiumACSCfg							OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 6 }
+cambiumSpectral							OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 7 }
+cambiumArcher							OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 8 }
+cambiumWatchdog							OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 9 }
+cambiumCrashReporter					OBJECT IDENTIFIER ::= { cambiumpmp80211Tools 10 }
+cambiumToolBarOpts						OBJECT IDENTIFIER ::= { cambiumToolBar 1 }
+cambiumToolBarStates					OBJECT IDENTIFIER ::= { cambiumToolBar 2 }
+watchdogGPS								OBJECT IDENTIFIER ::= { cambiumWatchdog 10 }
+tr069Local								OBJECT IDENTIFIER ::= { tr069 1 }
+tr069ACS								OBJECT IDENTIFIER ::= { tr069 2 }
 
 cambiumCurrentSWInfo  OBJECT-TYPE
 	SYNTAX	   DisplayString (SIZE(1..128))
@@ -222,7 +263,7 @@ cambiumCurrentSWInfo  OBJECT-TYPE
 	::= { cambiumGeneralStatus 1 }
 
 cambiumHWInfo  OBJECT-TYPE
-	SYNTAX     Integer32 (-1..6|8..14|16..20|22|33..52|62|100..250)
+	SYNTAX     Integer32 (-1..6|8..14|16..20|22|33..55|59..62|100..250)
 	MAX-ACCESS read-only
 	STATUS	   current
 	DESCRIPTION
@@ -249,6 +290,8 @@ cambiumHWInfo  OBJECT-TYPE
 			20 - 2.5 GHz Connectorized Radio
 			22 - 5 GHz Force 130 Radio
 			23 - 2.4 GHz Force 130 Radio
+			24 - 5 GHz Force 200L Radio
+			25 - 5 GHz Force 200L Radio V2
 			33  - 5 GHz PTP550 Integrated Radio
 			34  - 5 GHz PTP550 Connectorized Radio
 			35  - 5 GHz Force 300-25 Radio (FCC)
@@ -269,6 +312,13 @@ cambiumHWInfo  OBJECT-TYPE
 			50  - 5 GHz Force 300-19 Radio (ROW/ETSI)
 			51  - 5 GHz Force 300-19R IP67 Radio (ROW/ETSI)
 			52  - 5 GHz Force 300-19R IP67 Radio (FCC)
+			53  - 5 GHz ePMP Client MAXrP IP67 Radio (FCC)
+			54  - 5 GHz ePMP Client MAXrP IP67 Radio (ROW/ETSI)
+			55  - 5 GHz Force 300-25 Radio V2 (FCC)
+			58  - 5 GHz Force 300-25L Radio
+			59  - 5 GHz Force 300 CSML Connectorized Radio
+			60  - 5 GHz Force 300-22L Radio
+			61  - 5 GHz Force 300-13L Radio
 			62  - 5 GHz ePMP MP 3000
 			100 - (0xe855) ePMP Elevate NSM5-XW
 			110 - (0xe845) ePMP Elevate NSlocoM5-XW
@@ -284,6 +334,7 @@ cambiumHWInfo  OBJECT-TYPE
 			141 - ePMP Elevate INTELBRAS BOARD
 			142 - ePMP Elevate LHG5 BOARD
 			143 - ePMP Elevate Disc Lite BOARD
+			144 - ePMP Elevate 911L BOARD
 			145 - ePMP Elevate Sextant BOARD
 			150 - (0xe3e5) ePMP Elevate PBE-M5-300-XW
 			151 - (0xe4e5) ePMP Elevate PBE-M5-400-XW
@@ -307,6 +358,8 @@ cambiumHWInfo  OBJECT-TYPE
 			195 - (0xe235) ePMP Elevate NB-XM
 			196 - (0xe2b2) ePMP Elevate NB-M2-V1-XM
 			197 - (0xe232) ePMP Elevate NB-M2-V2-XM
+			200 - ePMP Elevate INTELBRAS WOM-5A-MiMo BOARD
+			201 - ePMP Elevate INTELBRAS WOM-5A-23 BOARD
 			220 - (0xe006) ePMP Elevate NS-M6
 			230 - (0xe215) ePMP Elevate AG-M5-23-XM
 			231 - (0xe245) ePMP Elevate AG-M5-28-XM
@@ -324,7 +377,14 @@ cambiumHWInfo  OBJECT-TYPE
 			246 - (0xe112) ePMP Elevate RM2-V2-XM
 			247 - (0xe1b2) ePMP Elevate RM2-V3-XM
 			248 - (0xe1c2) ePMP Elevate RM2-V4-XM
-
+			53280 - 5 GHz ePMP4000 8x8 (ROW)
+			53288 - 5 GHz ePMP4000 8x8 (FCC)
+			53344 - 5 GHz Force 400 Radio with GPS (ROW)
+			53352 - 5 GHz Force 400 Radio with GPS (FCC)
+			53504 - 5 GHz Force 425 Radio (ROW)
+			53505 - 5 GHz Force 400 CSM Radio (ROW)
+			53512 - 5 GHz Force 425 Radio (FCC)
+			53513 - 5 GHz Force 400 CSM Radio (FCC)
 		Device Allocation: AP, SM"
 	::= { cambiumGeneralStatus 2 }
 
@@ -403,15 +463,22 @@ cambiumEffectiveAntennaGain OBJECT-TYPE
 		::= { cambiumGeneralStatus 9 }
 
 cambiumEffectiveTDDRatio OBJECT-TYPE
-		SYNTAX	   Integer32 (0..4)
+		SYNTAX     Integer32 (1|2|3|4|35|40|45|55|60|65|70)
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
 		"Effective DL/UL Ratio:
-			1 - 75/25,
-			2 - 50/50,
-			3 - 30/70,
-			4 - Flexible
+			1  - 75/25,
+			2  - 50/50,
+			3  - 30/70,
+			4  - Flexible,
+			35 - 35/65,
+			40 - 40/60,
+			45 - 45/55,
+			55 - 55/45,
+			60 - 60/40,
+			65 - 65/35,
+			70 - 70/30
 		Device Allocation: AP, SM"
 		::= { cambiumGeneralStatus 10 }
 
@@ -552,6 +619,27 @@ sysHardRebootCounter OBJECT-TYPE
 				 Device Allocation: AP, SM"
 		::= { cambiumGeneralStatus 26 }
 
+sysConfigFlashStatus OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Hardware config partition state:
+		  1 - Healthy
+		  2 - Broken, Flash formatted, Configuration lost
+		  3 - Broken, Flash unrecoverable, Configuration may last until upgrade
+		 Device Allocation: AP, SM"
+	::= { cambiumGeneralStatus 27 }
+
+sysWDTRebootCounter OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+			"Device Watchdog Reboot Counter
+			 Device Allocation: AP, SM"
+	::= { cambiumGeneralStatus 28 }
+
 cambiumESN	OBJECT-TYPE
 		SYNTAX	   DisplayString (SIZE(13))
 		MAX-ACCESS read-only
@@ -579,7 +667,7 @@ cambiumFactoryReset OBJECT-TYPE
 		::= { cambiumGeneralStatus 32 }
 
 cambiumSubModeType OBJECT-TYPE
-		SYNTAX	   Integer32 (1|2|3|4|5)
+		SYNTAX	   Integer32 (1|2|3|4|5|6)
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -588,7 +676,8 @@ cambiumSubModeType OBJECT-TYPE
 			2 - TDD PTP,
 			3 - Standard WiFi,
 			4 - ePTP Slave,
-			5 - ePTP Master
+			5 - ePTP Master,
+			6 - WLR,
 			Device Allocation: AP, SM"
 		::= { cambiumGeneralStatus 33 }
 
@@ -757,6 +846,41 @@ cambiumDFS2StatusStr  OBJECT-TYPE
 		Device Allocation: AP, SM"
 		::= { cambiumGeneralStatus 54 }
 
+crashReporterKernelDataAvailable  OBJECT-TYPE
+		SYNTAX		Integer32 (0|1)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+		"Kernel crash data available for use
+			1 - data is available,
+			0 - data is not available
+		Device Allocation: AP, SM"
+		::= { cambiumGeneralStatus 55 }
+
+cambiumTR069Status OBJECT-TYPE
+		SYNTAX     Integer32 (0..2)
+		MAX-ACCESS read-only
+		STATUS     current
+		DESCRIPTION
+		"TR-069 Status:
+			0 - not connected to ACS
+			1 - connected to ACS
+			2 - XMPP session is established
+		Device Allocation: AP, SM"
+		::= { cambiumGeneralStatus 56 }
+
+cambiumDPIStatus OBJECT-TYPE
+		SYNTAX		Integer32 (0|1)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+		"DPI status
+			1 - packets processing is enabled,
+			0 - packets processing is disabled
+		Device Allocation: AP, SM"
+		::= { cambiumGeneralStatus 57 }
+
+
 cambiumSTAConnectedRFFrequency OBJECT-TYPE
 		SYNTAX	   Integer32 (2407..6420)
 		MAX-ACCESS read-only
@@ -814,6 +938,7 @@ cambiumSTAUplinkMCSMode OBJECT-TYPE
 		DESCRIPTION
 		"UL MCS Mode:
 			This parameter represents Uplink MCS mode number for both 802.11n and 802.11ac standard devices.
+			And Uplink MCS Rate for 802.11ax standard devices.
 
 			802.11n HW:
 
@@ -834,27 +959,46 @@ cambiumSTAUplinkMCSMode OBJECT-TYPE
 
 			802.11ac HW:
 
-			0  for 'SS MCS 0 - BPSK 1/2',
-			1  for 'SS MCS 1 - QPSK 1/2',
-			2  for 'SS MCS 2 - QPSK 3/4',
-			3  for 'SS MCS 3 - 16-QAM 1/2',
-			4  for 'SS MCS 4 - 16-QAM 3/4',
-			5  for 'SS MCS 5 - 64-QAM 2/3',
-			6  for 'SS MCS 6 - 64-QAM 3/4',
-			7  for 'SS MCS 7 - 64-QAM 5/6',
-			8  for 'SS MCS 8 - 256-QAM 3/4',
-			9  for 'SS MCS 9 - 256-QAM 5/6',
+			20 for 'SS MCS 0 - BPSK 1/2',
+			21 for 'SS MCS 1 - QPSK 1/2',
+			22 for 'SS MCS 2 - QPSK 3/4',
+			23 for 'SS MCS 3 - 16-QAM 1/2',
+			24 for 'SS MCS 4 - 16-QAM 3/4',
+			25 for 'SS MCS 5 - 64-QAM 2/3',
+			26 for 'SS MCS 6 - 64-QAM 3/4',
+			27 for 'SS MCS 7 - 64-QAM 5/6',
+			28 for 'SS MCS 8 - 256-QAM 3/4',
+			29 for 'SS MCS 9 - 256-QAM 5/6',
 
-			10 for 'DS MCS 0 - BPSK 1/2',
-			11 for 'DS MCS 1 - QPSK 1/2',
-			12 for 'DS MCS 2 - QPSK 3/4',
-			13 for 'DS MCS 3 - 16-QAM 1/2',
-			14 for 'DS MCS 4 - 16-QAM 3/4',
-			15 for 'DS MCS 5 - 64-QAM 2/3',
-			16 for 'DS MCS 6 - 64-QAM 3/4',
-			17 for 'DS MCS 7 - 64-QAM 5/6',
-			18 for 'DS MCS 8 - 256-QAM 3/4',
-			19 for 'DS MCS 9 - 256-QAM 5/6'
+			30 for 'DS MCS 0 - BPSK 1/2',
+			31 for 'DS MCS 1 - QPSK 1/2',
+			32 for 'DS MCS 2 - QPSK 3/4',
+			33 for 'DS MCS 3 - 16-QAM 1/2',
+			34 for 'DS MCS 4 - 16-QAM 3/4',
+			35 for 'DS MCS 5 - 64-QAM 2/3',
+			36 for 'DS MCS 6 - 64-QAM 3/4',
+			37 for 'DS MCS 7 - 64-QAM 5/6',
+			38 for 'DS MCS 8 - 256-QAM 3/4',
+			39 for 'DS MCS 9 - 256-QAM 5/6',
+
+			802.11ax HW:
+
+			MCS rate on AX is in range of 100-811 and organized using the following format:
+			NSS * 100 + MCS.
+			Where NSS is a Number of Spatial Streams: 1-8
+			      MCS is Modulation and Coding Scheme: 0-11
+			0  for 'MCS 0  - BPSK 1/2',
+			1  for 'MCS 1  - QPSK 1/2',
+			2  for 'MCS 2  - QPSK 3/4',
+			3  for 'MCS 3  - 16-QAM 1/2',
+			4  for 'MCS 4  - 16-QAM 3/4',
+			5  for 'MCS 5  - 64-QAM 2/3',
+			6  for 'MCS 6  - 64-QAM 3/4',
+			7  for 'MCS 7  - 64-QAM 5/6',
+			8  for 'MCS 8  - 256-QAM 3/4',
+			9  for 'MCS 9  - 256-QAM 5/6',
+			10 for 'MCS 10 - 1024-QAM 3/6',
+			11 for 'MCS 11 - 1024-QAM 5/6',
 
 		Device Allocation: SM"
 		::= { cambiumRFStatus 6 }
@@ -866,6 +1010,7 @@ cambiumSTADownlinkMCSMode OBJECT-TYPE
 		DESCRIPTION
 		"DL MCS Mode:
 			This parameter represents Downlink MCS mode number for both 802.11n and 802.11ac standard devices.
+			And Uplink MCS Rate for 802.11ax standard devices.
 
 			802.11n HW:
 
@@ -886,27 +1031,46 @@ cambiumSTADownlinkMCSMode OBJECT-TYPE
 
 			802.11ac HW:
 
-			0  for 'SS MCS 0 - BPSK 1/2',
-			1  for 'SS MCS 1 - QPSK 1/2',
-			2  for 'SS MCS 2 - QPSK 3/4',
-			3  for 'SS MCS 3 - 16-QAM 1/2',
-			4  for 'SS MCS 4 - 16-QAM 3/4',
-			5  for 'SS MCS 5 - 64-QAM 2/3',
-			6  for 'SS MCS 6 - 64-QAM 3/4',
-			7  for 'SS MCS 7 - 64-QAM 5/6',
-			8  for 'SS MCS 8 - 256-QAM 3/4',
-			9  for 'SS MCS 9 - 256-QAM 5/6',
+			20 for 'SS MCS 0 - BPSK 1/2',
+			21 for 'SS MCS 1 - QPSK 1/2',
+			22 for 'SS MCS 2 - QPSK 3/4',
+			23 for 'SS MCS 3 - 16-QAM 1/2',
+			24 for 'SS MCS 4 - 16-QAM 3/4',
+			25 for 'SS MCS 5 - 64-QAM 2/3',
+			26 for 'SS MCS 6 - 64-QAM 3/4',
+			27 for 'SS MCS 7 - 64-QAM 5/6',
+			28 for 'SS MCS 8 - 256-QAM 3/4',
+			29 for 'SS MCS 9 - 256-QAM 5/6',
 
-			10 for 'DS MCS 0 - BPSK 1/2',
-			11 for 'DS MCS 1 - QPSK 1/2',
-			12 for 'DS MCS 2 - QPSK 3/4',
-			13 for 'DS MCS 3 - 16-QAM 1/2',
-			14 for 'DS MCS 4 - 16-QAM 3/4',
-			15 for 'DS MCS 5 - 64-QAM 2/3',
-			16 for 'DS MCS 6 - 64-QAM 3/4',
-			17 for 'DS MCS 7 - 64-QAM 5/6',
-			18 for 'DS MCS 8 - 256-QAM 3/4',
-			19 for 'DS MCS 9 - 256-QAM 5/6'
+			30 for 'DS MCS 0 - BPSK 1/2',
+			31 for 'DS MCS 1 - QPSK 1/2',
+			32 for 'DS MCS 2 - QPSK 3/4',
+			33 for 'DS MCS 3 - 16-QAM 1/2',
+			34 for 'DS MCS 4 - 16-QAM 3/4',
+			35 for 'DS MCS 5 - 64-QAM 2/3',
+			36 for 'DS MCS 6 - 64-QAM 3/4',
+			37 for 'DS MCS 7 - 64-QAM 5/6',
+			38 for 'DS MCS 8 - 256-QAM 3/4',
+			39 for 'DS MCS 9 - 256-QAM 5/6',
+
+			802.11ax HW:
+
+			MCS rate on AX is in range of 100-811 and organized in the following format:
+			NSS * 100 + MCS.
+			Where NSS is a Number of Spatial Streams: 1-8
+			      MCS is Modulation and Coding Scheme: 0-11
+			0  for 'MCS 0  - BPSK 1/2',
+			1  for 'MCS 1  - QPSK 1/2',
+			2  for 'MCS 2  - QPSK 3/4',
+			3  for 'MCS 3  - 16-QAM 1/2',
+			4  for 'MCS 4  - 16-QAM 3/4',
+			5  for 'MCS 5  - 64-QAM 2/3',
+			6  for 'MCS 6  - 64-QAM 3/4',
+			7  for 'MCS 7  - 64-QAM 5/6',
+			8  for 'MCS 8  - 256-QAM 3/4',
+			9  for 'MCS 9  - 256-QAM 5/6',
+			10 for 'MCS 10 - 1024-QAM 3/6',
+			11 for 'MCS 11 - 1024-QAM 5/6',
 
 		Device Allocation: SM"
 		::= { cambiumRFStatus 7 }
@@ -1512,7 +1676,8 @@ CambiumSTAConnectedAPEntry ::= SEQUENCE {
 		connectedAPCAPS				DisplayString,
 		connectedAPAuthenticationMethod		DisplayString,
 		connectedAPMeetNEAttemptCriteria	DisplayString,
-		connectedAPIsViaInterface		Integer32
+		connectedAPIsViaInterface		Integer32,
+		connectedAPDriverMode			Integer32
 	}
 
 connectedAPSSID OBJECT-TYPE
@@ -1676,6 +1841,14 @@ connectedAPIsViaInterface OBJECT-TYPE
 		"Wireless interface number AP is visible via (starting from 0).
 		Device Allocation: SM"
 	::= { cambiumSTAConnectedAPEntry 18 }
+
+connectedAPDriverMode OBJECT-TYPE
+	SYNTAX	   Integer32
+	MAX-ACCESS read-only
+	STATUS	   current
+	DESCRIPTION
+		"Driver Mode"
+	::= { cambiumSTAConnectedAPEntry 19 }
 
 staTxCapacity OBJECT-TYPE
 	SYNTAX	   Integer32 (0..100)
@@ -1904,6 +2077,17 @@ cambLicenseStatus OBJECT-TYPE
 		 4 - License not valid for current device
 		Device Allocation: AP, SM"
 		::= { cambiumLicenseInfo 5 }
+
+cambLicenseDPIUnlockQoS OBJECT-TYPE
+	SYNTAX     Integer32 (0..1)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Smart QoS feature state, based on information from Operational License
+		 0 - Locked
+		 1 - Unlocked
+		Device Allocation: AP, SM"
+	::= { cambiumLicenseInfo 6 }
 
 dhcpServerStaticHostEntry OBJECT-TYPE
 	SYNTAX	   DhcpServerStaticHostEntry
@@ -3077,27 +3261,27 @@ cambiumSTA2UplinkMCSMode OBJECT-TYPE
 
 			802.11ac HW:
 
-			0  for 'SS MCS 0 - BPSK 1/2',
-			1  for 'SS MCS 1 - QPSK 1/2',
-			2  for 'SS MCS 2 - QPSK 3/4',
-			3  for 'SS MCS 3 - 16-QAM 1/2',
-			4  for 'SS MCS 4 - 16-QAM 3/4',
-			5  for 'SS MCS 5 - 64-QAM 2/3',
-			6  for 'SS MCS 6 - 64-QAM 3/4',
-			7  for 'SS MCS 7 - 64-QAM 5/6',
-			8  for 'SS MCS 8 - 256-QAM 3/4',
-			9  for 'SS MCS 9 - 256-QAM 5/6',
+			20 for 'SS MCS 0 - BPSK 1/2',
+			21 for 'SS MCS 1 - QPSK 1/2',
+			22 for 'SS MCS 2 - QPSK 3/4',
+			23 for 'SS MCS 3 - 16-QAM 1/2',
+			24 for 'SS MCS 4 - 16-QAM 3/4',
+			25 for 'SS MCS 5 - 64-QAM 2/3',
+			26 for 'SS MCS 6 - 64-QAM 3/4',
+			27 for 'SS MCS 7 - 64-QAM 5/6',
+			28 for 'SS MCS 8 - 256-QAM 3/4',
+			29 for 'SS MCS 9 - 256-QAM 5/6',
 
-			10 for 'DS MCS 0 - BPSK 1/2',
-			11 for 'DS MCS 1 - QPSK 1/2',
-			12 for 'DS MCS 2 - QPSK 3/4',
-			13 for 'DS MCS 3 - 16-QAM 1/2',
-			14 for 'DS MCS 4 - 16-QAM 3/4',
-			15 for 'DS MCS 5 - 64-QAM 2/3',
-			16 for 'DS MCS 6 - 64-QAM 3/4',
-			17 for 'DS MCS 7 - 64-QAM 5/6',
-			18 for 'DS MCS 8 - 256-QAM 3/4',
-			19 for 'DS MCS 9 - 256-QAM 5/6'
+			30 for 'DS MCS 0 - BPSK 1/2',
+			31 for 'DS MCS 1 - QPSK 1/2',
+			32 for 'DS MCS 2 - QPSK 3/4',
+			33 for 'DS MCS 3 - 16-QAM 1/2',
+			34 for 'DS MCS 4 - 16-QAM 3/4',
+			35 for 'DS MCS 5 - 64-QAM 2/3',
+			36 for 'DS MCS 6 - 64-QAM 3/4',
+			37 for 'DS MCS 7 - 64-QAM 5/6',
+			38 for 'DS MCS 8 - 256-QAM 3/4',
+			39 for 'DS MCS 9 - 256-QAM 5/6'
 
 		Device Allocation: SM"
 		::= { cambiumRFStatus 106 }
@@ -3129,27 +3313,27 @@ cambiumSTA2DownlinkMCSMode OBJECT-TYPE
 
 			802.11ac HW:
 
-			0  for 'SS MCS 0 - BPSK 1/2',
-			1  for 'SS MCS 1 - QPSK 1/2',
-			2  for 'SS MCS 2 - QPSK 3/4',
-			3  for 'SS MCS 3 - 16-QAM 1/2',
-			4  for 'SS MCS 4 - 16-QAM 3/4',
-			5  for 'SS MCS 5 - 64-QAM 2/3',
-			6  for 'SS MCS 6 - 64-QAM 3/4',
-			7  for 'SS MCS 7 - 64-QAM 5/6',
-			8  for 'SS MCS 8 - 256-QAM 3/4',
-			9  for 'SS MCS 9 - 256-QAM 5/6',
+			20 for 'SS MCS 0 - BPSK 1/2',
+			21 for 'SS MCS 1 - QPSK 1/2',
+			22 for 'SS MCS 2 - QPSK 3/4',
+			23 for 'SS MCS 3 - 16-QAM 1/2',
+			24 for 'SS MCS 4 - 16-QAM 3/4',
+			25 for 'SS MCS 5 - 64-QAM 2/3',
+			26 for 'SS MCS 6 - 64-QAM 3/4',
+			27 for 'SS MCS 7 - 64-QAM 5/6',
+			28 for 'SS MCS 8 - 256-QAM 3/4',
+			29 for 'SS MCS 9 - 256-QAM 5/6',
 
-			10 for 'DS MCS 0 - BPSK 1/2',
-			11 for 'DS MCS 1 - QPSK 1/2',
-			12 for 'DS MCS 2 - QPSK 3/4',
-			13 for 'DS MCS 3 - 16-QAM 1/2',
-			14 for 'DS MCS 4 - 16-QAM 3/4',
-			15 for 'DS MCS 5 - 64-QAM 2/3',
-			16 for 'DS MCS 6 - 64-QAM 3/4',
-			17 for 'DS MCS 7 - 64-QAM 5/6',
-			18 for 'DS MCS 8 - 256-QAM 3/4',
-			19 for 'DS MCS 9 - 256-QAM 5/6'
+			30 for 'DS MCS 0 - BPSK 1/2',
+			31 for 'DS MCS 1 - QPSK 1/2',
+			32 for 'DS MCS 2 - QPSK 3/4',
+			33 for 'DS MCS 3 - 16-QAM 1/2',
+			34 for 'DS MCS 4 - 16-QAM 3/4',
+			35 for 'DS MCS 5 - 64-QAM 2/3',
+			36 for 'DS MCS 6 - 64-QAM 3/4',
+			37 for 'DS MCS 7 - 64-QAM 5/6',
+			38 for 'DS MCS 8 - 256-QAM 3/4',
+			39 for 'DS MCS 9 - 256-QAM 5/6'
 
 		Device Allocation: SM"
 		::= { cambiumRFStatus 107 }
@@ -3378,6 +3562,269 @@ cambiumGPSAntennaType OBJECT-TYPE
 			Device Allocation: AP, SM"
 		::= { cambiumGPSStatus 11}
 
+tddSyncInternalStateDur OBJECT-TYPE
+	SYNTAX    Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Internal state duration, ms
+		Device Allocation: AP"
+	::= { cambiumGPSStatus 12 }
+
+tddSyncExpectedDrift OBJECT-TYPE
+	SYNTAX    Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"An expected drift, ns
+		Device Allocation: AP"
+	::= { cambiumGPSStatus 13 }
+
+tddSyncExpectedJitter OBJECT-TYPE
+	SYNTAX    Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"An expected jitter, ns
+		Device Allocation: AP"
+	::= { cambiumGPSStatus 14 }
+
+tddSyncStatTable OBJECT-TYPE
+	SYNTAX SEQUENCE OF TddSyncStatEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"TDD Sync Statistics
+		Device Allocation: AP"
+	::= { cambiumGPSStatus 15 }
+
+tddSyncStatEntry OBJECT-TYPE
+	SYNTAX     TddSyncStatEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"TDD Sync statistics
+		Device Allocation: AP"
+	INDEX	{ tddSyncStatPeriod }
+	::= { tddSyncStatTable 1 }
+
+TddSyncStatEntry ::= SEQUENCE {
+	tddSyncStatPeriod
+		INTEGER,
+	tddSyncPulseCount
+	    Counter32,
+	tddSyncLostPulseCount
+		Counter32,
+	tddSyncInvalidPulseCount
+		Counter32,
+	tddSyncInvPulseDeviationMin
+		Integer32,
+	tddSyncInvPulseDeviationMax
+		Integer32,
+	tddSyncInvPulseDeviationAvgAbs
+		Integer32,
+	tddSyncDriftMin
+		Integer32,
+	tddSyncDriftMax
+		Integer32,
+	tddSyncDriftAvg
+		Integer32,
+	tddSyncJitterMin
+		Integer32,
+	tddSyncJitterMax
+		Integer32,
+	tddSyncJitterAvgAbs
+		Integer32,
+	tddSyncState1Count
+		Counter32,
+	tddSyncState1Duration
+		Counter32,
+	tddSyncState2Count
+		Counter32,
+	tddSyncState2Duration
+		Counter32,
+	tddSyncState3Count
+		Counter32,
+	tddSyncState3Duration
+		Counter32
+}
+
+tddSyncStatPeriod OBJECT-TYPE
+	SYNTAX    INTEGER {
+				minutes5(1), -- statistics for last 5 minutes
+				hours1(2),   -- statistics for last hour  (+- 5 minutes)
+				hours24(3),  -- statistics for last 24 hours (+- 1hour)
+				alltime(4)   -- statistics for all the time
+			  }
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"The Time period the Sync statistics is taken for
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 1}
+
+tddSyncPulseCount OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Lost Sync pulses number
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 2}
+
+tddSyncLostPulseCount OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Lost Sync pulses number
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 3}
+
+tddSyncInvalidPulseCount OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Invalid Sync pulses number
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 4}
+
+tddSyncInvPulseDeviationMin OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Invalid Syns pulses minimal deviation from (1s + drift)
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 5}
+
+tddSyncInvPulseDeviationMax OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Invalid Syns pulses maximal deviation from (1s + drift)
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 6}
+
+tddSyncInvPulseDeviationAvgAbs OBJECT-TYPE
+	SYNTAX     Integer32 (0..2147483647)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Invalid Syns pulses average deviation by modulo from (1s + drift)
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 7}
+
+tddSyncDriftMin OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Minimal drift of Sync pulses, ns
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 8}
+
+tddSyncDriftMax OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Maximal drift of Sync pulses, ns
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 9}
+
+tddSyncDriftAvg OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Average drift of Sync pulses, ns
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 10}
+
+tddSyncJitterMin OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Minimal jitter of Sync pulses, ns
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 11}
+
+tddSyncJitterMax OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Maximal jitter of Sync pulses, ns
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 12}
+
+tddSyncJitterAvgAbs OBJECT-TYPE
+	SYNTAX     Integer32 (0..2147483647)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Average jitter by modulo of Sync pulses, ns
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 13}
+
+tddSyncState1Count OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"How many times we switched to state #1
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 14}
+
+tddSyncState1Duration OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"How many times we spent in state #1
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 15}
+
+tddSyncState2Count OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"How many times we switched to state #2
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 16}
+
+tddSyncState2Duration OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"How many times we spent in state #2
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 17}
+
+tddSyncState3Count OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"How many times we switched to state #3
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 18}
+
+tddSyncState3Duration OBJECT-TYPE
+	SYNTAX     Counter32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"How many time we spent in state #3
+		Device Allocation: AP"
+	::= {tddSyncStatEntry 19}
+
 cambiumLANStatus OBJECT-TYPE
 		SYNTAX	   Integer32 (0|1|2)
 		MAX-ACCESS read-only
@@ -3534,7 +3981,7 @@ cambiumLAN2ModeStatus  OBJECT-TYPE
 	::= { cambiumLinkStatus 14 }
 
 cambiumLAN2SpeedStatus  OBJECT-TYPE
-	SYNTAX	   Integer32 (-1|10|100|1000)
+	SYNTAX	   Integer32 (-1|10|100|1000|10000)
 	MAX-ACCESS read-only
 	STATUS	   current
 	DESCRIPTION
@@ -3542,7 +3989,8 @@ cambiumLAN2SpeedStatus  OBJECT-TYPE
 			-1 - No data,
 			 10 - 10 Mb/s,
 			 100 - 100 Mb/s,
-			 1000 - 1000 Mb/s
+			 1000 - 1000 Mb/s,
+			 10000 - 10000 Mb/s
 		Device Allocation: AP, SM"
 	::= { cambiumLinkStatus 15 }
 
@@ -3652,21 +4100,23 @@ cambiumManagementIFGateway OBJECT-TYPE
 		::= { cambiumLinkStatus 28 }
 
 cambiumEffectiveNetworkLanMTU OBJECT-TYPE
-		SYNTAX	   Integer32 (0|576..1708)
+		SYNTAX	   Integer32 (0|576..3508)
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
 			"SM NAT LAN MTU size
+			For Force devices this value is limited to 1700
 			Device Allocation: SM"
 		DEFVAL	{ 1500 }
 		::= { cambiumLinkStatus 29 }
 
 cambiumEffectiveNetworkBridgeMTU OBJECT-TYPE
-		SYNTAX	   Integer32 (0|576..1708)
+		SYNTAX	   Integer32 (0|576..3508)
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
 			"Device Bridge MTU size
+			For Force devices this value is limited to 1700
 			Device Allocation: AP, SM"
 		DEFVAL	{ 1500 }
 		::= { cambiumLinkStatus 30 }
@@ -3716,6 +4166,7 @@ cambiumAPCnsMGMTState  OBJECT-TYPE
 		DESCRIPTION
 		"AP Device management State"
 		::= { cambiumLinkStatus 35 }
+
 cambiumEffectiveDeviceIPv6Address OBJECT-TYPE
                 SYNTAX     Ipv6Address
                 MAX-ACCESS read-only
@@ -3819,7 +4270,7 @@ cambiumSFPConnectorType OBJECT-TYPE
                 ::= { cambiumLinkStatus 44 }
 
 cambiumSFPEthernetCodes OBJECT-TYPE
-                SYNTAX      Integer32 (0..7)
+                SYNTAX      Integer32 (0..13)
                 MAX-ACCESS read-only
                 STATUS     current
                 DESCRIPTION
@@ -3832,6 +4283,12 @@ cambiumSFPEthernetCodes OBJECT-TYPE
                          5 - 100BASE-FX,
                          6 - BASE-BX10,
                          7 - BASE-PX
+                         8 - 10G BASE-SR
+                         9 - 10G BASE-LR
+                         10 - 10G BASE-LRM
+                         11 - 10G BASE-ER
+                         12 - SFP+ Passive Cable
+                         13 - SFP+ Active Cable
                 Device Allocation: AP, SM"
                 ::= { cambiumLinkStatus 45 }
 
@@ -3890,14 +4347,170 @@ cambiumSFPVendorPN OBJECT-TYPE
                 ::= { cambiumLinkStatus 50 }
 
 cambiumEffectiveNetworkLan2MTU OBJECT-TYPE
-        SYNTAX     Integer32 (0|576..1708)
+        SYNTAX     Integer32 (0|576..3508)
         MAX-ACCESS read-only
         STATUS     current
         DESCRIPTION
             "SM NAT LAN2 MTU size
+			For Force devices this value is limited to 1700
             Device Allocation: SM"
         DEFVAL  { 1500 }
         ::= { cambiumLinkStatus 51 }
+
+lanSwitchPortsNum OBJECT-TYPE
+	SYNTAX     Integer32 (0..32)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Number of physical Switch Ports
+	Device Allocation: AP, SM"
+	DEFVAL  { 4 }
+	::= { cambiumLinkStatus 60 }
+
+lanSwitchPortStatusTable OBJECT-TYPE
+	SYNTAX SEQUENCE OF LanSwitchPortStatusEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"Switch Port Table Status"
+	::= { cambiumLinkStatus 61 }
+
+lanSwitchPortStatusEntry OBJECT-TYPE
+	SYNTAX     LanSwitchPortStatusEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"Switch Port Status Entry
+                Device Allocation: AP, SM"
+	INDEX	{ lanSwitchPortsNum }
+	::= { lanSwitchPortStatusTable 1 }
+
+LanSwitchPortStatusEntry ::= SEQUENCE {
+	lanSwitchPortCAPS
+		Integer32,
+	lanSwitchPortEnableStatus
+		Integer32,
+	lanSwitchPortLinkStatus
+		Integer32,
+	lanSwitchPortAutonegStatus
+		Integer32,
+	lanSwitchPortSpeedStatus
+		Integer32,
+	lanSwitchPortDuplexStatus
+		Integer32,
+	lanSwitchPortPoEStatus
+		Integer32,
+	lanSwitchPortPoEVoltage
+		Integer32,
+	lanSwitchPortPoECurrent
+		Integer32
+}
+
+lanSwitchPortCAPS OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Capability Flags bitmask:
+		0(0000b) - PoE is NOT Supported,
+		1(0001b) - Manual (Passsive) PoE 24V is supported,
+		2(0010b) - Auto (Active) PoE 24V is supported,
+		4(0100b) - Manual (Passive) PoE 56V is supported,
+		8(1000b) - Auto (Active) PoE 56V 802.3af is supported
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 1 }
+
+lanSwitchPortEnableStatus OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Enable
+		0 - Disable,
+		1 - Enable
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 2 }
+
+lanSwitchPortLinkStatus OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Link Status
+		0 - Down,
+		1 - Up
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 3 }
+
+lanSwitchPortAutonegStatus OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Autonegotiation
+		-1 - No data,
+		0  - Disable,
+		1  - Enable
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 4 }
+
+lanSwitchPortSpeedStatus OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Speed
+		-1   - No data,
+		10   - 10 Mb/s,
+		100  - 100 Mb/s,
+		1000 - 1000 Mb/s
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 5 }
+
+lanSwitchPortDuplexStatus OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Duplex Mode
+		-1 - No data,
+		0  - Half,
+		1  - Full
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 6 }
+
+lanSwitchPortPoEStatus OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Switch Port PoE Enable
+		-1 - Not Supported,
+		 0 - Disable,
+		 1 - PoE 24V,
+		 2 - PoE 24V in Auto Mode,
+		 3 - PoE 56V 802.3af,
+		 4 - PoE 56V 802.3af in Auto Mode
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 7 }
+
+lanSwitchPortPoEVoltage OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"POE out voltage measured in mV or -1 (voltage is unknown).
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 8 }
+
+lanSwitchPortPoECurrent OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"POE out current measured in mAh or -1 (current is unknown).
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortStatusEntry 9 }
 
 cambiumWLAN2Status OBJECT-TYPE
 		SYNTAX	   Integer32 (0|1|2)
@@ -4458,7 +5071,8 @@ CambiumTDDStatsPerSTAEntry ::= SEQUENCE {
 		dlWLanPerUserRetransmitPacketCount		Counter64,
 		dlWLanPerUserTxPower					Integer32,
 		cambiumTDDStatsIP						IpAddress,
-		cambiumTDDStatsDevName					DisplayString
+		cambiumTDDStatsDevName					DisplayString,
+		dlWLanPerUserRetransmitMsduCount		Counter64
 	}
 
 cambiumTDDStatsPerSTAIndex OBJECT-TYPE
@@ -4551,7 +5165,7 @@ dlWLanPerUserRetransmitPacketCount OBJECT-TYPE
 	MAX-ACCESS read-only
 	STATUS	   current
 	DESCRIPTION
-		   "Number of downlink data packet retransmitted due to no-acknowledge
+		   "Number of downlink MPDU retransmitted due to no-acknowledge
 		   for a single SM
 		   Device Allocation: AP"
 	::= { cambiumTDDStatsPerSTAEntry 10 }
@@ -4582,6 +5196,16 @@ cambiumTDDStatsDevName OBJECT-TYPE
 		   "Hostname of SM
 		   Device Allocation: AP"
 	::= { cambiumTDDStatsPerSTAEntry 13 }
+
+dlWLanPerUserRetransmitMsduCount OBJECT-TYPE
+	SYNTAX	   Counter64
+	MAX-ACCESS read-only
+	STATUS	   current
+	DESCRIPTION
+		   "Number of downlink data packets (MSDU) retransmitted due to no-acknowledge
+		   for a single SM
+		   Device Allocation: AP"
+	::= { cambiumTDDStatsPerSTAEntry 14 }
 
 ulWLanErrorDroppedPacketCount OBJECT-TYPE
 		SYNTAX	   Counter64
@@ -4778,7 +5402,7 @@ dlWLanRetransPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 59 }
 
 ulWLanBroadcastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -4787,7 +5411,7 @@ ulWLanBroadcastPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 60 }
 
 dlWLanBroadcastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -4796,7 +5420,7 @@ dlWLanBroadcastPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 61 }
 
 ulWLanMulticastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -4805,7 +5429,7 @@ ulWLanMulticastPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 62 }
 
 dlWLanMulticastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -5943,6 +6567,2200 @@ wLanSNRDeviation19Cnt OBJECT-TYPE
 				Device Allocation: AP, SM"
 		::= { cambiumPerformanceMonitoring 189 }
 
+wlanHEMCSPackets		OBJECT IDENTIFIER ::= { cambiumPerformanceMonitoring 190 }
+dlWlanHEMCSPackets		OBJECT IDENTIFIER ::= { wlanHEMCSPackets 1 }
+ulWlanHEMCSPackets		OBJECT IDENTIFIER ::= { wlanHEMCSPackets 2 }
+
+lanSwitchPortPerfTable OBJECT-TYPE
+	SYNTAX SEQUENCE OF LanSwitchPortPerfEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"Switch performance monitoring"
+	::= { cambiumPerformanceMonitoring 191 }
+
+dlWLanRetransMpduPacketCount OBJECT-TYPE
+	SYNTAX	   Counter64
+	MAX-ACCESS read-only
+	STATUS	   current
+	DESCRIPTION
+		"Aggregated number of total Downlink MPDU retransmitted
+		due to no-acknowledgement
+		Device Allocation: AP"
+	::= { cambiumPerformanceMonitoring 192 }
+
+ulWLanRetransMpduPacketCount OBJECT-TYPE
+	SYNTAX	   Counter64
+	MAX-ACCESS read-only
+	STATUS	   current
+	DESCRIPTION
+		"Aggregated number of total Uplink MPDU retransmitted
+		due to no-acknowledgement
+		Device Allocation: AP"
+	::= { cambiumPerformanceMonitoring 193 }
+
+lanSwitchPortPerfEntry OBJECT-TYPE
+	SYNTAX     LanSwitchPortPerfEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"Switch performance monitoring
+                Device Allocation: AP, SM"
+	INDEX	{ lanSwitchPortsNum }
+	::= { lanSwitchPortPerfTable 1 }
+
+LanSwitchPortPerfEntry ::= SEQUENCE {
+	rxSwitchPortKBCount
+		Counter64,
+	rxSwitchPortTotalPacketCount
+		Counter64,
+	rxSwitchPortErrorPacketCount
+		Counter64,
+	rxSwitchPortUnicastPacketCount
+		Counter64,
+	rxSwitchPortMulticastPacketCount
+		Counter64,
+	rxSwitchPortBroadcastPacketCount
+		Counter64,
+	txSwitchPortKBCount
+		Counter64,
+	txSwitchPortTotalPacketCount
+		Counter64,
+	txSwitchPortErrorPacketCount
+		Counter64,
+	txSwitchPortUnicastPacketCount
+		Counter64,
+	txSwitchPortMulticastPacketCount
+		Counter64,
+	txSwitchPortBroadcastPacketCount
+		Counter64
+}
+
+rxSwitchPortKBCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port RX kilobytes
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 1 }
+
+rxSwitchPortTotalPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port RX packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 2 }
+
+rxSwitchPortErrorPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port RX errors
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 3 }
+
+rxSwitchPortUnicastPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port RX unicast packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 4 }
+
+rxSwitchPortMulticastPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port RX multicast packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 5 }
+
+rxSwitchPortBroadcastPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port RX broadcast packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 6 }
+
+txSwitchPortKBCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port TX kilobytes
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 7 }
+
+txSwitchPortTotalPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port TX packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 8 }
+
+txSwitchPortErrorPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port TX errors
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 9 }
+
+txSwitchPortUnicastPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port TX unicast packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 10 }
+
+
+txSwitchPortMulticastPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port TX multicast packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 11 }
+
+txSwitchPortBroadcastPacketCount OBJECT-TYPE
+	SYNTAX     Counter64
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Total port TX broadcast packets
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortPerfEntry 12 }
+
+dlWLanHEMCS0S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 1 }
+
+dlWLanHEMCS1S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 2 }
+
+dlWLanHEMCS2S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 3 }
+
+dlWLanHEMCS3S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 4 }
+
+dlWLanHEMCS4S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 5 }
+
+dlWLanHEMCS5S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 6 }
+
+dlWLanHEMCS6S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 7 }
+
+dlWLanHEMCS7S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 8 }
+
+dlWLanHEMCS8S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 9 }
+
+dlWLanHEMCS9S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 10 }
+
+dlWLanHEMCS10S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 11 }
+
+dlWLanHEMCS11S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 1 Spatial Stream
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 12 }
+
+dlWLanHEMCS0S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 13 }
+
+dlWLanHEMCS1S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 14 }
+
+dlWLanHEMCS2S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 15 }
+
+dlWLanHEMCS3S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 16 }
+
+dlWLanHEMCS4S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 17 }
+
+dlWLanHEMCS5S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 18 }
+
+dlWLanHEMCS6S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 19 }
+
+dlWLanHEMCS7S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 20 }
+
+dlWLanHEMCS8S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 21 }
+
+dlWLanHEMCS9S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 22 }
+
+dlWLanHEMCS10S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 23 }
+
+dlWLanHEMCS11S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 24 }
+
+dlWLanHEMCS0S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 25 }
+
+dlWLanHEMCS1S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 26 }
+
+dlWLanHEMCS2S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 27 }
+
+dlWLanHEMCS3S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 28 }
+
+dlWLanHEMCS4S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 29 }
+
+dlWLanHEMCS5S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 30 }
+
+dlWLanHEMCS6S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 31 }
+
+dlWLanHEMCS7S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 32 }
+
+dlWLanHEMCS8S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 33 }
+
+dlWLanHEMCS9S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 34 }
+
+dlWLanHEMCS10S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 35 }
+
+dlWLanHEMCS11S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 36 }
+
+dlWLanHEMCS0S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 37 }
+
+dlWLanHEMCS1S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 38 }
+
+dlWLanHEMCS2S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 39 }
+
+dlWLanHEMCS3S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 40 }
+
+dlWLanHEMCS4S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 41 }
+
+dlWLanHEMCS5S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 42 }
+
+dlWLanHEMCS6S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 43 }
+
+dlWLanHEMCS7S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 44 }
+
+dlWLanHEMCS8S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 45 }
+
+dlWLanHEMCS9S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 46 }
+
+dlWLanHEMCS10S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 47 }
+
+dlWLanHEMCS11S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 48 }
+
+dlWLanHEMCS0S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 49 }
+
+dlWLanHEMCS1S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 50 }
+
+dlWLanHEMCS2S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 51 }
+
+dlWLanHEMCS3S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 52 }
+
+dlWLanHEMCS4S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 53 }
+
+dlWLanHEMCS5S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 54 }
+
+dlWLanHEMCS6S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 55 }
+
+dlWLanHEMCS7S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 56 }
+
+dlWLanHEMCS8S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 57 }
+
+dlWLanHEMCS9S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 58 }
+
+dlWLanHEMCS10S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 59 }
+
+dlWLanHEMCS11S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 60 }
+
+dlWLanHEMCS0S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 61 }
+
+dlWLanHEMCS1S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 62 }
+
+dlWLanHEMCS2S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 63 }
+
+dlWLanHEMCS3S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 64 }
+
+dlWLanHEMCS4S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 65 }
+
+dlWLanHEMCS5S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 66 }
+
+dlWLanHEMCS6S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 67 }
+
+dlWLanHEMCS7S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 68 }
+
+dlWLanHEMCS8S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 69 }
+
+dlWLanHEMCS9S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 70 }
+
+dlWLanHEMCS10S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 71 }
+
+dlWLanHEMCS11S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 72 }
+
+dlWLanHEMCS0S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 73 }
+
+dlWLanHEMCS1S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 74 }
+
+dlWLanHEMCS2S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 75 }
+
+dlWLanHEMCS3S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 76 }
+
+dlWLanHEMCS4S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 77 }
+
+dlWLanHEMCS5S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 78 }
+
+dlWLanHEMCS6S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 79 }
+
+dlWLanHEMCS7S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 80 }
+
+dlWLanHEMCS8S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 81 }
+
+dlWLanHEMCS9S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 82 }
+
+dlWLanHEMCS10S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 83 }
+
+dlWLanHEMCS11S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 84 }
+
+dlWLanHEMCS0S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS0 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 85 }
+
+dlWLanHEMCS1S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS1 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 86 }
+
+dlWLanHEMCS2S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS2 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 87 }
+
+dlWLanHEMCS3S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS3 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 88 }
+
+dlWLanHEMCS4S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS4 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 89 }
+
+dlWLanHEMCS5S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS5 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 90 }
+
+dlWLanHEMCS6S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS6 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 91 }
+
+dlWLanHEMCS7S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS7 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 92 }
+
+dlWLanHEMCS8S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS8 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 93 }
+
+dlWLanHEMCS9S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS9 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 94 }
+
+dlWLanHEMCS10S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS10 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 95 }
+
+dlWLanHEMCS11S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS11 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 96 }
+
+dlWLanHEMCS12S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 1 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 97 }
+
+dlWLanHEMCS13S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 1 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 98 }
+
+dlWLanHEMCS12S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 99 }
+
+dlWLanHEMCS13S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 2 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 100 }
+
+dlWLanHEMCS12S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 101 }
+
+dlWLanHEMCS13S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 3 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 102 }
+
+dlWLanHEMCS12S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 103 }
+
+dlWLanHEMCS13S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 4 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 104 }
+
+dlWLanHEMCS12S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 105 }
+
+dlWLanHEMCS13S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 5 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 106 }
+
+dlWLanHEMCS12S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 107 }
+
+dlWLanHEMCS13S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 6 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 108 }
+
+dlWLanHEMCS12S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 109 }
+
+dlWLanHEMCS13S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 7 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 110 }
+
+dlWLanHEMCS12S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS12 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 111 }
+
+dlWLanHEMCS13S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of downlink packet received for HE MCS13 8 Spatial Streams
+		Device Allocation: AP"
+	::= { dlWlanHEMCSPackets 112 }
+
+ulWLanHEMCS0S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 1 }
+
+ulWLanHEMCS1S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 2 }
+
+ulWLanHEMCS2S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 3 }
+
+ulWLanHEMCS3S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 4 }
+
+ulWLanHEMCS4S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 5 }
+
+ulWLanHEMCS5S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 6 }
+
+ulWLanHEMCS6S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 7 }
+
+ulWLanHEMCS7S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 8 }
+
+ulWLanHEMCS8S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 9 }
+
+ulWLanHEMCS9S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 10 }
+
+ulWLanHEMCS10S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 11 }
+
+ulWLanHEMCS11S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 1 Spatial Stream
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 12 }
+
+ulWLanHEMCS0S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 13 }
+
+ulWLanHEMCS1S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 14 }
+
+ulWLanHEMCS2S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 15 }
+
+ulWLanHEMCS3S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 16 }
+
+ulWLanHEMCS4S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 17 }
+
+ulWLanHEMCS5S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 18 }
+
+ulWLanHEMCS6S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 19 }
+
+ulWLanHEMCS7S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 20 }
+
+ulWLanHEMCS8S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 21 }
+
+ulWLanHEMCS9S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 22 }
+
+ulWLanHEMCS10S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 23 }
+
+ulWLanHEMCS11S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 24 }
+
+ulWLanHEMCS0S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 25 }
+
+ulWLanHEMCS1S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 26 }
+
+ulWLanHEMCS2S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 27 }
+
+ulWLanHEMCS3S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 28 }
+
+ulWLanHEMCS4S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 29 }
+
+ulWLanHEMCS5S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 30 }
+
+ulWLanHEMCS6S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 31 }
+
+ulWLanHEMCS7S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 32 }
+
+ulWLanHEMCS8S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 33 }
+
+ulWLanHEMCS9S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 34 }
+
+ulWLanHEMCS10S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 35 }
+
+ulWLanHEMCS11S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 36 }
+
+ulWLanHEMCS0S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 37 }
+
+ulWLanHEMCS1S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 38 }
+
+ulWLanHEMCS2S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 39 }
+
+ulWLanHEMCS3S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 40 }
+
+ulWLanHEMCS4S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 41 }
+
+ulWLanHEMCS5S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 42 }
+
+ulWLanHEMCS6S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 43 }
+
+ulWLanHEMCS7S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 44 }
+
+ulWLanHEMCS8S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 45 }
+
+ulWLanHEMCS9S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 46 }
+
+ulWLanHEMCS10S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 47 }
+
+ulWLanHEMCS11S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 48 }
+
+ulWLanHEMCS0S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 49 }
+
+ulWLanHEMCS1S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 50 }
+
+ulWLanHEMCS2S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 51 }
+
+ulWLanHEMCS3S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 52 }
+
+ulWLanHEMCS4S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 53 }
+
+ulWLanHEMCS5S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 54 }
+
+ulWLanHEMCS6S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 55 }
+
+ulWLanHEMCS7S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 56 }
+
+ulWLanHEMCS8S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 57 }
+
+ulWLanHEMCS9S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 58 }
+
+ulWLanHEMCS10S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 59 }
+
+ulWLanHEMCS11S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 60 }
+
+ulWLanHEMCS0S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 61 }
+
+ulWLanHEMCS1S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 62 }
+
+ulWLanHEMCS2S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 63 }
+
+ulWLanHEMCS3S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 64 }
+
+ulWLanHEMCS4S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 65 }
+
+ulWLanHEMCS5S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 66 }
+
+ulWLanHEMCS6S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 67 }
+
+ulWLanHEMCS7S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 68 }
+
+ulWLanHEMCS8S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 69 }
+
+ulWLanHEMCS9S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 70 }
+
+ulWLanHEMCS10S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 71 }
+
+ulWLanHEMCS11S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 72 }
+
+ulWLanHEMCS0S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 73 }
+
+ulWLanHEMCS1S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 74 }
+
+ulWLanHEMCS2S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 75 }
+
+ulWLanHEMCS3S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 76 }
+
+ulWLanHEMCS4S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 77 }
+
+ulWLanHEMCS5S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 78 }
+
+ulWLanHEMCS6S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 79 }
+
+ulWLanHEMCS7S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 80 }
+
+ulWLanHEMCS8S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 81 }
+
+ulWLanHEMCS9S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 82 }
+
+ulWLanHEMCS10S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 83 }
+
+ulWLanHEMCS11S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 84 }
+
+ulWLanHEMCS0S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS0 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 85 }
+
+ulWLanHEMCS1S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS1 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 86 }
+
+ulWLanHEMCS2S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS2 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 87 }
+
+ulWLanHEMCS3S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS3 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 88 }
+
+ulWLanHEMCS4S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS4 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 89 }
+
+ulWLanHEMCS5S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS5 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 90 }
+
+ulWLanHEMCS6S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS6 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 91 }
+
+ulWLanHEMCS7S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS7 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 92 }
+
+ulWLanHEMCS8S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS8 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 93 }
+
+ulWLanHEMCS9S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS9 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 94 }
+
+ulWLanHEMCS10S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS10 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 95 }
+
+ulWLanHEMCS11S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS11 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 96 }
+	
+ulWLanHEMCS12S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 1 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 97 }
+
+ulWLanHEMCS13S1Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 1 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 98 }
+
+ulWLanHEMCS12S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 99 }
+
+ulWLanHEMCS13S2Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 2 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 100 }
+
+ulWLanHEMCS12S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 101 }
+
+ulWLanHEMCS13S3Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 3 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 102 }
+
+ulWLanHEMCS12S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 103 }
+
+ulWLanHEMCS13S4Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 4 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 104 }
+
+ulWLanHEMCS12S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 105 }
+
+ulWLanHEMCS13S5Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 5 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 106 }
+
+ulWLanHEMCS12S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 107 }
+
+ulWLanHEMCS13S6Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 6 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 108 }
+
+ulWLanHEMCS12S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 109 }
+
+ulWLanHEMCS13S7Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 7 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 110 }
+
+ulWLanHEMCS12S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS12 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 111 }
+
+ulWLanHEMCS13S8Packets OBJECT-TYPE
+	SYNTAX		Counter64
+	MAX-ACCESS read-only
+	STATUS		current
+	DESCRIPTION
+		"Aggregated number of uplink packet received for HE MCS13 8 Spatial Streams
+		Device Allocation: AP"
+	::= { ulWlanHEMCSPackets 112 }
+
 ulWLan2KbitCount OBJECT-TYPE
 		SYNTAX	   Counter64
 		MAX-ACCESS read-only
@@ -6136,7 +8954,7 @@ dlWLan2RetransPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 259 }
 
 ulWLan2BroadcastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -6145,7 +8963,7 @@ ulWLan2BroadcastPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 260 }
 
 dlWLan2BroadcastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -6154,7 +8972,7 @@ dlWLan2BroadcastPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 261 }
 
 ulWLan2MulticastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -6163,7 +8981,7 @@ ulWLan2MulticastPacketCount OBJECT-TYPE
 		::= { cambiumPerformanceMonitoring 262 }
 
 dlWLan2MulticastPacketCount OBJECT-TYPE
-		SYNTAX	   Counter32
+		SYNTAX	   Counter64
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -7510,6 +10328,57 @@ syslogServerLogDA  OBJECT-TYPE
 				1 - Enabled"
 		::= { cambiumSystemLog 7 }
 
+syslogServerLogCLISH  OBJECT-TYPE
+		SYNTAX     Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS     current
+		DESCRIPTION
+			"Enable clish logging to syslog:
+				0 - Disabled
+				1 - Enabled"
+			DEFVAL	{ 1 }
+		::= { cambiumSystemLog 8 }
+
+syslogServerPortFirst	OBJECT-TYPE
+		SYNTAX	   Integer32 (0..65535)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+			"Syslog Server IP port 1
+				0 - will be replaced with the default port (514)
+			Device Allocation: AP, SM"
+		::= { cambiumSystemLog 11 }
+
+syslogServerPortSecond	OBJECT-TYPE
+		SYNTAX	   Integer32 (0..65535)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Syslog Server IP port 2
+				0 - will be replaced with the default port (514)
+			Device Allocation: AP, SM"
+		::= { cambiumSystemLog 12 }
+
+syslogServerPortThird 	OBJECT-TYPE
+		SYNTAX	   Integer32 (0..65535)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Syslog Server IP port 3
+				0 - will be replaced with the default port (514)
+			Device Allocation: AP, SM"
+		::= { cambiumSystemLog 13 }
+
+syslogServerPortFourth 	OBJECT-TYPE
+		SYNTAX	   Integer32 (0..65535)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Syslog Server IP port 4
+				0 - will be replaced with the default port (514)
+			Device Allocation: AP, SM"
+		::= { cambiumSystemLog 14 }
+
 dhcpLanEnable  OBJECT-TYPE
 		SYNTAX	   Integer32 (0|1)
 		MAX-ACCESS read-write
@@ -7718,6 +10587,18 @@ cambiumSSHServerPort	OBJECT-TYPE
 	DEFVAL	{ 22 }
 		::= { cambiumSSHServer 2 }
 
+cambiumSSHServerDeprecatedAlgorithms	OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+				"Cambium SSH Server: support deprecated algorithms
+					0 - Disable
+					1 - Enable
+				Device Allocation: AP, SM"
+	DEFVAL	{ 1 }
+		::= { cambiumSSHServer 3 }
+
 networkMode	 OBJECT-TYPE
 		SYNTAX	   Integer32 (1|2|3)
 		MAX-ACCESS read-write
@@ -7791,12 +10672,12 @@ networkLanDNSIPAddr	 OBJECT-TYPE
 	::= { networkLan 5 }
 
 networkLanMTU  OBJECT-TYPE
-	SYNTAX	   Integer32 (0|576..1708)
+	SYNTAX	   Integer32 (0|576..3508)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
 		"SM NAT LAN MTU size
-		For 802.11n devices maximum value is 1700 and default is 1500
+		For 802.11n and Force devices maximum value is 1700 and default is 1500
 		Device Allocation: SM"
 	::= { networkLan 6 }
 
@@ -7833,7 +10714,7 @@ networkLanAutoNegotiation  OBJECT-TYPE
 	::= { networkLan 9 }
 
 networkLanSpeed	 OBJECT-TYPE
-	SYNTAX	   Integer32 (10|100|1000)
+	SYNTAX	   Integer32 (10|100|1000|10000)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -7917,7 +10798,7 @@ networkLan2AutoNegotiation	OBJECT-TYPE
 	::= { networkLan 21 }
 
 networkLan2Speed  OBJECT-TYPE
-	SYNTAX	   Integer32 (10|100|1000)
+	SYNTAX	   Integer32 (10|100|1000|10000)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -7966,7 +10847,7 @@ networkLanEnabled  OBJECT-TYPE
 	::= { networkLan 25 }
 
 networkLan2MTU  OBJECT-TYPE
-    SYNTAX     Integer32 (0|576..1708)
+    SYNTAX     Integer32 (0|576..3508)
     MAX-ACCESS read-write
     STATUS     current
     DESCRIPTION
@@ -7974,6 +10855,24 @@ networkLan2MTU  OBJECT-TYPE
         For 802.11ac devices only
         Device Allocation: SM"
     ::= { networkLan 26 }
+
+networkLanAdvertise  OBJECT-TYPE
+	SYNTAX		Integer32
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+		"Lan Port speed and duplex advertised by autonegotiation.
+		Value is a decimal number which represents a bitmask constructed
+		using following values:
+			0x001	10baseT Half
+			0x002	10baseT Full
+			0x004	100baseT Half
+			0x008	100baseT Full
+			0x010	1000baseT Half       (not supported by IEEE standards)
+			0x020	1000baseT Full
+		Device Allocation: AP, SM"
+		DEFVAL	{ 47 }
+	::= { networkLan 27 }
 
 networkLanIPv6Addr  OBJECT-TYPE
         SYNTAX     Ipv6Address
@@ -7983,6 +10882,106 @@ networkLanIPv6Addr  OBJECT-TYPE
                 "SM NAT LAN IPv6 Address
                 Device Allocation: SM"
         ::= { networkLan 31 }
+
+lanSwitchPortTable OBJECT-TYPE
+	SYNTAX SEQUENCE OF LanSwitchPortEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"Lan Switch Port Table"
+	::= { lanSwitch 10 }
+
+lanSwitchPortEntry OBJECT-TYPE
+	SYNTAX     LanSwitchPortEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"Lan Switch Port Entry
+                Device Allocation: AP, SM"
+	INDEX   { lanSwitchPortNum }
+	::= { lanSwitchPortTable 1 }
+
+LanSwitchPortEntry ::= SEQUENCE {
+	lanSwitchPortNum
+		Integer32,
+	lanSwitchPortEnable
+		Integer32,
+	lanSwitchPortAutoneg
+		Integer32,
+	lanSwitchPortSpeed
+		Integer32,
+	lanSwitchPortDuplex
+		Integer32,
+	lanSwitchPortPoEMode
+		Integer32
+}
+
+lanSwitchPortNum OBJECT-TYPE
+	SYNTAX     Integer32 (1..32)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+	"Device port number.
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortEntry 1 }
+
+lanSwitchPortEnable OBJECT-TYPE
+	SYNTAX     Integer32 (0|1)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Enable
+		0 - Disable,
+		1 - Enable
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortEntry 2 }
+
+lanSwitchPortAutoneg OBJECT-TYPE
+	SYNTAX     Integer32 (0|1)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Autonegotiation
+		0 - Disable,
+		1 - Enable
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortEntry 3 }
+
+lanSwitchPortSpeed OBJECT-TYPE
+	SYNTAX     Integer32 (10|100|1000)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Speed
+		10   - 10 Mb/s,
+		100  - 100 Mb/s,
+		1000 - 1000 Mb/s
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortEntry 4 }
+
+lanSwitchPortDuplex OBJECT-TYPE
+	SYNTAX     Integer32 (0|1)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+	"Switch Port Duplex Mode
+		0 - Half,
+		1 - Full
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortEntry 5 }
+
+lanSwitchPortPoEMode OBJECT-TYPE
+	SYNTAX     Integer32 (0|1|2|3)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+	"Switch Port PoE Enable
+		0 - Off,
+		1 - Passive 56V,
+		2 - Active 56V,
+		3 - Passive 24V
+	Device Allocation: AP, SM"
+	::= { lanSwitchPortEntry 6 }
 
 networkWanIPAddressMode	 OBJECT-TYPE
 		SYNTAX	   Integer32 (1|2)
@@ -8033,12 +11032,12 @@ networkWanDNSIPAddr	 OBJECT-TYPE
 	::= { networkWan 5 }
 
 networkWanMTU  OBJECT-TYPE
-	SYNTAX	   Integer32 (0|576..1708)
+	SYNTAX	   Integer32 (0|576..3508)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
 		"SM NAT WAN MTU size
-		For 802.11n devices maximum value is 1700
+		For 802.11n and Force devices maximum value is 1700
 		Device Allocation: SM"
 	DEFVAL	{ 1500 }
 	::= { networkWan 6 }
@@ -8376,12 +11375,12 @@ networkBridgeDNSIPAddr	OBJECT-TYPE
 	::= { networkBridge 5 }
 
 networkBridgeMTU  OBJECT-TYPE
-	SYNTAX	   Integer32 (0|576..1708)
+	SYNTAX	   Integer32 (576..3508)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
 		"Device Bridge MTU size
-		For 802.11n devices maximum value is 1700 and default is 1500
+		For 802.11n and Force devices maximum value is 1700 and default is 1500
 		Device Allocation: AP, SM"
 	::= { networkBridge 6 }
 
@@ -8922,6 +11921,18 @@ watchdogPingRetries OBJECT-TYPE
 	DEFVAL { 4 }
 	::= { cambiumWatchdog 5 }
 
+crashReporterEnable OBJECT-TYPE
+	SYNTAX		Integer32 (0|1|2)
+	MAX-ACCESS	read-write
+	STATUS		current
+	DESCRIPTION
+		"Enable Crash Reporter
+			0 - Disable,
+			1 - Enable,
+			2 - None"
+	DEFVAL { 2 }
+	::= { cambiumCrashReporter 1 }
+
 watchdogGPSAllowHardReset OBJECT-TYPE
 	SYNTAX		Integer32 (0|1)
 	MAX-ACCESS	read-write
@@ -9109,6 +12120,147 @@ snmpDomainAccessIPMask OBJECT-TYPE
 		"SNMP Access Domain IP Mask
 		Device Allocation: AP, SM"
 		::= { snmp 10 }
+
+snmpProtocolVersion OBJECT-TYPE
+	SYNTAX     Integer32 (1..3)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP protocol versions support:
+			1 - v1, v2c
+			2 - v3
+			3 - v1, v2c, v3
+		 Device Allocation: AP, SM"
+	DEFVAL { 1 }
+	::= { snmp 11 }
+
+snmpAgentPort OBJECT-TYPE
+	SYNTAX	   Integer32 (1..65535)
+	MAX-ACCESS read-write
+	STATUS	   current
+	DESCRIPTION
+	"SNMP Agent Port
+	Device Allocation: AP, SM"
+	DEFVAL { 161 }
+	::= { snmp 12 }
+
+snmpRemoteAccess OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"SNMP Remote Access
+			0 - Disable,
+			1 - Enable
+		Device Allocation: AP, SM"
+		DEFVAL	{ 0 }
+		::= { snmp 13 }
+
+snmpv3UsersTable OBJECT-TYPE
+	SYNTAX     SEQUENCE OF Snmpv3UsersEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"This table contains users for SNMP v3 access
+		 Device Allocation: AP, SM"
+	::= { snmp 20 }
+
+snmpv3UsersEntry OBJECT-TYPE
+	SYNTAX     Snmpv3UsersEntry
+	MAX-ACCESS not-accessible
+	STATUS     current
+	DESCRIPTION
+		"User for SNMP v3 access data
+		 Device Allocation: AP, SM"
+	INDEX	{ snmpv3UsersTableIndex }
+	::= { snmpv3UsersTable 1 }
+
+Snmpv3UsersEntry ::= SEQUENCE {
+		snmpv3UsersTableIndex	Integer32,
+		snmpv3UserName			DisplayString,
+		snmpv3UserPassPhrase	DisplayString,
+		snmpv3UserSecurityLevel	Integer32,
+		snmpv3UserRWAccess		Integer32,
+		snmpv3UserAuthMethod	Integer32,
+		snmpv3UserEncryption	Integer32
+	}
+
+snmpv3UsersTableIndex OBJECT-TYPE
+	SYNTAX     Integer32 (0..16)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP v3 users table index
+		 Table Entry is cleared if Index is set to zero
+		 Device Allocation: AP, SM"
+	::= { snmpv3UsersEntry 1 }
+
+snmpv3UserName OBJECT-TYPE
+	SYNTAX     DisplayString (SIZE(1..64))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP v3 user name
+		 Device Allocation: AP, SM"
+	::= { snmpv3UsersEntry 2 }
+
+snmpv3UserPassPhrase OBJECT-TYPE
+	SYNTAX     DisplayString (SIZE(8..64))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP v3 user passphrase
+		 Device Allocation: AP, SM"
+	::= { snmpv3UsersEntry 3 }
+
+snmpv3UserSecurityLevel OBJECT-TYPE
+	SYNTAX     Integer32 (1..3)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP v3 user security level:
+			1 - noAuthNoPriv
+			2 - authNoPriv
+			3 - authPriv
+		 Device Allocation: AP, SM"
+	DEFVAL { 1 }
+	::= { snmpv3UsersEntry 4 }
+
+snmpv3UserRWAccess OBJECT-TYPE
+	SYNTAX     Integer32 (0|1)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP v3 user R/W access:
+			0 - disable
+			1 - enable
+		 Device Allocation: AP, SM"
+	DEFVAL { 0 }
+	::= { snmpv3UsersEntry 5 }
+
+snmpv3UserAuthMethod OBJECT-TYPE
+	SYNTAX     Integer32 (1|2)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP v3 user authentication method:
+			1 - MD5
+			2 - SHA1
+		 Device Allocation: AP, SM"
+	DEFVAL { 2 }
+	::= { snmpv3UsersEntry 6 }
+
+snmpv3UserEncryption OBJECT-TYPE
+	SYNTAX     Integer32 (1|2)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"SNMP v3 user encryption:
+			1 - AES
+			2 - DES
+		 Device Allocation: AP, SM"
+	DEFVAL { 1 }
+	::= { snmpv3UsersEntry 7 }
 
 systemConfigTimezone  OBJECT-TYPE
 	SYNTAX	   DisplayString
@@ -9353,7 +12505,7 @@ cambiumDeviceNameLoginDisplay OBJECT-TYPE
 
 systemConfigStartDHT OBJECT-TYPE
 	SYNTAX	   Integer32 (-45..70)
-	MAX-ACCESS read-only
+	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
 		"Begin value of dynamic heating temperature (-45 .. 70)"
@@ -9362,7 +12514,7 @@ systemConfigStartDHT OBJECT-TYPE
 
 systemConfigStopDHT OBJECT-TYPE
 	SYNTAX	   Integer32 (-45..70)
-	MAX-ACCESS read-only
+	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
 		"End value of dynamic heating temperature (-45 .. 70)"
@@ -9425,6 +12577,34 @@ systemConfigLanguage  OBJECT-TYPE
 		Device Allocation: AP, SM"
 	DEFVAL  { "en" }
 	::= { systemConfig 27 }
+
+systemConfigCNVision  OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-only
+		STATUS	   current
+		DESCRIPTION
+		"cnVision Lock Bit.
+		This bit indicates if cnVision Lock Bit is set or not.
+		If cnVision lock bit is set then device is considered to be a CCTV product:
+			0 - cnVision Bit not Set,
+			1 - cnVision Bit is set
+		Device Allocation: AP, SM"
+		DEFVAL	{ 0 }
+		::= { systemConfig 28 }
+
+systemConfigSCLockBit OBJECT-TYPE
+	SYNTAX     Integer32 (0|1)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Soft Country Lock Bit.
+		 This bit indicates if the systemConfigLockedCC value can be
+		 overridden using a valid Operational License:
+			0 - Soft Country Lock feature is disabled,
+			1 - Soft Country Lock feature is enabled.
+		Device Allocation: AP"
+	DEFVAL	{ 0 }
+	::= { systemConfig 29 }
 
 systemNtpServerIPMode OBJECT-TYPE
 	SYNTAX	   Integer32 (1|2)
@@ -9495,6 +12675,18 @@ uhttpdMainPem  OBJECT-TYPE
 		"Uhttpd .pem file
 		Device Allocation: AP, SM"
 	::= { cambiumWebServer 4 }
+
+uhttpdMainInactLogout  OBJECT-TYPE
+	SYNTAX	   Integer32 (0|1)
+	MAX-ACCESS read-write
+	STATUS	   current
+	DESCRIPTION
+		"Web Interface Inactivity Logout:
+		1 - Enable automatic user logout from Web UI after predefined inactivity timeout,
+		2 - Disable automatic user logout from Web UI after predefined inactivity timeout
+		Device Allocation: AP, SM"
+	DEFVAL  { 1 }
+	::= { cambiumWebServer 5 }
 
 wirelessDeviceCountryCode  OBJECT-TYPE
 	SYNTAX	   DisplayString (SIZE(0|2))
@@ -9636,6 +12828,18 @@ wirelessRandFD	OBJECT-TYPE
 		DEFVAL  { 0 }
 		::= { wirelessDevice 15 }
 
+wirelessEPTPPPDUDuration	OBJECT-TYPE
+		SYNTAX	Integer32 (100..4000)
+		MAX-ACCESS	read-write
+		STATUS	current
+		DESCRIPTION
+		"max PPDU duration
+			for ePTP mode
+			802.11ac  only
+			Device Allocation: AP, SM"
+		DEFVAL  { 2000 }
+		::= { wirelessDevice 16 }
+
 wirelessInterfaceMode  OBJECT-TYPE
 	SYNTAX	   Integer32 (1|2|3)
 	MAX-ACCESS read-write
@@ -9684,7 +12888,7 @@ wirelessInterfaceEncryptionKey	OBJECT-TYPE
 	::= { wirelessInterface 4 }
 
 wirelessInterfaceHTMode	 OBJECT-TYPE
-	SYNTAX	   Integer32 (1..5)
+	SYNTAX	   Integer32 (1..6)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -9693,7 +12897,8 @@ wirelessInterfaceHTMode	 OBJECT-TYPE
 			2 - 40Mhz,
 			3 - 10Mhz,
 			4 - 5MHz,
-			5 - 80MHz
+			5 - 80MHz,
+			6 - 160MHz
 		Device Allocation: AP"
 	DEFVAL	{ 1 }
 	::= { wirelessInterface 5 }
@@ -9723,15 +12928,22 @@ wirelessInterfaceTDDAntennaGain	 OBJECT-TYPE
 	::= { wirelessInterface 7 }
 
 wirelessInterfaceTDDRatio  OBJECT-TYPE
-	SYNTAX	   Integer32 (1|2|3|4)
+	SYNTAX	   Integer32 (1|2|3|4|35|40|45|55|60|65|70)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
 		"DL/UL Ratio:
-			1 - 75/25,
-			2 - 50/50,
-			3 - 30/70,
-			4 - Flexible
+			1  - 75/25,
+			2  - 50/50,
+			3  - 30/70,
+			4  - Flexible,
+			35 - 35/65,
+			40 - 40/60,
+			45 - 45/55,
+			55 - 55/45,
+			60 - 60/40,
+			65 - 65/35,
+			70 - 70/30
 		Device Allocation: AP"
 	DEFVAL	{ 4 }
 	::= { wirelessInterface 9 }
@@ -9826,7 +13038,7 @@ wirelessInterfaceScanFrequencyListForty	 OBJECT-TYPE
 		::= { wirelessInterface 17 }
 
 centerFrequency	 OBJECT-TYPE
-	SYNTAX	   Integer32 (0|2407..6420)
+	SYNTAX	   Integer32 (0|2407..7200)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -9835,7 +13047,7 @@ centerFrequency	 OBJECT-TYPE
 	::= { wirelessInterface 18 }
 
 dfsAlternative1CenterFrequency	OBJECT-TYPE
-	SYNTAX	   Integer32 (0|2407..6420)
+	SYNTAX	   Integer32 (0|2407..7200)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -9844,7 +13056,7 @@ dfsAlternative1CenterFrequency	OBJECT-TYPE
 	::= { wirelessInterface 19 }
 
 dfsAlternative2CenterFrequency	OBJECT-TYPE
-	SYNTAX	   Integer32 (0|2407..6420)
+	SYNTAX	   Integer32 (0|2407..7200)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -10383,7 +13595,7 @@ wirelessULMIR  OBJECT-TYPE
 		::= { wirelessMIRProfileEntry 5 }
 
 wirelessInterfaceScanFrequencyBandwidth OBJECT-TYPE
-	SYNTAX	   Integer32 (1..31)
+	SYNTAX	   Integer32 (1..63)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -10392,21 +13604,24 @@ wirelessInterfaceScanFrequencyBandwidth OBJECT-TYPE
 			2 - 40Mhz,
 			4 - 10Mhz,
 			8 - 5Mhz,
-			16 - 80Mhz (Only for 802.11ac)
+			16 - 80Mhz (802.11ac/ax)
+			32 - 160Mhz (Only for 802.11ax)
 		Device Allocation: SM"
 	DEFVAL	{ 1 }
 	::= { wirelessInterface 32 }
 
 wirelessInterfaceGuardInterval OBJECT-TYPE
-		SYNTAX Integer32 (1|2)
-		MAX-ACCESS read-write
-		STATUS	   current
-		DESCRIPTION
+	SYNTAX Integer32 (1|2|3|4)
+	MAX-ACCESS read-write
+	STATUS	   current
+	DESCRIPTION
 		"Guard Interval:
-			1 - Long GuardInterval,
-			2 - Short GuardInterval
+			1 - 0.8 us (long) guard interval,
+			2 - 0.4 us (short) guard interval,
+			3 - 1.6 us (AX only) guard interval,
+			4 - 3.2 us (AX only) guard interval
 		Device Allocation: AP"
-		DEFVAL	{ 1 }
+	DEFVAL	{ 1 }
 	::= { wirelessInterface 33 }
 
 wirelessInterfaceiFreqReuseMode OBJECT-TYPE
@@ -10550,7 +13765,7 @@ wirelessTXPowerManualLimit	OBJECT-TYPE
 	::= { wirelessInterface 48 }
 
 wirelessRateMaxMCS OBJECT-TYPE
-	SYNTAX	   Integer32 (1..249)
+	SYNTAX	   Integer32 (1..255)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -10573,7 +13788,7 @@ wirelessSMWifiDistance	OBJECT-TYPE
 		::= { wirelessInterface 50 }
 
 wirelessInterfaceProtocolMode  OBJECT-TYPE
-		SYNTAX	   Integer32 (1|2|3|4)
+		SYNTAX	   Integer32 (1..5)
 		MAX-ACCESS read-write
 		STATUS	   current
 		DESCRIPTION
@@ -10582,6 +13797,7 @@ wirelessInterfaceProtocolMode  OBJECT-TYPE
 		   2 - AP/SM WiFi
 		   3 - PTP.LL
 		   4 - TDD PTP
+		   5 - WLR
 	   Device Allocation: AP/SM"
    DEFVAL  { 1 }
 		::= { wirelessInterface 51 }
@@ -10607,6 +13823,18 @@ forceMcastBcast4Addr  OBJECT-TYPE
 		0 - FALSE"
    DEFVAL  { 1 }
 		::= { wirelessInterface 53 }
+
+wirelessInterfaceCipher	 OBJECT-TYPE
+	SYNTAX	   Integer32 (1|2)
+	MAX-ACCESS read-write
+	STATUS	   current
+	DESCRIPTION
+		"Wireless authentication cipher type:
+			1 - AES-128 (CCMP (128 bits)),
+			2 - AES-256 (CCMP-256 (256 bits))
+		Device Allocation: AP"
+	DEFVAL	{ 2 }
+	::= { wirelessInterface 54 }
 
 wirelessInterfaceRateMinMCS	 OBJECT-TYPE
 		SYNTAX	   Integer32 (1..7|9..15|21..29|31..39)
@@ -10868,6 +14096,87 @@ mikrotikFreqShift	 OBJECT-TYPE
 		DEFVAL	{ 0 }
 		::= { wirelessInterface 83 }
 
+cambiumKeepAliveIface1	OBJECT IDENTIFIER ::= { wirelessInterface 84 }
+
+wirelessInterface1KeepAliveEnable	 OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Enables Cambium KeepAlive feature for TDD PTP driver mode"
+		DEFVAL	{ 0 }
+		::= { cambiumKeepAliveIface1 1 }
+
+wirelessInterface1KeepAliveEPTPEnable	 OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Enables Cambium KeepAlive feature for ePTP driver mode"
+		DEFVAL	{ 1 }
+		::= { cambiumKeepAliveIface1 2 }
+
+wirelessInterface1KeepAlivePMPEnable	 OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Enables Cambium KeepAlive feature for TDD PMP driver mode"
+		DEFVAL	{ 1 }
+		::= { cambiumKeepAliveIface1 3 }
+
+wirelessInterfaceSTAMaxDLMCSLimit  OBJECT-TYPE
+	SYNTAX     Integer32 (0..9|16..25|255)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Radio max DL MCS limit:
+			0 - MCS 0 (802.11n) or MCS 0 SS (802.11ac)
+			1 - MCS 1 (802.11n) or MCS 1 SS (802.11ac)
+			2 - MCS 2 (802.11n) or MCS 2 SS (802.11ac)
+			3 - MCS 3 (802.11n) or MCS 3 SS (802.11ac)
+			4 - MCS 4 (802.11n) or MCS 4 SS (802.11ac)
+			5 - MCS 5 (802.11n) or MCS 5 SS (802.11ac)
+			6 - MCS 6 (802.11n) or MCS 6 SS (802.11ac)
+			7 - MCS 7 (802.11n) or MCS 7 SS (802.11ac)
+			8 - MCS 8 SS (802.11ac)
+			9 - MCS 9 SS (802.11ac)
+			16 - MCS 8 (802.11n) or MCS 0 DS (802.11ac)
+			17 - MCS 9 (802.11n) or MCS 1 DS (802.11ac)
+			18 - MCS 10 (802.11n) or MCS 2 DS (802.11ac)
+			19 - MCS 11 (802.11n) or MCS 3 DS (802.11ac)
+			20 - MCS 12 (802.11n) or MCS 4 DS (802.11ac)
+			21 - MCS 13 (802.11n) or MCS 5 DS (802.11ac)
+			22 - MCS 14 (802.11n) or MCS 6 DS (802.11ac)
+			23 - MCS 15 (802.11n) or MCS 7 DS (802.11ac)
+			24 - MCS 8 DS (802.11ac)
+			25 - MCS 9 DS (802.11ac)
+			255 - Use AP's config
+		Device Allocation: SM"
+	DEFVAL	{ 255 }
+	::= { wirelessInterface 85 }
+
+wirelessInterfaceScanFrequencyList160M  OBJECT-TYPE
+	SYNTAX	   DisplayString (SIZE(0|1..1500))
+	MAX-ACCESS read-write
+	STATUS	   current
+	DESCRIPTION
+		"Scan Frequency List for 160 MHz
+		Device Allocation: SM"
+	::= { wirelessInterface 86 }
+
+wirelessInterfaceSuRxBfOff OBJECT-TYPE
+	SYNTAX     Integer32(0|1)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Control of SM SU beamforming in transmit mode:
+			0 - SU beamforming is On
+			1 - SU beamforming is Off
+		Device Allocation: SM"
+	DEFVAL { 0 }
+	::= { wirelessInterface 87 }
+
 wirelessInterface2HTMode  OBJECT-TYPE
 		SYNTAX     Integer32 (1..5)
 		MAX-ACCESS read-write
@@ -10914,7 +14223,7 @@ wirelessInterface2ScanFrequencyListForty  OBJECT-TYPE
 		::= { wirelessInterface2 17 }
 
 centerFrequency2  OBJECT-TYPE
-		SYNTAX     Integer32 (0|2407..6420)
+		SYNTAX     Integer32 (0|2407..7200)
 		MAX-ACCESS read-write
 		STATUS     current
 		DESCRIPTION
@@ -10923,7 +14232,7 @@ centerFrequency2  OBJECT-TYPE
 		::= { wirelessInterface2 18 }
 
 dfsAlternative1CenterFrequency2  OBJECT-TYPE
-	SYNTAX	   Integer32 (0|2407..6420)
+	SYNTAX	   Integer32 (0|2407..7200)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -10932,7 +14241,7 @@ dfsAlternative1CenterFrequency2  OBJECT-TYPE
 	::= { wirelessInterface2 19 }
 
 dfsAlternative2CenterFrequency2  OBJECT-TYPE
-	SYNTAX	   Integer32 (0|2407..6420)
+	SYNTAX	   Integer32 (0|2407..7200)
 	MAX-ACCESS read-write
 	STATUS	   current
 	DESCRIPTION
@@ -11041,6 +14350,69 @@ wirelessInterface2ScanFrequencyListEighty  OBJECT-TYPE
 		"Second Radio Scan Frequency List for 80 MHz
 		Device Allocation: SM"
 		::= { wirelessInterface2 80 }
+
+cambiumKeepAliveIface2		OBJECT IDENTIFIER ::= { wirelessInterface2 84 }
+
+wirelessInterface2KeepAliveEnable	 OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Second Radio Enables Cambium KeepAlive feature for TDD PTP driver mode"
+		DEFVAL	{ 0 }
+		::= { cambiumKeepAliveIface2 1 }
+
+wirelessInterface2KeepAliveEPTPEnable	 OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Second Radio Enables Cambium KeepAlive feature for ePTP driver mode"
+		DEFVAL	{ 0 }
+		::= { cambiumKeepAliveIface2 2 }
+
+wirelessInterface2STAMaxDLMCSLimit  OBJECT-TYPE
+	SYNTAX     Integer32 (0..9|16..25|255)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Second Radio max DL MCS limit:
+			0 - MCS 0 SS
+			1 - MCS 1 SS
+			2 - MCS 2 SS
+			3 - MCS 3 SS
+			4 - MCS 4 SS
+			5 - MCS 5 SS
+			6 - MCS 6 SS
+			7 - MCS 7 SS
+			8 - MCS 8 SS
+			9 - MCS 9 SS
+			16 - MCS 0 DS
+			17 - MCS 1 DS
+			18 - MCS 2 DS
+			19 - MCS 3 DS
+			20 - MCS 4 DS
+			21 - MCS 5 DS
+			22 - MCS 6 DS
+			23 - MCS 7 DS
+			24 - MCS 8 DS
+			25 - MCS 9 DS
+			255 - Use AP's config
+		Device Allocation: SM"
+	DEFVAL	{ 255 }
+	::= { wirelessInterface2 85 }
+
+wirelessInterface2SuRxBfOff OBJECT-TYPE
+	SYNTAX     Integer32(0|1)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Control of SM SU beamforming in transmit mode:
+			0 - SU beamforming is On
+			1 - SU beamforming is Off
+		Device Allocation: SM"
+	DEFVAL { 0 }
+	::= { wirelessInterface2 87 }
 
 wirelessMACFilterEntry	 OBJECT-TYPE
 	SYNTAX	WirelessMACFilterEntry
@@ -12012,6 +15384,18 @@ cambiumDeviceAgentZeroTouchEnable  OBJECT-TYPE
 		DEFVAL	{ 1 }
 		::= { cambiumDeviceAgent 5 }
 
+cambiumDeviceAgentMGMTRoutingEnable  OBJECT-TYPE
+		SYNTAX		Integer32 (0|1)
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"Routing Device Agent traffic through Separate Management Interface:
+				0 - Disable
+				1 - Enable
+			Device Allocation: SM"
+		DEFVAL	{ 0 }
+		::= { cambiumDeviceAgent 6 }
+
 cambiumStaticRoutesCnfEntry OBJECT-TYPE
 	SYNTAX	   CambiumStaticRoutesCnfEntry
 	MAX-ACCESS not-accessible
@@ -12605,14 +15989,33 @@ cambiumpmp80211SoftwareUpdateError  OBJECT-TYPE
 		47 - Downgrade below 4.4 is not supported for Force 300-13 or Force 300-19 boards.
 		48 - Downgrade below 4.5 is not supported for ePMP MP 3000 board.
 		49 - ePTP mode is not supported in SW versions below 4.5.
-		50 - 2.5 ms mode is not supported in SW versions below 4.5.
+		50 - 2.5 ms mode is not supported in SW versions below 4.6.
 		51 - 5/10Mhz BW mode is not supported in SW versions below 4.5.
 		52 - Reliable multicast is not supported in SW versions below 4.5.
 		53 - ACS is not supported in SW versions below 4.5.
 		54 - Standard WiFi Driver Mode is not supported in SW versions below 4.5.
 		55 - Omni/Split-Sector Antenna is not supported in SW versions below 4.5.
-                Device Allocation: AP, SM"
-        ::= { cambiumpmp80211SystemActions 13 }
+		56 - Downgrade below 4.5.4 is not supported for 802.11n devices with MAC addresses from pool BC:E6:7C:xx:xx:xx.
+		57 - ACS/DCS is not supported in SW versions below 4.5.
+		58 - MTU value above 1700 is not supported in SW versions below 4.6.
+		59 - Downgrade below 4.6 is not supported for MIPS based boards.
+		60 - 70/30 65/35 60/40 55/45 45/55 40/60 35/65 downlink/uplink ratios are not supported in SW versions below 4.6.
+		61 - cnVision devices aren't supported in SW versions below 4.6.
+		62 - Downgrade below 4.6.1 is not supported for Force 300-25 V2 board.
+		63 - Downgrade below 4.7 is not supported for Force 200L.
+		64 - Cannot downgrade below 4.6.1 if DL Max Rate is not set to Use AP's config.
+		65 - DPI is not supported in SW versions below 4.7.
+		66 - WLR Driver Mode is not supported in SW versions below 5.2.0.
+		67 - Downgrade below 5.2 is not supported for 6GHz boards.
+		68 - Intelbras or Mikrotik licenses activated. Versions below 4.7 don't support those.
+		69 - Downgrade below 4.7 is not supported for boards with soft country lock set.
+		70 - Downgrade below 5.3 is not supported for the current hardware type.
+		71 - Downgrade below 4.7 is not supported for boards with flexible mode selected.
+		72 - Downgrade below 4.7 is not supported for boards with Port Forwarding configured containing ports 22(SSH), 161(SNMP), 80(HTTP), 443(HTTPS)
+		73 - TR-069 option is not supported in SW versions below 5.2 on 802.11ax devices and 4.7 on other devices.
+		74 - Downgrade below 4.6.4 is not supported for this device hardware.
+				Device Allocation: AP, SM"
+		::= { cambiumpmp80211SystemActions 13 }
 
 cambiumpmp80211StatsPerSTAListUpdateStatus	OBJECT-TYPE
 		SYNTAX	   Integer32 (0|1|2)
@@ -12676,7 +16079,7 @@ cambiumpmp80211GpsFirmwareUpdate  OBJECT-TYPE
 	::= { cambiumpmp80211SystemActions 19 }
 
 cambiumpmp80211GpsFirmwareUpdateError  OBJECT-TYPE
-		SYNTAX	   Integer32 (0..8)
+		SYNTAX	   Integer32 (0..11)
 		MAX-ACCESS read-only
 		STATUS	   current
 		DESCRIPTION
@@ -12932,6 +16335,61 @@ cambiumAPListFlush OBJECT-TYPE
 		Device Allocation: SM"
 		::= { cambiumpmp80211SystemActions 47 }
 
+cambiumCCTVListUpdate	 OBJECT-TYPE
+		SYNTAX	   Integer32 (1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"System OID for CCTV List update
+		When this OID is received,
+		Scanned CCTV list table is updated with actual CCTV scan list
+		Device Allocation: SM"
+		::= { cambiumpmp80211SystemActions 48 }
+
+cambiumCCTVListUpdateStatus  OBJECT-TYPE
+		SYNTAX	   Integer32 (0|1|2)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"CCTV List Update Status OID.
+		This OID is used to indicate CCTV list table status:
+			0 - No CCTVs are available in the list
+			1 - CCTV List Table is getting updated
+			2 - CCTV Data is ready
+		Device Allocation: SM"
+		::= { cambiumpmp80211SystemActions 49 }
+
+cambiumCCTVListFlush OBJECT-TYPE
+	SYNTAX	   Integer32 (1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Command flush CCTV scan list,
+		Related to cambiumONVIFTable.
+				1 - Force action
+		Device Allocation: SM"
+		::= { cambiumpmp80211SystemActions 50 }
+
+cambiumForceTabUpdSwitch OBJECT-TYPE
+	SYNTAX     Integer32 (1)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+	"Force update for lanSwitchPortTable,
+		1 - Force action
+	Device Allocation: AP, SM"
+	::= { cambiumpmp80211SystemActions 51 }
+
+cambiumForceTabUpdDPIQoSApp OBJECT-TYPE
+	SYNTAX	   Integer32 (1)
+	MAX-ACCESS read-write
+	STATUS	   current
+	DESCRIPTION
+	"Force update DPI QoS Application table,
+		1 - Force action
+	Device Allocation: AP, SM"
+	::= { cambiumpmp80211SystemActions 52 }
+
 cambiumpmp80211SoftwareUpdateStatusTrap NOTIFICATION-TYPE
 	OBJECTS {
 		cambiumpmp80211SoftwareUpdateError,
@@ -12945,7 +16403,7 @@ cambiumpmp80211SoftwareUpdateStatusTrap NOTIFICATION-TYPE
 	::= { cambiumpmp80211SystemTraps 1 }
 
 cambiumpmp80211GPSSyncStatusTrap NOTIFICATION-TYPE
-		OBJECTS { cambiumToolbarGPSSyncState }
+		OBJECTS { cambiumToolbarGPSSyncStateStr }
 		STATUS	   current
 		DESCRIPTION
 		"GPS Sync Status TRAP. Trap indicating GPS Sync State change.
@@ -13043,7 +16501,7 @@ cambiumpmp80211SMRegTrap NOTIFICATION-TYPE
 cambiumpmp80211SystemRebootTrap NOTIFICATION-TYPE
 		STATUS	   current
 		DESCRIPTION
-		"System reboot trap. Trap indicates that snmpd daemon has been shut
+		"System reboot trap. Trap indicates that snmpd daemon is going to be shut
 		down and the system is going to reboot.
 		Device Allocation: AP, SM"
 		::= { cambiumpmp80211SystemTraps 12 }
@@ -13051,7 +16509,7 @@ cambiumpmp80211SystemRebootTrap NOTIFICATION-TYPE
 cambiumpmp80211SAModeTrap NOTIFICATION-TYPE
 		STATUS	   current
 		DESCRIPTION
-		"Spectrum Analyzer mode trap. Trap indicates that he system is going to
+		"Spectrum Analyzer mode trap. Trap indicates that the system is going to
 		reboot in SA mode.
 		Device Allocation: AP, SM"
 		::= { cambiumpmp80211SystemTraps 13 }
@@ -13658,13 +17116,14 @@ cambiumIDMEnable OBJECT-TYPE
 		::= { cambiumIDM 3 }
 
 dcsEnable OBJECT-TYPE
-	SYNTAX     Integer32 (0|1)
+	SYNTAX     Integer32 (0|1|2)
 	MAX-ACCESS read-write
 	STATUS     current
 	DESCRIPTION
 		"Dynamic Channel Selection
 		0 - Disable
-		1 - Enable
+		1 - Enable in DCS mode
+		2 - Enable in ACS mode
 		Device Allocation: AP"
 	DEFVAL { 0 }
 	::= { cambiumDCS 1 }
@@ -14197,6 +17656,16 @@ wirelessInterfaceAttemptScanFrequencyListEighty	OBJECT-TYPE
 		Device Allocation: SM"
 		::= { cambiumArcher 5 }
 
+wirelessInterfaceAttemptScanFrequencyList160M	OBJECT-TYPE
+		SYNTAX	   DisplayString (SIZE(0|1..1500))
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+		"Scan Frequency List for 160MHz
+		Invalid frequencies will be skipped on set attempt.
+		Device Allocation: SM"
+		::= { cambiumArcher 6 }
+
 wirelessInterfaceAttemptScanFrequencySkipCounter	OBJECT-TYPE
 		SYNTAX	   Integer32
 		MAX-ACCESS read-only
@@ -14207,6 +17676,512 @@ wirelessInterfaceAttemptScanFrequencySkipCounter	OBJECT-TYPE
 		Device Allocation: SM"
 		::= { cambiumArcher 21 }
 
+cambiumONVIFTable	OBJECT-TYPE
+	SYNTAX      SEQUENCE OF CambiumONVIFEntry
+	MAX-ACCESS  not-accessible
+	STATUS      current
+	DESCRIPTION
+	"This table contains relevant information about ONVIF-cameras:
+	Device Allocation: SM"
+	::= { cambiumCCTVStatus 1 }
+
+cambiumONVIFEntry OBJECT-TYPE
+	SYNTAX      CambiumONVIFEntry
+	MAX-ACCESS  not-accessible
+	STATUS      current
+	DESCRIPTION
+	"Parameters mapping for particular ONVIF-camera.
+	Device Allocation: SM"
+	INDEX	{ cambiumONVIFMAC }
+	::= { cambiumONVIFTable 1 }
+
+CambiumONVIFEntry ::= SEQUENCE {
+		cambiumONVIFIndex	Integer32,
+		cambiumONVIFMAC		DisplayString,
+		cambiumONVIFIP		IpAddress,
+		cambiumONVIFHardware	DisplayString,
+		cambiumONVIFName	DisplayString,
+		cambiumONVIFLocation	DisplayString,
+		cambiumONVIFProbeTime	Counter32,
+		cambiumONVIFSTAMAC	DisplayString
+	}
+
+cambiumONVIFIndex OBJECT-TYPE
+	SYNTAX      Integer32
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"Internal index of ONVIF-camera
+		Device Allocation: SM"
+	::= { cambiumONVIFEntry 1 }
+	
+cambiumONVIFMAC OBJECT-TYPE
+	SYNTAX      DisplayString (SIZE(0|17))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"ONVIF-camera's MAC address
+		Device Allocation: SM"
+	::= { cambiumONVIFEntry 2 }
+
+cambiumONVIFIP OBJECT-TYPE
+	SYNTAX      IpAddress
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"ONVIF-camera's IP address
+		Device Allocation: SM"
+	::= { cambiumONVIFEntry 3 }
+
+cambiumONVIFHardware OBJECT-TYPE
+	SYNTAX      DisplayString (SIZE(0|1..128))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"ONVIF-camera's model
+		Device Allocation: SM"
+	::= { cambiumONVIFEntry 4 }
+
+cambiumONVIFName OBJECT-TYPE
+	SYNTAX      DisplayString (SIZE(0|1..128))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"ONVIF-camera's manufacturer
+		Device Allocation: SM"
+	::= { cambiumONVIFEntry 5 }
+
+cambiumONVIFLocation OBJECT-TYPE
+	SYNTAX      DisplayString (SIZE(0|1..128))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"ONVIF-camera's location
+		Device Allocation: SM"
+	::= { cambiumONVIFEntry 6 }
+
+cambiumONVIFProbeTime OBJECT-TYPE
+	SYNTAX      Counter32
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"Time of last ProbeMatch received from ONVIF-camera.
+		Number of seconds since the Unix epoch (00:00:00 UTC on 1 January 1970).
+		Device Allocation: SM"
+	::= { cambiumONVIFEntry 7 }
+
+cambiumONVIFSTAMAC OBJECT-TYPE
+	SYNTAX      DisplayString (SIZE(0|17))
+	MAX-ACCESS  read-only
+	STATUS      current
+	DESCRIPTION
+		"STA MAC address
+		Device Allocation: AP"
+	::= { cambiumONVIFEntry 8 }
+
+vmsagentEnable OBJECT-TYPE
+	SYNTAX      Integer32 (0|1)
+	MAX-ACCESS  read-write
+	STATUS      current
+	DESCRIPTION
+		"VMS agent:
+			0 - Disable
+			1 - Enable
+		Cambium provides VMS-agent (Video Management System).
+		This allows a user to notify VMS about different events (associate, disconnect etc).
+		This field enables this VMS-agent functionality.
+		Device Allocation: SM"
+	DEFVAL  { 1 }
+	::= { vmsagent 1 }
+
+vmsagentVMSType OBJECT-TYPE
+	SYNTAX     Integer32 (1..10)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"VMS's type.
+		 1 - NxWitness
+		 2 - Milestone
+		 3 - Genetec
+		 4 - Wisenet WAVE
+		 5 - Avigilon
+		 6 - AXIS
+		 7 - DW Spectrum
+		 8 - Digifort
+		 9 - Siemens
+		10 - Panasonic
+		Device Allocation: SM"
+	::= { vmsagent 2 }
+
+vmsagentVMSAddr OBJECT-TYPE
+	SYNTAX     OCTET STRING (SIZE(0..128))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"VMS address:
+		This specifies the VMS's FQDN or IP-address.
+		Device Allocation: SM"
+	::= { vmsagent 3 }
+
+vmsagentVMSPort OBJECT-TYPE
+	SYNTAX     Integer32 (1..65535)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"VMS Port:
+		This specifies the VMS's Port.
+		Device Allocation: SM"
+	::= { vmsagent 4 }
+
+vmsagentUsername OBJECT-TYPE
+	SYNTAX     DisplayString (SIZE(0..128))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Username for VMS.
+		Device Allocation: SM"
+	::= { vmsagent 5 }
+
+vmsagentPassword OBJECT-TYPE
+	SYNTAX     OCTET STRING (SIZE(0..128))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Password for VMS.
+		Device Allocation: AP, SM"
+	::= { vmsagent 6 }
+
+cnvisionVMSPreviewHash OBJECT-TYPE
+	SYNTAX     DisplayString (SIZE(0..128))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"VMS Hash Code. Unique Hash,
+		used for VMS Server GUI Preview Link generation
+		Device Allocation: SM"
+	::= { vmsagent 7 }
+
+cambiumNSSAcceleratedConn OBJECT-TYPE
+	SYNTAX     Integer32 (2048|4096|8192)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Total number of NSS accelerated connections.
+		 Constantly selected with regard to HW.
+		 Device Allocation: AP, SM"
+	DEFVAL { 8192 }
+	::= { cambiumNSS 1 }
+
+cambiumNSSAcceleratedIPv4Conn OBJECT-TYPE
+	SYNTAX     Integer32 (1024|2048|3072|4096|5120|6144|7168)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Number of NSS accelerated IPv4 connections.
+		 Must be a multiple of 1024, and must be in the range
+		 from 1024 to the total number of accelerated connections
+		 minus 1024 inclusive. Affects the value for IPv6.
+		 Device Allocation: AP, SM"
+	DEFVAL { 7168 }
+	::= { cambiumNSS 2 }
+
+cambiumNSSAcceleratedIPv6Conn OBJECT-TYPE
+	SYNTAX     Integer32 (1024|2048|3072|4096|5120|6144|7168)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Number of NSS accelerated IPv6 connections.
+		 Automatically selected as the total number of
+		 accelerated connections minus the number for IPv4.
+		 Device Allocation: AP, SM"
+	DEFVAL { 1024 }
+	::= { cambiumNSS 3 }
+
+cambiumNSSMcastFloodDestAth OBJECT-TYPE
+	SYNTAX     Integer32 (-1..16)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Force NSS to forward mcast data to the selected ath port or flood
+		-1: NSS will flood mcast data to all ports in bridge
+		0..x: Use desired ath<n> port"
+	DEFVAL { -1 }
+	::= { cambiumNSS 4 }
+
+cambiumNSSMcastFloodDestEth OBJECT-TYPE
+	SYNTAX     Integer32 (-1..16)
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Force NSS to forward mcast data to the selected eth port or flood
+		-1: NSS will flood mcast data to all ports in bridge
+		0..x: Use desired eth<n> port"
+	DEFVAL { -1 }
+	::= { cambiumNSS 5 }
+
+dpiEnable OBJECT-TYPE
+	SYNTAX      Integer32 (0|1)
+	MAX-ACCESS  read-write
+	STATUS      current
+	DESCRIPTION
+		"dpi agent:
+			0 - Disable
+			1 - Enable
+		This field enables DPI functionality.
+		Device Allocation: AP, SM"
+	DEFVAL  { 1 }
+	::= { dpi 1 }
+
+dpiQoSEnable OBJECT-TYPE
+	SYNTAX      Integer32 (0|1)
+	MAX-ACCESS  read-write
+	STATUS      current
+	DESCRIPTION
+		"dpi QoS module:
+			0 - Disable
+			1 - Enable
+		This field enables DPI QoS functionality.
+		Device Allocation: AP, SM"
+	DEFVAL  { 1 }
+	::= { dpi 2 }
+
+dpiLogLevel OBJECT-TYPE
+	SYNTAX      DisplayString (SIZE(0..16))
+	MAX-ACCESS  read-write
+	STATUS      current
+	DESCRIPTION
+		"DPI log levels:
+			off - disable logging;
+			error - log when error occurs;
+			warn - log to make a warning;
+			notice - normal but significant condition;
+			info - normal information message;
+			debug - printed in debug mode;
+			trace - detailed messages;
+			func - function call trace;
+			all - Enable all log levels;
+			system - use the highest level from syslogServerLogMask.
+		In case non of these values is set, the logging level from
+		syslogServerLogMask is going to be used.
+		All log messages are printed to the kernel log.
+		Device Allocation: AP, SM"
+	DEFVAL  { "system" }
+	::= { dpi 3 }
+
+dpiLogComponents OBJECT-TYPE
+	SYNTAX      DisplayString (SIZE(0..256))
+	MAX-ACCESS  read-write
+	STATUS      current
+	DESCRIPTION
+		"DPI log components:
+			sys - system;
+			mem - memory;
+			pkt - packet;
+			flow - flow;
+			tcp - tcp;
+			udp - udp;
+			session - tcp session;
+			tcp_pkt - trace tcp packet;
+			udp_pkt - trace udp packet;
+			icmp_pkt - trace icmp packet;
+			other_pkt - trace other packet;
+			mac - trace mac info;
+			http - http;
+			https - https;
+			quic - quic;
+			ftp - ftp;
+			mail - mail;
+			urinorm - http filter urinorm;
+			apg - application guard;
+			av - antivirus;
+			dna - antivirus engine;
+			decomp - decomp;
+			wg - web guard;
+			kf - keyword filter;
+			pbf - port-based framework;
+			insp - content inspection;
+			copt - content option;
+			hopt - header option;
+			dm - device map;
+			ts - tcp stream;
+			dev - device table;
+			uf - url filter;
+			cmd - command;
+			rde - rule-based detection engine;
+			ips - intrusion-prevention system;
+			psd - port-scan-defense system;
+			qos - smart qos;
+			event - event;
+			mpp - metadata protocol parser;
+			re3 - resoft3 module;
+			tld - top level domain filtering;
+			dns - dns cache module;
+			sb - dns redirect module;
+			rdpage - redirect page;
+			all - enable all components;
+			all_pkt - trace all packets.
+		Specify all necessary components to enable logging. Use space as a separator.
+		Device Allocation: AP, SM"
+	DEFVAL  { "all" }
+	::= { dpi 4 }
+
+
+dpiQoSAppRulesTable  OBJECT-TYPE
+		SYNTAX SEQUENCE OF DpiQoSAppRulesEntry
+		MAX-ACCESS not-accessible
+		STATUS	   current
+		DESCRIPTION
+			"dpi QoS Application rules table
+			Device Allocation: AP, STA"
+		::= { dpi 15 }
+
+dpiQoSAppRulesEntry  OBJECT-TYPE
+		SYNTAX	DpiQoSAppRulesEntry
+		MAX-ACCESS not-accessible
+		STATUS	   current
+		DESCRIPTION
+			"dpi QoS Application rules table entry
+			Device Allocation: AP, STA"
+		INDEX	{ dpiQoSAppRulesIndex }
+		::= { dpiQoSAppRulesTable 1 }
+
+DpiQoSAppRulesEntry ::= SEQUENCE {
+		dpiQoSAppRulesIndex
+				Integer32,
+		dpiQoSAppID
+				Integer32,
+		dpiQoSAppPriority
+				Integer32,
+		dpiQoSAppRuleType
+				Integer32
+}
+
+dpiQoSAppRulesIndex  OBJECT-TYPE
+		SYNTAX	   Integer32 (0..64)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+			"dpi QoS rules table limiting number,
+			Table Entry is cleared if Index is set to zero.
+			Device Allocation: AP, STA"
+		::= { dpiQoSAppRulesEntry 1 }
+
+dpiQoSAppID  OBJECT-TYPE
+		SYNTAX	   Integer32 (0..65535)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+			"dpi QoS application id or qos group id,
+			look dpiQosAppRuleType
+			Device Allocation: AP, STA"
+		::= { dpiQoSAppRulesEntry 2 }
+
+dpiQoSAppPriority  OBJECT-TYPE
+		SYNTAX	   Integer32(1..3)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+			"dpi QoS application piority, using as qos mark:
+			1 - Voice
+			2 - High
+			3 - Low
+			Device Allocation: AP, STA"
+		::= { dpiQoSAppRulesEntry 3 }
+
+dpiQoSAppRuleType  OBJECT-TYPE
+		SYNTAX	   Integer32(0..1)
+		MAX-ACCESS read-write
+		STATUS	   current
+		DESCRIPTION
+			"dpi QoS application rule type:
+			0 - qos application group rule,
+			1 - single application rule
+			Device Allocation: AP, STA"
+		::= { dpiQoSAppRulesEntry 4 }
+
+cambiumTR069Enable OBJECT-TYPE
+	SYNTAX      Integer32 (0|1)
+	MAX-ACCESS  read-write
+	STATUS      current
+	DESCRIPTION
+		"TR-069 Protocol Enable:
+			0 - Disable
+			1 - Enable
+		TODO:
+		Device Allocation: AP, SM"
+	DEFVAL  { 0 }
+	::= { tr069Local 1 }
+
+cambiumTR069Interface OBJECT-TYPE
+	SYNTAX     OCTET STRING (SIZE(0..128))
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Interface for local HTTP-server (TR-069).
+		Device Allocation: AP, SM"
+	::= { tr069Local 2 }
+
+cambiumTR069Port OBJECT-TYPE
+	SYNTAX     Integer32 (1..65535)
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Port for local HTTP-server (TR-069).
+		Device Allocation: AP, SM"
+	::= { tr069Local 3 }
+
+cambiumTR069Username OBJECT-TYPE
+	SYNTAX     DisplayString (SIZE(0..256))
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Username for access local HTTP-server (TR-069).
+		Device Allocation: AP, SM"
+	::= { tr069Local 4 }
+
+cambiumTR069Password OBJECT-TYPE
+	SYNTAX     OCTET STRING (SIZE(0..256))
+	MAX-ACCESS read-only
+	STATUS     current
+	DESCRIPTION
+		"Password for access local HTTP-server (TR-069).
+		Device Allocation: AP, SM"
+	::= { tr069Local 5 }
+
+cambiumTR069ACSURL OBJECT-TYPE
+	SYNTAX     DisplayString (SIZE(0..256))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Auto Configuration Server's URL.
+		Device Allocation: AP, SM"
+	::= { tr069ACS 1 }
+
+cambiumTR069ACSUsername OBJECT-TYPE
+	SYNTAX     DisplayString (SIZE(0..256))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Username for access ACS.
+		Device Allocation: AP, SM"
+	::= { tr069ACS 2 }
+
+cambiumTR069ACSPassword OBJECT-TYPE
+	SYNTAX     OCTET STRING (SIZE(0..256))
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Password for access ACS.
+		Device Allocation: AP, SM"
+	::= { tr069ACS 3 }
+
+cambiumTR069Interval OBJECT-TYPE
+	SYNTAX     Integer32
+	MAX-ACCESS read-write
+	STATUS     current
+	DESCRIPTION
+		"Interval for sending Inform message (TR-069).
+		Device Allocation: AP, SM"
+	::= { tr069ACS 4 }
+
 END
-
-

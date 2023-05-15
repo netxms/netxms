@@ -36,6 +36,15 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Asset;
+import org.netxms.client.objects.AssetGroup;
+import org.netxms.client.objects.AssetRoot;
+import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardGroup;
+import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.Template;
+import org.netxms.client.objects.TemplateGroup;
+import org.netxms.client.objects.TemplateRoot;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -499,4 +508,15 @@ public class StatusCalculation extends ObjectPropertyPage
 
 		return true;
 	}
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage#isVisible()
+    */
+   @Override
+   public boolean isVisible()
+   {
+      return !((object instanceof Asset) || (object instanceof AssetGroup) || (object instanceof AssetRoot) ||
+               (object instanceof Dashboard) || (object instanceof DashboardGroup) || (object instanceof DashboardRoot) || 
+               (object instanceof Template) || (object instanceof TemplateGroup) || (object instanceof TemplateRoot));
+   }
 }

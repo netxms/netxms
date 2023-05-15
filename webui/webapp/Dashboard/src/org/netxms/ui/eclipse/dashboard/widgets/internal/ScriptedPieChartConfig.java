@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
@@ -26,7 +27,13 @@ import org.simpleframework.xml.core.Persister;
  */
 public class ScriptedPieChartConfig extends ScriptedComparisonChartConfig
 {
-	/**
+   @Element(required = false)
+   private boolean doughnutRendering = true;
+
+   @Element(required = false)
+   private boolean showTotal = false;
+
+   /**
     * Create scripted pie chart settings object from XML document
     * 
     * @param xml XML document
@@ -38,4 +45,36 @@ public class ScriptedPieChartConfig extends ScriptedComparisonChartConfig
 		Serializer serializer = new Persister();
 		return serializer.read(ScriptedPieChartConfig.class, xml);
 	}
+
+   /**
+    * @return the doughnutRendering
+    */
+   public boolean isDoughnutRendering()
+   {
+      return doughnutRendering;
+   }
+
+   /**
+    * @param doughnutRendering the doughnutRendering to set
+    */
+   public void setDoughnutRendering(boolean doughnutRendering)
+   {
+      this.doughnutRendering = doughnutRendering;
+   }
+
+   /**
+    * @return the showTotal
+    */
+   public boolean isShowTotal()
+   {
+      return showTotal;
+   }
+
+   /**
+    * @param showTotal the showTotal to set
+    */
+   public void setShowTotal(boolean showTotal)
+   {
+      this.showTotal = showTotal;
+   }
 }

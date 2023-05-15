@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.DataSeries;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Abstract gauge widget
@@ -36,9 +37,9 @@ public abstract class GenericGauge extends GenericComparisonChart
    protected static final int INNER_MARGIN_WIDTH = 5;
    protected static final int INNER_MARGIN_HEIGHT = 5;
 
-   protected static final RGB GREEN_ZONE_COLOR = new RGB(0, 224, 0);
-   protected static final RGB YELLOW_ZONE_COLOR = new RGB(255, 242, 0);
-   protected static final RGB RED_ZONE_COLOR = new RGB(224, 0, 0);
+   protected static final RGB GREEN_ZONE_COLOR = new RGB(20, 156, 74);
+   protected static final RGB YELLOW_ZONE_COLOR = new RGB(253, 200, 14);
+   protected static final RGB RED_ZONE_COLOR = new RGB(226, 13, 52);
 
    /**
     * @param parent
@@ -63,6 +64,20 @@ public abstract class GenericGauge extends GenericComparisonChart
       if ((items.size() == 0) || (size.x < OUTER_MARGIN_WIDTH * 2) || (size.y < OUTER_MARGIN_HEIGHT * 2))
          return;
 
+      // top-left corner offset and width/height corrections
+      int dx, dy, wc, hc;
+      if (config.isElementBordersVisible())
+      {
+         dx = INNER_MARGIN_WIDTH;
+         dy = INNER_MARGIN_HEIGHT;
+         wc = -INNER_MARGIN_WIDTH * 2;
+         hc = -INNER_MARGIN_HEIGHT * 2;
+      }
+      else
+      {
+         dx = dy = wc = hc = 0;
+      }
+
       List<DataSeries> series = chart.getDataSeries();
       if (config.isTransposed())
       {
@@ -75,10 +90,17 @@ public abstract class GenericGauge extends GenericComparisonChart
             if (renderData != null)
             {
                for(int i = 0; i < items.size(); i++)
-                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h);
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), dx, top + i * h + dy, w + wc, h + hc, i);
             }
             for(int i = 0; i < items.size(); i++)
-               renderElement(gc, config, renderData, items.get(i), series.get(i), 0, top + i * h, w, h);
+            {
+               renderElement(gc, config, renderData, items.get(i), series.get(i), dx, top + i * h + dy, w + wc, h + hc, i);
+               if (config.isElementBordersVisible())
+               {
+                  gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.drawRectangle(0, top + i * h, w, h);
+               }
+            }
          }
       }
       else
@@ -92,10 +114,17 @@ public abstract class GenericGauge extends GenericComparisonChart
             if (renderData != null)
             {
                for(int i = 0; i < items.size(); i++)
-                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h);
+                  prepareElementRender(gc, config, renderData, items.get(i), series.get(i), i * w + dx, top + dy, w + wc, h + hc, i);
             }
             for(int i = 0; i < items.size(); i++)
-               renderElement(gc, config, renderData, items.get(i), series.get(i), i * w, top, w, h);
+            {
+               renderElement(gc, config, renderData, items.get(i), series.get(i), i * w + dx, top + dy, w + wc, h + hc, i);
+               if (config.isElementBordersVisible())
+               {
+                  gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+                  gc.drawRectangle(i * w, top, w, h);
+               }
+            }
          }
       }
    }
@@ -133,8 +162,9 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param y Y position
     * @param w width
     * @param h height
+    * @param index element index
     */
-   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void prepareElementRender(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
    {
    }
 
@@ -150,6 +180,20 @@ public abstract class GenericGauge extends GenericComparisonChart
     * @param y Y position
     * @param w width
     * @param h height
+    * @param index element index
     */
-   protected abstract void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h);
+   protected abstract void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index);
+
+   /**
+    * Get color for given data source.
+    *
+    * @param dataSource data source object
+    * @param index index of this data source
+    * @return color for data source
+    */
+   protected RGB getDataSourceColor(GraphItem dataSource, int index)
+   {
+      int c = dataSource.getColor();
+      return (c != -1) ? ColorConverter.rgbFromInt(c) : chart.getPaletteEntry(index).getRGBObject();
+   }
 }

@@ -18,8 +18,10 @@
  */
 package org.netxms.nxmc.tools;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import org.netxms.base.InetAddressEx;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -28,19 +30,35 @@ import org.xnap.commons.i18n.I18n;
  */
 public class IPNetMaskValidator implements TextFieldValidator
 {
-	private static final String IP_ADDRESS_PATTERN = "^([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}|[A-Fa-f0-9:]+)$"; //$NON-NLS-1$
+   private static final String IP_ADDRESS_PATTERN = "^([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}|[A-Fa-f0-9:]+)$";
 
    private I18n i18n = LocalizationHelper.getI18n(IPNetMaskValidator.class);
-	private boolean allowEmpty;
-	
+   private boolean allowEmpty;
+   private int maxBits;
+
 	/**
 	 * Create new IP network mask validator.
 	 * 
 	 * @param allowEmpty if true, empty string is allowed
 	 */
-	public IPNetMaskValidator(boolean allowEmpty)
+   public IPNetMaskValidator(boolean allowEmpty, String ipAddress)
 	{
 		this.allowEmpty = allowEmpty;
+      if (ipAddress.isEmpty())
+      {
+         maxBits = 32;
+      }
+      else
+      {
+         try
+         {
+            maxBits = (InetAddress.getByName(ipAddress) instanceof Inet4Address) ? 32 : 128;
+         }
+         catch(UnknownHostException e)
+         {
+            maxBits = 32;
+         }
+      }
 	}
 
    /**
@@ -54,10 +72,23 @@ public class IPNetMaskValidator implements TextFieldValidator
 
 		if (!text.matches(IP_ADDRESS_PATTERN))
 			return false;
-		
+
+		if (text.length() <= 2)
+		{
+	      try
+	      {
+	         int bits = Integer.parseInt(text);
+            return ((bits >= 0) && (bits < maxBits));
+	      }
+	      catch(NumberFormatException e)
+	      {
+	      }
+		}		   
+
 		try
 		{
-			byte[] bytes = InetAddress.getByName(text).getAddress();
+         InetAddress mask = InetAddress.getByName(text);
+			byte[] bytes = mask.getAddress();
 			for(int i = 0, state = 0; i < bytes.length; i++)
 			{
 				if (bytes[i] == (byte)0xFF)
@@ -68,7 +99,8 @@ public class IPNetMaskValidator implements TextFieldValidator
 					return false;
 				state = 1;
 			}
-			return true;
+         int bits = InetAddressEx.bitsInMask(mask);
+         return ((bits >= 0) && (bits < maxBits));
 		}
 		catch(UnknownHostException e)
 		{

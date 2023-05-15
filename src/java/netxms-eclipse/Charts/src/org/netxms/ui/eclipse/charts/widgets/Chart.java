@@ -386,12 +386,16 @@ public class Chart extends Composite
             plotAreaComposite = new BarChart(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
-         case DIAL:
-            plotAreaComposite = new DialGauge(this);
+         case BAR_GAUGE:
+            plotAreaComposite = new BarGauge(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
-         case GAUGE:
-            plotAreaComposite = new BarGauge(this);
+         case CIRCULAR_GAUGE:
+            plotAreaComposite = new CircularGauge(this);
+            plotArea = (PlotArea)plotAreaComposite;
+            break;
+         case DIAL_GAUGE:
+            plotAreaComposite = new DialGauge(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
          case LINE:
@@ -402,7 +406,7 @@ public class Chart extends Composite
             plotAreaComposite = new PieChart(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
-         case TEXT:
+         case TEXT_GAUGE:
             plotAreaComposite = new TextGauge(this);
             plotArea = (PlotArea)plotAreaComposite;
             break;
@@ -549,7 +553,7 @@ public class Chart extends Composite
    {
       if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return;
-         
+      
       dataSeries.set(index, new DataSeries(values));
       if (updateChart)
          refresh();
@@ -566,7 +570,7 @@ public class Chart extends Composite
    {
       if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return;
-         
+      
       dataSeries.set(index, new DataSeries(value));
       if (updateChart)
          refresh();
@@ -584,7 +588,7 @@ public class Chart extends Composite
    {
       if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return;
-         
+      
       dataSeries.set(index, new DataSeries(value, dataType));
       if (updateChart)
          refresh();

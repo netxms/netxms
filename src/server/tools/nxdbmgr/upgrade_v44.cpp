@@ -24,6 +24,29 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.12 to 44.13
+ */
+static bool H_UpgradeFromV12()
+{
+   CHK_EXEC(CreateConfigParam(_T("Objects.Assets.AllowDeleteIfLinked"),
+         _T("0"),
+         _T("Enable/disable deletion of linked assets."),
+         nullptr, 'B', true, false, false, false));
+   CHK_EXEC(SetMinorSchemaVersion(13));
+   return true;
+}
+
+/**
+ * Upgrade from 44.11 to 44.12
+ */
+static bool H_UpgradeFromV11()
+{
+   CHK_EXEC(SQLQuery( _T("UPDATE business_service_checks SET prototype_service_id=0,prototype_check_id=0 WHERE type=1 AND prototype_service_id=service_id")));
+   CHK_EXEC(SetMinorSchemaVersion(12));
+   return true;
+}
+
+/**
  * Upgrade from 44.10 to 44.11
  */
 static bool H_UpgradeFromV10()
@@ -451,6 +474,8 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 12,  44, 13,  H_UpgradeFromV12  },
+   { 11,  44, 12,  H_UpgradeFromV11  },
    { 10,  44, 11,  H_UpgradeFromV10  },
    { 9,  44, 10,  H_UpgradeFromV9  },
    { 8,  44, 9,  H_UpgradeFromV8  },

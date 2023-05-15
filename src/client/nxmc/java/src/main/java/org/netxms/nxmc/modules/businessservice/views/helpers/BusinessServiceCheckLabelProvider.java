@@ -37,6 +37,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
 import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.resources.ThemeEngine;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -47,6 +48,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
    private final I18n i18n = LocalizationHelper.getI18n(BusinessServiceCheckLabelProvider.class);
    private final String[] TYPES = { i18n.tr("None"), i18n.tr("Script"), i18n.tr("DCI threshold"), i18n.tr("Object status"), };
 
+   private Color prototypeColor = ThemeEngine.getForegroundColor("List.DisabledItem");
    private NXCSession session = Registry.getSession();
    private Map<Long, String> dciNameCache = new HashMap<Long, String>();
    private BaseObjectLabelProvider objectLabelProvider = new BaseObjectLabelProvider();
@@ -225,6 +227,10 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 	@Override
 	public Color getBackground(Object element, int columnIndex)
 	{
+	   if (((BusinessServiceCheck)element).getPrototypeServiceId() != 0)
+	   {
+	      return prototypeColor;
+	   }
 		return null;
 	}
 

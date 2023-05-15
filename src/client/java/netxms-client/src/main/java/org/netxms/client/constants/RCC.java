@@ -195,6 +195,8 @@ public final class RCC
    public static final int OPERATION_CANCELLED = 164;
    public static final int ZONE_CHANGE_FORBIDDEN = 165;
    public static final int ZONE_MISMATCH = 166;
+   public static final int AUTO_CREATED_CHECK = 167;
+   public static final int ASSET_IS_LINKED = 168;
 
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

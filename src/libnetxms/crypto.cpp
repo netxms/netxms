@@ -685,8 +685,6 @@ NXCPEncryptionContext::~NXCPEncryptionContext()
 NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY privateKey)
 {
 #ifdef _WITH_ENCRYPTION
-   BYTE ucKeyBuffer[KEY_BUFFER_SIZE], ucSessionKey[KEY_BUFFER_SIZE];
-   int nSize;
 	NXCPEncryptionContext *ctx = new NXCPEncryptionContext;
 
    int cipher = msg->getFieldAsInt16(VID_CIPHER);
@@ -697,8 +695,9 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA_KEY p
          ctx->m_sessionKey = MemAllocArrayNoInit<BYTE>(ctx->m_keyLength);
 
          // Decrypt session key
-         int keySize = (int)msg->getFieldAsBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
-         nSize = RSAPrivateDecrypt(ucKeyBuffer, keySize, ucSessionKey, sizeof(ucSessionKey), privateKey, RSA_PKCS1_OAEP_PADDING);
+         BYTE ucKeyBuffer[KEY_BUFFER_SIZE], ucSessionKey[KEY_BUFFER_SIZE];
+         size_t keySize = msg->getFieldAsBinary(VID_SESSION_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
+         ssize_t nSize = RSAPrivateDecrypt(ucKeyBuffer, keySize, ucSessionKey, sizeof(ucSessionKey), privateKey, RSA_PKCS1_OAEP_PADDING);
          if (nSize == ctx->m_keyLength)
          {
             memcpy(ctx->m_sessionKey, ucSessionKey, nSize);

@@ -27,6 +27,7 @@ import org.netxms.client.datacollection.ChartConfiguration;
 import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.nxmc.modules.charts.api.ChartColor;
 import org.netxms.nxmc.modules.charts.api.ChartType;
+import org.netxms.nxmc.modules.charts.api.GaugeColorMode;
 import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.dashboards.config.GaugeConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
@@ -81,18 +82,20 @@ public class GaugeElement extends ComparisonChartElement
       chartConfig.setExpectedTextWidth(elementConfig.getExpectedTextWidth());
       chartConfig.setGaugeColorMode(elementConfig.getColorMode());
 
+      updateThresholds = (elementConfig.getColorMode() == GaugeColorMode.THRESHOLD.getValue());
 		switch(elementConfig.getGaugeType())
 		{
          case GaugeConfig.BAR:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.GAUGE, chartConfig);
-            updateThresholds = true;
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.BAR_GAUGE, chartConfig);
             break;
-			case GaugeConfig.TEXT:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT, chartConfig);
-		      updateThresholds = true;
-				break;
+         case GaugeConfig.CIRCULAR:
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.CIRCULAR_GAUGE, chartConfig);
+            break;
+         case GaugeConfig.TEXT:
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.TEXT_GAUGE, chartConfig);
+            break;
 			default:
-            chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL, chartConfig);
+            chart = new Chart(getContentArea(), SWT.NONE, ChartType.DIAL_GAUGE, chartConfig);
 				break;
 		}
       chart.setDrillDownObjectId(elementConfig.getDrillDownObjectId());

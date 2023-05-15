@@ -275,12 +275,10 @@ static BOOL H_UpgradeFromV2(int currVersion, int newVersion)
  	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
                guid.toString(name));
 
-         //check that file exists and move it to other folder
+         // check that file exists and move it to other folder
          NX_STAT_STRUCT st;
          if (CALL_STAT(oldPath, &st) != 0)
-         {
             continue;
-         }
 
 #ifdef _WIN32
          MoveFileEx(oldPath, newPath, MOVEFILE_COPY_ALLOWED);

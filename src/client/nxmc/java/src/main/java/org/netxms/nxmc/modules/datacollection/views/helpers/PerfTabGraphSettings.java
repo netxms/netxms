@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import org.netxms.client.constants.TimeUnit;
 import org.netxms.client.datacollection.PerfTabDci;
+import org.netxms.nxmc.Registry;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Serializer;
@@ -191,7 +192,8 @@ public class PerfTabGraphSettings
    {
       String t = ((title == null) || title.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : title; //$NON-NLS-1$
       return t.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "") //$NON-NLS-1$ //$NON-NLS-2$
-            .replace("{instance-name}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstanceName() : ""); //$NON-NLS-1$ //$NON-NLS-2$
+            .replace("{instance-name}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstanceName() : "") //$NON-NLS-1$ //$NON-NLS-2$
+            .replace("{node-name}", (runtimeDciInfo != null) ? Registry.getSession().getObjectNameWithAlias(runtimeDciInfo.getNodeId()) : ""); //$NON-NLS-1$ //$NON-NLS-2$
    }
 
    /**
@@ -311,7 +313,8 @@ public class PerfTabGraphSettings
    {
       String n = ((name == null) || name.isEmpty()) ? ((runtimeDciInfo != null) ? runtimeDciInfo.getDescription() : "") : name; //$NON-NLS-1$
       return n.replace("{instance}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstance() : "") //$NON-NLS-1$ //$NON-NLS-2$
-            .replace("{instance-name}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstanceName() : ""); //$NON-NLS-1$ //$NON-NLS-2$
+            .replace("{instance-name}", (runtimeDciInfo != null) ? runtimeDciInfo.getInstanceName() : "") //$NON-NLS-1$ //$NON-NLS-2$
+            .replace("{node-name}", (runtimeDciInfo != null) ? Registry.getSession().getObjectNameWithAlias(runtimeDciInfo.getNodeId()) : ""); //$NON-NLS-1$ //$NON-NLS-2$
    }
 
    /**

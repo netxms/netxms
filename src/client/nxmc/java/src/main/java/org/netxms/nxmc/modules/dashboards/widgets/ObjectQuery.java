@@ -128,13 +128,13 @@ public class ObjectQuery extends ElementWidget
             return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
          }
       });
-      
+
       for(ObjectProperty p : config.getProperties())
       {
          TableColumn c = viewer.addColumn(p.displayName == null || p.displayName.isEmpty() ? p.name : p.displayName, 150);
          c.setData("ObjectProperty", p);
       }
-      
+
       actionCopyToClipboard = new CopyTableRowsAction(viewer, true);
       actionCopyToClipboard.setImageDescriptor(SharedIcons.COPY_TO_CLIPBOARD);
 

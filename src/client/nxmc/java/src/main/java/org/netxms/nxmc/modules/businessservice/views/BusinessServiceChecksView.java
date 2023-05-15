@@ -86,6 +86,7 @@ public class BusinessServiceChecksView extends ObjectView
    private SortableTableViewer viewer;
    private BusinessServiceCheckLabelProvider labelProvider;
    private Action actionEdit;
+   private Action actionDuplicate;
    private Action actionCreate;
    private Action actionDelete;
    private Action actionShowObjectDetails;
@@ -133,7 +134,10 @@ public class BusinessServiceChecksView extends ObjectView
          public void selectionChanged(SelectionChangedEvent event)
          {
             IStructuredSelection selection = event.getStructuredSelection();
-            actionEdit.setEnabled(selection.size() == 1);
+            final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
+            
+            actionEdit.setEnabled((selection.size() == 1) && (check.getPrototypeServiceId() == 0));
+            actionDuplicate.setEnabled(selection.size() == 1);
             actionDelete.setEnabled(selection.size() > 0);
          }
       });
@@ -300,6 +304,7 @@ public class BusinessServiceChecksView extends ObjectView
    {
       manager.add(actionCreate);
       manager.add(actionEdit);
+      manager.add(actionDuplicate);
       manager.add(actionDelete);
       manager.add(new Separator());
       manager.add(actionShowObjectDetails);
@@ -325,6 +330,15 @@ public class BusinessServiceChecksView extends ObjectView
          public void run()
          {
             editCheck();
+         }
+      };
+
+      actionDuplicate = new Action(i18n.tr("&Duplicate")) 
+      {
+         @Override
+         public void run()
+         {
+            duplicateCheck();
          }
       };
 
@@ -384,15 +398,41 @@ public class BusinessServiceChecksView extends ObjectView
    }
 
    /**
+    * Duplicate selected check
+    */
+   protected void duplicateCheck()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
+      if (selection.size() != 1)
+         return;
+
+      check.setId(0);
+      new Job(i18n.tr("Duplicate business service check"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            session.modifyBusinessServiceCheck(getObject().getObjectId(), check);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot duplicate business service check");
+         }
+      }.start();
+   }
+
+   /**
     * Edit selected check
     */
    protected void editCheck()
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
-      if (selection.size() != 1)
+      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
+      if ((selection.size() != 1) || (check.getPrototypeServiceId() != 0))
          return;
 
-      final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
       final EditBusinessServiceCheckDlg dlg = new EditBusinessServiceCheckDlg(getWindow().getShell(), check, false);
       if (dlg.open() == Window.OK)
       {

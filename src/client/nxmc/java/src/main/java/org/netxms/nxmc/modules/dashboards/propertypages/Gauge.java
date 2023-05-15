@@ -127,6 +127,7 @@ public class Gauge extends DashboardElementPropertyPage
       gaugeType.add(i18n.tr("Dial"));
       gaugeType.add(i18n.tr("Bar"));
       gaugeType.add(i18n.tr("Text"));
+      gaugeType.add(i18n.tr("Circular"));
 		gaugeType.select(config.getGaugeType());
 
 		fontName = new LabeledText(dialogArea, SWT.NONE);
@@ -164,7 +165,7 @@ public class Gauge extends DashboardElementPropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		minValue.setLayoutData(gd);
-		
+
 		maxValue = new LabeledText(dialogArea, SWT.NONE);
       maxValue.setLabel(i18n.tr("Maximum value"));
 		maxValue.setText(Double.toString(config.getMaxValue()));
@@ -172,7 +173,7 @@ public class Gauge extends DashboardElementPropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		maxValue.setLayoutData(gd);
-		
+
 		leftRedZone = new LabeledText(dialogArea, SWT.NONE);
       leftRedZone.setLabel(i18n.tr("Left red zone end"));
 		leftRedZone.setText(Double.toString(config.getLeftRedZone()));
@@ -180,7 +181,7 @@ public class Gauge extends DashboardElementPropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		leftRedZone.setLayoutData(gd);
-		
+
 		leftYellowZone = new LabeledText(dialogArea, SWT.NONE);
       leftYellowZone.setLabel(i18n.tr("Left yellow zone end"));
 		leftYellowZone.setText(Double.toString(config.getLeftYellowZone()));
@@ -188,7 +189,7 @@ public class Gauge extends DashboardElementPropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		leftYellowZone.setLayoutData(gd);
-		
+
 		rightYellowZone = new LabeledText(dialogArea, SWT.NONE);
       rightYellowZone.setLabel(i18n.tr("Right yellow zone start"));
 		rightYellowZone.setText(Double.toString(config.getRightYellowZone()));
@@ -196,7 +197,7 @@ public class Gauge extends DashboardElementPropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		rightYellowZone.setLayoutData(gd);
-		
+
 		rightRedZone = new LabeledText(dialogArea, SWT.NONE);
       rightRedZone.setLabel(i18n.tr("Right red zone start"));
 		rightRedZone.setText(Double.toString(config.getRightRedZone()));
@@ -212,6 +213,7 @@ public class Gauge extends DashboardElementPropertyPage
       colorMode.add(i18n.tr("Zone color"));
       colorMode.add(i18n.tr("Fixed custom color"));
       colorMode.add(i18n.tr("Active threshold color"));
+      colorMode.add(i18n.tr("Data source color"));
       colorMode.select(config.getColorMode());
       colorMode.addSelectionListener(new SelectionAdapter() {
          @Override

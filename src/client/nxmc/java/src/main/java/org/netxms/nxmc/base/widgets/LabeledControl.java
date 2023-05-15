@@ -238,6 +238,10 @@ public abstract class LabeledControl extends Composite
          errorMessage.setImage(ERROR_ICON);
          layout(true, true);
       }
+      else
+      {
+         errorMessage.setText(message);         
+      }
    }
 
    /**

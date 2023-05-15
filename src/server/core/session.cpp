@@ -6264,15 +6264,19 @@ void ClientSession::deleteObject(const NXCPMessage& request)
          // Check access rights
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
-				if ((object->getObjectClass() != OBJECT_ZONE) || object->isEmpty())
+				if ((object->getObjectClass() == OBJECT_ZONE) && !object->isEmpty())
 				{
-               ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
-					response.setField(VID_RCC, RCC_SUCCESS);
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
+	            response.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
+				}
+				else if ((object->getObjectClass() == OBJECT_ASSET) && !ConfigReadBoolean(_T("Objects.Assets.AllowDeleteIfLinked"), false) && (static_cast<Asset&>(*object).getLinkedObjectId() != 0))
+				{
+               response.setField(VID_RCC, RCC_ASSET_IS_LINKED);
 				}
 				else
 				{
-	            response.setField(VID_RCC, RCC_ZONE_NOT_EMPTY);
+               ThreadPoolExecute(g_clientThreadPool, DeleteObjectWorker, object);
+               response.setField(VID_RCC, RCC_SUCCESS);
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
 				}
          }
          else
@@ -12293,7 +12297,7 @@ void ClientSession::listServerFileStore(const NXCPMessage& request)
 
          struct _tdirent *d;
          NX_STAT_STRUCT st;
-         UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
+         uint32_t count = 0, varId = VID_INSTANCE_LIST_BASE;
          while((d = _treaddir(dir)) != nullptr)
          {
             if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))

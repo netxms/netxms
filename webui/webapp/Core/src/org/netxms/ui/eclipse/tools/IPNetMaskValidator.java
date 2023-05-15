@@ -29,10 +29,10 @@ import org.netxms.ui.eclipse.console.Messages;
  */
 public class IPNetMaskValidator implements TextFieldValidator
 {
-	private static final String IP_ADDRESS_PATTERN = "^([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}|[A-Fa-f0-9:]+)$"; //$NON-NLS-1$
+   private static final String IP_ADDRESS_PATTERN = "^([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}|[A-Fa-f0-9:]+)$"; //$NON-NLS-1$
 
-	private boolean allowEmpty;
-	private int maxBits;
+   private boolean allowEmpty;
+   private int maxBits;
 
 	/**
 	 * Create new IP network mask validator.
@@ -86,6 +86,17 @@ public class IPNetMaskValidator implements TextFieldValidator
 		try
 		{
          InetAddress mask = InetAddress.getByName(text);
+			byte[] bytes = mask.getAddress();
+			for(int i = 0, state = 0; i < bytes.length; i++)
+			{
+				if (bytes[i] == (byte)0xFF)
+					continue;
+				if ((state != 0) && (bytes[i] != 0))
+					return false;
+				if ((bytes[i] != 0) && (bytes[i] != (byte)0x80) && (bytes[i] != (byte)0xC0) && (bytes[i] != (byte)0xE0) && (bytes[i] != (byte)0xF0) && (bytes[i] != (byte)0xF8) && (bytes[i] != (byte)0xFC) && (bytes[i] != (byte)0xFE))
+					return false;
+				state = 1;
+			}
          int bits = InetAddressEx.bitsInMask(mask);
          return ((bits >= 0) && (bits < maxBits));
 		}

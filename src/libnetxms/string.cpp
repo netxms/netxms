@@ -674,12 +674,13 @@ StringBuffer& StringBuffer::operator =(const SharedString &src)
 /**
  * Append formatted string to the end of buffer
  */
-void StringBuffer::appendFormattedString(const TCHAR *format, ...)
+StringBuffer& StringBuffer::appendFormattedString(const TCHAR *format, ...)
 {
    va_list args;
    va_start(args, format);
    appendFormattedStringV(format, args);
    va_end(args);
+   return *this;
 }
 
 /**
@@ -1011,11 +1012,11 @@ void StringBuffer::insertAsHexString(size_t index, const void *data, size_t len,
 /**
  * Escape given character
  */
-void StringBuffer::escapeCharacter(int ch, int esc)
+StringBuffer& StringBuffer::escapeCharacter(int ch, int esc)
 {
    int nCount = NumChars(m_buffer, ch);
    if (nCount == 0)
-      return;
+      return *this;
 
    if (isInternalBuffer())
    {
@@ -1046,6 +1047,7 @@ void StringBuffer::escapeCharacter(int ch, int esc)
       }
    }
    m_buffer[m_length] = 0;
+   return *this;
 }
 
 /**
@@ -1073,11 +1075,11 @@ void StringBuffer::setBuffer(TCHAR *buffer)
 /**
  * Replace all occurrences of source substring with destination substring
  */
-void StringBuffer::replace(const TCHAR *src, const TCHAR *dst)
+StringBuffer& StringBuffer::replace(const TCHAR *src, const TCHAR *dst)
 {
    size_t lenSrc = _tcslen(src);
    if ((lenSrc > m_length) || (lenSrc == 0))
-      return;
+      return *this;
 
    size_t lenDst = _tcslen(dst);
 
@@ -1126,58 +1128,64 @@ void StringBuffer::replace(const TCHAR *src, const TCHAR *dst)
          }
       }
    }
+   return *this;
 }
 
 /**
  * Remove given range from string buffer
  */
-void StringBuffer::removeRange(size_t start, ssize_t len)
+StringBuffer& StringBuffer::removeRange(size_t start, ssize_t len)
 {
    if (start >= m_length)
-      return;
+      return *this;
 
    len = (len == -1) ? m_length - start : std::min(m_length - start, static_cast<size_t>(len));
    memmove(&m_buffer[start], &m_buffer[start + len], (m_length - start - len) * sizeof(TCHAR));
    m_length -= len;
+   return *this;
 }
 
 /**
  * Convert string to uppercase
  */
-void StringBuffer::toUppercase()
+StringBuffer& StringBuffer::toUppercase()
 {
    for (size_t i = 0; i < m_length; i++)
       m_buffer[i] = _totupper(m_buffer[i]);
+   return *this;
 }
 
 /**
 * Convert string to lowercase
 */
-void StringBuffer::toLowercase()
+StringBuffer& StringBuffer::toLowercase()
 {
    for (size_t i = 0; i < m_length; i++)
       m_buffer[i] = _totlower(m_buffer[i]);
+   return *this;
 }
 
 /**
  * Strip leading and trailing spaces, tabs, newlines
  */
-void StringBuffer::trim()
+StringBuffer& StringBuffer::trim()
 {
    Trim(m_buffer);
    m_length = _tcslen(m_buffer);
+   return *this;
 }
 
 /**
  * Shrink string by removing trailing characters
  */
-void StringBuffer::shrink(size_t chars)
+StringBuffer& StringBuffer::shrink(size_t chars)
 {
    if (m_length > 0)
    {
       m_length -= std::min(m_length, chars);
       m_buffer[m_length] = 0;
    }
+   return *this;
 }
 
 /**

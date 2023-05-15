@@ -37,6 +37,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -64,6 +65,14 @@ public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
    @Override
    protected void run(List<AbstractObject> objects)
    {
+      final NXCSession session = Registry.getSession();
+      if (objects.get(0).getAssetId() != 0)
+      {
+         String question = String.format(i18n.tr("\"%s\" object already linked to \"%s\" asset. Are you sure you want to link it another asset?"), objects.get(0).getObjectName(), session.getObjectName(objects.get(0).getAssetId()));
+         if (!MessageDialogHelper.openConfirm(getShell(), i18n.tr("Confirm Link"), question))
+            return;
+      }
+      
       ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), ObjectSelectionDialog.createAssetSelectionFilter());
       if (dlg.open() != Window.OK)
          return;
@@ -73,7 +82,6 @@ public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
          return; // Incompatible object selected
 
       final AbstractObject object = objects.get(0);
-      final NXCSession session = Registry.getSession();
       new Job(i18n.tr("Linking asset \"{0}\" to object \"{1}\"", asset.getObjectName(), object.getObjectName()), null, getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

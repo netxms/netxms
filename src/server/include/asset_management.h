@@ -116,6 +116,7 @@ public:
    int32_t getMinRange() const { return m_rangeMin; }
    int32_t getMaxRange() const { return m_rangeMax; }
    NXSL_Program *getScript() const { return m_autofillScript; }
+   StringList *getEnumValues() const { return (m_dataType == AMDataType::Enum) ? m_enumValues.keys() : nullptr; }
 
    const TCHAR *getActualDisplayName() const
    {
@@ -134,19 +135,22 @@ struct AssetPropertyAutofillContext
 {
    TCHAR name[MAX_OBJECT_NAME];
    AMDataType dataType;
+   StringList *enumValues;
    NXSL_VM *vm;
    SharedString newValue;
 
-   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, NXSL_VM *vm, SharedString newValue)
+   AssetPropertyAutofillContext(const TCHAR *name, AMDataType dataType, StringList *enumValues, NXSL_VM *vm, SharedString newValue)
    {
       _tcslcpy(this->name, name, MAX_OBJECT_NAME);
       this->dataType = dataType;
+      this->enumValues = enumValues;
       this->vm = vm;
       this->newValue = newValue;
    }
 
    ~AssetPropertyAutofillContext()
    {
+      delete enumValues;
       delete vm;
    }
 };
@@ -165,7 +169,7 @@ unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly = false);
 unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const Asset& asset, const shared_ptr<NetObj>& linkedObject);
 void LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
 void UnlinkAsset(Asset *asset, ClientSession *session);
-void UpdateAssetLinkage(NetObj *object);
+void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed = true);
 void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames);
 void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite);
 void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation, const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);

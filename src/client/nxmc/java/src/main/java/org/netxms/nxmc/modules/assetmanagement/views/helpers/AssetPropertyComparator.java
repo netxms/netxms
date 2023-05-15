@@ -30,16 +30,16 @@ import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
  */
 public class AssetPropertyComparator extends ViewerComparator
 {
-   private AssetPropertyListLabelProvider labelProvider;
+   private AssetPropertyReader propertyReader;
 
    /**
     * Asset instance comparator
     * 
-    * @param labelProvider asset instance comparator
+    * @param propertyReader asset property reader
     */
-   public AssetPropertyComparator(AssetPropertyListLabelProvider labelProvider)
+   public AssetPropertyComparator(AssetPropertyReader propertyReader)
    {
-      this.labelProvider = labelProvider;
+      this.propertyReader = propertyReader;
    }
 
    /**
@@ -56,19 +56,19 @@ public class AssetPropertyComparator extends ViewerComparator
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
       {
          case AssetView.NAME:
-            result = labelProvider.getName(o1.getKey()).compareToIgnoreCase(labelProvider.getName(o2.getKey()));
+            result = propertyReader.getDisplayName(o1.getKey()).compareToIgnoreCase(propertyReader.getDisplayName(o2.getKey()));
             break;
          case AssetView.VALUE:
-            result = labelProvider.getPropertyValue(o1).compareToIgnoreCase(labelProvider.getPropertyValue(o2));
+            result = propertyReader.valueToText(o1.getKey(), o1.getValue()).compareToIgnoreCase(propertyReader.valueToText(o2.getKey(), o2.getValue()));
             break;
          case AssetView.IS_MANDATORY:
-            result = labelProvider.isMandatory(o1.getKey()).compareToIgnoreCase(labelProvider.isMandatory(o2.getKey()));
+            result = propertyReader.isMandatory(o1.getKey()).compareToIgnoreCase(propertyReader.isMandatory(o2.getKey()));
             break;
          case AssetView.IS_UNIQUE:
-            result = labelProvider.isUnique(o1.getKey()).compareToIgnoreCase(labelProvider.isUnique(o2.getKey()));
+            result = propertyReader.isUnique(o1.getKey()).compareToIgnoreCase(propertyReader.isUnique(o2.getKey()));
             break;
          case AssetView.SYSTEM_TYPE:
-            result = labelProvider.getSystemType(o1.getKey()).compareToIgnoreCase(labelProvider.getSystemType(o2.getKey()));  
+            result = propertyReader.getSystemType(o1.getKey()).compareToIgnoreCase(propertyReader.getSystemType(o2.getKey()));
             break;      
       }
 

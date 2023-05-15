@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms-version.h>
+#include <asset_management.h>
 
 #define DEBUG_TAG_OBJECT_RELATIONS  _T("obj.relations")
 #define DEBUG_TAG_OBJECT_LIFECYCLE  _T("obj.lifecycle")
@@ -1907,6 +1908,15 @@ int NetObj::getPropagatedStatus()
  */
 void NetObj::prepareForDeletion()
 {
+   if (m_assetId != 0)
+   {
+      shared_ptr<Asset> asset = static_pointer_cast<Asset>(FindObjectById(m_assetId, OBJECT_ASSET));
+
+      if (asset != nullptr)
+      {
+         UnlinkAsset(asset.get(), nullptr);
+      }
+   }
 }
 
 /**

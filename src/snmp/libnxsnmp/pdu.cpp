@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -89,7 +89,6 @@ SNMP_PDU::SNMP_PDU() : m_variables(0, 16, Ownership::True)
 	m_dwAgentAddr = 0;
 	m_timestamp = 0;
 	m_signatureOffset = 0;
-   m_codepage[0] = 0;
 }
 
 /**
@@ -115,7 +114,6 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, uint32_t requestId, SNMP_Version versio
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = 0;
-   m_codepage[0] = 0;
 }
 
 /**
@@ -139,7 +137,6 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = 0;
-   m_codepage[0] = 0;
 
    setTrapId(trapId);
    if (version != SNMP_VERSION_1)
@@ -158,7 +155,7 @@ SNMP_PDU::SNMP_PDU(SNMP_Command command, SNMP_Version version, const SNMP_Object
 /**
  * Copy constructor
  */
-SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 16, Ownership::True), m_trapId(src.m_trapId), m_authoritativeEngine(&src.m_authoritativeEngine)
+SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 16, Ownership::True), m_trapId(src.m_trapId), m_codepage(src.m_codepage), m_authoritativeEngine(&src.m_authoritativeEngine)
 {
    m_version = src.m_version;
    m_command = src.m_command;
@@ -179,14 +176,9 @@ SNMP_PDU::SNMP_PDU(const SNMP_PDU& src) :  m_variables(src.m_variables.size(), 1
    m_dwAgentAddr = 0;
    m_timestamp = 0;
    m_signatureOffset = src.m_signatureOffset;
-   strcpy(m_codepage, src.m_codepage);
 
    for(int i = 0; i < src.m_variables.size(); i++)
-   {
-      auto v = new SNMP_Variable(src.m_variables.get(i));
-      v->setCodepage((m_codepage[0] != 0) ? m_codepage : nullptr);
-      m_variables.add(v);
-   }
+      m_variables.add(new SNMP_Variable(src.m_variables.get(i)));
 }
 
 /**
@@ -1418,11 +1410,11 @@ void SNMP_PDU::setTrapId(const uint32_t *value, size_t length)
 /**
  * Set codepage for PDU
  */
-void SNMP_PDU::setCodepage(const char *codepage)
+void SNMP_PDU::setCodepage(const SNMP_Codepage& codepage)
 {
-   strlcpy(m_codepage, codepage, 16);
+   m_codepage = codepage;
    for(int i = 0; i < m_variables.size(); i++)
-      m_variables.get(i)->setCodepage((m_codepage[0] != 0) ? m_codepage : nullptr);
+      m_variables.get(i)->setCodepage(m_codepage);
 }
 
 /**
@@ -1430,8 +1422,6 @@ void SNMP_PDU::setCodepage(const char *codepage)
  */
 void SNMP_PDU::unlinkVariables()
 {
-   for(int i = 0; i < m_variables.size(); i++)
-      m_variables.get(i)->setCodepage(nullptr);
    m_variables.setOwner(Ownership::False);
    m_variables.clear();
    m_variables.setOwner(Ownership::True);

@@ -21,8 +21,6 @@ package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.NXCSession;
-import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
 
 /**
@@ -31,17 +29,16 @@ import org.netxms.nxmc.base.views.AbstractViewerFilter;
 public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerFilter
 {
    private String filterString = null;
-   private AssetPropertyListLabelProvider labelProvider;
-   private NXCSession session = Registry.getSession();
+   private AssetPropertyReader propertyReader;
 
    /**
     * Asset instance comparator
     * 
     * @param labelProvider asset instance comparator
     */
-   public AssetPropertyFilter(AssetPropertyListLabelProvider labelProvider)
+   public AssetPropertyFilter(AssetPropertyReader propertyReader)
    {
-      this.labelProvider = labelProvider;
+      this.propertyReader = propertyReader;
    }
 
    /**
@@ -56,7 +53,8 @@ public class AssetPropertyFilter extends ViewerFilter implements AbstractViewerF
       @SuppressWarnings("unchecked")
       Entry<String, String> entry = (Entry<String, String>)element;
 
-      return session.getAssetManagementSchema().get(entry.getKey()).getEffectiveDisplayName().toUpperCase().contains(filterString) || labelProvider.getPropertyValue(entry).toUpperCase().contains(filterString);
+      return propertyReader.getDisplayName(entry.getKey()).toUpperCase().contains(filterString) || 
+            propertyReader.valueToText(entry.getKey(), entry.getValue()).toUpperCase().contains(filterString);
    }
 
    /**

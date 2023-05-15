@@ -18,40 +18,28 @@
  */
 package org.netxms.nxmc.modules.assetmanagement.views.helpers;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Map.Entry;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.NXCSession;
-import org.netxms.client.asset.AssetAttribute;
-import org.netxms.client.constants.AMDataType;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.localization.DateFormatFactory;
-import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
-import org.netxms.nxmc.modules.objects.widgets.helpers.BaseObjectLabelProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Asset properties label provider
  */
 public class AssetPropertyListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   final I18n i18n = LocalizationHelper.getI18n(AssetView.class);
-   final Logger log = LoggerFactory.getLogger(AssetPropertyListLabelProvider.class);
+   private AssetPropertyReader propertyReader;
 
-   private NXCSession session = Registry.getSession();
-   private BaseObjectLabelProvider objectLabelProvider;
-
-   public AssetPropertyListLabelProvider()
+   /**
+    * Create label provider.
+    *
+    * @param propertyReader asset property reader
+    */
+   public AssetPropertyListLabelProvider(AssetPropertyReader propertyReader)
    {
-      objectLabelProvider = new BaseObjectLabelProvider();
+      super();
+      this.propertyReader = propertyReader;
    }
 
    /**
@@ -62,24 +50,7 @@ public class AssetPropertyListLabelProvider extends LabelProvider implements ITa
    public Image getColumnImage(Object element, int columnIndex)
    {
       if (columnIndex == AssetView.VALUE)
-      {
-         String name = ((Entry<String, String>)element).getKey();
-         if (session.getAssetManagementSchema().get(name).getDataType() == AMDataType.OBJECT_REFERENCE)
-         {
-            long objectId = 0;
-            try 
-            {
-               objectId = Integer.parseInt(((Entry<String, String>)element).getValue());
-            }
-            catch (NumberFormatException e)
-            {
-               log.warn("Cannot parse object ID", e);
-            }
-            AbstractObject object = session.findObjectById(objectId);
-            if (object != null)
-               return objectLabelProvider.getImage(object);
-         }         
-      }
+         return propertyReader.valueToImage(((Entry<String, String>)element).getKey(), ((Entry<String, String>)element).getValue());
       return null;
    }
 
@@ -91,122 +62,19 @@ public class AssetPropertyListLabelProvider extends LabelProvider implements ITa
    public String getColumnText(Object element, int columnIndex)
    {
       String name = ((Entry<String, String>)element).getKey();
-
       switch(columnIndex)
       {
          case AssetView.NAME:
-            return getName(name);
+            return propertyReader.getDisplayName(name);
          case AssetView.VALUE:
-            return getPropertyValue((Entry<String, String>)element);
+            return propertyReader.valueToText(name, ((Entry<String, String>)element).getValue());
          case AssetView.IS_MANDATORY:
-            return isMandatory(name);
+            return propertyReader.isMandatory(name);
          case AssetView.IS_UNIQUE:
-            return isUnique(name);
+            return propertyReader.isUnique(name);
          case AssetView.SYSTEM_TYPE:
-            return getSystemType(name);            
+            return propertyReader.getSystemType(name);
       }
       return null;
    }
-
-   /**
-    * Get property value.
-    *
-    * @param element property (name-value pair)
-    * @return string representation of property value, decoded as needed
-    */
-   public String getPropertyValue(Entry<String, String> element)
-   {
-      String name = element.getKey();
-      AssetAttribute asetAttribute = session.getAssetManagementSchema().get(name);
-      if (asetAttribute.getDataType() == AMDataType.OBJECT_REFERENCE)
-      {
-         long objectId = 0;
-         try 
-         {
-            objectId = Integer.parseInt(element.getValue());
-         }
-         catch (NumberFormatException e)
-         {
-            log.warn("Filed to parse object ID", e);
-         }
-         AbstractObject object = session.findObjectById(objectId);
-         if (object != null)
-            return objectLabelProvider.getText(object);
-      }
-      else if (asetAttribute.getDataType() == AMDataType.ENUM)
-      {
-         String displayName = asetAttribute.getEnumValues().get(element.getValue());
-         return displayName == null || displayName.isBlank() ? element.getValue() : displayName;
-      }    
-      else if (asetAttribute.getDataType() == AMDataType.DATE)
-      {
-         final Calendar c = Calendar.getInstance();
-         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-         try
-         {
-            c.setTime(sdf.parse(element.getValue()));
-         }
-         catch(ParseException e)
-         {
-            log.error("Cannot parse date", e);
-            return "<Error>";
-         }
-         return DateFormatFactory.getDateFormat().format(c.getTime());
-      }      
-
-      return element.getValue();
-   }
-
-   /**
-    * Get name of the system type
-    * 
-    * @param name attribute name
-    * @return system type name
-    */
-   public String getSystemType(String name)
-   {
-      return AssetAttributeListLabelProvider.SYSTEM_TYPE[session.getAssetManagementSchema().get(name).getSystemType().getValue()];
-   }
-
-   /**
-    * Text representation if value is unique
-    * 
-    * @param name attribute name
-    * @return Text representation if value is unique
-    */
-   public String isUnique(String name)
-   {
-      return session.getAssetManagementSchema().get(name).isUnique() ? i18n.tr("Yes") : i18n.tr("No");
-   }
-
-   /**
-    * Text representation if value is mandatory
-    * 
-    * @param name attribute name
-    * @return Text representation if value is mandatory
-    */
-   public String isMandatory(String name)
-   {
-      return session.getAssetManagementSchema().get(name).isMandatory() ? i18n.tr("Yes") : i18n.tr("No");
-   }
-
-   /**
-    * @param name get name that should be displayed for user 
-    * 
-    * @return user displayed name 
-    */
-   public String getName(String name)
-   {
-      return session.getAssetManagementSchema().get(name).getEffectiveDisplayName();
-   }
-
-   /**
-    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      objectLabelProvider.dispose();
-      super.dispose();
-   }   
 }

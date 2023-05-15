@@ -30,6 +30,7 @@ import org.netxms.client.datacollection.DataFormatter;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.DataSeries;
 import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -37,9 +38,11 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class DialGauge extends GenericGauge
 {
-	private static final int NEEDLE_PIN_RADIUS = 8;
-	private static final int SCALE_OFFSET = 30;	// In percents
-	private static final int SCALE_WIDTH = 10;	// In percents
+   private static final int NEEDLE_PIN_RADIUS = 8;
+   private static final int SCALE_OFFSET = 18; // In percents
+   private static final int SCALE_WIDTH = 3; // In percents
+   private static final int COLOR_RING_OFFSET = 2; // In percents
+   private static final int COLOR_RING_WIDTH = 5; // In percents
 
 	private Font[] scaleFonts = null;
 	private Font[] valueFonts = null;
@@ -63,11 +66,11 @@ public class DialGauge extends GenericGauge
 
 		scaleFonts = new Font[16];
 		for(int i = 0; i < scaleFonts.length; i++)
-			scaleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL); //$NON-NLS-1$
+         scaleFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL);
 
 		valueFonts = new Font[16];
 		for(int i = 0; i < valueFonts.length; i++)
-			valueFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.BOLD); //$NON-NLS-1$
+         valueFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.BOLD);
 	}
 
    /**
@@ -93,12 +96,14 @@ public class DialGauge extends GenericGauge
    /**
     * @see org.netxms.ui.eclipse.charts.widgets.GenericGauge#renderElement(org.eclipse.swt.graphics.GC,
     *      org.netxms.client.datacollection.ChartConfiguration, java.lang.Object, org.netxms.client.datacollection.GraphItem,
-    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int)
+    *      org.netxms.ui.eclipse.charts.api.DataSeries, int, int, int, int, int)
     */
 	@Override
-   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h)
+   protected void renderElement(GC gc, ChartConfiguration configuration, Object renderData, GraphItem dci, DataSeries data, int x, int y, int w, int h, int index)
 	{
-		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+      Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+      int heightAdjustment = rect.height / 6;
+      rect.height += heightAdjustment;
 
       if (configuration.areLabelsVisible() && !configuration.areLabelsInside())
 		{
@@ -121,42 +126,46 @@ public class DialGauge extends GenericGauge
       double angleValue = (maxValue - minValue) / 270.0;
 		int outerRadius = (rect.width + 1) / 2;
 		int scaleOuterOffset = ((rect.width / 2) * SCALE_OFFSET / 100);
-		int scaleInnerOffset = ((rect.width / 2) * (SCALE_OFFSET + SCALE_WIDTH) / 100);
+		int scaleCenterOffset = ((rect.width / 2) * (SCALE_OFFSET + SCALE_WIDTH) / 100);
+      int scaleInnerOffset = ((rect.width / 2) * (SCALE_OFFSET + SCALE_WIDTH + COLOR_RING_OFFSET + COLOR_RING_WIDTH) / 100);
 
 		int cx = rect.x + rect.width / 2 + 1;
 		int cy = rect.y + rect.height / 2 + 1;
-		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+      gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
 		gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 
 		// Draw zones
-      switch(GaugeColorMode.getByValue(configuration.getGaugeColorMode()))
+      GaugeColorMode colorMode = GaugeColorMode.getByValue(configuration.getGaugeColorMode());
+      switch(colorMode)
 		{
-		   case ZONE:
+         case CUSTOM:
+            drawZone(gc, rect, 225, minValue, maxValue, angleValue, chart.getPaletteEntry(0).getRGBObject());
+            break;
+         case DATA_SOURCE:
+            drawZone(gc, rect, 225, minValue, maxValue, angleValue, getDataSourceColor(dci, index));
+            break;
+         case THRESHOLD:
+            drawZone(gc, rect, 225, minValue, maxValue, angleValue, StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()).getRGB());
+            break;
+         case ZONE:
             double startAngle = 225;
             startAngle = drawZone(gc, rect, startAngle, minValue, configuration.getLeftRedZone(), angleValue, RED_ZONE_COLOR);
             startAngle = drawZone(gc, rect, startAngle, configuration.getLeftRedZone(), configuration.getLeftYellowZone(), angleValue, YELLOW_ZONE_COLOR);
             startAngle = drawZone(gc, rect, startAngle, configuration.getLeftYellowZone(), configuration.getRightYellowZone(), angleValue, GREEN_ZONE_COLOR);
             startAngle = drawZone(gc, rect, startAngle, configuration.getRightYellowZone(), configuration.getRightRedZone(), angleValue, YELLOW_ZONE_COLOR);
             startAngle = drawZone(gc, rect, startAngle, configuration.getRightRedZone(), maxValue, angleValue, RED_ZONE_COLOR);
-		      break;
-		   case CUSTOM:
-            drawZone(gc, rect, 225, minValue, maxValue, angleValue, chart.getPaletteEntry(0).getRGBObject());
-		      break;
+            break;
 		   default:
 		      break;
 		}
 
-		// Draw center part and border
-		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-		gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
-		gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
-		gc.setLineWidth(2);
-		gc.drawArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
-		gc.setLineWidth(1);
+      // Draw center part
+      gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+      gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
+      gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
 
 		// Draw scale
       Color scaleColor = getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
-      Color scaleTextColor = getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
       gc.setForeground(scaleColor);
 		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
 		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
@@ -165,13 +174,14 @@ public class DialGauge extends GenericGauge
 		int textWidth = (int)(Math.sqrt((outerRadius - scaleOuterOffset) * (outerRadius - scaleOuterOffset) / 2) * 0.7);
 		final Font markFont = WidgetHelper.getBestFittingFont(gc, scaleFonts, "900MM", textWidth, outerRadius - scaleOuterOffset); //$NON-NLS-1$
 		gc.setFont(markFont);
+      gc.setLineWidth(1);
 		for(int i = 225; i >= -45; i -= step)
 		{
          if (configuration.isGridVisible())
 			{
 	         gc.setForeground(scaleColor);
 				Point l1 = positionOnArc(cx, cy, outerRadius - scaleOuterOffset, i);
-				Point l2 = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, i);
+				Point l2 = positionOnArc(cx, cy, outerRadius - scaleCenterOffset, i);
 				gc.drawLine(l1.x, l1.y, l2.x, l2.y);
 			}
 			
@@ -179,57 +189,73 @@ public class DialGauge extends GenericGauge
 			String value = DataFormatter.roundDecimalValue(angle, valueStep, 5);
 			Point t = positionOnArc(cx, cy, outerRadius - textOffset, i);
 			Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
-	      gc.setForeground(scaleTextColor);
 			gc.drawText(value, t.x - ext.x / 2, t.y - ext.y / 2, SWT.DRAW_TRANSPARENT);
 		}
-      gc.setForeground(scaleColor);
-		gc.drawArc(rect.x + scaleOuterOffset, rect.y + scaleOuterOffset, rect.width - scaleOuterOffset * 2, rect.height - scaleOuterOffset * 2, -45, 270);
-		gc.drawArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, -45, 270);
+		gc.drawArc(rect.x + scaleCenterOffset, rect.y + scaleCenterOffset, rect.width - scaleCenterOffset * 2, rect.height - scaleCenterOffset * 2, -45, 270);
+
+      // Draw current value
+      double dciValue = data.getCurrentValue();
+      if (dciValue < minValue)
+         dciValue = minValue;
+      if (dciValue > maxValue)
+         dciValue = maxValue;
+      gc.setFont(WidgetHelper.getBestFittingFont(gc, valueFonts, Integer.toString((int)maxValue) + ".00", outerRadius - scaleInnerOffset - 6, rect.height / 8));
+      switch(colorMode)
+      {
+         case CUSTOM:
+            gc.setForeground(chart.getColorCache().create(chart.getPaletteEntry(0).getRGBObject()));
+            break;
+         case DATA_SOURCE:
+            gc.setForeground(chart.getColorCache().create(getDataSourceColor(dci, index)));
+            break;
+         case THRESHOLD:
+            gc.setForeground(StatusDisplayInfo.getStatusColor(data.getActiveThresholdSeverity()));
+            break;
+         case ZONE:
+            if ((dciValue <= configuration.getLeftRedZone()) || (dciValue >= configuration.getRightRedZone()))
+               gc.setForeground(chart.getColorCache().create(RED_ZONE_COLOR));
+            else if ((dciValue <= configuration.getLeftYellowZone()) || (dciValue >= configuration.getRightYellowZone()))
+               gc.setForeground(chart.getColorCache().create(YELLOW_ZONE_COLOR));
+            else
+               gc.setForeground(chart.getColorCache().create(GREEN_ZONE_COLOR));
+            break;
+         default:
+            gc.setForeground(scaleColor);
+            break;
+      }
+      String value = getValueAsDisplayString(dci, data);
+      Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
+      gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
 
 		// Draw needle
-		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedle")); //$NON-NLS-1$
-      double dciValue = data.getCurrentValue();
-		if (dciValue < minValue)
-			dciValue = minValue;
-		if (dciValue > maxValue)
-			dciValue = maxValue;
+      gc.setBackground(gc.getForeground()); // Use same color as for current value
 		int angle = (int)(225 - (dciValue - minValue) / angleValue);
-		Point needleEnd = positionOnArc(cx, cy, outerRadius - ((rect.width / 2) * (SCALE_WIDTH / 2) / 100), angle);
-		Point np1 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle - 90);
-		Point np2 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle + 90);
+      Point needleEnd = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, angle);
+      Point np1 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle - 90);
+      Point np2 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle + 90);
 		gc.fillPolygon(new int[] { np1.x, np1.y, needleEnd.x, needleEnd.y, np2.x, np2.y });
+      gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedlePin")); //$NON-NLS-1$
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS, cy - NEEDLE_PIN_RADIUS, NEEDLE_PIN_RADIUS * 2 - 1, NEEDLE_PIN_RADIUS * 2 - 1, 0, 360);
-		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedlePin")); //$NON-NLS-1$
-		gc.fillArc(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, NEEDLE_PIN_RADIUS - 1, NEEDLE_PIN_RADIUS - 1, 0, 360);
-
-		// Draw current value
-      String value = getValueAsDisplayString(dci, data);
-		gc.setFont(WidgetHelper.getMatchingSizeFont(valueFonts, markFont));
-		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
-		gc.setLineWidth(3);
-		gc.setBackground(getColorFromPreferences("Chart.Colors.DialValueBackground")); //$NON-NLS-1$
-		int boxW = Math.max(outerRadius - scaleInnerOffset - 6, ext.x + 8);
-		gc.fillRoundRectangle(cx - boxW / 2, cy + rect.height / 4, boxW, ext.y + 6, 3, 3);
-      gc.setForeground(getColorFromPreferences("Chart.Colors.DialValueText")); //$NON-NLS-1$
-		gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
+      gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
+      gc.fillArc(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, NEEDLE_PIN_RADIUS - 1, NEEDLE_PIN_RADIUS - 1, 0, 360);
 
       // Draw labels
       if (configuration.areLabelsVisible())
 		{
-         gc.setFont(configuration.areLabelsInside() ? markFont : null);
+         gc.setFont(configuration.areLabelsInside() ? WidgetHelper.getBestFittingFont(gc, scaleFonts, "XXXXXXXXXXXXXXXXXXXXXXXX", rect.width - scaleInnerOffset * 2 - 6, rect.height / 8) : null);
          ext = gc.textExtent(dci.getDescription(), SWT.DRAW_TRANSPARENT);
-			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
+         gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
          if (configuration.areLabelsInside())
 			{
-            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleCenterOffset / 2 + rect.height / 4, true);
 			}
 			else
 			{
-            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4 - heightAdjustment, true);
 			}
 		}
 	}
-	
+
 	/**
 	 * Draw colored zone.
 	 * 
@@ -251,7 +277,7 @@ public class DialGauge extends GenericGauge
 		if (angle <= 0)
 			return startAngle;
 
-		int offset = ((rect.width / 2) * SCALE_OFFSET / 100);
+      int offset = ((rect.width / 2) * (SCALE_OFFSET + SCALE_WIDTH + COLOR_RING_OFFSET) / 100);
 
       gc.setBackground(chart.getColorCache().create(color));
       gc.fillArc(rect.x + offset, rect.y + offset, rect.width - offset * 2, rect.height - offset * 2, (int)Math.ceil(startAngle), (int)-Math.ceil(angle));

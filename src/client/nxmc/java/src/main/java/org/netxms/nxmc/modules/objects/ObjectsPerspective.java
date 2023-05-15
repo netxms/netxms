@@ -48,6 +48,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
@@ -71,6 +73,7 @@ import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
+import org.netxms.nxmc.modules.assetmanagement.views.AssetSummaryView;
 import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
@@ -183,6 +186,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addNavigationView(new ObjectBrowser(getName(), null, subtreeType));
       addMainView(new AgentFileManager());
       addMainView(new AlarmsView());
+      addMainView(new AssetSummaryView());
       addMainView(new AssetView());      
       addMainView(new BusinessServiceAvailabilityView());
       addMainView(new BusinessServiceChecksView());
@@ -245,6 +249,21 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          if ((componentId == null) || session.isServerComponentRegistered(componentId))
             actionContributions.add(a.createAction(viewPlacement, this));
       }
+
+      // Add session listener
+      session.addListener(new SessionListener() {
+         @Override
+         public void notificationHandler(SessionNotification n)
+         {
+            if (n.getCode() != SessionNotification.OBJECT_CHANGED)
+               return;
+            AbstractObject context = (AbstractObject)getContext();
+            if ((context != null) && (n.getSubCode() == context.getObjectId()))
+            {
+               getWindow().getShell().getDisplay().asyncExec(() -> updateContext(n.getObject()));
+            }
+         }
+      });
    }
 
    /**
@@ -452,6 +471,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addObjectMenu(i18n.tr("Graphs"), ObjectMenuFactory.createGraphTemplatesMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Summary Tables"), ObjectMenuFactory.createSummaryTableMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
+      addObjectMenu(i18n.tr("Dashboards"), ObjectMenuFactory.createDashboardsMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Create"), new ObjectCreateMenuManager(getWindow().getShell(), null, object));
    }
 

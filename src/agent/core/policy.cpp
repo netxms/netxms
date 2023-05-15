@@ -495,9 +495,7 @@ void UpdatePolicyInventory()
 
       TCHAR filePath[MAX_PATH], name[64];
       _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), GetPolicyDeploymentDirectory(type), guid.toString(name));
-
-      NX_STAT_STRUCT st;
-      if (CALL_STAT(filePath, &st) != 0)
+      if (_taccess(filePath, R_OK) != 0)
       {
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Unregistering policy %s (policy file is missing)"), guid.toString().cstr());
          UnregisterPolicy(guid);

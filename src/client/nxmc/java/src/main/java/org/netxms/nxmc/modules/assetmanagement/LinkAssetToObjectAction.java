@@ -37,6 +37,7 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -72,8 +73,15 @@ public class LinkAssetToObjectAction extends ObjectAction<Asset>
       if ((!(object instanceof Rack) && !(object instanceof DataCollectionTarget)) || (object instanceof Cluster))
          return; // Incompatible object selected
 
-      final Asset asset = objects.get(0);
       final NXCSession session = Registry.getSession();
+      if (object.getAssetId() != 0)
+      {
+         String question = String.format(i18n.tr("\"%s\" object already linked to \"%s\" asset. Are you sure you want to link it another asset?"), object.getObjectName(), session.getObjectName(object.getAssetId()));
+         if (!MessageDialogHelper.openConfirm(getShell(), i18n.tr("Confirm Link"), question))
+            return;
+      }
+
+      final Asset asset = objects.get(0);
       new Job(i18n.tr("Linking asset \"{0}\" to object \"{1}\"", asset.getObjectName(), object.getObjectName()), null, getMessageArea()) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception

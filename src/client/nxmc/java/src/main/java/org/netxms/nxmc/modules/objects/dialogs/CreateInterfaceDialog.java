@@ -202,7 +202,7 @@ public class CreateInterfaceDialog extends Dialog
 		if (!WidgetHelper.validateTextInput(nameField, new ObjectNameValidator()) ||
 		    !WidgetHelper.validateTextInput(macAddrField, new MacAddressValidator(true)) ||
 		    !WidgetHelper.validateTextInput(ipAddrField, new IPAddressValidator(true)) ||
-		    !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true)) ||
+          !WidgetHelper.validateTextInput(ipMaskField, new IPNetMaskValidator(true, ipAddrField.getText().trim())) ||
 		    (physicalPort && !WidgetHelper.validateTextInput(slotField, new NumericTextFieldValidator(0, 4096))) ||
 		    (physicalPort && !WidgetHelper.validateTextInput(portField, new NumericTextFieldValidator(0, 4096))))
       {

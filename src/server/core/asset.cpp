@@ -247,6 +247,15 @@ void Asset::calculateCompoundStatus(bool forcedRecalc)
 }
 
 /**
+ * Prepare object for deletion. Method should return only
+ * when object deletion is safe
+ */
+void Asset::prepareForDeletion()
+{
+   UnlinkAsset(this, nullptr);
+}
+
+/**
  * Get property
  */
 SharedString Asset::getProperty(const TCHAR *attr)
@@ -430,21 +439,31 @@ void Asset::autoFillProperties()
          vm->setGlobalVariable("$asset", createNXSLObject(vm));
          vm->setGlobalVariable("$name", vm->createValue(context->name));
          vm->setGlobalVariable("$value", vm->createValue(propertiesCopy.get(context->name)));
+         if (context->enumValues != nullptr)
+         {
+            vm->setGlobalVariable("$enumValues", vm->createValue(new NXSL_Array(vm, *context->enumValues)));
+         }
          if (vm->run())
          {
-            const TCHAR *newValue = vm->getResult()->getValueAsCString();
-            UpdateProperty(context, this, object, &propertiesCopy, newValue);
+            NXSL_Value *result = vm->getResult();
+            if (!result->isNull())
+            {
+               UpdateProperty(context, this, object, &propertiesCopy, result->getValueAsCString());
+            }
+            else
+            {
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): autofill script for attribute \"%s\" returned null, no changes will be made"), m_name, m_id, context->name);
+            }
          }
          else
          {
             if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
             {
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" aborted"),
-                     m_name, m_id, context->name);
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset property \"%s\" aborted"), m_name, m_id, context->name);
             }
             else
             {
-               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" failed (%s)"),
+               nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset property \"%s\" failed (%s)"),
                      m_name, m_id, context->name, vm->getErrorText());
                ReportScriptError(SCRIPT_CONTEXT_ASSET_MGMT, this, 0, vm->getErrorText(), _T("AssetAttribute::%s::autoFill"), context->name);
             }

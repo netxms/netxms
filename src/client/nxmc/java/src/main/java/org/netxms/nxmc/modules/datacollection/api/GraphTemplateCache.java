@@ -176,7 +176,7 @@ public class GraphTemplateCache
             if ((!dci.dciName.isEmpty() && namePattern.matcher(dciList[j].getName()).find()) ||
                 (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciList[j].getDescription()).find()))
             {
-               chartMetrics.add(new ChartDciConfig(dciList[j]));
+               chartMetrics.add(new ChartDciConfig(dci, dciList[j]));
                if (!dci.multiMatch)
                   break;
             }

@@ -31,16 +31,17 @@ bool SSHCheckConnection(const shared_ptr<Node>& proxyNode, const InetAddress& ad
 {
    StringBuffer request(_T("SSH.CheckConnection("));
    TCHAR ipAddr[64];
-   request.append(addr.toString(ipAddr));
-   request.append(_T(':'));
-   request.append(port);
-   request.append(_T(",\""));
-   request.append(EscapeStringForAgent(login).cstr());
-   request.append(_T("\",\""));
-   request.append(EscapeStringForAgent(password).cstr());
-   request.append(_T("\","));
-   request.append(keyId);
-   request.append(_T(')'));
+   request
+      .append(addr.toString(ipAddr))
+      .append(_T(':'))
+      .append(port)
+      .append(_T(",\""))
+      .append(EscapeStringForAgent(login).cstr())
+      .append(_T("\",\""))
+      .append(EscapeStringForAgent(password).cstr())
+      .append(_T("\","))
+      .append(keyId)
+      .append(_T(')'));
 
    TCHAR response[2];
    return proxyNode->getMetricFromAgent(request, response, 2) == DCE_SUCCESS && response[0] == _T('1');

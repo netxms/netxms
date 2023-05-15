@@ -64,8 +64,9 @@ void ReportPdhError(const TCHAR *function, const TCHAR *pdhCall, const TCHAR *pd
    if (status == PDH_NO_DATA)
       return;
 
+   int level = ((status == PDH_CSTATUS_NO_OBJECT) || (status == PDH_CSTATUS_NO_COUNTER)) ? 6 : 3;
    TCHAR buffer[1024];
-   nxlog_write_tag(NXLOG_WARNING, WINPERF_DEBUG_TAG, _T("%s: PDH Error %08X in call to %s%s%s (%s)"), 
+   nxlog_debug_tag(WINPERF_DEBUG_TAG, level, _T("%s: PDH Error %08X in call to %s%s%s (%s)"), 
          function, status, pdhCall, (pdhObject != nullptr) ? _T(" for ") : _T(""),
          (pdhObject != nullptr) ? pdhObject : _T(""), GetPdhErrorText(status, buffer, 1024));
 }

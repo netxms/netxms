@@ -87,6 +87,8 @@ static CodeLookupElement s_deviceNames[] =
    { 20, _T("2.5 GHz Connectorized Radio") },
    { 22, _T("5 GHz Force 130 Radio") },
    { 23, _T("2.4 GHz Force 130 Radio") },
+   { 24, _T("5 GHz Force 200L Radio") },
+   { 25, _T("5 GHz Force 200L Radio V2") },
    { 33, _T("5 GHz PTP550 Integrated Radio") },
    { 34, _T("5 GHz PTP550 Connectorized Radio") },
    { 35, _T("5 GHz Force 300-25 Radio (FCC)") },
@@ -107,6 +109,13 @@ static CodeLookupElement s_deviceNames[] =
    { 50, _T("5 GHz Force 300-19 Radio (ROW/ETSI)") },
    { 51, _T("5 GHz Force 300-19R IP67 Radio (ROW/ETSI)") },
    { 52, _T("5 GHz Force 300-19R IP67 Radio (FCC)") },
+   { 53, _T("5 GHz ePMP Client MAXrP IP67 Radio (FCC)") },
+   { 54, _T("5 GHz ePMP Client MAXrP IP67 Radio (ROW/ETSI)") },
+   { 55, _T("5 GHz Force 300-25 Radio V2 (FCC)") },
+   { 58, _T("5 GHz Force 300-25L Radio") },
+   { 59, _T("5 GHz Force 300 CSML Connectorized Radio") },
+   { 60, _T("5 GHz Force 300-22L Radio") },
+   { 61, _T("5 GHz Force 300-13L Radio") },
    { 62, _T("5 GHz ePMP MP 3000") },
    { 100, _T("ePMP Elevate NSM5-XW") },
    { 110, _T("ePMP Elevate NSlocoM5-XW") },
@@ -122,6 +131,7 @@ static CodeLookupElement s_deviceNames[] =
    { 141, _T("ePMP Elevate INTELBRAS BOARD") },
    { 142, _T("ePMP Elevate LHG5 BOARD") },
    { 143, _T("ePMP Elevate Disc Lite BOARD") },
+   { 144, _T("ePMP Elevate 911L BOARD") },
    { 145, _T("ePMP Elevate Sextant BOARD") },
    { 150, _T("ePMP Elevate PBE-M5-300-XW") },
    { 151, _T("ePMP Elevate PBE-M5-400-XW") },
@@ -145,6 +155,8 @@ static CodeLookupElement s_deviceNames[] =
    { 195, _T("ePMP Elevate NB-XM") },
    { 196, _T("ePMP Elevate NB-M2-V1-XM") },
    { 197, _T("ePMP Elevate NB-M2-V2-XM") },
+   { 200, _T("ePMP Elevate INTELBRAS WOM-5A-MiMo BOARD") },
+   { 201, _T("ePMP Elevate INTELBRAS WOM-5A-23 BOARD") },
    { 220, _T("ePMP Elevate NS-M6") },
    { 230, _T("ePMP Elevate AG-M5-23-XM") },
    { 231, _T("ePMP Elevate AG-M5-28-XM") },
@@ -162,6 +174,14 @@ static CodeLookupElement s_deviceNames[] =
    { 246, _T("ePMP Elevate RM2-V2-XM") },
    { 247, _T("ePMP Elevate RM2-V3-XM") },
    { 248, _T("ePMP Elevate RM2-V4-XM") },
+   { 53280, _T("5 GHz ePMP4000 8x8 (ROW)") },
+   { 53288, _T("5 GHz ePMP4000 8x8 (FCC)") },
+   { 53344, _T("5 GHz Force 400 Radio with GPS (ROW)") },
+   { 53352, _T("5 GHz Force 400 Radio with GPS (FCC)") },
+   { 53504, _T("5 GHz Force 425 Radio (ROW)") },
+   { 53505, _T("5 GHz Force 400 CSM Radio (ROW)") },
+   { 53512, _T("5 GHz Force 425 Radio (FCC)") },
+   { 53513, _T("5 GHz Force 400 CSM Radio (FCC)") },
    { 0, nullptr }
 };
 
@@ -280,20 +300,13 @@ InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *n
             int32_t mode;
             if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.17713.21.3.4.1.0"), nullptr, 0, &mode, sizeof(mode), 0, nullptr) == SNMP_ERR_SUCCESS) // networkMode
             {
-               if ((mode == 1) || (mode == 2))
+               if ((mode == 1) || (mode == 2))  // NAT or bridge mode
                {
                   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
-                  if (mode == 1) // NAT
-                  {
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.2.0")));   // networkLanIPAddr
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.3.0")));   // networkLanNetmask
-                  }
-                  else
-                  {
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.2.0")));   // networkBridgeIPAddr
-                     request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.3.0")));   // networkBridgeNetmask
-                  }
+                  request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.1.4.3.0")));   // cambiumEffectiveDeviceIPAddress
+                  request.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.1.4.5.0")));   // cambiumEffectiveDeviceLANNetMask
 
+                  bool addressRetrieved = false;
                   SNMP_PDU *response;
                   if (snmp->doRequest(&request, &response) == SNMP_ERR_SUCCESS)
                   {
@@ -308,10 +321,63 @@ InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *n
                            {
                               addr.setMaskBits(BitsInMask(mask));
                               iface->ipAddrList.add(addr);
+                              addressRetrieved = true;
                            }
                         }
                      }
                      delete response;
+                  }
+
+                  if (!addressRetrieved)
+                  {
+                     SNMP_PDU request2(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+                     request2.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.2.0")));   // networkLanIPAddr
+                     request2.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.2.3.0")));   // networkLanNetmask
+
+                     if (snmp->doRequest(&request2, &response) == SNMP_ERR_SUCCESS)
+                     {
+                        if (response->getNumVariables() == 2)
+                        {
+                           TCHAR buffer[256];
+                           InetAddress addr = InetAddress::parse(response->getVariable(0)->getValueAsString(buffer, 256));
+                           if (addr.isValid())
+                           {
+                              uint32_t mask = InetAddress::parse(response->getVariable(1)->getValueAsString(buffer, 256)).getAddressV4();
+                              if (mask != 0)
+                              {
+                                 addr.setMaskBits(BitsInMask(mask));
+                                 iface->ipAddrList.add(addr);
+                                 addressRetrieved = true;
+                              }
+                           }
+                        }
+                        delete response;
+                     }
+                  }
+
+                  if (!addressRetrieved && (mode == 2))
+                  {
+                     SNMP_PDU request2(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+                     request2.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.2.0")));   // networkBridgeIPAddr
+                     request2.bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.17713.21.3.4.7.3.0")));   // networkBridgeNetmask
+                     if (snmp->doRequest(&request2, &response) == SNMP_ERR_SUCCESS)
+                     {
+                        if (response->getNumVariables() == 2)
+                        {
+                           TCHAR buffer[256];
+                           InetAddress addr = InetAddress::parse(response->getVariable(0)->getValueAsString(buffer, 256));
+                           if (addr.isValid())
+                           {
+                              uint32_t mask = InetAddress::parse(response->getVariable(1)->getValueAsString(buffer, 256)).getAddressV4();
+                              if (mask != 0)
+                              {
+                                 addr.setMaskBits(BitsInMask(mask));
+                                 iface->ipAddrList.add(addr);
+                              }
+                           }
+                        }
+                        delete response;
+                     }
                   }
                }
             }

@@ -87,6 +87,7 @@ public class Gauge extends PropertyPage
 		gaugeType.add(Messages.get().Gauge_Dial);
 		gaugeType.add(Messages.get().Gauge_Bar);
 		gaugeType.add(Messages.get().Gauge_Text);
+      gaugeType.add("Circular");
 		gaugeType.select(config.getGaugeType());
 
 		fontName = new LabeledText(dialogArea, SWT.NONE);
@@ -124,7 +125,7 @@ public class Gauge extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		minValue.setLayoutData(gd);
-		
+
 		maxValue = new LabeledText(dialogArea, SWT.NONE);
 		maxValue.setLabel(Messages.get().DialChart_MaxVal);
 		maxValue.setText(Double.toString(config.getMaxValue()));
@@ -132,7 +133,7 @@ public class Gauge extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		maxValue.setLayoutData(gd);
-		
+
 		leftRedZone = new LabeledText(dialogArea, SWT.NONE);
 		leftRedZone.setLabel(Messages.get().DialChart_LeftRed);
 		leftRedZone.setText(Double.toString(config.getLeftRedZone()));
@@ -140,7 +141,7 @@ public class Gauge extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		leftRedZone.setLayoutData(gd);
-		
+
 		leftYellowZone = new LabeledText(dialogArea, SWT.NONE);
 		leftYellowZone.setLabel(Messages.get().DialChart_LeftYellow);
 		leftYellowZone.setText(Double.toString(config.getLeftYellowZone()));
@@ -148,7 +149,7 @@ public class Gauge extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		leftYellowZone.setLayoutData(gd);
-		
+
 		rightYellowZone = new LabeledText(dialogArea, SWT.NONE);
 		rightYellowZone.setLabel(Messages.get().DialChart_RightYellow);
 		rightYellowZone.setText(Double.toString(config.getRightYellowZone()));
@@ -156,7 +157,7 @@ public class Gauge extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		rightYellowZone.setLayoutData(gd);
-		
+
 		rightRedZone = new LabeledText(dialogArea, SWT.NONE);
 		rightRedZone.setLabel(Messages.get().DialChart_RightRed);
 		rightRedZone.setText(Double.toString(config.getRightRedZone()));
@@ -172,6 +173,7 @@ public class Gauge extends PropertyPage
       colorMode.add(Messages.get().Gauge_ZoneColor);
       colorMode.add(Messages.get().Gauge_FixedCustomColor);
       colorMode.add(Messages.get().Gauge_ActiveThresholdColor);
+      colorMode.add("Data source color");
       colorMode.select(config.getColorMode());
       colorMode.addSelectionListener(new SelectionAdapter() {
          @Override

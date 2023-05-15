@@ -64,6 +64,8 @@ public class AbstractChart extends DashboardElementPropertyPage
 	private Button checkShowGrid;
 	private Button checkTranslucent;
 	private Button checkTransposed;
+   private Button checkDoughnutRendering;
+   private Button checkShowTotal;
    private Button checkLogScale;
    private Button checkUseMultipliers;
    private Button checkStacked;
@@ -131,7 +133,7 @@ public class AbstractChart extends DashboardElementPropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 2;
 		title.setLayoutData(gd);
-		
+
       legendPosition = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Legend position"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       legendPosition.add(i18n.tr("Left"));
       legendPosition.add(i18n.tr("Right"));
@@ -219,6 +221,25 @@ public class AbstractChart extends DashboardElementPropertyPage
 			checkTransposed.setLayoutData(gd);
 		}
 
+      if ((config instanceof PieChartConfig) || (config instanceof ScriptedPieChartConfig))
+      {
+         checkDoughnutRendering = new Button(optionsGroup, SWT.CHECK);
+         checkDoughnutRendering.setText(i18n.tr("&Doughnut rendering"));
+         checkDoughnutRendering.setSelection((config instanceof PieChartConfig) ? ((PieChartConfig)config).isDoughnutRendering() : ((ScriptedPieChartConfig)config).isDoughnutRendering());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkDoughnutRendering.setLayoutData(gd);
+
+         checkShowTotal = new Button(optionsGroup, SWT.CHECK);
+         checkShowTotal.setText(i18n.tr("Show &total"));
+         checkShowTotal.setSelection((config instanceof PieChartConfig) ? ((PieChartConfig)config).isShowTotal() : ((ScriptedPieChartConfig)config).isShowTotal());
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         checkShowTotal.setLayoutData(gd);
+      }
+
 		if (config instanceof LineChartConfig)
 		{
 			checkShowGrid = new Button(optionsGroup, SWT.CHECK);
@@ -303,8 +324,7 @@ public class AbstractChart extends DashboardElementPropertyPage
 	      gd.horizontalAlignment = SWT.FILL;
 	      gd.grabExcessHorizontalSpace = true;
 	      yAxisRange.setLayoutData(gd);
-	      yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(),
-	                              config.getMinYScaleValue(), config.getMaxYScaleValue());
+         yAxisRange.setSelection(config.isAutoScale(), config.modifyYBase(), config.getMinYScaleValue(), config.getMaxYScaleValue());
       }
 
       if (!(config instanceof LineChartConfig))
@@ -361,11 +381,21 @@ public class AbstractChart extends DashboardElementPropertyPage
          config.setExtendedLegend(checkExtendedLegend.getSelection());
       }
 
-      if (!(config instanceof PieChartConfig) && !(config instanceof ScriptedPieChartConfig))
+      if (config instanceof PieChartConfig)
+      {
+         ((PieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
+         ((PieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+      }
+      else if (config instanceof ScriptedPieChartConfig)
+      {
+         ((ScriptedPieChartConfig)config).setDoughnutRendering(checkDoughnutRendering.getSelection());
+         ((ScriptedPieChartConfig)config).setShowTotal(checkShowTotal.getSelection());
+      }
+      else
       {
 	      if (!yAxisRange.validate(true))
 	         return false;
-	      
+
    		config.setAutoScale(yAxisRange.isAuto());
    		config.setMinYScaleValue(yAxisRange.getMinY());
          config.setMaxYScaleValue(yAxisRange.getMaxY());
