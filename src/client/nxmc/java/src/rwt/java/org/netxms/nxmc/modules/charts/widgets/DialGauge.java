@@ -43,6 +43,7 @@ public class DialGauge extends GenericGauge
    private static final int SCALE_WIDTH = 3; // In percents
    private static final int COLOR_RING_OFFSET = 2; // In percents
    private static final int COLOR_RING_WIDTH = 5; // In percents
+   private static final int LABEL_TOP_MARGIN = 6;
 
 	private Font[] scaleFonts = null;
 	private Font[] valueFonts = null;
@@ -107,7 +108,7 @@ public class DialGauge extends GenericGauge
 
       if (configuration.areLabelsVisible() && !configuration.areLabelsInside())
 		{
-			rect.height -= gc.textExtent("MMM").y + 4; //$NON-NLS-1$
+         rect.height -= gc.textExtent("MMM").y + LABEL_TOP_MARGIN; //$NON-NLS-1$
 		}
 		if (rect.height > rect.width)
 		{
@@ -251,7 +252,7 @@ public class DialGauge extends GenericGauge
 			}
 			else
 			{
-            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4 - heightAdjustment, true);
+            gc.drawText(dci.getDescription(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + LABEL_TOP_MARGIN - heightAdjustment, true);
 			}
 		}
 	}

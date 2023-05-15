@@ -215,20 +215,20 @@ public class BarGauge extends GenericGauge
     */
    private void drawZone(GC gc, Rectangle rect, double startValue, double endValue, double minValue, double pointValue, RGB color, boolean isTransposed)
    {
-      int start = (int)((startValue - minValue) / pointValue);
-      int points = (int)((endValue - startValue) / pointValue) + 1;
+      float start = (float)((startValue - minValue) / pointValue);
+      float points = (float)((endValue - startValue) / pointValue);
       if (isTransposed)
       {
          gc.setBackground(chart.getColorCache().create(color));
-         gc.fillRectangle(rect.x + start, rect.y, points, rect.height);
+         gc.fillRectangle(rect.x + Math.round(start), rect.y, Math.round(points), rect.height);
       }
       else
       {
          gc.setBackground(chart.getColorCache().create(color));
-         int y = rect.y + rect.height - start - points;
+         float y = rect.y + rect.height - start - points;
          if (y + points >= rect.y + rect.height)
             points--;
-         gc.fillRectangle(rect.x, y, rect.width, points);
+         gc.fillRectangle(rect.x, Math.round(y), rect.width, Math.round(points));
       }
    }
 
