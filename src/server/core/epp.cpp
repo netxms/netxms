@@ -576,6 +576,29 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    xml.append(_T("\t\t\t</alarmCategories>\n\t\t</rule>\n"));
 }
 
+bool EPRule::isConfigValid() const
+{
+   bool valid = true;
+
+   for(int i = 0; i < m_sourceExclusions.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(m_sourceExclusions.get(i));
+      if (object == nullptr)
+      {
+         valid = false;
+      }
+   }
+
+   for(int i = 0; i < m_sources.size(); i++)
+   {
+      shared_ptr<NetObj> object = FindObjectById(m_sources.get(i));
+      if (object == nullptr)
+      {
+         valid = false;
+      }
+   }
+   return valid;
+}
 /**
  * Check if source object's id match to the rule
  */
@@ -1658,6 +1681,24 @@ void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 /**
  * Check if given action is used in policy
  */
+bool EventPolicy::isConfigValid(uint32_t& rInvalidRuleId) const
+{
+   bool bResult = true;
+
+   readLock();
+
+   for(int i = 0; i < m_rules.size(); i++)
+      if (!m_rules.get(i)->isConfigValid())
+      {
+         rInvalidRuleId = m_rules.get(i)->getId() + 1;
+         bResult = false;
+         break;
+      }
+
+   unlock();
+   return bResult;
+}
+
 bool EventPolicy::isActionInUse(uint32_t actionId) const
 {
    bool bResult = false;

@@ -1705,3 +1705,13 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
    '   currentNodeName - currently linked node name'
    );
 
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+	EVENT_CONFIGURATION_ERROR, 'SYS_CONFIGURATION_ERROR', '762c581c-e9bf-11ed-a05b-0242ac120003',
+   EVENT_SEVERITY_MINOR, 1, 
+   'Configuration error in event processing policy rule #%1',
+   'Generated when event processing policy has and error in rule.'   CONCAT CRLF CONCAT
+   'Parameters:'   CONCAT CRLF CONCAT
+   '   ruleId - rule id in event procesing policy'
+   );
