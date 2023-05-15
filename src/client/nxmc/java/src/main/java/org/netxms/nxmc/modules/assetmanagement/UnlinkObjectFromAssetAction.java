@@ -24,9 +24,6 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.DataCollectionTarget;
-import org.netxms.client.objects.Rack;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
@@ -52,7 +49,7 @@ public class UnlinkObjectFromAssetAction extends ObjectAction<AbstractObject>
     */
    public UnlinkObjectFromAssetAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("&Unlink"), viewPlacement, selectionProvider);
+      super(AbstractObject.class, i18n.tr("&Unlink from asset"), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/disconnect.png"));
    }
 
@@ -100,15 +97,12 @@ public class UnlinkObjectFromAssetAction extends ObjectAction<AbstractObject>
       if (selection.isEmpty())
          return false;
 
-      int linkedAssets = 0;
       for(Object e : selection.toList())
       {
-         if ((!(e instanceof Rack) && !(e instanceof DataCollectionTarget)) || (e instanceof Cluster))
+         if (((AbstractObject)e).getAssetId() == 0)
             return false;
-         if (((AbstractObject)e).getAssetId() != 0)
-            linkedAssets++;
       }
 
-      return linkedAssets > 0;
+      return true;
    }
 }

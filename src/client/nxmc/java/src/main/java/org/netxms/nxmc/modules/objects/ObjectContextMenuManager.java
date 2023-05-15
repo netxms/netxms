@@ -386,7 +386,6 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionRemove);
             add(actionForcePolicyInstall);
             add(new Separator());
-            
          }
          if (object instanceof Cluster)
          {
@@ -397,24 +396,29 @@ public class ObjectContextMenuManager extends MenuManager
          if (((object instanceof Rack) || (object instanceof DataCollectionTarget)) && !(object instanceof Cluster))
          {
             add(actionLinkObjectToAsset);
-            add(actionUnlinkObjectFromAsset);
+            if (object.getAssetId() != 0)
+               add(actionUnlinkObjectFromAsset);
             add(new Separator());            
          }
       }
-      else if (actionForcePolicyInstall.isValidForSelection(selection))
+      else
       {
-         add(actionForcePolicyInstall);
-         add(new Separator());
-      }
-      else if (actionUnlinkAssetFromObject.isValidForSelection(selection))
-      {
-         add(actionUnlinkAssetFromObject);
-         add(new Separator());
-      }
-      else if (actionUnlinkObjectFromAsset.isValidForSelection(selection))
-      {
-         add(actionUnlinkObjectFromAsset);
-         add(new Separator());
+         if (actionUnlinkAssetFromObject.isValidForSelection(selection))
+         {
+            add(actionUnlinkAssetFromObject);
+            add(new Separator());
+         }
+         else if (actionUnlinkObjectFromAsset.isValidForSelection(selection))
+         {
+            add(actionUnlinkObjectFromAsset);
+            add(new Separator());
+         }
+
+         if (actionForcePolicyInstall.isValidForSelection(selection))
+         {
+            add(actionForcePolicyInstall);
+            add(new Separator());
+         }
       }
       if (isBindToMenuAllowed(selection))
       {

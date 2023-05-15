@@ -55,7 +55,7 @@ public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
     */
    public LinkObjectToAssetAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("&Link to..."), viewPlacement, selectionProvider);
+      super(AbstractObject.class, i18n.tr("&Link to asset..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/link-objects.png"));
    }
 
@@ -68,7 +68,8 @@ public class LinkObjectToAssetAction extends ObjectAction<AbstractObject>
       final NXCSession session = Registry.getSession();
       if (objects.get(0).getAssetId() != 0)
       {
-         String question = String.format(i18n.tr("\"%s\" object already linked to \"%s\" asset. Are you sure you want to link it another asset?"), objects.get(0).getObjectName(), session.getObjectName(objects.get(0).getAssetId()));
+         String question = String.format(i18n.tr("Object \"%s\" already linked to asset \"%s\". Are you sure you want to link it another asset?"), objects.get(0).getObjectName(),
+               session.getObjectName(objects.get(0).getAssetId()));
          if (!MessageDialogHelper.openConfirm(getShell(), i18n.tr("Confirm Link"), question))
             return;
       }
