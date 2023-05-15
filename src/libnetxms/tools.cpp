@@ -112,6 +112,11 @@ static void OnProcessExit()
 static bool s_coreDumpOnCRTError = false;
 
 /**
+ * Last CRT error report
+ */
+static time_t s_lastCRTErrorReport = 0;
+
+/**
  * Enable/disable process fatal exit on CRT error
  */
 void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable)
@@ -125,13 +130,18 @@ void LIBNETXMS_EXPORTABLE EnableFatalExitOnCRTError(bool enable)
 static void InvalidParameterHandler(const wchar_t *expression, const wchar_t *function, const wchar_t *file, unsigned int line, uintptr_t reserved)
 {
 #ifdef _DEBUG
-   nxlog_write(NXLOG_ERROR, _T("CRT error: function %s in %s:%u (%s)"), function, file, line, expression);
+   nxlog_write_tag(NXLOG_ERROR, _T("crt"), _T("CRT error: function %s in %s:%u (%s)"), function, file, line, expression);
    if (IsDebuggerPresent())
       DebugBreak();
    else
       FatalExit(99);
 #else
-   nxlog_write(NXLOG_ERROR, _T("CRT error detected"));
+   time_t now = time(nullptr);
+   if (now - s_lastCRTErrorReport > 600)
+   {
+      nxlog_write_tag(NXLOG_ERROR, _T("crt"), _T("CRT error detected (IsDebuggerPresent=%s, CoreDumpOnCRTError=%s)"), IsDebuggerPresent() ? _T("true") : _T("false"), s_coreDumpOnCRTError ? _T("true") : _T("false"));
+      s_lastCRTErrorReport = now;
+   }
    if (IsDebuggerPresent())
    {
       DebugBreak();
@@ -141,6 +151,7 @@ static void InvalidParameterHandler(const wchar_t *expression, const wchar_t *fu
       char *p = nullptr;
       *p = 'X';
    }
+
 #endif
 }
 
@@ -782,9 +793,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 #endif
    if (_tcsftime(temp, MAX_PATH, name, ltm) <= 0)
    {
-      if (name != buffer)
-         _tcslcpy(buffer, name, bufSize);
-      return nullptr;
+      _tcslcpy(temp, name, MAX_PATH);
    }
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
