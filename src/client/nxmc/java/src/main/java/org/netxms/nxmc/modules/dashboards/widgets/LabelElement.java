@@ -30,12 +30,16 @@ import org.netxms.nxmc.modules.dashboards.config.LabelConfig;
 import org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Dashboard label element
  */
 public class LabelElement extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(LabelElement.class);
+
 	private LabelConfig config; 
 	private Label label;
 	private Font font;
@@ -54,7 +58,7 @@ public class LabelElement extends ElementWidget
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
 			config = new LabelConfig();
 		}
 

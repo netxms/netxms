@@ -101,7 +101,7 @@ public class ViewRefreshController implements ViewStateListener
    {
       if (disposed)
          return;
-      
+
       view.removeStateListener(this);
       display.timerExec(-1, timer);
       disposed = true;
@@ -133,6 +133,7 @@ public class ViewRefreshController implements ViewStateListener
    @Override
    public void viewClosed(View view)
    {
-      dispose();
+      // Do not call dispose from within view state change handler as it may lead to concurrent modofication of view's listener set
+      display.asyncExec(() -> dispose());
    }
 }
