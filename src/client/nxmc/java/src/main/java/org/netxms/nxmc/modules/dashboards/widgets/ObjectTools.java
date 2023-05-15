@@ -43,12 +43,16 @@ import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.modules.objecttools.ObjectToolExecutor;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.tools.ColorConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * "Object tools" dashboard element
  */
 public class ObjectTools extends ElementWidget
 {
+   private static final Logger logger = LoggerFactory.getLogger(ObjectTools.class);
+
    private ObjectToolsConfig config;
    
    /**
@@ -66,7 +70,7 @@ public class ObjectTools extends ElementWidget
       }
       catch(Exception e)
       {
-         e.printStackTrace();
+         logger.error("Cannot parse dashboard element configuration", e);
          config = new ObjectToolsConfig();
       }
 
