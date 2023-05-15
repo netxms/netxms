@@ -43,6 +43,7 @@ import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
 import org.eclipse.gef4.zest.core.widgets.IDecorationFigure;
 import org.eclipse.gef4.zest.core.widgets.IDecorationLayer;
+import org.eclipse.gef4.zest.core.widgets.ZestStyles;
 import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
@@ -120,7 +121,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	 */
    public ExtendedGraphViewer(Composite composite, int style, View view)
 	{
-		super(composite, style);
+      super(composite, style | ZestStyles.GESTURES_DISABLED);
 		
       this.view = view;
 

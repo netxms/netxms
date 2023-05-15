@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.netxms.nxmc.modules.networkmaps.propertypages;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -43,6 +42,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.dialogs.SelectDciDialog;
@@ -55,7 +55,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * DCI network map link data source property page
  */
-public class LinkDataSources extends PreferencePage
+public class LinkDataSources extends PropertyPage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(LinkDataSources.class);
 
@@ -297,7 +297,7 @@ public class LinkDataSources extends PreferencePage
     */
    private void editItem()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
       SingleDciConfig dci = (SingleDciConfig)selection.getFirstElement();
       if (dci == null)
          return;
@@ -314,7 +314,7 @@ public class LinkDataSources extends PreferencePage
     */
    private void deleteItems()
    {
-      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
       for(Object o : selection.toList())
          dciList.remove(o);
       viewer.setInput(dciList.toArray());
@@ -325,7 +325,7 @@ public class LinkDataSources extends PreferencePage
     */
    private void moveUp()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() == 1)
       {
          Object element = selection.getFirstElement();
@@ -344,7 +344,7 @@ public class LinkDataSources extends PreferencePage
     */
    private void moveDown()
    {
-      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() == 1)
       {
          Object element = selection.getFirstElement();
@@ -357,34 +357,15 @@ public class LinkDataSources extends PreferencePage
          }
       }
    }
-   
+
    /**
-    * Apply changes
-    * 
-    * @param isApply true if update operation caused by "Apply" button
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
-   private boolean applyChanges(final boolean isApply)
+   @Override
+   protected boolean applyChanges(final boolean isApply)
    {
       object.setDciList(dciList);
       object.update();
       return true;
-   }
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-   @Override
-   public boolean performOk()
-   {
-      return applyChanges(false);
-   }
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-   @Override
-   protected void performApply()
-   {
-      applyChanges(true);
    }
 }
