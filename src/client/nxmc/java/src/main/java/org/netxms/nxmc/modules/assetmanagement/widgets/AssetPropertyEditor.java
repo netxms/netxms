@@ -20,7 +20,10 @@ package org.netxms.nxmc.modules.assetmanagement.widgets;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 import org.eclipse.swt.SWT;
@@ -28,6 +31,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
+import org.netxms.base.Pair;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.nxmc.base.widgets.LabeledCombo;
@@ -54,6 +58,8 @@ public class AssetPropertyEditor extends Composite
 
    private final I18n i18n = LocalizationHelper.getI18n(AssetPropertyEditor.class);
 
+   private List<Pair<String, String>> enums = new ArrayList<Pair<String, String>>();
+   
    private AssetAttribute attribute;
    private Control editorControl;
    private LabeledSpinner spinner;
@@ -90,7 +96,17 @@ public class AssetPropertyEditor extends Composite
             combo = new LabeledCombo(this, SWT.NONE);
             combo.setLabel(label);
             for(Entry<String, String> element : attribute.getEnumValues().entrySet())
-               combo.add(element.getValue().isBlank() ? element.getKey() : element.getValue());
+               enums.add(new Pair(element.getValue().isBlank() ? element.getKey() : element.getValue(), element.getKey()));
+            enums.sort(new Comparator<Pair<String, String>>() {
+
+               @Override
+               public int compare(Pair<String, String> arg0, Pair<String, String> arg1)
+               {
+                  return arg0.getFirst().compareToIgnoreCase(arg1.getFirst());
+               }
+            });
+            for (Pair<String, String> element : enums)
+               combo.add(element.getFirst());
             editorControl = combo.getControl();
             break;
          case INTEGER:
@@ -141,9 +157,9 @@ public class AssetPropertyEditor extends Composite
             break;
          case ENUM:
             int currentIndex = 0;
-            for(Entry<String, String> element : attribute.getEnumValues().entrySet())
+            for(Pair<String, String> element : enums)
             {
-               if (value != null && value.equals(element.getKey()))
+               if (value != null && value.equals(element.getSecond()))
                   break;
                currentIndex++;
             }
@@ -335,7 +351,7 @@ public class AssetPropertyEditor extends Composite
          case ENUM:
             if (combo.getSelectionIndex() == -1)
                return "";
-            return (String)attribute.getEnumValues().keySet().toArray()[combo.getSelectionIndex()];
+            return (String)enums.get(combo.getSelectionIndex()).getSecond();
          case INTEGER:
             return Integer.toString(spinner.getSelection());
          case OBJECT_REFERENCE:
