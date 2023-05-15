@@ -2378,7 +2378,9 @@ int main(int argc, char *argv[])
 
          // Configure exception handling
          if (s_startupFlags & SF_FATAL_EXIT_ON_CRT_ERROR)
+         {
             EnableFatalExitOnCRTError(true);
+         }
          if (s_startupFlags & SF_CATCH_EXCEPTIONS)
          {
             TCHAR pipeName[64];
@@ -2408,7 +2410,7 @@ int main(int argc, char *argv[])
                {
                   static google_breakpad::CustomInfoEntry clientInfoEntries[] = { { L"ProcessName", L"nxagentd" } };
                   static google_breakpad::CustomClientInfo clientInfo = { clientInfoEntries, 1 };
-                  exceptionHandler = new google_breakpad::ExceptionHandler(s_dumpDirectory, nullptr, nullptr, nullptr, google_breakpad::ExceptionHandler::HANDLER_ALL,
+                  exceptionHandler = new google_breakpad::ExceptionHandler(s_dumpDirectory, nullptr, nullptr, nullptr, google_breakpad::ExceptionHandler::HANDLER_EXCEPTION | google_breakpad::ExceptionHandler::HANDLER_PURECALL,
                      static_cast<MINIDUMP_TYPE>(((s_startupFlags & SF_WRITE_FULL_DUMP) ? MiniDumpWithFullMemory : MiniDumpNormal) | MiniDumpWithHandleData | MiniDumpWithProcessThreadData),
                      pipeName, &clientInfo);
                }
