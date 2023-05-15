@@ -74,7 +74,7 @@ public class PerfTabGraphSettings
    private String color = "0x00C000"; //$NON-NLS-1$
 
    @Element(required = false)
-   private boolean automaticColor = false;
+   private boolean automaticColor = true;
 
    @Element(required = false)
    private String title = ""; //$NON-NLS-1$

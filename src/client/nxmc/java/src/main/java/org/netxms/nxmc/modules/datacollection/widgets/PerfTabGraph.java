@@ -55,7 +55,7 @@ import org.netxms.nxmc.modules.charts.widgets.Chart;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView.ChartActionType;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView.HistoricalChartOwner;
-import org.netxms.nxmc.modules.datacollection.views.helpers.PerfTabGraphSettings;
+import org.netxms.nxmc.modules.datacollection.views.helpers.PerfViewGraphSettings;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.tools.ViewRefreshController;
 import org.netxms.nxmc.tools.VisibilityValidator;
@@ -81,13 +81,13 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
    private Action actionAdjustY;
    private Action actionAdjustBoth;
    private Action[] presetActions;
-   private PerfTabGraphSettings settings;
+   private PerfViewGraphSettings settings;
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings, View view, VisibilityValidator validator)
+	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfViewGraphSettings settings, View view, VisibilityValidator validator)
 	{
 		super(parent, SWT.BORDER);
 		this.nodeId = nodeId;
@@ -216,7 +216,7 @@ public class PerfTabGraph extends DashboardComposite implements HistoricalChartO
 	 * @param dci
 	 * @param settings
 	 */
-	public void addItem(PerfTabDci dci, PerfTabGraphSettings settings)
+	public void addItem(PerfTabDci dci, PerfViewGraphSettings settings)
 	{
       chart.getConfiguration().setLegendVisible(true);
 		if (settings.isExtendedLegend())

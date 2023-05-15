@@ -67,7 +67,7 @@ import org.netxms.nxmc.modules.datacollection.propertypages.General;
 import org.netxms.nxmc.modules.datacollection.propertypages.InstanceDiscovery;
 import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptions;
 import org.netxms.nxmc.modules.datacollection.propertypages.OtherOptionsTable;
-import org.netxms.nxmc.modules.datacollection.propertypages.PerfTab;
+import org.netxms.nxmc.modules.datacollection.propertypages.PerformanceView;
 import org.netxms.nxmc.modules.datacollection.propertypages.SNMP;
 import org.netxms.nxmc.modules.datacollection.propertypages.TableColumns;
 import org.netxms.nxmc.modules.datacollection.propertypages.TableThresholds;
@@ -405,7 +405,7 @@ public abstract class BaseDataCollectionView extends ObjectView
          pm.addToRoot(new PreferenceNode("thresholds", new TableThresholds(dce)));            
       pm.addToRoot(new PreferenceNode("instanceDiscovery", new InstanceDiscovery(dce)));
       if (dce.getObject() instanceof DataCollectionItem)
-         pm.addToRoot(new PreferenceNode("performanceTab", new PerfTab(dce)));
+         pm.addToRoot(new PreferenceNode("performanceTab", new PerformanceView(dce)));
       pm.addToRoot(new PreferenceNode("accessControl", new AccessControl(dce)));
       pm.addToRoot(new PreferenceNode("snmp", new SNMP(dce)));
       if (dce.getObject() instanceof DataCollectionItem)

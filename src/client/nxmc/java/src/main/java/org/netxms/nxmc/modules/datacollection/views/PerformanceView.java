@@ -39,7 +39,7 @@ import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.datacollection.views.helpers.PerfTabGraphSettings;
+import org.netxms.nxmc.modules.datacollection.views.helpers.PerfViewGraphSettings;
 import org.netxms.nxmc.modules.datacollection.widgets.PerfTabGraph;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -236,12 +236,12 @@ public class PerformanceView extends ObjectView
          chart.dispose();
       charts.clear();
 
-      List<PerfTabGraphSettings> settings = new ArrayList<PerfTabGraphSettings>(items.size());
+      List<PerfViewGraphSettings> settings = new ArrayList<PerfViewGraphSettings>(items.size());
       for(PerfTabDci dci : items)
       {
          try
          {
-            PerfTabGraphSettings s = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
+            PerfViewGraphSettings s = PerfViewGraphSettings.createFromXml(dci.getPerfTabSettings());
             if (s.isEnabled())
             {
                s.setRuntimeDciInfo(dci);
@@ -254,9 +254,9 @@ public class PerformanceView extends ObjectView
       }
 
       // Sort DCIs: by group name, then by order number, then alphabetically
-      Collections.sort(settings, new Comparator<PerfTabGraphSettings>() {
+      Collections.sort(settings, new Comparator<PerfViewGraphSettings>() {
          @Override
-         public int compare(PerfTabGraphSettings o1, PerfTabGraphSettings o2)
+         public int compare(PerfViewGraphSettings o1, PerfViewGraphSettings o2)
          {
             int result = Integer.signum(o1.getOrder() - o2.getOrder());
             if (result == 0)
@@ -273,7 +273,7 @@ public class PerformanceView extends ObjectView
          }
       });
 
-      for(PerfTabGraphSettings s : settings)
+      for(PerfViewGraphSettings s : settings)
       {
          String groupName = s.getGroupName();
          PerfTabGraph chart = groupName.isEmpty() ? null : charts.get(groupName);

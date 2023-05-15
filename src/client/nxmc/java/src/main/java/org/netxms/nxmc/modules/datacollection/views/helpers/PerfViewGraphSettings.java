@@ -29,10 +29,10 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
 /**
- * Settings for performance tab graph
+ * Settings for performance view graph
  */
 @Root(name = "config", strict = false)
-public class PerfTabGraphSettings
+public class PerfViewGraphSettings
 {
    @Element(required = false)
    private boolean enabled = false;
@@ -71,16 +71,16 @@ public class PerfTabGraphSettings
    private int type = 1;
 
    @Element(required = false)
-   private String color = "0x00C000"; //$NON-NLS-1$
+   private String color = "0x00C000";
 
    @Element(required = false)
-   private boolean automaticColor = false;
+   private boolean automaticColor = true;
 
    @Element(required = false)
-   private String title = ""; //$NON-NLS-1$
+   private String title = "";
 
    @Element(required = false)
-   private String name = ""; //$NON-NLS-1$
+   private String name = "";
 
    @Element(required = false)
    private boolean showThresholds = false;
@@ -112,10 +112,10 @@ public class PerfTabGraphSettings
     * @return deserialized object
     * @throws Exception if the object cannot be fully deserialized
     */
-   public static PerfTabGraphSettings createFromXml(final String xml) throws Exception
+   public static PerfViewGraphSettings createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(PerfTabGraphSettings.class, xml);
+      return serializer.read(PerfViewGraphSettings.class, xml);
    }
 
    /**

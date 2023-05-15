@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,21 +33,21 @@ import org.netxms.nxmc.base.widgets.ExtendedColorSelector;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
-import org.netxms.nxmc.modules.datacollection.views.helpers.PerfTabGraphSettings;
+import org.netxms.nxmc.modules.datacollection.views.helpers.PerfViewGraphSettings;
 import org.netxms.nxmc.modules.datacollection.widgets.YAxisRangeEditor;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * DCI property page for Performance Tab settings
+ * DCI property page for Performance View settings
  */
-public class PerfTab extends AbstractDCIPropertyPage
+public class PerformanceView extends AbstractDCIPropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(PerfTab.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(PerformanceView.class);
    
 	private DataCollectionItem dci;
-	private PerfTabGraphSettings settings;
+	private PerfViewGraphSettings settings;
 	private Button checkShow;
 	private Button checkLogScale;
    private Button checkStacked;
@@ -66,10 +66,15 @@ public class PerfTab extends AbstractDCIPropertyPage
    private Spinner timeRange;
    private Combo timeUnits;
 	private YAxisRangeEditor yAxisRange;
-	
-   public PerfTab(DataCollectionObjectEditor editor)
+
+   /**
+    * Create property page.
+    *
+    * @param editor DCI editor object
+    */
+   public PerformanceView(DataCollectionObjectEditor editor)
    {
-      super(i18n.tr("Performance Tab"), editor);
+      super(i18n.tr("Performance View"), editor);
    }
 
    /**
@@ -80,16 +85,16 @@ public class PerfTab extends AbstractDCIPropertyPage
 	{
 	   Composite dialogArea = (Composite)super.createContents(parent);
 		dci = editor.getObjectAsItem();
-		
+
 		try
 		{
-			settings = PerfTabGraphSettings.createFromXml(dci.getPerfTabSettings());
+			settings = PerfViewGraphSettings.createFromXml(dci.getPerfTabSettings());
 		}
 		catch(Exception e)
 		{
-			settings = new PerfTabGraphSettings();	// Create default empty settings
+			settings = new PerfViewGraphSettings();	// Create default empty settings
 		}
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginWidth = 0;
@@ -98,12 +103,12 @@ public class PerfTab extends AbstractDCIPropertyPage
       dialogArea.setLayout(layout);
 
       checkShow = new Button(dialogArea, SWT.CHECK);
-      checkShow.setText(i18n.tr("&Show on performance tab"));
+      checkShow.setText(i18n.tr("&Show in performance view"));
       checkShow.setSelection(settings.isEnabled());
       GridData gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       checkShow.setLayoutData(gd);
-      
+
       title = new LabeledText(dialogArea, SWT.NONE);
       title.setLabel(i18n.tr("Title"));
       title.setText(settings.getTitle());
@@ -130,7 +135,7 @@ public class PerfTab extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.horizontalSpan = layout.numColumns;
       name.setLayoutData(gd);
-      
+
       Group timeGroup = new Group(dialogArea, SWT.NONE);
       timeGroup.setText(i18n.tr("Time Period"));
       GridLayout timeGroupLayout = new GridLayout();
@@ -142,7 +147,7 @@ public class PerfTab extends AbstractDCIPropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       timeGroup.setLayoutData(gd);
-      
+
       timeRange = WidgetHelper.createLabeledSpinner(timeGroup, SWT.BORDER, i18n.tr("Time interval"), 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeRange.setSelection(settings.getTimeRange());
 
@@ -166,11 +171,11 @@ public class PerfTab extends AbstractDCIPropertyPage
       checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
       checkShowThresholds.setText(i18n.tr("&Show thresholds on graph"));
       checkShowThresholds.setSelection(settings.isShowThresholds());
-      
+
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
       checkLogScale.setText(i18n.tr("Logarithmic scale"));
       checkLogScale.setSelection(settings.isLogScaleEnabled());
-      
+
       checkStacked = new Button(optionsGroup, SWT.CHECK);
       checkStacked.setText(i18n.tr("&Stacked"));
       checkStacked.setSelection(settings.isStacked());
@@ -190,7 +195,7 @@ public class PerfTab extends AbstractDCIPropertyPage
       checkInvertValues = new Button(optionsGroup, SWT.CHECK);
       checkInvertValues.setText(i18n.tr("&Inverted values"));
       checkInvertValues.setSelection(settings.isInvertedValues());
-      
+
       checkTranslucent = new Button(optionsGroup, SWT.CHECK);
       checkTranslucent.setText(i18n.tr("&Translucent"));
       checkTranslucent.setSelection(settings.isTranslucent());
@@ -217,12 +222,11 @@ public class PerfTab extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);
-      yAxisRange.setSelection(settings.isAutoScale(), settings.modifyYBase(),
-                              settings.getMinYScaleValue(), settings.getMaxYScaleValue());
-      
+      yAxisRange.setSelection(settings.isAutoScale(), settings.modifyYBase(), settings.getMinYScaleValue(), settings.getMaxYScaleValue());
+
       return dialogArea;
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -288,7 +292,7 @@ public class PerfTab extends AbstractDCIPropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		PerfTabGraphSettings defaults = new PerfTabGraphSettings();
+		PerfViewGraphSettings defaults = new PerfViewGraphSettings();
 		checkShow.setSelection(defaults.isEnabled());
 		title.setText(defaults.getTitle());
 		color.setColorValue(ColorConverter.rgbFromInt(defaults.getColorAsInt()));
