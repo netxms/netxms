@@ -347,6 +347,13 @@ void NotificationChannel::workerThread()
       if (notification == INVALID_POINTER_VALUE)
          break;
 
+      if (IsShutdownInProgress())
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Message to \"%s\" via channel %s dropped due to server shutdown"), notification->getRecipient(), m_name);
+         delete notification;
+         continue;
+      }
+
       m_messageCount++;
       m_lastMessageTime = time(nullptr);
       m_driverLock.lock();
@@ -361,7 +368,8 @@ void NotificationChannel::workerThread()
                break;
 
             nxlog_debug_tag(DEBUG_TAG, 4, _T("Driver error for channel %s, retrying in %d seconds, %d retries left"), m_name, result, retryCount);
-            SleepAndCheckForShutdown(result);
+            if (SleepAndCheckForShutdown(result))
+               break;
          }
          while (--retryCount > 0);
 
