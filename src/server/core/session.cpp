@@ -16697,11 +16697,10 @@ void ClientSession::setAssetProperty(const NXCPMessage& request)
             json_t *oldObjectValues = object->toJson();
             SharedString value = request.getFieldAsSharedString(VID_VALUE);
             SharedString oldValue = static_cast<Asset&>(*object).getProperty(name);
-            std::pair<uint32_t, String> result = static_cast<Asset&>(*object).setProperty(name, value);
+            std::pair<uint32_t, String> result = static_cast<Asset&>(*object).setProperty(name, value, m_dwUserId);
             if (result.first == RCC_SUCCESS)
             {
                json_t *newObjectValues = object->toJson();
-               WriteAssetChangeLog(object->getId(), name, oldValue.isNull() ? AssetOperation::Create : AssetOperation::Update, oldValue, value, m_dwUserId, static_cast<Asset&>(*object).getLinkedObjectId());
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldObjectValues, newObjectValues, _T("Asset property %s changed"), name.cstr());
                json_decref(newObjectValues);
             }
@@ -16821,8 +16820,24 @@ void ClientSession::linkAsset(const NXCPMessage& request)
          {
             if (IsValidAssetLinkTargetClass(newTarget->getObjectClass()))
             {
-               LinkAsset(asset.get(), newTarget.get(), this);
-               response.setField(VID_RCC, RCC_SUCCESS);
+               if (request.getFieldAsBoolean(VID_UPDATE_IDENTIFICATION))
+               {
+                  std::pair<uint32_t, String> result = UpdateIdentification(asset.get(), newTarget.get());
+                  if (result.first == RCC_SUCCESS)
+                  {
+                     LinkAsset(asset.get(), newTarget.get(), this);
+                  }
+                  else
+                  {
+                     response.setField(VID_ERROR_TEXT, result.second);
+                  }
+                  response.setField(VID_RCC, result.first);
+               }
+               else
+               {
+                  LinkAsset(asset.get(), newTarget.get(), this);
+                  response.setField(VID_RCC, RCC_SUCCESS);
+               }
             }
             else
             {

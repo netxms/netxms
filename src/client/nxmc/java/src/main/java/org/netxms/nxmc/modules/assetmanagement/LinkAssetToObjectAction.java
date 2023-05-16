@@ -86,7 +86,7 @@ public class LinkAssetToObjectAction extends ObjectAction<Asset>
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            session.linkAsset(asset.getObjectId(), object.getObjectId());
+            session.linkAsset(asset.getObjectId(), object.getObjectId(), true);
             runInUIThread(new Runnable() {
                @Override
                public void run()

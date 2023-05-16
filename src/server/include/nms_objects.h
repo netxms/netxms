@@ -4335,7 +4335,7 @@ public:
    uint32_t getLinkedObjectId() const { return m_linkedObjectId; }
    SharedString getProperty(const TCHAR *attr);
 
-   std::pair<uint32_t, String> setProperty(const TCHAR *attr, const TCHAR *value);
+   std::pair<uint32_t, String> setProperty(const TCHAR *attr, const TCHAR *value, uint32_t userId);
    uint32_t deleteProperty(const TCHAR *attr);
    void deleteCachedProperty(const TCHAR *attr);
 

@@ -167,6 +167,7 @@ bool IsBooleanAssetProperty(const TCHAR *name);
 bool IsValidAssetPropertyName(const TCHAR *name);
 unique_ptr<StringSet> GetAssetAttributeNames(bool mandatoryOnly = false);
 unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofill(const Asset& asset, const shared_ptr<NetObj>& linkedObject);
+std::pair<uint32_t, String> UpdateIdentification(Asset *asset, NetObj *object);
 void LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
 void UnlinkAsset(Asset *asset, ClientSession *session);
 void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed = true);

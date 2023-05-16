@@ -269,14 +269,18 @@ SharedString Asset::getProperty(const TCHAR *attr)
 /**
  * Set property
  */
-std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *value)
+std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *value, uint32_t userId)
 {
    std::pair<uint32_t, String> result = ValidateAssetPropertyValue(attr, value);
    if (result.first == RCC_SUCCESS)
    {
       lockProperties();
-      bool changed = m_properties.get(attr) != nullptr ? _tcscmp(m_properties.get(attr), value) : true;
+      SharedString oldValue = m_properties.get(attr);
+      bool changed = oldValue != nullptr ? _tcscmp(oldValue, value) : true;
       m_properties.set(attr, value);
+
+      if (changed)
+         WriteAssetChangeLog(m_id, attr, oldValue != nullptr ? AssetOperation::Create : AssetOperation::Update, oldValue, value, userId, m_linkedObjectId);
       unlockProperties();
       if (changed)
          setModified(MODIFY_ASSET_PROPERTIES);
@@ -388,10 +392,10 @@ void Asset::dumpProperties(ServerConsole *console) const
    unlockProperties();
 }
 
-void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, shared_ptr<NetObj> object, const StringMap *propertiesCopy, const TCHAR *newValue)
+static inline void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, shared_ptr<NetObj> object, const TCHAR *newValue)
 {
    SharedString oldValue = asset->getProperty(context->name);
-   std::pair<uint32_t, String> result = asset->setProperty(context->name, newValue);
+   std::pair<uint32_t, String> result = asset->setProperty(context->name, newValue, 0);
    if ((result.first != RCC_SUCCESS) && (result.first != RCC_UNKNOWN_ATTRIBUTE))
    {
       nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 4, _T("Asset::autoFillProperties(%s [%u]): automatic update of asset management attribute \"%s\" with value \"%s\" failed (%s)"),
@@ -400,14 +404,10 @@ void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, s
          .param(_T("name"), context->name)
          .param(_T("displayName"), GetAssetAttributeDisplayName(context->name))
          .param(_T("dataType"), static_cast<int32_t>(context->dataType))
-         .param(_T("currValue"), propertiesCopy->get(context->name))
+         .param(_T("currValue"), oldValue)
          .param(_T("newValue"), newValue)
          .param(_T("reason"), result.second)
          .post();
-   }
-   if (result.first == RCC_SUCCESS && _tcscmp(oldValue, newValue))
-   {
-      WriteAssetChangeLog(asset->getId(), context->name, oldValue.isNull() ? AssetOperation::Create : AssetOperation::Update, oldValue, newValue, 0, asset->getLinkedObjectId());
    }
 }
 
@@ -448,7 +448,7 @@ void Asset::autoFillProperties()
             NXSL_Value *result = vm->getResult();
             if (!result->isNull())
             {
-               UpdateProperty(context, this, object, &propertiesCopy, result->getValueAsCString());
+               UpdateProperty(context, this, object, result->getValueAsCString());
             }
             else
             {
@@ -473,7 +473,7 @@ void Asset::autoFillProperties()
       {
          SharedString oldValue = getProperty(context->name);
          if (oldValue.isEmpty())
-            UpdateProperty(context, this, object, &propertiesCopy, context->newValue);
+            UpdateProperty(context, this, object, context->newValue);
       }
    }
    nxlog_debug_tag(DEBUG_TAG_ASSET_MGMT, 6, _T("Asset::autoFillProperties(%s [%u]): asset auto fill completed"), m_name, m_id);

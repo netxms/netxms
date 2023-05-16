@@ -976,6 +976,73 @@ unique_ptr<ObjectArray<AssetPropertyAutofillContext>> PrepareAssetPropertyAutofi
 }
 
 /**
+ * Get serial number for object
+ */
+static inline SharedString GetSerialNumber(const NetObj& object)
+{
+   switch(object.getObjectClass())
+   {
+      case OBJECT_ACCESSPOINT:
+         return SharedString(static_cast<const AccessPoint&>(object).getSerialNumber());
+      case OBJECT_NODE:
+         return static_cast<const Node&>(object).getSerialNumber();
+      case OBJECT_SENSOR:
+         return SharedString(static_cast<const Sensor&>(object).getSerialNumber());
+   }
+   return SharedString();
+}
+
+/**
+ * Get MAC address for object
+ */
+static inline MacAddress GetMacAddress(const NetObj& object)
+{
+   switch(object.getObjectClass())
+   {
+      case OBJECT_ACCESSPOINT:
+         return static_cast<const AccessPoint&>(object).getMacAddr();
+      case OBJECT_NODE:
+         return static_cast<const Node&>(object).getPrimaryMacAddress();
+      case OBJECT_SENSOR:
+         return static_cast<const Sensor&>(object).getMacAddress();
+   }
+   return MacAddress();
+}
+
+/**
+ * Update identification fileds for asset: Serial and MAC address
+ */
+std::pair<uint32_t, String> UpdateIdentification(Asset *asset, NetObj *object)
+{
+   TCHAR serialAttributeName[MAX_OBJECT_NAME] = _T("");
+   TCHAR macAttributeName[MAX_OBJECT_NAME] = _T("");
+   s_schemaLock.readLock();
+   for (KeyValuePair<AssetAttribute> *a : s_schema)
+   {
+      if (a->value->getSystemType() == AMSystemType::Serial)
+         _tcslcpy(serialAttributeName, a->key, MAX_OBJECT_NAME);
+      if (a->value->getSystemType() == AMSystemType::MacAddress)
+         _tcslcpy(macAttributeName, a->key, MAX_OBJECT_NAME);
+      if ((serialAttributeName[0] != 0) && (macAttributeName[0] != 0))
+         break;
+   }
+   s_schemaLock.unlock();
+
+   SharedString serialNumber = GetSerialNumber(*object);
+   MacAddress macAddress = GetMacAddress(*object);
+   std::pair<uint32_t, String> result;
+   if ((serialAttributeName[0] != 0) && !serialNumber.isEmpty())
+   {
+      return asset->setProperty(serialAttributeName, serialNumber, 0);
+   }
+   else if ((macAttributeName[0] != 0) &&  macAddress.isValid())
+   {
+      return asset->setProperty(macAttributeName, macAddress.toString(), 0);
+   }
+   return std::pair<uint32_t, String>(RCC_SUCCESS, _T(""));
+}
+
+/**
  * Link asset to object
  */
 void LinkAsset(Asset *asset, NetObj *object, ClientSession *session)
@@ -1030,40 +1097,6 @@ void UnlinkAsset(Asset *asset, ClientSession *session)
          session->writeAuditLog(AUDIT_OBJECTS, true, asset->getId(), _T("Link with object %s [%u] removed"), object->getName(), object->getId());
       }
    }
-}
-
-/**
- * Get serial number for object
- */
-static inline SharedString GetSerialNumber(const NetObj& object)
-{
-   switch(object.getObjectClass())
-   {
-      case OBJECT_ACCESSPOINT:
-         return SharedString(static_cast<const AccessPoint&>(object).getSerialNumber());
-      case OBJECT_NODE:
-         return static_cast<const Node&>(object).getSerialNumber();
-      case OBJECT_SENSOR:
-         return SharedString(static_cast<const Sensor&>(object).getSerialNumber());
-   }
-   return SharedString();
-}
-
-/**
- * Get MAC address for object
- */
-static inline MacAddress GetMacAddress(const NetObj& object)
-{
-   switch(object.getObjectClass())
-   {
-      case OBJECT_ACCESSPOINT:
-         return static_cast<const AccessPoint&>(object).getMacAddr();
-      case OBJECT_NODE:
-         return static_cast<const Node&>(object).getPrimaryMacAddress();
-      case OBJECT_SENSOR:
-         return static_cast<const Sensor&>(object).getMacAddress();
-   }
-   return MacAddress();
 }
 
 /**

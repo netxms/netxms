@@ -13897,14 +13897,16 @@ public class NXCSession
     * 
     * @param assetId asset object ID
     * @param objectId other object ID
+    * @param updateIdentification if identification filed (serial or MAC address should be updated on link)
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void linkAsset(long assetId, long objectId) throws IOException, NXCException
+   public void linkAsset(long assetId, long objectId, boolean updateIdentification) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LINK_ASSET);
       msg.setFieldUInt32(NXCPCodes.VID_ASSET_ID, assetId);
       msg.setFieldUInt32(NXCPCodes.VID_OBJECT_ID, objectId);
+      msg.setField(NXCPCodes.VID_UPDATE_IDENTIFICATION, updateIdentification);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
