@@ -275,12 +275,11 @@ std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *v
    if (result.first == RCC_SUCCESS)
    {
       lockProperties();
-      SharedString oldValue = m_properties.get(attr);
-      bool changed = oldValue != nullptr ? _tcscmp(oldValue, value) : true;
+      const TCHAR *oldValue = m_properties.get(attr);
+      bool changed = (oldValue != nullptr) ? (_tcscmp(oldValue, value) != 0) : true;
       m_properties.set(attr, value);
-
       if (changed)
-         WriteAssetChangeLog(m_id, attr, oldValue != nullptr ? AssetOperation::Create : AssetOperation::Update, oldValue, value, userId, m_linkedObjectId);
+         WriteAssetChangeLog(m_id, attr, (oldValue != nullptr) ? AssetOperation::Create : AssetOperation::Update, oldValue, value, userId, m_linkedObjectId);
       unlockProperties();
       if (changed)
          setModified(MODIFY_ASSET_PROPERTIES);
@@ -392,6 +391,9 @@ void Asset::dumpProperties(ServerConsole *console) const
    unlockProperties();
 }
 
+/**
+ * Update asset property
+ */
 static inline void UpdateProperty(const AssetPropertyAutofillContext *context, Asset *asset, shared_ptr<NetObj> object, const TCHAR *newValue)
 {
    SharedString oldValue = asset->getProperty(context->name);

@@ -1010,9 +1010,9 @@ static inline MacAddress GetMacAddress(const NetObj& object)
 }
 
 /**
- * Update identification fileds for asset: Serial and MAC address
+ * Update identification fields for asset (serial number and MAC address)
  */
-std::pair<uint32_t, String> UpdateIdentification(Asset *asset, NetObj *object)
+std::pair<uint32_t, String> UpdateAssetIdentification(Asset *asset, NetObj *object, uint32_t userId)
 {
    TCHAR serialAttributeName[MAX_OBJECT_NAME] = _T("");
    TCHAR macAttributeName[MAX_OBJECT_NAME] = _T("");
@@ -1028,17 +1028,20 @@ std::pair<uint32_t, String> UpdateIdentification(Asset *asset, NetObj *object)
    }
    s_schemaLock.unlock();
 
-   SharedString serialNumber = GetSerialNumber(*object);
-   MacAddress macAddress = GetMacAddress(*object);
    std::pair<uint32_t, String> result;
+
+   SharedString serialNumber = GetSerialNumber(*object);
    if ((serialAttributeName[0] != 0) && !serialNumber.isEmpty())
    {
-      return asset->setProperty(serialAttributeName, serialNumber, 0);
+      return asset->setProperty(serialAttributeName, serialNumber, userId);
    }
-   else if ((macAttributeName[0] != 0) &&  macAddress.isValid())
+
+   MacAddress macAddress = GetMacAddress(*object);
+   if ((macAttributeName[0] != 0) &&  macAddress.isValid())
    {
-      return asset->setProperty(macAttributeName, macAddress.toString(), 0);
+      return asset->setProperty(macAttributeName, macAddress.toString(), userId);
    }
+
    return std::pair<uint32_t, String>(RCC_SUCCESS, _T(""));
 }
 

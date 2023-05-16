@@ -16822,7 +16822,7 @@ void ClientSession::linkAsset(const NXCPMessage& request)
             {
                if (request.getFieldAsBoolean(VID_UPDATE_IDENTIFICATION))
                {
-                  std::pair<uint32_t, String> result = UpdateIdentification(asset.get(), newTarget.get());
+                  std::pair<uint32_t, String> result = UpdateAssetIdentification(asset.get(), newTarget.get(), m_dwUserId);
                   if (result.first == RCC_SUCCESS)
                   {
                      LinkAsset(asset.get(), newTarget.get(), this);
