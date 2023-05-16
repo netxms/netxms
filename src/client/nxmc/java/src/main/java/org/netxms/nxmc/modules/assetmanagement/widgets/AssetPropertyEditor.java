@@ -22,7 +22,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -58,8 +57,7 @@ public class AssetPropertyEditor extends Composite
 
    private final I18n i18n = LocalizationHelper.getI18n(AssetPropertyEditor.class);
 
-   private List<Pair<String, String>> enums = new ArrayList<Pair<String, String>>();
-   
+   private List<Pair<String, String>> enumValues;
    private AssetAttribute attribute;
    private Control editorControl;
    private LabeledSpinner spinner;
@@ -95,17 +93,11 @@ public class AssetPropertyEditor extends Composite
          case ENUM:
             combo = new LabeledCombo(this, SWT.NONE);
             combo.setLabel(label);
+            enumValues = new ArrayList<Pair<String, String>>(attribute.getEnumValues().size());
             for(Entry<String, String> element : attribute.getEnumValues().entrySet())
-               enums.add(new Pair(element.getValue().isBlank() ? element.getKey() : element.getValue(), element.getKey()));
-            enums.sort(new Comparator<Pair<String, String>>() {
-
-               @Override
-               public int compare(Pair<String, String> arg0, Pair<String, String> arg1)
-               {
-                  return arg0.getFirst().compareToIgnoreCase(arg1.getFirst());
-               }
-            });
-            for (Pair<String, String> element : enums)
+               enumValues.add(new Pair<String, String>(element.getValue().isBlank() ? element.getKey() : element.getValue(), element.getKey()));
+            enumValues.sort((a1, a2) -> a1.getFirst().compareToIgnoreCase(a2.getFirst()));
+            for (Pair<String, String> element : enumValues)
                combo.add(element.getFirst());
             editorControl = combo.getControl();
             break;
@@ -156,14 +148,17 @@ public class AssetPropertyEditor extends Composite
             combo.select(LogParser.stringToBoolean(value) ? 0 : 1);
             break;
          case ENUM:
-            int currentIndex = 0;
-            for(Pair<String, String> element : enums)
+            if (value != null)
             {
-               if (value != null && value.equals(element.getSecond()))
-                  break;
-               currentIndex++;
+               int currentIndex = 0;
+               for(Pair<String, String> element : enumValues)
+               {
+                  if (value.equals(element.getSecond()))
+                     break;
+                  currentIndex++;
+               }
+               combo.select(currentIndex);
             }
-            combo.select(currentIndex);
             break;
          case INTEGER:
             if (value != null)
@@ -351,7 +346,7 @@ public class AssetPropertyEditor extends Composite
          case ENUM:
             if (combo.getSelectionIndex() == -1)
                return "";
-            return (String)enums.get(combo.getSelectionIndex()).getSecond();
+            return enumValues.get(combo.getSelectionIndex()).getSecond();
          case INTEGER:
             return Integer.toString(spinner.getSelection());
          case OBJECT_REFERENCE:
