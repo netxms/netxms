@@ -135,7 +135,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
          }
       };
       actionToggleFullScreen.setChecked(openInFullScreen);
-      keyBindingManager.addBinding("M3+F11", actionToggleFullScreen);
+      keyBindingManager.addBinding("F11", actionToggleFullScreen);
 
       windowArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
