@@ -275,14 +275,14 @@ std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *v
    if (result.first == RCC_SUCCESS)
    {
       lockProperties();
-      const TCHAR *oldValue = m_properties.get(attr);
-      bool changed = (oldValue != nullptr) ? (_tcscmp(oldValue, value) != 0) : true;
+      SharedString oldValue = m_properties.get(attr);
       m_properties.set(attr, value);
-      if (changed)
+      if (oldValue.isNull() || _tcscmp(oldValue, value))
+      {
          WriteAssetChangeLog(m_id, attr, (oldValue != nullptr) ? AssetOperation::Create : AssetOperation::Update, oldValue, value, userId, m_linkedObjectId);
-      unlockProperties();
-      if (changed)
          setModified(MODIFY_ASSET_PROPERTIES);
+      }
+      unlockProperties();
    }
    return result;
 }
