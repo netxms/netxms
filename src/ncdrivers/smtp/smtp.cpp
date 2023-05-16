@@ -320,7 +320,7 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
       CURLcode rc = curl_easy_perform(curl);
       if (rc != CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform(\"%hs\") failed (%hs)"), url, errorBuffer);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform(\"%hs\") failed (%hs)"), url, (errorBuffer[0] != 0) ? errorBuffer : curl_easy_strerror(rc));
          if ((rc == CURLE_COULDNT_CONNECT) || (rc == CURLE_OPERATION_TIMEDOUT) || (rc == CURLE_SEND_ERROR) || (rc == CURLE_RECV_ERROR))
             result = 30;   // Retry in 30 seconds
          else

@@ -2600,7 +2600,7 @@ static inline bool DecryptPasswordFailA(const char *encryptedPasswd, char *decry
  */
 bool LIBNETXMS_EXPORTABLE DecryptPasswordA(const char *login, const char *encryptedPasswd, char *decryptedPasswd, size_t bufferLenght)
 {
-   //check that lenght is correct
+   // check that lenght is correct
    size_t plen = strlen(encryptedPasswd);
    if ((plen != 44) && (plen != 88))
       return DecryptPasswordFailA(encryptedPasswd, decryptedPasswd, bufferLenght);
