@@ -20,6 +20,7 @@ package org.netxms.nxmc.base.windows;
 
 import java.util.Arrays;
 import java.util.List;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
@@ -78,6 +79,7 @@ import org.netxms.nxmc.base.views.ViewFolder;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.base.widgets.ServerClock;
+import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -119,6 +121,8 @@ public class MainWindow extends Window implements MessageAreaHolder
    private HeaderButton helpMenuButton;
    private HelpMenuManager helpMenuManager;
    private Font headerFontBold;
+   private Action actionToggleFullScreen;
+   private KeyBindingManager keyBindingManager;
    private Runnable postOpenRunnable = null;
 
    /**
@@ -132,6 +136,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       showServerClock = ps.getAsBoolean("Appearance.ShowServerClock", false);
       userMenuManager = new UserMenuManager();
       helpMenuManager = new HelpMenuManager();
+      keyBindingManager = new KeyBindingManager();
    }
 
    /**
@@ -459,6 +464,15 @@ public class MainWindow extends Window implements MessageAreaHolder
          }
       });
 
+      actionToggleFullScreen = new Action(i18n.tr("&Full screen"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            getShell().setFullScreen(actionToggleFullScreen.isChecked());
+         }
+      };
+      keyBindingManager.addBinding("F11", actionToggleFullScreen);
+
       return windowContent;
    }
 
@@ -473,6 +487,9 @@ public class MainWindow extends Window implements MessageAreaHolder
          return; // Ignore key down on modifier keys
 
       KeyStroke ks = new KeyStroke(stateMask, keyCode);
+      if (keyBindingManager.processKeyStroke(ks))
+         return;
+
       boolean processed = false;
       for(final Perspective p : perspectives)
       {

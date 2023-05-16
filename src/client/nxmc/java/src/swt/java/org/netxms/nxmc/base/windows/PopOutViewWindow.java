@@ -131,7 +131,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
          @Override
          public void run()
          {
-            enableFullScreen(actionToggleFullScreen.isChecked());
+            getShell().setFullScreen(actionToggleFullScreen.isChecked());
          }
       };
       actionToggleFullScreen.setChecked(openInFullScreen);
@@ -205,17 +205,6 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       KeyStroke ks = new KeyStroke(stateMask, keyCode);
       if (!keyBindingManager.processKeyStroke(ks))
          viewContainer.processKeyStroke(ks);
-   }
-
-   /**
-    * Enable/disable full screen display
-    *
-    * @param enable true to enable full screen display
-    */
-   private void enableFullScreen(boolean enable)
-   {
-      getShell().setFullScreen(enable);
-      actionToggleFullScreen.setChecked(enable);
    }
 
    /**
