@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import javax.servlet.http.HttpServletRequest;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
@@ -42,6 +41,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
@@ -50,6 +50,7 @@ import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
+import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
@@ -135,6 +136,21 @@ public class Startup implements EntryPoint, StartupParameters
          MainWindow w = new MainWindow();
          Registry.setMainWindow(w);
          w.setBlockOnOpen(true);
+         String dashboardName = getParameter("dashboard");
+         logger.debug("Dashboard=" + dashboardName);
+         if (dashboardName != null)
+         {
+            Dashboard dashboard = (Dashboard)Registry.getSession().findObjectByName(dashboardName, (o) -> o instanceof Dashboard);
+            if (dashboard != null)
+            {
+               AdHocDashboardView view = new AdHocDashboardView(0, dashboard, null);
+               w.setPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view)));
+            }
+            else
+            {
+               logger.warn("Cannot find dashboard object with name \"" + dashboardName + "\"");
+            }
+         }
          window = w;
       }
 
@@ -168,21 +184,20 @@ public class Startup implements EntryPoint, StartupParameters
       boolean ignoreProtocolVersion = false;
       String password = "";
 
-      HttpServletRequest request = RWT.getRequest();
-      String s = request.getParameter("login");
+      String s = getParameter("login");
       if (s != null)
       {
          settings.set("Connect.Login", s);
       }
 
-      s = request.getParameter("password");
+      s = getParameter("password");
       if (s != null)
       {
          password = s;
          settings.set("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue());
       }
 
-      s = request.getParameter("auto");
+      s = getParameter("auto");
       if (s != null)
       {
          autoConnect = true;

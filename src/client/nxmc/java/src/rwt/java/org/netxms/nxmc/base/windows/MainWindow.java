@@ -35,6 +35,9 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
@@ -109,6 +112,7 @@ public class MainWindow extends Window implements MessageAreaHolder
    private UserMenuManager userMenuManager;
    private HeaderButton helpMenuButton;
    private HelpMenuManager helpMenuManager;
+   private Runnable postOpenRunnable = null;
 
    /**
     * @param parentShell
@@ -154,6 +158,47 @@ public class MainWindow extends Window implements MessageAreaHolder
             ps.set(PreferenceStore.serverProperty("MainWindow.CurrentPerspective"), (currentPerspective != null) ? currentPerspective.getId() : "(none)");
          }
       });
+   }
+
+   /**
+    * @see org.eclipse.jface.window.Window#getShellListener()
+    */
+   @Override
+   protected ShellListener getShellListener()
+   {
+      return new ShellAdapter() {
+         @Override
+         public void shellActivated(ShellEvent e)
+         {
+            logger.debug("Main window activated");
+            if (postOpenRunnable != null)
+            {
+               logger.debug("Executing post-open handler");
+               postOpenRunnable.run();
+               postOpenRunnable = null;
+            }
+         }
+
+         @Override
+         public void shellClosed(ShellEvent event)
+         {
+            event.doit = false; // don't close now
+            if (canHandleShellCloseEvent())
+            {
+               handleShellCloseEvent();
+            }
+         }
+      };
+   }
+
+   /**
+    * Set runnable to be executed after window is open.
+    *
+    * @param postOpenRunnable runnable to be executed after window is open
+    */
+   public void setPostOpenRunnable(Runnable postOpenRunnable)
+   {
+      this.postOpenRunnable = postOpenRunnable;
    }
 
    /**

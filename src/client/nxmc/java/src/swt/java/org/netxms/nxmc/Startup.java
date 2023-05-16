@@ -46,15 +46,19 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.services.ServiceManager;
 import org.netxms.nxmc.base.dialogs.PasswordExpiredDialog;
 import org.netxms.nxmc.base.dialogs.PasswordRequestDialog;
 import org.netxms.nxmc.base.dialogs.SecurityWarningDialog;
 import org.netxms.nxmc.base.login.LoginDialog;
 import org.netxms.nxmc.base.login.LoginJob;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.windows.MainWindow;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
@@ -149,11 +153,7 @@ public class Startup
          ObjectToolsCache.attachSession(display, session);
          SummaryTablesCache.attachSession(display, session);
          GraphTemplateCache.attachSession(display, session);
-
-         MainWindow w = new MainWindow();
-         Registry.setMainWindow(w);
-         w.setBlockOnOpen(true);
-         w.open();
+         openWindows(session, args);
       }
 
       for(Image i : windowIcons)
@@ -168,6 +168,54 @@ public class Startup
       logger.debug("Running threads on shutdown:");
       for(Thread t : Thread.getAllStackTraces().keySet())
          logger.debug("   " + t.getName() + " state=" + t.getState() + " daemon=" + t.isDaemon());
+   }
+
+   /**
+    * Open application window(s)
+    * 
+    * @param session client session
+    * @param args command line arguments
+    */
+   private static void openWindows(NXCSession session, String[] args)
+   {
+      boolean kioskMode = false;
+      String dashboardName = null;
+      for(String s : args)
+      {
+         if (s.startsWith("-dashboard="))
+         {
+            dashboardName = s.substring(11);
+         }
+         else if (s.equals("-kiosk-mode"))
+         {
+            kioskMode = true;
+         }
+      }
+
+      View fullScreenView = null;
+      if (dashboardName != null)
+      {
+         Dashboard dashboard = (Dashboard)session.findObjectByName(dashboardName, (o) -> o instanceof Dashboard);
+         if (dashboard != null)
+            fullScreenView = new AdHocDashboardView(0, dashboard, null);
+      }
+
+      if (kioskMode)
+      {
+         PopOutViewWindow.open(fullScreenView, true, true);
+      }
+      else
+      {
+         MainWindow w = new MainWindow();
+         Registry.setMainWindow(w);
+         w.setBlockOnOpen(true);
+         if (fullScreenView != null)
+         {
+            final View view = fullScreenView;
+            w.setPostOpenRunnable(() -> Display.getCurrent().asyncExec(() -> PopOutViewWindow.open(view, true, false)));
+         }
+         w.open();
+      }
    }
 
    /**

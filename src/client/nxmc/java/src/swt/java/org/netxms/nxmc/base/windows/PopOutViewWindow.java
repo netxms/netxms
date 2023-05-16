@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.base.windows;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -39,7 +40,10 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewStack;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Window that holds pop out view
@@ -53,23 +57,44 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
     */
    public static void open(View view)
    {
-      new PopOutViewWindow(view).open();
+      open(view, false, false);
    }
+
+   /**
+    * Open pop-out window with given view
+    *
+    * @param view view to show in pop-out window
+    * @param fullScreen true to show full screen window
+    * @param blocking block on open
+    */
+   public static void open(View view, boolean fullScreen, boolean blocking)
+   {
+      PopOutViewWindow w = new PopOutViewWindow(view, fullScreen);
+      w.setBlockOnOpen(blocking);
+      w.open();
+   }
+
+   private final I18n i18n = LocalizationHelper.getI18n(PopOutViewWindow.class);
 
    private Composite windowArea;
    private MessageArea messageArea;
    private ViewStack viewContainer;
    private View view;
+   private Action actionToggleFullScreen;
+   private KeyBindingManager keyBindingManager;
+   private boolean openInFullScreen;
 
    /**
     * Create new pop-out window.
     *
     * @param view view to show inside pop-out window
     */
-   private PopOutViewWindow(View view)
+   private PopOutViewWindow(View view, boolean openInFullScreen)
    {
       super((Shell)null);
       this.view = view;
+      this.openInFullScreen = openInFullScreen;
+      this.keyBindingManager = new KeyBindingManager();
    }
 
    /**
@@ -84,6 +109,7 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       if (shellSize != null)
          shell.setSize(shellSize);
       shell.setImages(Startup.windowIcons);
+      shell.setFullScreen(openInFullScreen);
    }
 
    /**
@@ -101,6 +127,16 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
    @Override
    protected Control createContents(Composite parent)
    {
+      actionToggleFullScreen = new Action(i18n.tr("&Full screen"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFullScreen(actionToggleFullScreen.isChecked());
+         }
+      };
+      actionToggleFullScreen.setChecked(openInFullScreen);
+      keyBindingManager.addBinding("M3+F11", actionToggleFullScreen);
+
       windowArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.marginHeight = 0;
@@ -166,7 +202,20 @@ public class PopOutViewWindow extends Window implements MessageAreaHolder
       if ((keyCode == SWT.SHIFT) || (keyCode == SWT.CTRL) || (keyCode == SWT.SHIFT) || (keyCode == SWT.ALT) || (keyCode == SWT.ALT_GR) || (keyCode == SWT.COMMAND))
          return; // Ignore key down on modifier keys
 
-      viewContainer.processKeyStroke(new KeyStroke(stateMask, keyCode));
+      KeyStroke ks = new KeyStroke(stateMask, keyCode);
+      if (!keyBindingManager.processKeyStroke(ks))
+         viewContainer.processKeyStroke(ks);
+   }
+
+   /**
+    * Enable/disable full screen display
+    *
+    * @param enable true to enable full screen display
+    */
+   private void enableFullScreen(boolean enable)
+   {
+      getShell().setFullScreen(enable);
+      actionToggleFullScreen.setChecked(enable);
    }
 
    /**
