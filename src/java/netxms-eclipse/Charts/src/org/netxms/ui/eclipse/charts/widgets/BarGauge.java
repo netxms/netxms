@@ -39,7 +39,7 @@ public class BarGauge extends GenericGauge
 {
    private static final int MAX_BAR_THICKNESS = 40;
    private static final int SCALE_TEXT_HEIGHT = 20;
-   private static final int SCALE_TEXT_WIDTH = 100;
+   private static final int SCALE_TEXT_WIDTH = 80;
 
    private Font[] scaleFonts = null;
 
@@ -135,7 +135,6 @@ public class BarGauge extends GenericGauge
             rect.width -= d;
             rect.x += d / 2;
          }
-         rect.x -= SCALE_TEXT_WIDTH / 2;
       }
 
       gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea"));
