@@ -123,10 +123,6 @@
 #define NETXMS_MAX_CIPHERS       6
 #define NETXMS_RSA_KEYLEN        4096
 
-#ifndef EVENTLOG_DEBUG_TYPE
-#define EVENTLOG_DEBUG_TYPE		0x0080
-#endif
-
 #define INVALID_INDEX         0xFFFFFFFF
 #define MD4_DIGEST_SIZE       16
 #define MD5_DIGEST_SIZE       16
@@ -899,28 +895,18 @@ typedef struct hostent HOSTENT;
 #endif
 
 /**
- * Windows-specific structures for non-Windows platforms
- */
-#ifndef _WIN32
-
-typedef struct tagPOINT
-{
-   int x;
-   int y;
-} POINT;
-
-#endif
-
-/**
  * Event log severity codes
  */
-#ifndef _WIN32
+#ifdef _WIN32
+#define EVENTLOG_DEBUG_TYPE             0x0080
+#else
 #define EVENTLOG_SUCCESS                0x0000
 #define EVENTLOG_ERROR_TYPE             0x0001
 #define EVENTLOG_WARNING_TYPE           0x0002
 #define EVENTLOG_INFORMATION_TYPE       0x0004
 #define EVENTLOG_AUDIT_SUCCESS          0x0008
 #define EVENTLOG_AUDIT_FAILURE          0x0010
+#define EVENTLOG_DEBUG_TYPE             0x0080
 #endif   /* _WIN32 */
 
 #define NXLOG_DEBUG     EVENTLOG_DEBUG_TYPE

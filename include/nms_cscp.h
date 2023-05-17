@@ -1672,9 +1672,6 @@ typedef struct
 // Base value for map list
 #define VID_MAP_LIST_BASE           ((UINT32)0x10000000)
 
-// Base value for module list
-#define VID_MODULE_LIST_BASE        ((UINT32)0x10000000)
-
 // Base value for agent configs list
 #define VID_AGENT_CFG_LIST_BASE     ((UINT32)0x10000000)
 
@@ -1801,15 +1798,5 @@ typedef struct
 
 #define VID_AM_ATTRIBUTES_BASE      ((uint32_t)0x10000000)
 #define VID_AM_ENUM_MAP_BASE        ((uint32_t)0x20000000)
-
-#ifdef __cplusplus
-
-inline BOOL IsBinaryMsg(NXCP_MESSAGE *msg)
-{
-   return ntohs(msg->flags) & MF_BINARY;
-}
-
-#endif
-
 
 #endif   /* _nms_cscp_h_ */

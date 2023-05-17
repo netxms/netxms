@@ -122,7 +122,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ..
       _vsntprintf(szBuffer, 4096, format, args);
       va_end(args);
       szBuffer[4095] = 0;
-      s_fpWriteLog(EVENTLOG_DEBUG_TYPE, level, szBuffer);
+      s_fpWriteLog(NXLOG_DEBUG, level, szBuffer);
    }
 }
 
@@ -137,7 +137,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
    {
       _vsntprintf(szBuffer, 4096, format, args);
       szBuffer[4095] = 0;
-      s_fpWriteLog(EVENTLOG_DEBUG_TYPE, level, szBuffer);
+      s_fpWriteLog(NXLOG_DEBUG, level, szBuffer);
    }
 }
 

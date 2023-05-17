@@ -76,16 +76,16 @@
 #endif
 
 #if !(HAVE_DECL_BSWAP_16)
-inline UINT16 bswap_16(UINT16 val)
+inline uint16_t bswap_16(uint16_t val)
 {
    return (val >> 8) | ((val << 8) & 0xFF00);
 }
 #endif
 
 #if !(HAVE_DECL_BSWAP_32)
-inline UINT32 bswap_32(UINT32 val)
+inline uint32_t bswap_32(uint32_t val)
 {
-   UINT32 result;
+   uint32_t result;
    BYTE *sptr = (BYTE *)&val;
    BYTE *dptr = (BYTE *)&result + 3;
    for(int i = 0; i < 4; i++, sptr++, dptr--)
@@ -95,9 +95,9 @@ inline UINT32 bswap_32(UINT32 val)
 #endif
 
 #if !(HAVE_DECL_BSWAP_64)
-inline UINT64 bswap_64(UINT64 val)
+inline uint64_t bswap_64(uint64_t val)
 {
-   UINT64 result;
+   uint64_t result;
    BYTE *sptr = (BYTE *)&val;
    BYTE *dptr = (BYTE *)&result + 7;
    for(int i = 0; i < 8; i++, sptr++, dptr--)
@@ -4939,8 +4939,6 @@ char LIBNETXMS_EXPORTABLE *IntegerToString(int64_t value, char *str, int base = 
 WCHAR LIBNETXMS_EXPORTABLE *IntegerToString(int64_t value, WCHAR *str, int base = 10);
 char LIBNETXMS_EXPORTABLE *IntegerToString(uint64_t value, char *str, int base = 10);
 WCHAR LIBNETXMS_EXPORTABLE *IntegerToString(uint64_t value, WCHAR *str, int base = 10);
-
-TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
 bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags);
 void LIBNETXMS_EXPORTABLE nxlog_close();

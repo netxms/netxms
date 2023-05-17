@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -102,10 +102,7 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 /**
  * Common constants and macros
  */
-#define CHECKPOINT_SNMP_PORT     260
 #define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
-
-#define MAX_DEVICE_SESSIONS   256
 
 #define PING_TIME_TIMEOUT     10000
 
@@ -179,12 +176,10 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
  */
 #define CSF_TERMINATED           ((uint32_t)0x00000001)
 #define CSF_EPP_LOCKED           ((uint32_t)0x00000002)
-//#define CSF_USER_DB_LOCKED       ((uint32_t)0x00000008)
 #define CSF_EPP_UPLOAD           ((uint32_t)0x00000010)
 #define CSF_CONSOLE_OPEN         ((uint32_t)0x00000020)
 #define CSF_AUTHENTICATED        ((uint32_t)0x00000080)
 #define CSF_COMPRESSION_ENABLED  ((uint32_t)0x00000100)
-#define CSF_RECEIVING_MAP_DATA   ((uint32_t)0x00000200)
 #define CSF_SYNC_OBJECT_COMMENTS ((uint32_t)0x00000400)
 #define CSF_OBJECT_SYNC_FINISHED ((uint32_t)0x00000800)
 #define CSF_OBJECTS_OUT_OF_SYNC  ((uint32_t)0x00001000)

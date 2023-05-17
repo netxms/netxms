@@ -3197,39 +3197,6 @@ int LIBNETXMS_EXPORTABLE wmkstemp(WCHAR *tmpl)
 
 #endif
 
-/**
- * Safe _fgetts implementation which will work
- * with handles opened by popen
- */
-TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
-{
-#ifdef UNICODE
-#if SAFE_FGETWS_WITH_POPEN && !defined(_WIN32)
-	return fgetws(buffer, len, f);
-#else
-	char *mbBuffer = static_cast<char*>(MemAllocLocal(len));
-	char *s = fgets(mbBuffer, len, f);
-	if (s == nullptr)
-	{
-	   MemFreeLocal(mbBuffer);
-		return nullptr;
-	}
-	mbBuffer[len - 1] = 0;
-#if HAVE_MBSTOWCS
-	mbstowcs(buffer, mbBuffer, len);
-#elif defined(_WIN32)
-   utf8_to_wchar(mbBuffer, -1, buffer, len);
-#else
-	mb_to_wchar(mbBuffer, -1, buffer, len);
-#endif
-   MemFreeLocal(mbBuffer);
-	return buffer;
-#endif
-#else
-	return fgets(buffer, len, f);
-#endif
-}
-
 #if !HAVE_STRLWR && !defined(_WIN32)
 
 /**
