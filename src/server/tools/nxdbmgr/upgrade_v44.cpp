@@ -28,6 +28,16 @@
  */
 static bool H_UpgradeFromV12()
 {
+   CHK_EXEC(CreateEventTemplate(EVENT_CONFIGURATION_ERROR, _T("SYS_CONFIGURATION_ERROR"),
+                              EVENT_SEVERITY_MINOR, EF_LOG, _T("762c581c-e9bf-11ed-a05b-0242ac120003"),
+                              _T("System configuration error (%<description>)"),
+                              _T("  \r\n")
+                              _T("Parameters:\r\n")
+                              _T("   subsystem - The subsystem which has the error\r\n")
+                              _T("   tag - Related tag for the error\r\n")
+                              _T("   descriptipon - Description of the error\r\n")
+                              ));
+
    CHK_EXEC(CreateConfigParam(_T("Objects.Assets.AllowDeleteIfLinked"),
          _T("0"),
          _T("Enable/disable deletion of linked assets."),

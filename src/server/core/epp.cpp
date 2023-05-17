@@ -576,6 +576,30 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    xml.append(_T("\t\t\t</alarmCategories>\n\t\t</rule>\n"));
 }
 
+void EPRule::validateConfig() const
+{
+   const uint32_t ruleId = getId() + 1;
+
+   for(int i = 0; i < m_sourceExclusions.size(); i++)
+   {
+      const uint32_t objectId = m_sourceExclusions.get(i);
+
+      if (FindObjectById(objectId) == nullptr)
+      {
+         ReportConfigurationError(_T("EPP"), _T("invalid-object-id"), _T("Invalid object ID %u in EPP rule %u"), objectId, ruleId);
+      }
+   }
+
+   for(int i = 0; i < m_sources.size(); i++)
+   {
+      const uint32_t objectId = m_sources.get(i);
+
+      if (FindObjectById(objectId) == nullptr)
+      {
+         ReportConfigurationError(_T("EPP"), _T("invalid-object-id"), _T("Invalid object ID %u in EPP rule %u"), objectId, ruleId);         
+      }
+   }
+}
 /**
  * Check if source object's id match to the rule
  */
@@ -602,10 +626,6 @@ bool EPRule::matchSource(uint32_t objectId) const
             break;
          }
       }
-      else
-      {
-         nxlog_write(NXLOG_WARNING, _T("Invalid object identifier %u in event processing policy rule #%u"), m_sourceExclusions.get(i), m_id + 1);
-      }
    }
    if (exception)
    {
@@ -629,10 +649,6 @@ bool EPRule::matchSource(uint32_t objectId) const
             match = true;
             break;
          }
-      }
-      else
-      {
-         nxlog_write(NXLOG_WARNING, _T("Invalid object identifier %u in event processing policy rule #%u"), m_sources.get(i), m_id + 1);
       }
    }
    return (m_flags & RF_NEGATED_SOURCE) ? !match : match;
@@ -1658,6 +1674,18 @@ void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 /**
  * Check if given action is used in policy
  */
+void EventPolicy::validateConfig() const
+{
+   readLock();
+
+   for(int i = 0; i < m_rules.size(); i++)
+   {
+      m_rules.get(i)->validateConfig();
+   }
+
+   unlock();
+}
+
 bool EventPolicy::isActionInUse(uint32_t actionId) const
 {
    bool bResult = false;

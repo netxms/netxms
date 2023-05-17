@@ -1705,3 +1705,15 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
    '   currentNodeName - currently linked node name'
    );
 
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+	EVENT_CONFIGURATION_ERROR, 'SYS_CONFIGURATION_ERROR', '762c581c-e9bf-11ed-a05b-0242ac120003',
+   EVENT_SEVERITY_MINOR, 1, 
+   'System configuration error (%<description>)',
+   'Generated on any system configuration error.'   CONCAT CRLF CONCAT
+   'Parameters:'   CONCAT CRLF CONCAT
+   '   subsystem - The subsystem which has the error'   CONCAT CRLF CONCAT
+   '   tag - Related tag for the error'   CONCAT CRLF CONCAT
+   '   descriptipon - Description of the error'      
+   );
