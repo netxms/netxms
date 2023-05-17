@@ -102,7 +102,6 @@ template class NXCORE_EXPORTABLE SynchronizedHashSet<uint32_t>;
 /**
  * Common constants and macros
  */
-#define MAX_LINE_SIZE            4096
 #define CHECKPOINT_SNMP_PORT     260
 #define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
 
