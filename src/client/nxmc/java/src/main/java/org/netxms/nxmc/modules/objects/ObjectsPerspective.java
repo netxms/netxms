@@ -112,6 +112,7 @@ import org.netxms.nxmc.modules.objects.views.SoftwareInventoryView;
 import org.netxms.nxmc.modules.objects.views.StatusMapView;
 import org.netxms.nxmc.modules.objects.views.SwitchForwardingDatabaseView;
 import org.netxms.nxmc.modules.objects.views.TemplateTargets;
+import org.netxms.nxmc.modules.objects.views.UserSessionsView;
 import org.netxms.nxmc.modules.objects.views.VlanView;
 import org.netxms.nxmc.modules.objects.views.VpnView;
 import org.netxms.nxmc.modules.objects.views.WirelessStations;
@@ -220,6 +221,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addMainView(new SwitchForwardingDatabaseView());
       addMainView(new TemplateTargets());      
       addMainView(new ThresholdSummaryView());
+      addMainView(new UserSessionsView());
       addMainView(new VlanView());
       addMainView(new VpnView());
       addMainView(new WirelessStations());
