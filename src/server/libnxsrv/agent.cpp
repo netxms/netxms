@@ -24,6 +24,7 @@
 #include "libnxsrv.h"
 #include <stdarg.h>
 #include <nxstat.h>
+#include <netxms-regex.h>
 
 #ifndef _WIN32
 #define _tell(f) lseek((f),0,SEEK_CUR)
@@ -3107,6 +3108,162 @@ uint32_t AgentConnection::getFileSetInfo(const StringList &fileSet, bool allowPa
    {
       rcc = ERR_CONNECTION_BROKEN;
    }
+   return rcc;
+}
+
+/**
+ * Get list of user sessions
+ */
+uint32_t AgentConnection::getUserSessions(ObjectArray<UserSession> **sessions)
+{
+   *sessions = nullptr;
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
+
+   bool hasSessionAgentInfo = false;
+
+   Table *table;
+   uint32_t rcc = getTable(_T("System.ActiveUserSessions"), &table);
+   if (rcc == ERR_SUCCESS)
+   {
+      *sessions = new ObjectArray<UserSession>(table->getNumRows(), 16, Ownership::True);
+
+      int cId = table->getColumnIndex(_T("ID"));
+      int cUserName = table->getColumnIndex(_T("USER_NAME"));
+      int cTerminal = table->getColumnIndex(_T("TERMINAL"));
+      int cState = table->getColumnIndex(_T("STATE"));
+      int cClientName = table->getColumnIndex(_T("CLIENT_NAME"));
+      int cClientAddress = table->getColumnIndex(_T("CLIENT_ADDRESS"));
+      int cDisplay = table->getColumnIndex(_T("CLIENT_DISPLAY"));
+      int cConnectTime = table->getColumnIndex(_T("CONNECT_TIMESTAMP"));
+      int cLogonTime = table->getColumnIndex(_T("LOGON_TIMESTAMP"));
+      int cIdleTime = table->getColumnIndex(_T("IDLE_TIME"));
+      int cAgentType = table->getColumnIndex(_T("AGENT_TYPE"));
+      int cAgentPid = table->getColumnIndex(_T("AGENT_PID"));
+
+      hasSessionAgentInfo = (cAgentType != -1);
+
+      for(int i = 0; i < table->getNumRows(); i++)
+      {
+         UserSession *session = new UserSession();
+         session->id = table->getAsUInt(i, cId);
+         session->loginName = table->getAsString(i, cUserName, _T(""));
+         session->terminal = table->getAsString(i, cTerminal, _T(""));
+         session->connected = _tcsicmp(table->getAsString(i, cState, _T("")), _T("Active")) == 0;
+         session->clientName = table->getAsString(i, cClientName, _T(""));
+         session->connectTime = static_cast<time_t>(table->getAsInt64(i, cConnectTime));
+         session->loginTime = static_cast<time_t>(table->getAsInt64(i, cLogonTime));
+         session->idleTime = static_cast<time_t>(table->getAsInt64(i, cIdleTime));
+
+         if (cAgentType != -1)
+         {
+            session->agentType = table->getAsInt(i, cAgentType);
+            session->agentPID = table->getAsInt(i, cAgentPid);
+         }
+
+         const TCHAR *addr = table->getAsString(i, cClientAddress, _T(""));
+         if (*addr != 0)
+            session->clientAddress = InetAddress::parse(addr);
+
+         TCHAR displayInfo[128];
+         _tcslcpy(displayInfo, table->getAsString(i, cDisplay, _T("")), 128);
+         if (displayInfo[0] != 0)
+         {
+            int values[3];
+            memset(values, 0, sizeof(values));
+            TCHAR *e = displayInfo;
+            for(int j = 0; j < 3; j++)
+            {
+               TCHAR *p = _tcschr(e, _T('x'));
+               if (p != nullptr)
+                  *p = 0;
+               TCHAR *eptr;
+               values[j] = _tcstol(e, &eptr, 10);
+               if ((*eptr != 0) || (p == nullptr))
+                  break;
+               e = p + 1;
+            }
+            if ((values[0] != 0) && (values[1] != 0) && (values[2] != 0))
+            {
+               session->displayWidth = values[0];
+               session->displayHeight = values[1];
+               session->displayColorDepth = values[2];
+            }
+         }
+
+         (*sessions)->add(session);
+      }
+
+      delete table;
+   }
+   else if (rcc == ERR_UNKNOWN_METRIC)
+   {
+      StringList *list;
+      rcc = getList(_T("System.ActiveUserSessions"), &list);
+      if (rcc == ERR_SUCCESS)
+      {
+         *sessions = new ObjectArray<UserSession>(list->size(), 16, Ownership::True);
+
+         // Each line has format "login" "terminal" "address"
+         const char *eptr;
+         int eoffset;
+         PCRE *re = _pcre_compile_t(reinterpret_cast<const PCRE_TCHAR*>(_T("^\"([^\"]*)\" \"([^\"]*)\" \"([^\"]*)\"$")), PCRE_COMMON_FLAGS | PCRE_CASELESS, &eptr, &eoffset, nullptr);
+         if (re != nullptr)
+         {
+            int pmatch[30];
+            for(int i = 0; i < list->size(); i++)
+            {
+               const TCHAR *entry = list->get(i);
+               if (_pcre_exec_t(re, nullptr, reinterpret_cast<const PCRE_TCHAR*>(entry), static_cast<int>(_tcslen(entry)), 0, 0, pmatch, 30) == 4)
+               {
+                  UserSession *session = new UserSession();
+                  session->id = i;
+                  session->loginName = String(&entry[pmatch[2]], pmatch[3] - pmatch[2]);
+                  session->terminal = String(&entry[pmatch[4]], pmatch[5] - pmatch[4]);
+
+                  String addr(&entry[pmatch[6]], pmatch[7] - pmatch[6]);
+                  if (!addr.isEmpty())
+                     session->clientAddress = InetAddress::parse(addr);
+
+                  (*sessions)->add(session);
+               }
+            }
+            _pcre_free_t(re);
+         }
+
+         delete list;
+      }
+   }
+
+   if ((rcc == ERR_SUCCESS) && !hasSessionAgentInfo && (getTable(_T("Agent.SessionAgents"), &table) == ERR_SUCCESS))
+   {
+      int cId = table->getColumnIndex(_T("SESSION_ID"));
+      int cAgentType = table->getColumnIndex(_T("AGENT_TYPE"));
+      int cAgentPid = table->getColumnIndex(_T("AGENT_PID"));
+      for(int i = 0; i < table->getNumRows(); i++)
+      {
+         uint32_t sid = table->getAsUInt(i, cId);
+
+         UserSession *session = nullptr;
+         for(int j = 0; j < (*sessions)->size(); j++)
+         {
+            UserSession *s = (*sessions)->get(j);
+            if (s->id == sid)
+            {
+               session = s;
+               break;
+            }
+         }
+
+         if (session != nullptr)
+         {
+            session->agentPID = table->getAsUInt(i, cAgentPid);
+            session->agentType = table->getAsUInt(i, cAgentType);
+         }
+      }
+      delete table;
+   }
+
    return rcc;
 }
 

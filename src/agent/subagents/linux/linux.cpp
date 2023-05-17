@@ -430,7 +430,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Net.IP.RoutingTable"), H_NetRoutingTable, nullptr },
    { _T("Net.InterfaceList"), H_NetIfList, nullptr },
    { _T("Net.InterfaceNames"), H_NetIfNames, nullptr },
-   { _T("System.ActiveUserSessions"), H_ActiveUserSessions, nullptr },
+   { _T("System.ActiveUserSessions"), H_UserSessionList, nullptr },
    { _T("System.IO.Devices"), H_IoDevices, nullptr },
    { _T("System.IO.LogicalDevices"), H_IoLogicalDevices, nullptr },
    { _T("System.ProcessList"), H_ProcessList, nullptr }
@@ -448,6 +448,7 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
    { _T("Hardware.Processors"), SMBIOS_TableHandler, _T("P"), _T("HANDLE"), DCTDESC_HARDWARE_PROCESSORS },
    { _T("Hardware.StorageDevices"), H_StorageDeviceTable, nullptr, _T("NUMBER"), DCTDESC_HARDWARE_STORAGE_DEVICES },
    { _T("Net.Interfaces"), H_NetIfTable, nullptr, _T("INDEX"), DCTDESC_NETWORK_INTERFACES },
+   { _T("System.ActiveUserSessions"), H_UserSessionTable, nullptr, _T("ID"), DCTDESC_SYSTEM_ACTIVE_USER_SESSIONS },
    { _T("System.InstalledProducts"), H_InstalledProducts, nullptr, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
    { _T("System.OpenFiles"), H_OpenFilesTable, nullptr, _T("PID,HANDLE"), DCTDESC_SYSTEM_OPEN_FILES },
    { _T("System.Processes"), H_ProcessTable, nullptr, _T("PID"), DCTDESC_SYSTEM_PROCESSES }

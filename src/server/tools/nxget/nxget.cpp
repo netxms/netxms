@@ -32,23 +32,24 @@ NETXMS_EXECUTABLE_HEADER(nxget)
 /**
  * Operations
  */
-enum Operation
+enum class Operation
 {
-   CMD_GET,
-   CMD_LIST,
-   CMD_CHECK_SERVICE,
-   CMD_GET_PARAMS,
-   CMD_GET_CONFIG,
-   CMD_TABLE,
-   CMD_GET_SCREENSHOT,
-   CMD_FILE_SET_INFO
+   CHECK_SERVICE,
+   FILE_SET_INFO,
+   GET,
+   GET_CONFIG,
+   GET_LIST,
+   GET_PARAMS,
+   GET_SCREENSHOT,
+   GET_TABLE,
+   GET_USER_SESSIONS
 };
 
 /**
  * Static fields
  */
 static TCHAR s_tableOutputDelimiter = 0;
-static Operation s_operation = CMD_GET;
+static Operation s_operation = Operation::GET;
 static bool s_showNames = false;
 static bool s_batchMode = false;
 static bool s_fixedType = false;
@@ -213,8 +214,8 @@ static int GetScreenshot(AgentConnection *pConn, const TCHAR *sessionName, const
 {
    BYTE *data;
    size_t size;
-   uint32_t dwError = pConn->takeScreenshot(sessionName, &data, &size);
-   if (dwError == ERR_SUCCESS)
+   uint32_t rcc = pConn->takeScreenshot(sessionName, &data, &size);
+   if (rcc == ERR_SUCCESS)
    {
       FILE *f = _tfopen(fileName, _T("wb"));
       if (f != nullptr)
@@ -227,9 +228,9 @@ static int GetScreenshot(AgentConnection *pConn, const TCHAR *sessionName, const
    }
    else
    {
-      WriteToTerminalEx(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
-   return (dwError == ERR_SUCCESS) ? 0 : 1;
+   return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
 /**
@@ -242,7 +243,7 @@ static int GetFileSetInfo(AgentConnection *conn, int argc, TCHAR **argv)
       fileSet.add(argv[i]);
 
    ObjectArray<RemoteFileInfo> *info;
-   UINT32 rcc = conn->getFileSetInfo(fileSet, true, &info);
+   uint32_t rcc = conn->getFileSetInfo(fileSet, true, &info);
    if (rcc == ERR_SUCCESS)
    {
       for(int i = 0; i < info->size(); i++)
@@ -267,6 +268,68 @@ static int GetFileSetInfo(AgentConnection *conn, int argc, TCHAR **argv)
       WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
    }
    return (rcc == ERR_SUCCESS) ? 0 : 1;
+}
+
+/**
+ * Get user sessions
+ */
+static int GetUserSessions(AgentConnection *conn)
+{
+   ObjectArray<UserSession> *sessions;
+   uint32_t rcc = conn->getUserSessions(&sessions);
+   if (rcc != ERR_SUCCESS)
+   {
+      WriteToTerminalEx(_T("%d: %s\n"), rcc, AgentErrorCodeToText(rcc));
+      return 1;
+   }
+
+   // Convert to table for simplified printing
+   Table table;
+   table.addColumn(_T("ID"), DCI_DT_UINT, _T("ID"), true);
+   table.addColumn(_T("User Name"));
+   table.addColumn(_T("Terminal"));
+   table.addColumn(_T("Session Name"));
+   table.addColumn(_T("State"));
+   table.addColumn(_T("Client Name"));
+   table.addColumn(_T("Client Address"));
+   table.addColumn(_T("Display"));
+   table.addColumn(_T("Connected at"));
+   table.addColumn(_T("Logon at"));
+   table.addColumn(_T("Idle Time"));
+   table.addColumn(_T("Agent Type"));
+   table.addColumn(_T("Agent PID"));
+
+   for(int i = 0; i < sessions->size(); i++)
+   {
+      UserSession *s = sessions->get(i);
+      table.addRow();
+      table.set(0, s->id);
+      table.set(1, s->loginName);
+      table.set(2, s->terminal);
+      table.set(3, s->connected ? _T("Active") : _T("Disconnected"));
+      table.set(4, s->clientName);
+      if (s->clientAddress.isValid())
+         table.set(5, s->clientAddress.toString());
+      if ((s->displayWidth > 0) && (s->displayHeight > 0) && (s->displayColorDepth > 0))
+         table.set(6, StringBuffer().append(s->displayWidth).append(_T('x')).append(s->displayHeight).append(_T('x')).append(s->displayColorDepth));
+      if (s->connectTime > 0)
+         table.set(7, s->connectTime);
+      if (s->loginTime > 0)
+         table.set(8, s->loginTime);
+      if ((s->connectTime > 0) || (s->loginTime > 0))
+         table.set(9, s->idleTime);
+      if (s->agentType != -1)
+         table.set(10, s->agentType);
+      if (s->agentPID != 0)
+         table.set(11, s->agentPID);
+   }
+   if (s_tableOutputDelimiter != 0)
+      table.dump(stdout, true, s_tableOutputDelimiter);
+   else
+      table.writeToTerminal();
+
+   delete sessions;
+   return 0;
 }
 
 /**
@@ -299,38 +362,46 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
          }
          break;
       case 'E':
-         s_operation = CMD_GET_SCREENSHOT;
+         s_operation = Operation::GET_SCREENSHOT;
          break;
       case 'f':
          s_fixedType = true;
          break;
       case 'F':
-         s_operation = CMD_FILE_SET_INFO;
+         s_operation = Operation::FILE_SET_INFO;
          break;
       case 'I':
-         s_operation = CMD_GET_PARAMS;
+         s_operation = Operation::GET_PARAMS;
          break;
       case 'C':
-         s_operation = CMD_GET_CONFIG;
+         s_operation = Operation::GET_CONFIG;
          break;
       case 'l':
-         s_operation = CMD_LIST;
-         s_fixedType = true;
-         break;
-      case 'T':
-         s_operation = CMD_TABLE;
+         s_operation = Operation::GET_LIST;
          s_fixedType = true;
          break;
       case 'n':   // Show names
          s_showNames = true;
          break;
       case 'N':   // Check service
-         s_operation = CMD_CHECK_SERVICE;
+         s_operation = Operation::CHECK_SERVICE;
          s_serviceAddr = InetAddress::parse(optarg);
          if (!s_serviceAddr.isValidUnicast())
          {
             _tprintf(_T("Invalid IP address \"%s\"\n"), optarg);
             start = false;
+         }
+         break;
+      case 'o':   // Protocol number for service check
+         i = _tcstol(optarg, &eptr, 0);
+         if ((*eptr != 0) || (i < 0) || (i > 65535))
+         {
+            _tprintf(_T("Invalid protocol number \"%s\"\n"), optarg);
+            start = false;
+         }
+         else
+         {
+            s_serviceProto = static_cast<uint16_t>(i);
          }
          break;
       case 'P':   // Port number for service check
@@ -394,17 +465,12 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
             }
          }
          break;
-      case 'o':   // Protocol number for service check
-         i = _tcstol(optarg, &eptr, 0);
-         if ((*eptr != 0) || (i < 0) || (i > 65535))
-         {
-            _tprintf(_T("Invalid protocol number \"%s\"\n"), optarg);
-            start = false;
-         }
-         else
-         {
-            s_serviceProto = static_cast<uint16_t>(i);
-         }
+      case 'T':
+         s_operation = Operation::GET_TABLE;
+         s_fixedType = true;
+         break;
+      case 'U':
+         s_operation = Operation::GET_USER_SESSIONS;
          break;
       default:
          break;
@@ -417,7 +483,7 @@ static bool ParseAdditionalOptionCb(const char ch, const TCHAR *optarg)
  */
 static bool IsArgMissingCb(int currentCount)
 {
-   return currentCount < (((s_operation == CMD_CHECK_SERVICE) || (s_operation == CMD_GET_PARAMS) || (s_operation == CMD_GET_CONFIG)) ? 1 : 2);
+   return currentCount < (((s_operation == Operation::CHECK_SERVICE) || (s_operation == Operation::GET_PARAMS) || (s_operation == Operation::GET_CONFIG) || (s_operation == Operation::GET_USER_SESSIONS)) ? 1 : 2);
 }
 
 /**
@@ -431,33 +497,36 @@ static int ExecuteCommandCb(AgentConnection *conn, int argc, TCHAR **argv, int o
    {
       switch(s_operation)
       {
-         case CMD_GET:
+         case Operation::CHECK_SERVICE:
+            exitCode = CheckService(conn, s_serviceType, s_serviceAddr, s_serviceProto, s_servicePort, s_serviceRequest, s_serviceResponse);
+            break;
+         case Operation::FILE_SET_INFO:
+            exitCode = GetFileSetInfo(conn, argc - optind - 1, &argv[optind + 1]);
+            break;
+         case Operation::GET:
             pos = optind + 1;
             do
             {
                exitCode = Get(conn, argv[pos++]);
             } while((exitCode == 0) && (s_batchMode) && (pos < argc));
             break;
-         case CMD_LIST:
-            exitCode = GetList(conn, argv[optind + 1]);
-            break;
-         case CMD_TABLE:
-            exitCode = GetTable(conn, argv[optind + 1]);
-            break;
-         case CMD_CHECK_SERVICE:
-            exitCode = CheckService(conn, s_serviceType, s_serviceAddr, s_serviceProto, s_servicePort, s_serviceRequest, s_serviceResponse);
-            break;
-         case CMD_GET_PARAMS:
-            exitCode = ListParameters(conn);
-            break;
-         case CMD_GET_CONFIG:
+         case Operation::GET_CONFIG:
             exitCode = GetConfig(conn);
             break;
-         case CMD_GET_SCREENSHOT:
+         case Operation::GET_LIST:
+            exitCode = GetList(conn, argv[optind + 1]);
+            break;
+         case Operation::GET_PARAMS:
+            exitCode = ListParameters(conn);
+            break;
+         case Operation::GET_SCREENSHOT:
             exitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : _T("Console"), argv[optind + 1]);
             break;
-         case CMD_FILE_SET_INFO:
-            exitCode = GetFileSetInfo(conn, argc - optind - 1, &argv[optind + 1]);
+         case Operation::GET_TABLE:
+            exitCode = GetTable(conn, argv[optind + 1]);
+            break;
+         case Operation::GET_USER_SESSIONS:
+            exitCode = GetUserSessions(conn);
             break;
          default:
             break;
@@ -501,8 +570,9 @@ int main(int argc, char *argv[])
                        _T("   -R string    : Service check expected response string.\n")
                        _T("   -t type      : Set type of service to be checked.\n")
                        _T("                  Possible types are: custom, ssh, pop3, smtp, ftp, http, https, telnet.\n")
-                       _T("   -T           : Requested parameter is a table.\n");
-   tool.additionalOptions = "bCd:EfFi:IlnN:o:P:r:R:t:T";
+                       _T("   -T           : Requested parameter is a table.\n")
+                       _T("   -U           : Get list of active user sessions.\n");
+   tool.additionalOptions = "bCd:EfFi:IlnN:o:P:r:R:t:TU";
    tool.executeCommandCb = &ExecuteCommandCb;
    tool.parseAdditionalOptionCb = &ParseAdditionalOptionCb;
    tool.isArgMissingCb = &IsArgMissingCb;

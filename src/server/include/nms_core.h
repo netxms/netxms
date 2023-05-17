@@ -799,6 +799,7 @@ private:
 	void getNodeSoftware(const NXCPMessage& request);
    void getNodeHardware(const NXCPMessage& request);
 	void getWinPerfObjects(const NXCPMessage& request);
+	void getUserSessions(const NXCPMessage& request);
 	void listMappingTables(const NXCPMessage& request);
 	void getMappingTable(const NXCPMessage& request);
 	void updateMappingTable(const NXCPMessage& request);

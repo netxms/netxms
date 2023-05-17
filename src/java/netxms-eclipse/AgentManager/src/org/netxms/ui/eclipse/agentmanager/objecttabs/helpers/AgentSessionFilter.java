@@ -18,9 +18,10 @@
  */
 package org.netxms.ui.eclipse.agentmanager.objecttabs.helpers;
 
+import java.net.InetAddress;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.TableRow;
+import org.netxms.client.UserSession;
 
 /**
  * Agent session filter
@@ -35,18 +36,25 @@ public class AgentSessionFilter extends ViewerFilter
    @Override
    public boolean select(Viewer viewer, Object parentElement, Object element)
    {
-      TableRow row = (TableRow)element;
-
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      for(int i = 0; i < row.size(); i++)
-      {
-         if (row.get(i).getValue().toLowerCase().contains(filterString))
-            return true;
-      }
+      UserSession s = (UserSession)element;
+      return s.getLoginName().toLowerCase().contains(filterString) 
+            || s.getTerminal().toLowerCase().contains(filterString)
+            || s.getClientName().toLowerCase().contains(filterString)
+            || addressToText(s.getClientAddress()).contains(filterString);
+   }
 
-      return false;
+   /**
+    * Safely convert inet address to text
+    *
+    * @param a address
+    * @return text representation
+    */
+   private static String addressToText(InetAddress a)
+   {
+      return ((a != null) && !a.isAnyLocalAddress()) ? a.getHostAddress() : "";
    }
 
    /**

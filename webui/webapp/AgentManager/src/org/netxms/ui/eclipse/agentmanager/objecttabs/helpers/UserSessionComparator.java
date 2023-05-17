@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 Raden Solutions
+ * Copyright (C) 2019-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,9 @@ package org.netxms.ui.eclipse.agentmanager.objecttabs.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.client.TableRow;
+import org.netxms.client.UserSession;
 import org.netxms.ui.eclipse.agentmanager.objecttabs.UserSessionsTab;
+import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -30,21 +31,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserSessionComparator extends ViewerComparator
 {
-   UserSessionsTab tab;
-   
    /**
-    * Constructor 
-    * 
-    * @param tab
-    */
-   public UserSessionComparator(UserSessionsTab tab)
-   {
-      this.tab = tab;
-   }
-   
-   /*
-    * (non-Javadoc)
-    * 
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -52,34 +39,44 @@ public class UserSessionComparator extends ViewerComparator
    {
       int result;
 
-      TableRow row1 = (TableRow)e1;
-      TableRow row2 = (TableRow)e2;
+      UserSession s1 = (UserSession)e1;
+      UserSession s2 = (UserSession)e2;
       
       Integer id = (Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID");
-      int index1 = tab.getTable().getColumnIndex(UserSessionsTab.COLUMNS[id]);
-
-      switch(index1)
+      switch(id)
       {
-         case UserSessionsTab.COLUMN_ID:
-            result = row1.get(UserSessionsTab.COLUMN_ID).getValue().compareTo(row2.get(UserSessionsTab.COLUMN_ID).getValue());
-            break;
-         case UserSessionsTab.COLUMN_SESSION:
-            result = row1.get(UserSessionsTab.COLUMN_SESSION).getValue()
-                  .compareTo(row2.get(UserSessionsTab.COLUMN_SESSION).getValue());
-            break;
-         case UserSessionsTab.COLUMN_USER:
-            result = row1.get(UserSessionsTab.COLUMN_USER).getValue().compareTo(row2.get(UserSessionsTab.COLUMN_USER).getValue());
-            break;
-         case UserSessionsTab.COLUMN_CLIENT:
-            result = row1.get(UserSessionsTab.COLUMN_CLIENT).getValue()
-                  .compareTo(row2.get(UserSessionsTab.COLUMN_CLIENT).getValue());
-            break;
-         case UserSessionsTab.COLUMN_STATE:
-            result = row1.get(UserSessionsTab.COLUMN_STATE).getValue().compareTo(row2.get(UserSessionsTab.COLUMN_STATE).getValue());
+         case UserSessionsTab.COLUMN_AGENT_PID:
+            result = Long.compare(s1.getAgentPID(), s2.getAgentPID());
             break;
          case UserSessionsTab.COLUMN_AGENT_TYPE:
-            result = row1.get(UserSessionsTab.COLUMN_AGENT_TYPE).getValue()
-                  .compareTo(row2.get(UserSessionsTab.COLUMN_AGENT_TYPE).getValue());
+            result = Integer.compare(s1.getAgentType(), s2.getAgentType());
+            break;
+         case UserSessionsTab.COLUMN_CLIENT_ADDRESS:
+            result = ComparatorHelper.compareInetAddresses(s1.getClientAddress(), s2.getClientAddress());
+            break;
+         case UserSessionsTab.COLUMN_CLIENT_NAME:
+            result = s1.getClientName().compareToIgnoreCase(s2.getClientName());
+            break;
+         case UserSessionsTab.COLUMN_DISPLAY:
+            result = s1.getDisplayDescription().compareToIgnoreCase(s2.getDisplayDescription());
+            break;
+         case UserSessionsTab.COLUMN_ID:
+            result = Integer.compare(s1.getId(), s2.getId());
+            break;
+         case UserSessionsTab.COLUMN_IDLE_TIME:
+            result = Integer.compare(s1.getIdleTime(), s2.getIdleTime());
+            break;
+         case UserSessionsTab.COLUMN_LOGIN_TIME:
+            result = s1.getLoginTime().compareTo(s2.getLoginTime());
+            break;
+         case UserSessionsTab.COLUMN_TERMINAL:
+            result = s1.getTerminal().compareToIgnoreCase(s2.getTerminal());
+            break;
+         case UserSessionsTab.COLUMN_USER:
+            result = s1.getLoginName().compareToIgnoreCase(s2.getLoginName());
+            break;
+         case UserSessionsTab.COLUMN_STATE:
+            result = Boolean.compare(s1.isConnected(), s2.isConnected());
             break;
          default:
             result = 0;

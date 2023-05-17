@@ -1598,6 +1598,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_WINPERF_OBJECTS:
          getWinPerfObjects(*request);
          break;
+      case CMD_GET_USER_SESSIONS:
+         getUserSessions(*request);
+         break;
       case CMD_LIST_MAPPING_TABLES:
          listMappingTables(*request);
          break;
@@ -12744,7 +12747,6 @@ void ClientSession::getWinPerfObjects(const NXCPMessage& request)
 {
    NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
 
-   // Get node id and check object class and access rights
    shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
    if (node != nullptr)
    {
@@ -12754,6 +12756,62 @@ void ClientSession::getWinPerfObjects(const NXCPMessage& request)
       }
       else
       {
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on reading list of Windows performance counters"));
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else  // No object with given ID
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get list of user sessions on a node
+ */
+void ClientSession::getUserSessions(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != nullptr)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         shared_ptr<AgentConnectionEx> conn = static_cast<Node&>(*node).getAgentConnection();
+         if (conn != nullptr)
+         {
+            ObjectArray<UserSession> *sessions;
+            uint32_t status = conn->getUserSessions(&sessions);
+            if (status == ERR_SUCCESS)
+            {
+               response.setField(VID_RCC, RCC_SUCCESS);
+               response.setField(VID_NUM_SESSIONS, sessions->size());
+
+               uint32_t fieldId = VID_SESSION_DATA_BASE;
+               for(int i = 0; i < sessions->size(); i++)
+               {
+                  sessions->get(i)->fillMessage(&response, fieldId);
+                  fieldId += 64;
+               }
+
+               delete sessions;
+            }
+            else
+            {
+               response.setField(VID_RCC, AgentErrorToRCC(status));
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_NO_CONNECTION_TO_AGENT);
+         }
+      }
+      else
+      {
+         writeAuditLog(AUDIT_OBJECTS, false, node->getId(), _T("Access denied on reading user session list"));
          response.setField(VID_RCC, RCC_ACCESS_DENIED);
       }
    }

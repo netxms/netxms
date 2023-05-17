@@ -7411,6 +7411,14 @@ public class NXCSession
       return packages;
    }
 
+   /**
+    * Get list of hardware components as reported by agent.
+    *
+    * @param nodeId node object identifier
+    * @return list of hardware components
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
    public List<HardwareComponent> getNodeHardwareComponents(long nodeId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_NODE_HARDWARE);
@@ -7428,6 +7436,33 @@ public class NXCSession
          baseId += 64;
       }
       return components;
+   }
+
+   /**
+    * Get list of user sessions on given node as reported by agent.
+    *
+    * @param nodeId node object identifier
+    * @return list of user sessions
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<UserSession> getUserSessions(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_USER_SESSIONS);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      sendMessage(msg);
+
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SESSIONS);
+      List<UserSession> sessions = new ArrayList<UserSession>(count);
+      long baseId = NXCPCodes.VID_SESSION_DATA_BASE;
+
+      for(int i = 0; i < count; i++)
+      {
+         sessions.add(new UserSession(response, baseId));
+         baseId += 64;
+      }
+      return sessions;
    }
 
    /**

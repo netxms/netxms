@@ -194,7 +194,7 @@ public class NXCPCodes
    public static final int CMD_DELETE_ASSET_PROPERTY = 0x00A8;
    public static final int CMD_LINK_ASSET = 0x00A9;
    public static final int CMD_UNLINK_ASSET = 0x00AA;
-   // public static final int CMD_GET_MODULE_LIST = 0x00AB;
+   public static final int CMD_GET_USER_SESSIONS = 0x00AB;
    // public static final int CMD_UPDATE_MODULE_INFO = 0x00AC;
 	public static final int CMD_COPY_USER_VARIABLE = 0x00AD;
 	public static final int CMD_RESOLVE_DCI_NAMES = 0x00AE;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
 
    private NXCSession session;
    private long nodeId;
-   private String userSession;
+   private String terminal;
    private String userName;
    private Image image;
    private String errorMessage;
@@ -107,7 +107,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
       nodeId = Long.parseLong(params[0]);
       if(params.length > 1)
       {
-         userSession = params[1];
+         terminal = params[1];
          if(params.length > 2)
             userName = params[2];
          else
@@ -211,7 +211,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
          {
             try
             {
-               if (userSession == null)
+               if (terminal == null)
                {
                   Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents"); //$NON-NLS-1$
                   if ((sessions != null) && (sessions.getRowCount() > 0))
@@ -223,22 +223,22 @@ public class ScreenshotView extends ViewPart implements IPartListener
                         String n = sessions.getCellValue(i, colIndexName);
                         if ("Console".equalsIgnoreCase(n)) //$NON-NLS-1$
                         {
-                           userSession = n;
+                           terminal = n;
                            userName = sessions.getCellValue(i, colIndexUser);
                            break;
                         }
                      }
                      
-                     if (userSession == null)
+                     if (terminal == null)
                      {
                         // Console session not found, use first available
-                        userSession = sessions.getCellValue(0, colIndexName);
+                        terminal = sessions.getCellValue(0, colIndexName);
                         userName = sessions.getCellValue(0, colIndexUser);
                      }
                   }
                }
                
-               if (userSession == null)
+               if (terminal == null)
                {
                   // Cannot find any connected sessions
                   runInUIThread(new Runnable() {
@@ -265,7 +265,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                }
                
                lastRequestTime = System.currentTimeMillis();
-               byteImage = session.takeScreenshot(nodeId, userSession);
+               byteImage = session.takeScreenshot(nodeId, terminal);
                final ImageData data = new ImageData(new ByteArrayInputStream(byteImage));
                runInUIThread(new Runnable() {
                   @Override
@@ -278,7 +278,7 @@ public class ScreenshotView extends ViewPart implements IPartListener
                         image.dispose();
                      
                      image = new Image(getDisplay(), data);
-                     imageInfo = userName + "@" + userSession; //$NON-NLS-1$
+                     imageInfo = userName + "@" + terminal; //$NON-NLS-1$
                      errorMessage = null;
                      canvas.redraw();
 

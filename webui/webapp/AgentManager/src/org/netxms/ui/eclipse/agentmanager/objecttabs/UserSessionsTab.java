@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2019 Raden Solutions
+ * Copyright (C) 2019-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.agentmanager.objecttabs;
 
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -42,8 +43,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
-import org.netxms.client.Table;
-import org.netxms.client.TableRow;
+import org.netxms.client.UserSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
@@ -69,17 +69,20 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserSessionsTab extends ObjectTab
 {
-   public static final String[] COLUMNS = { "SESSION_ID", "SESSION_NAME", "USER_NAME", "CLIENT_NAME", "STATE", "AGENT_TYPE" };
    public static final int COLUMN_ID = 0;
-   public static final int COLUMN_SESSION = 1;
-   public static final int COLUMN_USER = 2;
-   public static final int COLUMN_CLIENT = 3;
-   public static final int COLUMN_STATE = 4;
-   public static final int COLUMN_AGENT_TYPE = 5;
+   public static final int COLUMN_USER = 1;
+   public static final int COLUMN_TERMINAL = 2;
+   public static final int COLUMN_STATE = 3;
+   public static final int COLUMN_CLIENT_NAME = 4;
+   public static final int COLUMN_CLIENT_ADDRESS = 5;
+   public static final int COLUMN_DISPLAY = 6;
+   public static final int COLUMN_LOGIN_TIME = 7;
+   public static final int COLUMN_IDLE_TIME = 8;
+   public static final int COLUMN_AGENT_TYPE = 9;
+   public static final int COLUMN_AGENT_PID = 10;
 
    private NXCSession session;
    private AbstractObject object;
-   private Table sessionsTable = null;
    private boolean showFilter = true;
    private CompositeWithMessageBar viewerContainer;
    private SortableTableViewer viewer;
@@ -127,22 +130,22 @@ public class UserSessionsTab extends ObjectTab
          }
       });
 
-      final String[] names = { "Session id", "Session", "User", "Client", "State", "Agent type" };
-      final int[] widths = { 150, 150, 100, 150, 150, 100 };
+      final String[] names = { "ID", "User", "Terminal", "State", "Client name", "Client address", "Display", "Login timestamp", "Idle time", "Agent type", "Agent PID" };
+      final int[] widths = { 100, 150, 150, 100, 150, 150, 150, 180, 120, 150, 120 };
       viewer = new SortableTableViewer(viewerContainer.getContent(), names, widths, COLUMN_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
-      viewer.setLabelProvider(new UserSessionLabelProvider(this));
+      viewer.setLabelProvider(new UserSessionLabelProvider());
       viewer.setContentProvider(new ArrayContentProvider());
-      viewer.setComparator(new UserSessionComparator(this));
+      viewer.setComparator(new UserSessionComparator());
       viewer.getTable().setHeaderVisible(true);
       viewer.getTable().setLinesVisible(true);
       filter = new AgentSessionFilter();
       viewer.addFilter(filter);
-      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "UserSessions"); //$NON-NLS-1$
+      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "UserSessions.V2"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "UserSessions"); //$NON-NLS-1$
+            WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "UserSessions.V2"); //$NON-NLS-1$
          }
       });
 
@@ -264,15 +267,13 @@ public class UserSessionsTab extends ObjectTab
       IStructuredSelection selection = viewer.getStructuredSelection();
       if ((selection.size() >= 1))
       {
-         int colIndexName = sessionsTable.getColumnIndex("SESSION_NAME"); //$NON-NLS-1$
-         int colIndexUser = sessionsTable.getColumnIndex("USER_NAME"); //$NON-NLS-1$
          for(Object o : selection.toList())
          {
+            UserSession s = (UserSession)o;
             try
             {
                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-                     .showView(ScreenshotView.ID, Long.toString(object.getObjectId()) + "&"
-                           + ((TableRow)o).get(colIndexName).getValue() + "&" + ((TableRow)o).get(colIndexUser).getValue(),
+                     .showView(ScreenshotView.ID, Long.toString(object.getObjectId()) + "&" + s.getTerminal() + "&" + s.getLoginName(),
                            IWorkbenchPage.VIEW_ACTIVATE);
             }
             catch(PartInitException e)
@@ -366,21 +367,21 @@ public class UserSessionsTab extends ObjectTab
    {
       if (!isActive())
          return;
-      
-      ConsoleJob job = new ConsoleJob("Get list of agent sessions", getViewPart(), Activator.PLUGIN_ID) {
+
+      ConsoleJob job = new ConsoleJob("Get list of user sessions", getViewPart(), Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             try
             {
-               sessionsTable = session.queryAgentTable(object.getObjectId(), "Agent.SessionAgents");
+               List<UserSession> sessions = session.getUserSessions(object.getObjectId());
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
                      if (viewer.getControl().isDisposed())
                         return;
-                     viewer.setInput(sessionsTable.getAllRows());
+                     viewer.setInput(sessions);
                      viewerContainer.hideMessage();
                   }
                });
@@ -392,8 +393,7 @@ public class UserSessionsTab extends ObjectTab
                   public void run()
                   {
                      viewer.setInput(new Object[0]);
-                     viewerContainer.showMessage(CompositeWithMessageBar.ERROR,
-                           String.format("Cannot get user sessions (%s)", e.getLocalizedMessage()));
+                     viewerContainer.showMessage(CompositeWithMessageBar.ERROR, String.format("Cannot get user sessions (%s)", e.getLocalizedMessage()));
                   }
                });
             }
@@ -402,7 +402,7 @@ public class UserSessionsTab extends ObjectTab
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get list of user agent sessions";
+            return "Cannot get list of user sessions";
          }
       };
       job.setUser(false);
@@ -417,13 +417,5 @@ public class UserSessionsTab extends ObjectTab
    {
       super.selected();
       refresh();
-   }
-   
-   /**
-    * @return displayed table
-    */
-   public Table getTable()
-   {
-      return sessionsTable;
    }
 }

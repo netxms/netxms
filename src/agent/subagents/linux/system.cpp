@@ -28,55 +28,101 @@
 /**
  * Handler for System.ConnectedUsers parameter
  */
-LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+LONG H_ConnectedUsers(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	LONG nRet = SYSINFO_RC_ERROR;
-	struct utmp rec;
-	int nCount = 0;
-
 	FILE *f = fopen(UTMP_FILE, "r");
-	if (f != NULL)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-		while(fread(&rec, sizeof(rec), 1, f) == 1)
-		{
-			if (rec.ut_type == USER_PROCESS)
-			{
-				nCount++;
-			}
-		}
-		fclose(f);
-		ret_uint(pValue, nCount);
-	}
+	if (f == nullptr)
+	   return SYSINFO_RC_ERROR;
 
-	return nRet;
+   int count = 0;
+   struct utmp rec;
+   while(fread(&rec, sizeof(rec), 1, f) == 1)
+   {
+      if (rec.ut_type == USER_PROCESS)
+         count++;
+   }
+   fclose(f);
+   ret_uint(value, count);
+	return SYSINFO_RC_SUCCESS;
 }
 
 /**
- * Handler for System.ActiveUserSessions enum
+ * Handler for System.ActiveUserSessions list
  */
-LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_UserSessionList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	LONG nRet = SYSINFO_RC_ERROR;
-	struct utmp rec;
-	TCHAR szBuffer[1024];
-
 	FILE *f = fopen(UTMP_FILE, "r");
-	if (f != nullptr)
-	{
-		nRet = SYSINFO_RC_SUCCESS;
-		while(fread(&rec, sizeof(rec), 1, f) == 1)
-		{
-			if (rec.ut_type == USER_PROCESS)
-			{
-				_sntprintf(szBuffer, 1024, _T("\"%hs\" \"%hs\" \"%hs\""), rec.ut_user, rec.ut_line, rec.ut_host);
-				pValue->add(szBuffer);
-			}
-		}
-		fclose(f);
-	}
+	if (f == nullptr)
+	   return SYSINFO_RC_ERROR;
 
-	return nRet;
+   struct utmp rec;
+   while(fread(&rec, sizeof(rec), 1, f) == 1)
+   {
+      if (rec.ut_type == USER_PROCESS)
+      {
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("\"%hs\" \"%hs\" \"%hs\""), rec.ut_user, rec.ut_line, rec.ut_host);
+         value->add(buffer);
+      }
+   }
+   fclose(f);
+
+	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.ActiveUserSessions table
+ */
+LONG H_UserSessionTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   FILE *f = fopen(UTMP_FILE, "r");
+   if (f == nullptr)
+      return SYSINFO_RC_ERROR;
+
+   value->addColumn(_T("ID"), DCI_DT_UINT, _T("ID"), true);
+   value->addColumn(_T("USER_NAME"), DCI_DT_STRING, _T("User name"));
+   value->addColumn(_T("TERMINAL"), DCI_DT_STRING, _T("Terminal"));
+   value->addColumn(_T("STATE"), DCI_DT_STRING, _T("State"));
+   value->addColumn(_T("CLIENT_NAME"), DCI_DT_STRING, _T("Client name"));
+   value->addColumn(_T("CLIENT_ADDRESS"), DCI_DT_STRING, _T("Client address"));
+   value->addColumn(_T("CLIENT_DISPLAY"), DCI_DT_STRING, _T("Client display"));
+   value->addColumn(_T("CONNECT_TIMESTAMP"), DCI_DT_UINT64, _T("Connect time"));
+   value->addColumn(_T("LOGON_TIMESTAMP"), DCI_DT_UINT64, _T("Logon time"));
+   value->addColumn(_T("IDLE_TIME"), DCI_DT_UINT, _T("Idle for"));
+   value->addColumn(_T("AGENT_TYPE"), DCI_DT_INT, _T("Agent type"));
+   value->addColumn(_T("AGENT_PID"), DCI_DT_UINT, _T("Agent PID"));
+
+   char tty[128] = "/dev/";
+   struct utmp rec;
+   while(fread(&rec, sizeof(rec), 1, f) == 1)
+   {
+      if (rec.ut_type != USER_PROCESS)
+         continue;
+
+      value->addRow();
+      value->set(0, rec.ut_pid);
+      value->set(1, rec.ut_user);
+      value->set(2, rec.ut_line);
+      value->set(3, _T("Active"));
+      value->set(4, rec.ut_host);
+
+      InetAddress addr = InetAddress::parse(rec.ut_host);
+      if (addr.isValid())
+         value->set(5, addr.toString());
+
+      value->set(8, rec.ut_tv.tv_sec);
+
+      strlcpy(&tty[5], rec.ut_line, 123);
+      struct stat st;
+      if (stat(tty, &st) == 0)
+         value->set(9, time(nullptr) - st.st_atime);
+
+      value->set(10, -1);
+      value->set(11, 0);
+   }
+   fclose(f);
+
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

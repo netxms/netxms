@@ -865,6 +865,59 @@ struct FilePartInfo
 };
 
 /**
+ * User session information
+ */
+struct LIBNXSRV_EXPORTABLE UserSession
+{
+   uint32_t id;
+   MutableString loginName;
+   MutableString terminal;
+   bool connected;
+   MutableString clientName;
+   InetAddress clientAddress;
+   int32_t displayWidth;
+   int32_t displayHeight;
+   int32_t displayColorDepth;
+   time_t connectTime;
+   time_t loginTime;
+   time_t idleTime;
+   uint64_t agentPID;
+   int32_t agentType;
+
+   UserSession()
+   {
+      id = 0;
+      connected = true;
+      displayWidth = 0;
+      displayHeight = 0;
+      displayColorDepth = 0;
+      connectTime = 0;
+      loginTime = 0;
+      idleTime = 0;
+      agentPID = 0;
+      agentType = -1;
+   }
+
+   void fillMessage(NXCPMessage *msg, uint32_t baseId) const
+   {
+      msg->setField(baseId++, id);
+      msg->setField(baseId++, loginName);
+      msg->setField(baseId++, terminal);
+      msg->setField(baseId++, connected);
+      msg->setField(baseId++, clientName);
+      msg->setField(baseId++, clientAddress);
+      msg->setField(baseId++, displayWidth);
+      msg->setField(baseId++, displayHeight);
+      msg->setField(baseId++, displayColorDepth);
+      msg->setFieldFromTime(baseId++, connectTime);
+      msg->setFieldFromTime(baseId++, loginTime);
+      msg->setFieldFromTime(baseId++, idleTime);
+      msg->setField(baseId++, agentPID);
+      msg->setField(baseId++, agentType);
+   }
+};
+
+/**
  * Receiver for agent connection
  */
 class AgentConnectionReceiver;
@@ -979,6 +1032,7 @@ public:
 
    bool connect(RSA_KEY serverKey = nullptr, uint32_t *error = nullptr, uint32_t *socketError = nullptr, uint64_t serverId = 0);
    void disconnect();
+
    bool isConnected() const { return m_isConnected; }
    bool isProxyMode() { return m_useProxy; }
 	int getProtocolVersion() const { return m_nProtocolVersion; }
@@ -993,6 +1047,11 @@ public:
    void postRawMessage(NXCP_MESSAGE *msg);
    NXCPMessage *waitForMessage(uint16_t code, uint32_t id, uint32_t timeout) { return m_messageWaitQueue.waitForMessage(code, id, timeout); }
    uint32_t waitForRCC(uint32_t requestId, uint32_t timeout);
+
+   uint32_t setServerCapabilities();
+   uint32_t setServerId(uint64_t serverId);
+   uint32_t enableTraps();
+   uint32_t enableFileUpdates();
 
    shared_ptr<ArpCache> getArpCache();
    InterfaceList *getInterfaceList();
@@ -1010,8 +1069,6 @@ public:
          uint32_t retentionTime, const TCHAR *login, const TCHAR *password, WebServiceAuthType authType, const StringMap& headers,
          const TCHAR *path, bool verifyCert, bool verifyHost, bool followLocation, bool forcePlainTextParser, StringList *results);
    uint32_t nop();
-   uint32_t setServerCapabilities();
-   uint32_t setServerId(uint64_t serverId);
    uint32_t executeCommand(const TCHAR *command, const StringList &args, bool withOutput = false,
          void (*outputCallback)(ActionCallbackEvent, const TCHAR*, void*) = nullptr, void *cbData = nullptr);
    uint32_t changeFileOwner(const TCHAR *file, bool allowPathExpansion, const TCHAR *newOwner, const TCHAR *newGroup);
@@ -1019,21 +1076,20 @@ public:
    uint32_t getFileSetInfo(const StringList &fileSet, bool allowPathExpansion, ObjectArray<RemoteFileInfo> **info);
    uint32_t getFileFingerprint(const TCHAR *file, RemoteFileFingerprint *fp);
    uint32_t uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
-            std::function<void (size_t)> progressCallback = nullptr, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+         std::function<void (size_t)> progressCallback = nullptr, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    uint32_t downloadFile(const TCHAR *localFile, const TCHAR *destinationFile = nullptr, bool allowPathExpansion = false,
-            std::function<void (size_t)> progressCallback = nullptr, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
+         std::function<void (size_t)> progressCallback = nullptr, NXCPStreamCompressionMethod compMethod = NXCP_STREAM_COMPRESSION_NONE);
    uint32_t cancelFileMonitoring(const TCHAR *agentFileId);
    uint32_t startUpgrade(const TCHAR *pkgName);
    uint32_t installPackage(const TCHAR *pkgName, const TCHAR *pkgType, const TCHAR *command);
    uint32_t checkNetworkService(uint32_t *status, const InetAddress& addr, int serviceType, uint16_t port = 0, uint16_t proto = 0,
-            const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
+         const TCHAR *serviceRequest = nullptr, const TCHAR *serviceResponse = nullptr, uint32_t *responseTime = nullptr);
    uint32_t getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    uint32_t readConfigFile(TCHAR **content, size_t *size);
    uint32_t writeConfigFile(const TCHAR *content);
-   uint32_t enableTraps();
-   uint32_t enableFileUpdates();
    uint32_t getPolicyInventory(AgentPolicyInfo **info);
    uint32_t uninstallPolicy(const uuid& guid);
+   uint32_t getUserSessions(ObjectArray<UserSession> **sessions);
    uint32_t takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
    TCHAR *getHostByAddr(const InetAddress& ipAddr, TCHAR *buffer, size_t bufLen);
    uint32_t setupTcpProxy(const InetAddress& ipAddr, uint16_t port, uint32_t *channelId);
