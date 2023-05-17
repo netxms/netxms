@@ -18,6 +18,7 @@
  */
 package org.netxms.client.datacollection;
 
+import java.util.regex.Matcher;
 import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
@@ -167,19 +168,22 @@ public class ChartDciConfig implements NodeItemPair
       displayFormat = "";
    }
 
-	/**
-	 * Create DCI info from DciValue object
-	 * 
-	 * @param dci The DciValue
-	 */
-	public ChartDciConfig(ChartDciConfig src, DciValue dci)
-	{
-		nodeId = dci.getNodeId();
-		dciId = dci.getId();
-      dciName = dci.getName();
-      dciDescription = dci.getDescription();
-		type = dci.getDcObjectType();
-		name = dci.getDescription();
+   
+   /**
+    * 
+    * Create DCI info from DciValue object
+    * 
+    * @param src initial configuration to copy form
+    * @param matcher matcher to get match grup for node
+    * @param dciValue
+    */
+   public ChartDciConfig(ChartDciConfig src, Matcher matcher, DciValue dciValue)
+   {
+      nodeId = dciValue.getNodeId();
+      dciId = dciValue.getId();
+      dciName = dciValue.getName();
+      dciDescription = dciValue.getDescription();
+      type = dciValue.getDcObjectType();
       this.color = src.color;
       this.lineWidth = src.lineWidth;
       this.lineChartType = src.lineChartType;
@@ -191,7 +195,53 @@ public class ChartDciConfig implements NodeItemPair
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
-	}
+
+
+      if (src.name.isEmpty())
+      {
+         name = dciValue.getDescription();
+      }
+      else
+      {
+         StringBuffer str = new StringBuffer();
+         int state = 0;
+         for (char c : src.name.toCharArray())
+         {
+            switch   (state)
+            {
+               case 0:
+               {
+                  if (c == '/')
+                     state = 1;
+                  else
+                     str.append(c);
+                  break;
+               }
+               case 1:
+               {
+                  if (c == '/')
+                     str.append(c);
+                  else if (c >= '0' && c <= '9')
+                  {
+                     int group = 0 + c - '0';
+                     if (matcher.groupCount() >= group)
+                     {
+                        str.append(matcher.group(group));
+                     }
+                  }
+                  else
+                  {
+                     str.append('/');
+                     str.append(c);
+                  }
+                  state = 0;
+                  break;    
+               }
+            }
+         }
+         name = str.toString();
+      }
+   }
 
    /**
     * Create DCI info from DataCollectionObject object
@@ -219,7 +269,7 @@ public class ChartDciConfig implements NodeItemPair
       displayFormat = "";
    }
 
-	/**
+   /**
 	 * @return the color
 	 */
 	public int getColorAsInt()

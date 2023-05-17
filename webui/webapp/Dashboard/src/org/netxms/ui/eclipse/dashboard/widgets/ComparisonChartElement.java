@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -110,9 +111,12 @@ public abstract class ComparisonChartElement extends ElementWidget
                      if (dciInfo.getDcObjectType() != DataCollectionObject.DCO_TYPE_ITEM)
                         continue;
 
-                     if ((!dci.dciName.isEmpty() && namePattern.matcher(dciInfo.getName()).find()) || (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciInfo.getDescription()).find()))
+                     Matcher nameMatch = namePattern.matcher(dciInfo.getName());
+                     Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
+                     if ((!dci.dciName.isEmpty() && nameMatch.find()) || 
+                           (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
                      {
-                        ChartDciConfig instance = new ChartDciConfig(dciInfo);
+                        ChartDciConfig instance = new ChartDciConfig(dci, nameMatch.find() ? nameMatch : descriptionMatch, dciInfo);
                         runtimeDciList.add(instance);
                         if (!dci.multiMatch)
                            break;

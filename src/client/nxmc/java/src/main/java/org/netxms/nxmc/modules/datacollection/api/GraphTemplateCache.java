@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCException;
@@ -169,14 +170,16 @@ public class GraphTemplateCache
       final HashSet<ChartDciConfig> chartMetrics = new HashSet<ChartDciConfig>();
       for(ChartDciConfig dci : graphDefinition.getDciList())
       {
-         Pattern namePattern = dci.dciName.isEmpty() ? null : Pattern.compile(dci.dciName);
-         Pattern descriptionPattern = dci.dciDescription.isEmpty() ? null : Pattern.compile(dci.dciDescription);
+         Pattern namePattern = Pattern.compile(dci.dciName);
+         Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
          for(int j = 0; j < dciList.length; j++)
          {
-            if ((!dci.dciName.isEmpty() && namePattern.matcher(dciList[j].getName()).find()) ||
-                (!dci.dciDescription.isEmpty() && descriptionPattern.matcher(dciList[j].getDescription()).find()))
+            Matcher nameMatch = namePattern.matcher(dciList[j].getName());
+            Matcher descriptionMatch = descriptionPattern.matcher(dciList[j].getDescription());
+            if ((!dci.dciName.isEmpty() && nameMatch.find()) ||
+                (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
             {
-               chartMetrics.add(new ChartDciConfig(dci, dciList[j]));
+               chartMetrics.add(new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciList[j]));
                if (!dci.multiMatch)
                   break;
             }
