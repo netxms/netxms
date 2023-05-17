@@ -374,8 +374,8 @@ ObjectUrl::ObjectUrl(DB_RESULT hResult, int row)
  */
 ObjectUrl::~ObjectUrl()
 {
-   free(m_url);
-   free(m_description);
+   MemFree(m_url);
+   MemFree(m_description);
 }
 
 /**
@@ -398,14 +398,6 @@ json_t *ObjectUrl::toJson() const
    json_object_set_new(root, "url", json_string_t(m_url));
    json_object_set_new(root, "description", json_string_t(m_description));
    return root;
-}
-
-/**
- * Distance array sorting callback
- */
-int DistanceSortCallback(const ObjectsDistance **obj1, const ObjectsDistance **obj2)
-{
-   return (*obj1)->distance - (*obj2)->distance;
 }
 
 /**
@@ -449,7 +441,7 @@ ObjectArray<ObjectsDistance> *FindNearestObjects(uint32_t currObjectId, int maxD
    }
 
    // Sort filtered objects
-   result->sort(DistanceSortCallback);
+   result->sort([] (const ObjectsDistance **d1, const ObjectsDistance **d2) -> int { return (*d1)->distance - (*d2)->distance; });
 
    return result;
 }
