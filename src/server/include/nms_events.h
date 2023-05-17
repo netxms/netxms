@@ -581,6 +581,7 @@ public:
    void createOrderingExportRecord(StringBuffer &xml) const;
    json_t *toJson() const;
 
+   void validateConfig() const;
    bool isActionInUse(uint32_t actionId) const;
    bool isCategoryInUse(uint32_t categoryId) const { return m_alarmCategoryList.contains(categoryId); }
 
@@ -709,6 +710,7 @@ public:
    void importRule(EPRule *rule, bool overwrite, ObjectArray<uuid> *ruleOrdering);
    json_t *toJson() const;
 
+   void validateConfig() const;
    bool isActionInUse(uint32_t actionId) const;
    bool isCategoryInUse(uint32_t categoryId) const;
 

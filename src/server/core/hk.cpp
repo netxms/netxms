@@ -487,6 +487,8 @@ static void HouseKeeper()
                static_cast<DataCollectionTarget*>(object)->queuePredictionEngineTraining();
 		   });
 
+      g_pEventPolicy->validateConfig();
+
       PostSystemEvent(EVENT_HOUSEKEEPER_COMPLETED, g_dwMgmtNode, "t", time(nullptr) - cycleStartTime);
 
       ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second

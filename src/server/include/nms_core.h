@@ -1427,6 +1427,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool is
 
 bool ValidateConfig(const Config& config, uint32_t flags, TCHAR *errorText, int errorTextLen);
 uint32_t ImportConfig(const Config& config, uint32_t flags);
+void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TCHAR *descriptionFormat, ...);
 
 #ifdef _WITH_ENCRYPTION
 X509 *CertificateFromLoginMessage(const NXCPMessage& msg);

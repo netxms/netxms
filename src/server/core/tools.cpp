@@ -677,3 +677,19 @@ bool ExecuteSQLCommandFile(const TCHAR *filePath, DB_HANDLE hdb)
 
    return true;
 }
+
+void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TCHAR *descriptionFormat, ...)
+{
+   va_list args;
+   va_start(args, descriptionFormat);
+
+   TCHAR description[1024];
+   _vsntprintf(description, 1024, descriptionFormat, args);
+   nxlog_write(NXLOG_WARNING, description);       
+   EventBuilder(EVENT_CONFIGURATION_ERROR, g_dwMgmtNode).
+                  param(_T("subsystem"), _T("EPP")).
+                  param(_T("tag"), _T("invalid-object-id")).
+                  param(_T("description"), description).post();
+
+   va_end(args);
+}
