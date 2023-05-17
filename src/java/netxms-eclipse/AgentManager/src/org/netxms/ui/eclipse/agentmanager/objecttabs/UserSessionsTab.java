@@ -49,7 +49,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
 import org.netxms.ui.eclipse.agentmanager.Messages;
-import org.netxms.ui.eclipse.agentmanager.objecttabs.helpers.AgentSessionFilter;
+import org.netxms.ui.eclipse.agentmanager.objecttabs.helpers.UserSessionFilter;
 import org.netxms.ui.eclipse.agentmanager.objecttabs.helpers.UserSessionComparator;
 import org.netxms.ui.eclipse.agentmanager.objecttabs.helpers.UserSessionLabelProvider;
 import org.netxms.ui.eclipse.agentmanager.views.ScreenshotView;
@@ -87,7 +87,7 @@ public class UserSessionsTab extends ObjectTab
    private CompositeWithMessageBar viewerContainer;
    private SortableTableViewer viewer;
    private FilterText filterText;
-   private AgentSessionFilter filter;
+   private UserSessionFilter filter;
    private ViewRefreshController refreshController;
    private Action actionExportToCsv;
    private Action actionTakeScreenshot;
@@ -138,7 +138,7 @@ public class UserSessionsTab extends ObjectTab
       viewer.setComparator(new UserSessionComparator());
       viewer.getTable().setHeaderVisible(true);
       viewer.getTable().setLinesVisible(true);
-      filter = new AgentSessionFilter();
+      filter = new UserSessionFilter();
       viewer.addFilter(filter);
       WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "UserSessions.V2"); //$NON-NLS-1$
       viewer.getTable().addDisposeListener(new DisposeListener() {
