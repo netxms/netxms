@@ -161,6 +161,7 @@ public class LogParserEditor extends Composite
       createVisualEditor();
       createTextEditor();
 
+      currentTab = TAB_BUILDER;
       tabFolder.setSelection(0);
    }
 

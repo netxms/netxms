@@ -298,6 +298,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 			}
 		};
       addKeyBinding("M1+S", actionSave);
+      actionSave.setEnabled(false);
 	}
 
 	/**
@@ -1252,6 +1253,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
 		if (!modified)
 		{
 			modified = true;
+			actionSave.setEnabled(true);
 		}
 	}
 
@@ -1296,6 +1298,7 @@ public class NetworkCredentialsEditor extends ConfigurationView
                   saveInProgress = false;
                   deleteMessage(warningMessageId);
                   warningMessageId = 0;
+                  actionSave.setEnabled(false);
 					}
 				});
 			}

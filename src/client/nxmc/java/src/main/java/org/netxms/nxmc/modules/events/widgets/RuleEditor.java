@@ -961,6 +961,7 @@ public class RuleEditor extends Composite
    public void setRuleNumber(int ruleNumber)
    {
       this.ruleNumber = ruleNumber;
+      rule.setRuleNumber(ruleNumber);
       if (!isDisposed())
       {
          ruleNumberLabel.setText(Integer.toString(ruleNumber));
