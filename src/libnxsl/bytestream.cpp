@@ -47,9 +47,9 @@ NXSL_METHOD_DEFINITION(ByteStream, seek)
 /**
  * Read from byte stream using method passed as argument
  */
-#define READ_FROM_BYTE_STREAM(x)                                 \
-   ByteStream* bs = static_cast<ByteStream*>(object->getData()); \
-   *result = vm->createValue(bs->x());                           \
+#define READ_FROM_BYTE_STREAM(method)                            \
+   ByteStream *bs = static_cast<ByteStream*>(object->getData()); \
+   *result = vm->createValue(bs->method());                      \
    return 0;
 
 /**

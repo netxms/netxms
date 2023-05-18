@@ -4729,10 +4729,10 @@ NXSL_METHOD_DEFINITION(SNMPTransport, set)
 /**
  * SNMP walk callback
  */
-static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *context)
+static uint32_t WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, NXSL_Array *varbinds)
 {
-   NXSL_VM *vm = static_cast<NXSL_VM*>(static_cast<NXSL_Array*>(context)->vm());
-   static_cast<NXSL_Array*>(context)->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
+   NXSL_VM *vm = static_cast<NXSL_VM*>(varbinds->vm());
+   varbinds->append(vm->createValue(vm->createObject(&g_nxslSnmpVarBindClass, new SNMP_Variable(var))));
    return SNMP_ERR_SUCCESS;
 }
 
