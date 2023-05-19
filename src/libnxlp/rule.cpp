@@ -488,23 +488,19 @@ int LogParserRule::getMatchCount(uint32_t objectId) const
 }
 
 /**
- * Callback for copying object counters
- */
-static EnumerationCallbackResult RestoreCountersCallback(const uint32_t& key, ObjectRuleStats *src, HashMap<uint32_t, ObjectRuleStats> *counters)
-{
-   ObjectRuleStats *dst = new ObjectRuleStats;
-   dst->checkCount = src->checkCount;
-   dst->matchCount = src->matchCount;
-   counters->set(key, dst);
-   return _CONTINUE;
-}
-
-/**
  * Restore counters from previous rule version
  */
 void LogParserRule::restoreCounters(const LogParserRule& rule)
 {
    m_checkCount = rule.m_checkCount;
    m_matchCount = rule.m_matchCount;
-   rule.m_objectCounters.forEach(RestoreCountersCallback, &m_objectCounters);
+   rule.m_objectCounters.forEach(
+      [this] (const uint32_t& key, ObjectRuleStats *src) -> EnumerationCallbackResult
+      {
+         ObjectRuleStats *dst = new ObjectRuleStats;
+         dst->checkCount = src->checkCount;
+         dst->matchCount = src->matchCount;
+         this->m_objectCounters.set(key, dst);
+         return _CONTINUE;
+      });
 }

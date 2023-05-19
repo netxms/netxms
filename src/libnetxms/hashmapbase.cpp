@@ -179,6 +179,25 @@ EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(c
 }
 
 /**
+ * Enumerate entries
+ * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
+ */
+EnumerationCallbackResult HashMapBase::forEach(std::function<EnumerationCallbackResult (const void*, void*)> cb) const
+{
+   EnumerationCallbackResult result = _CONTINUE;
+   HashMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (cb(GET_KEY(entry), entry->value) == _STOP)
+      {
+         result = _STOP;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
  * Find entry
  */
 const void *HashMapBase::findElement(bool (*comparator)(const void *, const void *, void *), void *context) const
@@ -188,6 +207,24 @@ const void *HashMapBase::findElement(bool (*comparator)(const void *, const void
    HASH_ITER(hh, m_data, entry, tmp)
    {
       if (comparator(GET_KEY(entry), entry->value, context))
+      {
+         result = entry->value;
+         break;
+      }
+   }
+   return result;
+}
+
+/**
+ * Find entry
+ */
+const void *HashMapBase::findElement(std::function<bool (const void*, const void*)> comparator) const
+{
+   const void *result = nullptr;
+   HashMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (comparator(GET_KEY(entry), entry->value))
       {
          result = entry->value;
          break;
