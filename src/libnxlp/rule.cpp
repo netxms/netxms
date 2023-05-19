@@ -279,7 +279,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
 	if (m_isInverted)
 	{
 		m_parser->trace(7, _T("  negated matching against regexp %s"), m_regexp);
-		if ((_pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, LOGWATCH_MAX_NUM_CAPTURE_GROUPS * 3) < 0) && matchRepeatCount())
+		int matchCount;
+		if ((_pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, LOGWATCH_MAX_NUM_CAPTURE_GROUPS * 3) < 0) && matchRepeatCount(&matchCount))
 		{
 			m_parser->trace(7, _T("  matched"));
 			if ((cb != nullptr) && ((m_eventCode != 0) || (m_eventName != nullptr)))
@@ -296,7 +297,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
             data.objectId = objectId;
             data.originalText = line;
             data.recordId = recordId;
-            data.repeatCount = ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1;
+            data.repeatCount = ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? matchCount : 1;
             data.severity = level;
             data.source = source;
             data.userData = userData;
@@ -317,7 +318,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
 		int cgcount = _pcre_exec_t(m_preg, nullptr, reinterpret_cast<const PCRE_TCHAR*>(line), static_cast<int>(_tcslen(line)), 0, 0, m_pmatch, LOGWATCH_MAX_NUM_CAPTURE_GROUPS * 3);
 
 		m_parser->trace(7, _T("  pcre_exec returns %d"), cgcount);
-		if ((cgcount >= 0) && matchRepeatCount())
+		int matchCount;
+		if ((cgcount >= 0) && matchRepeatCount(&matchCount))
 		{
 			m_parser->trace(7, _T("  matched"));
 
@@ -339,7 +341,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, uint32_t ev
             data.objectId = objectId;
 			   data.originalText = line;
 			   data.recordId = recordId;
-			   data.repeatCount = ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1;
+			   data.repeatCount = ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? matchCount : 1;
 			   data.severity = level;
 			   data.source = source;
 			   data.userData = userData;
@@ -409,7 +411,7 @@ void LogParserRule::expandMacros(const TCHAR *regexp, StringBuffer &out)
 /**
  * Match repeat count
  */
-bool LogParserRule::matchRepeatCount()
+bool LogParserRule::matchRepeatCount(int *matchCount)
 {
    if ((m_repeatCount == 0) || (m_repeatInterval == 0))
       return true;
@@ -426,6 +428,7 @@ bool LogParserRule::matchRepeatCount()
 
    m_matchArray->add(now);
    bool match = m_matchArray->size() >= m_repeatCount;
+   *matchCount = m_matchArray->size();
    if (m_resetRepeat && match)
       m_matchArray->clear();
    return match;

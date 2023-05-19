@@ -247,7 +247,7 @@ private:
 	bool matchInternal(bool extMode, const TCHAR *source, uint32_t eventId, uint32_t level, const TCHAR *line,
 	         StringList *variables, uint64_t recordId, uint32_t objectId, time_t timestamp, const TCHAR *logName,
 	         LogParserCallback cb, LogParserDataPushCallback cbDataPush, LogParserActionCallback cbAction, void *userData);
-	bool matchRepeatCount();
+	bool matchRepeatCount(int *matchCount);
    void expandMacros(const TCHAR *regexp, StringBuffer &out);
    void incCheckCount(uint32_t objectId);
    void incMatchCount(uint32_t objectId);
