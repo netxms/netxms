@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1185,45 +1185,35 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+    */
 	@Override
 	public ISelection getSelection()
 	{
 		return currentSelection;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener
-	 * )
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
 	@Override
 	public void removeSelectionChangedListener(ISelectionChangedListener listener)
 	{
 		selectionListeners.remove(listener);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void setSelection(ISelection selection)
 	{
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.gef4.zest.core.viewers.IZoomableWorkbenchPart#getZoomableViewer()
-	 */
+   /**
+    * @see org.eclipse.gef4.zest.core.viewers.IZoomableWorkbenchPart#getZoomableViewer()
+    */
 	@Override
 	public AbstractZoomableViewer getZoomableViewer()
 	{
