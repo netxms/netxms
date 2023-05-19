@@ -174,10 +174,9 @@ public class LinkGeneral extends PropertyPage
       list.setLayoutData(gd);
       if (object.getStatusObjects() != null)
 		{
-         NXCSession session = Registry.getSession();
          for(Long id : object.getStatusObjects())
 		   {
-            list.add(session.getObjectName(id));
+            list.add(getobjectName(id));
 		   }
 		}
       list.setEnabled(radioColorObject.getSelection());
@@ -277,6 +276,21 @@ public class LinkGeneral extends PropertyPage
 
 		return dialogArea;
 	}
+	
+	/**
+	 * Get objectName or parentNodeName/objectName
+	 * @param objectId object id
+	 * @return formatted name
+	 */
+	private String getobjectName(long objectId)
+	{
+      NXCSession session = Registry.getSession();
+      AbstractObject obj = session.findObjectById(objectId);
+      if (obj == null)
+         return "[" + Long.toString(objectId) + "]";
+      java.util.List<AbstractObject> parentNode = obj.getParentChain(new int [] { AbstractObject.OBJECT_NODE });
+      return (parentNode.size() > 0 ? parentNode.get(0).getObjectName() + "/" : "") +  obj.getObjectName();	   
+	}
 
    /**
     * Add object to status source list
@@ -293,7 +307,7 @@ public class LinkGeneral extends PropertyPage
             for(AbstractObject obj : objects)
             {
                object.addStatusObject(obj.getObjectId());
-               list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(obj.getObjectId()) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
+               list.add(getobjectName(obj.getObjectId())); 
             }
          }
       }
