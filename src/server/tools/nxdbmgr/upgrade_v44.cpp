@@ -24,20 +24,28 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.13 to 44.14
+ */
+static bool H_UpgradeFromV13()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_CONFIGURATION_ERROR, _T("SYS_CONFIGURATION_ERROR"),
+         EVENT_SEVERITY_MINOR, EF_LOG, _T("762c581c-e9bf-11ed-a05b-0242ac120003"),
+         _T("System configuration error (%<description>)"),
+         _T("Generated on any system configuration error.\r\n")
+         _T("Parameters:\r\n")
+         _T("   subsystem - The subsystem which has the error\r\n")
+         _T("   tag - Related tag for the error\r\n")
+         _T("   descriptipon - Description of the error\r\n")
+      ));
+   CHK_EXEC(SetMinorSchemaVersion(14));
+   return true;
+}
+
+/**
  * Upgrade from 44.12 to 44.13
  */
 static bool H_UpgradeFromV12()
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_CONFIGURATION_ERROR, _T("SYS_CONFIGURATION_ERROR"),
-                              EVENT_SEVERITY_MINOR, EF_LOG, _T("762c581c-e9bf-11ed-a05b-0242ac120003"),
-                              _T("System configuration error (%<description>)"),
-                              _T("  \r\n")
-                              _T("Parameters:\r\n")
-                              _T("   subsystem - The subsystem which has the error\r\n")
-                              _T("   tag - Related tag for the error\r\n")
-                              _T("   descriptipon - Description of the error\r\n")
-                              ));
-
    CHK_EXEC(CreateConfigParam(_T("Objects.Assets.AllowDeleteIfLinked"),
          _T("0"),
          _T("Enable/disable deletion of linked assets."),
@@ -476,6 +484,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 13,  44, 14,  H_UpgradeFromV13  },
    { 12,  44, 13,  H_UpgradeFromV12  },
    { 11,  44, 12,  H_UpgradeFromV11  },
    { 10,  44, 11,  H_UpgradeFromV10  },

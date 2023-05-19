@@ -576,6 +576,9 @@ void EPRule::createExportRecord(StringBuffer &xml) const
    xml.append(_T("\t\t\t</alarmCategories>\n\t\t</rule>\n"));
 }
 
+/**
+ * Validate rule configuration
+ */
 void EPRule::validateConfig() const
 {
    const uint32_t ruleId = getId() + 1;
@@ -583,7 +586,6 @@ void EPRule::validateConfig() const
    for(int i = 0; i < m_sourceExclusions.size(); i++)
    {
       const uint32_t objectId = m_sourceExclusions.get(i);
-
       if (FindObjectById(objectId) == nullptr)
       {
          ReportConfigurationError(_T("EPP"), _T("invalid-object-id"), _T("Invalid object ID %u in EPP rule %u"), objectId, ruleId);
@@ -593,13 +595,13 @@ void EPRule::validateConfig() const
    for(int i = 0; i < m_sources.size(); i++)
    {
       const uint32_t objectId = m_sources.get(i);
-
       if (FindObjectById(objectId) == nullptr)
       {
          ReportConfigurationError(_T("EPP"), _T("invalid-object-id"), _T("Invalid object ID %u in EPP rule %u"), objectId, ruleId);         
       }
    }
 }
+
 /**
  * Check if source object's id match to the rule
  */
@@ -1646,7 +1648,7 @@ void EventPolicy::sendToClient(ClientSession *session, uint32_t requestId) const
    for(int i = 0; i < m_rules.size(); i++)
    {
       m_rules.get(i)->createMessage(&msg);
-      session->sendMessage(&msg);
+      session->sendMessage(msg);
       msg.deleteAllFields();
    }
    unlock();
@@ -1672,20 +1674,21 @@ void EventPolicy::replacePolicy(uint32_t numRules, EPRule **ruleList)
 }
 
 /**
- * Check if given action is used in policy
+ * Validate event policy configuration
  */
 void EventPolicy::validateConfig() const
 {
    readLock();
-
    for(int i = 0; i < m_rules.size(); i++)
    {
       m_rules.get(i)->validateConfig();
    }
-
    unlock();
 }
 
+/**
+ * Check if given action is used in policy
+ */
 bool EventPolicy::isActionInUse(uint32_t actionId) const
 {
    bool bResult = false;
