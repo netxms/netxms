@@ -72,8 +72,8 @@ bool SetPrivilege(HANDLE hToken, const TCHAR* privilege, bool enabled)
 /**
  * Root folders
  */
-static ObjectArray<RootFolder> *s_rootDirectories;
-static HashMap<uint32_t, VolatileCounter> *s_downloadFileStopMarkers;
+static ObjectArray<RootFolder> s_rootDirectories(16, 16, Ownership::True);
+static SynchronizedHashMap<uint32_t, VolatileCounter> s_downloadFileStopMarkers(Ownership::True);
 
 /**
  * Monitored file list
@@ -154,8 +154,6 @@ RootFolder::RootFolder(const TCHAR *folder)
  */
 static bool SubagentInit(Config *config)
 {
-   s_rootDirectories = new ObjectArray<RootFolder>(16, 16, Ownership::True);
-   s_downloadFileStopMarkers = new HashMap<uint32_t, VolatileCounter>(Ownership::True);
    ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != nullptr)
    {
@@ -164,9 +162,9 @@ static bool SubagentInit(Config *config)
          auto folder = new RootFolder(root->getValue(i));
 
          bool alreadyRegistered = false;
-         for(int j = 0; j < s_rootDirectories->size(); j++)
+         for(int j = 0; j < s_rootDirectories.size(); j++)
          {
-            RootFolder *curr = s_rootDirectories->get(j);
+            RootFolder *curr = s_rootDirectories.get(j);
 #ifdef _WIN32
             if (!_tcsicmp(curr->getFolder(), folder->getFolder()))
 #else
@@ -174,7 +172,7 @@ static bool SubagentInit(Config *config)
 #endif
             {
                if (curr->isReadOnly() && !folder->isReadOnly())
-                  s_rootDirectories->remove(j); // Replace read-only element with read-write
+                  s_rootDirectories.remove(j); // Replace read-only element with read-write
                else
                   alreadyRegistered = true;
                break;
@@ -183,7 +181,7 @@ static bool SubagentInit(Config *config)
 
          if (!alreadyRegistered)
          {
-            s_rootDirectories->add(folder);
+            s_rootDirectories.add(folder);
             nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Added file manager root directory \"%s\" (%s)"), folder->getFolder(), folder->isReadOnly() ? _T("R/O") : _T("R/W"));
          }
          else
@@ -194,7 +192,7 @@ static bool SubagentInit(Config *config)
       }
    }
 
-   if (s_rootDirectories->isEmpty())
+   if (s_rootDirectories.isEmpty())
    {
       nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("No root directories in file manager configuration"));
       return false;
@@ -209,8 +207,6 @@ static bool SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
-   delete s_rootDirectories;
-   delete s_downloadFileStopMarkers;
 }
 
 #ifndef _WIN32
@@ -327,19 +323,20 @@ static bool CheckFullPath(const TCHAR *path, TCHAR **fullPath, bool withHomeDir,
    bool found = false;
    bool readOnly;
    size_t maxPathLen = 0;
-   for(int i = 0; i < s_rootDirectories->size(); i++)
+   for(int i = 0; i < s_rootDirectories.size(); i++)
    {
-      size_t folderPathLen = _tcslen(s_rootDirectories->get(i)->getFolder());
+      RootFolder *root = s_rootDirectories.get(i);
+      size_t folderPathLen = _tcslen(root->getFolder());
 #if defined(_WIN32) || defined(__APPLE__)
-      if (!_tcsnicmp(s_rootDirectories->get(i)->getFolder(), fullPathT, folderPathLen))
+      if (!_tcsnicmp(root->getFolder(), fullPathT, folderPathLen))
 #else
-      if (!_tcsncmp(s_rootDirectories->get(i)->getFolder(), fullPathT, folderPathLen))
+      if (!_tcsncmp(root->getFolder(), fullPathT, folderPathLen))
 #endif
       {
          if (maxPathLen < folderPathLen)
          {
             maxPathLen = folderPathLen;
-            readOnly = s_rootDirectories->get(i)->isReadOnly();
+            readOnly = root->isReadOnly();
             found = true;
          }
       }
@@ -537,9 +534,10 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *response, bool rootFold
    {
       response->setField(VID_RCC, ERR_SUCCESS);
 
-      for(int i = 0; i < s_rootDirectories->size(); i++)
+      for(int i = 0; i < s_rootDirectories.size(); i++)
       {
-         if (FillMessageFolderContent(s_rootDirectories->get(i)->getFolder(), s_rootDirectories->get(i)->getFolder(), msg, fieldId))
+         const TCHAR *path = s_rootDirectories.get(i)->getFolder();
+         if (FillMessageFolderContent(path, path, msg, fieldId))
          {
             count++;
             fieldId += 10;
@@ -1199,14 +1197,14 @@ static void SendFile(FileSendData *data)
    }
    nxlog_debug_tag(DEBUG_TAG, 5, _T("SendFile: request for file \"%s\", follow = %s, compression = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"), compressionMethodName);
-   bool success = data->session->sendFile(data->id, data->fileName, data->offset, data->compressionMethod, s_downloadFileStopMarkers->get(data->id));
+   bool success = data->session->sendFile(data->id, data->fileName, data->offset, data->compressionMethod, s_downloadFileStopMarkers.get(data->id));
    if (data->follow && success)
    {
       g_monitorFileList.add(data->fileId);
       auto flData = new FollowData(data->fileName, data->fileId, 0, data->session->getServerAddress());
       ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
    }
-   s_downloadFileStopMarkers->remove(data->id);
+   s_downloadFileStopMarkers.remove(data->id);
    delete data;
 }
 
@@ -1228,7 +1226,7 @@ static void CH_GetFile(const NXCPMessage& request, NXCPMessage *response, Abstra
    TCHAR *fullPath;
    if (CheckFullPath(fileName, &fullPath, false))
    {
-      s_downloadFileStopMarkers->set(request.getId(), new VolatileCounter(0));
+      s_downloadFileStopMarkers.set(request.getId(), new VolatileCounter(0));
       ThreadCreateEx(SendFile, new FileSendData(session->self(), fullPath, request));
       response->setField(VID_RCC, ERR_SUCCESS);
    }
@@ -1507,8 +1505,8 @@ static void CH_ChangeFileOwner(NXCPMessage *request, NXCPMessage *response, Abst
  */
 static void CH_CancelFileDownload(NXCPMessage *request, NXCPMessage *response)
 {
-   VolatileCounter *counter = s_downloadFileStopMarkers->get(request->getFieldAsUInt32(VID_REQUEST_ID));
-   if (counter != NULL)
+   VolatileCounter *counter = s_downloadFileStopMarkers.get(request->getFieldAsUInt32(VID_REQUEST_ID));
+   if (counter != nullptr)
    {
       InterlockedIncrement(counter);
       response->setField(VID_RCC, ERR_SUCCESS);

@@ -107,8 +107,8 @@ public:
       MemFree(m_folder);
    }
 
-   const TCHAR *getFolder() { return m_folder; }
-   bool isReadOnly() { return m_readOnly; }
+   const TCHAR *getFolder() const { return m_folder; }
+   bool isReadOnly() const { return m_readOnly; }
 };
 
 /**
