@@ -89,6 +89,7 @@ import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.DownloadServiceHandler;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.networkmaps.ObjectDoubleClickHandlerRegistry;
@@ -740,7 +741,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 		};
       addKeyBinding("M1+M3+G", actionAlignToGrid);
 
-      actionShowObjectDetails = new Action(i18n.tr("Show object details")) {
+      actionShowObjectDetails = new Action(i18n.tr("Go to &object")) {
 			@Override
 			public void run()
 			{
@@ -1324,7 +1325,7 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 			return;
 
 		AbstractObject object = (AbstractObject)currentSelection.getFirstElement();
-      /* FIXME: show object details */
+      MainWindow.switchToObject(object.getObjectId(), 0);
 	}
 
    /**

@@ -53,6 +53,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.widgets.helpers.ObjectSelectionProvider;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.SummaryTableContentProvider;
@@ -181,7 +182,7 @@ public class SummaryTableWidget extends Composite
          }
       };
 
-      actionShowObjectDetails = new Action(i18n.tr("Show &object details")) {
+      actionShowObjectDetails = new Action(i18n.tr("Go to &object")) {
          @Override
          public void run()
          {
@@ -472,10 +473,7 @@ public class SummaryTableWidget extends Composite
          return;
       
       AbstractObject object = ((ObjectWrapper)selection.getFirstElement()).getObject();
-      if (object != null)
-      {
-         /* TODO: implement switch to object */
-      }
+      MainWindow.switchToObject(object.getObjectId(), 0);
    }
 
    /**

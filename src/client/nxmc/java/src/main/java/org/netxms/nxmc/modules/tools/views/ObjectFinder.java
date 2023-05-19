@@ -94,6 +94,7 @@ import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.nxsl.widgets.ScriptEditor;
 import org.netxms.nxmc.modules.objects.ObjectContextMenuManager;
@@ -764,7 +765,7 @@ public class ObjectFinder extends View
       actionStartSearch.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.start_search");
       addKeyBinding("F9", actionStartSearch);
 
-      actionShowObjectDetails = new Action("Show object details") {
+      actionShowObjectDetails = new Action("Go to &object") {
          @Override
          public void run()
          {
@@ -1121,7 +1122,8 @@ public class ObjectFinder extends View
 
       final Object selectedElement = selection.getFirstElement();
       final AbstractObject object = (selectedElement instanceof ObjectQueryResult) ? ((ObjectQueryResult)selectedElement).getObject() : (AbstractObject)selectedElement;
-      //TODO: implement show object details
+
+      MainWindow.switchToObject(object.getObjectId(), 0);
    }
 
    /**

@@ -65,6 +65,7 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
@@ -133,6 +134,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 {
    private final I18n i18n = LocalizationHelper.getI18n(ObjectsPerspective.class);
 
+   private ObjectBrowser objectBrowser;
    private SubtreeType subtreeType;
    private StructuredSelection selection = new StructuredSelection();
    private Composite headerArea;
@@ -184,7 +186,8 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    @Override
    protected void configureViews()
    {
-      addNavigationView(new ObjectBrowser(getName(), null, subtreeType));
+      objectBrowser = new ObjectBrowser(getName(), null, subtreeType);
+      addNavigationView(objectBrowser);
       addMainView(new AgentFileManager());
       addMainView(new AlarmsView());
       addMainView(new AssetSummaryView());
@@ -587,5 +590,32 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    @Override
    public void setSelection(ISelection selection)
    {
+   }
+
+   /**
+    * Show object object 
+    * 
+    * @param object object to be shown 
+    * @param dciId DCI id or 0 if object only should be showed 
+    * @return true if object found in the view
+    */
+   public boolean showObject(AbstractObject object, long dciId)
+   {
+
+      for (Integer classId : ObjectBrowser.calculateClassFilter(subtreeType))
+      {
+         if (classId == object.getObjectClass())
+         {
+            Registry.getMainWindow().switchToPerspective(getId());
+            objectBrowser.selectObject(object);
+            if (dciId != 0 && showMainView("DataCollection"))
+            {
+               View dataCollectionView = findMainView("DataCollection");
+               ((DataCollectionView)dataCollectionView).selectDci(dciId);
+            }
+            return true;
+         }
+      }
+      return false;
    }
 }

@@ -52,6 +52,7 @@ import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.interfaces.NodeItemPair;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.businessservice.dialogs.EditBusinessServiceCheckDlg;
 import org.netxms.nxmc.modules.businessservice.views.helpers.BusinessServiceCheckFilter;
@@ -90,6 +91,7 @@ public class BusinessServiceChecksView extends ObjectView
    private Action actionCreate;
    private Action actionDelete;
    private Action actionShowObjectDetails;
+   private Action actionShowDciDetails;
    private Map<Long, BusinessServiceCheck> checks;
    private Map<Long, BusinessServiceCheck> updatedChecks = new HashMap<>();
    private Set<Long> deletedChecks = new HashSet<>();
@@ -139,6 +141,8 @@ public class BusinessServiceChecksView extends ObjectView
             actionEdit.setEnabled((selection.size() == 1) && (check.getPrototypeServiceId() == 0));
             actionDuplicate.setEnabled(selection.size() == 1);
             actionDelete.setEnabled(selection.size() > 0);
+            actionShowObjectDetails.setEnabled(selection.size() == 1);
+            actionShowDciDetails.setEnabled(selection.size() == 1 && check.getDciId() != 0);
          }
       });
       
@@ -308,6 +312,7 @@ public class BusinessServiceChecksView extends ObjectView
       manager.add(actionDelete);
       manager.add(new Separator());
       manager.add(actionShowObjectDetails);
+      manager.add(actionShowDciDetails);
    }
 
    /**
@@ -351,11 +356,20 @@ public class BusinessServiceChecksView extends ObjectView
          }
       };
       
-      actionShowObjectDetails = new Action(i18n.tr("Show object details")) {
+      actionShowObjectDetails = new Action(i18n.tr("Go to &object")) {
          @Override
          public void run()
          {
-            showObjectDetails();
+            showObjectDetails(false);
+         }
+         
+      };
+      
+      actionShowDciDetails = new Action(i18n.tr("Go to &DCI")) {
+         @Override
+         public void run()
+         {
+            showObjectDetails(true);
          }
          
       };
@@ -585,7 +599,7 @@ public class BusinessServiceChecksView extends ObjectView
       super.dispose();
    }
    
-   private void showObjectDetails()
+   private void showObjectDetails(boolean showDCI)
    {
       IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)
@@ -594,8 +608,7 @@ public class BusinessServiceChecksView extends ObjectView
       final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
       if (check.getObjectId() == 0)
          return;
-
-      AbstractObject object = session.findObjectById(check.getObjectId());
-      //TODO: create redirect to object
+      
+      MainWindow.switchToObject(check.getObjectId(), showDCI ? check.getDciId() : 0);
    }
 }

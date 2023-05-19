@@ -131,7 +131,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
             if (e.stateMask == 0 && e.keyCode == 13 && !proposalAdapter.isProposalPopupOpen())
             {
                searchFilter = queryEditor.getText(); //Save string for autorefresh
-               getDataFromServer();
+               getDataFromServer(null);
             }
          }
       });
@@ -146,7 +146,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
          public void widgetSelected(SelectionEvent e)
          {
             searchFilter = queryEditor.getText(); //Save string for autorefresh
-            getDataFromServer();
+            getDataFromServer(null);
          }
       });
       startButton.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
@@ -201,7 +201,7 @@ public class SummaryDataCollectionView extends BaseDataCollectionView
     * Get data from server
     */
    @Override
-   protected void getDataFromServer()
+   protected void getDataFromServer(Runnable callback)
    {
       if (getObject() == null || searchFilter == null || searchFilter.isEmpty())
       {

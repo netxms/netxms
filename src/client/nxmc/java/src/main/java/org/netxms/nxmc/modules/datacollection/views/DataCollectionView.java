@@ -34,6 +34,7 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -559,6 +560,14 @@ public class DataCollectionView extends BaseDataCollectionView
    @Override
    public void refresh()
    {
+      refresh(null);
+   }
+
+   /**
+    * Refresh DCI list
+    */
+   public void refresh(Runnable callback)
+   {
       if (editMode)
       {
          if (dciConfig != null)
@@ -572,7 +581,28 @@ public class DataCollectionView extends BaseDataCollectionView
                      @Override
                      public void run()
                      {
+                        final IStructuredSelection selection = viewer.getStructuredSelection();
                         viewer.setInput(dciConfig.getItems());
+                        if (callback != null)
+                           callback.run();
+                        else 
+                        {
+                           List<DataCollectionObject> selected = new ArrayList<DataCollectionObject>(selection.size());
+                           Iterator<?> it = selection.iterator();
+                           while(it.hasNext())
+                           {
+                              DataCollectionObject obj = (DataCollectionObject)it.next();
+                              for (DataCollectionObject item : (DataCollectionObject[])viewer.getInput())
+                              {
+                                 if (obj.getId() == item.getId())
+                                 {
+                                    selected.add(item);
+                                    break;
+                                 }
+                              }
+                           }   
+                           viewer.setSelection(new StructuredSelection(selected.toArray()));                           
+                        }
                      }
                   });
                }
@@ -587,7 +617,7 @@ public class DataCollectionView extends BaseDataCollectionView
       }
       else
       {
-         getDataFromServer();
+         getDataFromServer(callback);
       }
    }
 
@@ -1297,5 +1327,32 @@ public class DataCollectionView extends BaseDataCollectionView
    {
       dcFilter.setHideTemplateItems(hide);
       viewer.refresh(false);
+   }
+
+   public void selectDci(long dciId)
+   {
+      refresh( new Runnable() {         
+         @Override
+         public void run()
+         {
+            if (editMode)
+            {
+               for (DataCollectionObject item : dciConfig.getItems())
+               {
+                  if (item.getId() == dciId)
+                     viewer.setSelection(new StructuredSelection(item), true); 
+               }
+            }
+            else 
+            {
+               for (DciValue item : (DciValue[])viewer.getInput())
+               {
+                  if (item.getId() == dciId)
+                     viewer.setSelection(new StructuredSelection(item), true); 
+               }
+               
+            }
+         }
+      });
    }
 }

@@ -76,6 +76,7 @@ import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTreeViewer;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttribute;
 import org.netxms.nxmc.base.widgets.helpers.SearchQueryAttributeValueProvider;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.modules.alarms.dialogs.AcknowledgeCustomTimeDialog;
@@ -559,10 +560,16 @@ public class AlarmList extends CompositeWithMessageArea
          }
       };
       
-      actionShowObjectDetails = new Action(i18n.tr("Show &object details")) {
+      actionShowObjectDetails = new Action(i18n.tr("Go to &object")) {
 			@Override
 			public void run()
 			{
+	         IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
+	         if (selection.size() != 1)
+	            return;
+	         
+	         final long id = ((Alarm)selection.getFirstElement()).getSourceObjectId();
+	         MainWindow.switchToObject(id, 0);
 			}
 		};
       actionShowObjectDetails.setId("AlarmList.ShowObjectDetails");

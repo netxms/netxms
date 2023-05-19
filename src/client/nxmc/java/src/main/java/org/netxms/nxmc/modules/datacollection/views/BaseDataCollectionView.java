@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.datacollection.views;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -33,6 +34,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -362,7 +364,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    @Override
    public void refresh()
    {
-      getDataFromServer();
+      getDataFromServer(null);
    }
    
    /**
@@ -449,7 +451,7 @@ public abstract class BaseDataCollectionView extends ObjectView
             if (viewer.getTable().isDisposed())
                return;
             
-            getDataFromServer();
+            getDataFromServer(null);
          }
       }, validator);
       viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -498,13 +500,14 @@ public abstract class BaseDataCollectionView extends ObjectView
       createContextMenu();
 
       if ((validator == null) || validator.isVisible())
-         getDataFromServer();
+         getDataFromServer(null);
    }
 
    /**
     * Get data from server
+    * @param callback 
     */
-   protected void getDataFromServer()
+   protected void getDataFromServer(Runnable callback)
    {
       if (getObject() == null)
       {
@@ -524,8 +527,29 @@ public abstract class BaseDataCollectionView extends ObjectView
                {
                   if (!viewer.getTable().isDisposed() && (getObject() != null) && (getObject().getObjectId() == jobTarget.getObjectId()))
                   {
+                     final IStructuredSelection selection = viewer.getStructuredSelection();
                      viewer.setInput(data);
                      clearMessages();
+                     if (callback != null)
+                        callback.run();
+                     else 
+                     {
+                        List<DciValue> selected = new ArrayList<DciValue>(selection.size());
+                        Iterator<?> it = selection.iterator();
+                        while(it.hasNext())
+                        {
+                           DciValue obj = (DciValue)it.next();
+                           for (DciValue item : (DciValue[])viewer.getInput())
+                           {
+                              if (obj.getId() == item.getId())
+                              {
+                                 selected.add(item);
+                                 break;
+                              }
+                           }
+                        }   
+                        viewer.setSelection(new StructuredSelection(selected.toArray()));                           
+                     }
                   }
                }
             });

@@ -117,7 +117,7 @@ public class ObjectBrowser extends NavigationView
    @Override
    protected void createContent(Composite parent)
    {
-      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(), this, true, false);
+      objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, calculateClassFilter(subtreeType), this, true, false);
 
       Menu menu = new ObjectContextMenuManager(this, objectTree.getSelectionProvider(), objectTree.getTreeViewer()).createContextMenu(objectTree.getTreeControl());
       objectTree.getTreeControl().setMenu(menu);
@@ -209,7 +209,7 @@ public class ObjectBrowser extends NavigationView
     *
     * @return root objects
     */
-   private Set<Integer> calculateClassFilter()
+   public static Set<Integer> calculateClassFilter(SubtreeType subtreeType)
    {
       Set<Integer> classFilter = new HashSet<Integer>();
       switch(subtreeType)
@@ -375,5 +375,17 @@ public class ObjectBrowser extends NavigationView
             return String.format(i18n.tr("Cannot move object %s"), ((AbstractObject)movableObject).getObjectName());
          }
       }.start();
+   }
+   
+   /**
+    * Select object 
+    * 
+    * @param objectId id of the object to be selected
+    * @return true if selection occurred
+    */
+   public void selectObject(AbstractObject object)
+   {
+      objectTree.getTreeViewer().setSelection(new StructuredSelection(object), true);
+      objectTree.getTreeViewer().reveal(object);
    }
 }

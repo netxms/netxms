@@ -520,6 +520,17 @@ public abstract class Perspective
    }
 
    /**
+    * Find main view by ID.
+    *
+    * @param id view ID
+    * @return main view or null
+    */
+   public boolean showMainView(String id)
+   {
+      return (mainFolder != null) ? mainFolder.showView(id) : false;
+   }
+
+   /**
     * Remove view from main folder.
     * 
     * @param id ID of view to remove
