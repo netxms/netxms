@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -160,7 +160,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       {
          readOnly = cachedFlag;
          reconfigureViewer();
-         refresh();
+         syncObjects();
       }
       else
       {
@@ -179,7 +179,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
                      reconfigureViewer();
                      updateToolBar();
                      updateMenu();
-                     refresh();
+                     syncObjects();
                   }
                });
             }
@@ -192,40 +192,27 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          };
          job.setUser(false);
          job.start();
-
-         syncObjects();
       }
    }
 
    /**
-    * Reconfigure viewer
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
     */
-   private void reconfigureViewer()
+   @Override
+   protected void onObjectUpdate(AbstractObject object)
    {
-      allowManualLayout = !readOnly;
-      viewer.setDraggingEnabled(!readOnly);
+      super.onObjectUpdate(object);
+      reconfigureViewer((NetworkMap)object);
+      syncObjects();
+   }
 
-      NetworkMap mapObject = getMapObject();
-      if (mapObject == null)
-         return;
-
-      if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
-      {
-         automaticLayoutEnabled = false;
-         viewer.setLayoutAlgorithm(new ManualLayout());
-      }
-      else
-      {
-         automaticLayoutEnabled = true;
-         layoutAlgorithm = mapObject.getLayout();
-         setLayoutAlgorithm(layoutAlgorithm, true);
-      }
-      
-      for(int i = 0; i < actionSetAlgorithm.length; i++)
-         actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
-      actionSaveLayout.setEnabled(!automaticLayoutEnabled);
-      actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
-
+   /**
+    * Reconfigure viewer for given map object
+    * 
+    * @param mapObject map object
+    */
+   private void reconfigureViewer(NetworkMap mapObject)
+   {
       if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
       {
          if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
@@ -243,13 +230,41 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
          viewer.setBackgroundImage(null, false);
       }
 
-      setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
       viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
 
+      setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
+
+      if (defaultLinkColor != null)
+         defaultLinkColor.dispose();
       if (mapObject.getDefaultLinkColor() >= 0)
-      {
          defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
-         labelProvider.setDefaultLinkColor(defaultLinkColor);
+      else
+         defaultLinkColor = null;
+      labelProvider.setDefaultLinkColor(defaultLinkColor);
+
+      if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
+      {
+         if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
+         {
+            if (!disableGeolocationBackground)
+               viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
+         }
+         else
+         {
+            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
+         }
+      }
+
+      if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
+      {
+         automaticLayoutEnabled = false;
+         viewer.setLayoutAlgorithm(new ManualLayout());
+      }
+      else
+      {
+         automaticLayoutEnabled = true;
+         layoutAlgorithm = mapObject.getLayout();
+         setLayoutAlgorithm(layoutAlgorithm, true);
       }
 
       setObjectDisplayMode(mapObject.getObjectDisplayMode(), false);
@@ -264,6 +279,26 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
       actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
       actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBackground());
+
+      for(int i = 0; i < actionSetAlgorithm.length; i++)
+         actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
+      actionSaveLayout.setEnabled(!automaticLayoutEnabled);
+      actionEnableAutomaticLayout.setChecked(automaticLayoutEnabled);
+   }
+
+   /**
+    * Reconfigure viewer after object change
+    */
+   private void reconfigureViewer()
+   {
+      allowManualLayout = !readOnly;
+      viewer.setDraggingEnabled(!readOnly);
+
+      NetworkMap mapObject = getMapObject();
+      if (mapObject == null)
+         return;
+
+      reconfigureViewer(mapObject);
    }
 
    /**
@@ -847,82 +882,6 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 	}
 
    /**
-    * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#processObjectUpdateNotification(org.netxms.client.objects.AbstractObject)
-    */
-	@Override
-   protected void processObjectUpdateNotification(final AbstractObject object)
-	{
-      super.processObjectUpdateNotification(object);
-
-      if (object.getObjectId() != getMapObject().getObjectId())
-			return;
-
-      NetworkMap mapObject = (NetworkMap)object;
-		UUID oldBackground = mapObject.getBackground();
-		if (!oldBackground.equals(mapObject.getBackground()) || mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-		{
-			if (mapObject.getBackground().equals(NXCommon.EMPTY_GUID))
-			{
-            viewer.setBackgroundImage(null, false);
-			}
-			else if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-			{
-			   if (!disableGeolocationBackground)
-               viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
-			}
-			else
-			{
-            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
-			}
-		}
-
-		viewer.setBackgroundColor(ColorConverter.rgbFromInt(mapObject.getBackgroundColor()));
-
-		setConnectionRouter(mapObject.getDefaultLinkRouting(), false);
-
-		if (defaultLinkColor != null)
-			defaultLinkColor.dispose();
-		if (mapObject.getDefaultLinkColor() >= 0)
-		{
-			defaultLinkColor = new Color(viewer.getControl().getDisplay(), ColorConverter.rgbFromInt(mapObject.getDefaultLinkColor()));
-		}
-		else
-		{
-			defaultLinkColor = null;
-		}
-		labelProvider.setDefaultLinkColor(defaultLinkColor);
-
-		if ((mapObject.getBackground() != null) && (mapObject.getBackground().compareTo(NXCommon.EMPTY_GUID) != 0))
-		{
-			if (mapObject.getBackground().equals(org.netxms.client.objects.NetworkMap.GEOMAP_BACKGROUND))
-			{
-			   if (!disableGeolocationBackground)
-			      viewer.setBackgroundImage(mapObject.getBackgroundLocation(), mapObject.getBackgroundZoom());
-			}
-			else
-			{
-            viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()), mapObject.isCenterBackgroundImage());
-			}
-		}
-
-		setLayoutAlgorithm(mapObject.getLayout(), false);
-		setObjectDisplayMode(mapObject.getObjectDisplayMode(), false);
-      labelProvider.setShowStatusBackground(mapObject.isShowStatusBackground());
-      labelProvider.setShowStatusFrame(mapObject.isShowStatusFrame());
-      labelProvider.setShowStatusIcons(mapObject.isShowStatusIcon());
-      labelProvider.setShowLinkDirection(mapObject.isShowLinkDirection());
-      labelProvider.setTranslucentLabelBackground(mapObject.isTranslucentLabelBackground());
-
-      actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
-      actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
-      actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
-      actionShowLinkDirection.setChecked(labelProvider.isShowLinkDirection());
-      actionTranslucentLabelBkgnd.setChecked(labelProvider.isTranslucentLabelBackground());
-		
-      syncObjects();//refresh will be done after sync
-	}
-
-   /**
     * Add DCI container to map
     */
    private void addDCIContainer()
@@ -1187,15 +1146,5 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    protected NetworkMap getMapObject()
    {
       return (NetworkMap)getObject();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectUpdate(org.netxms.client.objects.AbstractObject)
-    */
-   @Override
-   protected void onObjectUpdate(AbstractObject object)
-   {
-      super.onObjectUpdate(object);
-      onObjectChange(object);
    }
 }

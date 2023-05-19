@@ -24,6 +24,7 @@ import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewWithContext;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
@@ -70,7 +71,25 @@ public abstract class ObjectView extends ViewWithContext
    protected void postContentCreate()
    {
       super.postContentCreate();
-      clientListener = new SessionListener() {         
+      setupClientListener();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      super.postClone(view);
+      setupClientListener();
+   }
+
+   /**
+    * Setup client listener
+    */
+   private void setupClientListener()
+   {
+      clientListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -92,7 +111,7 @@ public abstract class ObjectView extends ViewWithContext
    }
 
    /**
-    * Called when current object is updated 
+    * Called when current object is updated
     *
     * @param object updated object
     */
@@ -168,6 +187,9 @@ public abstract class ObjectView extends ViewWithContext
       return (object != null) ? object.getObjectName() : "";
    }
 
+   /**
+    * @see org.netxms.nxmc.base.views.View#dispose()
+    */
    @Override
    public void dispose()
    {
