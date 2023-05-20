@@ -115,7 +115,7 @@ LONG H_UserSessionTable(const TCHAR *param, const TCHAR *arg, Table *value, Abst
       strlcpy(&tty[5], rec.ut_line, 123);
       struct stat st;
       if (stat(tty, &st) == 0)
-         value->set(9, time(nullptr) - st.st_atime);
+         value->set(9, static_cast<int64_t>(time(nullptr) - st.st_atime));
 
       value->set(10, -1);
       value->set(11, 0);
