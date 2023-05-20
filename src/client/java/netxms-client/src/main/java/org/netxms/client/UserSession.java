@@ -43,7 +43,10 @@ public class UserSession
    private int agentType;
 
    /**
-    * Create session information object from NXCP message
+    * Create session information object from NXCP message.
+    * 
+    * @param msg NXCP message
+    * @param baseId base field ID
     */
    protected UserSession(NXCPMessage msg, long baseId)
    {

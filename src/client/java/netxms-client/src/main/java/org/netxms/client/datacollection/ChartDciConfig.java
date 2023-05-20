@@ -168,14 +168,12 @@ public class ChartDciConfig implements NodeItemPair
       displayFormat = "";
    }
 
-   
    /**
-    * 
     * Create DCI info from DciValue object
     * 
     * @param src initial configuration to copy form
-    * @param matcher matcher to get match grup for node
-    * @param dciValue
+    * @param matcher matcher to get match group for node
+    * @param dciValue runtime DCI information
     */
    public ChartDciConfig(ChartDciConfig src, Matcher matcher, DciValue dciValue)
    {
@@ -196,50 +194,51 @@ public class ChartDciConfig implements NodeItemPair
       this.column = src.column;
       this.displayFormat = src.displayFormat;
 
-
       if (src.name.isEmpty())
       {
          name = dciValue.getDescription();
       }
       else
       {
-         StringBuffer str = new StringBuffer();
+         StringBuilder sb = new StringBuilder();
          int state = 0;
          for (char c : src.name.toCharArray())
          {
-            switch   (state)
+            switch(state)
             {
                case 0:
                {
-                  if (c == '/')
+                  if (c == '\\')
                      state = 1;
                   else
-                     str.append(c);
+                     sb.append(c);
                   break;
                }
                case 1:
                {
-                  if (c == '/')
-                     str.append(c);
+                  if (c == '\\')
+                  {
+                     sb.append(c);
+                  }
                   else if (c >= '0' && c <= '9')
                   {
                      int group = 0 + c - '0';
                      if (matcher.groupCount() >= group)
                      {
-                        str.append(matcher.group(group));
+                        sb.append(matcher.group(group));
                      }
                   }
                   else
                   {
-                     str.append('/');
-                     str.append(c);
+                     sb.append('\\');
+                     sb.append(c);
                   }
                   state = 0;
                   break;    
                }
             }
          }
-         name = str.toString();
+         name = sb.toString();
       }
    }
 
