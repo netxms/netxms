@@ -110,7 +110,7 @@ LONG H_UserSessionTable(const TCHAR *param, const TCHAR *arg, Table *value, Abst
       if (addr.isValid())
          value->set(5, addr.toString());
 
-      value->set(8, rec.ut_tv.tv_sec);
+      value->set(8, static_cast<int64_t>(rec.ut_tv.tv_sec));
 
       strlcpy(&tty[5], rec.ut_line, 123);
       struct stat st;
