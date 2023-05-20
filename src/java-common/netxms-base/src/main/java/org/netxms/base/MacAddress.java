@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,25 +58,26 @@ public class MacAddress
 			Arrays.fill(value, (byte)0);
 		}
 	}
-   
+
    /**
-    * Create MAC address object from byte array
+    * Create MAC address object from byte array. Any bytes beyond <code>maxLength</code> will be droppped.
     * 
     * @param src byte array containing MAC address value
+    * @param maxLength maximum possible MAC address length.
     */
-   public MacAddress(byte[] src,int len)
+   public MacAddress(byte[] src, int maxLength)
    {
       if (src != null && src.length > 0)
       {
-         value = Arrays.copyOf(src, Integer.min(src.length, len));
+         value = Arrays.copyOf(src, Integer.min(src.length, maxLength));
       }
       else
       {
-         value = new byte[6];
+         value = new byte[maxLength];
          Arrays.fill(value, (byte)0);
       }
    }
-	
+
 	/**
 	 * Check if MAC address is all zeroes
 	 * @return true if MAC address is all zeroes
