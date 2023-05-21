@@ -583,10 +583,18 @@ bool LogParser::monitorFile(off_t startOffset)
          continue;
       }
 
+      int openFlags = O_RDONLY;
+
+      if (!m_followSymlinks)
+      {
+         openFlags |= O_NOFOLLOW;
+      }
+      
 #ifdef _WIN32
-      int fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
+      openFlags |= O_BINARY;
+      int fh = _tsopen(fname, openFlags, _SH_DENYNO);
 #else
-		int fh = _topen(fname, O_RDONLY);
+		int fh = _topen(fname, openFlags);
 #endif
 		if (fh == -1)
       {
