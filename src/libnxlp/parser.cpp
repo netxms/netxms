@@ -76,6 +76,7 @@ struct LogParser_XmlParserState
    IntegerArray<int32_t> keepOpenFlags;
    IntegerArray<int32_t> ignoreMTimeFlags;
    IntegerArray<int32_t> rescanFlags;
+   IntegerArray<int32_t> followSymlinksFlags;
    StringBuffer logName;
    StringBuffer id;
    StringBuffer level;
@@ -197,6 +198,7 @@ LogParser::LogParser(const LogParser *src) : m_rules(src->m_rules.size(), 16, Ow
    m_suspended = src->m_suspended;
    m_keepFileOpen = src->m_keepFileOpen;
    m_ignoreMTime = src->m_ignoreMTime;
+   m_followSymlinks = src->m_followSymlinks;
    m_rescan = src->m_rescan;
 	m_status = LPS_INIT;
 #ifdef _WIN32
@@ -498,10 +500,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		}
 		ps->preallocFlags.add(XMLGetAttrBoolean(attrs, "preallocated", false) ? 1 : 0);
 		ps->detectBrokenPreallocFlags.add(XMLGetAttrBoolean(attrs, "detectBrokenPrealloc", false) ? 1 : 0);
-      ps->snapshotFlags.add(XMLGetAttrBoolean(attrs, "snapshot", false) ? 1 : 0);
-      ps->keepOpenFlags.add(XMLGetAttrBoolean(attrs, "keepOpen", true) ? 1 : 0);
-      ps->ignoreMTimeFlags.add(XMLGetAttrBoolean(attrs, "ignoreModificationTime", false) ? 1 : 0);
-      ps->rescanFlags.add(XMLGetAttrBoolean(attrs, "rescan", false) ? 1 : 0);
+		ps->snapshotFlags.add(XMLGetAttrBoolean(attrs, "snapshot", false) ? 1 : 0);
+		ps->keepOpenFlags.add(XMLGetAttrBoolean(attrs, "keepOpen", true) ? 1 : 0);
+		ps->ignoreMTimeFlags.add(XMLGetAttrBoolean(attrs, "ignoreModificationTime", false) ? 1 : 0);
+		ps->rescanFlags.add(XMLGetAttrBoolean(attrs, "rescan", false) ? 1 : 0);
+		ps->followSymlinksFlags.add(XMLGetAttrBoolean(attrs, "followSymlinks", false) ? 1 : 0);
    }
 	else if (!strcmp(name, "macros"))
 	{
@@ -927,6 +930,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, ssize_t xmlLen
 				p->m_detectBrokenPrealloc = (state.detectBrokenPreallocFlags.get(i) != 0);
 				p->m_keepFileOpen = (state.keepOpenFlags.get(i) != 0);
 				p->m_ignoreMTime = (state.ignoreMTimeFlags.get(i) != 0);
+				p->m_followSymlinks = (state.followSymlinksFlags.get(i) != 0);
             p->m_rescan = (state.rescanFlags.get(i) != 0);
 #ifdef _WIN32
             p->m_useSnapshot = (state.snapshotFlags.get(i) != 0);

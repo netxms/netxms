@@ -365,6 +365,7 @@ private:
    bool m_detectBrokenPrealloc;
    bool m_keepFileOpen;
    bool m_ignoreMTime;
+   bool m_followSymlinks;
    bool m_rescan;
 	bool m_processAllRules;
    bool m_suspended;
