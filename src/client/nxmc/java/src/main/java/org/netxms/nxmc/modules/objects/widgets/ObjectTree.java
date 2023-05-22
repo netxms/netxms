@@ -578,8 +578,7 @@ public class ObjectTree extends Composite
    {
       if ((object instanceof ServiceRoot) || (object instanceof EntireNetwork))
          return 3;
-      if ((object instanceof Container) || (object instanceof Cluster) ||
-          (object instanceof Chassis) || (object instanceof Rack))
+      if ((object instanceof Container) || (object instanceof Cluster) || (object instanceof Chassis) || (object instanceof Rack))
          return 2;
       if ((object instanceof Zone) || (object instanceof Subnet))
          return 1;
@@ -596,11 +595,14 @@ public class ObjectTree extends Composite
       int parentPriority = -1;
       for(AbstractObject p : parents)
       {
-         int pp = getParentPriority(p);
-         if (pp > parentPriority)
+         if (filter.select(objectTree, null, p))
          {
-            parentPriority = pp;
-            parent = p;
+            int pp = getParentPriority(p);
+            if (pp > parentPriority)
+            {
+               parentPriority = pp;
+               parent = p;
+            }
          }
       }
       return parent;
