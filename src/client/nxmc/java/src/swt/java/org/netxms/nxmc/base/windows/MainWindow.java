@@ -767,6 +767,25 @@ public class MainWindow extends Window implements MessageAreaHolder
    {
       messageArea.clearMessages();
    }
+   
+   /**
+    * Switch to object
+    * 
+    * @param objectId object id
+    * @param dciId dci id
+    */
+   public static void switchToObject(long objectId, long dciId)
+   {
+      AbstractObject object = Registry.getSession().findObjectById(objectId);
+      if (object == null)
+         return;
+      
+      for (Perspective p : Registry.getPerspectives())
+      {
+         if (p instanceof ObjectsPerspective && ((ObjectsPerspective)p).showObject(object, dciId))
+            break;
+      }
+   }
 
    /**
     * Spacer composite
@@ -790,25 +809,6 @@ public class MainWindow extends Window implements MessageAreaHolder
       public Point computeSize(int wHint, int hHint, boolean changed)
       {
          return new Point(width, (hHint == SWT.DEFAULT) ? 20 : hHint);
-      }
-   }
-   
-   /**
-    * Switch to object
-    * 
-    * @param objectId object id
-    * @param dciId dci id
-    */
-   public static void switchToObject(long objectId, long dciId)
-   {
-      AbstractObject object = Registry.getSession().findObjectById(objectId);
-      if (object == null)
-         return;
-      
-      for (Perspective p : Registry.getPerspectives())
-      {
-         if (p instanceof ObjectsPerspective && ((ObjectsPerspective)p).showObject(object, dciId))
-            break;
       }
    }
 

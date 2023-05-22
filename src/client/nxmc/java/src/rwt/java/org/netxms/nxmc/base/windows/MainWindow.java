@@ -60,6 +60,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.BrandingManager;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
@@ -75,6 +76,7 @@ import org.netxms.nxmc.base.widgets.MessageAreaHolder;
 import org.netxms.nxmc.base.widgets.ServerClock;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -723,6 +725,25 @@ public class MainWindow extends Window implements MessageAreaHolder
    public void clearMessages()
    {
       messageArea.clearMessages();
+   }
+   
+   /**
+    * Switch to object
+    * 
+    * @param objectId object id
+    * @param dciId dci id
+    */
+   public static void switchToObject(long objectId, long dciId)
+   {
+      AbstractObject object = Registry.getSession().findObjectById(objectId);
+      if (object == null)
+         return;
+      
+      for (Perspective p : Registry.getPerspectives())
+      {
+         if (p instanceof ObjectsPerspective && ((ObjectsPerspective)p).showObject(object, dciId))
+            break;
+      }
    }
 
    /**
