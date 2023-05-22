@@ -197,28 +197,24 @@ static const SNMP_Variable *GetVariableFromCache(uint32_t *oid, size_t oidLen, c
 }
 
 /**
- * Topology table walker's callback for LLDP topology table
- */
-static uint32_t LLDPRemoteTableHandler(SNMP_Variable *var, SNMP_Transport *transport, StringObjectMap<SNMP_Variable> *variableCache)
-{
-   TCHAR buffer[1024];
-   variableCache->set(var->getName().toString(buffer, 1024), new SNMP_Variable(var));
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Read LLDP remote device table
  */
 static unique_ptr<StringObjectMap<SNMP_Variable>> ReadLLDPRemoteTable(Node *node)
 {
    // Entire table should be cached before processing because some devices (D-Link for example)
    // do not allow GET requests for table elements
-   unique_ptr<StringObjectMap<SNMP_Variable>> connections;
+   StringObjectMap<SNMP_Variable> *connections = nullptr;
    SNMP_Transport *snmp = node->createSnmpTransport();
    if (snmp != nullptr)
    {
-      connections = make_unique<StringObjectMap<SNMP_Variable>>(Ownership::True);
-      SnmpWalk(snmp, LLDP_OID(_T("1.4.1.1"), node->isLLDPV2MIBSupported()), LLDPRemoteTableHandler, connections.get(), false, false);
+      connections = new StringObjectMap<SNMP_Variable>(Ownership::True);
+      SnmpWalk(snmp, LLDP_OID(_T("1.4.1.1"), node->isLLDPV2MIBSupported()),
+         [connections] (SNMP_Variable *v) -> uint32_t
+         {
+            TCHAR buffer[1024];
+            connections->set(v->getName().toString(buffer, 1024), new SNMP_Variable(v));
+            return SNMP_ERR_SUCCESS;
+         });
       if (connections->size() > 0)
       {
          nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("%d entries in LLDP connection database for node %s [%u]"), connections->size(), node->getName(), node->getId());
@@ -226,7 +222,7 @@ static unique_ptr<StringObjectMap<SNMP_Variable>> ReadLLDPRemoteTable(Node *node
       else
       {
          nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("LLDP connection database empty for node %s [%d]"), node->getName(), node->getId());
-         connections.reset();
+         delete_and_null(connections);
       }
       delete snmp;
    }
@@ -234,7 +230,7 @@ static unique_ptr<StringObjectMap<SNMP_Variable>> ReadLLDPRemoteTable(Node *node
    {
       nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("Cannot create SNMP transport for node %s [%d]"), node->getName(), node->getId());
    }
-   return connections;
+   return unique_ptr<StringObjectMap<SNMP_Variable>>(connections);
 }
 
 /**
@@ -280,7 +276,7 @@ static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode)
    unique_ptr<StringObjectMap<SNMP_Variable>> connections = ReadLLDPRemoteTable(remoteNode);
    if (connections == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindLocalInterfaceOnRemoteNode(%s [%u]): cannot get LLDP remote table from node %s [%d]"),
+      nxlog_debug_tag(DEBUG_TAG_TOPO_LLDP, 5, _T("FindLocalInterfaceOnRemoteNode(%s [%u]): cannot get LLDP remote table from node %s [%u]"),
                thisNode->getName(), thisNode->getId(), remoteNode->getName(), remoteNode->getId());
       return 0;
    }
@@ -351,7 +347,7 @@ static uint32_t FindLocalInterfaceOnRemoteNode(Node *thisNode, Node *remoteNode)
       {
          // Try to find remote interface by description
          if (lldpv2mib)
-            newOid[13] = 9;   // lldpV2RemPortDesc
+            newOid[12] = 9;   // lldpV2RemPortDesc
          else
             newOid[10] = 8; // lldpRemPortDesc
          const SNMP_Variable *lldpRemPortDesc = GetVariableFromCache(newOid, name.length(), *connections);
@@ -395,25 +391,25 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
 	memcpy(newOid, oid.value(), oid.length() * sizeof(uint32_t));
 
    if (lldpv2mib)
-      newOid[13] = 5;   // lldpV2RemChassisIdSubtype
+      newOid[12] = 5;   // lldpV2RemChassisIdSubtype
    else
       newOid[10] = 4;	// lldpRemChassisIdSubtype
 	const SNMP_Variable *lldpRemChassisIdSubtype = GetVariableFromCache(newOid, oid.length(), *connections);
 
    if (lldpv2mib)
-      newOid[13] = 8;   // lldpV2RemPortId
+      newOid[12] = 8;   // lldpV2RemPortId
    else
       newOid[10] = 7;	// lldpRemPortId
    const SNMP_Variable *lldpRemPortId = GetVariableFromCache(newOid, oid.length(), *connections);
 
    if (lldpv2mib)
-      newOid[13] = 7;   // lldpV2RemPortIdSubtype
+      newOid[12] = 7;   // lldpV2RemPortIdSubtype
    else
       newOid[10] = 6;	// lldpRemPortIdSubtype
 	const SNMP_Variable *lldpRemPortIdSubtype = GetVariableFromCache(newOid, oid.length(), *connections);
 
    if (lldpv2mib)
-      newOid[13] = 10;   // lldpV2RemSysName
+      newOid[12] = 10;   // lldpV2RemSysName
    else
       newOid[10] = 9;   // lldpRemSysName
    const SNMP_Variable *lldpRemSysName = GetVariableFromCache(newOid, oid.length(), *connections);
