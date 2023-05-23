@@ -206,6 +206,8 @@ REQUIRE_CURL="no"
 LDAP_SUPPORT="no"
 DISABLE_LDAP="no"
 REQUIRE_LDAP="no"
+DISABLE_MODBUS="no"
+REQUIRE_MODBUS="no"
 DISABLE_READLINE="yes"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
@@ -901,6 +903,28 @@ AC_ARG_ENABLE(ldap,
 	if test "x$enableval" = "xyes"; then
 		DISABLE_LDAP="no"
 		REQUIRE_LDAP="yes"
+	fi
+])
+
+AC_ARG_ENABLE(modbus,
+[AS_HELP_STRING(--disable-modbus,disable MODBUS support)],
+[
+	if test "x$enableval" = "xno"; then
+		DISABLE_MODBUS="yes"
+	fi
+	if test "x$enableval" = "xyes"; then
+		DISABLE_MODBUS="no"
+		REQUIRE_MODBUS="yes"
+	fi
+])
+
+AC_ARG_WITH(libmodbus,
+[AS_HELP_STRING(--with-libmodbus,specify libmodbus location)],
+[
+	if test "x$withval" != "x" && test "x$withval" != "xyes" && test "x$withval" != "xno" ; then
+		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+		LIBMODBUS_LDFLAGS="-L${withval}/lib"
+		LIBMODBUS_CPPFLAGS="-I${withval}/include"
 	fi
 ])
 
@@ -2505,9 +2529,9 @@ if test "x$DISABLE_SSH" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
 		AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
 	else
-      if test "x$REQUIRE_SSH" = "xyes"; then
-		   AC_MSG_ERROR(libssh is required for SSH support)
-      fi
+		if test "x$REQUIRE_SSH" = "xyes"; then
+			AC_MSG_ERROR(libssh is required for SSH support)
+		fi
 	fi
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -2623,10 +2647,53 @@ if test "x$DISABLE_LDAP" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 		fi
 	fi
 
-   if test "x$HAVE_LDAP" != "xyes" -a "x$REQUIRE_LDAP" = "xyes"; then
-      AC_MSG_ERROR(OpenLDAP is required for LDAP support)
-   fi
+	if test "x$HAVE_LDAP" != "xyes" -a "x$REQUIRE_LDAP" = "xyes"; then
+		AC_MSG_ERROR(OpenLDAP is required for LDAP support)
+	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
+fi
+
+
+#--------------------------------------------------------------------
+# Checks for MODBUS libraries
+#--------------------------------------------------------------------
+
+if test "x$DISABLE_MODBUS" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	CPPFLAGS="$LIBSSH_CPPFLAGS $CPPFLAGS"
+	LDFLAGS="$LIBSSH_LDFLAGS $LDFLAGS"
+
+	AC_CHECK_HEADER(modbus/modbus.h,
+		[
+			HAVE_MODBUS=yes
+			AC_DEFINE(HAVE_MODBUS_MODBUS_H, 1, Define to 1 if modbus/modbus.h is available)
+		], HAVE_MODBUS=no)
+	if test "x$HAVE_MODBUS" = "xno"; then
+		AC_CHECK_HEADER(modbus.h,
+			[
+				HAVE_MODBUS=yes
+				AC_DEFINE(HAVE_MODBUS_H, 1, Define to 1 if modbus.h is available)
+			], HAVE_MODBUS=no)
+	fi
+	if test "x$HAVE_MODBUS" = "xyes"; then
+		AC_CHECK_LIB(modbus, modbus_connect, [ HAVE_MODBUS=yes ], [ HAVE_MODBUS=no ])
+	fi
+
+	if test "x$HAVE_MODBUS" = "xyes"; then
+		AC_DEFINE(WITH_MODBUS, 1, Define to 1 if MODBUS support is enabled)
+		SERVER_LIBS="$SERVER_LIBS -lmodbus"
+		AGENT_LIBS="$AGENT_LIBS -lmodbus"
+	else
+		if test "x$REQUIRE_SSH" = "xyes"; then
+			AC_MSG_ERROR(libmodbus is required for MODBUS support)
+		fi
+	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+else
+	HAVE_MODBUS=no
 fi
 
 
@@ -4543,6 +4610,8 @@ AC_SUBST(INSTALL_LIBPATH)
 AC_SUBST(LIBNXAGENT_LIBS)
 AC_SUBST(LIBSSH_CPPFLAGS)
 AC_SUBST(LIBSSH_LDFLAGS)
+AC_SUBST(LIBMODBUS_CPPFLAGS)
+AC_SUBST(LIBMODBUS_LDFLAGS)
 AC_SUBST(LIBJQ_CPPFLAGS)
 AC_SUBST(LIBJQ_LDFLAGS)
 AC_SUBST(MARIADB_CPPFLAGS)
@@ -4972,6 +5041,11 @@ if test "x${MQTT_SUPPORT}" = "xyes"; then
 else
 	echo "MQTT support            : NO"
 fi
+if test "x${HAVE_MODBUS}" = "xyes"; then
+	echo "MODBUS support          : YES"
+else
+	echo "MODBUS support          : NO"
+fi
 if test "x${ZEROMQ_SUPPORT}" = "xyes"; then
 	echo "ZeroMQ support          : YES"
    if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
@@ -5141,6 +5215,13 @@ if test "x${TUXEDO_LDFLAGS}" != "x"; then
 fi
 if test "x${TUXEDO_LIBS}" != "x"; then
 	echo "Tuxedo LIBS             : ${TUXEDO_LIBS}"
+fi
+
+if test "x${LIBMODBUS_CPPFLAGS}" != "x"; then
+	echo "libmodbus CPPFLAGS      : ${LIBMODBUS_CPPFLAGS}"
+fi
+if test "x${LIBMODBUS_LDFLAGS}" != "x"; then
+	echo "libmodbus LDFLAGS       : ${LIBMODBUS_LDFLAGS}"
 fi
 
 if test "x${MONGODB_CPPFLAGS}" != "x"; then

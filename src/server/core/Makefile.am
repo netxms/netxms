@@ -36,12 +36,12 @@ libnxcore_la_SOURCES = 2fa.cpp abind_target.cpp accesspoint.cpp acl.cpp actions.
 			userdb_objects.cpp vobject.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			websvc.cpp winevent.cpp winperf.cpp zone.cpp
 libnxcore_la_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/build -I@top_srcdir@/src/server/include -DNXCORE_EXPORTS \
-	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@
+	@MQTT_CPPFLAGS@ @PYTHON_CPPFLAGS@ @LIBMODBUS_CPPFLAGS@
 if USE_INTERNAL_ZLIB
 libnxcore_la_CPPFLAGS += -I../../zlib
 endif
 libnxcore_la_CXXFLAGS = -I@top_srcdir@/@CUSTOM_INCLUDE@
-libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@
+libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @MQTT_LDFLAGS@ @PYTHON_LDFLAGS@ @LIBMODBUS_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \

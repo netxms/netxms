@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: getparam.cpp
+** File: metrics.cpp
 **
 **/
 
@@ -79,6 +79,13 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 LONG H_ThreadPoolList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+
+#if WITH_MODBUS
+LONG H_MODBUSCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MODBUSInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+#endif
 
 /**
  * Authentication failure count
@@ -291,7 +298,7 @@ static LONG H_SystemIsVirtual(const TCHAR *param, const TCHAR *arg, TCHAR *value
  */
 static LONG H_AgentHeapActive(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   INT64 bytes = GetActiveHeapMemory();
+   int64_t bytes = GetActiveHeapMemory();
    if (bytes == -1)
       return SYSINFO_RC_UNSUPPORTED;
    ret_int64(value, bytes);
@@ -303,7 +310,7 @@ static LONG H_AgentHeapActive(const TCHAR *param, const TCHAR *arg, TCHAR *value
  */
 static LONG H_AgentHeapAllocated(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   INT64 bytes = GetAllocatedHeapMemory();
+   int64_t bytes = GetAllocatedHeapMemory();
    if (bytes == -1)
       return SYSINFO_RC_UNSUPPORTED;
    ret_int64(value, bytes);
@@ -440,6 +447,12 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
    { _T("File.Type(*)"), H_FileType, nullptr, DCI_DT_UINT, _T("Type of file {instance}") },
    { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
+#if WITH_MODBUS
+   { _T("MODBUS.Coil(*)"), H_MODBUSCoil, nullptr, DCI_DT_UINT, _T("Value of MODBUS coil {instance}") },
+   { _T("MODBUS.DiscreteInput(*)"), H_MODBUSDiscreteInput, nullptr, DCI_DT_UINT, _T("Value of MODBUS discrete input {instance}") },
+   { _T("MODBUS.HoldingRegister(*)"), H_MODBUSHoldingRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS holding register {instance}") },
+   { _T("MODBUS.InputRegister(*)"), H_MODBUSInputRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS input register {instance}") },
+#endif
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
    { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
    { _T("PhysicalDisk.Capacity(*)"), H_PhysicalDiskInfo, _T("C"), DCI_DT_UINT64, DCIDESC_PHYSICALDISK_CAPACITY },
