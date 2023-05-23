@@ -78,6 +78,7 @@ public abstract class DataCollectionObject
 	protected long id;
    protected long nodeId;
 	protected long templateId;
+	protected long templateItemId;
 	protected long resourceId;
 	protected long sourceNode;
 	protected int pollingScheduleType;
@@ -118,6 +119,7 @@ public abstract class DataCollectionObject
 		id = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
 		nodeId = (owner != null) ? owner.getOwnerId() : msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
 		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
+		templateItemId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ITEM_ID);
 		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
 		sourceNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		pollingScheduleType = msg.getFieldAsInt32(NXCPCodes.VID_POLLING_SCHEDULE_TYPE);
@@ -958,5 +960,13 @@ public abstract class DataCollectionObject
    public void setRelatedObject(long relatedObject)
    {
       this.relatedObject = relatedObject;
+   }
+
+   /**
+    * @return the templateItemId
+    */
+   public long getTemplateItemId()
+   {
+      return templateItemId;
    }
 }

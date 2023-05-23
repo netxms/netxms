@@ -807,6 +807,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_DCI_ID, m_id);
 	pMsg->setField(VID_DCOBJECT_TYPE, (WORD)getType());
    pMsg->setField(VID_TEMPLATE_ID, m_templateId);
+   pMsg->setField(VID_TEMPLATE_ITEM_ID, m_templateItemId);
    pMsg->setField(VID_NAME, m_name);
    pMsg->setField(VID_DESCRIPTION, m_description);
    pMsg->setField(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));

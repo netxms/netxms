@@ -64,6 +64,7 @@ import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
+import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.ShowHistoricalDataMenuItems;
@@ -127,6 +128,7 @@ public class DataCollectionView extends BaseDataCollectionView
    private Action actionBulkUpdate;
    private Action actionHideTemplateItems;
    private Action actionApplyChanges;
+   private Action actionShowTemplate;
 
    /**
     * Constructor
@@ -200,6 +202,7 @@ public class DataCollectionView extends BaseDataCollectionView
                Iterator<?> it = selection.iterator();
                boolean canActivate = false;
                boolean canDisable = false;
+               boolean hasTemplate = false;
                while(it.hasNext() && (!canActivate || !canDisable))
                {
                   DataCollectionObject dci = (DataCollectionObject)it.next();
@@ -207,9 +210,12 @@ public class DataCollectionView extends BaseDataCollectionView
                      canActivate = true;
                   if (dci.getStatus() != DataCollectionObject.DISABLED)
                      canDisable = true;
+                  if (dci.getTemplateId() != 0 && dci.getTemplateId() != getObjectId())
+                     hasTemplate = true;    
                }
                actionActivate.setEnabled(canActivate);
                actionDisable.setEnabled(canDisable);
+               actionShowTemplate.setEnabled((selection.size() == 1) && hasTemplate);
             }
          }
       });
@@ -303,6 +309,7 @@ public class DataCollectionView extends BaseDataCollectionView
                Iterator<?> it = selection.iterator();
                boolean canActivate = false;
                boolean canDisable = false;
+               boolean hasTemplate = false;
                while(it.hasNext() && (!canActivate || !canDisable))
                {
                   DciValue dci = (DciValue)it.next();
@@ -310,9 +317,16 @@ public class DataCollectionView extends BaseDataCollectionView
                      canActivate = true;
                   if (dci.getStatus() != DataCollectionObject.DISABLED)
                      canDisable = true;
+                  if (dci.getTemplateDciId() != 0)
+                  {
+                     DataCollectionObject dco = getDataCollectionObject(dci);
+                     if (dco.getTemplateId() != 0 && dco.getTemplateId() != getObjectId())
+                        hasTemplate = true;                            
+                  }         
                }
                actionActivate.setEnabled(canActivate);
                actionDisable.setEnabled(canDisable);
+               actionShowTemplate.setEnabled((selection.size() == 1) && hasTemplate);
             }
          }
       });
@@ -390,6 +404,12 @@ public class DataCollectionView extends BaseDataCollectionView
       manager.add(new Separator());
       manager.add(actionActivate);
       manager.add(actionDisable);
+      if (!isTemplate)
+      {
+         manager.add(new Separator());
+         manager.add(actionShowTemplate);
+         manager.add(new Separator());
+      }
       if (editMode)
       {
          if (!isTemplate)
@@ -552,6 +572,15 @@ public class DataCollectionView extends BaseDataCollectionView
       };
       actionApplyChanges.setEnabled(false);      
       addKeyBinding("M1+S", actionApplyChanges);
+
+      actionShowTemplate = new Action(i18n.tr("Go to &Template DCI")) {
+         @Override
+         public void run()
+         {
+            showTemplate();
+         }
+      };
+      actionDisable.setEnabled(false);
    }
 
    /**
@@ -658,6 +687,20 @@ public class DataCollectionView extends BaseDataCollectionView
          dco = dciConfig.findItem(value.getId());
       }
       return dco;
+   }
+   
+   /**
+    * Open template and it's DCI
+    */
+   private void showTemplate()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      DataCollectionObject dco = getDataCollectionObject(selection.getFirstElement());
+      
+      MainWindow.switchToObject(dco.getTemplateId(), dco.getTemplateItemId());
    }
    
    /**
@@ -1329,6 +1372,11 @@ public class DataCollectionView extends BaseDataCollectionView
       viewer.refresh(false);
    }
 
+   /**
+    * Select DCI 
+    * 
+    * @param dciId DCI id
+    */
    public void selectDci(long dciId)
    {
       refresh( new Runnable() {         
@@ -1337,7 +1385,7 @@ public class DataCollectionView extends BaseDataCollectionView
          {
             if (editMode)
             {
-               for (DataCollectionObject item : dciConfig.getItems())
+               for (DataCollectionObject item : (DataCollectionObject[])viewer.getInput())
                {
                   if (item.getId() == dciId)
                      viewer.setSelection(new StructuredSelection(item), true); 

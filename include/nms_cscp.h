@@ -1533,6 +1533,7 @@ typedef struct
 #define VID_ASSET_ATTRIBUTE_NAMES   ((uint32_t)828)
 #define VID_TIMER_LIST              ((uint32_t)829)
 #define VID_UPDATE_IDENTIFICATION   ((uint32_t)830)
+#define VID_TEMPLATE_ITEM_ID        ((uint32_t)831)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
