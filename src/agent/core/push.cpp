@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,13 +25,13 @@
 /**
  * Request ID
  */
-static uint64_t s_requestIdHigh = (uint64_t)time(NULL) << 32;
+static uint64_t s_requestIdHigh = static_cast<uint64_t>(time(nullptr)) << 32;
 static VolatileCounter s_requestIdLow = 0;
 
 /**
  * Push parameter's data
  */
-bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp)
+bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, time_t timestamp)
 {
 	bool success = false;
 
@@ -42,7 +42,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_
 	msg.setField(VID_VALUE, value);
    msg.setField(VID_OBJECT_ID, objectId);
    msg.setFieldFromTime(VID_TIMESTAMP, timestamp);
-   msg.setField(VID_REQUEST_ID, s_requestIdHigh | (UINT64)InterlockedIncrement(&s_requestIdLow)); 
+   msg.setField(VID_REQUEST_ID, s_requestIdHigh | static_cast<uint64_t>(InterlockedIncrement(&s_requestIdLow)));
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
    {

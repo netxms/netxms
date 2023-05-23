@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,10 +23,10 @@
 #include "libnxagent.h"
 
 /**
- * Get arguments for parameters like name(arg1,...)
+ * Get arguments for metric like name(arg1,...)
  * Returns FALSE on processing error
  */
-static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *arg, size_t maxSize, bool inBrackets)
+static bool AgentGetMetricArgInternal(const TCHAR *param, int index, TCHAR *arg, size_t maxSize, bool inBrackets)
 {
    arg[0] = 0;    // Default is empty string
    const TCHAR *ptr1 = inBrackets ? _tcschr(param, _T('(')) : param;
@@ -133,15 +133,15 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
 }
 
 /**
- * Get arguments for parameters like name(arg1,...) as multibyte string
+ * Get arguments for metric like name(arg1,...) as multibyte string
  * Returns FALSE on processing error
  */
-bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets)
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgA(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets)
 {
 #ifdef UNICODE
    WCHAR localBuffer[1024];
 	WCHAR *temp = (maxSize > 1024) ? MemAllocStringW(maxSize) : localBuffer;
-	bool success = AgentGetParameterArgInternal(param, index, temp, maxSize, inBrackets);
+	bool success = AgentGetMetricArgInternal(param, index, temp, maxSize, inBrackets);
 	if (success)
 	{
 		wchar_to_mb(temp, -1, arg, maxSize);
@@ -151,22 +151,22 @@ bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, 
 	   MemFree(temp);
 	return success;
 #else
-	return AgentGetParameterArgInternal(param, index, arg, maxSize, inBrackets);
+	return AgentGetMetricArgInternal(param, index, arg, maxSize, inBrackets);
 #endif
 }
 
 /**
- * Get arguments for parameters like name(arg1,...) as UNICODE string
+ * Get arguments for metric like name(arg1,...) as UNICODE string
  * Returns FALSE on processing error
  */
-bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, size_t maxSize, bool inBrackets)
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgW(const TCHAR *param, int index, WCHAR *arg, size_t maxSize, bool inBrackets)
 {
 #ifdef UNICODE
-	return AgentGetParameterArgInternal(param, index, arg, maxSize, inBrackets);
+	return AgentGetMetricArgInternal(param, index, arg, maxSize, inBrackets);
 #else
    char localBuffer[1024];
    char *temp = (maxSize > 1024) ? MemAllocStringA(maxSize) : localBuffer;
-	bool success = AgentGetParameterArgInternal(param, index, temp, maxSize, inBrackets);
+	bool success = AgentGetMetricArgInternal(param, index, temp, maxSize, inBrackets);
 	if (success)
 	{
 		mb_to_wchar(temp, -1, arg, maxSize);
@@ -176,6 +176,93 @@ bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, 
       MemFree(temp);
 	return success;
 #endif
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as IP address object, with host name resolution if necessary
+ * Returns invalid address on processing error
+ */
+InetAddress LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInetAddress(const TCHAR *metric, int index, bool inBrackets)
+{
+   TCHAR hostName[256];
+   if (!AgentGetMetricArg(metric, index, hostName, 256, inBrackets))
+      return InetAddress();
+   if (hostName[0] == 0)
+      return InetAddress();
+   return InetAddress::resolveHostName(hostName);
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as given integer type
+ * Returns false on processing error
+ */
+template<typename _Tv, typename _Ti> static inline bool AgentGetMetricArgAsInteger(const TCHAR *metric, int index, _Tv *value, _Tv defaultValue, bool inBrackets, _Ti (*f)(const TCHAR*, TCHAR**, int))
+{
+   TCHAR buffer[256];
+   if (!AgentGetMetricArg(metric, index, buffer, 256, inBrackets))
+      return false;
+   if (buffer[0] == 0)
+   {
+      *value = defaultValue;
+      return true;
+   }
+   TCHAR *eptr;
+   *value = static_cast<_Tv>(f(buffer, &eptr, 0));
+   return *eptr == 0;
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as 16 bit signed integer
+ * Returns false on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt16(const TCHAR *metric, int index, int16_t *value, int16_t defaultValue, bool inBrackets)
+{
+   return AgentGetMetricArgAsInteger(metric, index, value, defaultValue, inBrackets, _tcstol);
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as 16 bit unsigned integer
+ * Returns false on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt16(const TCHAR *metric, int index, uint16_t *value, uint16_t defaultValue, bool inBrackets)
+{
+   return AgentGetMetricArgAsInteger(metric, index, value, defaultValue, inBrackets, _tcstoul);
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as 32 bit signed integer
+ * Returns false on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt32(const TCHAR *metric, int index, int32_t *value, int32_t defaultValue, bool inBrackets)
+{
+   return AgentGetMetricArgAsInteger(metric, index, value, defaultValue, inBrackets, _tcstol);
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as 32 bit unsigned integer
+ * Returns false on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt32(const TCHAR *metric, int index, uint32_t *value, uint32_t defaultValue, bool inBrackets)
+{
+   return AgentGetMetricArgAsInteger(metric, index, value, defaultValue, inBrackets, _tcstoul);
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as 64 bit signed integer
+ * Returns false on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt64(const TCHAR *metric, int index, int64_t *value, int64_t defaultValue, bool inBrackets)
+{
+   return AgentGetMetricArgAsInteger(metric, index, value, defaultValue, inBrackets, _tcstoll);
+}
+
+/**
+ * Get arguments for metric like name(arg1,...) as 64 bit unsigned integer
+ * Returns false on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt64(const TCHAR *metric, int index, uint64_t *value, uint64_t defaultValue, bool inBrackets)
+{
+   return AgentGetMetricArgAsInteger(metric, index, value, defaultValue, inBrackets, _tcstoull);
 }
 
 /**

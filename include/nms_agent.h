@@ -1323,13 +1323,24 @@ public:
 /**
  * API for subagents
  */
-bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets = true);
-bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, size_t maxSize, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgA(const TCHAR *param, int index, char *arg, size_t maxSize, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgW(const TCHAR *param, int index, WCHAR *arg, size_t maxSize, bool inBrackets = true);
 #ifdef UNICODE
-#define AgentGetParameterArg AgentGetParameterArgW
+#define AgentGetMetricArg AgentGetMetricArgW
+#define AgentGetParameterArg AgentGetMetricArgW
 #else
-#define AgentGetParameterArg AgentGetParameterArgA
+#define AgentGetMetricArg AgentGetMetricArgA
+#define AgentGetParameterArg AgentGetMetricArgA
 #endif
+#define AgentGetParameterArgA AgentGetMetricArgA
+#define AgentGetParameterArgW AgentGetMetricArgW
+InetAddress LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInetAddress(const TCHAR *metric, int index, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt16(const TCHAR *metric, int index, int16_t *value, int16_t defaultValue = 0, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt16(const TCHAR *metric, int index, uint16_t *value, uint16_t defaultValue = 0, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt32(const TCHAR *metric, int index, int32_t *value, int32_t defaultValue = 0, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt32(const TCHAR *metric, int index, uint32_t *value, uint32_t defaultValue = 0, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt64(const TCHAR *metric, int index, int64_t *value, int64_t defaultValue = 0, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt64(const TCHAR *metric, int index, uint64_t *value, uint64_t defaultValue = 0, bool inBrackets = true);
 
 void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
