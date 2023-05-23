@@ -22,7 +22,6 @@
 **/
 
 #include "libnxlp.h"
-#include <nxstat.h>
 
 #ifdef _WIN32
 #include <share.h>
@@ -573,7 +572,7 @@ bool LogParser::monitorFile(off_t startOffset)
       TCHAR fname[MAX_PATH];
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
       NX_STAT_STRUCT st;
-      if (CALL_STAT_FOLLOW_SYMLINK(fname, &st) != 0)
+      if (callStat(fname, &st) != 0)
       {
          if (errno == ENOENT)
             readFromStart = true;
@@ -582,18 +581,17 @@ bool LogParser::monitorFile(off_t startOffset)
             break;
          continue;
       }
-
+      
+#ifdef _WIN32
+      int fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
+#else
       int openFlags = O_RDONLY;
 
       if (!m_followSymlinks)
       {
          openFlags |= O_NOFOLLOW;
       }
-      
-#ifdef _WIN32
-      openFlags |= O_BINARY;
-      int fh = _tsopen(fname, openFlags, _SH_DENYNO);
-#else
+
 		int fh = _topen(fname, openFlags);
 #endif
 		if (fh == -1)
@@ -667,7 +665,7 @@ bool LogParser::monitorFile(off_t startOffset)
 			}
 
          NX_STAT_STRUCT stn;
-         if (CALL_STAT_FOLLOW_SYMLINK(fname, &stn) < 0)
+         if (callStat(fname, &stn) < 0)
 			{
 				nxlog_debug_tag(DEBUG_TAG, 1, _T("stat(%s) failed, errno=%d"), fname, errno);
 				readFromStart = true;
@@ -752,6 +750,11 @@ stop_parser:
 	return true;
 }
 
+int LogParser::callStat(const TCHAR *fname, NX_STAT_STRUCT* st)
+{
+    return (m_followSymlinks ? CALL_STAT_FOLLOW_SYMLINK(fname, st) : CALL_STAT(fname, st));
+}
+
 /**
  * File parser thread (do not keep it open)
  */
@@ -793,7 +796,7 @@ bool LogParser::monitorFile2(off_t startOffset)
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
       
       NX_STAT_STRUCT st;
-      if (CALL_STAT_FOLLOW_SYMLINK(fname, &st) != 0)
+      if (callStat(fname, &st) != 0)
       {
          if (errno == ENOENT)
          {
@@ -831,7 +834,14 @@ bool LogParser::monitorFile2(off_t startOffset)
 #ifdef _WIN32
       int fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
 #else
-      int fh = _topen(fname, O_RDONLY);
+      int openFlags = O_RDONLY;
+
+      if (!m_followSymlinks)
+      {
+         openFlags |= O_NOFOLLOW;
+      }
+
+		int fh = _topen(fname, openFlags);
 #endif
       if (fh == -1)
       {
@@ -1021,7 +1031,7 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
       
       NX_STAT_STRUCT st;
-      if (CALL_STAT(fname, &st) != 0)
+      if (callStat(fname, &st) != 0)
       {
          setStatus(LPS_NO_FILE);
          if (m_stopCondition.wait(10000))

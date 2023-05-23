@@ -144,6 +144,7 @@ LogParser::LogParser() : m_rules(0, 16, Ownership::True), m_stopCondition(true)
    m_suspended = false;
    m_keepFileOpen = true;
    m_ignoreMTime = false;
+   m_followSymlinks = false;   
    m_rescan = false;
 	m_status = LPS_INIT;
 #ifdef _WIN32
