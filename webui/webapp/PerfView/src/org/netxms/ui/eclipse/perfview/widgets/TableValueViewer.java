@@ -64,7 +64,7 @@ public class TableValueViewer extends BaseTableValueViewer
    {
       super(parent, style, viewPart, configSubId, saveTableSettings);
    }
-   
+
    /**
     * @see org.netxms.ui.eclipse.perfview.widgets.BaseTableValueViewer#buildConfigId(java.lang.String)
     */
@@ -199,7 +199,7 @@ public class TableValueViewer extends BaseTableValueViewer
       {
          TableColumnDefinition column = currentData.getColumnDefinition(cells[i].getColumnIndex());
          final String instance = buildInstanceString(cells[i].getViewerRow());
-         
+
          sb.append("&");
          sb.append(ChartDciConfig.TABLE);
          sb.append("@");
@@ -214,8 +214,7 @@ public class TableValueViewer extends BaseTableValueViewer
          sb.append(safeEncode(column.getName()));
       }
 
-      final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench()
-            .getActiveWorkbenchWindow().getActivePage();
+      final IWorkbenchPage page = (viewPart != null) ? viewPart.getSite().getPage() : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
       try
       {
          page.showView(HistoricalGraphView.ID, sb.toString(), IWorkbenchPage.VIEW_ACTIVATE);

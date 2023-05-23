@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,49 +48,48 @@ public class EditColumnDialog extends Dialog
 	private Combo dataType;
 	private Combo aggregationFunction;
 	private Button checkInstanceColumn;
-	private Button checkInstanceLabelColumn;
    private Button checkSnmpHexString;
 	private LabeledText snmpOid;
-	
+
 	/**
 	 * @param parentShell
 	 */
-	public EditColumnDialog(Shell parentShell, ColumnDefinition column)
+   public EditColumnDialog(Shell parentShell, ColumnDefinition column)
 	{
 		super(parentShell);
 		this.column = column;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().EditColumnDialog_ColumnDefinition + column.getName());
+      newShell.setText(column.getName().isEmpty() ? "Add Column Definition" : "Edit Column Definition ");
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.makeColumnsEqualWidth = true;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
-		
+
 		name = new LabeledText(dialogArea, SWT.NONE);
 		name.setLabel(Messages.get().EditColumnDialog_Name);
 		name.setText(column.getName());
 		name.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		
+
 		displayName = new LabeledText(dialogArea, SWT.NONE);
 		displayName.setLabel(Messages.get().EditColumnDialog_DispName);
 		displayName.setText(column.getDisplayName());
@@ -119,11 +118,6 @@ public class EditColumnDialog extends Dialog
 		checkInstanceColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		checkInstanceColumn.setSelection(column.isInstanceColumn());
 		
-		checkInstanceLabelColumn = new Button(dialogArea, SWT.CHECK);
-		checkInstanceLabelColumn.setText(Messages.get().EditColumnDialog_InstanceLabelCol);
-		checkInstanceLabelColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		checkInstanceLabelColumn.setSelection(column.isInstanceLabelColumn());
-		
       checkSnmpHexString = new Button(dialogArea, SWT.CHECK);
       checkSnmpHexString.setText("Convert SNMP value to &hexadecimal string");
       checkSnmpHexString.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
@@ -137,9 +131,9 @@ public class EditColumnDialog extends Dialog
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -161,15 +155,20 @@ public class EditColumnDialog extends Dialog
 		{
 			column.setSnmpObjectId(null);
 		}
-		
-		column.setName(name.getText().trim());
-		column.setDisplayName(displayName.getText().trim());
-		column.setInstanceColumn(checkInstanceColumn.getSelection());
-		column.setInstanceLabelColumn(checkInstanceLabelColumn.getSelection());
+
+      if (name.getText().trim().isEmpty())
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Column name can not be empty");
+         return;
+      }
+
+      column.setName(name.getText().trim());
+      column.setDisplayName(displayName.getText().trim().isEmpty() ? name.getText().trim() : displayName.getText().trim());
+      column.setInstanceColumn(checkInstanceColumn.getSelection());
 		column.setConvertSnmpStringToHex(checkSnmpHexString.getSelection());
 		column.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
 		column.setAggregationFunction(aggregationFunction.getSelectionIndex());
-		
+
 		super.okPressed();
 	}
 
@@ -203,15 +202,15 @@ public class EditColumnDialog extends Dialog
             return 0;  // fallback to int32
       }
    }
-   
+
    /**
     * Data type positions in selector
     */
-   private static final DataType[] TYPES = { 
+   private static final DataType[] TYPES = {
       DataType.INT32, DataType.UINT32, DataType.COUNTER32, DataType.INT64,
       DataType.UINT64, DataType.COUNTER64, DataType.FLOAT, DataType.STRING
-      };
-   
+   };
+
    /**
     * Get data type by selector position
     *  

@@ -206,7 +206,6 @@ public class TableValueViewer extends BaseTableValueViewer
          config.nodeId = objectId;
          config.dciId = dciId;
          config.dciName = column.getDisplayName() + ": " + instance.replace("~~~", " / ");
-         config.dciName = config.dciName;
          config.type = ChartDciConfig.TABLE;
          config.instance = instance;
          config.column = column.getName();

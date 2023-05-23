@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.IInputValidator;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -77,7 +75,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class TableColumns extends AbstractDCIPropertyPage
 {
 	private static final String COLUMN_SETTINGS_PREFIX = "TableColumns.ColumnList"; //$NON-NLS-1$
-	
+
 	private DataCollectionTable dci;
 	private List<ColumnDefinition> columns;
 	private TableViewer columnList;
@@ -143,8 +141,8 @@ public class TableColumns extends AbstractDCIPropertyPage
       gd.horizontalSpan = 2;
       columnList.getControl().setLayoutData(gd);
       setupColumnList();
-      columnList.setInput(columns.toArray());
-      
+      columnList.setInput(columns);
+
       Composite leftButtons = new Composite(columnListArea, SWT.NONE);
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
@@ -388,7 +386,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 	 */
 	private void deleteColumns()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)columnList.getSelection();
+      final IStructuredSelection selection = columnList.getStructuredSelection();
 		if (!selection.isEmpty())
 		{
 			Iterator<?> it = selection.iterator();
@@ -396,54 +394,42 @@ public class TableColumns extends AbstractDCIPropertyPage
 			{
 				columns.remove(it.next());
 			}
-	      columnList.setInput(columns.toArray());
+         columnList.refresh();
 		}
 	}
-	
+
 	/**
 	 * Edit selected threshold
 	 */
 	private void editColumn()
 	{
-		final IStructuredSelection selection = (IStructuredSelection)columnList.getSelection();
+      final IStructuredSelection selection = columnList.getStructuredSelection();
 		if (selection.size() == 1)
 		{
 			final ColumnDefinition column = (ColumnDefinition)selection.getFirstElement();
-			EditColumnDialog dlg = new EditColumnDialog(getShell(), column);
+         EditColumnDialog dlg = new EditColumnDialog(getShell(), column);
 			if (dlg.open() == Window.OK)
 			{
 				columnList.update(column, null);
 			}
 		}
 	}
-	
+
 	/**	
 	 * Add new threshold
 	 */
 	private void addColumn()
 	{
-		final InputDialog idlg = new InputDialog(getShell(), Messages.get().TableColumns_NewColumn, Messages.get().TableColumns_ColumnName, "", new IInputValidator() { //$NON-NLS-1$
-			@Override
-			public String isValid(String newText)
-			{
-				if (newText.trim().isEmpty())
-					return Messages.get().TableColumns_WarningText;
-				return null;
-			}
-		});
-		if (idlg.open() == Window.OK)
+      final ColumnDefinition column = new ColumnDefinition();
+      final EditColumnDialog dlg = new EditColumnDialog(getShell(), column);
+		if (dlg.open() == Window.OK)
 		{
-			final ColumnDefinition column = new ColumnDefinition(idlg.getValue(), idlg.getValue());
-			final EditColumnDialog dlg = new EditColumnDialog(getShell(), column);
-			if (dlg.open() == Window.OK)
-			{
-				columns.add(column);
-		      columnList.setInput(columns.toArray());
-		      columnList.setSelection(new StructuredSelection(column));
-			}
+         columns.add(column);
+         columnList.refresh();
+	      columnList.setSelection(new StructuredSelection(column));
 		}
 	}
-	
+
 	/**
 	 * Move selected element up 
 	 */
@@ -458,11 +444,10 @@ public class TableColumns extends AbstractDCIPropertyPage
 		if (index > 0)
 		{
 			Collections.swap(columns, index, index - 1);
-			columnList.setInput(columns.toArray());
-			columnList.setSelection(new StructuredSelection(column));
+         columnList.refresh();
 		}
 	}
-	
+
 	/**
 	 * Move selected element down
 	 */
@@ -477,11 +462,10 @@ public class TableColumns extends AbstractDCIPropertyPage
 		if (index < columns.size() - 1)
 		{
 			Collections.swap(columns, index, index + 1);
-			columnList.setInput(columns.toArray());
-			columnList.setSelection(new StructuredSelection(column));
+         columnList.refresh();
 		}
 	}
-	
+
 	/**
 	 * Apply changes
 	 * 
@@ -494,7 +478,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 		editor.modify();
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()
 	 */
 	@Override
@@ -504,7 +488,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 		applyChanges(true);
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
 	 */
 	@Override
@@ -514,25 +498,26 @@ public class TableColumns extends AbstractDCIPropertyPage
 		applyChanges(false);
 		return true;
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performCancel()
-	 */
+
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+    */
 	@Override
 	public boolean performCancel()
 	{
 		saveSettings();
 		return true;
 	}
-	
+
 	/**
 	 * Save settings
 	 */
 	private void saveSettings()
 	{
+	   if (columnList != null)
 		WidgetHelper.saveColumnSettings(columnList.getTable(), Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);
 	}
-	
+
 	/**
 	 * Query columns from agent
 	 */
@@ -540,7 +525,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 	{
 	   if (!MessageDialogHelper.openQuestion(getShell(), "Warning", "Current column definition will be replaced by definition provided by agent. Continue?"))
 	      return;
-	   
+
 	   AbstractObject object = ConsoleSharedData.getSession().findObjectById(dci.getNodeId());
 	   if ((editor.getSourceNode() == 0) && ((object instanceof Template) || (object instanceof Cluster)))
 	   {
@@ -585,7 +570,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 								c.setInstanceColumn(table.getColumnDefinition(i).isInstanceColumn());
 								columns.add(c);
 							}
-							columnList.setInput(columns.toArray());
+                     columnList.refresh();
 						}
 					});
 				}
