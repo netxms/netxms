@@ -260,18 +260,16 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    QWORD llFileSize = 0;
    LONG nRet;
 
-   if (!AgentGetParameterArg(cmd, 1, szPath, MAX_PATH))
-      return SYSINFO_RC_UNSUPPORTED;
-   if (!AgentGetParameterArg(cmd, 2, szPattern, MAX_PATH))
-      return SYSINFO_RC_UNSUPPORTED;
-   if (!AgentGetParameterArg(cmd, 3, szRecursive, 10))
+   if (!AgentGetMetricArg(cmd, 1, szPath, MAX_PATH) ||
+       !AgentGetParameterArg(cmd, 2, szPattern, MAX_PATH) ||
+       !AgentGetParameterArg(cmd, 3, szRecursive, 10))
       return SYSINFO_RC_UNSUPPORTED;
 
-   if (!AgentGetParameterArg(cmd, 4, szBuffer, 128))
+   if (!AgentGetMetricArg(cmd, 4, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
-   INT64 sizeFilter = _tcstoll(szBuffer, nullptr, 0);
+   int64_t sizeFilter = _tcstoll(szBuffer, nullptr, 0);
 
-   if (!AgentGetParameterArg(cmd, 5, szBuffer, 128))
+   if (!AgentGetMetricArg(cmd, 5, szBuffer, 128))
       return SYSINFO_RC_UNSUPPORTED;
    int ageFilter = _tcstoul(szBuffer, nullptr, 0);
 
@@ -280,7 +278,9 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 
    // If pattern is omited use asterisk
    if (szPattern[0] == 0)
+   {
       _tcscpy(szPattern, _T("*"));
+   }
    else if (szPattern[0] == _T('!'))
    {
       // Inverse counting flag
@@ -335,8 +335,7 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
-
-   if (!AgentGetParameterArg(cmd, 1, fileName, MAX_PATH))
+   if (!AgentGetMetricArg(cmd, 1, fileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
@@ -358,7 +357,7 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 {
    TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
 
-   if (!AgentGetParameterArg(cmd, 1, fileName, MAX_PATH))
+   if (!AgentGetMetricArg(cmd, 1, fileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
@@ -381,7 +380,7 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSessi
    TCHAR fileName[MAX_PATH], realFileName[MAX_PATH];
    uint32_t crc32;
 
-   if (!AgentGetParameterArg(cmd, 1, fileName, MAX_PATH))
+   if (!AgentGetMetricArg(cmd, 1, fileName, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
@@ -478,7 +477,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR path[MAX_PATH];
-   if (!AgentGetParameterArg(cmd, 1, path, MAX_PATH))
+   if (!AgentGetMetricArg(cmd, 1, path, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
@@ -514,7 +513,7 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR path[MAX_PATH];
-   if (!AgentGetParameterArg(cmd, 1, path, MAX_PATH))
+   if (!AgentGetMetricArg(cmd, 1, path, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    // Expand strftime macros in the path
@@ -552,11 +551,11 @@ LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR name[256];
-   if (!AgentGetParameterArg(cmd, 1, name, 256))
+   if (!AgentGetMetricArg(cmd, 1, name, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
    TCHAR family[32] = _T("");
-   if (!AgentGetParameterArg(cmd, 2, family, 32))
+   if (!AgentGetMetricArg(cmd, 2, family, 32))
       return SYSINFO_RC_UNSUPPORTED;
    _tcslwr(family);
    int af = AF_UNSPEC;
@@ -576,7 +575,7 @@ LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 LONG H_ResolverAddrByNameList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    TCHAR name[256];
-   if (!AgentGetParameterArg(cmd, 1, name, 256))
+   if (!AgentGetMetricArg(cmd, 1, name, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
    InetAddressList *list = InetAddressList::resolveHostName(name);
@@ -599,7 +598,7 @@ LONG H_ResolverAddrByNameList(const TCHAR *cmd, const TCHAR *arg, StringList *va
 LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR name[256];
-   if (!AgentGetParameterArg(cmd, 1, name, 256))
+   if (!AgentGetMetricArg(cmd, 1, name, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
    InetAddress addr = InetAddress::parse(name);
@@ -614,11 +613,11 @@ LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 /**
  * Get thread pool information
  */
-LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ThreadPoolInfo(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR poolName[64], options[64];
-   if (!AgentGetParameterArg(param, 1, poolName, 64) ||
-       !AgentGetParameterArg(param, 2, options, 64))
+   if (!AgentGetMetricArg(metric, 1, poolName, 64) ||
+       !AgentGetMetricArg(metric, 2, options, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
    ThreadPoolInfo info;
@@ -678,7 +677,7 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 /**
  * Thread pool list
  */
-LONG H_ThreadPoolList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+LONG H_ThreadPoolList(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    StringList *pools = ThreadPoolGetAllPools();
    value->addAll(pools);
@@ -697,10 +696,10 @@ LONG H_HostName(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Handler for File.LineCount parameter
  */
-LONG H_FileLineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_FileLineCount(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR fname[MAX_PATH];
-   if (!AgentGetParameterArg(cmd, 1, fname, MAX_PATH))
+   if (!AgentGetMetricArg(metric, 1, fname, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
 
    int fd = _topen(fname, O_RDONLY);
@@ -730,18 +729,16 @@ LONG H_FileLineCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractC
 /**
  * Handler for File.Content parameter
  */
-LONG H_FileContent(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_FileContent(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    if (!session->isMasterServer())
       return SYSINFO_RC_ACCESS_DENIED;
 
    char fname[MAX_PATH];
-   if (!AgentGetParameterArgA(cmd, 1, fname, MAX_PATH))
+   int32_t offset;
+   if (!AgentGetMetricArgA(metric, 1, fname, MAX_PATH) || !AgentGetMetricArgAsInt32(metric, 2, &offset, 1))
       return SYSINFO_RC_UNSUPPORTED;
 
-   TCHAR temp[32];
-   AgentGetParameterArg(cmd, 2, temp, 32);
-   int offset = (temp[0] == 0) ? 1 : _tcstol(temp, nullptr, 0);
    if (offset < 1)
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -763,7 +760,7 @@ LONG H_FileContent(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
             *nl = 0;
 #ifdef UNICODE
          char codepage[64] = "";
-         AgentGetParameterArgA(cmd, 3, codepage, 64);
+         AgentGetMetricArgA(metric, 3, codepage, 64);
          mbcp_to_wchar(line, -1, value, MAX_RESULT_LENGTH, (codepage[0] != 0) ? codepage : nullptr);
 #else
          ret_string(value, line);

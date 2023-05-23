@@ -841,7 +841,7 @@ void ForwardEvent(NXCPMessage *msg);
 void StartEventConnector();
 
 void StartPushConnector();
-bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp);
+bool PushData(const TCHAR *parameter, const TCHAR *value, uint32_t objectId, time_t timestamp);
 
 void StartControlConnector();
 bool SendControlMessage(NXCPMessage *msg);
