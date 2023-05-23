@@ -30,13 +30,25 @@ public class ColumnDefinition
 	public static final int TCF_DATA_TYPE_MASK          = 0x000F;
 	public static final int TCF_AGGREGATE_FUNCTION_MASK = 0x0070;
 	public static final int TCF_INSTANCE_COLUMN         = 0x0100;
-	public static final int TCF_INSTANCE_LABEL_COLUMN   = 0x0200;
+	//public static final int TCF_INSTANCE_LABEL_COLUMN   = 0x0200; not used
    public static final int TCF_SNMP_HEX_STRING         = 0x0400;
 
 	private String name;
 	private String displayName;
 	private int flags;
 	private SnmpObjectId snmpObjectId;
+
+   /**
+    * Create new column definition.
+    */
+   public ColumnDefinition()
+   {
+      this.name = "";
+      this.displayName = "";
+      flags = 0;
+      setDataType(DataType.STRING);
+      snmpObjectId = null;
+   }
 
 	/**
 	 * Create new column definition.
@@ -207,29 +219,6 @@ public class ColumnDefinition
 			flags |= TCF_INSTANCE_COLUMN;
 		else
 			flags &= ~TCF_INSTANCE_COLUMN;
-	}
-	
-	/**
-    * Get "instance label column" flag
-    * 
-	 * @return "instance label column" flag
-	 */
-	public boolean isInstanceLabelColumn()
-	{
-		return (flags & TCF_INSTANCE_LABEL_COLUMN) != 0;
-	}
-	
-	/**
-    * Set "instance label column" flag
-    * 
-	 * @param isInstanceLabel true to set flag
-	 */
-	public void setInstanceLabelColumn(boolean isInstanceLabel)
-	{
-		if (isInstanceLabel)
-			flags |= TCF_INSTANCE_LABEL_COLUMN;
-		else
-			flags &= ~TCF_INSTANCE_LABEL_COLUMN;
 	}
 
    /**

@@ -996,7 +996,7 @@ enum HistoricalDataType
 #define TCF_DATA_TYPE_MASK          ((uint16_t)0x000F)
 #define TCF_AGGREGATE_FUNCTION_MASK ((uint16_t)0x0070)
 #define TCF_INSTANCE_COLUMN         ((uint16_t)0x0100)
-#define TCF_INSTANCE_LABEL_COLUMN   ((uint16_t)0x0200)
+//#define TCF_INSTANCE_LABEL_COLUMN   ((uint16_t)0x0200) not used
 #define TCF_SNMP_HEX_STRING         ((uint16_t)0x0400)
 
 /**

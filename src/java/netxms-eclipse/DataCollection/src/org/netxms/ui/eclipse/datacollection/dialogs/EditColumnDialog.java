@@ -48,17 +48,18 @@ public class EditColumnDialog extends Dialog
 	private Combo dataType;
 	private Combo aggregationFunction;
 	private Button checkInstanceColumn;
-	private Button checkInstanceLabelColumn;
    private Button checkSnmpHexString;
 	private LabeledText snmpOid;
+   private boolean newColumn;
 	
 	/**
 	 * @param parentShell
 	 */
-	public EditColumnDialog(Shell parentShell, ColumnDefinition column)
+	public EditColumnDialog(Shell parentShell, ColumnDefinition column, boolean newColumn)
 	{
 		super(parentShell);
 		this.column = column;
+      this.newColumn = newColumn;
 	}
 
 	/* (non-Javadoc)
@@ -68,7 +69,10 @@ public class EditColumnDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().EditColumnDialog_ColumnDefinition + column.getName());
+      if (newColumn)
+         newShell.setText("New Column Definition");
+      else
+         newShell.setText(Messages.get().EditColumnDialog_ColumnDefinition + column.getName());
 	}
 
 	/* (non-Javadoc)
@@ -119,11 +123,6 @@ public class EditColumnDialog extends Dialog
 		checkInstanceColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		checkInstanceColumn.setSelection(column.isInstanceColumn());
 		
-		checkInstanceLabelColumn = new Button(dialogArea, SWT.CHECK);
-		checkInstanceLabelColumn.setText(Messages.get().EditColumnDialog_InstanceLabelCol);
-		checkInstanceLabelColumn.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		checkInstanceLabelColumn.setSelection(column.isInstanceLabelColumn());
-		
       checkSnmpHexString = new Button(dialogArea, SWT.CHECK);
       checkSnmpHexString.setText("Convert SNMP value to &hexadecimal string");
       checkSnmpHexString.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
@@ -161,11 +160,16 @@ public class EditColumnDialog extends Dialog
 		{
 			column.setSnmpObjectId(null);
 		}
-		
-		column.setName(name.getText().trim());
-		column.setDisplayName(displayName.getText().trim());
-		column.setInstanceColumn(checkInstanceColumn.getSelection());
-		column.setInstanceLabelColumn(checkInstanceLabelColumn.getSelection());
+
+      if (name.getText().trim().isEmpty())
+      {
+         MessageDialogHelper.openWarning(getShell(), "Warning", "Column name can not be empty");
+         return;
+      }
+      
+      column.setName(name.getText().trim());
+      column.setDisplayName(displayName.getText().trim().isEmpty() ? name.getText().trim() : displayName.getText().trim());
+      column.setInstanceColumn(checkInstanceColumn.getSelection());
 		column.setConvertSnmpStringToHex(checkSnmpHexString.getSelection());
 		column.setDataType(getDataTypeByPosition(dataType.getSelectionIndex()));
 		column.setAggregationFunction(aggregationFunction.getSelectionIndex());
