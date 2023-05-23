@@ -136,7 +136,9 @@ public class BusinessServiceChecksView extends ObjectView
          public void selectionChanged(SelectionChangedEvent event)
          {
             IStructuredSelection selection = event.getStructuredSelection();
-            final BusinessServiceCheck check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
+            BusinessServiceCheck check = null;
+            if (selection.size() > 0)
+               check = new BusinessServiceCheck((BusinessServiceCheck)selection.getFirstElement());
             
             actionEdit.setEnabled((selection.size() == 1) && (check.getPrototypeServiceId() == 0));
             actionDuplicate.setEnabled(selection.size() == 1);

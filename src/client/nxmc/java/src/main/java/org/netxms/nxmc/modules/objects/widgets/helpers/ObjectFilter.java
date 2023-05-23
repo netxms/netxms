@@ -163,21 +163,12 @@ public class ObjectFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		if (classFilter != null)
-		{
-			if (!classFilter.contains(((AbstractObject)element).getObjectClass()))
-				return false;
-		}
+	   if (!passMainFilters(element))
+	      return false;	   
 
-		if (hideUnmanaged && (((AbstractObject)element).getStatus() == ObjectStatus.UNMANAGED))
-			return false;
-
-      if (hideSubInterfaces && (element instanceof Interface) && (((Interface)element).getParentInterfaceId() != 0))
-         return false;
-
-		if (objectList == null)
-			return true;
-
+      if (objectList == null)
+         return true;
+	   
 		boolean pass = objectList.containsKey(((AbstractObject)element).getObjectId());
 		if (!pass)
 		{
@@ -199,6 +190,22 @@ public class ObjectFilter extends ViewerFilter
          }
 		}
 		return pass;
+	}
+	
+	private boolean passMainFilters(Object element)
+	{
+      if (classFilter != null)
+      {
+         if (!classFilter.contains(((AbstractObject)element).getObjectClass()))
+            return false;
+      }
+      if (hideUnmanaged && (((AbstractObject)element).getStatus() == ObjectStatus.UNMANAGED))
+         return false;
+
+      if (hideSubInterfaces && (element instanceof Interface) && (((Interface)element).getParentInterfaceId() != 0))
+         return false;
+	   
+	   return true;
 	}
 
 	/**
@@ -277,7 +284,7 @@ public class ObjectFilter extends ViewerFilter
             List<AbstractObject> fullList = (sourceObjects != null) ? sourceObjects : Registry.getSession().getAllObjects();
 				objectList = new HashMap<Long, AbstractObject>();
 				for(AbstractObject o : fullList)
-               if (matchFilterString(o))
+               if (matchFilterString(o) && passMainFilters(o))
 					{
 						objectList.put(o.getObjectId(), o);
 						lastMatch = o;
@@ -290,7 +297,7 @@ public class ObjectFilter extends ViewerFilter
 				while(it.hasNext())
 				{
 					AbstractObject obj = it.next();
-					if (!matchFilterString(obj))
+					if (!matchFilterString(obj) || !passMainFilters(obj))
 						it.remove();
 					else
 						lastMatch = obj;

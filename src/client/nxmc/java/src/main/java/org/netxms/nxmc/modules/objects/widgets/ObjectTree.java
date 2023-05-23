@@ -596,7 +596,7 @@ public class ObjectTree extends Composite
       for(AbstractObject p : parents)
       {
          if (filter.select(objectTree, null, p))
-         {
+         {   
             int pp = getParentPriority(p);
             if (pp > parentPriority)
             {
