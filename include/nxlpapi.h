@@ -33,6 +33,7 @@
 #include <netxms-regex.h>
 #include <nms_util.h>
 #include <uuid.h>
+#include <nxstat.h>
 
 /**
  * Parser status
@@ -466,6 +467,8 @@ public:
 
    off_t scanFile(int fh, off_t startOffset, const TCHAR *fileName);
 	bool monitorFile(off_t startOffset);
+   int callStat(const TCHAR *fname, NX_STAT_STRUCT *st);
+   
 #ifdef _WIN32
    bool monitorEventLog(const TCHAR *markerPrefix);
    void saveLastProcessedRecordTimestamp(time_t timestamp);
