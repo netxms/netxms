@@ -385,7 +385,6 @@ public class ObjectBrowser extends NavigationView
     */
    public void selectObject(AbstractObject object)
    {
-      objectTree.getTreeViewer().setSelection(new StructuredSelection(object), true);
-      objectTree.getTreeViewer().reveal(object);
+      objectTree.selectObject(object);
    }
 }

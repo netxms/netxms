@@ -911,4 +911,18 @@ public class ObjectTree extends Composite
    {
       return objectTree;
    }
+   
+   /**
+    * Select object 
+    * 
+    * @param objectId id of the object to be selected
+    */
+   public void selectObject(AbstractObject object)
+   {
+      AbstractObject parent = getParent(object);
+      if (parent != null)
+         objectTree.expandToLevel(parent, 1);
+      objectTree.setSelection(new StructuredSelection(object), true);
+      objectTree.reveal(object);
+   }
 }
