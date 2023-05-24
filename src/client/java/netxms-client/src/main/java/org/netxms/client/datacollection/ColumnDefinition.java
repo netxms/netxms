@@ -30,7 +30,6 @@ public class ColumnDefinition
 	public static final int TCF_DATA_TYPE_MASK          = 0x000F;
 	public static final int TCF_AGGREGATE_FUNCTION_MASK = 0x0070;
 	public static final int TCF_INSTANCE_COLUMN         = 0x0100;
-	//public static final int TCF_INSTANCE_LABEL_COLUMN   = 0x0200; not used
    public static final int TCF_SNMP_HEX_STRING         = 0x0400;
 
 	private String name;
