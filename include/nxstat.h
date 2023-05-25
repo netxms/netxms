@@ -27,6 +27,10 @@
 #define S_ISDIR(m)      (((m) & S_IFMT) == S_IFDIR)
 #endif
 
+#ifndef S_ISLNK
+#define S_ISLNK(m) 		(((m) & S_IFMT) == S_IFLNK)
+#endif
+
 #ifndef S_ISREG
 #define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
 #endif

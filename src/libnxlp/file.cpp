@@ -752,7 +752,23 @@ stop_parser:
 
 int LogParser::callStat(const TCHAR *fname, NX_STAT_STRUCT* st)
 {
-    return (m_followSymlinks ? CALL_STAT_FOLLOW_SYMLINK(fname, st) : CALL_STAT(fname, st));
+   bool result = 0;
+
+   if(m_followSymlinks)
+   {
+      result = CALL_STAT_FOLLOW_SYMLINK(fname, st);
+   }
+   else
+   {
+      result = CALL_STAT(fname, st);
+      if((result == 0) && S_ISLNK(st->st_mode))
+      {
+         errno = ENOENT;
+         result = -1;
+      }
+   }
+   
+   return result;
 }
 
 /**
