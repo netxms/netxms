@@ -181,7 +181,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;breakpad-client.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;wtsapi32.lib;pcre16.lib;libcurl.lib;libssl.lib;libcrypto.lib;crypt32.lib;ncrypt.lib;jq.lib;breakpad-client.lib;modbus.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -215,6 +215,7 @@
     <ClCompile Include="localdb.cpp" />
     <ClCompile Include="master.cpp" />
     <ClCompile Include="metrics.cpp" />
+    <ClCompile Include="modbus.cpp" />
     <ClCompile Include="nproc.cpp" />
     <ClCompile Include="nxagentd.cpp" />
     <ClCompile Include="policy.cpp" />

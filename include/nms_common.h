@@ -39,9 +39,6 @@
 #else    /* _WIN32 */
 
 #define _WITH_ENCRYPTION   1
-#define WITH_OPENSSL       1
-#define WITH_LDAP          1
-#define VA_LIST_IS_POINTER 1
 
 #if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
@@ -189,6 +186,7 @@ typedef int bool;
 #define HAVE_DECL_CURLE_UNKNOWN_OPTION   1
 #define HAVE_DECL_CURLOPT_RESOLVE        1
 #define HAVE_DECL_CURLOPT_XOAUTH2_BEARER 1
+#define VA_LIST_IS_POINTER               1
 
 // Disable some warnings:
 //   4293 - 'function xxx' not available as intrinsic function
@@ -211,6 +209,11 @@ typedef int bool;
 #define WITH_IPV6               1
 #define WITH_PYTHON             1
 #define WITH_MICROHTTPD         1
+#define WITH_OPENSSL            1
+#define WITH_LDAP               1
+
+#define WITH_MODBUS             1
+#define HAVE_MODBUS_H           1
 
 #define USE_BUNDLED_LIBTRE      1
 #define USE_BUNDLED_GETOPT      1
