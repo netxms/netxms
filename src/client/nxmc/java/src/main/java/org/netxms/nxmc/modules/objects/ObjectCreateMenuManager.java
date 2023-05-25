@@ -56,6 +56,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateClusterDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateInterfaceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateMobileDeviceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkServiceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSubnetDialog;
@@ -85,6 +86,7 @@ public class ObjectCreateMenuManager extends MenuManager
    private Action actionCreateDashboard;
    private Action actionCreateDashboardGroup;
    private Action actionCreateInterface;
+   private Action actionCreateNetworkService;
    private Action actionCreateMobileDevice;
    private Action actionCreateNetworkMap;
    private Action actionCreateNetworkMapGroup;
@@ -124,6 +126,7 @@ public class ObjectCreateMenuManager extends MenuManager
       addAction(this, actionCreateDashboard, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateDashboardGroup, (AbstractObject o) -> (o instanceof DashboardGroup) || (o instanceof DashboardRoot));
       addAction(this, actionCreateInterface, (AbstractObject o) -> o instanceof Node);
+      addAction(this, actionCreateNetworkService, (AbstractObject o) -> o instanceof Node);
       addAction(this, actionCreateMobileDevice, (AbstractObject o) -> (o instanceof Container) || (o instanceof ServiceRoot));
       addAction(this, actionCreateNetworkMap, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
       addAction(this, actionCreateNetworkMapGroup, (AbstractObject o) -> (o instanceof NetworkMapGroup) || (o instanceof NetworkMapRoot));
@@ -309,6 +312,41 @@ public class ObjectCreateMenuManager extends MenuManager
                protected String getErrorMessage()
                {
                   return String.format(i18n.tr("Cannot create interface object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
+      
+      actionCreateNetworkService = new Action(i18n.tr("&Network service...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateNetworkServiceDialog dlg = new CreateNetworkServiceDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating network service"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NETWORKSERVICE, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setServiceType(dlg.getServiceType());
+                  cd.setIpPort(dlg.getPort());
+                  cd.setRequest(dlg.getRequest());
+                  cd.setResponse(dlg.getResponse());
+                  cd.setCreateStatusDci(dlg.isCreateDci());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create network service object %s"), dlg.getName());
                }
             }.start();
          }
