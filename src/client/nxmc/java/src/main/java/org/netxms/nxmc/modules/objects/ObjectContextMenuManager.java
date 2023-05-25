@@ -48,6 +48,7 @@ import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
@@ -68,6 +69,7 @@ import org.netxms.nxmc.modules.assetmanagement.LinkAssetToObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
+import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
@@ -119,6 +121,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionUnlinkAssetFromObject;
    private ObjectAction<?> actionLinkObjectToAsset;
    private ObjectAction<?> actionUnlinkObjectFromAsset;
+   private ObjectAction<?> actionCloneDashboard;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -337,6 +340,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionUnlinkAssetFromObject = new UnlinkAssetFromObjectAction(viewPlacement, selectionProvider);
       actionLinkObjectToAsset = new LinkObjectToAssetAction(viewPlacement, selectionProvider);
       actionUnlinkObjectFromAsset = new UnlinkObjectFromAssetAction(viewPlacement, selectionProvider);
+      actionCloneDashboard = new CloneDashboardAction(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -399,6 +403,11 @@ public class ObjectContextMenuManager extends MenuManager
             if (object.getAssetId() != 0)
                add(actionUnlinkObjectFromAsset);
             add(new Separator());            
+         }
+         if (object instanceof Dashboard)
+         {
+            add(actionCloneDashboard);
+            add(new Separator());           
          }
       }
       else
