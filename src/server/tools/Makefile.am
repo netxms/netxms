@@ -13,7 +13,7 @@ SUBDIRS = libnxdbmgr nddload nxget nxadm nxaction nxap nxdbmgr nxdownload nxminf
 bin_PROGRAMS = nddload/nddload nxaction/nxaction nxadm/nxadm nxap/nxap nxdownload/nxdownload nxget/nxget \
 	       nxminfo/nxminfo nxupload/nxupload nxwsget/nxwsget
 
-COMMON_LDADD = ../libnxsrv/libnxsrv.la ../../libnxsl/libnxsl.la ../../snmp/libnxsnmp/libnxsnmp.la ../../libnetxms/libnetxms.la @SERVER_LIBS@ @EXEC_LIBS@
+COMMON_LDADD = ../libnxsrv/libnxsrv.la ../../libnxsl/libnxsl.la ../../snmp/libnxsnmp/libnxsnmp.la ../../libnetxms/libnetxms.la @EXEC_LIBS@
 
 nddload_nddload_SOURCES = nddload/nddload.cpp
 nddload_nddload_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
@@ -28,7 +28,7 @@ nxaction_nxaction_LDADD = $(COMMON_LDADD)
 nxadm_nxadm_SOURCES = nxadm/comm.cpp nxadm/nxadm.cpp
 nxadm_nxadm_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build
 nxadm_nxadm_LDFLAGS = @EXEC_LDFLAGS@
-nxadm_nxadm_LDADD = $(COMMON_LDADD)
+nxadm_nxadm_LDADD = $(COMMON_LDADD) @NXADM_LIBS@
 
 nxap_nxap_SOURCES = nxap/nxap.cpp
 nxap_nxap_CPPFLAGS = -I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/build

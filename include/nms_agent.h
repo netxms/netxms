@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -1419,6 +1419,13 @@ void LIBNXAGENT_EXPORTABLE ReloadAllCRLs();
 void LIBNXAGENT_EXPORTABLE TCPScanAddressRange(const InetAddress& from, const InetAddress& to, uint16_t port, void (*callback)(const InetAddress&, uint32_t, void*), void *context);
 
 int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name);
+
+#if WITH_MODBUS
+typedef struct _modbus modbus_t;
+LONG LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback);
+int LIBNXAGENT_EXPORTABLE MODBUSReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value);
+int LIBNXAGENT_EXPORTABLE MODBUSReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value);
+#endif
 
 /**
  * TFTP client error codes

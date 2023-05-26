@@ -162,6 +162,7 @@ AGENT_DIRS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
+NXADM_LIBS=""
 NCDRV_MODULES=""
 NCDRV_LTLIBRARIES=""
 HDLINK_DIRS=""
@@ -2372,12 +2373,11 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$BUILD_SERVER" = "xyes" ; then
-	AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
-
 	AC_CHECK_HEADER(histedit.h,HAVE_LIBEDIT=yes,HAVE_LIBEDIT=no)
 	if test "x$HAVE_LIBEDIT" = "xyes"; then
 		AC_CHECK_LIB(edit, history_winit, [
 			SERVER_LIBS="$SERVER_LIBS -ledit"
+			NXADM_LIBS="$NXADM_LIBS -ledit"
 	   		AC_DEFINE(HAVE_LIBEDIT, 1, Define to 1 if libedit is available)
 		], [ HAVE_LIBEDIT=no ])
 	fi
@@ -2661,8 +2661,9 @@ fi
 if test "x$DISABLE_MODBUS" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 	OLD_CPPFLAGS="$CPPFLAGS"
 	OLD_LDFLAGS="$LDFLAGS"
-	CPPFLAGS="$LIBSSH_CPPFLAGS $CPPFLAGS"
-	LDFLAGS="$LIBSSH_LDFLAGS $LDFLAGS"
+	OLD_LIBS="$LIBS"
+	CPPFLAGS="$LIBMODBUS_CPPFLAGS $CPPFLAGS"
+	LDFLAGS="$LIBMODBUS_LDFLAGS $LDFLAGS"
 
 	AC_CHECK_HEADER(modbus/modbus.h,
 		[
@@ -2677,21 +2678,27 @@ if test "x$DISABLE_MODBUS" != "xyes" -a "x$DIST_BUILD" != "xyes"; then
 			], HAVE_MODBUS=no)
 	fi
 	if test "x$HAVE_MODBUS" = "xyes"; then
-		AC_CHECK_LIB(modbus, modbus_connect, [ HAVE_MODBUS=yes ], [ HAVE_MODBUS=no ])
+		AC_CHECK_LIB(nxmodbus, modbus_connect, [ HAVE_MODBUS=yes ], [ HAVE_MODBUS=no ])
 	fi
 
 	if test "x$HAVE_MODBUS" = "xyes"; then
+		LIBS="$LIBS -lnxmodbus"
+                AC_CHECK_FUNC(modbus_read_device_id, , [
+                        AC_MSG_ERROR([*** Cannot find modbus_read_device_id function - check your libnxmodbus installation or disable MODBUS support with --disable-modbus ***])
+                ])
 		AC_DEFINE(WITH_MODBUS, 1, Define to 1 if MODBUS support is enabled)
-		SERVER_LIBS="$SERVER_LIBS -lmodbus"
-		AGENT_LIBS="$AGENT_LIBS -lmodbus"
+		SERVER_LIBS="$SERVER_LIBS -lnxmodbus"
+		AGENT_LIBS="$AGENT_LIBS -lnxmodbus"
+		LIBNXAGENT_LIBS="$LIBNXAGENT_LIBS -lnxmodbus"
 	else
-		if test "x$REQUIRE_SSH" = "xyes"; then
-			AC_MSG_ERROR(libmodbus is required for MODBUS support)
+		if test "x$REQUIRE_MODBUS" = "xyes"; then
+			AC_MSG_ERROR([libnxmodbus (NetXMS fork of libmodbus) is required for MODBUS support])
 		fi
 	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
 else
 	HAVE_MODBUS=no
 fi
@@ -4640,6 +4647,7 @@ AC_SUBST(NETXMS_PKGLIBDIR)
 AC_SUBST(NETXMS_PREFIX)
 AC_SUBST(NETXMS_STATEDIR)
 AC_SUBST(NETXMS_SYSCONFDIR)
+AC_SUBST(NXADM_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(ODBC_CPPFLAGS)
 AC_SUBST(ODBC_LDFLAGS)

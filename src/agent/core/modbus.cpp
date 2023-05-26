@@ -33,42 +33,6 @@
 #endif
 
 /**
- * Execute provided callback within MODBUS session context
- */
-static LONG MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback)
-{
-   char ipAddrText[64];
-
-   modbus_t *mb;
-   if (addr.getFamily() == AF_INET)
-   {
-      mb = modbus_new_tcp(addr.toStringA(ipAddrText), port);
-   }
-   else
-   {
-      char portText[64];
-      mb = modbus_new_tcp_pi(addr.toStringA(ipAddrText), IntegerToString(port, portText));
-   }
-
-   modbus_set_response_timeout(mb, 1, 0);
-
-   if (modbus_connect(mb) != 0)
-   {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_connect(%hs:%d) failed (%hs)"), ipAddrText, port, modbus_strerror(errno));
-      modbus_free(mb);
-      return SYSINFO_RC_ERROR;
-   }
-
-   modbus_set_slave(mb, unitId);
-
-   LONG exitCode = callback(mb, ipAddrText, port, unitId);
-
-   modbus_close(mb);
-   modbus_free(mb);
-   return exitCode;
-}
-
-/**
  * Common handler for MODBUS.* metrics
  */
 static LONG ReadMODBUSMetric(const TCHAR *metric, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t, int32_t)> reader)
@@ -96,17 +60,18 @@ static LONG ReadMODBUSMetric(const TCHAR *metric, std::function<int32_t (modbus_
  */
 LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
+   TCHAR conversion[64];
+   if (!AgentGetMetricArg(metric, 5, conversion, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
    return ReadMODBUSMetric(metric,
-      [value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
+      [conversion, value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
       {
-         uint16_t r;
-         if (modbus_read_registers(mb, modbusAddress, 1, &r) < 1)
+         if (MODBUSReadHoldingRegisters(mb, modbusAddress, conversion, value) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_registers(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadHoldingRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
             return SYSINFO_RC_ERROR;
          }
-
-         ret_uint(value, r);
          return SYSINFO_RC_SUCCESS;
       });
 }
@@ -116,17 +81,18 @@ LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value
  */
 LONG H_MODBUSInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
+   TCHAR conversion[64];
+   if (!AgentGetMetricArg(metric, 5, conversion, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
    return ReadMODBUSMetric(metric,
-      [value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
+      [conversion, value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
       {
-         uint16_t r;
-         if (modbus_read_input_registers(mb, modbusAddress, 1, &r) < 1)
+         if (MODBUSReadInputRegisters(mb, modbusAddress, conversion, value) < 1)
          {
-            nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_input_registers(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadInputRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
             return SYSINFO_RC_ERROR;
          }
-
-         ret_uint(value, r);
          return SYSINFO_RC_SUCCESS;
       });
 }
@@ -172,4 +138,4 @@ LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, 
       });
 }
 
-#endif
+#endif   /* WITH_MODBUS */
