@@ -61,14 +61,14 @@ public class ImageLibraryLoginListener implements LoginListener
 	@Override
 	public void afterLogin(final NXCSession session, final Display display)
 	{
-		ImageProvider.createInstance(display, session);
+      final ImageProvider imageProvider = ImageProvider.createInstance(display, session);
 		Thread worker = new Thread(new Runnable() {
          @Override
          public void run()
          {
             try
             {
-               ImageProvider.getInstance().syncMetaData();
+               imageProvider.syncMetaData();
                session.addListener(new ImageLibraryListener(display, session));
             }
             catch(Exception e)

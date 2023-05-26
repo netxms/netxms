@@ -56,9 +56,11 @@ public class ImageProvider
     * @param display owning display
     * @param session communication session
     */
-	public static void createInstance(Display display, NXCSession session)
+   public static ImageProvider createInstance(Display display, NXCSession session)
 	{
-      Registry.setSingleton(display, ImageProvider.class, new ImageProvider(display, session));
+      ImageProvider instance = new ImageProvider(display, session);
+      Registry.setSingleton(display, ImageProvider.class, instance);
+      return instance;
 	}
 
 	/**
