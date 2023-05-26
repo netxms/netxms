@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,19 +48,13 @@ public class EventMonitorFilter extends AbstractTraceViewFilter
             return false;
       }
 
-		if ((filterString == null) || (filterString.isEmpty()))
-			return true;
+      if ((filterString == null) || (filterString.isEmpty()))
+         return true;
 
-      if (event.getMessage().toLowerCase().contains(filterString))
-			return true;
-		
-      AbstractObject object = session.findObjectById(event.getSourceId());
-		if (object != null)
-		{
-			return object.getObjectName().toLowerCase().contains(filterString);
-		}
-		
-		return false;
+      return 
+         event.getMessage().toLowerCase().contains(filterString) ||
+         session.getEventName(event.getCode()).toLowerCase().contains(filterString) || 
+         session.getObjectName(event.getSourceId()).toLowerCase().contains(filterString); 
 	}
 
    /**
