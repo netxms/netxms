@@ -43,8 +43,8 @@ public class LogFilter
 		columnFilters = new HashMap<String, ColumnFilter>();
 		orderingColumns = new ArrayList<OrderingColumn>();
 	}
-	
-	/**
+
+   /**
 	 * Set filter for column
 	 * 
 	 * @param column Column name
