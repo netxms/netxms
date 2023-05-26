@@ -320,7 +320,7 @@ public class DataCollectionView extends BaseDataCollectionView
                   if (dci.getTemplateDciId() != 0)
                   {
                      DataCollectionObject dco = getDataCollectionObject(dci);
-                     if (dco.getTemplateId() != 0 && dco.getTemplateId() != getObjectId())
+                     if (dco != null && dco.getTemplateId() != 0 && dco.getTemplateId() != getObjectId())
                         hasTemplate = true;                            
                   }         
                }

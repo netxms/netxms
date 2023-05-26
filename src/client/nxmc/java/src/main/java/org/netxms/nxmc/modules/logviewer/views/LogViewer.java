@@ -99,7 +99,6 @@ public class LogViewer extends View
    protected LogViewer()
    {
       super();
-      filter = new LogFilter();
    }
 
    /**
@@ -189,6 +188,20 @@ public class LogViewer extends View
 		createPopupMenu();
    }
 
+	
+	
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View view)
+   {
+      LogViewer origin = (LogViewer)view;
+      delayedQueryFilter = origin.filterBuilder.createFilter();
+      openServerLog();
+      super.postClone(view);
+   }
+
    /**
     * @see org.netxms.nxmc.base.views.View#postContentCreate()
     */
@@ -196,6 +209,14 @@ public class LogViewer extends View
    protected void postContentCreate()
    {
       super.postContentCreate();
+      openServerLog();
+   }
+   
+   /**
+    * Open server log
+    */
+   private void openServerLog()
+   {
       new Job(String.format(i18n.tr("Opening server log \"%s\""), logName), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
@@ -223,6 +244,7 @@ public class LogViewer extends View
             return String.format(i18n.tr("Cannot open server log \"%s\""), logName);
          }
       }.start();
+      
    }
 
    /**

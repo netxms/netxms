@@ -249,7 +249,8 @@ public class ColumnFilterEditor extends DashboardComposite
 		this.filterBuilder = filterBuilder;
       if ((initialFilter == null) || (initialFilter.getSubFilters() == null))
       {
-         addCondition(null);
+         
+         addCondition( (initialFilter != null) ? initialFilter : null);
       }
       else
       {
