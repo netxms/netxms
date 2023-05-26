@@ -302,7 +302,7 @@ public class ImageProvider
       if ((image != null) && (image != missingImage) && !image.isDisposed())
          image.dispose();
 
-      Job job = new Job(i18n.tr("Update library image"), null) {
+      Job job = new Job(i18n.tr("Update library image"), null, null, display) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
