@@ -2347,10 +2347,6 @@ fi
 # Checks for other libs.
 #--------------------------------------------------------------------
 
-if test "x$BUILD_SERVER" = "xyes" ; then
-   AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
-fi
-
 check_substr "$COMPONENTS" "sqlite"
 if test $? = 0; then
 	if test "x$FORCE_INTERNAL_SQLITE" = "xyes"; then
