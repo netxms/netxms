@@ -761,6 +761,7 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
                break;
             case DCO_TYPE_TABLE:
                tableValue = make_shared<Table>(*msg);
+               static_cast<DCTable*>(dcObject.get())->updateResultColumns(tableValue);
                break;
             default:
                debugPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on object %s [%d]"),
