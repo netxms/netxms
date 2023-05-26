@@ -162,7 +162,7 @@ public class CreateSnmpDci extends Action
 	 * @param type ASN.1 identifier type
 	 * @return DCI data type
 	 */
-	private static DataType dciTypeFromAsnType(int type)
+	public static DataType dciTypeFromAsnType(int type)
 	{
 		switch(type)
 		{

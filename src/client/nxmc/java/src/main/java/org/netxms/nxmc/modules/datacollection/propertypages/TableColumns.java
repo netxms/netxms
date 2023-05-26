@@ -20,8 +20,11 @@ package org.netxms.nxmc.modules.datacollection.propertypages;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -56,15 +59,22 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Template;
+import org.netxms.client.snmp.MibObject;
+import org.netxms.client.snmp.SnmpObjectId;
+import org.netxms.client.snmp.SnmpObjectIdFormatException;
+import org.netxms.client.snmp.SnmpValue;
+import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectEditor;
 import org.netxms.nxmc.modules.datacollection.DataCollectionObjectListener;
 import org.netxms.nxmc.modules.datacollection.TableColumnEnumerator;
+import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpDci;
 import org.netxms.nxmc.modules.datacollection.dialogs.EditColumnDialog;
 import org.netxms.nxmc.modules.datacollection.propertypages.helpers.TableColumnLabelProvider;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
+import org.netxms.nxmc.modules.snmp.shared.MibCache;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.slf4j.Logger;
@@ -530,7 +540,11 @@ public class TableColumns extends AbstractDCIPropertyPage
 	         return;
 	      object = dlg.getSelectedObjects().get(0);
 	   }
-	   updateColumnsFromAgent(dci.getName(), true, object);
+	   if (dci.getOrigin() == DataOrigin.AGENT)
+	      updateColumnsFromAgent(dci.getName(), true, object);
+	   else if (dci.getOrigin() == DataOrigin.SNMP)
+         updateColumnsFromSnmp(dci.getName(), true, object);
+	      
 	}
 	
 	/**
@@ -539,7 +553,7 @@ public class TableColumns extends AbstractDCIPropertyPage
 	private void updateColumnsFromAgent(final String name, final boolean interactive, final AbstractObject queryObject)
 	{
 		final NXCSession session = Registry.getSession();
-		Job job = new Job(i18n.tr("Get additional table information"), null) {
+		Job job = new Job(i18n.tr("Get additional NetXMS Agent table information"), null) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
@@ -596,4 +610,97 @@ public class TableColumns extends AbstractDCIPropertyPage
 		job.setUser(false);
 		job.start();
 	}
+   
+   /**
+    * Update columns from SNMP walk
+    */
+   private void updateColumnsFromSnmp(final String name, final boolean interactive, final AbstractObject queryObject)
+   {
+      final NXCSession session = Registry.getSession();
+      Job job = new Job(i18n.tr("Get additional SNMP table information"), null) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            try
+            {
+               String oid = name.substring(0,name.lastIndexOf("."));
+               int itemNumber = (int)oid.chars().filter(ch -> ch =='.').count();
+               long nodeId;
+               if (editor.getSourceNode() != 0)
+               {
+                  nodeId = editor.getSourceNode();
+               }
+               else
+               {
+                  nodeId = (queryObject != null) ? queryObject.getObjectId() : dci.getNodeId();
+               }      
+               Map<Long, SnmpValue> oidMap = new HashMap<Long, SnmpValue>();
+               session.snmpWalk(nodeId, oid, new SnmpWalkListener() {
+                  
+                  @Override
+                  public void onSnmpWalkData(List<SnmpValue> data)
+                  {
+                     for (SnmpValue v : data)
+                     {
+                        oidMap.put(v.getObjectId().getIdFromPos(itemNumber), v);
+                     }
+                  }
+               });    
+               
+
+               if (oidMap.isEmpty())
+                  return;
+               
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     columns.clear();
+                     for (Entry<Long, SnmpValue> entry : oidMap.entrySet())
+                     {
+                        MibObject object = MibCache.findObject(entry.getValue().getName(), false);
+                        String columnName = object != null ? object.getName() : entry.getValue().getName();
+                        ColumnDefinition c = new ColumnDefinition(columnName, columnName);
+                        c.setDataType(CreateSnmpDci.dciTypeFromAsnType(entry.getValue().getType()));
+                        c.setConvertSnmpStringToHex(entry.getValue().getType() == 0xFFFF);
+                        try
+                        {
+                           c.setSnmpObjectId(SnmpObjectId.parseSnmpObjectId(oid + "." + entry.getKey()));
+                        }
+                        catch(SnmpObjectIdFormatException e)
+                        {
+                           //ignore error
+                        }
+                        columns.add(c);
+                     }
+                     columnList.refresh();
+                  }                        
+               });
+            }
+            catch(Exception e)
+            {
+               logger.error("Cannot read table column definition from SNMP agnet", e);
+               if (interactive)
+               {
+                  final String msg = (e instanceof NXCException) ? e.getLocalizedMessage() : "Internal error";
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot read table column definition from SNMP agent (%s)", msg));
+                     }
+                  });
+               }
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return null;
+         }
+      };
+      job.setUser(false);
+      job.start();
+   }
 }
