@@ -411,7 +411,13 @@ public class ScriptLibraryView extends ConfigurationView
          @Override
          protected void jobFinalize()
          {
-            refresh();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  refresh();
+               }
+            });
          }
 
          @Override
