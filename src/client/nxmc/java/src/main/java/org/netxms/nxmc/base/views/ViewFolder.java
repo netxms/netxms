@@ -443,16 +443,19 @@ public class ViewFolder extends ViewContainer
    {
       String viewId = getViewId(view);
       View currentView = views.get(viewId);
+      if (currentView == view)
+         return; // View already added
+
       if (currentView != null)
       {
-         if (currentView == view)
-            return; // View already added
-
          // Dispose current view with same ID and replace with provided one
+         boolean originalDisposeWhenEmpty = disposeWhenEmpty;
+         disposeWhenEmpty = false;
          currentView.dispose();
          CTabItem tabItem = tabs.remove(viewId);
          if (tabItem != null)
             tabItem.dispose();
+         disposeWhenEmpty = originalDisposeWhenEmpty;
       }
 
       views.put(viewId, view);

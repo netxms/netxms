@@ -60,8 +60,7 @@ public abstract class ObjectView extends ViewWithContext
    @Override
    public String getGlobalId()
    {
-      AbstractObject object = getObject();
-      return getBaseId() + "@" + ((object != null) ? Long.toString(object.getObjectId()) : "none");
+      return getBaseId() + "@" + Long.toString(getObjectId());
    }   
 
    /**
