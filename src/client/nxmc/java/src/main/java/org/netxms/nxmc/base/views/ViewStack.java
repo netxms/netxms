@@ -196,6 +196,16 @@ public class ViewStack extends ViewContainer
          });
       }
 
+      keyBindingManager.addBinding("M1+W", new Action() {
+         @Override
+         public void run()
+         {
+            View view = getActiveView();
+            if ((view != null) && view.isCloseable())
+               popView();
+         }
+      });
+
       Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
       gd = new GridData();
       gd.horizontalSpan = 3;
@@ -253,7 +263,7 @@ public class ViewStack extends ViewContainer
 
       if (view != null)
       {
-         pushViewInternal(view);
+         pushViewInternal(view, false);
       }
       else
       {
@@ -273,10 +283,21 @@ public class ViewStack extends ViewContainer
     */
    public void pushView(View view)
    {
+      pushView(view, false);
+   }
+
+   /**
+    * Push view into existing stack.
+    *
+    * @param view view to push
+    * @param activate true to activate view
+    */
+   public void pushView(View view, boolean activate)
+   {
       if (view == null)
          return;
 
-      pushViewInternal(view);
+      pushViewInternal(view, activate);
       addViewListElement(view);
    }
 
@@ -284,14 +305,17 @@ public class ViewStack extends ViewContainer
     * Push view into existing stack (internal implementation).
     *
     * @param view view to push
+    * @param activate true to activate view
     */
-   private void pushViewInternal(View view)
+   private void pushViewInternal(View view, boolean activate)
    {
       views.push(view);
       view.create(this, viewArea, onFilterCloseCallback);
       if (contextAware && (view instanceof ViewWithContext))
          ((ViewWithContext)view).setContext(context);
       activateView(view);
+      if (activate)
+         view.setFocus();
    }
 
    /**

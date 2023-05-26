@@ -458,4 +458,23 @@ public class ScriptEditorView extends ConfigurationView
 
       editor.setCaretToLine(Integer.parseInt(dlg.getValue()));
    }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#setFocus()
+    */
+   @Override
+   public void setFocus()
+   {
+      if (!editor.isDisposed())
+         editor.setFocus();
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#isCloseable()
+    */
+   @Override
+   public boolean isCloseable()
+   {
+      return true;
+   }
 }

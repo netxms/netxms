@@ -485,7 +485,7 @@ public abstract class Perspective
       if (mainFolder != null)
          mainFolder.addView(view, activate, ignoreContext);
       else
-         mainArea.pushView(view);
+         mainArea.pushView(view, activate);
    }
    
    /**

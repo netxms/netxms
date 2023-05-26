@@ -302,6 +302,9 @@ public class MappingTableManagerView extends ConfigurationView
 					@Override
 					public void run()
 					{
+                  if (viewer.getControl().isDisposed())
+                     return;
+
 						if (tableId > 0)
 						{
 							for(MappingTableDescriptor d : tables)
