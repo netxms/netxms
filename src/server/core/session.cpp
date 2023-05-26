@@ -2413,10 +2413,15 @@ void ClientSession::validate2FAResponse(const NXCPMessage& request)
          {
             response.setField(VID_TRUSTED_DEVICE_TOKEN, trustedDeviceToken, trustedDeviceTokenSize);
          }
+         if (rcc != RCC_SUCCESS)
+         {
+            writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed with error code %d (client info: %s)"), m_loginInfo->loginName, rcc, m_clientInfo);
+         }
          MemFree(trustedDeviceToken);
       }
       else
       {
+         writeAuditLog(AUDIT_SECURITY, false, 0, _T("User \"%s\" 2FA response validation failed (client info: %s)"), m_loginInfo->loginName, m_clientInfo);
          response.setField(VID_RCC, RCC_FAILED_2FA_VALIDATION);
       }
       delete_and_null(m_loginInfo);
