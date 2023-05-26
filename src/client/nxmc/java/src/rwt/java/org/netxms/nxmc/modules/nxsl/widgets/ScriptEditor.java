@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ public class ScriptEditor extends CompositeWithMessageArea
       {
          createHintsArea();
       }
-      
+
       editor = new Text(content, editorStyle | SWT.MULTI);
       editor.setData(RWT.CUSTOM_VARIANT, "monospace");
       editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -392,10 +392,19 @@ public class ScriptEditor extends CompositeWithMessageArea
 	}
 
 	/**
-	 * Show/hide line numbers in editor
-	 * 
-	 * @param show
-	 */
+    * @see org.eclipse.swt.widgets.Composite#setFocus()
+    */
+   @Override
+   public boolean setFocus()
+   {
+      return !editor.isDisposed() ? editor.setFocus() : super.setFocus();
+   }
+
+   /**
+    * Show/hide line numbers in editor
+    * 
+    * @param show
+    */
 	public void showLineNumbers(boolean show)
 	{
 	}

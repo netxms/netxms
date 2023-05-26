@@ -638,7 +638,8 @@ public class ImageLibrary extends ConfigurationView
 					@Override
 					public void run()
 					{
-						refreshUI(imageLibrary);
+                  if (!viewer.getControl().isDisposed())
+                     refreshUI(imageLibrary);
 					}
 				});
 			}
