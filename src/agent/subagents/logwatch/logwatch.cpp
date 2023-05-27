@@ -221,7 +221,14 @@ static void ParserThreadTemplate(LogParser *parser)
             if (MatchString(fname, d->d_name, true))
 #endif
             {
-               matchingFileList.add(d->d_name);
+               TCHAR path[MAX_PATH];
+               _tcscpy(path, dirPath);
+               _tcslcat(path, d->d_name, MAX_PATH);
+               NX_STAT_STRUCT st;
+               if (parser->callStat(path, &st) == 0)
+               {
+                  matchingFileList.add(d->d_name);
+               }
             }
          }
          _tclosedir(dir);
