@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@
 #endif
 
 #ifndef S_ISLNK
-#define S_ISLNK(m) 		(((m) & S_IFMT) == S_IFLNK)
+#define S_ISLNK(m)      (((m) & S_IFMT) == S_IFLNK)
 #endif
 
 #ifndef S_ISREG

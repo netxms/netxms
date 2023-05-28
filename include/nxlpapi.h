@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -33,7 +33,6 @@
 #include <netxms-regex.h>
 #include <nms_util.h>
 #include <uuid.h>
-#include <nxstat.h>
 
 /**
  * Parser status
@@ -415,6 +414,7 @@ public:
    const TCHAR *getStatusText() const;
    bool isFilePreallocated() const { return m_preallocatedFile; }
    bool isDetectBrokenPrealloc() const { return m_detectBrokenPrealloc; }
+   bool isFollowSymlinks() const { return m_followSymlinks; }
    void getEventList(HashSet<uint32_t> *eventList) const;
    bool isUsingEvent(uint32_t eventCode) const;
    int getCharSize() const;
@@ -467,7 +467,6 @@ public:
 
    off_t scanFile(int fh, off_t startOffset, const TCHAR *fileName);
 	bool monitorFile(off_t startOffset);
-   int callStat(const TCHAR *fname, NX_STAT_STRUCT *st);
    
 #ifdef _WIN32
    bool monitorEventLog(const TCHAR *markerPrefix);

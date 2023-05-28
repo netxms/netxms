@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2022 Victor Kirhenshtein
+** Copyright (C) 2008-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "logwatch.h"
+#include <nxstat.h>
 #include <netxms-version.h>
 
 #define DEBUG_TAG _T("logwatch")
@@ -69,7 +70,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 
    s_parserLock.lock();
 
-	LogParser *parser = NULL;
+	LogParser *parser = nullptr;
 	for(int i = 0; i < s_parsers.size(); i++)
    {
       LogParser *p = s_parsers.get(i);
@@ -81,7 +82,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
    }
 
    LONG rc = SYSINFO_RC_SUCCESS;
-   if (parser != NULL)
+   if (parser != nullptr)
    {
       switch (*arg)
       {
@@ -221,14 +222,23 @@ static void ParserThreadTemplate(LogParser *parser)
             if (MatchString(fname, d->d_name, true))
 #endif
             {
+#if defined(_WIN32)
+               if (d->d_type == DT_REG)
+                  matchingFileList.add(d->d_name);
+#elif HAVE_DIRENT_D_TYPE
+               if ((d->d_type == DT_REG) || ((d->d_type == DT_LNK) && parser->isFollowSymlinks()))
+                  matchingFileList.add(d->d_name);
+#else
                TCHAR path[MAX_PATH];
                _tcscpy(path, dirPath);
                _tcslcat(path, d->d_name, MAX_PATH);
                NX_STAT_STRUCT st;
-               if (parser->callStat(path, &st) == 0)
+               if (CALL_STAT(path, &st) == 0)
                {
-                  matchingFileList.add(d->d_name);
+                  if (S_ISREG(st.st_mode) || (parser->isFollowSymlinks() && S_ISLNK(st.st_mode)))
+                     matchingFileList.add(d->d_name);
                }
+#endif
             }
          }
          _tclosedir(dir);

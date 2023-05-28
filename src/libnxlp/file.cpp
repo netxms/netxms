@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2022 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,7 @@
 **/
 
 #include "libnxlp.h"
+#include <nxstat.h>
 
 #ifdef _WIN32
 #include <share.h>
@@ -520,6 +521,27 @@ static void SeekToZero(int fh, int chsize, bool detectBrokenPrealloc)
 }
 
 /**
+ * Call appropriate stat() function
+ */
+static inline int __stat(LogParser *parser, const TCHAR *fname, NX_STAT_STRUCT* st)
+{
+#ifdef _WIN32
+   return CALL_STAT(fname, st);
+#else
+   if (parser->isFollowSymlinks())
+      return CALL_STAT_FOLLOW_SYMLINK(fname, st);
+
+   int result = CALL_STAT(fname, st);
+   if ((result == 0) && S_ISLNK(st->st_mode))
+   {
+      errno = ENOENT;
+      result = -1;
+   }
+   return result;
+#endif
+}
+
+/**
  * File parser thread
  */
 bool LogParser::monitorFile(off_t startOffset)
@@ -572,7 +594,7 @@ bool LogParser::monitorFile(off_t startOffset)
       TCHAR fname[MAX_PATH];
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
       NX_STAT_STRUCT st;
-      if (callStat(fname, &st) != 0)
+      if (__stat(this, fname, &st) != 0)
       {
          if (errno == ENOENT)
             readFromStart = true;
@@ -581,18 +603,11 @@ bool LogParser::monitorFile(off_t startOffset)
             break;
          continue;
       }
-      
+
 #ifdef _WIN32
       int fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
 #else
-      int openFlags = O_RDONLY;
-
-      if (!m_followSymlinks)
-      {
-         openFlags |= O_NOFOLLOW;
-      }
-
-		int fh = _topen(fname, openFlags);
+		int fh = _topen(fname, O_RDONLY | (m_followSymlinks ? 0 : O_NOFOLLOW));
 #endif
 		if (fh == -1)
       {
@@ -665,7 +680,7 @@ bool LogParser::monitorFile(off_t startOffset)
 			}
 
          NX_STAT_STRUCT stn;
-         if (callStat(fname, &stn) < 0)
+         if (__stat(this, fname, &stn) < 0)
 			{
 				nxlog_debug_tag(DEBUG_TAG, 1, _T("stat(%s) failed, errno=%d"), fname, errno);
 				readFromStart = true;
@@ -750,27 +765,6 @@ stop_parser:
 	return true;
 }
 
-int LogParser::callStat(const TCHAR *fname, NX_STAT_STRUCT* st)
-{
-   bool result = 0;
-
-   if(m_followSymlinks)
-   {
-      result = CALL_STAT_FOLLOW_SYMLINK(fname, st);
-   }
-   else
-   {
-      result = CALL_STAT(fname, st);
-      if((result == 0) && S_ISLNK(st->st_mode))
-      {
-         errno = ENOENT;
-         result = -1;
-      }
-   }
-   
-   return result;
-}
-
 /**
  * File parser thread (do not keep it open)
  */
@@ -810,9 +804,9 @@ bool LogParser::monitorFile2(off_t startOffset)
 
       TCHAR fname[MAX_PATH];
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
-      
+
       NX_STAT_STRUCT st;
-      if (callStat(fname, &st) != 0)
+      if (__stat(this, fname, &st) != 0)
       {
          if (errno == ENOENT)
          {
@@ -850,14 +844,7 @@ bool LogParser::monitorFile2(off_t startOffset)
 #ifdef _WIN32
       int fh = _tsopen(fname, O_RDONLY | O_BINARY, _SH_DENYNO);
 #else
-      int openFlags = O_RDONLY;
-
-      if (!m_followSymlinks)
-      {
-         openFlags |= O_NOFOLLOW;
-      }
-
-		int fh = _topen(fname, openFlags);
+      int fh = _topen(fname, O_RDONLY | (m_followSymlinks ? 0 : O_NOFOLLOW));
 #endif
       if (fh == -1)
       {
