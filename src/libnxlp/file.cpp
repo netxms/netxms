@@ -1032,9 +1032,9 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
 
       TCHAR fname[MAX_PATH];
       ExpandFileName(getFileName(), fname, MAX_PATH, true);
-      
+
       NX_STAT_STRUCT st;
-      if (callStat(fname, &st) != 0)
+      if (CALL_STAT(fname, &st) != 0)
       {
          setStatus(LPS_NO_FILE);
          if (m_stopCondition.wait(10000))
