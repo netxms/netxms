@@ -313,11 +313,11 @@ static int GetUserSessions(AgentConnection *conn)
       if ((s->displayWidth > 0) && (s->displayHeight > 0) && (s->displayColorDepth > 0))
          table.set(6, StringBuffer().append(s->displayWidth).append(_T('x')).append(s->displayHeight).append(_T('x')).append(s->displayColorDepth));
       if (s->connectTime > 0)
-         table.set(7, s->connectTime);
+         table.set(7, static_cast<int64_t>(s->connectTime));
       if (s->loginTime > 0)
-         table.set(8, s->loginTime);
+         table.set(8, static_cast<int64_t>(s->loginTime));
       if ((s->connectTime > 0) || (s->loginTime > 0))
-         table.set(9, s->idleTime);
+         table.set(9, static_cast<int64_t>(s->idleTime));
       if (s->agentType != -1)
          table.set(10, s->agentType);
       if (s->agentPID != 0)
