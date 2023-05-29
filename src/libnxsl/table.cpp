@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -124,11 +124,22 @@ NXSL_METHOD_DEFINITION(Table, deleteRow)
  */
 NXSL_METHOD_DEFINITION(Table, findRowByInstance)
 {
-   if (!argv[0]->isString())
-      return NXSL_ERR_NOT_STRING;
+   if (argc == 0)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   StringBuffer instance;
+   for(int i = 0; i < argc; i++)
+   {
+      if (!argv[i]->isString())
+         return NXSL_ERR_NOT_STRING;
+
+      if (i > 0)
+         instance.append(_T("~~~"));
+      instance.append(argv[i]->getValueAsCString());
+   }
 
    shared_ptr<Table> table(*static_cast<shared_ptr<Table>*>(object->getData()));
-   int index = table->findRowByInstance(argv[0]->getValueAsCString());
+   int index = table->findRowByInstance(instance);
    *result = (index != -1) ? vm->createValue(vm->createObject(&g_nxslTableRowClass, new TableRowReference(table, index))) : vm->createValue();
    return 0;
 }
@@ -138,10 +149,21 @@ NXSL_METHOD_DEFINITION(Table, findRowByInstance)
  */
 NXSL_METHOD_DEFINITION(Table, findRowIndexByInstance)
 {
-   if (!argv[0]->isString())
-      return NXSL_ERR_NOT_STRING;
+   if (argc == 0)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
-   *result = vm->createValue(static_cast<shared_ptr<Table>*>(object->getData())->get()->findRowByInstance(argv[0]->getValueAsCString()));
+   StringBuffer instance;
+   for(int i = 0; i < argc; i++)
+   {
+      if (!argv[i]->isString())
+         return NXSL_ERR_NOT_STRING;
+
+      if (i > 0)
+         instance.append(_T("~~~"));
+      instance.append(argv[i]->getValueAsCString());
+   }
+
+   *result = vm->createValue(static_cast<shared_ptr<Table>*>(object->getData())->get()->findRowByInstance(instance));
    return 0;
 }
 
@@ -218,7 +240,7 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Table, addRow, 0);
    NXSL_REGISTER_METHOD(Table, deleteColumn, 1);
    NXSL_REGISTER_METHOD(Table, deleteRow, 1);
-   NXSL_REGISTER_METHOD(Table, findRowByInstance, 1);
+   NXSL_REGISTER_METHOD(Table, findRowByInstance, -1);
    NXSL_REGISTER_METHOD(Table, findRowIndexByInstance, 1);
    NXSL_REGISTER_METHOD(Table, get, 2);
    NXSL_REGISTER_METHOD(Table, getColumnIndex, 1);

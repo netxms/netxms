@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -128,7 +128,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          ps->table->setExtendedFormat(XMLGetAttrBoolean(attrs, "extendedFormat", false));
          ps->table->setSource(XMLGetAttrInt(attrs, "source", 0));
          const char *title = XMLGetAttr(attrs, "name");
-		   if (title != NULL)
+		   if (title != nullptr)
 		   {
 #ifdef UNICODE
 			   WCHAR *wtitle = WideStringFromUTF8String(title);
@@ -156,7 +156,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 #ifdef UNICODE
          wchar_t *name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
          const char *tmp = XMLGetAttr(attrs, "displayName");
-         wchar_t *displayName = (tmp != NULL) ? WideStringFromUTF8String(tmp) : NULL;
+         wchar_t *displayName = (tmp != nullptr) ? WideStringFromUTF8String(tmp) : nullptr;
 #else
          const char *name = CHECK_NULL_A(XMLGetAttr(attrs, "name"));
          const char *displayName = XMLGetAttr(attrs, "displayName");
@@ -1008,7 +1008,7 @@ int Table::mergeRow(const Table *src, int row)
 void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
 {
    TableRow *r = m_data.get(row);
-   if (r == NULL)
+   if (r == nullptr)
    {
       buffer[0] = 0;
       return;
@@ -1024,7 +1024,7 @@ void Table::buildInstanceString(int row, TCHAR *buffer, size_t bufLen)
             instance += _T("~~~");
          first = false;
          const TCHAR *value = r->getValue(i);
-         if (value != NULL)
+         if (value != nullptr)
             instance += value;
       }
    }
@@ -1045,8 +1045,8 @@ int Table::findRowByInstance(const TCHAR *instance)
 {
    for(int i = 0; i < m_data.size(); i++)
    {
-      TCHAR currInstance[256];
-      buildInstanceString(i, currInstance, 256);
+      TCHAR currInstance[1024];
+      buildInstanceString(i, currInstance, 1024);
       if (!_tcscmp(instance, currInstance))
          return i;
    }
