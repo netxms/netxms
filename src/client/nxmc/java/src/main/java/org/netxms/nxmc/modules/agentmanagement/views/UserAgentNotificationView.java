@@ -286,7 +286,13 @@ public class UserAgentNotificationView extends ConfigurationView implements Sess
 		switch(n.getCode())
 		{
 			case SessionNotification.USER_AGENT_MESSAGE_CHANGED:
-				refresh();
+	         getDisplay().asyncExec(new Runnable() {
+	            @Override
+	            public void run()
+	            {
+	               refresh();
+	            }
+	         });
 				break;
 		}		
 	}

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2023 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,14 +35,14 @@ import org.netxms.nxmc.modules.objects.dialogs.ZoneSelectionDialog;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Action for creating interface DCIs
+ * Action for changing objet's zone
  */
 public class ChangeZoneAction extends ObjectAction<AbstractObject>
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ChangeZoneAction.class);
 
    /**
-    * Create action for creating interface DCIs.
+    * Create action for creating changing objects zone
     *
     * @param text action's text
     * @param viewPlacement view placement information

@@ -43,6 +43,7 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Chassis;
@@ -62,6 +63,7 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.helpers.MenuContributionItem;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.PackageDeployment;
+import org.netxms.nxmc.modules.agentmanagement.SendUserAgentNotificationAction;
 import org.netxms.nxmc.modules.agentmanagement.dialogs.SelectDeployPackage;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.agentmanagement.views.PackageDeploymentMonitor;
@@ -124,6 +126,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionUnlinkObjectFromAsset;
    private ObjectAction<?> actionCloneDashboard;
    private ObjectAction<?> actionChangeZone;
+   private ObjectAction<?> actionSendUserAgentNotification;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -344,6 +347,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionUnlinkObjectFromAsset = new UnlinkObjectFromAssetAction(viewPlacement, selectionProvider);
       actionCloneDashboard = new CloneDashboardAction(viewPlacement, selectionProvider);
       actionChangeZone = new ChangeZoneAction(viewPlacement, selectionProvider);
+      actionSendUserAgentNotification = new SendUserAgentNotificationAction(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -465,6 +469,11 @@ public class ObjectContextMenuManager extends MenuManager
          add(actionChangeZone);
       }
       add(new Separator());
+      
+      if (isSendUANotificationMenuAllowed(selection))
+      {
+         add(actionSendUserAgentNotification);
+      }
 
       // Agent/package management
       if (singleObject)
@@ -669,10 +678,10 @@ public class ObjectContextMenuManager extends MenuManager
    }
 
    /**
-    * Check if manage/unmanage menu items are allowed.
+    * Check if change zone menu items are allowed.
     *
     * @param selection current object selection
-    * @return true if manage/unmanage menu items are allowed
+    * @return true if change zone menu items are allowed
     */
    private static boolean isChangeZoneMenuAllowed(IStructuredSelection selection)
    {
@@ -685,6 +694,33 @@ public class ObjectContextMenuManager extends MenuManager
             return true;
       }
       return false;
+   }
+
+   /**
+    * Check if send user agent notification menu items are allowed.
+    *
+    * @param selection current object selection
+    * @return true if send user agent notification menu items are allowed
+    */
+   private static boolean isSendUANotificationMenuAllowed(IStructuredSelection selection)
+   {
+      if (!selection.isEmpty())
+      {
+         for (Object obj : ((IStructuredSelection)selection).toList())
+         {
+            if (!(((obj instanceof AbstractNode) && ((AbstractNode)obj).hasAgent()) || 
+                (obj instanceof Container) || (obj instanceof ServiceRoot) || (obj instanceof Rack) ||
+                (obj instanceof Cluster)))
+            {
+               return false;
+            }
+         }
+      }
+      else
+      {
+         return false;
+      }
+      return true;
    }
 
    /**
