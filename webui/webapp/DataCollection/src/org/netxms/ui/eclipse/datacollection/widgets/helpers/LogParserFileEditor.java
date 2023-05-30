@@ -55,6 +55,7 @@ public class LogParserFileEditor extends DashboardComposite
    private Button checkKeepOpen;
    private Button checkIgnoreModificationTime;
    private Button checkRescan;
+   private Button checkFollowSymlonks;
 
 	/**
 	 * @param parent
@@ -117,7 +118,8 @@ public class LogParserFileEditor extends DashboardComposite
       final Composite checkboxBar = new Composite(this, SWT.NONE);
       checkboxBar.setLayout(new RowLayout(SWT.HORIZONTAL));
       gd = new GridData();
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
+      gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.LEFT;
       checkboxBar.setLayoutData(gd);
 
@@ -180,6 +182,18 @@ public class LogParserFileEditor extends DashboardComposite
             editor.fireModifyListeners();
          }
       }); 
+      
+      checkFollowSymlonks = new Button(checkboxBar, SWT.CHECK);
+      checkFollowSymlonks.setBackground(getBackground());
+      checkFollowSymlonks.setText("&Follow symlinks");
+      checkFollowSymlonks.setSelection(file.getFollowSymlinks());
+      checkFollowSymlonks.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      }); 
 	}
 
 	/**
@@ -213,6 +227,7 @@ public class LogParserFileEditor extends DashboardComposite
 	   file.setKeepOpen(checkKeepOpen.getSelection());
 	   file.setIgnoreModificationTime(checkIgnoreModificationTime.getSelection());
 	   file.setRescan(checkRescan.getSelection());
+      file.setFollowSymlinks(checkFollowSymlonks.getSelection());
 	}
 
    /**
