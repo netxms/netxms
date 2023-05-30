@@ -47,6 +47,9 @@ public class LogParserFile
    @Attribute(required=false)
    private String rescan = null;
    
+   @Attribute(required=false)
+   private String followSymlinks = null;
+   
    private LogParserFileEditor editor;
 
    /**
@@ -163,6 +166,26 @@ public class LogParserFile
    public void setRescan(boolean value)
    {
       this.rescan = LogParser.booleanToString(value);
+   }
+
+   /**
+    * Get value of "followSymlinks" flag.
+    * 
+    * @return value of "followSymlinks" flag
+    */
+   public boolean getFollowSymlinks()
+   {
+      return LogParser.stringToBoolean(followSymlinks);
+   }
+
+   /**
+    * Set value of "followSymlinks" flag.
+    * 
+    * @param value new value of "followSymlinks" flag
+    */
+   public void setFollowSymlinks(boolean value)
+   {
+      this.followSymlinks = LogParser.booleanToString(value);
    }
 
    /**
