@@ -71,6 +71,7 @@ import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
+import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
 import org.netxms.nxmc.modules.objects.actions.ForcedPolicyDeploymentAction;
 import org.netxms.nxmc.modules.objects.actions.ObjectAction;
@@ -122,6 +123,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionLinkObjectToAsset;
    private ObjectAction<?> actionUnlinkObjectFromAsset;
    private ObjectAction<?> actionCloneDashboard;
+   private ObjectAction<?> actionChangeZone;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -341,6 +343,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionLinkObjectToAsset = new LinkObjectToAssetAction(viewPlacement, selectionProvider);
       actionUnlinkObjectFromAsset = new UnlinkObjectFromAssetAction(viewPlacement, selectionProvider);
       actionCloneDashboard = new CloneDashboardAction(viewPlacement, selectionProvider);
+      actionChangeZone = new ChangeZoneAction(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -456,6 +459,10 @@ public class ObjectContextMenuManager extends MenuManager
       if (isDeleteMenuAllowed(selection))
       {
          add(actionDelete);
+      }
+      if (singleObject && isChangeZoneMenuAllowed(selection))
+      {
+         add(actionChangeZone);
       }
       add(new Separator());
 
@@ -659,6 +666,25 @@ public class ObjectContextMenuManager extends MenuManager
             return false;
       }
       return true;
+   }
+
+   /**
+    * Check if manage/unmanage menu items are allowed.
+    *
+    * @param selection current object selection
+    * @return true if manage/unmanage menu items are allowed
+    */
+   private static boolean isChangeZoneMenuAllowed(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+      {
+         if (!(o instanceof AbstractObject))
+            return false;
+         int objectClass = ((AbstractObject)o).getObjectClass();
+         if ((objectClass == AbstractObject.OBJECT_NODE) || (objectClass == AbstractObject.OBJECT_CLUSTER))
+            return true;
+      }
+      return false;
    }
 
    /**
