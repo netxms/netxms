@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.assetmanagement.views;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.eclipse.jface.action.Action;
@@ -25,6 +26,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -40,6 +42,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -54,12 +57,16 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Asset summary view
  */
+/**
+ * 
+ */
 public class AssetSummaryView extends ObjectView
 {
    static final I18n i18n = LocalizationHelper.getI18n(AssetSummaryView.class);
 
    private SortableTableViewer viewer;
    private AssetPropertyReader propertyReader;
+   private Action actionHideEmptyColumns;
    private Action actionExportToCSV;
    private Action actionExportAllToCSV;
 
@@ -101,7 +108,9 @@ public class AssetSummaryView extends ObjectView
       viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
 
       viewer.addColumn(i18n.tr("Asset"), SWT.DEFAULT);
-      for(AssetAttribute a : session.getAssetManagementSchema().values())
+      List<AssetAttribute> attributes = new ArrayList<>(session.getAssetManagementSchema().values());
+      attributes.sort((a1, a2) -> a1.getEffectiveDisplayName().compareToIgnoreCase(a2.getEffectiveDisplayName()));
+      for(AssetAttribute a : attributes)
       {
          TableColumn tc = viewer.addColumn(a.getEffectiveDisplayName(), SWT.DEFAULT);
          tc.setData("Attribute", a.getName());
@@ -127,6 +136,21 @@ public class AssetSummaryView extends ObjectView
    {
       actionExportAllToCSV = new ExportToCsvAction(this, viewer, false);
       actionExportToCSV = new ExportToCsvAction(this, viewer, true);
+
+      actionHideEmptyColumns = new Action(i18n.tr("&Hide empty columns"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            if (isChecked())
+               hideEmptyColumns();
+            else
+               showAllColumns();
+            viewer.packColumns();
+            PreferenceStore.getInstance().set("AssetSummaryView.hideEmptyColumns", isChecked());
+         }
+      };
+      actionHideEmptyColumns.setChecked(PreferenceStore.getInstance().getAsBoolean("AssetSummaryView.hideEmptyColumns", true));
+      addKeyBinding("M1+H", actionHideEmptyColumns);
    }
 
    /**
@@ -153,7 +177,64 @@ public class AssetSummaryView extends ObjectView
 
       List<AbstractObject> assets = root.getAllChildren(-1).stream().filter((object) -> (object instanceof Asset) || (object.getAssetId() != 0)).collect(Collectors.toList());
       viewer.setInput(assets);
+
+      if (!assets.isEmpty() && actionHideEmptyColumns.isChecked())
+         hideEmptyColumns();
+      else
+         showAllColumns();
+
       viewer.packColumns();
+   }
+
+   /**
+    * Hide columns with empty values for all assets
+    */
+   private void hideEmptyColumns()
+   {
+      TableColumn[] columns = viewer.getTable().getColumns();
+      for(int i = 1; i < columns.length; i++)
+      {
+         boolean empty = true;
+         String attr = (String)columns[i].getData("Attribute");
+         for(Object o : (List<?>)viewer.getInput())
+         {
+            Asset asset = getAsset(o);
+            if (asset != null)
+            {
+               String v = asset.getProperties().get(attr);
+               if ((v != null) && !v.isEmpty())
+               {
+                  empty = false;
+                  break;
+               }
+            }
+         }
+         columns[i].setWidth(empty ? 0 : 100);
+         columns[i].setResizable(!empty);
+      }
+   }
+
+   /**
+    * Show all columns
+    */
+   private void showAllColumns()
+   {
+      TableColumn[] columns = viewer.getTable().getColumns();
+      for(int i = 1; i < columns.length; i++)
+         columns[i].setResizable(true);
+   }
+
+   /**
+    * Get asset from element
+    *
+    * @param element list element
+    * @return asset object
+    */
+   private Asset getAsset(Object element)
+   {
+      if (element instanceof Asset)
+         return (Asset)element;
+      return session.findObjectById(((AbstractObject)element).getAssetId(), Asset.class);
    }
 
    /**
@@ -201,6 +282,8 @@ public class AssetSummaryView extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
+      manager.add(actionHideEmptyColumns);
+      manager.add(new Separator());
       manager.add(actionExportAllToCSV);
    }
 
