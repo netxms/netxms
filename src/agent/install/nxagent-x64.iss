@@ -61,6 +61,7 @@ Source: "..\..\..\x64\Release\nxzlib.dll"; DestDir: "{app}\bin"; Flags: ignoreve
 Source: "..\..\..\x64\Release\jansson.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\jq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
+Source: "..\..\install\files\windows\x64\modbus.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce
 Source: "..\..\install\files\windows\x64\smartctl.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce

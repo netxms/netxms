@@ -339,6 +339,8 @@ Source: "..\files\windows\x64\libmicrohttpd.pdb"; DestDir: "{app}\bin"; Flags: i
 Source: "..\files\windows\x64\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "..\files\windows\x64\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x64\libssl-1_1-x64.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\pgsql
+Source: "..\files\windows\x64\modbus.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
+Source: "..\files\windows\x64\modbus.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base and pdb
 Source: "..\files\windows\x64\pcre.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\pcre16.dll"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: base
 Source: "..\files\windows\x64\prunsrv.exe"; DestDir: "{app}\bin"; Flags: ignoreversion signonce; Components: server\reporting
