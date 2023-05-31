@@ -165,11 +165,19 @@ static bool StartEchoListener()
 
    TCHAR pipeName[128];
    _sntprintf(pipeName, 128, _T("nxuseragent.%u"), sessionId);
-   s_echoListener = NamedPipeListener::create(pipeName, EchoRequestHandler, nullptr);
-   if (s_echoListener == nullptr)
+   int retryCount = 10;
+   while (true)
    {
-      nxlog_write(NXLOG_ERROR, _T("StartEchoListener: cannot create named pipe"));
-      return false;
+      s_echoListener = NamedPipeListener::create(pipeName, EchoRequestHandler, nullptr);
+      if (s_echoListener != nullptr)
+         break;
+
+      retryCount--;
+      nxlog_write(NXLOG_ERROR, _T("StartEchoListener: cannot create named pipe (%d attempts left)"), retryCount);
+      if (retryCount == 0)
+         return false;
+
+      Sleep(10000);
    }
 
    s_echoListener->start();
