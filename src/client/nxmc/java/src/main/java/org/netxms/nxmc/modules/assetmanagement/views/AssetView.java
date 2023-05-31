@@ -25,10 +25,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -37,8 +39,11 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.asset.AssetAttribute;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
@@ -75,7 +80,8 @@ public class AssetView extends ObjectView
    private AssetPropertyFilter filter;
    private Map<String, String> properties;
    private AssetPropertyReader propertyReader;
-   private MenuManager attributeSelectionMenu;
+   private MenuManager attributeSelectionSubMenu;
+   private MenuManager attributeSelectionPopupMenu;
    private Action actionAdd;
    private Action actionEdit;
    private Action actionDelete;
@@ -180,35 +186,36 @@ public class AssetView extends ObjectView
     */
    void createActions()
    {    
-      attributeSelectionMenu = new MenuManager(i18n.tr("&Add"));
-      attributeSelectionMenu.setImageDescriptor(SharedIcons.ADD_OBJECT);
-      attributeSelectionMenu.setRemoveAllWhenShown(true);
-      attributeSelectionMenu.addMenuListener(new IMenuListener() {
+      final IMenuListener menuListener = new IMenuListener() {
          @Override
          public void menuAboutToShow(IMenuManager manager)
          {
-            for(final AssetAttribute definition : session.getAssetManagementSchema().values())
+            List<AssetAttribute> attributes = new ArrayList<>(session.getAssetManagementSchema().values());
+            attributes.sort((a1, a2) -> a1.getEffectiveDisplayName().compareToIgnoreCase(a2.getEffectiveDisplayName()));
+            for(final AssetAttribute attribute : attributes)
             {
-               if (!properties.containsKey(definition.getName()))
+               if (!properties.containsKey(attribute.getName()))
                {
-                  attributeSelectionMenu.add(new Action(definition.getEffectiveDisplayName()) {
+                  manager.add(new Action(attribute.getEffectiveDisplayName()) {
                      @Override
                      public void run()
                      {
-                        addProperty(definition.getName());
+                        addProperty(attribute.getName());
                      }
                   });
                }
             }
          }
-      });
-
-      actionAdd = new Action(i18n.tr("&Add"), SharedIcons.ADD_OBJECT) {
-         @Override
-         public void run()
-         {
-         }
       };
+
+      attributeSelectionSubMenu = new MenuManager(i18n.tr("&Add"));
+      attributeSelectionSubMenu.setImageDescriptor(SharedIcons.ADD_OBJECT);
+      attributeSelectionSubMenu.setRemoveAllWhenShown(true);
+      attributeSelectionSubMenu.addMenuListener(menuListener);
+
+      attributeSelectionPopupMenu = new MenuManager(i18n.tr("Add"));
+      attributeSelectionPopupMenu.setRemoveAllWhenShown(true);
+      attributeSelectionPopupMenu.addMenuListener(menuListener);
 
       actionEdit = new Action(i18n.tr("&Edit"), SharedIcons.EDIT) {
          @Override
@@ -249,8 +256,13 @@ public class AssetView extends ObjectView
          }
       }
       properties = (asset != null) ? new HashMap<String, String>(asset.getProperties()) : new HashMap<String, String>(0);
-      viewer.setInput(properties.entrySet().toArray());  
+      viewer.setInput(properties.entrySet().toArray());
       checkMandatoryAttributes();
+
+      if (actionAdd != null)
+      {
+         actionAdd.setEnabled(properties.size() < session.getAssetManagementSchemaSize());
+      }
    }
 
    /**
@@ -274,7 +286,7 @@ public class AssetView extends ObjectView
                @Override
                public void run()
                {
-                  if (properties.size() == session.getAssetManagementSchemaSize())
+                  if ((actionAdd != null) && (properties.size() == session.getAssetManagementSchemaSize()))
                   {
                      actionAdd.setEnabled(false);
                   }
@@ -346,6 +358,7 @@ public class AssetView extends ObjectView
          {
             for(String a : attributes)
                session.deleteAssetProperty(getAssetId(), a);
+            runInUIThread(() -> actionAdd.setEnabled(properties.size() < session.getAssetManagementSchemaSize()));
          }
 
          @Override
@@ -372,6 +385,27 @@ public class AssetView extends ObjectView
    @Override
    protected void fillLocalToolBar(IToolBarManager manager)
    {
+      attributeSelectionPopupMenu.update(true);
+      actionAdd = new Action(i18n.tr("Add"), SharedIcons.ADD_OBJECT) {
+         @Override
+         public void run()
+         {
+            attributeSelectionPopupMenu.update(true);
+            for(ToolItem i : ((ToolBarManager)manager).getControl().getItems())
+            {
+               if (((ActionContributionItem)i.getData()).getId().equals(getId()))
+               {
+                  Rectangle rect = i.getBounds();
+                  Point pt = i.getParent().toDisplay(new Point(rect.x, rect.y));
+                  Menu menu = attributeSelectionPopupMenu.createContextMenu(i.getParent());
+                  menu.setLocation(pt.x, pt.y + rect.height);
+                  menu.setVisible(true);
+                  break;
+               }
+            }
+         }
+      };
+      actionAdd.setId("nxmc.add_asset_property");
       manager.add(actionAdd);
    }
 
@@ -381,8 +415,8 @@ public class AssetView extends ObjectView
    @Override
    protected void fillLocalMenu(IMenuManager manager)
    {
-      attributeSelectionMenu.update(true);
-      manager.add(attributeSelectionMenu);
+      attributeSelectionSubMenu.update(true);
+      manager.add(attributeSelectionSubMenu);
    }
 
    /**
@@ -413,8 +447,8 @@ public class AssetView extends ObjectView
    {
       if (properties.size() < session.getAssetManagementSchemaSize())
       {
-         attributeSelectionMenu.update(true);
-         mgr.add(attributeSelectionMenu);
+         attributeSelectionSubMenu.update(true);
+         mgr.add(attributeSelectionSubMenu);
       }
       mgr.add(actionEdit);
       mgr.add(actionDelete);
