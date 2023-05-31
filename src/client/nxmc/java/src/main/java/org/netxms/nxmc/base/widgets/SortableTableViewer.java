@@ -185,7 +185,11 @@ public class SortableTableViewer extends TableViewer
 	   Table table = getTable();
 	   int count = table.getColumnCount();
 	   for(int i = 0; i < count; i++)
-	      table.getColumn(i).pack();
+      {
+         TableColumn c = table.getColumn(i);
+         if (c.getResizable())
+            c.pack();
+      }
 	}
 
    /**

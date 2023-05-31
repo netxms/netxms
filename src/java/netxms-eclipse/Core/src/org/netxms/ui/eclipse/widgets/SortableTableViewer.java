@@ -44,30 +44,27 @@ public class SortableTableViewer extends TableViewer
 	private TableSortingListener sortingListener;
 	
 	/**
-	 * Constructor
-	 * 
-	 * @param parent Parent composite for table control
-	 * @param names Column names
-	 * @param widths Column widths (may be null)
-	 * @param defaultSortingColumn Index of default sorting column
-	 */
-	public SortableTableViewer(Composite parent, String[] names, int[] widths,
-	                           int defaultSortingColumn, int defaultSortDir,
-	                           int style)
+    * Constructor
+    * 
+    * @param parent Parent composite for table control
+    * @param names Column names
+    * @param widths Column widths (may be null)
+    * @param defaultSortingColumn Index of default sorting column
+    * @param defaultSortDir default sorting direction
+    * @param style widget style
+    */
+   public SortableTableViewer(Composite parent, String[] names, int[] widths, int defaultSortingColumn, int defaultSortDir, int style)
 	{
-		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
-		getTable().setLinesVisible(true);
-		getTable().setHeaderVisible(true);
-      sortingListener = new TableSortingListener(this);
+      this(parent, style);
 		createColumns(names, widths, defaultSortingColumn, defaultSortDir);
 	}
 
 	/**
-	 * Constructor for delayed initialization
-	 * 
-	 * @param parent
-	 * @param style
-	 */
+    * Constructor for delayed initialization
+    * 
+    * @param parent Parent composite for table control
+    * @param style widget style
+    */
 	public SortableTableViewer(Composite parent, int style)
 	{
 		super(new Table(parent, (style == DEFAULT_STYLE) ? (SWT.MULTI | SWT.FULL_SELECTION) : style));
@@ -126,7 +123,7 @@ public class SortableTableViewer extends TableViewer
       c.addSelectionListener(sortingListener);
       return c;
 	}
-	
+
 	/**
 	 * Get column object by id (named data with key ID)
 	 * @param id Column ID
@@ -188,7 +185,11 @@ public class SortableTableViewer extends TableViewer
 	   Table table = getTable();
 	   int count = table.getColumnCount();
 	   for(int i = 0; i < count; i++)
-	      table.getColumn(i).pack();
+      {
+         TableColumn c = table.getColumn(i);
+         if (c.getResizable())
+            c.pack();
+      }
 	}
 
    /**
