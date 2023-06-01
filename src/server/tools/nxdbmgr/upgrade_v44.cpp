@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.14 to 44.15
+ */
+static bool H_UpgradeFromV14()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE am_attributes ADD is_hidden char(1)\n")
+      _T("UPDATE am_attributes SET is_hidden='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("am_attributes"), _T("is_hidden")));
+   CHK_EXEC(SetMinorSchemaVersion(15));
+   return true;
+}
+
+/**
  * Upgrade from 44.13 to 44.14
  */
 static bool H_UpgradeFromV13()
@@ -484,11 +499,12 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
-   { 13,  44, 14,  H_UpgradeFromV13  },
-   { 12,  44, 13,  H_UpgradeFromV12  },
-   { 11,  44, 12,  H_UpgradeFromV11  },
-   { 10,  44, 11,  H_UpgradeFromV10  },
-   { 9,  44, 10,  H_UpgradeFromV9  },
+   { 14, 44, 15, H_UpgradeFromV14 },
+   { 13, 44, 14, H_UpgradeFromV13 },
+   { 12, 44, 13, H_UpgradeFromV12 },
+   { 11, 44, 12, H_UpgradeFromV11 },
+   { 10, 44, 11, H_UpgradeFromV10 },
+   { 9,  44, 10, H_UpgradeFromV9  },
    { 8,  44, 9,  H_UpgradeFromV8  },
    { 7,  44, 8,  H_UpgradeFromV7  },
    { 6,  44, 7,  H_UpgradeFromV6  },

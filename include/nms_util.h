@@ -1308,6 +1308,7 @@ public:
    StringBuffer& append(const TCHAR *str) { if (str != nullptr) append(str, _tcslen(str)); return *this; }
    StringBuffer& append(const TCHAR *str, size_t len) { insert(m_length, str, len); return *this; }
    StringBuffer& append(const TCHAR c) { return append(&c, 1); }
+   StringBuffer& append(bool b) { return b ? append(_T("true"), 4) : append(_T("false"), 5); }
    StringBuffer& append(int32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
    StringBuffer& append(uint32_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }
    StringBuffer& append(int64_t n, const TCHAR *format = nullptr) { insert(m_length, n, format); return *this; }

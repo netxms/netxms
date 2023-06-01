@@ -84,6 +84,7 @@ private:
    AMDataType m_dataType;
    bool m_isMandatory;
    bool m_isUnique;
+   bool m_isHidden;
    TCHAR *m_autofillScriptSource;
    NXSL_Program *m_autofillScript;
    int32_t m_rangeMin;
@@ -113,6 +114,7 @@ public:
    AMSystemType getSystemType() const { return m_systemType; }
    bool isMandatory() const { return m_isMandatory; }
    bool isUnique() const { return m_isUnique; }
+   bool isHidden() const { return m_isHidden; }
    int32_t getMinRange() const { return m_rangeMin; }
    int32_t getMaxRange() const { return m_rangeMax; }
    NXSL_Program *getScript() const { return m_autofillScript; }

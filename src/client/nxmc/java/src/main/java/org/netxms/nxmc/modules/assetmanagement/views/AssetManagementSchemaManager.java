@@ -72,10 +72,11 @@ public class AssetManagementSchemaManager extends ConfigurationView
    public static final int COLUMN_DATA_TYPE = 2;
    public static final int COLUMN_IS_MANDATORY = 3;
    public static final int COLUMN_IS_UNIQUE = 4;
-   public static final int COLUMN_HAS_SCRIPT = 5;
-   public static final int COLUMN_RANGE_MIN = 6;
-   public static final int COLUMN_RANGE_MAX = 7;
-   public static final int COLUMN_SYSTEM_TYPE = 8;
+   public static final int COLUMN_IS_HIDDEN = 5;
+   public static final int COLUMN_HAS_SCRIPT = 6;
+   public static final int COLUMN_RANGE_MIN = 7;
+   public static final int COLUMN_RANGE_MAX = 8;
+   public static final int COLUMN_SYSTEM_TYPE = 9;
 
    Map<String, AssetAttribute> schema = null;
    private NXCSession session;
@@ -101,9 +102,9 @@ public class AssetManagementSchemaManager extends ConfigurationView
    @Override
    protected void createContent(Composite parent)
    {
-      final int[] widths = { 200, 200, 100, 100, 100, 100, 100, 100, 100 };
-      final String[] names = { i18n.tr("Name"), i18n.tr("Display Name"), i18n.tr("Data Type"), i18n.tr("Is mandatory"), 
-            i18n.tr("Is Unique"), i18n.tr("Autofill"), i18n.tr("Range min"), i18n.tr("Range max"), i18n.tr("System type") };
+      final int[] widths = { 200, 200, 100, 100, 100, 100, 100, 100, 100, 100 };
+      final String[] names = { i18n.tr("Name"), i18n.tr("Display Name"), i18n.tr("Data Type"), i18n.tr("Mandatory"), 
+            i18n.tr("Unique"), i18n.tr("Hidden"), i18n.tr("Autofill"), i18n.tr("Range min"), i18n.tr("Range max"), i18n.tr("System type") };
       viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new AssetAttributeListLabelProvider());
@@ -112,7 +113,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
-            actionEdit.run();
+            editAttribute();
          }
       });
 
@@ -185,7 +186,7 @@ public class AssetManagementSchemaManager extends ConfigurationView
          @Override
          public void run()
          {
-            updateAttribute();
+            editAttribute();
          }         
       };
       addKeyBinding("M3+ENTER", actionEdit);
@@ -232,9 +233,9 @@ public class AssetManagementSchemaManager extends ConfigurationView
    }
 
    /**
-    * Update new asset management attribute
+    * Edit asset management attribute
     */
-   protected void updateAttribute()
+   protected void editAttribute()
    {
       final IStructuredSelection selection = viewer.getStructuredSelection();
       if (selection.size() != 1)

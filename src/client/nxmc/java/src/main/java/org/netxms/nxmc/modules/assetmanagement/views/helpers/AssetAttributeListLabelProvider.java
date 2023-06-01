@@ -48,22 +48,24 @@ public class AssetAttributeListLabelProvider extends LabelProvider implements IT
       AssetAttribute attr = (AssetAttribute)element;
       switch(columnIndex)
       {
-         case AssetManagementSchemaManager.COLUMN_NAME:
-            return attr.getName();
-         case AssetManagementSchemaManager.COLUMN_DISPLAY_NAME:
-            return attr.getDisplayName();
          case AssetManagementSchemaManager.COLUMN_DATA_TYPE:
             return DATA_TYPES[attr.getDataType().getValue()];
+         case AssetManagementSchemaManager.COLUMN_DISPLAY_NAME:
+            return attr.getDisplayName();
+         case AssetManagementSchemaManager.COLUMN_HAS_SCRIPT:
+            return attr.getAutofillScript().isEmpty() ? i18n.tr("No") : i18n.tr("Yes");
+         case AssetManagementSchemaManager.COLUMN_IS_HIDDEN:
+            return attr.isHidden() ? i18n.tr("Yes") : i18n.tr("No");
          case AssetManagementSchemaManager.COLUMN_IS_MANDATORY:
             return attr.isMandatory() ? i18n.tr("Yes") : i18n.tr("No");
          case AssetManagementSchemaManager.COLUMN_IS_UNIQUE:
             return attr.isUnique() ? i18n.tr("Yes") : i18n.tr("No");
-         case AssetManagementSchemaManager.COLUMN_HAS_SCRIPT:
-            return attr.getAutofillScript().isEmpty() ? i18n.tr("No") : i18n.tr("Yes");
-         case AssetManagementSchemaManager.COLUMN_RANGE_MIN:
-            return Integer.toString(attr.getRangeMin());
+         case AssetManagementSchemaManager.COLUMN_NAME:
+            return attr.getName();
          case AssetManagementSchemaManager.COLUMN_RANGE_MAX:
             return Integer.toString(attr.getRangeMax());
+         case AssetManagementSchemaManager.COLUMN_RANGE_MIN:
+            return Integer.toString(attr.getRangeMin());
          case AssetManagementSchemaManager.COLUMN_SYSTEM_TYPE:
             return SYSTEM_TYPE[attr.getSystemType().getValue()];
          

@@ -1534,6 +1534,7 @@ typedef struct
 #define VID_TIMER_LIST              ((uint32_t)829)
 #define VID_UPDATE_IDENTIFICATION   ((uint32_t)830)
 #define VID_TEMPLATE_ITEM_ID        ((uint32_t)831)
+#define VID_IS_HIDDEN               ((uint32_t)832)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

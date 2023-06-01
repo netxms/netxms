@@ -33,8 +33,9 @@ public class AssetAttribute
    String name;
    String displayName;
    AMDataType dataType;
-   boolean isMandatory;
-   boolean isUnique;
+   boolean mandatory;
+   boolean unique;
+   boolean hidden;
    String autofillScript;
    int rangeMin;
    int rangeMax;
@@ -49,15 +50,16 @@ public class AssetAttribute
       name = "";
       displayName = "";
       dataType = AMDataType.STRING;
-      isMandatory = false;
-      isUnique = false;
+      mandatory = false;
+      unique = false;
+      hidden = false;
       autofillScript = "";
       rangeMin = -1;
       rangeMax = - 1;
       systemType = AMSystemType.NONE;
       enumValues = new HashMap<String, String>();      
    }
-   
+
    /**
     * Create attribute from server message.
     * 
@@ -69,8 +71,9 @@ public class AssetAttribute
       name = msg.getFieldAsString(baseId++);
       displayName = msg.getFieldAsString(baseId++);
       dataType = AMDataType.getByValue(msg.getFieldAsInt32(baseId++));
-      isMandatory = msg.getFieldAsBoolean(baseId++);
-      isUnique = msg.getFieldAsBoolean(baseId++);
+      mandatory = msg.getFieldAsBoolean(baseId++);
+      unique = msg.getFieldAsBoolean(baseId++);
+      hidden = msg.getFieldAsBoolean(baseId++);
       autofillScript = msg.getFieldAsString(baseId++);
       rangeMin = msg.getFieldAsInt32(baseId++);
       rangeMax = msg.getFieldAsInt32(baseId++);
@@ -88,8 +91,9 @@ public class AssetAttribute
       msg.setField(NXCPCodes.VID_NAME, name);
       msg.setField(NXCPCodes.VID_DISPLAY_NAME, displayName);
       msg.setFieldInt32(NXCPCodes.VID_DATA_TYPE, dataType.getValue());
-      msg.setField(NXCPCodes.VID_IS_MANDATORY, isMandatory);
-      msg.setField(NXCPCodes.VID_IS_UNIQUE, isUnique);
+      msg.setField(NXCPCodes.VID_IS_MANDATORY, mandatory);
+      msg.setField(NXCPCodes.VID_IS_UNIQUE, unique);
+      msg.setField(NXCPCodes.VID_IS_HIDDEN, hidden);
       msg.setField(NXCPCodes.VID_SCRIPT, autofillScript);
       msg.setFieldInt32(NXCPCodes.VID_RANGE_MIN, rangeMin);
       msg.setFieldInt32(NXCPCodes.VID_RANGE_MAX, rangeMax);
@@ -160,7 +164,7 @@ public class AssetAttribute
     */
    public boolean isMandatory()
    {
-      return isMandatory;
+      return mandatory;
    }
 
    /**
@@ -168,7 +172,7 @@ public class AssetAttribute
     */
    public void setMandatory(boolean isMandatory)
    {
-      this.isMandatory = isMandatory;
+      this.mandatory = isMandatory;
    }
 
    /**
@@ -176,7 +180,7 @@ public class AssetAttribute
     */
    public boolean isUnique()
    {
-      return isUnique;
+      return unique;
    }
 
    /**
@@ -184,7 +188,23 @@ public class AssetAttribute
     */
    public void setUnique(boolean isUnique)
    {
-      this.isUnique = isUnique;
+      this.unique = isUnique;
+   }
+
+   /**
+    * @return the hidden
+    */
+   public boolean isHidden()
+   {
+      return hidden;
+   }
+
+   /**
+    * @param hidden the hidden to set
+    */
+   public void setHidden(boolean hidden)
+   {
+      this.hidden = hidden;
    }
 
    /**

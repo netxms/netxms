@@ -39,18 +39,20 @@ public class AssetAttributeComparator extends ViewerComparator
       AssetAttribute attr1 = (AssetAttribute)e1;
       AssetAttribute attr2 = (AssetAttribute)e2;
       int result = 0; 
-      
+
       switch((Integer) ((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID"))
       {
-         case AssetManagementSchemaManager.COLUMN_NAME:
-            result = attr1.getName().compareToIgnoreCase(attr2.getName());
+         case AssetManagementSchemaManager.COLUMN_DATA_TYPE:
+            result = AssetAttributeListLabelProvider.DATA_TYPES[attr1.getDataType().getValue()].compareTo(AssetAttributeListLabelProvider.DATA_TYPES[attr2.getDataType().getValue()]);
             break;
          case AssetManagementSchemaManager.COLUMN_DISPLAY_NAME:
             result = attr1.getDisplayName().compareToIgnoreCase(attr2.getDisplayName());
             break;
-         case AssetManagementSchemaManager.COLUMN_DATA_TYPE:
-            result = AssetAttributeListLabelProvider.DATA_TYPES[attr1.getDataType().getValue()].compareTo(
-                  AssetAttributeListLabelProvider.DATA_TYPES[attr2.getDataType().getValue()]);
+         case AssetManagementSchemaManager.COLUMN_HAS_SCRIPT:
+            result = Boolean.compare(!attr1.getAutofillScript().isEmpty(), !attr2.getAutofillScript().isEmpty());
+            break;
+         case AssetManagementSchemaManager.COLUMN_IS_HIDDEN:
+            result = Boolean.compare(attr1.isHidden(), attr2.isHidden());
             break;
          case AssetManagementSchemaManager.COLUMN_IS_MANDATORY:
             result = Boolean.compare(attr1.isMandatory(), attr2.isMandatory());
@@ -58,21 +60,21 @@ public class AssetAttributeComparator extends ViewerComparator
          case AssetManagementSchemaManager.COLUMN_IS_UNIQUE:
             result = Boolean.compare(attr1.isUnique(), attr2.isUnique());
             break;
-         case AssetManagementSchemaManager.COLUMN_HAS_SCRIPT:
-            result = Boolean.compare(!attr1.getAutofillScript().isEmpty(), !attr2.getAutofillScript().isEmpty());
-            break;
-         case AssetManagementSchemaManager.COLUMN_RANGE_MIN:
-            result = Integer.compare(attr1.getRangeMin(), attr2.getRangeMin());
+         case AssetManagementSchemaManager.COLUMN_NAME:
+            result = attr1.getName().compareToIgnoreCase(attr2.getName());
             break;
          case AssetManagementSchemaManager.COLUMN_RANGE_MAX:
             result = Integer.compare(attr1.getRangeMax(), attr2.getRangeMax());
+            break;
+         case AssetManagementSchemaManager.COLUMN_RANGE_MIN:
+            result = Integer.compare(attr1.getRangeMin(), attr2.getRangeMin());
             break;
          case AssetManagementSchemaManager.COLUMN_SYSTEM_TYPE:
             result = AssetAttributeListLabelProvider.SYSTEM_TYPE[attr1.getSystemType().getValue()].compareTo(
                   AssetAttributeListLabelProvider.SYSTEM_TYPE[attr2.getSystemType().getValue()]);
             break;
       }      
-      
+
       return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : - result;
    }
 }

@@ -112,8 +112,11 @@ public class AssetSummaryView extends ObjectView
       attributes.sort((a1, a2) -> a1.getEffectiveDisplayName().compareToIgnoreCase(a2.getEffectiveDisplayName()));
       for(AssetAttribute a : attributes)
       {
-         TableColumn tc = viewer.addColumn(a.getEffectiveDisplayName(), SWT.DEFAULT);
-         tc.setData("Attribute", a.getName());
+         if (!a.isHidden())
+         {
+            TableColumn tc = viewer.addColumn(a.getEffectiveDisplayName(), SWT.DEFAULT);
+            tc.setData("Attribute", a.getName());
+         }
       }
 
       viewer.getTable().setSortColumn(viewer.getTable().getColumn(0));
@@ -141,12 +144,13 @@ public class AssetSummaryView extends ObjectView
          @Override
          public void run()
          {
-            if (isChecked())
+            boolean hideEmptyColumns = isChecked();
+            if (hideEmptyColumns)
                hideEmptyColumns();
             else
                showAllColumns();
             viewer.packColumns();
-            PreferenceStore.getInstance().set("AssetSummaryView.hideEmptyColumns", isChecked());
+            PreferenceStore.getInstance().set("AssetSummaryView.hideEmptyColumns", hideEmptyColumns);
          }
       };
       actionHideEmptyColumns.setChecked(PreferenceStore.getInstance().getAsBoolean("AssetSummaryView.hideEmptyColumns", true));
@@ -178,7 +182,10 @@ public class AssetSummaryView extends ObjectView
       List<AbstractObject> assets = root.getAllChildren(-1).stream().filter((object) -> (object instanceof Asset) || (object.getAssetId() != 0)).collect(Collectors.toList());
       viewer.setInput(assets);
 
-      if (!assets.isEmpty() && actionHideEmptyColumns.isChecked())
+      // Re-read "hide" setting in case it was changed by another view
+      boolean hideEmptyColumns = PreferenceStore.getInstance().getAsBoolean("AssetSummaryView.hideEmptyColumns", true);
+      actionHideEmptyColumns.setChecked(hideEmptyColumns);
+      if (!assets.isEmpty() && hideEmptyColumns)
          hideEmptyColumns();
       else
          showAllColumns();

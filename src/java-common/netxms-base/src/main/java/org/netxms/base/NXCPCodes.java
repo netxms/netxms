@@ -1314,6 +1314,7 @@ public class NXCPCodes
    public static final long VID_TIMER_LIST = 829;
    public static final long VID_UPDATE_IDENTIFICATION = 830;
    public static final long VID_TEMPLATE_ITEM_ID = 831;
+   public static final long VID_IS_HIDDEN = 832;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;

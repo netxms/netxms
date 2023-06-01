@@ -26,7 +26,7 @@
 /**
  * Create asset attribute from database.
  * Fields:
- * attr_name,display_name,data_type,is_mandatory,is_unique,autofill_script,range_min,range_max,sys_type
+ * attr_name,display_name,data_type,is_mandatory,is_unique,is_hidden,autofill_script,range_min,range_max,sys_type
  */
 AssetAttribute::AssetAttribute(DB_RESULT result, int row)
 {
@@ -35,12 +35,13 @@ AssetAttribute::AssetAttribute(DB_RESULT result, int row)
    m_dataType = static_cast<AMDataType>(DBGetFieldLong(result, row, 2));
    m_isMandatory = DBGetFieldLong(result, row, 3) ? true : false;
    m_isUnique = DBGetFieldLong(result, row, 4) ? true : false;
+   m_isHidden = DBGetFieldLong(result, row, 5) ? true : false;
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
-   setScript(DBGetField(result, row, 5, nullptr, 0));
-   m_rangeMin = DBGetFieldLong(result, row, 6);
-   m_rangeMax = DBGetFieldLong(result, row, 7);
-   m_systemType = static_cast<AMSystemType>(DBGetFieldLong(result, row, 8));
+   setScript(DBGetField(result, row, 6, nullptr, 0));
+   m_rangeMin = DBGetFieldLong(result, row, 7);
+   m_rangeMax = DBGetFieldLong(result, row, 8);
+   m_systemType = static_cast<AMSystemType>(DBGetFieldLong(result, row, 9));
 }
 
 /**
@@ -53,6 +54,7 @@ AssetAttribute::AssetAttribute(const NXCPMessage &msg) : m_enumValues(msg, VID_A
    m_dataType = static_cast<AMDataType>(msg.getFieldAsUInt32(VID_DATA_TYPE));
    m_isMandatory = msg.getFieldAsBoolean(VID_IS_MANDATORY);
    m_isUnique = msg.getFieldAsBoolean(VID_IS_UNIQUE);
+   m_isHidden = msg.getFieldAsBoolean(VID_IS_HIDDEN);
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
    setScript(msg.getFieldAsString(VID_SCRIPT));
@@ -69,8 +71,9 @@ AssetAttribute::AssetAttribute(const TCHAR *name, const ConfigEntry& entry)
    m_name = MemCopyString(name);
    m_displayName = MemCopyString(entry.getSubEntryValue(_T("displayName")));
    m_dataType = static_cast<AMDataType>(entry.getSubEntryValueAsInt(_T("dataType"), 0 , 0));
-   m_isMandatory = entry.getSubEntryValueAsBoolean(_T("isMandatory"), 0, false);
-   m_isUnique = entry.getSubEntryValueAsBoolean(_T("isUnique"), 0, false);
+   m_isMandatory = entry.getSubEntryValueAsBoolean(_T("mandatory"), 0, false);
+   m_isUnique = entry.getSubEntryValueAsBoolean(_T("unique"), 0, false);
+   m_isHidden = entry.getSubEntryValueAsBoolean(_T("hidden"), 0, false);
    m_autofillScriptSource = nullptr;
    m_autofillScript = nullptr;
    setScript(MemCopyString(entry.getSubEntryValue(_T("script"))));
@@ -123,6 +126,7 @@ void AssetAttribute::fillMessage(NXCPMessage *msg, uint32_t baseId)
    msg->setField(baseId++, static_cast<uint32_t>(m_dataType));
    msg->setField(baseId++, m_isMandatory);
    msg->setField(baseId++, m_isUnique);
+   msg->setField(baseId++, m_isHidden);
    msg->setField(baseId++, m_autofillScriptSource);
    msg->setField(baseId++, m_rangeMin);
    msg->setField(baseId++, m_rangeMax);
@@ -140,6 +144,7 @@ void AssetAttribute::updateFromMessage(const NXCPMessage &msg)
    m_dataType = static_cast<AMDataType>(msg.getFieldAsUInt32(VID_DATA_TYPE));
    m_isMandatory = msg.getFieldAsBoolean(VID_IS_MANDATORY);
    m_isUnique = msg.getFieldAsBoolean(VID_IS_UNIQUE);
+   m_isHidden = msg.getFieldAsBoolean(VID_IS_HIDDEN);
    setScript(msg.getFieldAsString(VID_SCRIPT));
    m_rangeMin = msg.getFieldAsUInt32(VID_RANGE_MIN);
    m_rangeMax = msg.getFieldAsUInt32(VID_RANGE_MAX);
@@ -162,11 +167,11 @@ bool AssetAttribute::saveToDatabase() const
    DBBegin(db);
    if (IsDatabaseRecordExist(db, _T("am_attributes"), _T("attr_name"), m_name))
    {
-      stmt = DBPrepare(db, _T("UPDATE am_attributes SET display_name=?,data_type=?,is_mandatory=?,is_unique=?,autofill_script=?,range_min=?,range_max=?,sys_type=? WHERE attr_name=?"));
+      stmt = DBPrepare(db, _T("UPDATE am_attributes SET display_name=?,data_type=?,is_mandatory=?,is_unique=?,is_hidden=?,autofill_script=?,range_min=?,range_max=?,sys_type=? WHERE attr_name=?"));
    }
    else
    {
-      stmt = DBPrepare(db, _T("INSERT INTO am_attributes (display_name,data_type,is_mandatory,is_unique,autofill_script,range_min,range_max,sys_type,attr_name) VALUES (?,?,?,?,?,?,?,?,?)"));
+      stmt = DBPrepare(db, _T("INSERT INTO am_attributes (display_name,data_type,is_mandatory,is_unique,is_hidden,autofill_script,range_min,range_max,sys_type,attr_name) VALUES (?,?,?,?,?,?,?,?,?,?)"));
    }
    if (stmt != nullptr)
    {
@@ -174,11 +179,12 @@ bool AssetAttribute::saveToDatabase() const
       DBBind(stmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dataType));
       DBBind(stmt, 3, DB_SQLTYPE_VARCHAR, m_isMandatory ? _T("1") : _T("0"), DB_BIND_STATIC);
       DBBind(stmt, 4, DB_SQLTYPE_VARCHAR, m_isUnique ? _T("1") : _T("0"), DB_BIND_STATIC);
-      DBBind(stmt, 5, DB_SQLTYPE_TEXT, m_autofillScriptSource, DB_BIND_STATIC);
-      DBBind(stmt, 6, DB_SQLTYPE_INTEGER, m_rangeMin);
-      DBBind(stmt, 7, DB_SQLTYPE_INTEGER, m_rangeMax);
-      DBBind(stmt, 8, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_systemType));
-      DBBind(stmt, 9, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
+      DBBind(stmt, 5, DB_SQLTYPE_VARCHAR, m_isHidden ? _T("1") : _T("0"), DB_BIND_STATIC);
+      DBBind(stmt, 6, DB_SQLTYPE_TEXT, m_autofillScriptSource, DB_BIND_STATIC);
+      DBBind(stmt, 7, DB_SQLTYPE_INTEGER, m_rangeMin);
+      DBBind(stmt, 8, DB_SQLTYPE_INTEGER, m_rangeMax);
+      DBBind(stmt, 9, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_systemType));
+      DBBind(stmt, 10, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 
       success = DBExecute(stmt);
       DBFreeStatement(stmt);
@@ -306,11 +312,13 @@ void AssetAttribute::createExportRecord(StringBuffer &xml)
    xml.append(m_displayName);
    xml.append(_T("</displayName>\n\t\t\t<dataType>"));
    xml.append(static_cast<int32_t>(m_dataType));
-   xml.append(_T("</dataType>\n\t\t\t<isMandatory>"));
-   xml.append(m_isMandatory ? 1 : 0);
-   xml.append(_T("</isMandatory>\n\t\t\t<isUnique>"));
-   xml.append(m_isUnique ? 1 : 0);
-   xml.append(_T("</isUnique>\n\t\t\t<script>"));
+   xml.append(_T("</dataType>\n\t\t\t<mandatory>"));
+   xml.append(m_isMandatory);
+   xml.append(_T("</mandatory>\n\t\t\t<unique>"));
+   xml.append(m_isUnique);
+   xml.append(_T("</unique>\n\t\t\t<hidden>"));
+   xml.append(m_isHidden);
+   xml.append(_T("</hidden>\n\t\t\t<script>"));
    xml.append(m_autofillScriptSource);
    xml.append(_T("</script>\n\t\t\t<rangeMin>"));
    xml.append(m_rangeMin);
@@ -456,7 +464,7 @@ void LoadAssetManagementSchema()
 {
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
 
-   DB_RESULT result = DBSelect(db, _T("SELECT attr_name,display_name,data_type,is_mandatory,is_unique,autofill_script,range_min,range_max,sys_type FROM am_attributes"));
+   DB_RESULT result = DBSelect(db, _T("SELECT attr_name,display_name,data_type,is_mandatory,is_unique,is_hidden,autofill_script,range_min,range_max,sys_type FROM am_attributes"));
    if (result != nullptr)
    {
       DB_STATEMENT stmt = DBPrepare(db, _T("SELECT value,display_name FROM am_enum_values WHERE attr_name=?"), true);

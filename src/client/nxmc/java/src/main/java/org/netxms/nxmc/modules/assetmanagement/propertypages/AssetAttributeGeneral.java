@@ -49,19 +49,18 @@ public class AssetAttributeGeneral extends PropertyPage
 {
    final static I18n i18n = LocalizationHelper.getI18n(AssetAttributeGeneral.class);
 
-   AssetAttribute attribute = null;
-   boolean createNew = false;
-
-   LabeledText textName;
-   LabeledText textDisplayName;
-   Combo comboDataType = null;
-   Button buttonMandatory;
-   Button buttonUnique;
-   Button useLimits;
-   LabeledSpinner spinnerRangeMin;
-   LabeledSpinner spinnerRangeMax;
-   Combo comboSystemType;   
-   
+   private AssetAttribute attribute = null;
+   private boolean createNew = false;
+   private LabeledText textName;
+   private LabeledText textDisplayName;
+   private Combo comboDataType = null;
+   private Button checkMandatory;
+   private Button checkUnique;
+   private Button checkHidden;
+   private Button useLimits;
+   private LabeledSpinner spinnerRangeMin;
+   private LabeledSpinner spinnerRangeMax;
+   private Combo comboSystemType;
 
    /**
     * Page constructor
@@ -98,23 +97,22 @@ public class AssetAttributeGeneral extends PropertyPage
       textName.setLayoutData(gd);
       textName.setText(attribute.getName());
       textName.setEditable(createNew);
-      
+
       textDisplayName = new LabeledText(dialogArea, SWT.NONE);
       textDisplayName.setLabel("Display name");
       gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
       gd.horizontalSpan = 2;
       textDisplayName.setLayoutData(gd);
       textDisplayName.setText(attribute.getDisplayName());
-      
+
       comboDataType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Data type"), new GridData(SWT.FILL, SWT.CENTER, true, false));
       for (String s : AssetAttributeListLabelProvider.DATA_TYPES)
       {
          comboDataType.add(s);
       }
       comboDataType.select(attribute.getDataType().getValue());
-      
+
       comboDataType.addModifyListener(new ModifyListener() {
-         
          @Override
          public void modifyText(ModifyEvent e)
          {
@@ -145,8 +143,7 @@ public class AssetAttributeGeneral extends PropertyPage
       gd.horizontalSpan = 2;
       useLimits.setLayoutData(gd);
       useLimits.setSelection(attribute.getRangeMax() != 0 || attribute.getRangeMin() != 0);
-      useLimits.addSelectionListener(new SelectionAdapter()
-      {
+      useLimits.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -155,37 +152,42 @@ public class AssetAttributeGeneral extends PropertyPage
          }
       });
       useLimits.setEnabled(haveLimits);
-      haveLimits &= useLimits.getSelection();
-      
+      haveLimits = haveLimits && useLimits.getSelection();
+
       spinnerRangeMin = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMin.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       spinnerRangeMin.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Minimum lenght") : i18n.tr("Minimum value"));
       spinnerRangeMin.setRange((attribute.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
       spinnerRangeMin.setSelection(attribute.getRangeMin());
-      
+
       spinnerRangeMax = new LabeledSpinner(dialogArea, SWT.NONE);
       spinnerRangeMax.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       spinnerRangeMax.setLabel((attribute.getDataType() == AMDataType.STRING) ? i18n.tr("Maximum lenght") : i18n.tr("Minimum value"));
       spinnerRangeMax.setRange((attribute.getDataType() == AMDataType.STRING) ? 0 : Integer.MIN_VALUE, (attribute.getDataType() == AMDataType.STRING) ? 255 : Integer.MAX_VALUE);
       spinnerRangeMax.setSelection(attribute.getRangeMax());
-      
+
       spinnerRangeMin.setEnabled(haveLimits);
       spinnerRangeMax.setEnabled(haveLimits);
+
+      Composite optionsContainer = new Composite(dialogArea, SWT.NONE);
+      optionsContainer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      optionsContainer.setLayout(new GridLayout());
+
+      checkMandatory = new Button(optionsContainer, SWT.CHECK);
+      checkMandatory.setText(i18n.tr("&Mandatory"));
+      checkMandatory.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      checkMandatory.setSelection(attribute.isMandatory());
       
-      Composite checkContainer = new Composite(dialogArea, SWT.NONE);
-      checkContainer.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      checkContainer.setLayout(new GridLayout());
+      checkUnique = new Button(optionsContainer, SWT.CHECK);
+      checkUnique.setText(i18n.tr("&Unique"));
+      checkUnique.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      checkUnique.setSelection(attribute.isUnique());
       
-      buttonMandatory = new Button(checkContainer, SWT.CHECK);
-      buttonMandatory.setText(i18n.tr("Is mandatory"));
-      buttonMandatory.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      buttonMandatory.setSelection(attribute.isMandatory());
-      
-      buttonUnique = new Button(checkContainer, SWT.CHECK);
-      buttonUnique.setText(i18n.tr("Is unique"));
-      buttonUnique.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      buttonUnique.setSelection(attribute.isUnique());
-      
+      checkHidden = new Button(optionsContainer, SWT.CHECK);
+      checkHidden.setText(i18n.tr("&Hidden"));
+      checkHidden.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      checkHidden.setSelection(attribute.isUnique());
+
       return dialogArea;
    }
 
@@ -200,7 +202,7 @@ public class AssetAttributeGeneral extends PropertyPage
          MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Minumun can't be lesst than maximum"));
          return false;
       }
-      
+
       if (createNew)
       {
          String newName = textName.getText();
@@ -234,9 +236,10 @@ public class AssetAttributeGeneral extends PropertyPage
          attribute.setRangeMin(0);
          attribute.setRangeMax(0);         
       }
-      attribute.setMandatory(buttonMandatory.getSelection());
-      attribute.setUnique(buttonUnique.getSelection());
-      
+      attribute.setMandatory(checkMandatory.getSelection());
+      attribute.setUnique(checkUnique.getSelection());
+      attribute.setHidden(checkHidden.getSelection());
+
       return true;
    }
 }
