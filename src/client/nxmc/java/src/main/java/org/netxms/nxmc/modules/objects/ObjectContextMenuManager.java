@@ -72,6 +72,7 @@ import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
+import org.netxms.nxmc.modules.logviewer.views.ObjectLogViewer;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
@@ -94,6 +95,10 @@ import org.xnap.commons.i18n.I18n;
 public class ObjectContextMenuManager extends MenuManager
 {
    private final I18n i18n = LocalizationHelper.getI18n(ObjectContextMenuManager.class);
+   private final String[] logNames = {"AlarmLog", "EventLog", "SnmpTrapLog", "syslog", "WindowsEventLog"};
+   private final String[] logFilterColumns = {"source_object_id", "event_source", "object_id", "source_object_id", "node_id"};
+   private final String[] logSortingColumns = {"last_change_time", "event_timestamp", "trap_timestamp", "msg_timestamp", "event_timestamp"};
+   private String[] viewNames;
 
    private View view;
    private ISelectionProvider selectionProvider;
@@ -118,6 +123,7 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemove;
    private Action actionAddNode;
    private Action actionRemoveNode;
+   private List<Action> actionListLogOpen = new ArrayList<Action>();
    private ObjectAction<?> actionCreateInterfaceDCI;
    private ObjectAction<?> actionForcePolicyInstall;
    private ObjectAction<?> actionLinkAssetToObject;
@@ -137,6 +143,12 @@ public class ObjectContextMenuManager extends MenuManager
     */
    public ObjectContextMenuManager(View view, ISelectionProvider selectionProvider, ColumnViewer objectViewer)
    {
+      viewNames = new String[5];
+      viewNames[0] = i18n.tr("Alarms");
+      viewNames[1] = i18n.tr("Events");
+      viewNames[2] = i18n.tr("SNMP Traps");
+      viewNames[3] = i18n.tr("Syslog");
+      viewNames[4] = i18n.tr("Windows Events");
       this.view = view;
       this.selectionProvider = selectionProvider;
       this.objectViewer = objectViewer;
@@ -337,7 +349,20 @@ public class ObjectContextMenuManager extends MenuManager
             removeNodeFromCluster();
          }
       };
-
+      
+      for (int i = 0; i < logNames.length; i++)
+      {
+         final int index = i;
+         Action action = new Action(i18n.tr("Open ") + viewNames[i], ResourceManager.getImageDescriptor("icons/log-viewer/" + logNames[i] + ".png")) {
+            @Override
+            public void run()
+            {
+               openLong(index);
+            }
+         };
+         actionListLogOpen.add(action);
+      }
+      
       ViewPlacement viewPlacement = new ViewPlacement(view);
       actionCreateInterfaceDCI = new CreateInterfaceDciAction(viewPlacement, selectionProvider);
       actionForcePolicyInstall = new ForcedPolicyDeploymentAction(viewPlacement, selectionProvider);
@@ -526,6 +551,17 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionTakeScreenshot);
          }
          add(actionExecuteScript);
+      }
+      
+      // Logs
+      if (singleObject)
+      {
+
+         add(new Separator());
+         for (Action action : actionListLogOpen)
+         {
+            add(action);
+         }
       }
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
@@ -964,6 +1000,17 @@ public class ObjectContextMenuManager extends MenuManager
 
       long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
       view.openView(new AgentConfigurationEditor((Node)object, contextId));
+   }
+
+   /**
+    * Open agent configuration editor
+    */
+   private void openLong(int logIndex)
+   {
+      AbstractObject object = getObjectFromSelection();
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : 0;
+      view.openView(new ObjectLogViewer(viewNames[logIndex], logNames[logIndex], logFilterColumns[logIndex], logSortingColumns[logIndex], object.getObjectId(), contextId));
    }
 
    /**
