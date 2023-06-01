@@ -18,6 +18,7 @@
  */
 package org.netxms.client.objects;
 
+import java.util.Date;
 import java.util.Map;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -29,6 +30,8 @@ import org.netxms.client.NXCSession;
 public class Asset extends GenericObject
 {
    private long linkedObjectId;
+   private Date lastUpdateTimestamp;
+   private long lastUpdateUserId;
    private Map<String, String> properties;
 
 	/**
@@ -42,6 +45,8 @@ public class Asset extends GenericObject
 		super(msg, session);
 
       linkedObjectId = msg.getFieldAsInt64(NXCPCodes.VID_LINKED_OBJECT);
+      lastUpdateTimestamp = msg.getFieldAsDate(NXCPCodes.VID_LAST_UPDATE_TIMESTAMP);
+      lastUpdateUserId = msg.getFieldAsInt64(NXCPCodes.VID_LAST_UPDATE_UID);
       properties = msg.getStringMapFromFields(NXCPCodes.VID_ASSET_PROPERTIES_BASE, NXCPCodes.VID_NUM_ASSET_PROPERTIES);
 	}
 
@@ -60,6 +65,22 @@ public class Asset extends GenericObject
    public long getLinkedObjectId()
    {
       return linkedObjectId;
+   }
+
+   /**
+    * @return the lastUpdateTimestamp
+    */
+   public Date getLastUpdateTimestamp()
+   {
+      return lastUpdateTimestamp;
+   }
+
+   /**
+    * @return the lastUpdateUserId
+    */
+   public long getLastUpdateUserId()
+   {
+      return lastUpdateUserId;
    }
 
    /**

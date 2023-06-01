@@ -131,6 +131,26 @@ public class GeneralInfo extends TableElement
       
       switch(object.getObjectClass())
 		{
+         case AbstractObject.OBJECT_ASSET:
+            Asset asset = (Asset)object;
+            if (asset.getLinkedObjectId() != 0)
+               addPair(i18n.tr("Linked to"), session.getObjectNameWithAlias(asset.getLinkedObjectId()));
+            if ((asset.getLastUpdateTimestamp() != null) && (asset.getLastUpdateTimestamp().getTime() != 0))
+            {
+               addPair(i18n.tr("Last updated"), DateFormatFactory.getDateTimeFormat().format(asset.getLastUpdateTimestamp()));
+
+               AbstractUserObject user = session.findUserDBObjectById(asset.getLastUpdateUserId(), () ->
+                  getDisplay().asyncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        onObjectChange(); // will cause refresh of table content
+                     }
+                  })
+               );
+               addPair(i18n.tr("Updated by"), (user != null) ? user.getName() : "[" + asset.getLastUpdateUserId() + "]");
+            }
+            break;
          case AbstractObject.OBJECT_CHASSIS:
             Chassis chassis = (Chassis)object;
             if (chassis.getControllerId() != 0)
@@ -333,11 +353,6 @@ public class GeneralInfo extends TableElement
             Cluster cluster = (Cluster)object;
             if (session.isZoningEnabled())
                addPair(i18n.tr("Zone UIN"), getZoneName(cluster.getZoneId()));
-            break;
-         case AbstractObject.OBJECT_ASSET:
-            Asset asset = (Asset)object;
-            if (asset.getLinkedObjectId() != 0)
-               addPair(i18n.tr("Linked to"), session.getObjectNameWithAlias(asset.getLinkedObjectId()));
             break;
 			default:
 				break;

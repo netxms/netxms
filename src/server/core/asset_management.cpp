@@ -604,7 +604,6 @@ uint32_t DeleteAssetAttribute(const NXCPMessage &msg, const ClientSession &sessi
    AssetAttribute *attribute = s_schema.get(name);
    if (attribute != nullptr)
    {
-
       json_t *oldAttrData = attribute->toJson();
       session.writeAuditLogWithValues(AUDIT_SYSCFG, true, 0, oldAttrData, nullptr, _T("Asset attribute \"%s\" deleted"), name.cstr());
       json_decref(oldAttrData);

@@ -24,6 +24,23 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.15 to 44.16
+ */
+static bool H_UpgradeFromV15()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE assets ADD last_update_timestamp integer\n")
+      _T("ALTER TABLE assets ADD last_update_uid integer\n")
+      _T("UPDATE assets SET last_update_timestamp=0,last_update_uid=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("assets"), _T("last_update_timestamp")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("assets"), _T("last_update_uid")));
+   CHK_EXEC(SetMinorSchemaVersion(16));
+   return true;
+}
+
+/**
  * Upgrade from 44.14 to 44.15
  */
 static bool H_UpgradeFromV14()
@@ -499,6 +516,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 15, 44, 16, H_UpgradeFromV15 },
    { 14, 44, 15, H_UpgradeFromV14 },
    { 13, 44, 14, H_UpgradeFromV13 },
    { 12, 44, 13, H_UpgradeFromV12 },

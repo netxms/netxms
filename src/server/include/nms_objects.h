@@ -4304,6 +4304,8 @@ private:
 
    StringMap m_properties;
    uint32_t m_linkedObjectId;
+   time_t m_lastUpdateTimestamp;
+   uint32_t m_lastUpdateUserId;
 
 protected:
    virtual void fillMessageInternal(NXCPMessage *msg, uint32_t userId) override;
@@ -4331,12 +4333,15 @@ public:
 
    void autoFillProperties();
 
+   time_t getLastUpdateTimestamp() const { return m_lastUpdateTimestamp; }
+   uint32_t getLastUpdateUserId() const { return m_lastUpdateUserId; }
+
    void setLinkedObjectId(uint32_t objectId)  { lockProperties(); m_linkedObjectId = objectId; setModified(MODIFY_ASSET_PROPERTIES); unlockProperties(); }
    uint32_t getLinkedObjectId() const { return m_linkedObjectId; }
    SharedString getProperty(const TCHAR *attr);
 
    std::pair<uint32_t, String> setProperty(const TCHAR *attr, const TCHAR *value, uint32_t userId);
-   uint32_t deleteProperty(const TCHAR *attr);
+   uint32_t deleteProperty(const TCHAR *attr, uint32_t userId);
    void deleteCachedProperty(const TCHAR *attr);
 
    bool isSamePropertyValue(const TCHAR *attr, const TCHAR *value) const;

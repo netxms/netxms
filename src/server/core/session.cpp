@@ -16818,13 +16818,12 @@ void ClientSession::deleteAssetProperty(const NXCPMessage& request)
          if (object->getObjectClass() == OBJECT_ASSET)
          {
             json_t *oldValue = object->toJson();
-            uint32_t result = static_cast<Asset&>(*object).deleteProperty(name);
+            uint32_t result = static_cast<Asset&>(*object).deleteProperty(name, m_dwUserId);
             if (result == RCC_SUCCESS)
             {
                json_t *newValue = object->toJson();
                writeAuditLogWithValues(AUDIT_OBJECTS, true, object->getId(), oldValue, newValue, _T("Asset property %s deleted"), name.cstr());
                json_decref(newValue);
-               WriteAssetChangeLog(object->getId(), name, AssetOperation::Delete, nullptr, nullptr, m_dwUserId, static_cast<Asset&>(*object).getLinkedObjectId());
             }
             else
             {

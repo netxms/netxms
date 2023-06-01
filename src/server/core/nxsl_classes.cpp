@@ -1008,7 +1008,15 @@ NXSL_Value *NXSL_AssetClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
 
    NXSL_VM *vm = object->vm();
    auto asset = SharedObjectFromData<Asset>(object);
-   if (NXSL_COMPARE_ATTRIBUTE_NAME("linkedObject"))
+   if (NXSL_COMPARE_ATTRIBUTE_NAME("lastUpdateTimestamp"))
+   {
+      value = vm->createValue(static_cast<int64_t>(asset->getLastUpdateTimestamp()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("lastUpdateUserId"))
+   {
+      value = vm->createValue(asset->getLastUpdateUserId());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("linkedObject"))
    {
       uint32_t id = asset->getLinkedObjectId();
       if (id != 0)

@@ -45,6 +45,8 @@ bool AssetGroup::showThresholdSummary() const
 Asset::Asset() : NetObj()
 {
    m_linkedObjectId = 0;
+   m_lastUpdateTimestamp = 0;
+   m_lastUpdateUserId = 0;
    m_status = STATUS_NORMAL;
 }
 
@@ -55,6 +57,8 @@ Asset::Asset(const TCHAR *name, const StringMap& properties) : NetObj(), m_prope
 {
    _tcslcpy(m_name, name, MAX_OBJECT_NAME);
    m_linkedObjectId = 0;
+   m_lastUpdateTimestamp = 0;
+   m_lastUpdateUserId = 0;
    m_status = STATUS_NORMAL;
 }
 
@@ -75,7 +79,7 @@ bool Asset::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    if (!loadCommonProperties(hdb))
       return false;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT linked_object_id FROM assets WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT linked_object_id,last_update_timestamp,last_update_uid FROM assets WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -88,6 +92,8 @@ bool Asset::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       if (DBGetNumRows(hResult) != 0)
       {
          m_linkedObjectId = DBGetFieldULong(hResult, 0, 0);
+         m_lastUpdateTimestamp = DBGetFieldULong(hResult, 0, 1);
+         m_lastUpdateUserId = DBGetFieldULong(hResult, 0, 2);
          success = true;
       }
       DBFreeResult(hResult);
@@ -127,13 +133,15 @@ bool Asset::saveToDatabase(DB_HANDLE hdb)
    bool success = super::saveToDatabase(hdb);
    if (success && (m_modified & MODIFY_ASSET_PROPERTIES))
    {
-      static const TCHAR *columns[] = { _T("linked_object_id"), nullptr };
+      static const TCHAR *columns[] = { _T("linked_object_id"), _T("last_update_timestamp"), _T("last_update_uid"), nullptr };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("assets"), _T("id"), m_id, columns);
       if (hStmt != nullptr)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_linkedObjectId);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastUpdateTimestamp));
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_lastUpdateUserId);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -193,6 +201,8 @@ void Asset::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
 {
    super::fillMessageInternal(msg, userId);
    msg->setField(VID_LINKED_OBJECT, m_linkedObjectId);
+   msg->setFieldFromTime(VID_LAST_UPDATE_TIMESTAMP, m_lastUpdateTimestamp);
+   msg->setField(VID_LAST_UPDATE_UID, m_lastUpdateUserId);
    m_properties.fillMessage(msg, VID_ASSET_PROPERTIES_BASE, VID_NUM_ASSET_PROPERTIES);
 }
 
@@ -224,6 +234,8 @@ json_t *Asset::toJson()
 
    lockProperties();
    json_object_set_new(root, "linkedObjectId", json_integer(m_linkedObjectId));
+   json_object_set_new(root, "lastUpdateTimestamp", json_integer(m_lastUpdateTimestamp));
+   json_object_set_new(root, "lastUpdateUserId", json_integer(m_lastUpdateUserId));
 
    json_t *properties = json_object();
    for(KeyValuePair<const TCHAR> *p : m_properties)
@@ -280,6 +292,8 @@ std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *v
       if (oldValue.isNull() || _tcscmp(oldValue, value))
       {
          WriteAssetChangeLog(m_id, attr, (oldValue != nullptr) ? AssetOperation::Create : AssetOperation::Update, oldValue, value, userId, m_linkedObjectId);
+         m_lastUpdateTimestamp = time(nullptr);
+         m_lastUpdateUserId = userId;
          setModified(MODIFY_ASSET_PROPERTIES);
       }
       unlockProperties();
@@ -290,7 +304,7 @@ std::pair<uint32_t, String> Asset::setProperty(const TCHAR *attr, const TCHAR *v
 /**
  * Delete property
  */
-uint32_t Asset::deleteProperty(const TCHAR *name)
+uint32_t Asset::deleteProperty(const TCHAR *name, uint32_t userId)
 {
    uint32_t result;
    if (!IsMandatoryAssetProperty(name))
@@ -299,7 +313,11 @@ uint32_t Asset::deleteProperty(const TCHAR *name)
       bool changed = m_properties.contains(name);
       if (changed)
       {
+         SharedString oldValue = m_properties.get(name);
          m_properties.remove(name);
+         WriteAssetChangeLog(m_id, name, AssetOperation::Delete, oldValue, nullptr, userId, m_linkedObjectId);
+         m_lastUpdateTimestamp = time(nullptr);
+         m_lastUpdateUserId = userId;
          setModified(MODIFY_ASSET_PROPERTIES);
          result = RCC_SUCCESS;
       }
