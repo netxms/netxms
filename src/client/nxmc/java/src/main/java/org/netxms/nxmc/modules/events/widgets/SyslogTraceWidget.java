@@ -131,9 +131,9 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
       ps.set("SyslogMonitor.showIcons", labelProvider.isShowIcons());
 	}
 
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#createActions()
-    */
+	/**
+	 * @see org.netxms.nxmc.base.widgets.AbstractTraceWidget#createActions()
+	 */
 	@Override
 	protected void createActions()
 	{

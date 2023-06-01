@@ -125,9 +125,9 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 		return "EventMonitor"; //$NON-NLS-1$
 	}
 
-   /**
-    * @see org.netxms.ui.eclipse.widgets.AbstractTraceWidget#createActions()
-    */
+	/**
+	 * @see org.netxms.nxmc.base.widgets.AbstractTraceWidget#createActions()
+	 */
 	@Override
 	protected void createActions()
 	{

@@ -478,6 +478,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       addObjectMenu(i18n.tr("Poll"), ObjectMenuFactory.createPollMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Dashboards"), ObjectMenuFactory.createDashboardsMenu(new StructuredSelection(object), object.getObjectId(), null, objectToolBar, new ViewPlacement(this)));
       addObjectMenu(i18n.tr("Create"), new ObjectCreateMenuManager(getWindow().getShell(), null, object));
+      addObjectMenu(i18n.tr("Logs"), new ObjectLogMenuManager(object, 0, new ViewPlacement(this)));
    }
 
    /**
