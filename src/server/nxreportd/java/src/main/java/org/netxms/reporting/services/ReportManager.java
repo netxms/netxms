@@ -47,6 +47,7 @@ import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
@@ -60,6 +61,7 @@ import org.netxms.reporting.tools.DateParameterParser;
 import org.netxms.reporting.tools.ThreadLocalReportInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRParameter;
@@ -216,7 +218,7 @@ public class ReportManager
       }
       catch(Exception e)
       {
-         logger.error("Error while deploying package " + archiveName);
+         logger.error("Error while deploying package " + archiveName, e);
       }
    }
 
@@ -745,7 +747,7 @@ public class ReportManager
          }
          catch(NumberFormatException e)
          {
-            logger.error("Invalid ID in comma separated list: " + input);
+            logger.error("Invalid ID in comma separated list: " + input, e);
             throw e;
          }
       }
