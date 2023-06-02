@@ -27,6 +27,7 @@ import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logviewer.LogDeclaration;
+import org.netxms.nxmc.modules.logviewer.WindowsLogDeclaration;
 import org.netxms.nxmc.modules.logviewer.views.ObjectLogViewer;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
@@ -80,7 +81,7 @@ public class ObjectLogMenuManager extends MenuManager
       eventLog = new LogDeclaration(i18n.tr("Events"), "EventLog", "event_source");
       snmpTrapLog = new LogDeclaration(i18n.tr("SNMP Traps"), "SnmpTrapLog", "object_id");
       syslogLog = new LogDeclaration(i18n.tr("Syslog"), "syslog", "source_object_id");
-      windowsEventLog = new LogDeclaration(i18n.tr("Windows Events"), "WindowsEventLog", "node_id");
+      windowsEventLog = new WindowsLogDeclaration();
    }
 
    /**
