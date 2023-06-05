@@ -50,6 +50,8 @@ import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.client.objects.DashboardGroup;
+import org.netxms.client.objects.DashboardRoot;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
@@ -73,6 +75,7 @@ import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
+import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
@@ -129,6 +132,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionChangeZone;
    private ObjectAction<?> actionSendUserAgentNotification;
    private ObjectAction<?> actionExportDashboard;
+   private ObjectAction<?> actionImportDashboard;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -351,6 +355,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionChangeZone = new ChangeZoneAction(viewPlacement, selectionProvider);
       actionSendUserAgentNotification = new SendUserAgentNotificationAction(viewPlacement, selectionProvider);
       actionExportDashboard = new ExportDashboardAction(viewPlacement, selectionProvider);
+      actionImportDashboard = new ImportDashboardAction(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -420,6 +425,11 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionExportDashboard);
             add(new Separator());           
          }
+         if ((object instanceof DashboardGroup) || (object instanceof DashboardRoot))
+         {
+            add(actionImportDashboard);
+            add(new Separator());           
+         }         
       }
       else
       {

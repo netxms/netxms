@@ -79,6 +79,7 @@ import org.netxms.nxmc.modules.assetmanagement.views.AssetView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceAvailabilityView;
 import org.netxms.nxmc.modules.businessservice.views.BusinessServiceChecksView;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
+import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
 import org.netxms.nxmc.modules.dashboards.views.ContextDashboardView;
 import org.netxms.nxmc.modules.dashboards.views.DashboardView;
 import org.netxms.nxmc.modules.datacollection.views.DataCollectionView;
@@ -247,6 +248,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       actionContributions.add(new LinkObjectToAssetAction(new ViewPlacement(this), this));
       actionContributions.add(new UnlinkObjectFromAssetAction(new ViewPlacement(this), this));
       actionContributions.add(new ExportDashboardAction(new ViewPlacement(this), this));
+      actionContributions.add(new ImportDashboardAction(new ViewPlacement(this), this));
 
       ViewPlacement viewPlacement = new ViewPlacement(this);
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
