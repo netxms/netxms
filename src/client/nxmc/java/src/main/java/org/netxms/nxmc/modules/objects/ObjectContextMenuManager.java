@@ -72,6 +72,7 @@ import org.netxms.nxmc.modules.assetmanagement.LinkObjectToAssetAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkAssetFromObjectAction;
 import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
+import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
@@ -127,6 +128,7 @@ public class ObjectContextMenuManager extends MenuManager
    private ObjectAction<?> actionCloneDashboard;
    private ObjectAction<?> actionChangeZone;
    private ObjectAction<?> actionSendUserAgentNotification;
+   private ObjectAction<?> actionExportDashboard;
    private List<ObjectAction<?>> actionContributions = new ArrayList<>();
 
    /**
@@ -348,6 +350,7 @@ public class ObjectContextMenuManager extends MenuManager
       actionCloneDashboard = new CloneDashboardAction(viewPlacement, selectionProvider);
       actionChangeZone = new ChangeZoneAction(viewPlacement, selectionProvider);
       actionSendUserAgentNotification = new SendUserAgentNotificationAction(viewPlacement, selectionProvider);
+      actionExportDashboard = new ExportDashboardAction(viewPlacement, selectionProvider);
 
       NXCSession session = Registry.getSession();
       ServiceLoader<ObjectActionDescriptor> actionLoader = ServiceLoader.load(ObjectActionDescriptor.class, getClass().getClassLoader());
@@ -414,6 +417,7 @@ public class ObjectContextMenuManager extends MenuManager
          if (object instanceof Dashboard)
          {
             add(actionCloneDashboard);
+            add(actionExportDashboard);
             add(new Separator());           
          }
       }
