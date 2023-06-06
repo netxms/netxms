@@ -332,6 +332,18 @@ static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, const StringMap 
       (*globalVariables)->merge(expressionVariables);
    }
    delete expressionVariables;
+   if ((globalVariables != nullptr) && vm->getResult()->isHashMap())
+   {
+      NXSL_HashMap *map = vm->getResult()->getValueAsHashMap();
+      StringList *keys = map->getKeysAsList();
+      for (int i = 0; i < keys->size(); i++)
+      {
+         (*globalVariables)->create(keys->get(i), vm->createValue(map->get(keys->get(i))));
+      }
+      delete keys;
+      return true;
+   }
+
    return vm->getResult()->isTrue() ? 1 : 0;
 }
 
