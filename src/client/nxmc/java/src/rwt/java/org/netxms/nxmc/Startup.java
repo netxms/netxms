@@ -54,6 +54,7 @@ import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
+import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -160,6 +161,7 @@ public class Startup implements EntryPoint, StartupParameters
       ObjectToolsCache.attachSession(display, session);
       SummaryTablesCache.attachSession(display, session);
       GraphTemplateCache.attachSession(display, session);
+      LogDescriptorRegistry.attachSession(display, session);
 
       ExitConfirmation exitConfirmation = RWT.getClient().getService(ExitConfirmation.class);
       exitConfirmation.setMessage(i18n.tr("This will terminate your current session. Are you sure?"));

@@ -61,7 +61,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
     */
    public ExportDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Dashboard.class, i18n.tr("&Export"), viewPlacement, selectionProvider);
+      super(Dashboard.class, i18n.tr("&Export..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/export.png"));
    }
 
@@ -76,36 +76,35 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 		FileDialog dlg = new FileDialog(getShell(), SWT.SAVE);
 		dlg.setText(i18n.tr("Select File"));
 		dlg.setFileName(dashboard.getObjectName() + ".xml");
-		dlg.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+      dlg.setFilterExtensions(new String[] { "*.xml", "*.*" });
 		dlg.setFilterNames(new String[] { i18n.tr("XML files"), i18n.tr("All files") });
 		final String fileName = dlg.open();
-
 		if (fileName == null)
 		   return;
 
 		final Set<Long> objects = new HashSet<Long>();
 		final Map<Long, Long> items = new HashMap<Long, Long>();
 
-		final StringBuilder xml = new StringBuilder("<dashboard>\n\t<name>"); //$NON-NLS-1$
+      final StringBuilder xml = new StringBuilder("<dashboard>\n\t<name>");
 		xml.append(dashboard.getObjectName());
-		xml.append("</name>\n\t<columns>"); //$NON-NLS-1$
+      xml.append("</name>\n\t<columns>");
 		xml.append(dashboard.getNumColumns());
-      xml.append("</columns>\n\t<flags>"); //$NON-NLS-1$
+      xml.append("</columns>\n\t<flags>");
       xml.append(dashboard.getFlags());
-      xml.append("</flags>\n\t<autoBindFlags>"); //$NON-NLS-1$
+      xml.append("</flags>\n\t<autoBindFlags>");
       xml.append(dashboard.getAutoBindFlags());
-      xml.append("</autoBindFlags>\n\t<autoBindFilter>"); //$NON-NLS-1$
+      xml.append("</autoBindFlags>\n\t<autoBindFilter>");
       xml.append(dashboard.getAutoBindFilter().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"));
-      xml.append("</autoBindFilter>\n\t<elements>\n"); //$NON-NLS-1$
+      xml.append("</autoBindFilter>\n\t<elements>\n");
 		for(DashboardElement e : dashboard.getElements())
 		{
-			xml.append("\t\t<dashboardElement>\n\t\t\t<type>"); //$NON-NLS-1$
+         xml.append("\t\t<dashboardElement>\n\t\t\t<type>");
 			xml.append(e.getType());
-			xml.append("</type>\n"); //$NON-NLS-1$
+         xml.append("</type>\n");
 			xml.append(e.getLayout());
 			xml.append('\n');
 			xml.append(e.getData());
-			xml.append("\n\t\t</dashboardElement>\n"); //$NON-NLS-1$
+         xml.append("\n\t\t</dashboardElement>\n");
 
 	      DashboardElementConfig config = DashboardElementConfigFactory.create(e);
 			if (config != null)
@@ -114,7 +113,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 				items.putAll(config.getDataCollectionItems());
 			}
 		}
-		xml.append("\t</elements>\n"); //$NON-NLS-1$
+      xml.append("\t</elements>\n");
 
       final NXCSession session = Registry.getSession();
 		new Job(i18n.tr("Export dashboard configuration"), null, getMessageArea()) {
@@ -122,22 +121,22 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				// Add object ID mapping
-				xml.append("\t<objectMap>\n"); //$NON-NLS-1$
+            xml.append("\t<objectMap>\n");
 				for(Long id : objects)
 				{
 					AbstractObject o = session.findObjectById(id);
 					if (o != null)
 					{
-						xml.append("\t\t<object id=\""); //$NON-NLS-1$
+                  xml.append("\t\t<object id=\"");
 						xml.append(id);
-						xml.append("\" class=\""); //$NON-NLS-1$
+                  xml.append("\" class=\"");
 						xml.append(o.getObjectClass());
-						xml.append("\">"); //$NON-NLS-1$
+                  xml.append("\">");
 						xml.append(o.getObjectName());
-						xml.append("</object>\n"); //$NON-NLS-1$
+                  xml.append("</object>\n");
 					}
 				}
-				xml.append("\t</objectMap>\n\t<dciMap>\n"); //$NON-NLS-1$
+            xml.append("\t</objectMap>\n\t<dciMap>\n");
 
 				// Add DCI ID mapping
 		      List<Long> nodeList = new ArrayList<Long>();
@@ -153,17 +152,17 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 				Map<Long, String> names = session.dciIdsToNames(nodeList, dciList);
 				for(int i = 0; i < names.size(); i++)
 				{
-					xml.append("\t\t<dci id=\""); //$NON-NLS-1$
+               xml.append("\t\t<dci id=\"");
 					xml.append(dciList.get(i));
-					xml.append("\" node=\""); //$NON-NLS-1$
+               xml.append("\" node=\"");
 					xml.append(nodeList.get(i));
-					xml.append("\">"); //$NON-NLS-1$
+               xml.append("\">");
 					xml.append(names.get(dciList.get(i)));
-					xml.append("</dci>\n"); //$NON-NLS-1$
+               xml.append("</dci>\n");
 				}
-				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$
+            xml.append("\t</dciMap>\n</dashboard>\n");
 
-				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"); //$NON-NLS-1$
+            OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8");
 				try
 				{
 					out.write(xml.toString());

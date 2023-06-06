@@ -20,11 +20,11 @@ package org.netxms.nxmc.modules.logviewer.views;
 
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.View;
-import org.netxms.nxmc.modules.logviewer.LogDeclaration;
+import org.netxms.nxmc.modules.logviewer.LogDescriptor;
 
 public class ObjectLogViewer extends LogViewer
 {   
-   private LogDeclaration logDeclaration;
+   private LogDescriptor logDescriptor;
    private AbstractObject object;
    private long contextId;
    
@@ -40,18 +40,18 @@ public class ObjectLogViewer extends LogViewer
    /**
     * Create new log viewer view
     *
-    * @param logDeclaration log declaration object
+    * @param logDescriptor log descriptor
     * @param object object to show log for
     * @param contextId context id
     */
-   public ObjectLogViewer(LogDeclaration logDeclaration, AbstractObject object, long contextId)
+   public ObjectLogViewer(LogDescriptor logDescriptor, AbstractObject object, long contextId)
    {
-      super(logDeclaration.getViewName(), logDeclaration.getLogName());
-      this.logDeclaration = logDeclaration;  
+      super(logDescriptor.getViewName(), logDescriptor.getLogName());
+      this.logDescriptor = logDescriptor;  
       this.contextId = contextId;
       this.object = object;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */
@@ -59,19 +59,19 @@ public class ObjectLogViewer extends LogViewer
    protected void postClone(View view)
    {
       ObjectLogViewer origin = (ObjectLogViewer)view;
-      this.logDeclaration = origin.logDeclaration;  
+      this.logDescriptor = origin.logDescriptor;  
       this.contextId = origin.contextId;
       this.object = origin.object;
       super.postClone(view);
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.View#postContentCreate()
     */
    @Override
    protected void postContentCreate()
    {            
-      queryWithFilter(logDeclaration.getFilter(object));      
+      queryWithFilter(logDescriptor.createFilter(object));      
       super.postContentCreate();
    }
 

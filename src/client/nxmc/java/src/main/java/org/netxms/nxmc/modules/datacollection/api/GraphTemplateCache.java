@@ -95,7 +95,7 @@ public class GraphTemplateCache
     * 
     * @param session
     */
-   public static void attachSession(Display display,NXCSession session)
+   public static void attachSession(Display display, NXCSession session)
    {
       GraphTemplateCache instance = new GraphTemplateCache(session);
       Registry.setSingleton(display, GraphTemplateCache.class, instance);

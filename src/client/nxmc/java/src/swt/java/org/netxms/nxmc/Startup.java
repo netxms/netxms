@@ -62,6 +62,7 @@ import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
 import org.netxms.nxmc.modules.datacollection.api.GraphTemplateCache;
 import org.netxms.nxmc.modules.datacollection.widgets.helpers.DataCollectionDisplayInfo;
+import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
 import org.netxms.nxmc.modules.objects.ObjectIcons;
 import org.netxms.nxmc.modules.objecttools.ObjectToolsCache;
 import org.netxms.nxmc.modules.snmp.shared.MibCache;
@@ -153,6 +154,7 @@ public class Startup
          ObjectToolsCache.attachSession(display, session);
          SummaryTablesCache.attachSession(display, session);
          GraphTemplateCache.attachSession(display, session);
+         LogDescriptorRegistry.attachSession(display, session);
          openWindows(session, args);
       }
 

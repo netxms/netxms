@@ -1,7 +1,7 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2023 Raden Solutions
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -78,26 +78,26 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 		final Set<Long> objects = new HashSet<Long>();
 		final Map<Long, Long> items = new HashMap<Long, Long>();
 
-		final StringBuilder xml = new StringBuilder("<dashboard>\n\t<name>"); //$NON-NLS-1$
+      final StringBuilder xml = new StringBuilder("<dashboard>\n\t<name>");
 		xml.append(dashboard.getObjectName());
-		xml.append("</name>\n\t<columns>"); //$NON-NLS-1$
+      xml.append("</name>\n\t<columns>");
 		xml.append(dashboard.getNumColumns());
-      xml.append("</columns>\n\t<flags>"); //$NON-NLS-1$
+      xml.append("</columns>\n\t<flags>");
       xml.append(dashboard.getFlags());
-      xml.append("</flags>\n\t<autoBindFlags>"); //$NON-NLS-1$
+      xml.append("</flags>\n\t<autoBindFlags>");
       xml.append(dashboard.getAutoBindFlags());
-      xml.append("</autoBindFlags>\n\t<autoBindFilter>"); //$NON-NLS-1$
+      xml.append("</autoBindFlags>\n\t<autoBindFilter>");
       xml.append(dashboard.getAutoBindFilter().replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"));
-      xml.append("</autoBindFilter>\n\t<elements>\n"); //$NON-NLS-1$
+      xml.append("</autoBindFilter>\n\t<elements>\n");
 		for(DashboardElement e : dashboard.getElements())
 		{
-			xml.append("\t\t<dashboardElement>\n\t\t\t<type>"); //$NON-NLS-1$
+         xml.append("\t\t<dashboardElement>\n\t\t\t<type>");
 			xml.append(e.getType());
-			xml.append("</type>\n"); //$NON-NLS-1$
+         xml.append("</type>\n");
 			xml.append(e.getLayout());
 			xml.append('\n');
 			xml.append(e.getData());
-			xml.append("\n\t\t</dashboardElement>\n"); //$NON-NLS-1$
+         xml.append("\n\t\t</dashboardElement>\n");
 
 	      DashboardElementConfig config = DashboardElementConfigFactory.create(e);
 			if (config != null)
@@ -106,7 +106,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 				items.putAll(config.getDataCollectionItems());
 			}
 		}
-		xml.append("\t</elements>\n"); //$NON-NLS-1$
+      xml.append("\t</elements>\n");
 
       final NXCSession session = Registry.getSession();
 		new Job(i18n.tr("Export dashboard configuration"), null, getMessageArea()) {
@@ -114,22 +114,22 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 			protected void run(IProgressMonitor monitor) throws Exception
 			{
 				// Add object ID mapping
-				xml.append("\t<objectMap>\n"); //$NON-NLS-1$
+            xml.append("\t<objectMap>\n");
 				for(Long id : objects)
 				{
 					AbstractObject o = session.findObjectById(id);
 					if (o != null)
 					{
-						xml.append("\t\t<object id=\""); //$NON-NLS-1$
+                  xml.append("\t\t<object id=\"");
 						xml.append(id);
-						xml.append("\" class=\""); //$NON-NLS-1$
+                  xml.append("\" class=\"");
 						xml.append(o.getObjectClass());
-						xml.append("\">"); //$NON-NLS-1$
+                  xml.append("\">");
 						xml.append(o.getObjectName());
-						xml.append("</object>\n"); //$NON-NLS-1$
+                  xml.append("</object>\n");
 					}
 				}
-				xml.append("\t</objectMap>\n\t<dciMap>\n"); //$NON-NLS-1$
+            xml.append("\t</objectMap>\n\t<dciMap>\n");
 
 				// Add DCI ID mapping
 		      List<Long> nodeList = new ArrayList<Long>();
@@ -145,18 +145,18 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
 				Map<Long, String> names = session.dciIdsToNames(nodeList, dciList);
 				for(int i = 0; i < names.size(); i++)
 				{
-					xml.append("\t\t<dci id=\""); //$NON-NLS-1$
+               xml.append("\t\t<dci id=\"");
 					xml.append(dciList.get(i));
-					xml.append("\" node=\""); //$NON-NLS-1$
+               xml.append("\" node=\"");
 					xml.append(nodeList.get(i));
-					xml.append("\">"); //$NON-NLS-1$
+               xml.append("\">");
 					xml.append(names.get(dciList.get(i)));
-					xml.append("</dci>\n"); //$NON-NLS-1$
+               xml.append("</dci>\n");
 				}
-				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$
+            xml.append("\t</dciMap>\n</dashboard>\n");
 
             final File dashboardFile = File.createTempFile("export_dashboard_" + dashboard.getObjectId(), "_" + System.currentTimeMillis()); 
-				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(dashboardFile), "UTF-8"); //$NON-NLS-1$
+				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(dashboardFile), "UTF-8");
 				try
 				{
 					out.write(xml.toString());

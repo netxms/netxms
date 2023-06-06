@@ -80,7 +80,7 @@ public class ImportDashboardAction extends ObjectAction<AbstractObject>
     */
    public ImportDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(AbstractObject.class, i18n.tr("&Import"), viewPlacement, selectionProvider);
+      super(AbstractObject.class, i18n.tr("&Import..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/import.png"));
    }
 

@@ -18,37 +18,50 @@
  */
 package org.netxms.nxmc.modules.logviewer;
 
+import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogFilter;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objecttools.ObjectTool;
 
 /**
- * Log declaration configuration object
+ * Server log descriptor
  */
-public class LogDeclaration
+public class LogDescriptor
 {
    protected String viewName;
    protected String logName;
    protected String filterColumn;
-      
+
    /**
-    * Constructor
+    * Create new log descriptor.
     * 
     * @param viewName view name
     * @param logName log name
     * @param filterColumn filter column
     */
-   public LogDeclaration(String viewName, String logName, String filterColumn)
+   public LogDescriptor(String viewName, String logName, String filterColumn)
    {
-      super();
       this.viewName = viewName;
       this.logName = logName;
       this.filterColumn = filterColumn;
    }
-   
+
+   /**
+    * Check if this descriptor is valid for given user session. Default implementation always returns true.
+    *
+    * @param session user session to check
+    * @return true if this descriptor is valid
+    */
+   public boolean isValidForSession(NXCSession session)
+   {
+      return true;
+   }
+
    /**
     * Create object filter for log view 
     * 
@@ -56,7 +69,7 @@ public class LogDeclaration
     * 
     * @return log filter object
     */
-   public LogFilter getFilter(AbstractObject object)
+   public LogFilter createFilter(AbstractObject object)
    {      
       ColumnFilter cf = new ColumnFilter();
       cf.setOperation(ColumnFilterSetOperation.OR);
@@ -66,7 +79,7 @@ public class LogDeclaration
       filter.setColumnFilter(filterColumn, cf);
       return filter;
    }
-   
+
    /**
     * If is applicable for selected object
     * 
@@ -75,7 +88,7 @@ public class LogDeclaration
     */
    public boolean isApplicableForObject(AbstractObject object)
    {
-      return true;
+      return (object instanceof DataCollectionTarget) || ObjectTool.isContainerObject(object);
    }
 
    /**

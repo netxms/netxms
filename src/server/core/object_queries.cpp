@@ -320,6 +320,7 @@ static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, const StringMap 
    {
       vm->setGlobalVariable("$INPUT", vm->createValue(new NXSL_HashMap(vm, inputFields)));
    }
+
    NXSL_VariableSystem *expressionVariables = nullptr;
    ObjectRefArray<NXSL_Value> args(0);
    if (!vm->run(args, globalVariables, &expressionVariables))
@@ -327,23 +328,24 @@ static int FilterObject(NXSL_VM *vm, shared_ptr<NetObj> object, const StringMap 
       delete expressionVariables;
       return -1;
    }
-   if ((globalVariables != nullptr) && (expressionVariables != nullptr))
+
+   if (globalVariables != nullptr)
    {
-      (*globalVariables)->merge(expressionVariables);
-   }
-   delete expressionVariables;
-   if ((globalVariables != nullptr) && vm->getResult()->isHashMap())
-   {
-      NXSL_HashMap *map = vm->getResult()->getValueAsHashMap();
-      StringList *keys = map->getKeysAsList();
-      for (int i = 0; i < keys->size(); i++)
+      if  (expressionVariables != nullptr)
+         (*globalVariables)->merge(expressionVariables);
+
+      if (vm->getResult()->isHashMap())
       {
-         (*globalVariables)->create(keys->get(i), vm->createValue(map->get(keys->get(i))));
+         NXSL_HashMap *map = vm->getResult()->getValueAsHashMap();
+         unique_ptr<StringList> keys(map->getKeysAsList());
+         for (int i = 0; i < keys->size(); i++)
+         {
+            (*globalVariables)->create(keys->get(i), vm->createValue(map->get(keys->get(i))));
+         }
       }
-      delete keys;
-      return true;
    }
 
+   delete expressionVariables;
    return vm->getResult()->isTrue() ? 1 : 0;
 }
 

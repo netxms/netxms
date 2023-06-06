@@ -29,6 +29,7 @@ import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
@@ -454,6 +455,6 @@ public class ObjectTool implements ObjectAction
     */
    public static boolean isContainerObject(AbstractObject object)
    {
-      return ((object instanceof Container) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster) || (object instanceof Zone));
+      return ((object instanceof Container) || (object instanceof Rack) || (object instanceof ServiceRoot) || (object instanceof Subnet) || (object instanceof Cluster) || (object instanceof Zone));
    }
 }

@@ -385,6 +385,8 @@ public class ObjectContextMenuManager extends MenuManager
          if (!createMenu.isEmpty())
          {
             add(createMenu);
+            if ((object instanceof DashboardGroup) || (object instanceof DashboardRoot))
+               add(actionImportDashboard);
             add(new Separator());
          }
          if (object instanceof Asset)
@@ -425,11 +427,6 @@ public class ObjectContextMenuManager extends MenuManager
             add(actionExportDashboard);
             add(new Separator());           
          }
-         if ((object instanceof DashboardGroup) || (object instanceof DashboardRoot))
-         {
-            add(actionImportDashboard);
-            add(new Separator());           
-         }         
       }
       else
       {
