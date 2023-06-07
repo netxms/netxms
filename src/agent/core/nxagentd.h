@@ -100,6 +100,7 @@
 #define AF_CHECK_SERVER_CERTIFICATE 0x00080000
 #define AF_ENABLE_WEBSVC_PROXY      0x00100000
 #define AF_ENABLE_TFTP_PROXY        0x00200000
+#define AF_ENABLE_MODBUS_PROXY      0x00400000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001

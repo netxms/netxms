@@ -82,6 +82,7 @@ LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
 
 #if WITH_MODBUS
 LONG H_MODBUSCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MODBUSInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -498,6 +499,9 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
    { _T("Agent.SupportedPushParameters"), H_PushMetricList, nullptr },
    { _T("Agent.SupportedTables"), H_TableList, nullptr },
    { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr },
+#if WITH_MODBUS
+   { _T("MODBUS.DeviceIdentification(*)"), H_MODBUSDeviceIdentification, nullptr },
+#endif
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr },
    { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr },
    { _T("TCP.ScanAddressRange(*)"), H_TCPAddressRangeScan, nullptr },
