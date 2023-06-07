@@ -564,7 +564,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetFieldUTF8(hResult, 0, 75, m_syslogCodepage, 16);
    DBGetFieldUTF8(hResult, 0, 76, m_snmpCodepage, 16);
    m_ospfRouterId = DBGetFieldIPAddr(hResult, 0, 77);
-   m_mqttProxy = DBGetFieldIPAddr(hResult, 0, 78);
+   m_mqttProxy = DBGetFieldULong(hResult, 0, 78);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
