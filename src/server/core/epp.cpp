@@ -311,6 +311,7 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
          m_actions.add(new ActionExecutionConfiguration(actionId, timerDelay, snoozeTime, timerKey, blockingTimerKey));
       }
    }
+
    if (msg.isFieldExist(VID_TIMER_LIST))
    {
       m_timerCancellations.addAllFromMessage(msg, VID_TIMER_LIST);
@@ -321,10 +322,11 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
    msg.getFieldAsInt32Array(VID_RULE_SOURCE_EXCLUSIONS, &m_sourceExclusions);
 
    int count = msg.getFieldAsInt32(VID_NUM_TIME_FRAMES);
-   int base = VID_TIME_FRAME_LIST_BASE;
+   uint32_t fieldId = VID_TIME_FRAME_LIST_BASE;
    for(int i = 0; i < count; i++)
    {
-      m_timeFrames.add(new TimeFrame(msg.getFieldAsUInt32(base++), msg.getFieldAsUInt64(base++)));
+      m_timeFrames.add(new TimeFrame(msg.getFieldAsUInt32(fieldId), msg.getFieldAsUInt64(fieldId + 1)));
+      fieldId += 2;
    }
 
    m_alarmKey = msg.getFieldAsString(VID_ALARM_KEY);
@@ -337,33 +339,11 @@ EPRule::EPRule(const NXCPMessage& msg) : m_timeFrames(0, 16, Ownership::True), m
 
    msg.getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, &m_alarmCategoryList);
 
-   count = msg.getFieldAsInt32(VID_NUM_SET_PSTORAGE);
-   base = VID_PSTORAGE_SET_LIST_BASE;
-   for(int i = 0; i < count; i++, base+=2)
-   {
-      m_pstorageSetActions.setPreallocated(msg.getFieldAsString(base), msg.getFieldAsString(base+1));
-   }
+   m_pstorageSetActions.addAllFromMessage(msg, VID_PSTORAGE_SET_LIST_BASE, VID_NUM_SET_PSTORAGE);
+   m_pstorageDeleteActions.addAllFromMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
 
-   count = msg.getFieldAsInt32(VID_NUM_DELETE_PSTORAGE);
-   base = VID_PSTORAGE_DELETE_LIST_BASE;
-   for(int i = 0; i < count; i++, base++)
-   {
-      m_pstorageDeleteActions.addPreallocated(msg.getFieldAsString(base));
-   }
-
-   count = msg.getFieldAsInt32(VID_NUM_SET_CUSTOM_ATTRIBUTE);
-   base = VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE;
-   for(int i = 0; i < count; i++, base+=2)
-   {
-      m_customAttributeSetActions.setPreallocated(msg.getFieldAsString(base), msg.getFieldAsString(base+1));
-   }
-
-   count = msg.getFieldAsInt32(VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
-   base = VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE;
-   for(int i = 0; i < count; i++, base++)
-   {
-      m_customAttributeDeleteActions.addPreallocated(msg.getFieldAsString(base));
-   }
+   m_customAttributeSetActions.addAllFromMessage(msg, VID_CUSTOM_ATTR_SET_LIST_BASE, VID_CUSTOM_ATTR_SET_COUNT);
+   m_customAttributeDeleteActions.addAllFromMessage(msg, VID_CUSTOM_ATTR_DEL_LIST_BASE, VID_CUSTOM_ATTR_DEL_COUNT);
 
    m_filterScriptSource = msg.getFieldAsString(VID_SCRIPT);
    if ((m_filterScriptSource != nullptr) && (*m_filterScriptSource != 0))
@@ -1480,8 +1460,8 @@ void EPRule::createMessage(NXCPMessage *msg) const
    msg->setField(VID_ACTION_SCRIPT, CHECK_NULL_EX(m_actionScriptSource));
    m_pstorageSetActions.fillMessage(msg, VID_PSTORAGE_SET_LIST_BASE, VID_NUM_SET_PSTORAGE);
    m_pstorageDeleteActions.fillMessage(msg, VID_PSTORAGE_DELETE_LIST_BASE, VID_NUM_DELETE_PSTORAGE);
-   m_customAttributeSetActions.fillMessage(msg, VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE, VID_NUM_SET_CUSTOM_ATTRIBUTE);
-   m_customAttributeDeleteActions.fillMessage(msg, VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE, VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
+   m_customAttributeSetActions.fillMessage(msg, VID_CUSTOM_ATTR_SET_LIST_BASE, VID_CUSTOM_ATTR_SET_COUNT);
+   m_customAttributeDeleteActions.fillMessage(msg, VID_CUSTOM_ATTR_DEL_LIST_BASE, VID_CUSTOM_ATTR_DEL_COUNT);
 }
 
 /**

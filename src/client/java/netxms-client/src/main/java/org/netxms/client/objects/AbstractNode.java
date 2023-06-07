@@ -98,6 +98,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NF_DISABLE_PERF_COUNT        = 0x10000000;
    public static final int NF_DISABLE_8021X_STATUS_POLL = 0x20000000;
    public static final int NF_DISABLE_SSH               = 0x40000000;
+   public static final int NF_DISABLE_MODBUS_TCP = 0x80000000;
 
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;
@@ -190,6 +191,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    protected int cipState;
    protected String cipStateText;
    protected int cipVendorCode;
+   protected int modbusUnitId;
+   protected int modbusTcpPort;
+   protected long modbusProxyId;
    protected CertificateMappingMethod agentCertificateMappingMethod;
    protected String agentCertificateMappingData;
    protected String agentCertificateSubject;
@@ -297,6 +301,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
       cipState = msg.getFieldAsInt32(NXCPCodes.VID_CIP_STATE);
       cipStateText = msg.getFieldAsString(NXCPCodes.VID_CIP_STATE_TEXT);
       cipVendorCode = msg.getFieldAsInt32(NXCPCodes.VID_CIP_VENDOR_CODE);
+      modbusUnitId = msg.getFieldAsInt32(NXCPCodes.VID_MODBUS_UNIT_ID);
+      modbusTcpPort = msg.getFieldAsInt32(NXCPCodes.VID_MODBUS_TCP_PORT);
+      modbusProxyId = msg.getFieldAsInt64(NXCPCodes.VID_MODBUS_PROXY);
       agentCertificateMappingMethod = CertificateMappingMethod.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD));
       agentCertificateMappingData = msg.getFieldAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
       agentCertificateSubject = msg.getFieldAsString(NXCPCodes.VID_AGENT_CERT_SUBJECT);
@@ -990,7 +997,31 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    {
       return sshProxyId;
    }
-   
+
+   /**
+    * @return the modbusUnitId
+    */
+   public int getModbusUnitId()
+   {
+      return modbusUnitId;
+   }
+
+   /**
+    * @return the modbusTcpPort
+    */
+   public int getModbusTcpPort()
+   {
+      return modbusTcpPort;
+   }
+
+   /**
+    * @return the modbusProxyId
+    */
+   public long getModbusProxyId()
+   {
+      return modbusProxyId;
+   }
+
    /**
     * Get number of rows for physical ports
     * 

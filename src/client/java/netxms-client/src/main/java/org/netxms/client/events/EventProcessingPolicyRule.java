@@ -185,8 +185,8 @@ public class EventProcessingPolicyRule
       persistentStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       persistentStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
 
-      customAttributeStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE);
-      customAttributeStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
+      customAttributeStorageSet = msg.getStringMapFromFields(NXCPCodes.VID_CUSTOM_ATTR_SET_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_SET_COUNT);
+      customAttributeStorageDelete = msg.getStringListFromFields(NXCPCodes.VID_CUSTOM_ATTR_DEL_LIST_BASE, NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
 
       this.ruleNumber = ruleNumber;
    }
@@ -235,8 +235,8 @@ public class EventProcessingPolicyRule
       msg.setFieldsFromStringMap(persistentStorageSet, NXCPCodes.VID_PSTORAGE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_PSTORAGE);
       msg.setFieldsFromStringCollection(persistentStorageDelete, NXCPCodes.VID_PSTORAGE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_PSTORAGE);
 
-      msg.setFieldsFromStringMap(customAttributeStorageSet, NXCPCodes.VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE, NXCPCodes.VID_NUM_SET_CUSTOM_ATTRIBUTE);
-      msg.setFieldsFromStringCollection(customAttributeStorageDelete, NXCPCodes.VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE, NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
+      msg.setFieldsFromStringMap(customAttributeStorageSet, NXCPCodes.VID_CUSTOM_ATTR_SET_LIST_BASE, NXCPCodes.VID_CUSTOM_ATTR_SET_COUNT);
+      msg.setFieldsFromStringCollection(customAttributeStorageDelete, NXCPCodes.VID_CUSTOM_ATTR_DEL_LIST_BASE, NXCPCodes.VID_NUM_DELETE_CUSTOM_ATTRIBUTE);
    }
 
    /**

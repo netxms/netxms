@@ -1288,8 +1288,8 @@ public class NXCPCodes
    public static final long VID_TCP_PROXY = 803;
    public static final long VID_FOLLOW_LOCATION = 804;
    public static final long VID_ACTION_SCRIPT = 805;
-   public static final long VID_NUM_SET_CUSTOM_ATTRIBUTE = 806;
-   public static final long VID_NUM_DELETE_CUSTOM_ATTRIBUTE = 807;
+   public static final long VID_CUSTOM_ATTR_SET_COUNT = 806;
+   public static final long VID_CUSTOM_ATTR_DEL_COUNT = 807;
    public static final long VID_RULE_SOURCE_EXCLUSIONS = 808;
    public static final long VID_NETWORK_SERVICE_COUNT = 809;
    public static final long VID_VPN_CONNECTOR_COUNT = 810;
@@ -1317,6 +1317,9 @@ public class NXCPCodes
    public static final long VID_IS_HIDDEN = 832;
    public static final long VID_LAST_UPDATE_TIMESTAMP = 833;
    public static final long VID_LAST_UPDATE_UID = 834;
+   public static final long VID_MODBUS_PROXY = 835;
+   public static final long VID_MODBUS_TCP_PORT = 836;
+   public static final long VID_MODBUS_UNIT_ID = 837;
 
    public static final long VID_ACL_USER_BASE = 0x00001000L;
    public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1390,8 +1393,8 @@ public class NXCPCodes
 	public static final long VID_STRING_LIST_BASE = 0x10000000L;
    public static final long VID_PSTORAGE_SET_LIST_BASE = 0x10000000L;
    public static final long VID_PSTORAGE_DELETE_LIST_BASE = 0x20000000L;   
-   public static final long VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE = 0x30000000L;
-   public static final long VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE = 0x40000000L;  
+   public static final long VID_CUSTOM_ATTR_SET_LIST_BASE = 0x30000000L;
+   public static final long VID_CUSTOM_ATTR_DEL_LIST_BASE = 0x40000000L;  
    public static final long VID_TIME_FRAME_LIST_BASE = 0x70000000L;   
 	public static final long VID_PSTORAGE_LIST_BASE = 0x10000000L;	
 	public static final long VID_INSTANCE_LIST_BASE = 0x20000000L;

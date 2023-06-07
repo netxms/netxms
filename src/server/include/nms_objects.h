@@ -748,11 +748,14 @@ struct NXCORE_EXPORTABLE NewNodeData
    uint16_t agentPort;
    uint16_t snmpPort;
    uint16_t eipPort;
+   uint16_t modbusTcpPort;
+   uint16_t modbusUnitId;
    TCHAR name[MAX_OBJECT_NAME];
    uint32_t agentProxyId;
    uint32_t snmpProxyId;
    uint32_t eipProxyId;
    uint32_t mqttProxyId;
+   uint32_t modbusProxyId;
    uint32_t icmpProxyId;
    uint32_t sshProxyId;
    uint32_t webServiceProxyId;
@@ -3200,6 +3203,7 @@ protected:
    uint32_t m_snmpProxy;       // Node used as proxy for SNMP requests
    uint32_t m_eipProxy;        // Node used as proxy for EtherNet/IP requests
    uint32_t m_mqttProxy;       // Node used as proxy for MQTT metrics
+   uint32_t m_modbusProxy;     // Node used as proxy for MODBUS requests
    uint32_t m_icmpProxy;       // Node used as proxy for ICMP ping
    uint64_t m_lastEvents[MAX_LAST_EVENTS];
    ObjectArray<RoutingLoopEvent> *m_routingLoopEvents;
@@ -3249,6 +3253,8 @@ protected:
    uint16_t m_cipStatus;
    uint8_t m_cipState;
    uint16_t m_cipVendorCode;
+   uint16_t m_modbusTcpPort;
+   uint16_t m_modbusUnitId;
 
    virtual bool isDataCollectionDisabled() override;
    virtual void collectProxyInfo(ProxyInfo *info) override;
@@ -3483,6 +3489,9 @@ public:
    uint16_t getCipStatus() const { return m_cipStatus; }
    uint8_t getCipState() const { return m_cipState; }
    uint16_t getCipVendorCode() const { return m_cipVendorCode; }
+   uint16_t getModbusTcpPort() const { return m_modbusTcpPort; }
+   uint16_t getModbusUnitId() const { return m_modbusUnitId; }
+   uint32_t getModbusProxy() const { return m_modbusProxy; }
    const char *getSyslogCodepage() const { return m_syslogCodepage; }
    const char *getSnmpCodepage() const { return m_snmpCodepage; }
    uint32_t getOSPFRouterId() const { return m_ospfRouterId; }
@@ -3610,6 +3619,7 @@ public:
    uint32_t getEffectiveSnmpProxy(bool backup = false);
    uint32_t getEffectiveEtherNetIPProxy(bool backup = false);
    uint32_t getEffectiveMqttProxy();
+   uint32_t getEffectiveModbusProxy();
    uint32_t getEffectiveSshProxy();
    uint32_t getEffectiveIcmpProxy();
    uint32_t getEffectiveAgentProxy();

@@ -434,6 +434,9 @@ CREATE TABLE nodes
   snmp_codepage varchar(15) null,
   ospf_router_id varchar(15) null,
   mqtt_proxy integer not null,
+  modbus_proxy integer not null,
+  modbus_tcp_port integer not null,
+  modbus_unit_id integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

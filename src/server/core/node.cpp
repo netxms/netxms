@@ -149,6 +149,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_snmpProxy = 0;
    m_eipProxy = 0;
    m_mqttProxy = 0;
+   m_modbusProxy = 0;
    m_icmpProxy = 0;
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
@@ -205,6 +206,8 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
+   m_modbusTcpPort = 502;
+   m_modbusUnitId = 255;
 }
 
 /**
@@ -269,6 +272,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_snmpProxy = newNodeData->snmpProxyId;
    m_eipProxy = newNodeData->eipProxyId;
    m_mqttProxy = newNodeData->mqttProxyId;
+   m_modbusProxy = newNodeData->modbusProxyId;
    m_icmpProxy = newNodeData->icmpProxyId;
    memset(m_lastEvents, 0, sizeof(m_lastEvents));
    m_routingLoopEvents = new ObjectArray<RoutingLoopEvent>(0, 16, Ownership::True);
@@ -329,6 +333,8 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_cipStatus = 0;
    m_cipVendorCode = 0;
    m_webServiceProxy = newNodeData->webServiceProxyId;
+   m_modbusTcpPort = newNodeData->modbusTcpPort;
+   m_modbusUnitId = newNodeData->modbusUnitId;
 }
 
 /**
@@ -397,7 +403,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
-      _T("mqtt_proxy FROM nodes WHERE id=?"));
+      _T("mqtt_proxy,modbus_proxy FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -565,7 +571,10 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    DBGetFieldUTF8(hResult, 0, 75, m_syslogCodepage, 16);
    DBGetFieldUTF8(hResult, 0, 76, m_snmpCodepage, 16);
    m_ospfRouterId = DBGetFieldIPAddr(hResult, 0, 77);
-   m_mqttProxy = DBGetFieldIPAddr(hResult, 0, 78);
+   m_mqttProxy = DBGetFieldULong(hResult, 0, 78);
+   m_modbusProxy = DBGetFieldULong(hResult, 0, 79);
+   m_modbusTcpPort = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 80));
+   m_modbusUnitId = static_cast<uint16_t>(DBGetFieldULong(hResult, 0, 81));
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -993,7 +1002,7 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
          _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("syslog_codepage"), _T("snmp_codepage"),
-         _T("ospf_router_id"), _T("mqtt_proxy"),
+         _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"), _T("modbus_unit_id"),
          nullptr
       };
 
@@ -1131,7 +1140,10 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          else
             DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          DBBind(hStmt, 79, DB_SQLTYPE_INTEGER, m_mqttProxy);
-         DBBind(hStmt, 80, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 80, DB_SQLTYPE_INTEGER, m_modbusProxy);
+         DBBind(hStmt, 81, DB_SQLTYPE_INTEGER, m_modbusTcpPort);
+         DBBind(hStmt, 82, DB_SQLTYPE_INTEGER, m_modbusUnitId);
+         DBBind(hStmt, 83, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -4717,7 +4729,7 @@ NodeType Node::detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo)
 /**
  * Configuration poll: check for NetXMS agent
  */
-bool Node::confPollAgent(UINT32 rqId)
+bool Node::confPollAgent(uint32_t requestId)
 {
    nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} StateFlags={%08X} RuntimeFlags={%08X}"), m_name, m_flags, m_state, m_runtimeFlags);
    if (((m_capabilities & NC_IS_NATIVE_AGENT) && (m_state & NSF_AGENT_UNREACHABLE)) || (m_flags & NF_DISABLE_NXCP))
@@ -6586,15 +6598,6 @@ static uint32_t ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowO
 }
 
 /**
- * Callback for SnmpWalk in Node::getTableFromSNMP
- */
-static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
-{
-   ((ObjectArray<SNMP_ObjectId> *)arg)->add(new SNMP_ObjectId(varbind->getName()));
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Get table from SNMP
  */
 DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table)
@@ -6604,7 +6607,12 @@ DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, 
       return DCE_COMM_ERROR;
 
    ObjectArray<SNMP_ObjectId> oidList(64, 64, Ownership::True);
-   uint32_t rc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList);
+   uint32_t rc = SnmpWalk(snmp, oid,
+      [&oidList] (SNMP_Variable *varbind) -> uint32_t
+      {
+         oidList.add(new SNMP_ObjectId(varbind->getName()));
+         return SNMP_ERR_SUCCESS;
+      });
    if (rc == SNMP_ERR_SUCCESS)
    {
       *table = make_shared<Table>();
@@ -6633,11 +6641,11 @@ DataCollectionError Node::getTableFromSNMP(uint16_t port, SNMP_Version version, 
 /**
  * Callback for SnmpWalk in Node::getListFromSNMP
  */
-static uint32_t SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+static uint32_t SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, StringList *values)
 {
    bool convert = false;
    TCHAR buffer[256];
-   static_cast<StringList*>(arg)->add(varbind->getValueAsPrintableString(buffer, 256, &convert));
+   values->add(varbind->getValueAsPrintableString(buffer, 256, &convert));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -6663,36 +6671,6 @@ DataCollectionError Node::getListFromSNMP(uint16_t port, SNMP_Version version, c
 }
 
 /**
- * Information for SNMPOIDSuffixListCallback
- */
-struct SNMPOIDSuffixListCallback_Data
-{
-   size_t oidLen;
-   StringMap *values;
-};
-
-/**
- * Callback for SnmpWalk in Node::getOIDSuffixListFromSNMP
- */
-static uint32_t SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
-{
-   SNMPOIDSuffixListCallback_Data *data = (SNMPOIDSuffixListCallback_Data *)arg;
-   const SNMP_ObjectId& oid = varbind->getName();
-   if (oid.length() <= data->oidLen)
-      return SNMP_ERR_SUCCESS;
-   TCHAR buffer[256];
-   SnmpConvertOIDToText(oid.length() - data->oidLen, &(oid.value()[data->oidLen]), buffer, 256);
-
-   const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
-
-   TCHAR value[256] = _T("");
-   bool convert = false;
-   varbind->getValueAsPrintableString(value, 256, &convert);
-   data->values->set(key, (value[0] != 0) ? value : key);
-   return SNMP_ERR_SUCCESS;
-}
-
-/**
  * Get list of OID suffixes from SNMP
  */
 DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values)
@@ -6702,25 +6680,40 @@ DataCollectionError Node::getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version v
    if (snmp == nullptr)
       return DCE_COMM_ERROR;
 
-   SNMPOIDSuffixListCallback_Data data;
    uint32_t oidBin[256];
-   data.oidLen = SnmpParseOID(oid, oidBin, 256);
-   if (data.oidLen == 0)
+   size_t oidLen = SnmpParseOID(oid, oidBin, 256);
+   if (oidLen == 0)
    {
       delete snmp;
       return DCE_NOT_SUPPORTED;
    }
 
-   data.values = new StringMap;
-   uint32_t rc = SnmpWalk(snmp, oid, SNMPOIDSuffixListCallback, &data);
+   auto oidSuffixes = new StringMap();
+   uint32_t rc = SnmpWalk(snmp, oid,
+      [oidLen, oidSuffixes] (SNMP_Variable *varbind) -> uint32_t
+      {
+         const SNMP_ObjectId& oid = varbind->getName();
+         if (oid.length() <= oidLen)
+            return SNMP_ERR_SUCCESS;
+         TCHAR buffer[256];
+         SnmpConvertOIDToText(oid.length() - oidLen, &(oid.value()[oidLen]), buffer, 256);
+
+         const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
+
+         TCHAR value[256] = _T("");
+         bool convert = false;
+         varbind->getValueAsPrintableString(value, 256, &convert);
+         oidSuffixes->set(key, (value[0] != 0) ? value : key);
+         return SNMP_ERR_SUCCESS;
+      });
    delete snmp;
    if (rc == SNMP_ERR_SUCCESS)
    {
-      *values = data.values;
+      *values = oidSuffixes;
    }
    else
    {
-      delete data.values;
+      delete oidSuffixes;
    }
    return DCErrorFromSNMPError(rc);
 }
@@ -7968,6 +7961,7 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_AGENT_PROXY, m_agentProxy);
    msg->setField(VID_SNMP_PROXY, m_snmpProxy);
    msg->setField(VID_MQTT_PROXY, m_mqttProxy);
+   msg->setField(VID_MODBUS_PROXY, m_modbusProxy);
    msg->setField(VID_ETHERNET_IP_PROXY, m_eipProxy);
    msg->setField(VID_ICMP_PROXY, m_icmpProxy);
    msg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
@@ -8042,6 +8036,9 @@ void Node::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
       msg->setField(VID_CIP_STATE_TEXT, CIP_DeviceStateTextFromCode(m_cipState));
       msg->setField(VID_CIP_VENDOR_CODE, m_cipVendorCode);
    }
+
+   msg->setField(VID_MODBUS_TCP_PORT, m_modbusTcpPort);
+   msg->setField(VID_MODBUS_UNIT_ID, m_modbusUnitId);
 
    msg->setField(VID_CERT_MAPPING_METHOD, static_cast<int16_t>(m_agentCertMappingMethod));
    msg->setField(VID_CERT_MAPPING_DATA, m_agentCertMappingData);
@@ -8295,6 +8292,18 @@ uint32_t Node::modifyFromMessageInternal(const NXCPMessage& msg)
    // Change MQTT proxy node
    if (msg.isFieldExist(VID_MQTT_PROXY))
       m_mqttProxy = msg.getFieldAsUInt32(VID_MQTT_PROXY);
+
+   // Change MODBUS proxy node
+   if (msg.isFieldExist(VID_MODBUS_PROXY))
+      m_modbusProxy = msg.getFieldAsUInt32(VID_MODBUS_PROXY);
+
+   // Change MODBUS-TCP port
+   if (msg.isFieldExist(VID_MODBUS_TCP_PORT))
+      m_modbusTcpPort = msg.getFieldAsUInt16(VID_MODBUS_TCP_PORT);
+
+   // Change MODBUS unit ID
+   if (msg.isFieldExist(VID_MODBUS_UNIT_ID))
+      m_modbusUnitId = msg.getFieldAsUInt16(VID_MODBUS_UNIT_ID);
 
    // Number of required polls
    if (msg.isFieldExist(VID_REQUIRED_POLLS))
@@ -9460,6 +9469,14 @@ uint32_t Node::getEffectiveEtherNetIPProxy(bool backup)
 uint32_t Node::getEffectiveMqttProxy()
 {
    return GetEffectiveProtocolProxy(this, m_mqttProxy, m_zoneUIN, false, g_dwMgmtNode);
+}
+
+/**
+ * Get effective MODBUS proxy for this node
+ */
+uint32_t Node::getEffectiveModbusProxy()
+{
+   return GetEffectiveProtocolProxy(this, m_modbusProxy, m_zoneUIN, false, g_dwMgmtNode);
 }
 
 /**
@@ -11742,6 +11759,9 @@ json_t *Node::toJson()
    json_object_set_new(root, "icmpTargets", m_icmpTargets.toJson());
    json_object_set_new(root, "chassisPlacementConfig", json_string_t(m_chassisPlacementConf));
    json_object_set_new(root, "syslogCodepage", json_string_a(m_syslogCodepage));
+   json_object_set_new(root, "modbusUnitId", json_integer(m_modbusUnitId));
+   json_object_set_new(root, "modbusTCPPort", json_integer(m_modbusTcpPort));
+   json_object_set_new(root, "modbusProxy", json_integer(m_modbusProxy));
    unlockProperties();
    return root;
 }

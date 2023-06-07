@@ -242,6 +242,7 @@
 #define NF_DISABLE_PERF_COUNT          0x10000000
 #define NF_DISABLE_8021X_STATUS_POLL   0x20000000
 #define NF_DISABLE_SSH                 0x40000000
+#define NF_DISABLE_MODBUS_TCP          0x80000000
 
 /**
  * Subnet flags

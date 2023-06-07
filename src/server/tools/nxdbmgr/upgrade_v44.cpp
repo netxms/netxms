@@ -24,6 +24,25 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.16 to 44.17
+ */
+static bool H_UpgradeFromV16()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD modbus_proxy integer\n")
+      _T("ALTER TABLE nodes ADD modbus_tcp_port integer\n")
+      _T("ALTER TABLE nodes ADD modbus_unit_id integer\n")
+      _T("UPDATE nodes SET modbus_proxy=0,modbus_tcp_port=502,modbus_unit_id=255\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("modbus_proxy")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("modbus_tcp_port")));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("nodes"), _T("modbus_unit_id")));
+   CHK_EXEC(SetMinorSchemaVersion(17));
+   return true;
+}
+
+/**
  * Upgrade from 44.15 to 44.16
  */
 static bool H_UpgradeFromV15()
@@ -516,6 +535,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 16, 44, 17, H_UpgradeFromV16 },
    { 15, 44, 16, H_UpgradeFromV15 },
    { 14, 44, 15, H_UpgradeFromV14 },
    { 13, 44, 14, H_UpgradeFromV13 },

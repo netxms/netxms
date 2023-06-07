@@ -1443,6 +1443,14 @@ NXSL_METHOD_DEFINITION(Node, enableIcmp)
 }
 
 /**
+ * enableModbus(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableModbusTcp)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_MODBUS_TCP, true);
+}
+
+/**
  * enablePrimaryIPPing(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enablePrimaryIPPing)
@@ -1839,6 +1847,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableEtherNetIP, 1);
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
+   NXSL_REGISTER_METHOD(Node, enableModbusTcp, 1);
    NXSL_REGISTER_METHOD(Node, enablePrimaryIPPing, 1);
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
@@ -2210,6 +2219,30 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
    {
       value = vm->createValue(static_cast<int64_t>(node->getLastAgentCommTime()));
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("modbusProxy"))
+   {
+      shared_ptr<NetObj> object = FindObjectById(node->getModbusProxy());
+      if (object != nullptr)
+      {
+         value = object->createNXSLObject(vm);
+      }
+      else
+      {
+         value = vm->createValue();
+      }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("modbusProxyId"))
+   {
+      value = vm->createValue(node->getModbusProxy());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("modbusTCPPort"))
+   {
+      value = vm->createValue(node->getModbusTcpPort());
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("modbusUnitId"))
+   {
+      value = vm->createValue(node->getModbusUnitId());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("nodeSubType"))
    {
       value = vm->createValue(node->getSubType());
@@ -2321,6 +2354,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const NXSL_Identifier& 
       {
          value = vm->createValue();
       }
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpProxyId"))
+   {
+      value = vm->createValue(node->getSNMPProxy());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("snmpSysContact"))
    {

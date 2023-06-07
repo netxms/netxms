@@ -1508,8 +1508,8 @@ typedef struct
 #define VID_TCP_PROXY               ((uint32_t)803)
 #define VID_FOLLOW_LOCATION         ((uint32_t)804)
 #define VID_ACTION_SCRIPT           ((uint32_t)805)
-#define VID_NUM_SET_CUSTOM_ATTRIBUTE ((uint32_t)806)
-#define VID_NUM_DELETE_CUSTOM_ATTRIBUTE ((uint32_t)807)
+#define VID_CUSTOM_ATTR_SET_COUNT   ((uint32_t)806)
+#define VID_CUSTOM_ATTR_DEL_COUNT   ((uint32_t)807)
 #define VID_RULE_SOURCE_EXCLUSIONS  ((uint32_t)808)
 #define VID_NETWORK_SERVICE_COUNT   ((uint32_t)809)
 #define VID_VPN_CONNECTOR_COUNT     ((uint32_t)810)
@@ -1537,6 +1537,9 @@ typedef struct
 #define VID_IS_HIDDEN               ((uint32_t)832)
 #define VID_LAST_UPDATE_TIMESTAMP   ((uint32_t)833)
 #define VID_LAST_UPDATE_UID         ((uint32_t)834)
+#define VID_MODBUS_PROXY            ((uint32_t)835)
+#define VID_MODBUS_TCP_PORT         ((uint32_t)836)
+#define VID_MODBUS_UNIT_ID          ((uint32_t)837)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1703,19 +1706,19 @@ typedef struct
 #define VID_CERT_LIST_BASE 			((UINT32)0x10000000)
 
 // Base value for various string lists
-#define VID_STRING_LIST_BASE 			((UINT32)0x10000000)
+#define VID_STRING_LIST_BASE 			((uint32_t)0x10000000)
 
-// Base values for persistent storage actions in epp
-#define VID_PSTORAGE_SET_LIST_BASE     ((UINT32)0x10000000)
-#define VID_PSTORAGE_DELETE_LIST_BASE  ((UINT32)0x20000000)
-// Base values for persistent storage actions in epp
-#define VID_CUSTOM_ATTRIBUTE_SET_LIST_BASE     ((UINT32)0x30000000)
-#define VID_CUSTOM_ATTRIBUTE_DELETE_LIST_BASE  ((UINT32)0x40000000)
-//Base value for time based filtr frames in epp
-#define VID_TIME_FRAME_LIST_BASE       ((UINT32)0x70000000)
+// Base values for persistent storage actions in EPP
+#define VID_PSTORAGE_SET_LIST_BASE    ((uint32_t)0x10000000)
+#define VID_PSTORAGE_DELETE_LIST_BASE ((uint32_t)0x20000000)
+// Base values for persistent storage actions in EPP
+#define VID_CUSTOM_ATTR_SET_LIST_BASE ((uint32_t)0x30000000)
+#define VID_CUSTOM_ATTR_DEL_LIST_BASE ((uint32_t)0x40000000)
+// Base value for time based filtr frames in EPP
+#define VID_TIME_FRAME_LIST_BASE      ((uint32_t)0x70000000)
 
 // Base values for persistent storage lists
-#define VID_PSTORAGE_LIST_BASE     ((UINT32)0x10000000)
+#define VID_PSTORAGE_LIST_BASE      ((uint32_t)0x10000000)
 
 //Base values for file list
 #define VID_INSTANCE_LIST_BASE      ((UINT32)0x20000000)
