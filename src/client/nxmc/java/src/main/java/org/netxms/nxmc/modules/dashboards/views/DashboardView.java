@@ -18,10 +18,16 @@
  */
 package org.netxms.nxmc.modules.dashboards.views;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.dashboards.widgets.DashboardModifyListener;
 import org.netxms.nxmc.resources.ResourceManager;
+import org.netxms.nxmc.resources.SharedIcons;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -29,7 +35,14 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DashboardView extends AbstractDashboardView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(DashboardView.class);   
+
+   private DashboardModifyListener dbcModifyListener;
+   private Action actionEditMode;
+   private Action actionAddColumn;
+   private Action actionRemoveColumn;
+   private Action actionSave;
+   private boolean readOnly;
 
    /**
     * @param name
@@ -41,6 +54,88 @@ public class DashboardView extends AbstractDashboardView
    {
       super(i18n.tr("Dashboard"), ResourceManager.getImageDescriptor("icons/object-views/dashboard.png"), "DashboardView");
    }
+
+   /**
+    * Create actions
+    */
+   @Override
+   protected void createActions()
+   {
+      super.createActions();
+      actionSave = new Action(i18n.tr("&Save"), SharedIcons.SAVE) {
+         @Override
+         public void run()
+         {
+            dbc.saveDashboard();
+         }
+      };
+      actionSave.setEnabled(false);
+
+      actionEditMode = new Action(i18n.tr("Edit mode"), Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            dbc.setEditMode(!dbc.isEditMode());
+            actionEditMode.setChecked(dbc.isEditMode());
+            if (!dbc.isEditMode())
+               rebuildDashboard((Dashboard)getObject(), null);
+         }
+      };
+      actionEditMode.setImageDescriptor(SharedIcons.EDIT);
+
+      actionAddColumn = new Action("Add &column", ResourceManager.getImageDescriptor("icons/add-column.png")) {
+         @Override
+         public void run()
+         {
+            dbc.addColumn();
+            if (dbc.getColumnCount() == 128)
+               actionAddColumn.setEnabled(false);
+            actionRemoveColumn.setEnabled(true);
+         }
+      };
+
+      actionRemoveColumn = new Action("&Remove column", ResourceManager.getImageDescriptor("icons/remove-column.png")) {
+         @Override
+         public void run()
+         {
+            dbc.removeColumn();
+            if (dbc.getColumnCount() == dbc.getMinimalColumnCount())
+               actionRemoveColumn.setEnabled(false);
+            actionAddColumn.setEnabled(true);
+         }
+      };
+      
+      dbcModifyListener = new DashboardModifyListener() {
+         @Override
+         public void save()
+         {
+            actionSave.setEnabled(false);
+         }
+
+         @Override
+         public void modify()
+         {
+            actionSave.setEnabled(true);
+         }
+      };
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionEditMode);
+      manager.add(actionSave);
+      manager.add(new Separator());
+      manager.add(actionAddColumn);
+      manager.add(actionRemoveColumn);
+      manager.add(new Separator());
+      super.fillLocalToolBar(manager);
+   }
+   
+   
 
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
@@ -56,7 +151,35 @@ public class DashboardView extends AbstractDashboardView
     */
    @Override
    protected void onObjectChange(AbstractObject object)
-   {
+   {      
+      readOnly = ((object.getEffectiveRights() & UserAccessRights.OBJECT_ACCESS_MODIFY) == 0);
       rebuildDashboard((Dashboard)object, null);
    }
+
+   /**
+    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#rebuildDashboard(org.netxms.client.objects.Dashboard, org.netxms.client.objects.AbstractObject)
+    */
+   @Override
+   protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)
+   {
+      super.rebuildDashboard(dashboard, dashboardContext);
+      if (dbc != null)
+      {
+         if (!readOnly)
+         {
+            actionAddColumn.setEnabled(dbc.getColumnCount() < 128);
+            actionRemoveColumn.setEnabled(dbc.getColumnCount() != dbc.getMinimalColumnCount());
+            actionSave.setEnabled(dbc.isModified());
+            dbc.setModifyListener(dbcModifyListener);
+            actionEditMode.setEnabled(true);
+         }
+         else
+         {
+            actionAddColumn.setEnabled(false);
+            actionRemoveColumn.setEnabled(false);
+            actionSave.setEnabled(false);     
+            actionEditMode.setEnabled(false);
+         }
+      }
+   }   
 }
