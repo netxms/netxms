@@ -633,7 +633,8 @@ public class ObjectContextMenuManager extends MenuManager
              (objectClass == AbstractObject.OBJECT_DASHBOARD) || (objectClass == AbstractObject.OBJECT_DASHBOARDGROUP) || (objectClass == AbstractObject.OBJECT_DASHBOARDROOT) ||
              (objectClass == AbstractObject.OBJECT_NETWORKMAP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPGROUP) || (objectClass == AbstractObject.OBJECT_NETWORKMAPROOT) ||
              (objectClass == AbstractObject.OBJECT_TEMPLATE) || (objectClass == AbstractObject.OBJECT_TEMPLATEGROUP) || (objectClass == AbstractObject.OBJECT_TEMPLATEROOT) ||
-             (objectClass == AbstractObject.OBJECT_ASSET) || (objectClass == AbstractObject.OBJECT_ASSETGROUP) || (objectClass == AbstractObject.OBJECT_ASSETROOT))
+             (objectClass == AbstractObject.OBJECT_ASSET) || (objectClass == AbstractObject.OBJECT_ASSETGROUP) || (objectClass == AbstractObject.OBJECT_ASSETROOT) ||
+             (objectClass == AbstractObject.OBJECT_NETWORKSERVICE))
             return false;
       }
       return true;
