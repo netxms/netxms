@@ -117,7 +117,6 @@ INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_rest
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ICMP.PingTimeout','1500','1500',1,0,'I','Timeout for ICMP ping used for status polls (in milliseconds).','milliseconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ICMP.PollingInterval','60','60',1,0,'I','Interval between ICMP polls (in seconds).','seconds');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('ICMP.StatisticPeriod','60','60',1,0,'I','Time period for collecting ICMP statistics (in number of polls).','polls');
-INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('InternalCA','0','0',1,1,'B','Enable/disable internal certificate authority.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Jira.IssueType','Task','Task',1,0,'S','Jira issue type.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Jira.Login','netxms','netxms',1,0,'S','Jira login name.','');
 INSERT INTO config (var_name,var_value,default_value,is_visible,need_server_restart,data_type,description,units) VALUES ('Jira.Password','','',1,0,'S','Jira password.','');

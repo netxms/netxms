@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.17 to 44.18
+ */
+static bool H_UpgradeFromV17()
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='InternalCA'")));
+   CHK_EXEC(SetMinorSchemaVersion(18));
+   return true;
+}
+
+/**
  * Upgrade from 44.16 to 44.17
  */
 static bool H_UpgradeFromV16()
@@ -535,6 +545,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 17, 44, 18, H_UpgradeFromV17 },
    { 16, 44, 17, H_UpgradeFromV16 },
    { 15, 44, 16, H_UpgradeFromV15 },
    { 14, 44, 15, H_UpgradeFromV14 },
