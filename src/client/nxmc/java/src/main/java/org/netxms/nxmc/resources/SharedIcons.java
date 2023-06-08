@@ -173,7 +173,7 @@ public class SharedIcons
       EXPAND = ResourceManager.getImageDescriptor("icons/expand.png");
       EXPAND_ALL = ResourceManager.getImageDescriptor("icons/expandall.png");
       EXPORT = ResourceManager.getImageDescriptor("icons/export.png");
-      FILTER = ResourceManager.getImageDescriptor("icons/filter.gif");
+      FILTER = ResourceManager.getImageDescriptor("icons/filter.png");
       FIND = ResourceManager.getImageDescriptor("icons/find.png");
       GROUP = ResourceManager.getImageDescriptor("icons/group.png");
       HIDE = ResourceManager.getImageDescriptor("icons/hide.png");
