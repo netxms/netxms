@@ -1074,6 +1074,9 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
 	 */
    protected void processObjectUpdateNotification(final AbstractObject object)
 	{
+      if (mapPage == null) //For object maps - exist but not created till active
+         return;
+      
 		NetworkMapObject element = mapPage.findObjectElement(object.getObjectId());
 		if (element != null)
 			viewer.refresh(element, true);
