@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ public class NetworkDiscoveryConfig
 
    private NXCSession session;
 	private int discoveryType;
+   private boolean enableSNMPProbing;
    private boolean enableTCPProbing;
 	private boolean useSnmpTraps;
 	private boolean useSyslog;
@@ -75,7 +76,8 @@ public class NetworkDiscoveryConfig
 		Map<String, ServerVariable> variables = session.getServerVariables();
 
 		config.discoveryType = getInteger(variables, "NetworkDiscovery.Type", 0);
-      config.enableTCPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", false); 
+      config.enableSNMPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing", true); //$NON-NLS-1$
+      config.enableTCPProbing = getBoolean(variables, "NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", false); //$NON-NLS-1$
       config.useSnmpTraps = getBoolean(variables, "NetworkDiscovery.UseSNMPTraps", false); //$NON-NLS-1$
       config.useSyslog = getBoolean(variables, "NetworkDiscovery.UseSyslog", false); //$NON-NLS-1$
       config.filterFlags = getInteger(variables, "NetworkDiscovery.Filter.Flags", 0); //$NON-NLS-1$
@@ -162,6 +164,7 @@ public class NetworkDiscoveryConfig
 	public void save() throws NXCException, IOException
 	{
 		session.setServerVariable("NetworkDiscovery.Type", Integer.toString(discoveryType)); //$NON-NLS-1$ 	
+      session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableSNMPProbing", enableSNMPProbing ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.ActiveDiscovery.EnableTCPProbing", enableTCPProbing ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.UseSNMPTraps", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
       session.setServerVariable("NetworkDiscovery.UseSyslog", useSyslog ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -251,6 +254,22 @@ public class NetworkDiscoveryConfig
    public boolean isUseSnmpTraps()
    {
       return useSnmpTraps;
+   }
+
+   /**
+    * @return the enableSNMPProbing
+    */
+   public boolean isEnableSNMPProbing()
+   {
+      return enableSNMPProbing;
+   }
+
+   /**
+    * @param enableSNMPProbing the enableSNMPProbing to set
+    */
+   public void setEnableSNMPProbing(boolean enableSNMPProbing)
+   {
+      this.enableSNMPProbing = enableSNMPProbing;
    }
 
    /**

@@ -89,6 +89,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
    private Button radioDiscoveryPassive;
    private Button radioDiscoveryActive;
    private Button radioDiscoveryActiveAndPassive;
+   private Button checkEnableSNMPProbing;
    private Button checkEnableTCPProbing;
    private Button checkUseSnmpTraps;
    private Button checkUseSyslog;
@@ -270,6 +271,20 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       radioDiscoveryActiveAndPassive.setText(i18n.tr("Active and passive"));
       radioDiscoveryActiveAndPassive.addSelectionListener(listener);      
 
+      checkEnableSNMPProbing = new Button(clientArea, SWT.CHECK);
+      checkEnableSNMPProbing.setText(i18n.tr("Enable SNMP probing"));
+      checkEnableSNMPProbing.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            config.setEnableSNMPProbing(checkEnableSNMPProbing.getSelection());
+            setModified();
+         }
+      });
+      gd = new GridData();
+      gd.verticalIndent = 10;
+      checkEnableSNMPProbing.setLayoutData(gd);
+
       checkEnableTCPProbing = new Button(clientArea, SWT.CHECK);
       checkEnableTCPProbing.setText(i18n.tr("Enable TCP probing"));
       checkEnableTCPProbing.addSelectionListener(new SelectionAdapter() {
@@ -280,9 +295,6 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
             setModified();
          }
       });
-      gd = new GridData();
-      gd.verticalIndent = 10;
-      checkEnableTCPProbing.setLayoutData(gd);
 
       checkUseSnmpTraps = new Button(clientArea, SWT.CHECK);
       checkUseSnmpTraps.setText(i18n.tr("Use SNMP trap source addresses for discovery"));
@@ -334,6 +346,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       }
       radioActiveDiscoveryInterval.setEnabled(enabled);
       radioActiveDiscoverySchedule.setEnabled(enabled);
+      checkEnableSNMPProbing.setEnabled(enabled);
       checkEnableTCPProbing.setEnabled(enabled);
    }
 
@@ -786,6 +799,7 @@ public class NetworkDiscoveryConfigurator extends ConfigurationView
       radioDiscoveryPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
       radioDiscoveryActive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
       radioDiscoveryActiveAndPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      checkEnableSNMPProbing.setSelection(config.isEnableSNMPProbing());
       checkEnableTCPProbing.setSelection(config.isEnableTCPProbing());
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());

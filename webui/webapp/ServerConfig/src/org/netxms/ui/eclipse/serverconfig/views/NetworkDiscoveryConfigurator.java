@@ -92,6 +92,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    private Button radioDiscoveryPassive;
    private Button radioDiscoveryActive;
    private Button radioDiscoveryActiveAndPassive;
+   private Button checkEnableSNMPProbing;
    private Button checkEnableTCPProbing;
    private Button checkUseSnmpTraps;
    private Button checkUseSyslog;
@@ -286,6 +287,20 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryActiveAndPassive.setText(Messages.get().NetworkDiscoveryConfigurator_ActiveDiscovery);
       radioDiscoveryActiveAndPassive.addSelectionListener(listener); 
 
+      checkEnableSNMPProbing = new Button(clientArea, SWT.CHECK);
+      checkEnableSNMPProbing.setText("Enable SNMP probing");
+      checkEnableSNMPProbing.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            config.setEnableSNMPProbing(checkEnableSNMPProbing.getSelection());
+            setModified();
+         }
+      });
+      gd = new GridData();
+      gd.verticalIndent = 10;
+      checkEnableSNMPProbing.setLayoutData(gd);
+
       checkEnableTCPProbing = new Button(clientArea, SWT.CHECK);
       checkEnableTCPProbing.setText("Enable TCP probing");
       checkEnableTCPProbing.addSelectionListener(new SelectionAdapter() {
@@ -296,9 +311,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
             setModified();
          }
       });
-      gd = new GridData();
-      gd.verticalIndent = 10;
-      checkEnableTCPProbing.setLayoutData(gd);
 
       checkUseSnmpTraps = new Button(clientArea, SWT.CHECK);
       checkUseSnmpTraps.setText(Messages.get().NetworkDiscoveryConfigurator_UseSNMPTrapsForDiscovery);
@@ -350,6 +362,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       }
       radioActiveDiscoveryInterval.setEnabled(enabled);
       radioActiveDiscoverySchedule.setEnabled(enabled);
+      checkEnableSNMPProbing.setEnabled(enabled);
       checkEnableTCPProbing.setEnabled(enabled);
    }
 
@@ -802,6 +815,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       radioDiscoveryPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_PASSIVE);
       radioDiscoveryActive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE);
       radioDiscoveryActiveAndPassive.setSelection(config.getDiscoveryType() == NetworkDiscoveryConfig.DISCOVERY_TYPE_ACTIVE_PASSIVE);
+      checkEnableSNMPProbing.setSelection(config.isEnableSNMPProbing());
       checkEnableTCPProbing.setSelection(config.isEnableTCPProbing());
       checkUseSnmpTraps.setSelection(config.isUseSnmpTraps());
       checkUseSyslog.setSelection(config.isUseSyslog());
@@ -952,10 +966,10 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void editTargetAddressListElement()
    {
-      IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
+      IStructuredSelection selection = activeDiscoveryAddressList.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       AddressListElementEditDialog dlg = new AddressListElementEditDialog(getSite().getShell(), true, true, (InetAddressListElement)selection.getFirstElement());
       if (dlg.open() == Window.OK)
       {
@@ -1011,16 +1025,13 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
                @Override
                public void run()
                {
-                  StringBuilder sb = new StringBuilder("Active discovery started for ranges:\n");
-                  for (int i = 0; i < list.size(); i++)
+                  StringBuilder sb = new StringBuilder("Scan started for the following address ranges:");
+                  for(InetAddressListElement e : list)
                   {
-                     InetAddressListElement e = list.get(i);
+                     sb.append("\n");
                      sb.append((e.getType() == InetAddressListElement.SUBNET) ? e.getBaseAddress().getHostAddress() + "/" + e.getMaskBits() : e.getBaseAddress().getHostAddress() + " - " + e.getEndAddress().getHostAddress());
-                     if ((i+1) != list.size())
-                        sb.append("\n");
                   }
-                  
-                  MessageDialogHelper.openInformation(getSite().getShell(), "Active discovery started", sb.toString());
+                  MessageDialogHelper.openInformation(getSite().getShell(), "Information", sb.toString());
                }
             });
          }
@@ -1028,7 +1039,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
          @Override
          protected String getErrorMessage()
          {
-            return "Error startin active discovery";
+            return "Cannot start address range scan";
          }
       }.start();
    }
