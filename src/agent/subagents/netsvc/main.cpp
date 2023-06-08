@@ -29,7 +29,7 @@
 
 uint32_t g_netsvcFlags = NETSVC_AF_VERIFYPEER;
 uint32_t g_netsvcTimeout = 30000;
-char g_netsvcDomainName[128] = "netxms.com";
+char g_netsvcDomainName[128] = "example.org";
 
 /**
  * Certificate bundle
