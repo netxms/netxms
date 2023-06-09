@@ -57,6 +57,7 @@ import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmNotifier;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -145,7 +146,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          GridData gridData = new GridData();
          gridData.verticalAlignment = GridData.END;
          button.setLayoutData(gridData);
-         button.setImage(Activator.getImageDescriptor("icons/sound.png").createImage()); //$NON-NLS-1$
+         button.setImage(SharedIcons.IMG_SOUND); 
          final int index = i; 
          button.addMouseListener(new MouseListener() {
             

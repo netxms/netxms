@@ -65,6 +65,7 @@ public class SharedIcons
 	public static ImageDescriptor SAVE;
    public static ImageDescriptor SAVE_AS;
    public static ImageDescriptor SAVE_AS_IMAGE;
+   public static ImageDescriptor SOUND;
 	public static ImageDescriptor TERMINATE;
 	public static ImageDescriptor UNKNOWN_OBJECT;
 	public static ImageDescriptor UP;
@@ -111,6 +112,7 @@ public class SharedIcons
 	public static Image IMG_SAVE;
    public static Image IMG_SAVE_AS;
    public static Image IMG_SAVE_AS_IMAGE;
+   public static Image IMG_SOUND;
 	public static Image IMG_TERMINATE;
 	public static Image IMG_UNKNOWN_OBJECT;
 	public static Image IMG_UP;
@@ -162,6 +164,7 @@ public class SharedIcons
       SAVE_AS = Activator.getImageDescriptor("icons/saveas.gif"); //$NON-NLS-1$
       SAVE_AS_IMAGE = Activator.getImageDescriptor("icons/image_obj.png"); //$NON-NLS-1$
       SHOW = Activator.getImageDescriptor("icons/show.png"); //$NON-NLS-1$
+      SOUND = Activator.getImageDescriptor("icons/sound.png"); //$NON-NLS-1$
 		TERMINATE = Activator.getImageDescriptor("icons/terminate.gif"); //$NON-NLS-1$
 		UNKNOWN_OBJECT = Activator.getImageDescriptor("icons/unknown_obj.gif"); //$NON-NLS-1$
 		UP = Activator.getImageDescriptor("icons/up.png"); //$NON-NLS-1$
@@ -208,6 +211,7 @@ public class SharedIcons
       IMG_SAVE_AS = SAVE_AS.createImage();
       IMG_SAVE_AS_IMAGE = SAVE_AS_IMAGE.createImage();
       IMG_SHOW = SHOW.createImage();
+      IMG_SOUND = SOUND.createImage();
 		IMG_TERMINATE = TERMINATE.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_UP = UP.createImage();

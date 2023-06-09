@@ -181,6 +181,14 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	}
 
    /**
+    * Toggle blink state
+    */
+   public void stopBlinking()
+   {
+      blinkState = true;
+   }
+
+   /**
     * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
     */
    @Override

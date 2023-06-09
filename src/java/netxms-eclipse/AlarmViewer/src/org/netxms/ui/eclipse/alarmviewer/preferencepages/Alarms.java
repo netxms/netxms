@@ -51,7 +51,6 @@ public class Alarms extends FieldEditorPreferencePage implements IWorkbenchPrefe
 		addField(new BooleanFieldEditor("BLINK_OUTSTANDING_ALARMS", Messages.get().Alarms_Blinking, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new BooleanFieldEditor("SHOW_TRAY_POPUPS", Messages.get().Alarms_ShowPopup, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new BooleanFieldEditor("OUTSTANDING_ALARMS_REMINDER", Messages.get().Alarms_ShowReminder, getFieldEditorParent())); //$NON-NLS-1$
-      addField(new BooleanFieldEditor("SHOW_ALARM_TOOLTIPS", Messages.get().Alarms_ShowDetailedTooltips, getFieldEditorParent())); //$NON-NLS-1$
       if (((NXCSession)ConsoleSharedData.getSession()).isTimedAlarmAckEnabled())
       {
          addField(new AcknowledgeTimeEditor("ALARM_TIME_EDITOR", Messages.get().Alarms_AcknowledgeTimeEditor, getFieldEditorParent())); //$NON-NLS-1$

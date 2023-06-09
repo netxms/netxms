@@ -147,6 +147,7 @@ public class AlarmList extends CompositeWithMessageArea
    private boolean initShowfilter;
    private boolean isLocalNotificationsEnabled = false;
    private long rootObject;
+   private boolean blinkEnabled = false;
 
    private final SearchQueryAttribute[] attributeProposals = {
          new SearchQueryAttribute("AcknowledgedBy:"),
@@ -326,37 +327,51 @@ public class AlarmList extends CompositeWithMessageArea
             if (isDisposed())
                return;
 
-            int count = 0;
-            synchronized(alarmList)
+            if (blinkEnabled)
             {
-               for(Alarm a : alarmList.values())
-                  if (a.getState() == Alarm.STATE_OUTSTANDING)
-                     count++;
+               int count = 0;
+               synchronized(alarmList)
+               {
+                  for(Alarm a : alarmList.values())
+                     if (a.getState() == Alarm.STATE_OUTSTANDING)
+                        count++;
+               }
+   
+               if (count > 0)
+               {
+                  ((AlarmListLabelProvider)alarmViewer.getLabelProvider()).toggleBlinkState();
+                  alarmViewer.refresh();
+               }
+               getDisplay().timerExec(500, this);
             }
-
-            if (count > 0)
+            else
             {
-               ((AlarmListLabelProvider)alarmViewer.getLabelProvider()).toggleBlinkState();
-               alarmViewer.refresh();
+               ((AlarmListLabelProvider)alarmViewer.getLabelProvider()).stopBlinking();
+               alarmViewer.refresh();               
             }
-            getDisplay().timerExec(500, this);
          }
       };
 
-      if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false)) //$NON-NLS-1$
+      if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false)) 
+      {
+         blinkEnabled = true;
          getDisplay().timerExec(500, blinkTimer);
+      }
       final IPropertyChangeListener propertyChangeListener = new IPropertyChangeListener() {
          @Override
          public void propertyChange(PropertyChangeEvent event)
          {
-            if (event.getProperty().equals("AlarmList.BlinkOutstandingAlarm")) //$NON-NLS-1$
+            if (event.getProperty().equals("AlarmList.BlinkOutstandingAlarm")) 
             {
-               if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false)) //$NON-NLS-1$
+               if (ps.getAsBoolean("AlarmList.BlinkOutstandingAlarm", false)) 
+               {
+                  blinkEnabled = true;
                   getDisplay().timerExec(500, blinkTimer);
+               }
                else
-                  getDisplay().timerExec(-1, blinkTimer);
+                  blinkEnabled = false;
             }
-            else if (event.getProperty().equals("AlarmList.ShowStatusColor")) //$NON-NLS-1$
+            else if (event.getProperty().equals("AlarmList.ShowStatusColor")) 
             {
                boolean showColors = ps.getAsBoolean("AlarmList.ShowStatusColor", false);
                if (labelProvider.isShowColor() != showColors)
@@ -427,7 +442,7 @@ public class AlarmList extends CompositeWithMessageArea
 							sb.append(newLine);
 						sb.append('[');
 						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SEVERITY)));
-						sb.append("]\t"); //$NON-NLS-1$
+						sb.append("]\t"); 
 						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_SOURCE)));
 						sb.append('\t');
 						sb.append(selection[i].getText(WidgetHelper.getColumnIndexById(alarmViewer.getTree(), COLUMN_MESSAGE)));
@@ -457,7 +472,7 @@ public class AlarmList extends CompositeWithMessageArea
 				}
 			}
 		};
-      actionCopyMessage.setId("AlarmList.CopyMessage"); //$NON-NLS-1$
+      actionCopyMessage.setId("AlarmList.CopyMessage"); 
 
       actionAcknowledge = new Action(i18n.tr("&Acknowledge"), ResourceManager.getImageDescriptor("icons/alarms/acknowledged.png")) {
 			@Override
@@ -466,7 +481,7 @@ public class AlarmList extends CompositeWithMessageArea
 				acknowledgeAlarms(false, 0);
 			}
 		};
-      actionAcknowledge.setId("AlarmList.Acknowledge"); //$NON-NLS-1$
+      actionAcknowledge.setId("AlarmList.Acknowledge"); 
 
       actionStickyAcknowledge = new Action(i18n.tr("&Sticky acknowledge"), ResourceManager.getImageDescriptor("icons/alarms/acknowledged_sticky.png")) {
 			@Override
@@ -475,25 +490,25 @@ public class AlarmList extends CompositeWithMessageArea
 				acknowledgeAlarms(true, 0);
 			}
 		};
-      actionStickyAcknowledge.setId("AlarmList.StickyAcknowledge"); //$NON-NLS-1$
+      actionStickyAcknowledge.setId("AlarmList.StickyAcknowledge"); 
 
-      actionResolve = new Action(i18n.tr("&Resolve"), ResourceManager.getImageDescriptor("icons/alarms/resolved.png")) { //$NON-NLS-1$
+      actionResolve = new Action(i18n.tr("&Resolve"), ResourceManager.getImageDescriptor("icons/alarms/resolved.png")) { 
 			@Override
 			public void run()
 			{
 				resolveAlarms();
 			}
 		};
-      actionResolve.setId("AlarmList.Resolve"); //$NON-NLS-1$
+      actionResolve.setId("AlarmList.Resolve"); 
 
-      actionTerminate = new Action(i18n.tr("&Terminate"), ResourceManager.getImageDescriptor("icons/alarms/terminated.png")) { //$NON-NLS-1$
+      actionTerminate = new Action(i18n.tr("&Terminate"), ResourceManager.getImageDescriptor("icons/alarms/terminated.png")) { 
 			@Override
 			public void run()
 			{
 				terminateAlarms();
 			}
 		};
-      actionTerminate.setId("AlarmList.Terminate"); //$NON-NLS-1$
+      actionTerminate.setId("AlarmList.Terminate"); 
 		
       actionCreateIssue = new Action(i18n.tr("Create ticket in &helpdesk system"),
             ResourceManager.getImageDescriptor("icons/alarms/create-issue.png")) {
@@ -550,7 +565,7 @@ public class AlarmList extends CompositeWithMessageArea
             }
          }
       };
-      timeAcknowledgeOther.setId("AlarmList.TimeAcknowledgeOther"); //$NON-NLS-1$
+      timeAcknowledgeOther.setId("AlarmList.TimeAcknowledgeOther"); 
 
       actionShowColor = new Action(i18n.tr("Show status &colors"), Action.AS_CHECK_BOX) {
          @Override
@@ -588,19 +603,19 @@ public class AlarmList extends CompositeWithMessageArea
       int menuSize = settings.getAsInteger("AlarmList.AckMenuSize", 0);
       if (menuSize < 1)
       {
-         settings.set("AlarmList.AckMenuSize", 4); //$NON-NLS-1$
+         settings.set("AlarmList.AckMenuSize", 4); 
          timeAcknowledge = new ArrayList<Action>(4);
          createDefaultIntervals();
-         settings.set("AlarmList.AckMenuEntry.0", 1 * 60 * 60); //$NON-NLS-1$
-         settings.set("AlarmList.AckMenuEntry.1", 4 * 60 * 60); //$NON-NLS-1$
-         settings.set("AlarmList.AckMenuEntry.2", 24 * 60 * 60); //$NON-NLS-1$
-         settings.set("AlarmList.AckMenuEntry.3", 2 * 24 * 60 * 60); //$NON-NLS-1$
+         settings.set("AlarmList.AckMenuEntry.0", 1 * 60 * 60); 
+         settings.set("AlarmList.AckMenuEntry.1", 4 * 60 * 60); 
+         settings.set("AlarmList.AckMenuEntry.2", 24 * 60 * 60); 
+         settings.set("AlarmList.AckMenuEntry.3", 2 * 24 * 60 * 60); 
          return;
 	   }
 	   timeAcknowledge = new ArrayList<Action>(menuSize);
       for(int i = 0; i < menuSize; i++)
       {
-         final int time = settings.getAsInteger("AlarmList.AckMenuEntry." + Integer.toString(i), 0); //$NON-NLS-1$
+         final int time = settings.getAsInteger("AlarmList.AckMenuEntry." + Integer.toString(i), 0); 
 	      if (time == 0)
 	         continue;
 	      timeAcknowledge.add(createTimeAcknowledgeAction(time, i));

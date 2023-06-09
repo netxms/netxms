@@ -51,7 +51,7 @@ import org.xnap.commons.i18n.I18n;
 public class AlarmNotifier
 {
    private static final Logger logger = LoggerFactory.getLogger(AlarmNotifier.class);
-   private static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" };
+   public static final String[] SEVERITY_TEXT = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL", "REMINDER" };
 
    /**
     * Get instance for current session

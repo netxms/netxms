@@ -258,7 +258,6 @@ public class AlarmList extends CompositeWithMessageBar
       });
       alarmViewer.setInput(displayList);
 
-
       // Get filter settings
       initShowfilter = Activator.getDefault().getPreferenceStore().getBoolean("INIT_SHOW_FILTER");
 		

@@ -31,6 +31,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.UUID;
 import javax.servlet.http.Cookie;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.rap.rwt.RWT;
@@ -47,7 +48,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Local preference store
  */
-public class PreferenceStore
+public class PreferenceStore implements IPreferenceStore
 {
    private static final Logger logger = LoggerFactory.getLogger(PreferenceStore.class);
    private static final RGB DEFAULT_COLOR = new RGB(0, 0, 0);
@@ -704,5 +705,295 @@ public class PreferenceStore
    public void remove(String name)
    {
       properties.remove(name);
+   }
+   
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#contains(java.lang.String)
+    */
+   @Override
+   public boolean contains(String name)
+   {
+      return properties.contains(name);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#firePropertyChangeEvent(java.lang.String, java.lang.Object, java.lang.Object)
+    */
+   @Override
+   public void firePropertyChangeEvent(String name, Object oldValue, Object newValue)
+   {
+      firePropertyChangeListeners(name, (String)oldValue, (String)newValue);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getBoolean(java.lang.String)
+    */
+   @Override
+   public boolean getBoolean(String name)
+   {
+      return getAsBoolean(name, false);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getDefaultBoolean(java.lang.String)
+    */
+   @Override
+   public boolean getDefaultBoolean(String name)
+   {
+      String v = defaultValues.getProperty(name);
+      return (v != null) ? Boolean.parseBoolean(v) : false;
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getDefaultDouble(java.lang.String)
+    */
+   @Override
+   public double getDefaultDouble(String name)
+   {
+      String v = defaultValues.getProperty(name);
+      if (v == null)
+         return DOUBLE_DEFAULT_DEFAULT;
+      try
+      {
+         return Double.parseDouble(v);
+      }
+      catch(NumberFormatException e)
+      {
+         return DOUBLE_DEFAULT_DEFAULT;
+      }
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getDefaultFloat(java.lang.String)
+    */
+   @Override
+   public float getDefaultFloat(String name)
+   {
+      String v = defaultValues.getProperty(name);
+      if (v == null)
+         return FLOAT_DEFAULT_DEFAULT;
+      try
+      {
+         return Float.parseFloat(v);
+      }
+      catch(NumberFormatException e)
+      {
+         return FLOAT_DEFAULT_DEFAULT;
+      }
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getDefaultInt(java.lang.String)
+    */
+   @Override
+   public int getDefaultInt(String name)
+   {
+      String v = defaultValues.getProperty(name);
+      if (v == null)
+         return INT_DEFAULT_DEFAULT;
+      try
+      {
+         return Integer.parseInt(v);
+      }
+      catch(NumberFormatException e)
+      {
+         return INT_DEFAULT_DEFAULT;
+      }
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getDefaultLong(java.lang.String)
+    */
+   @Override
+   public long getDefaultLong(String name)
+   {
+      String v = defaultValues.getProperty(name);
+      if (v == null)
+         return LONG_DEFAULT_DEFAULT;
+      try
+      {
+         return Long.parseLong(v);
+      }
+      catch(NumberFormatException e)
+      {
+         return LONG_DEFAULT_DEFAULT;
+      }
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getDefaultString(java.lang.String)
+    */
+   @Override
+   public String getDefaultString(String name)
+   {
+      String v = defaultValues.getProperty(name);
+      if (v == null)
+         return "";
+      return v;
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getDouble(java.lang.String)
+    */
+   @Override
+   public double getDouble(String name)
+   {
+      return getAsDouble(name, DOUBLE_DEFAULT_DEFAULT);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getFloat(java.lang.String)
+    */
+   @Override
+   public float getFloat(String name)
+   {
+      String v = properties.getProperty(name);
+      if (v == null)
+         return getDefaultFloat(name);
+      try
+      {
+         return Float.parseFloat(v);
+      }
+      catch(NumberFormatException e)
+      {
+         return getDefaultFloat(name);
+      }
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getInt(java.lang.String)
+    */
+   @Override
+   public int getInt(String name)
+   {
+      return getAsInteger(name, getDefaultInt(name));
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getLong(java.lang.String)
+    */
+   @Override
+   public long getLong(String name)
+   {
+      return getAsLong(name, getDefaultLong(name));
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#getString(java.lang.String)
+    */
+   @Override
+   public String getString(String name)
+   {
+      return getAsString(name);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#isDefault(java.lang.String)
+    */
+   @Override
+   public boolean isDefault(String name)
+   {
+      String v = defaultValues.getProperty(name);
+      return v != null;
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#needsSaving()
+    */
+   @Override
+   public boolean needsSaving()
+   {
+      return false;
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#putValue(java.lang.String, java.lang.String)
+    */
+   @Override
+   public void putValue(String name, String value)
+   {
+      set(name, value);      
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setDefault(java.lang.String, double)
+    */
+   @Override
+   public void setDefault(String name, double value)
+   {
+      setDefault(name, value);
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setDefault(java.lang.String, float)
+    */
+   @Override
+   public void setDefault(String name, float value)
+   {
+      setDefault(name, value);      
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setToDefault(java.lang.String)
+    */
+   @Override
+   public void setToDefault(String name)
+   {
+      set(name, getDefaultString(name));
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setValue(java.lang.String, double)
+    */
+   @Override
+   public void setValue(String name, double value)
+   {
+      set(name, value);       
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setValue(java.lang.String, float)
+    */
+   @Override
+   public void setValue(String name, float value)
+   {
+      set(name, value); 
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setValue(java.lang.String, int)
+    */
+   @Override
+   public void setValue(String name, int value)
+   {
+      set(name, value); 
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setValue(java.lang.String, long)
+    */
+   @Override
+   public void setValue(String name, long value)
+   {
+      set(name, value); 
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setValue(java.lang.String, java.lang.String)
+    */
+   @Override
+   public void setValue(String name, String value)
+   {
+      set(name, value); 
+   }
+
+   /**
+    * @see org.eclipse.jface.preference.IPreferenceStore#setValue(java.lang.String, boolean)
+    */
+   @Override
+   public void setValue(String name, boolean value)
+   {
+      set(name, value); 
    }
 }

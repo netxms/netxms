@@ -16,13 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.alarmviewer.preferencepages;
+package org.netxms.nxmc.modules.alarms.preferencepages;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,11 +30,6 @@ import java.util.Set;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -48,51 +42,50 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerFile;
-import org.netxms.ui.eclipse.alarmviewer.Activator;
-import org.netxms.ui.eclipse.alarmviewer.AlarmNotifier;
-import org.netxms.ui.eclipse.alarmviewer.Messages;
-import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.login.LoginJob;
+import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.alarms.AlarmNotifier;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * Alarm sound configuration
  */
-public class AlarmSounds extends PreferencePage implements IWorkbenchPreferencePage
+public class AlarmSounds extends PreferencePage
 {
+   private static final I18n i18n = LocalizationHelper.getI18n(Alarms.class);
+   private static Logger logger = LoggerFactory.getLogger(LoginJob.class);
+   
    private NXCSession session;
    private ServerFile[] serverFiles = null;
+   private File workspaceDir;
    private Button isGeneralSound;
    private Button isLocalSound;
-   private IPreferenceStore ps;
-   private URL workspaceUrl;
+   private PreferenceStore ps;
    private Set<String> soundList = new HashSet<String>();
    private List<String> currentSoundList = new ArrayList<String>();
    private Set<String> oldSoundList = new HashSet<String>();
    private List<String> newSoundList = new ArrayList<String>();
    private List<Combo> comboList = new ArrayList<Combo>();
    private List<Button> buttonList = new ArrayList<Button>();
-   
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
-    */
-   @Override
-   public void init(IWorkbench workbench)
+
+   public AlarmSounds()
    {
-      setPreferenceStore(Activator.getDefault().getPreferenceStore());
-      session = (NXCSession)ConsoleSharedData.getSession();
-      ps = Activator.getDefault().getPreferenceStore();
-      workspaceUrl = Platform.getInstanceLocation().getURL();
+      super(i18n.tr("Alarm sounds"));
+      workspaceDir = Registry.getStateDir();
+      ps = PreferenceStore.getInstance();
+      setPreferenceStore(ps);
+      session = Registry.getSession();
    }
 
    /*
@@ -125,12 +118,12 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       isGeneralSound = new Button(typeGroup, SWT.RADIO);
       isGeneralSound.setText("Play sound on all alarms");
       isGeneralSound.setLayoutData(new GridData());
-      isGeneralSound.setSelection(!ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"));
+      isGeneralSound.setSelection(!ps.getAsBoolean("AlarmNotifier.LocalSound", false));
       
       isLocalSound = new Button(typeGroup, SWT.RADIO);
       isLocalSound.setText("Play sound as defined by active dashboard");
       isLocalSound.setLayoutData(new GridData());
-      isLocalSound.setSelection(ps.getBoolean("ALARM_NOTIFIER.SOUND.LOCAL"));
+      isLocalSound.setSelection(ps.getAsBoolean("AlarmNotifier.LocalSound", false));
 
       Combo newCombo = null;
       Button button = null;
@@ -157,7 +150,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                try
                {
                   Clip sound = (Clip) AudioSystem.getLine(new Line.Info(Clip.class));
-                  sound.open(AudioSystem.getAudioInputStream(new File(workspaceUrl.getPath(), comboList.get(index).getText()).getAbsoluteFile()));
+                  sound.open(AudioSystem.getAudioInputStream(new File(workspaceDir.getPath(), comboList.get(index).getText()).getAbsoluteFile()));
                   sound.start();
                   while(!sound.isRunning())
                      Thread.sleep(10);
@@ -173,8 +166,9 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                      @Override
                      public void run()
                      {
-                        MessageDialogHelper.openError(Display.getDefault().getActiveShell(), Messages.get().AlarmNotifier_ErrorPlayingSound,
-                              Messages.get().AlarmNotifier_ErrorPlayingSoundDescription + ex.getMessage());
+                        MessageDialogHelper.openError(Display.getDefault().getActiveShell(), 
+                              i18n.tr("Was not possible to play sound"),
+                              i18n.tr(" Error while playing sound. Melody will not be played. Error: ")+ ex.getMessage());
                      }
                   });
                }
@@ -195,9 +189,10 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          buttonList.add(i, button);
       }
 
-      new UIJob(Messages.get().AlarmMelody_JobGetMelodyList) {
+      getShell().getDisplay().asyncExec(new Runnable() {
+         
          @Override
-         public IStatus runInUIThread(IProgressMonitor monitor)
+         public void run()
          {
             try
             {
@@ -211,8 +206,8 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                   @Override
                   public void run()
                   {
-                     MessageDialogHelper.openError(getShell(), Messages.get().AlarmMelody_ErrorGettingMelodyList,
-                           Messages.get().AlarmMelody_ErrorGettingMelodyListDescription + e.getMessage());
+                     MessageDialogHelper.openError(getShell(), i18n.tr("Not possible to get melody list."),
+                           i18n.tr(" Not possible to get melody list. Error: ")+ e.getMessage());
                   }
                });
             }
@@ -225,7 +220,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
 
             for(int i = 0; i < 6; i++)
             {
-               currentSoundList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.SEVERITY_TEXT[i])); //$NON-NLS-1$
+               currentSoundList.add(i, ps.getAsString("AlarmNotifier.Sound." + AlarmNotifier.SEVERITY_TEXT[i], "")); //$NON-NLS-1$
             }
             soundList.addAll(currentSoundList);
 
@@ -238,10 +233,8 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                newCombo.setItems(soundList.toArray(new String[soundList.size()]));
                newCombo.select(newCombo.indexOf(currentSoundList.get(i)));
             }
-
-            return Status.OK_STATUS;
          }
-      }.schedule();
+      });
       return dialogArea;
    }
    
@@ -251,8 +244,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
     */
    private void getMelodyAndDownloadIfRequired(String melodyName)
    {
-      URL workspaceUrl = Platform.getInstanceLocation().getURL();
-      if (!isSoundFileExist(melodyName, workspaceUrl))
+      if (!isSoundFileExist(melodyName, workspaceDir))
       {
          try
          {
@@ -264,7 +256,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                try
                {
                   src = new FileInputStream(fileContent);
-                  File f = new File(workspaceUrl.getPath(), melodyName);
+                  File f = new File(workspaceDir.getPath(), melodyName);
                   f.createNewFile();
                   dest = new FileOutputStream(f);
                   FileChannel fcSrc = src.getChannel();
@@ -272,7 +264,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                }
                catch(IOException e)
                {
-                  Activator.logError("Cannot copy sound file", e); //$NON-NLS-1$
+                  logger.error("Cannot copy sound file", e);
                }
                finally
                {
@@ -292,9 +284,9 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                   MessageDialogHelper
                   .openError(
                         Display.getDefault().getActiveShell(),
-                        Messages.get().AlarmNotifier_ErrorMelodynotExists,
-                        Messages.get().AlarmNotifier_ErrorMelodyNotExistsDescription
-                              + e.getLocalizedMessage());
+                        i18n.tr("Melody does not exist."),
+                        i18n.tr("Melody was not found locally and it was not possible to download it from server. Melody is removed and will not be played. Error: {0}",
+                              e.getLocalizedMessage()));
                }
             });
          }
@@ -303,14 +295,14 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
 
    /**
     * @param melodyName
-    * @param workspaceUrl
+    * @param workspaceDir2
     * @return
     */
-   private static boolean isSoundFileExist(String melodyName, URL workspaceUrl)
+   private static boolean isSoundFileExist(String melodyName, File workspaceDir2)
    {
-      if (!melodyName.isEmpty() && (workspaceUrl != null))
+      if (!melodyName.isEmpty() && (workspaceDir2 != null))
       {
-         File f = new File(workspaceUrl.getPath(), melodyName);
+         File f = new File(workspaceDir2.getPath(), melodyName);
          return f.isFile();
       }
       else
@@ -326,6 +318,9 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
     */
    protected void applyChanges(final boolean isApply)
    {
+      if (isGeneralSound == null)
+         return;
+      
       if (isApply)
          setValid(false);
 
@@ -335,11 +330,12 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          newSoundList.add(comboList.get(i).getText());
       }
       final boolean newSelection = isGeneralSound.getSelection();
-      new UIJob(Messages.get().AlarmMelody_SaveClientSelection) {
+      getShell().getDisplay().asyncExec(new Runnable() {
+         
          @Override
-         public IStatus runInUIThread(IProgressMonitor monitor)
+         public void run()
          {
-            ps.setValue("ALARM_NOTIFIER.SOUND.LOCAL", !newSelection); //$NON-NLS-1$
+            ps.set("AlarmNotifier.LocalSound", !newSelection); //$NON-NLS-1$
             for(int i = 0; i < newSoundList.size(); i++)
             {
                changeSound(newSoundList.get(i), AlarmNotifier.SEVERITY_TEXT[i], i);
@@ -348,16 +344,14 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
             {
                if (!currentSoundList.contains(oldName))
                {
-                  File file = new File(workspaceUrl.getPath(), oldName);
+                  File file = new File(workspaceDir.getPath(), oldName);
                   file.delete();
                }
             }
             if (isApply)
-               setValid(true);
-            return Status.OK_STATUS;
+               setValid(true);            
          }
-
-      }.schedule();
+      });
    }
 
    /**
@@ -374,9 +368,9 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       {
          try
          {
-            if (!checkMelodyExists(soundName, workspaceUrl))
-               downloadSoundFile(session, soundName, workspaceUrl);
-            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, soundName); //$NON-NLS-1$
+            if (!checkMelodyExists(soundName, workspaceDir))
+               downloadSoundFile(session, soundName, workspaceDir);
+            ps.set("AlarmNotifier.Sound." + severity, soundName); //$NON-NLS-1$
             currentSoundList.set(id, soundName);
             oldSoundList.add(oldSoundName);
          }
@@ -389,26 +383,26 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                   MessageDialogHelper
                         .openError(
                               getShell(),
-                              Messages.get().AlarmMelody_ErrorMelodyNotExists,
-                              Messages.get().AlarmMelody_ErrorMelodyNotExistsDescription
-                                    + e.getMessage());
+                              i18n.tr("Melody does not exist."),
+                              i18n.tr("Melody was not found locally and it was not possible to download it from server. Melody is removed and will not be played. Error: {0}",
+                                    e.getLocalizedMessage()));
                }
             });
-            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
+            ps.set("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
          }
       }
    }
 
    /**
     * @param melodyName
-    * @param workspaceUrl
+    * @param workspaceDir2
     * @return
     */
-   private static boolean checkMelodyExists(String melodyName, URL workspaceUrl)
+   private static boolean checkMelodyExists(String melodyName, File workspaceDir2)
    {
-      if (workspaceUrl != null && melodyName != null && !melodyName.equals("")) //$NON-NLS-1$
+      if (workspaceDir2 != null && melodyName != null && !melodyName.equals("")) //$NON-NLS-1$
       {
-         File f = new File(workspaceUrl.getPath(), melodyName);
+         File f = new File(workspaceDir2.getPath(), melodyName);
          return f.isFile();
       }
       else
@@ -422,12 +416,12 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
     * 
     * @param session
     * @param melodyName
-    * @param workspaceUrl
+    * @param workspaceDir2
     * @throws NXCException
     * @throws IOException
     */
    @SuppressWarnings("resource")
-   private static void downloadSoundFile(NXCSession session, String melodyName, URL workspaceUrl) throws NXCException, IOException
+   private static void downloadSoundFile(NXCSession session, String melodyName, File workspaceDir2) throws NXCException, IOException
    {
       File serverFile = session.downloadFileFromServer(melodyName);
       FileChannel src = null;
@@ -435,14 +429,14 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       try
       {
          src = new FileInputStream(serverFile).getChannel();
-         File f = new File(workspaceUrl.getPath(), melodyName);
+         File f = new File(workspaceDir2.getPath(), melodyName);
          f.createNewFile();
          dest = new FileOutputStream(f).getChannel();
          dest.transferFrom(src, 0, src.size());
       }
       catch(IOException e)
       {
-         Activator.logError("Cannot copy sound file", e); //$NON-NLS-1$
+         logger.error("Cannot copy sound file", e);
       }
       finally
       {

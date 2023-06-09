@@ -330,10 +330,11 @@ public class AlarmNotifier
 
    /**
     * Check if global sound is enabled
+    * @param display 
     * 
     * @return true if enabled
     */
-   public static boolean isGlobalSoundEnabled()
+   public static boolean isGlobalSoundEnabled(Display display)
    {
       return !ps.getAsBoolean("AlarmNotifier.LocalSound", false);
    }

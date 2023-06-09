@@ -83,6 +83,8 @@ import org.netxms.nxmc.base.widgets.ServerClock;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.modules.alarms.preferencepages.AlarmSounds;
+import org.netxms.nxmc.modules.alarms.preferencepages.Alarms;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -677,6 +679,8 @@ public class MainWindow extends Window implements MessageAreaHolder
    {
       PreferenceManager pm = new PreferenceManager();
       pm.addToRoot(new PreferenceNode("appearance", new Appearance()));
+      pm.addToRoot(new PreferenceNode("alarm", new Alarms()));
+      pm.addTo("alarm", new PreferenceNode("alarmSounds", new AlarmSounds()));
 
       PreferenceDialog dlg = new PreferenceDialog(getShell(), pm) {
          @Override

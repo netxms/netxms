@@ -53,9 +53,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -89,7 +86,6 @@ import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmAcknowledgeTimeFun
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
-import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmToolTip;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmTreeContentProvider;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -138,8 +134,6 @@ public class AlarmList extends CompositeWithMessageBar
 	private AlarmListFilter alarmFilter;
    private TransformationSelectionProvider alarmSelectionProvider;
    private FilterText filterText;
-	private Point toolTipLocation;
-	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
    private List<Alarm> newAlarmList = new ArrayList<Alarm>();
    private Set<Long> updateList = new HashSet<Long>();
@@ -260,40 +254,6 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
       alarmViewer.setInput(displayList);
-
-      final Runnable toolTipTimer = new Runnable() {
-         @Override
-         public void run()
-         {
-            AlarmToolTip t = new AlarmToolTip(alarmViewer.getTree(), toolTipObject);
-            t.show(toolTipLocation);
-         }
-      };
-
-      alarmViewer.getTree().addMouseTrackListener(new MouseTrackAdapter() {
-         @Override
-         public void mouseHover(MouseEvent e)
-         {
-            if (!Activator.getDefault().getPreferenceStore().getBoolean("SHOW_ALARM_TOOLTIPS")) //$NON-NLS-1$
-               return;
-
-            Point p = new Point(e.x, e.y);
-            TreeItem item = alarmViewer.getTree().getItem(p);
-            if (item == null)
-               return;
-            toolTipObject = (Alarm)item.getData();
-            p.x -= 10;
-            p.y -= 10;
-            toolTipLocation = p;
-            getDisplay().timerExec(300, toolTipTimer);
-         }
-
-         @Override
-         public void mouseExit(MouseEvent e)
-         {
-            getDisplay().timerExec(-1, toolTipTimer);
-         }
-      });
 
       // Get filter settings
       initShowfilter = Activator.getDefault().getPreferenceStore().getBoolean("INIT_SHOW_FILTER");

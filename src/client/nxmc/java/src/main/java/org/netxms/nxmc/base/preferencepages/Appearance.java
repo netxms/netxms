@@ -74,6 +74,9 @@ public class Appearance extends PreferencePage
     */
    private void doApply()
    {
+      if (checkVerticalLayout == null)
+         return;
+      
       PreferenceStore settings = PreferenceStore.getInstance();
       settings.set("Appearance.VerticalLayout", checkVerticalLayout.getSelection());
       settings.set("Appearance.ShowServerClock", checkShowServerClock.getSelection());
