@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * "Object view" property page for dashboard object
+ * "Object Context" property page for dashboard object
  */
 public class DashboardObjectContext extends ObjectPropertyPage
 {
@@ -101,7 +101,7 @@ public class DashboardObjectContext extends ObjectPropertyPage
       dialogArea.setLayout(layout);
 
       checkboxShowAsObjectView = new Button(dialogArea, SWT.CHECK);
-      checkboxShowAsObjectView.setText(i18n.tr("&Show this dashboard in object context"));
+      checkboxShowAsObjectView.setText(i18n.tr("&Automatically show this dashboard in object context"));
       checkboxShowAsObjectView.setSelection((dashboard.getFlags() & Dashboard.SHOW_AS_OBJECT_VIEW) != 0);
       checkboxShowAsObjectView.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
 
