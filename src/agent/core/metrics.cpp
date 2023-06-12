@@ -82,6 +82,7 @@ LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractC
 
 #if WITH_MODBUS
 LONG H_MODBUSCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MODBUSConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -450,6 +451,7 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
 #if WITH_MODBUS
    { _T("MODBUS.Coil(*)"), H_MODBUSCoil, nullptr, DCI_DT_UINT, _T("Value of MODBUS coil {instance}") },
+   { _T("MODBUS.ConnectionStatus(*)"), H_MODBUSConnectionStatus, nullptr, DCI_DT_INT, _T("Status of MODBUS connection to {instance}") },
    { _T("MODBUS.DiscreteInput(*)"), H_MODBUSDiscreteInput, nullptr, DCI_DT_UINT, _T("Value of MODBUS discrete input {instance}") },
    { _T("MODBUS.HoldingRegister(*)"), H_MODBUSHoldingRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS holding register {instance}") },
    { _T("MODBUS.InputRegister(*)"), H_MODBUSInputRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS input register {instance}") },

@@ -62,6 +62,10 @@
 #define HARDWARE_ID_LENGTH       SHA1_DIGEST_SIZE
 #define SSH_PORT                 22
 
+#ifndef MODBUS_TCP_DEFAULT_PORT
+#define MODBUS_TCP_DEFAULT_PORT  502
+#endif
+
 /**
  * Agent policy types
  */
@@ -1422,7 +1426,8 @@ int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name);
 
 #if WITH_MODBUS
 typedef struct _modbus modbus_t;
-LONG LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback);
+bool LIBNXAGENT_EXPORTABLE MODBUSCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId);
+int LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus);
 int LIBNXAGENT_EXPORTABLE MODBUSReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value);
 int LIBNXAGENT_EXPORTABLE MODBUSReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value);
 #endif

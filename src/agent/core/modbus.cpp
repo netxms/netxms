@@ -33,6 +33,28 @@
 #endif
 
 /**
+ * Handler for MODBUS.ConnectionStatus(*) metric
+ */
+LONG H_MODBUSConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   if (!(g_dwFlags & AF_ENABLE_MODBUS_PROXY))
+      return SYSINFO_RC_ACCESS_DENIED;
+
+   InetAddress addr = AgentGetMetricArgAsInetAddress(metric, 1);
+   uint16_t port;
+   int32_t unitId;
+   if ((!addr.isValidUnicast() && !addr.isLoopback()) ||
+       !AgentGetMetricArgAsUInt16(metric, 2, &port, MODBUS_TCP_DEFAULT_PORT) ||
+       !AgentGetMetricArgAsInt32(metric, 3, &unitId, 1))
+      return SYSINFO_RC_UNSUPPORTED;
+   if ((unitId < 1) || (unitId > 255))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ret_boolean(value, MODBUSCheckConnection(addr, port, unitId));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Common handler for MODBUS.* metrics
  */
 static LONG ReadMODBUSMetric(const TCHAR *metric, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t, int32_t)> reader)
@@ -55,7 +77,7 @@ static LONG ReadMODBUSMetric(const TCHAR *metric, std::function<int32_t (modbus_
       [reader, modbusAddress] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId) -> int32_t
       {
          return reader(mb, addrText, port, unitId, modbusAddress);
-      });
+      }, SYSINFO_RC_ERROR);
 }
 
 /**
@@ -128,14 +150,14 @@ LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, 
    return ReadMODBUSMetric(metric,
       [value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
       {
-         uint8_t coil;
-         if (modbus_read_input_bits(mb, modbusAddress, 1, &coil) < 1)
+         uint8_t input;
+         if (modbus_read_input_bits(mb, modbusAddress, 1, &input) < 1)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_read_input_bits(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
             return SYSINFO_RC_ERROR;
          }
 
-         ret_boolean(value, coil ? true : false);
+         ret_boolean(value, input ? true : false);
          return SYSINFO_RC_SUCCESS;
       });
 }
@@ -185,8 +207,13 @@ LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringL
             int objectLength = static_cast<int>(curr[1]);
 
             TCHAR objectValue[256];
+#ifdef UNICODE
             size_t chars = mb_to_wchar(reinterpret_cast<char*>(curr + 2), objectLength, objectValue, 256);
             objectValue[chars] = 0;
+#else
+            memcpy(objectValue, curr + 2, objectLength);
+            objectValue[objectLength] = 0;
+#endif
 
             TCHAR element[256];
             if (objectId < sizeof(standardNames) / sizeof(const TCHAR*))
@@ -199,7 +226,7 @@ LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringL
          }
 
          return SYSINFO_RC_SUCCESS;
-      });
+      }, SYSINFO_RC_ERROR);
 }
 
 #endif   /* WITH_MODBUS */

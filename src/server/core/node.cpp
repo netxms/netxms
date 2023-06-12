@@ -206,7 +206,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_cipState = 0;
    m_cipStatus = 0;
    m_cipVendorCode = 0;
-   m_modbusTcpPort = 502;
+   m_modbusTcpPort = MODBUS_TCP_DEFAULT_PORT;
    m_modbusUnitId = 255;
 }
 

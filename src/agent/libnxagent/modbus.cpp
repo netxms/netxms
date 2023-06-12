@@ -32,9 +32,9 @@
 #endif
 
 /**
- * Execute provided callback within MODBUS session context
+ * Check if target responds to MODBUS protocol. Return true on success.
  */
-LONG LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback)
+bool LIBNXAGENT_EXPORTABLE MODBUSCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId)
 {
    char ipAddrText[64];
 
@@ -49,18 +49,63 @@ LONG LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port,
       mb = modbus_new_tcp_pi(addr.toStringA(ipAddrText), IntegerToString(port, portText));
    }
 
-   modbus_set_response_timeout(mb, 1, 0);
+   modbus_set_response_timeout(mb, 2, 0);
 
    if (modbus_connect(mb) != 0)
    {
       nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_connect(%hs:%d) failed (%hs)"), ipAddrText, port, modbus_strerror(errno));
       modbus_free(mb);
-      return SYSINFO_RC_ERROR;
+      return false;
    }
 
    modbus_set_slave(mb, unitId);
 
-   LONG exitCode = callback(mb, ipAddrText, port, unitId);
+   bool success;
+   uint16_t r;
+   if (modbus_read_registers(mb, 0, 1, &r) == 1)
+   {
+      success = true;
+   }
+   else
+   {
+      success = ((errno == EMBXILADD) || (errno == EMBXILFUN));
+   }
+
+   modbus_close(mb);
+   modbus_free(mb);
+   return success;
+}
+
+/**
+ * Execute provided callback within MODBUS session context
+ */
+int LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus)
+{
+   char ipAddrText[64];
+
+   modbus_t *mb;
+   if (addr.getFamily() == AF_INET)
+   {
+      mb = modbus_new_tcp(addr.toStringA(ipAddrText), port);
+   }
+   else
+   {
+      char portText[64];
+      mb = modbus_new_tcp_pi(addr.toStringA(ipAddrText), IntegerToString(port, portText));
+   }
+
+   modbus_set_response_timeout(mb, 2, 0);
+
+   if (modbus_connect(mb) != 0)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("modbus_connect(%hs:%d) failed (%hs)"), ipAddrText, port, modbus_strerror(errno));
+      modbus_free(mb);
+      return commErrorStatus;
+   }
+
+   modbus_set_slave(mb, unitId);
+
+   int exitCode = callback(mb, ipAddrText, port, unitId);
 
    modbus_close(mb);
    modbus_free(mb);

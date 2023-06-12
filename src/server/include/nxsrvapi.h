@@ -1146,6 +1146,95 @@ public:
 };
 
 /**
+ * MODBUS device identification data
+ */
+struct MODBUS_DeviceIdentification
+{
+   TCHAR vendorName[256];
+   TCHAR productCode[256];
+   TCHAR revision[256];
+   TCHAR vendorURL[256];
+   TCHAR productName[256];
+   TCHAR modelName[256];
+   TCHAR userApplicationName[256];
+};
+
+/**
+ * MODBUS operation completion status codes
+ */
+enum MODBUS_OperationStatus
+{
+   MODBUS_STATUS_SUCCESS = 0,
+   MODBUS_STATUS_COMM_FAILURE = 1,
+   MODBUS_STATUS_PROTOCOL_ERROR = 2,
+   MODBUS_STATUS_TIMEOUT = 3
+};
+
+/**
+ * Generic MODBUS transport (base class for actual implementation)
+ */
+class LIBNXSRV_EXPORTABLE MODBUS_Transport
+{
+protected:
+   InetAddress m_address;
+   uint16_t m_port;
+   uint16_t m_unitId;
+
+public:
+   MODBUS_Transport(const InetAddress& address, uint16_t port, uint16_t unitId) : m_address(address)
+   {
+      m_port = port;
+      m_unitId = unitId;
+   }
+   virtual ~MODBUS_Transport() = default;
+
+   virtual MODBUS_OperationStatus checkConnection() = 0;
+   virtual MODBUS_OperationStatus readDeviceIdentification(MODBUS_DeviceIdentification *deviceId) = 0;
+   virtual MODBUS_OperationStatus readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value) = 0;
+   virtual MODBUS_OperationStatus readInputRegisters(int address, const TCHAR *conversion, TCHAR *value) = 0;
+   virtual MODBUS_OperationStatus readCoil(int address, TCHAR *value) = 0;
+   virtual MODBUS_OperationStatus readDiscreteInput(int address, TCHAR *value) = 0;
+};
+
+#if WITH_MODBUS
+
+/**
+ * Direct (non-proxied) MODBUS transport
+ */
+class LIBNXSRV_EXPORTABLE MODBUS_DirectTransport : public MODBUS_Transport
+{
+public:
+   MODBUS_DirectTransport(const InetAddress& address, uint16_t port, uint16_t unitId) : MODBUS_Transport(address, port, unitId) { }
+
+   virtual MODBUS_OperationStatus checkConnection();
+   virtual MODBUS_OperationStatus readDeviceIdentification(MODBUS_DeviceIdentification *deviceId);
+   virtual MODBUS_OperationStatus readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value);
+   virtual MODBUS_OperationStatus readInputRegisters(int address, const TCHAR *conversion, TCHAR *value);
+   virtual MODBUS_OperationStatus readCoil(int address, TCHAR *value);
+   virtual MODBUS_OperationStatus readDiscreteInput(int address, TCHAR *value);
+};
+
+#else
+
+/**
+ * Dummy MODBUS transport
+ */
+class LIBNXSRV_EXPORTABLE MODBUS_DummyTransport : public MODBUS_Transport
+{
+public:
+   MODBUS_DummyTransport(const InetAddress& address, uint16_t port, uint16_t unitId) : MODBUS_Transport(address, port, unitId) { }
+
+   virtual MODBUS_OperationStatus checkConnection();
+   virtual MODBUS_OperationStatus readDeviceIdentification(MODBUS_DeviceIdentification *deviceId);
+   virtual MODBUS_OperationStatus readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value);
+   virtual MODBUS_OperationStatus readInputRegisters(int address, const TCHAR *conversion, TCHAR *value);
+   virtual MODBUS_OperationStatus readCoil(int address, TCHAR *value);
+   virtual MODBUS_OperationStatus readDiscreteInput(int address, TCHAR *value);
+};
+
+#endif   /* WITH_MODBUS */
+
+/**
  * ISC flags
  */
 #define ISCF_IS_CONNECTED        ((UINT32)0x00000001)
