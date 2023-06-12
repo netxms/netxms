@@ -29,6 +29,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -45,7 +46,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	private static final String[] functions = { "last()", "average(", "deviation(", "diff()", "error(", "sum(" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
 	private NXCSession session;
-	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
+	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
 	private List<ConditionDciInfo> elementList;
 	
 	/**
@@ -81,7 +82,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ConditionData.COLUMN_METRIC:
-				String name = dciNameCache.get(dci.getDciId());
+				String name = dciNameCache.get(dci.getDciId()).displayName;
 				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case ConditionData.COLUMN_FUNCTION:
 			   if (dci.getType() == DataCollectionObject.DCO_TYPE_TABLE)
@@ -109,7 +110,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Map<Long, String> names = session.dciIdsToNames(dciList);
+				final Map<Long, DciInfo> names = session.dciIdsToNames(dciList);
 				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
@@ -136,6 +137,6 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void addCacheEntry(long nodeId, long dciId, String name)
 	{
-		dciNameCache.put(dciId, name);
+		dciNameCache.put(dciId, new DciInfo("", name));
 	}
 }

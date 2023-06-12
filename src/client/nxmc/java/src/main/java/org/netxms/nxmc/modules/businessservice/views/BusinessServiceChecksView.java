@@ -47,6 +47,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.businessservices.BusinessServiceCheck;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.BaseBusinessService;
 import org.netxms.client.objects.interfaces.NodeItemPair;
@@ -514,7 +515,7 @@ public class BusinessServiceChecksView extends ObjectView
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final Map<Long, String> names = session.dciIdsToNames(checks);
+            final Map<Long, DciInfo> names = session.dciIdsToNames(checks);
             runInUIThread(new Runnable() {
                @Override
                public void run()

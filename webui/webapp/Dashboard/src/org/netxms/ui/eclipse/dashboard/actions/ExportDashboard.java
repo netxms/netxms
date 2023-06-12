@@ -37,6 +37,7 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
@@ -139,7 +140,7 @@ public class ExportDashboard implements IObjectActionDelegate
                   nodeList.add(dci.getValue());
                }
 				}
-				Map<Long, String> names = session.dciIdsToNames(nodeList, dciList);
+				Map<Long, DciInfo> names = session.dciIdsToNames(nodeList, dciList);
 				for(int i = 0; i < names.size(); i++)
 				{
 					xml.append("\t\t<dci id=\""); //$NON-NLS-1$
@@ -147,7 +148,7 @@ public class ExportDashboard implements IObjectActionDelegate
 					xml.append("\" node=\""); //$NON-NLS-1$
 					xml.append(nodeList.get(i));
 					xml.append("\">"); //$NON-NLS-1$
-					xml.append(names.get(dciList.get(i)));
+					xml.append(names.get(dciList.get(i)).displayName);
 					xml.append("</dci>\n"); //$NON-NLS-1$
 				}
 				xml.append("\t</dciMap>\n</dashboard>\n"); //$NON-NLS-1$

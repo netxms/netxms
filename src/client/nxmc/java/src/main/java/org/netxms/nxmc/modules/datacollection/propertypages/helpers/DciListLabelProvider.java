@@ -28,6 +28,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
@@ -43,7 +44,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
    private static final I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
 
 	private NXCSession session;
-	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
+	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
 	private List<ChartDciConfig> elementList;
 	
 	/**
@@ -77,9 +78,9 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case DataSources.COLUMN_NODE:
 				AbstractObject object = session.findObjectById(dci.nodeId);
-				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.nodeId) + "]");
 			case DataSources.COLUMN_METRIC:
-				String name = dciNameCache.get(dci.dciId);
+				String name = dciNameCache.get(dci.dciId).displayName;
             return (name != null) ? name : i18n.tr("<unresolved>");
 			case DataSources.COLUMN_LABEL:
 				return dci.name;
@@ -100,7 +101,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final Map<Long, String> names = session.dciIdsToNames(dciList);
+				final Map<Long, DciInfo> names = session.dciIdsToNames(dciList);
 				
 				runInUIThread(new Runnable() {
 					@Override
@@ -129,6 +130,6 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void addCacheEntry(long nodeId, long dciId, String name)
 	{
-		dciNameCache.put(dciId, name);
+		dciNameCache.put(dciId, new DciInfo("", name));
 	}
 }

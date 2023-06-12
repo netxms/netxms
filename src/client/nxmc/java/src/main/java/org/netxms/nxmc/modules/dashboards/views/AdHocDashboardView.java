@@ -77,7 +77,8 @@ public class AdHocDashboardView extends AbstractDashboardView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof AbstractObject) && (((AbstractObject)context).getObjectId() == contextObjectId);
+      return (context != null) && (context instanceof AbstractObject) && 
+            ((((AbstractObject)context).getObjectId() == dashboardContext.getObjectId()) || (((AbstractObject)context).getObjectId() == contextObjectId));
    }
 
    /**

@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.UnknownObject;
 import org.netxms.nxmc.Registry;
@@ -378,7 +379,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
       private Image imageScript = ResourceManager.getImage("icons/script.png");
       private Image imageDCI = ResourceManager.getImage("icons/dci.png");
       private BaseObjectLabelProvider objectLabelProvider = new BaseObjectLabelProvider();
-      private Map<Long, String> dciNameCache = new HashMap<Long, String>();
+      private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
 
       /**
        * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
@@ -410,7 +411,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
          switch(e.getType())
          {
             case StatusIndicatorConfig.ELEMENT_TYPE_DCI:
-               String name = (e.getDciId() != 0) ? dciNameCache.get(e.getDciId()) : e.getDciName();
+               String name = (e.getDciId() != 0) ? dciNameCache.get(e.getDciId()).displayName : e.getDciName();
                if (name == null)
                   name = i18n.tr("<unresolved>");
                return ((e.getObjectId() == AbstractObject.CONTEXT) ? i18n.tr("<context>") : session.getObjectName(e.getObjectId())) + " / " + ((e.getDciId() != 0) ? name : e.getDciName());
@@ -445,7 +446,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
             case COLUMN_METRIC:
                if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI)
                {
-                  String name = dciNameCache.get(e.getDciId());
+                  String name = dciNameCache.get(e.getDciId()).displayName;
                   return (name != null) ? name : i18n.tr("<unresolved>");
                }
                if (e.getType() == StatusIndicatorConfig.ELEMENT_TYPE_DCI_TEMPLATE)
@@ -498,7 +499,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
             @Override
             protected void run(IProgressMonitor monitor) throws Exception
             {
-               final Map<Long, String> names = session.dciIdsToNames(elementList);
+               final Map<Long, DciInfo> names = session.dciIdsToNames(elementList);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -526,7 +527,7 @@ public class StatusIndicatorElements extends DashboardElementPropertyPage
       public void addCacheEntry(long nodeId, long dciId, String name)
       {
          if (dciId != 0)
-            dciNameCache.put(dciId, name);
+            dciNameCache.put(dciId, new DciInfo("", name));
       }
    }
 }

@@ -27,6 +27,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -42,7 +43,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 {
    private I18n i18n = LocalizationHelper.getI18n(DciListLabelProvider.class);
    private NXCSession session = Registry.getSession();
-	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
+	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
 	private List<SingleDciConfig> elementList;
 	
 	/**
@@ -77,7 +78,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				AbstractObject object = session.findObjectById(dci.getNodeId());
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case LinkDataSources.COLUMN_METRIC:
-				String name = dciNameCache.get(dci.dciId);
+				String name = dciNameCache.get(dci.dciId).displayName;
             return (name != null) ? name : i18n.tr("Unresolved DCI name");
 			case LinkDataSources.COLUMN_LABEL:
 				return dci.name;
@@ -96,7 +97,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final Map<Long, String> names = session.dciIdsToNames(dciList);
+				final Map<Long, DciInfo> names = session.dciIdsToNames(dciList);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -123,6 +124,6 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void addCacheEntry(long nodeId, long dciId, String name)
 	{
-		dciNameCache.put(dciId, name);
+		dciNameCache.put(dciId, new DciInfo("", name));
 	}
 }

@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
@@ -138,7 +139,7 @@ public class DciSelector extends AbstractSelector
 			@Override
          protected void run(IProgressMonitor monitor) throws Exception
 			{
-				final Map<Long, String> names = session.dciIdsToNames(new ArrayList<Long>(Arrays.asList(nodeId)), 
+				final Map<Long, DciInfo> names = session.dciIdsToNames(new ArrayList<Long>(Arrays.asList(nodeId)), 
                   new ArrayList<Long>(Arrays.asList(DciSelector.this.dciId)));
 				runInUIThread(new Runnable() {
 					@Override
@@ -163,7 +164,7 @@ public class DciSelector extends AbstractSelector
 						}
 						if (names.size() > 0)
 						{
-							sb.append(names.get(dciId));
+							sb.append(names.get(dciId).displayName);
 						}
 						else
 						{

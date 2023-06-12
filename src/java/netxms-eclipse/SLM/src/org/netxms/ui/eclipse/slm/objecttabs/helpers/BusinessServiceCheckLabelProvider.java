@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.businessservices.BusinessServiceCheck;
 import org.netxms.client.constants.BusinessServiceCheckType;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.interfaces.NodeChild;
@@ -47,7 +48,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
 
    private Color prototypeColor = ThemeEngine.getForegroundColor("List.DisabledItem");
    private NXCSession session = ConsoleSharedData.getSession();
-   private Map<Long, String> dciNameCache = new HashMap<Long, String>();
+   private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
    private WorkbenchLabelProvider objectLabelProvider = new WorkbenchLabelProvider();
 
    /**
@@ -183,7 +184,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
       if ((check.getCheckType() != BusinessServiceCheckType.DCI) || (check.getDciId() == 0))
          return "";
 
-      String name = dciNameCache.get(check.getDciId());
+      String name = dciNameCache.get(check.getDciId()).displayName;
       return (name != null) ? name : ("[" + Long.toString(check.getDciId()) + "]");
    }
 
@@ -236,7 +237,7 @@ public class BusinessServiceCheckLabelProvider extends LabelProvider implements 
     * 
     * @param names set of updated names
     */
-   public void updateDciNames(Map<Long, String> names)
+   public void updateDciNames(Map<Long, DciInfo> names)
    {
       dciNameCache.putAll(names);
    }

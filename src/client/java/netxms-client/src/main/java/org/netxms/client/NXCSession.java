@@ -93,6 +93,7 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciLastValue;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
@@ -5674,10 +5675,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Long, String> dciIdsToNames(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
+   public Map<Long, DciInfo> dciIdsToNames(List<Long> nodeIds, List<Long> dciIds) throws IOException, NXCException
    {
       if (nodeIds.isEmpty())
-         return new HashMap<Long, String>();
+         return new HashMap<Long, DciInfo>();
 
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_RESOLVE_DCI_NAMES);
       msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, nodeIds.size());
@@ -5686,13 +5687,14 @@ public class NXCSession
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      Map<Long, String> result = new HashMap<Long, String>();
+      Map<Long, DciInfo> result = new HashMap<Long, DciInfo>();
       int size = response.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       long fieldId = NXCPCodes.VID_DCI_LIST_BASE;
       for(int i = 0; i < size; i++)
       {
-         result.put(response.getFieldAsInt64(fieldId), response.getFieldAsString(fieldId + 1));
-         fieldId += 2;
+         System.out.println(response.getFieldAsString(fieldId + 1) + " " + response.getFieldAsString(fieldId + 2));
+         result.put(response.getFieldAsInt64(fieldId), new DciInfo(response.getFieldAsString(fieldId + 1), response.getFieldAsString(fieldId + 2)));
+         fieldId += 3;
       }
       return result;
    }
@@ -5705,10 +5707,10 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public Map<Long, String> dciIdsToNames(Collection<? extends NodeItemPair> itemList) throws IOException, NXCException
+   public Map<Long, DciInfo> dciIdsToNames(Collection<? extends NodeItemPair> itemList) throws IOException, NXCException
    {
       if (itemList.isEmpty())
-         return new HashMap<Long, String>();
+         return new HashMap<Long, DciInfo>();
 
       List<Long> nodeIds = new ArrayList<Long>();
       List<Long> dciIds = new ArrayList<Long>();

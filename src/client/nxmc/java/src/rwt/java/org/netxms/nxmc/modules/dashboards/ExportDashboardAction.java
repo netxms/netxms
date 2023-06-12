@@ -35,6 +35,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.nxmc.DownloadServiceHandler;
@@ -63,7 +64,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
     */
    public ExportDashboardAction(ViewPlacement viewPlacement, ISelectionProvider selectionProvider)
    {
-      super(Dashboard.class, i18n.tr("&Export"), viewPlacement, selectionProvider);
+      super(Dashboard.class, i18n.tr("&Export..."), viewPlacement, selectionProvider);
       setImageDescriptor(ResourceManager.getImageDescriptor("icons/export.png"));
    }
 
@@ -142,7 +143,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
                   nodeList.add(dci.getValue());
                }
 				}
-				Map<Long, String> names = session.dciIdsToNames(nodeList, dciList);
+				Map<Long, DciInfo> names = session.dciIdsToNames(nodeList, dciList);
 				for(int i = 0; i < names.size(); i++)
 				{
                xml.append("\t\t<dci id=\"");
@@ -150,7 +151,7 @@ public class ExportDashboardAction extends ObjectAction<Dashboard>
                xml.append("\" node=\"");
 					xml.append(nodeList.get(i));
                xml.append("\">");
-					xml.append(names.get(dciList.get(i)));
+					xml.append(names.get(dciList.get(i)).displayName);
                xml.append("</dci>\n");
 				}
             xml.append("\t</dciMap>\n</dashboard>\n");

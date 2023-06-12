@@ -446,7 +446,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    /**
     * Add object toolbar item.
     *
-    * @param name tooltip text
+    * @param metric tooltip text
     * @param icon icon
     * @param handler selection handler
     */

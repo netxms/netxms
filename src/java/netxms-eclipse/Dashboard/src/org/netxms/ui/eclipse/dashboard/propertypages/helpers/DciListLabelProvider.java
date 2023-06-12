@@ -28,6 +28,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.ChartDciConfig;
+import org.netxms.client.datacollection.DciInfo;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -41,7 +42,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 public class DciListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	private NXCSession session;
-	private Map<Long, String> dciNameCache = new HashMap<Long, String>();
+	private Map<Long, DciInfo> dciNameCache = new HashMap<Long, DciInfo>();
 	private List<ChartDciConfig> elementList;
 
 	/**
@@ -75,10 +76,15 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				return Integer.toString(elementList.indexOf(dci) + 1);
 			case DataSources.COLUMN_NODE:
             return ((dci.nodeId == 0) || (dci.nodeId == AbstractObject.CONTEXT)) ? "<context>" : session.getObjectName(dci.nodeId);
+			case DataSources.COLUMN_METRIC_DISPLAYNAME:
+            if (dci.dciId == 0)
+               return dci.dciDescription;
+            String displayName = dciNameCache.get(dci.dciId).displayName;
+            return (displayName != null) ? displayName : Messages.get().DciListLabelProvider_Unresolved;
 			case DataSources.COLUMN_METRIC:
             if (dci.dciId == 0)
                return dci.dciName;
-				String name = dciNameCache.get(dci.dciId);
+				String name = dciNameCache.get(dci.dciId).metric;
 				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case DataSources.COLUMN_LABEL:
 				return dci.name;
@@ -99,7 +105,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Map<Long, String> names = session.dciIdsToNames(dciList);
+				final Map<Long, DciInfo> names = session.dciIdsToNames(dciList);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -124,8 +130,8 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 * @param dciId
 	 * @param name
 	 */
-	public void addCacheEntry(long nodeId, long dciId, String name)
+	public void addCacheEntry(long nodeId, long dciId, String metric, String displayName)
 	{
-		dciNameCache.put(dciId, name);
+		dciNameCache.put(dciId, new DciInfo(metric, displayName));
 	}
 }

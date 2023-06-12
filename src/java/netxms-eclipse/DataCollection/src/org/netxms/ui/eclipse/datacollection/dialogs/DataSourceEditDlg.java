@@ -95,7 +95,28 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 
       GridData gd = new GridData();
-      if (!isTemplate)
+      if (isTemplate)
+      {
+         dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
+         dciName.setLabel("Metric regular expression");
+         dciName.setText(dci.dciName);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         dciName.setLayoutData(gd);       
+
+         dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
+         dciDescription.setLabel("DCI display name regular expression");
+         dciDescription.setText(dci.dciDescription);
+         dciDescription.setSelectDescription(true);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         dciDescription.setLayoutData(gd);
+      }
+      else
       {
          dciSelector = new DciSelector(dialogArea, SWT.NONE);
    		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
@@ -109,7 +130,7 @@ public class DataSourceEditDlg extends Dialog
       }
 
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel(Messages.get().DataSourceEditDlg_DispName);
+		name.setLabel("Label (Leave empty to use DCI display name)");
 		name.setText(dci.name);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -125,28 +146,6 @@ public class DataSourceEditDlg extends Dialog
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
-
-      if (isTemplate)
-		{
-         dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
-		   dciName.setLabel("DCI Name");
-		   dciName.setText(dci.dciName);
-	      gd = new GridData();
-	      gd.horizontalAlignment = SWT.FILL;
-	      gd.grabExcessHorizontalSpace = true;
-	      gd.horizontalSpan = 2;
-	      dciName.setLayoutData(gd);	      
-
-         dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
-	      dciDescription.setLabel("DCI Description");
-	      dciDescription.setText(dci.dciDescription);
-         dciDescription.setSelectDescription(true);
-         gd = new GridData();
-         gd.horizontalAlignment = SWT.FILL;
-         gd.grabExcessHorizontalSpace = true;
-         gd.horizontalSpan = 2;
-         dciDescription.setLayoutData(gd);
-		}
 
 		if (dci.type == ChartDciConfig.TABLE)
 		{

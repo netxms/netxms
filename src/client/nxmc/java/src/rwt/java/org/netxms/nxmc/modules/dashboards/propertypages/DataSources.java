@@ -58,9 +58,10 @@ public class DataSources extends DashboardElementPropertyPage
 
 	public static final int COLUMN_POSITION = 0;
 	public static final int COLUMN_NODE = 1;
-	public static final int COLUMN_METRIC = 2;
-	public static final int COLUMN_LABEL = 3;
-	public static final int COLUMN_COLOR = 4;
+   public static final int COLUMN_METRIC_DISPLAYNAME = 2;
+	public static final int COLUMN_METRIC = 3;
+	public static final int COLUMN_LABEL = 4;
+	public static final int COLUMN_COLOR = 5;
 
 	private AbstractChartConfig config;
 	private DciListLabelProvider labelProvider;
@@ -134,8 +135,8 @@ public class DataSources extends DashboardElementPropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { i18n.tr("Pos"), i18n.tr("Node"), i18n.tr("Metric"), i18n.tr("Label"), i18n.tr("Color") };
-      final int[] columnWidths = { 40, 130, 200, 150, 50 };
+      final String[] columnNames = { i18n.tr("Pos"), i18n.tr("Node"), i18n.tr("DCI Display name"), i18n.tr("Metric"), i18n.tr("Label"), i18n.tr("Color") };
+      final int[] columnWidths = { 40, 130, 200, 200, 150, 50 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(labelProvider);
@@ -296,7 +297,7 @@ public class DataSources extends DashboardElementPropertyPage
 			{
 			   ChartDciConfig dci = new ChartDciConfig(item);
 			   newSelection.add(dci);
-   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
+   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, item.getName(), item.getDescription());
             dciList.add(dci);
 			}			
          viewer.refresh();

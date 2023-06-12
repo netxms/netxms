@@ -9141,7 +9141,7 @@ void ClientSession::startSnmpWalk(const NXCPMessage& request)
 /**
  * Resolve single DCI name
  */
-uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *name)
+uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *metric, TCHAR *displayName)
 {
    uint32_t rcc;
    shared_ptr<NetObj> object = FindObjectById(nodeId);
@@ -9154,12 +9154,14 @@ uint32_t ClientSession::resolveDCIName(uint32_t nodeId, uint32_t dciId, TCHAR *n
 				shared_ptr<DCObject> dci = static_cast<DataCollectionOwner&>(*object).getDCObjectById(dciId, m_dwUserId);
 				if (dci != nullptr)
 				{
-               _tcslcpy(name, dci->getDescription(), MAX_DB_STRING);
+               _tcslcpy(metric, dci->getName(), MAX_DB_STRING);
+               _tcslcpy(displayName, dci->getDescription(), MAX_DB_STRING);
 					rcc = RCC_SUCCESS;
 				}
 				else
 				{
-               _sntprintf(name, MAX_DB_STRING, _T("[%d]"), dciId);
+               _sntprintf(metric, MAX_DB_STRING, _T("[%d]"), dciId);
+               _sntprintf(displayName, MAX_DB_STRING, _T("[%d]"), dciId);
 					rcc = RCC_SUCCESS;
 				}
 			}
@@ -9198,12 +9200,14 @@ void ClientSession::resolveDCINames(const NXCPMessage& request)
    uint32_t fieldId = VID_DCI_LIST_BASE;
    for(; i < count; i++)
    {
-      TCHAR m_description[MAX_DB_STRING];
-      rcc = resolveDCIName(nodeList[i], dciList[i], m_description);
+      TCHAR metric[MAX_DB_STRING];
+      TCHAR displayName[MAX_DB_STRING];
+      rcc = resolveDCIName(nodeList[i], dciList[i], metric, displayName);
       if (rcc != RCC_SUCCESS)
          break;
       response.setField(fieldId++, dciList[i]);
-      response.setField(fieldId++, m_description);
+      response.setField(fieldId++, metric);
+      response.setField(fieldId++, displayName);
    }
    response.setField(VID_NUM_ITEMS, i);
 

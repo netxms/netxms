@@ -155,7 +155,7 @@ public class ChartDciConfig implements NodeItemPair
       dciName = dci.getName();
       dciDescription = dci.getDescription();
       type = dci.getDcObjectType();
-      name = dci.getDescription();
+      name = "";
       color = UNSET_COLOR;
       lineWidth = 2;
       lineChartType = DEFAULT;
