@@ -158,6 +158,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
    m_failTimeEtherNetIP = TIMESTAMP_NEVER;
+   m_failTimeModbus = TIMESTAMP_NEVER;
    m_recoveryTime = TIMESTAMP_NEVER;
    m_lastAgentCommTime = TIMESTAMP_NEVER;
    m_lastAgentConnectAttempt = TIMESTAMP_NEVER;
@@ -169,6 +170,7 @@ Node::Node() : super(Pollable::STATUS | Pollable::CONFIGURATION | Pollable::DISC
    m_pollCountSNMP = 0;
    m_pollCountSSH = 0;
    m_pollCountEtherNetIP = 0;
+   m_pollCountModbus = 0;
    m_pollCountICMP = 0;
    m_requiredPollCount = 0; // Use system default
    m_pollsAfterIpUpdate = 0;
@@ -282,6 +284,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_failTimeSNMP = TIMESTAMP_NEVER;
    m_failTimeSSH = TIMESTAMP_NEVER;
    m_failTimeEtherNetIP = TIMESTAMP_NEVER;
+   m_failTimeModbus = TIMESTAMP_NEVER;
    m_recoveryTime = TIMESTAMP_NEVER;
    m_lastAgentCommTime = TIMESTAMP_NEVER;
    m_lastAgentConnectAttempt = TIMESTAMP_NEVER;
@@ -293,6 +296,7 @@ Node::Node(const NewNodeData *newNodeData, uint32_t flags) : super(Pollable::STA
    m_pollCountSNMP = 0;
    m_pollCountSSH = 0;
    m_pollCountEtherNetIP = 0;
+   m_pollCountModbus = 0;
    m_pollCountICMP = 0;
    m_requiredPollCount = 0; // Use system default
    m_pollsAfterIpUpdate = 0;
@@ -2789,6 +2793,78 @@ restart_status_poll:
       nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): EtherNet/IP check finished"), m_name);
    }
 
+   POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
+
+   // Check Modbus TCP connectivity
+   if ((m_capabilities & NC_IS_MODBUS_TCP) && (!(m_flags & NF_DISABLE_MODBUS_TCP)))
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): checking Modbus TCP"), m_name);
+      poller->setStatus(_T("check Modbus TCP"));
+      sendPollerMsg(_T("Checking Modbus TCP connectivity\r\n"));
+
+      ModbusOperationStatus status = MODBUS_STATUS_COMM_FAILURE;
+      ModbusTransport *transport = createModbusTransport();
+      if ((transport != nullptr) && ((status = transport->checkConnection()) == MODBUS_STATUS_SUCCESS))
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): connected to device via Modbus TCP"), m_name);
+         if (m_state & NSF_MODBUS_UNREACHABLE)
+         {
+            m_pollCountModbus++;
+            if (m_pollCountModbus >= requiredPolls)
+            {
+               m_state &= ~NSF_MODBUS_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_MODBUS_OK, m_id, nullptr);
+               sendPollerMsg(POLLER_INFO _T("Modbus TCP connectivity restored\r\n"));
+               m_pollCountModbus = 0;
+            }
+         }
+         else
+         {
+            m_pollCountModbus = 0;
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Modbus TCP is unreachable (%s), poll count %d of %d"),
+                  m_name, GetModbusStatusText(status), m_pollCountModbus, requiredPolls);
+         sendPollerMsg(POLLER_ERROR _T("Cannot connect to device via Modbus TCP (%s)\r\n"), GetModbusStatusText(status));
+         if (m_state & NSF_MODBUS_UNREACHABLE)
+         {
+            if ((now > m_failTimeModbus + capabilityExpirationTime) && !(m_state & DCSF_UNREACHABLE) && (now > m_recoveryTime + capabilityExpirationGracePeriod))
+            {
+               m_capabilities &= ~NC_IS_MODBUS_TCP;
+               m_state &= ~NSF_MODBUS_UNREACHABLE;
+               sendPollerMsg(POLLER_WARNING _T("Attribute isModbusTCP set to FALSE\r\n"));
+            }
+         }
+         else
+         {
+            m_pollCountModbus++;
+            if (m_pollCountModbus >= requiredPolls)
+            {
+               if (g_primaryIpUpdateMode == PrimaryIPUpdateMode::ON_FAILURE)
+               {
+                  InetAddress addr = ResolveHostName(m_zoneUIN, m_primaryHostName);
+                  if (addr.isValidUnicast() && !m_ipAddress.equals(addr))
+                  {
+                     nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): primary IP address changed, restarting poll"), m_name);
+                     forceResolveHostName = true;
+                     goto restart_status_poll;
+                  }
+               }
+
+               m_state |= NSF_MODBUS_UNREACHABLE;
+               PostSystemEventEx(eventQueue, EVENT_MODBUS_UNREACHABLE, m_id, nullptr);
+               m_failTimeModbus = now;
+               m_pollCountModbus = 0;
+            }
+         }
+      }
+      delete transport;
+
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 7, _T("StatusPoll(%s): Modbus TCP check finished"), m_name);
+   }
+
    poller->setStatus(_T("prepare polling list"));
 
    POLL_CANCELLATION_CHECKPOINT_EX(delete eventQueue);
@@ -2892,12 +2968,12 @@ restart_status_poll:
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): agent is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
-                  sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to TCP ping on port %d\r\n"), m_agentPort);
                   allDown = false;
                }
                else
                {
-                  sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to TCP ping on port %d\r\n"), m_agentPort);
                }
             }
          }
@@ -2929,12 +3005,39 @@ restart_status_poll:
                if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
                {
                   nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): EtherNet/IP is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
-                  sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to TCP ping on port %d\r\n"), m_eipPort);
                   allDown = false;
                }
                else
                {
-                  sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to TCP ping\r\n"));
+                  sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to TCP ping on port %d\r\n"), m_eipPort);
+               }
+            }
+         }
+         else
+         {
+            allDown = false;
+         }
+      }
+      if (allDown && (m_capabilities & NC_IS_MODBUS_TCP) && !(m_flags & NF_DISABLE_MODBUS_TCP))
+      {
+         if (m_state & NSF_MODBUS_UNREACHABLE)
+         {
+            // Use TCP ping to check if node actually unreachable if possible
+            if (m_ipAddress.isValidUnicast() && (getEffectiveModbusProxy() == 0))
+            {
+               nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): using TCP ping on primary IP address"), m_name);
+               sendPollerMsg(_T("Checking primary IP address with TCP ping on Modbus TCP port\r\n"));
+               TcpPingResult r = TcpPing(m_ipAddress, m_modbusTcpPort, 1000);
+               if ((r == TCP_PING_SUCCESS) || (r == TCP_PING_REJECT))
+               {
+                  nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): Modbus TCP is unreachable but IP address is likely reachable (TCP ping returns %d)"), m_name, r);
+                  sendPollerMsg(POLLER_INFO _T("   Primary IP address is responding to TCP ping on port %d\r\n"), m_modbusTcpPort);
+                  allDown = false;
+               }
+               else
+               {
+                  sendPollerMsg(POLLER_ERROR _T("   Primary IP address is not responding to TCP ping on port %d\r\n"), m_modbusTcpPort);
                }
             }
          }
@@ -4079,7 +4182,7 @@ static void DeleteDuplicateNode(DeleteDuplicateNodeData *data)
 }
 
 /**
- * Exit from "unreachable" state f full configuration poll was successful on any communication method (agent, SNMP, etc.)
+ * Exit from "unreachable" state if full configuration poll was successful on any communication method (agent, SNMP, etc.)
  */
 #define ExitFromUnreachableState() do { \
    if ((m_runtimeFlags & NDF_RECHECK_CAPABILITIES) && (m_state & DCSF_UNREACHABLE)) \
@@ -4257,6 +4360,23 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
          sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
          m_pollCountEtherNetIP = 0;
+      }
+
+      POLL_CANCELLATION_CHECKPOINT();
+
+      if (confPollModbus(rqId))
+         modified |= MODIFY_NODE_PROPERTIES;
+
+      ExitFromUnreachableState();
+
+      // Check if MODBUS was marked as unreachable before full poll
+      if ((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
+      {
+         m_state &= ~NSF_MODBUS_UNREACHABLE;
+         PostSystemEvent(EVENT_MODBUS_OK, m_id, nullptr);
+         sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Modbus connectivity restored"), m_name);
+         m_pollCountModbus = 0;
       }
 
       POLL_CANCELLATION_CHECKPOINT();
@@ -5177,11 +5297,109 @@ bool Node::confPollEthernetIP(uint32_t requestId)
 }
 
 /**
+ * Configuration poll: check for MODBUS
+ */
+bool Node::confPollModbus(uint32_t requestId)
+{
+   if (((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE)) ||
+       !m_ipAddress.isValidUnicast() || (m_flags & NF_DISABLE_MODBUS_TCP))
+   {
+      sendPollerMsg(_T("   Modbus TCP polling is %s\r\n"), (m_flags & NF_DISABLE_MODBUS_TCP) ? _T("disabled") : _T("not possible"));
+      return false;
+   }
+
+   bool hasChanges = false;
+
+   sendPollerMsg(_T("   Checking Modbus TCP...\r\n"));
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): checking Modbus TCP"), m_name);
+
+   ModbusTransport *transport = createModbusTransport();
+   if (transport != nullptr)
+   {
+      ModbusOperationStatus status = transport->checkConnection();
+      if (status == MODBUS_STATUS_SUCCESS)
+      {
+         sendPollerMsg(_T("   Device is Modbus capable\r\n"));
+
+         lockProperties();
+         m_capabilities |= NC_IS_MODBUS_TCP;
+         if (m_state & NSF_MODBUS_UNREACHABLE)
+         {
+            m_state &= ~NSF_MODBUS_UNREACHABLE;
+            PostSystemEvent(EVENT_MODBUS_OK, m_id, nullptr);
+            sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
+         }
+         unlockProperties();
+
+         ModbusDeviceIdentification deviceIdentification;
+         status = transport->readDeviceIdentification(&deviceIdentification);
+         if (status == MODBUS_STATUS_SUCCESS)
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): Modbus device identification successfully completed (vendor=\"%s\", product-code=\"%s\", product-name=\"%s\""),
+               m_name, deviceIdentification.vendorName, deviceIdentification.productCode, deviceIdentification.productName);
+            sendPollerMsg(_T("   Modbus device identification successfully completed\r\n"));
+            sendPollerMsg(_T("      Vendor: %s\r\n"), deviceIdentification.vendorName);
+            sendPollerMsg(_T("      Product code: %s\r\n"), deviceIdentification.productCode);
+            sendPollerMsg(_T("      Product name: %s\r\n"), deviceIdentification.productName);
+            sendPollerMsg(_T("      Revision: %s\r\n"), deviceIdentification.revision);
+
+            lockProperties();
+
+            if (_tcscmp(m_vendor, deviceIdentification.vendorName))
+            {
+               m_vendor = deviceIdentification.vendorName;
+               hasChanges = true;
+            }
+
+            if (_tcscmp(m_productName, deviceIdentification.productName))
+            {
+               m_productName = deviceIdentification.productName;
+               hasChanges = true;
+            }
+
+            if (_tcscmp(m_productCode, deviceIdentification.productCode))
+            {
+               m_productCode = deviceIdentification.productCode;
+               hasChanges = true;
+            }
+
+            if (_tcscmp(m_productVersion, deviceIdentification.revision))
+            {
+               m_productVersion = deviceIdentification.revision;
+               hasChanges = true;
+            }
+
+            unlockProperties();
+         }
+         else
+         {
+            nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot get device identification data via Modbus (%s)"), m_name, GetModbusStatusText(status));
+            sendPollerMsg(_T("   Cannot get device identification data via Modbus (%s)\r\n"), GetModbusStatusText(status));
+         }
+      }
+      else
+      {
+         nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): device does not respond to Modbus TCP request (%s)"), m_name, GetModbusStatusText(status));
+         sendPollerMsg(_T("   Device does not respond to Modbus TCP request (%s)\r\n"), GetModbusStatusText(status));
+      }
+      delete transport;
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): cannot create transport for Modbus TCP"), m_name);
+      sendPollerMsg(_T("   Modbus TCP connection is not possible\r\n"));
+   }
+
+   nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): check for Modbus TCP completed"), m_name);
+   return hasChanges;
+}
+
+/**
  * SNMP walker callback which sets indicator to true after first varbind and aborts walk
  */
-static UINT32 IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static uint32_t IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, bool *flag)
 {
-   *static_cast<bool*>(arg) = true;
+   *flag = true;
    return SNMP_ERR_COMM;
 }
 
@@ -9476,7 +9694,7 @@ uint32_t Node::getEffectiveMqttProxy()
  */
 uint32_t Node::getEffectiveModbusProxy()
 {
-   return GetEffectiveProtocolProxy(this, m_modbusProxy, m_zoneUIN, false, g_dwMgmtNode);
+   return GetEffectiveProtocolProxy(this, m_modbusProxy, m_zoneUIN, false);
 }
 
 /**
@@ -9553,12 +9771,12 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
    if ((m_flags & NF_DISABLE_SNMP) || (m_status == STATUS_UNMANAGED) || (g_flags & AF_SHUTDOWN) || m_isDeleteInitiated)
       return nullptr;
 
-   SNMP_Transport *pTransport = nullptr;
+   SNMP_Transport *transport = nullptr;
    uint32_t snmpProxy = getEffectiveSnmpProxy();
    if (snmpProxy == 0)
    {
-      pTransport = new SNMP_UDPTransport;
-      static_cast<SNMP_UDPTransport*>(pTransport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_snmpPort);
+      transport = new SNMP_UDPTransport();
+      static_cast<SNMP_UDPTransport*>(transport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_snmpPort);
    }
    else
    {
@@ -9569,32 +9787,32 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
          if (conn != nullptr)
          {
             // Use loopback address if node is SNMP proxy for itself
-            pTransport = new SNMP_ProxyTransport(conn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_snmpPort);
+            transport = new SNMP_ProxyTransport(conn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_snmpPort);
          }
       }
    }
 
    // Set security
-   if (pTransport != nullptr)
+   if (transport != nullptr)
    {
       lockProperties();
       SNMP_Version effectiveVersion = (version != SNMP_VERSION_DEFAULT) ? version : m_snmpVersion;
-      pTransport->setSnmpVersion(effectiveVersion);
+      transport->setSnmpVersion(effectiveVersion);
       if (m_snmpCodepage[0] != 0)
       {
-         pTransport->setCodepage(m_snmpCodepage);
+         transport->setCodepage(m_snmpCodepage);
       }
       else if (g_snmpCodepage[0] != 0)
       {
-         pTransport->setCodepage(g_snmpCodepage);
+         transport->setCodepage(g_snmpCodepage);
       }
 
       if (context == nullptr)
       {
          if (community == nullptr)
-            pTransport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
+            transport->setSecurityContext(new SNMP_SecurityContext(m_snmpSecurity));
          else
-            pTransport->setSecurityContext(new SNMP_SecurityContext(community));
+            transport->setSecurityContext(new SNMP_SecurityContext(community));
       }
       else
       {
@@ -9605,18 +9823,18 @@ SNMP_Transport *Node::createSnmpTransport(uint16_t port, SNMP_Version version, c
                snprintf(fullCommunity, 128, "%s@%s", m_snmpSecurity->getCommunity(), context);
             else
                snprintf(fullCommunity, 128, "%s@%s", community, context);
-            pTransport->setSecurityContext(new SNMP_SecurityContext(fullCommunity));
+            transport->setSecurityContext(new SNMP_SecurityContext(fullCommunity));
          }
          else
          {
             SNMP_SecurityContext *securityContext = new SNMP_SecurityContext(m_snmpSecurity);
             securityContext->setContextName(context);
-            pTransport->setSecurityContext(securityContext);
+            transport->setSecurityContext(securityContext);
          }
       }
       unlockProperties();
    }
-   return pTransport;
+   return transport;
 }
 
 /**
@@ -12173,4 +12391,35 @@ void Node::updateClusterMembership()
       }
       delete cachedFilterVM;
    }
+}
+
+/**
+ * Create MODBUS transport
+ */
+ModbusTransport *Node::createModbusTransport()
+{
+#if WITH_MODBUS
+   ModbusTransport *transport = nullptr;
+   uint32_t modbusProxy = getEffectiveModbusProxy();
+   if (modbusProxy == 0)
+   {
+      transport = new ModbusDirectTransport(m_ipAddress, m_modbusTcpPort, m_modbusUnitId);
+   }
+   else
+   {
+      shared_ptr<Node> proxyNode = (modbusProxy == m_id) ? self() : static_pointer_cast<Node>(g_idxNodeById.get(modbusProxy));
+      if (proxyNode != nullptr)
+      {
+         shared_ptr<AgentConnectionEx> conn = proxyNode->acquireProxyConnection(MODBUS_PROXY);
+         if (conn != nullptr)
+         {
+            // Use loopback address if node is MODBUS proxy for itself
+            transport = new ModbusProxyTransport(conn, (modbusProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, m_modbusTcpPort, m_modbusUnitId);
+         }
+      }
+   }
+   return transport;
+#else
+   return nullptr;
+#endif
 }

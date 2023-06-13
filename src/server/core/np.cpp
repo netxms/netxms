@@ -99,7 +99,7 @@ NewNodeData::NewNodeData(const NXCPMessage& msg, const InetAddress& ipAddress) :
    agentProxyId = msg.getFieldAsUInt32(VID_AGENT_PROXY);
    snmpProxyId = msg.getFieldAsUInt32(VID_SNMP_PROXY);
    mqttProxyId = msg.getFieldAsUInt32(VID_MQTT_PROXY);
-   modbusProxyId = msg.getFieldAsUInt32(VID_MQTT_PROXY);
+   modbusProxyId = msg.getFieldAsUInt32(VID_MODBUS_PROXY);
    eipProxyId = msg.getFieldAsUInt32(VID_ETHERNET_IP_PROXY);
    icmpProxyId = msg.getFieldAsUInt32(VID_ICMP_PROXY);
    sshProxyId = msg.getFieldAsUInt32(VID_SSH_PROXY);
@@ -149,6 +149,8 @@ shared_ptr<Node> NXCORE_EXPORTABLE PollNewNode(NewNodeData *newNodeData)
       flags |= NF_DISABLE_SNMP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_ETHERNET_IP)
       flags |= NF_DISABLE_ETHERNET_IP;
+   if (newNodeData->creationFlags & NXC_NCF_DISABLE_MODBUS_TCP)
+      flags |= NF_DISABLE_MODBUS_TCP;
    if (newNodeData->creationFlags & NXC_NCF_DISABLE_NXCP)
       flags |= NF_DISABLE_NXCP;
    if (newNodeData->creationFlags & NXC_NCF_SNMP_SETTINGS_LOCKED)

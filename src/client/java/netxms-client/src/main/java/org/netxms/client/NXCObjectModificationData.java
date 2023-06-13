@@ -170,6 +170,9 @@ public class NXCObjectModificationData
    private String chassisPlacement;
    private Integer etherNetIPPort;
    private Long etherNetIPProxy;
+   private Integer modbusTcpPort;
+   private Short modbusUnitId;
+   private Long modbusProxy;
    private CertificateMappingMethod certificateMappingMethod;
    private String certificateMappingData;
    private Integer categoryId;
@@ -2021,6 +2024,54 @@ public class NXCObjectModificationData
    public void setEtherNetIPProxy(long etherNetIPProxy)
    {
       this.etherNetIPProxy = etherNetIPProxy;
+   }
+
+   /**
+    * @return the modbusTcpPort
+    */
+   public Integer getModbusTcpPort()
+   {
+      return modbusTcpPort;
+   }
+
+   /**
+    * @param modbusTcpPort the modbusTcpPort to set
+    */
+   public void setModbusTcpPort(Integer modbusTcpPort)
+   {
+      this.modbusTcpPort = modbusTcpPort;
+   }
+
+   /**
+    * @return the modbusUnitId
+    */
+   public Short getModbusUnitId()
+   {
+      return modbusUnitId;
+   }
+
+   /**
+    * @param modbusUnitId the modbusUnitId to set
+    */
+   public void setModbusUnitId(Short modbusUnitId)
+   {
+      this.modbusUnitId = modbusUnitId;
+   }
+
+   /**
+    * @return the modbusProxy
+    */
+   public Long getModbusProxy()
+   {
+      return modbusProxy;
+   }
+
+   /**
+    * @param modbusProxy the modbusProxy to set
+    */
+   public void setModbusProxy(Long modbusProxy)
+   {
+      this.modbusProxy = modbusProxy;
    }
 
    /**

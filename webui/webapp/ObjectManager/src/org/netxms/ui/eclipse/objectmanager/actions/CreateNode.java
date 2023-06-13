@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,9 +28,9 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
@@ -47,9 +47,9 @@ public class CreateNode implements IObjectActionDelegate
 	private IWorkbenchPart part;
 	private long parentId = -1;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
-	 */
+   /**
+    * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+    */
 	@Override
 	public void setActivePart(IAction action, IWorkbenchPart targetPart)
 	{
@@ -57,9 +57,9 @@ public class CreateNode implements IObjectActionDelegate
 		window = targetPart.getSite().getWorkbenchWindow();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+    */
 	@Override
 	public void run(IAction action)
 	{
@@ -69,25 +69,29 @@ public class CreateNode implements IObjectActionDelegate
    		dlg = new CreateNodeDialog(window.getShell(), dlg);
    		if (dlg.open() != Window.OK)
    			return;
-   		
+
          final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
          cd.setCreationFlags(dlg.getCreationFlags());
-         cd.setObjectAlias(dlg.getObjectAlias());
          cd.setPrimaryName(dlg.getHostName());
+         cd.setObjectAlias(dlg.getObjectAlias());
          cd.setAgentPort(dlg.getAgentPort());
-         cd.setSnmpPort(dlg.getSnmpPort());
-         cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
-         cd.setSshPort(dlg.getSshPort());
          cd.setAgentProxyId(dlg.getAgentProxy());
+         cd.setSnmpPort(dlg.getSnmpPort());
          cd.setSnmpProxyId(dlg.getSnmpProxy());
-         cd.setWebServiceProxyId(dlg.getWebServiceProxy());
+         cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
          cd.setEtherNetIpProxyId(dlg.getEtherNetIpProxy());
+         cd.setModbusTcpPort(dlg.getModbusTcpPort());
+         cd.setModbusUnitId(dlg.getModbusUnitId());
+         cd.setModbusProxyId(dlg.getModbusProxy());
          cd.setIcmpProxyId(dlg.getIcmpProxy());
+         cd.setWebServiceProxyId(dlg.getWebServiceProxy());
+         cd.setSshPort(dlg.getSshPort());
          cd.setSshProxyId(dlg.getSshProxy());
-         cd.setZoneUIN(dlg.getZoneUIN());
          cd.setSshLogin(dlg.getSshLogin());
          cd.setSshPassword(dlg.getSshPassword());
-   		
+         cd.setMqttProxyId(dlg.getMqttProxy());
+         cd.setZoneUIN(dlg.getZoneUIN());
+
          final NXCSession session = ConsoleSharedData.getSession();
    		new ConsoleJob(Messages.get().CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {
    			@Override
@@ -95,7 +99,7 @@ public class CreateNode implements IObjectActionDelegate
    			{
    				session.createObject(cd);
    			}
-   
+
    			@Override
    			protected String getErrorMessage()
    			{
@@ -105,9 +109,9 @@ public class CreateNode implements IObjectActionDelegate
 	   } while(dlg.isShowAgain());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
-	 */
+   /**
+    * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+    */
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{

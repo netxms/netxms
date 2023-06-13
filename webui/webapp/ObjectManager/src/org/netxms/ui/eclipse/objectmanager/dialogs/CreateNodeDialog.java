@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -49,13 +48,14 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class CreateNodeDialog extends Dialog
 {
 	private NXCSession session;
-	
 	private LabeledText objectNameField;
    private LabeledText objectAliasField;
 	private LabeledText hostNameField;
 	private Spinner agentPortField;
 	private Spinner snmpPortField;
    private Spinner etherNetIpPortField;
+   private Spinner modbusTcpPortField;
+   private Spinner modbusUnitIdField;
    private Spinner sshPortField;
 	private LabeledText sshLoginField;
    private LabeledText sshPasswordField;
@@ -66,6 +66,7 @@ public class CreateNodeDialog extends Dialog
 	private Button checkDisableSNMP;
    private Button checkDisableSSH;
    private Button checkDisableEtherNetIP;
+   private Button checkDisableModbusTCP;
 	private Button checkDisablePing;
 	private Button checkCreateAnother;
 	private Button checkDisableAutomaticSNMPConfig;
@@ -73,11 +74,13 @@ public class CreateNodeDialog extends Dialog
 	private ObjectSelector agentProxySelector;
 	private ObjectSelector snmpProxySelector;
    private ObjectSelector etherNetIpProxySelector;
+   private ObjectSelector modbusProxySelector;
    private ObjectSelector icmpProxySelector;
    private ObjectSelector sshProxySelector;
+   private ObjectSelector mqttProxySelector;
    private ObjectSelector webServiceProxySelector;
 	private ZoneSelector zoneSelector;
-	
+
 	private String objectName = "";
    private String objectAlias = "";
 	private String hostName = "";
@@ -85,19 +88,23 @@ public class CreateNodeDialog extends Dialog
 	private long agentProxy = 0;
 	private long snmpProxy = 0;
    private long etherNetIpProxy = 0;
+   private long modbusProxy = 0;
    private long icmpProxy = 0;
    private long sshProxy = 0;
+   private long mqttProxy = 0;
    private long webServiceProxy = 0;
 	private int zoneUIN = 0;
 	private int agentPort = 4700;
 	private int snmpPort = 161;
    private int etherNetIpPort = 44818;
+   private int modbusTcpPort = 502;
+   private short modbusUnitId = 1;
    private int sshPort = 22;
 	private String sshLogin = "";
 	private String sshPassword; 
 	private boolean showAgain = false;
 	private boolean enableShowAgainFlag = true;
-	
+
 	/**
 	 * @param parentShell
 	 */
@@ -111,7 +118,10 @@ public class CreateNodeDialog extends Dialog
          agentProxy = prev.agentProxy;
          snmpProxy = prev.snmpProxy;
          icmpProxy = prev.snmpProxy;
-         sshProxy = prev.snmpProxy;
+         etherNetIpProxy = prev.etherNetIpProxy;
+         modbusProxy = prev.modbusProxy;
+         sshProxy = prev.sshProxy;
+         mqttProxy = prev.mqttProxy;
          webServiceProxy = prev.webServiceProxy;
 		   zoneUIN = prev.zoneUIN;
 		   agentPort = prev.agentPort;
@@ -119,6 +129,9 @@ public class CreateNodeDialog extends Dialog
 		   sshLogin = prev.sshLogin;
 		   sshPassword = prev.sshPassword;
 		   sshPort = prev.sshPort;
+         etherNetIpPort = prev.etherNetIpPort;
+         modbusTcpPort = prev.modbusTcpPort;
+         modbusUnitId = prev.modbusUnitId;
          showAgain = prev.showAgain;
 		}
 	}
@@ -146,7 +159,7 @@ public class CreateNodeDialog extends Dialog
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
-		layout.numColumns = 2;
+      layout.numColumns = 3;
 		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 		
@@ -157,7 +170,7 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 600;
-		gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
 		objectNameField.setLayoutData(gd);
 		objectNameField.setText(objectName);
 
@@ -167,61 +180,73 @@ public class CreateNodeDialog extends Dialog
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
       objectAliasField.setLayoutData(gd);
       objectAliasField.setText(objectAlias);
 
-		final Composite ipAddrGroup = new Composite(dialogArea, SWT.NONE);
-		layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.numColumns = 2;
-		ipAddrGroup.setLayout(layout);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
-		ipAddrGroup.setLayoutData(gd);
-		
-		hostNameField = new LabeledText(ipAddrGroup, SWT.NONE);
+      hostNameField = new LabeledText(dialogArea, SWT.NONE);
 		hostNameField.setLabel(Messages.get().CreateNodeDialog_PrimaryHostName);
 		hostNameField.getTextControl().setTextLimit(255);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
 		hostNameField.setLayoutData(gd);
 		hostNameField.setText(hostName);
-		
+
 		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_AgentPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		agentPortField.setSelection(agentPort);
-		
+
 		snmpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_SNMPPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		snmpPortField.setSelection(snmpPort);
 		
       etherNetIpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "EtherNet/IP Port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
       etherNetIpPortField.setSelection(etherNetIpPort);
-      
-      sshPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "SSH Port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+
+      modbusTcpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Modbus TCP port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      modbusTcpPortField.setSelection(modbusTcpPort);
+
+      modbusUnitIdField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Modbus unit ID", 0, 255, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      modbusUnitIdField.setSelection(modbusUnitId);
+
+      sshPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "SSH port", 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
       sshPortField.setSelection(sshPort);
 
-		sshLoginField = new LabeledText(dialogArea, SWT.NONE);
+      Composite sshGroup = new Composite(dialogArea, SWT.NONE);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
+      sshGroup.setLayoutData(gd);
+      GridLayout sshGroupLayout = new GridLayout();
+      sshGroupLayout.numColumns = 2;
+      sshGroupLayout.makeColumnsEqualWidth = true;
+      sshGroupLayout.marginHeight = 0;
+      sshGroupLayout.marginWidth = 0;
+      sshGroupLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      sshGroup.setLayout(sshGroupLayout);
+
+      sshLoginField = new LabeledText(sshGroup, SWT.NONE);
 		sshLoginField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		sshLoginField.setLabel("SSH Login");
+      sshLoginField.setLabel("SSH login");
 		sshLoginField.setText(sshLogin);
 		
-      sshPasswordField = new LabeledText(dialogArea, SWT.NONE);
+      sshPasswordField = new LabeledText(sshGroup, SWT.NONE);
       sshPasswordField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      sshPasswordField.setLabel("SSH Password");
+      sshPasswordField.setLabel("SSH password");
       sshPasswordField.setText(sshPassword);
-      
+
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
 		optionsGroup.setText(Messages.get().CreateNodeDialog_Options);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+      gd.horizontalSpan = layout.numColumns;
 		optionsGroup.setLayoutData(gd);
-		optionsGroup.setLayout(new RowLayout(SWT.VERTICAL));
+      GridLayout optionsGroupLayout = new GridLayout();
+      optionsGroupLayout.numColumns = 2;
+      optionsGroupLayout.makeColumnsEqualWidth = true;
+      optionsGroup.setLayout(optionsGroupLayout);
 
 		checkRemoteManagementNode = new Button(optionsGroup, SWT.CHECK);
       checkRemoteManagementNode.setText("Communication through external &gateway");
@@ -262,7 +287,7 @@ public class CreateNodeDialog extends Dialog
             }
          });
       }
-      
+
 		checkDisableAgent = new Button(optionsGroup, SWT.CHECK);
 		checkDisableAgent.setText(Messages.get().CreateNodeDialog_DisableAgent);
 		checkDisableAgent.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_NXCP) != 0);
@@ -278,16 +303,34 @@ public class CreateNodeDialog extends Dialog
       checkDisablePing = new Button(optionsGroup, SWT.CHECK);
       checkDisablePing.setText(Messages.get().CreateNodeDialog_DisableICMP);
       checkDisablePing.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ICMP) != 0);
-		
+
       checkDisableEtherNetIP = new Button(optionsGroup, SWT.CHECK);
       checkDisableEtherNetIP.setText("Disable usage of &EtherNet/IP for all polls");
       checkDisableEtherNetIP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ETHERNET_IP) != 0);
+
+      checkDisableModbusTCP = new Button(optionsGroup, SWT.CHECK);
+      checkDisableModbusTCP.setText("Disable usage of &Modbus TCP for all polls");
+      checkDisableModbusTCP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_MODBUS_TCP) != 0);
 
       checkDisableAutomaticSNMPConfig = new Button(optionsGroup, SWT.CHECK);
       checkDisableAutomaticSNMPConfig.setText("&Prevent automatic SNMP configuration changes");
       checkDisableAutomaticSNMPConfig.setSelection((creationFlags & NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED) != 0);
 
-		agentProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      Composite proxyGroup = new Composite(dialogArea, SWT.NONE);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
+      proxyGroup.setLayoutData(gd);
+      GridLayout proxyGroupLayout = new GridLayout();
+      proxyGroupLayout.numColumns = 2;
+      proxyGroupLayout.makeColumnsEqualWidth = true;
+      proxyGroupLayout.marginHeight = 0;
+      proxyGroupLayout.marginWidth = 0;
+      proxyGroupLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      proxyGroup.setLayout(proxyGroupLayout);
+
+      agentProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
 		agentProxySelector.setLabel(Messages.get().CreateNodeDialog_AgentProxy);
 		agentProxySelector.setObjectClass(Node.class);
 		agentProxySelector.setObjectId(agentProxy);
@@ -296,7 +339,7 @@ public class CreateNodeDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		agentProxySelector.setLayoutData(gd);
 
-		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      snmpProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
 		snmpProxySelector.setLabel(Messages.get().CreateNodeDialog_SNMPProxy);
 		snmpProxySelector.setObjectClass(Node.class);
 		snmpProxySelector.setObjectId(snmpProxy);
@@ -304,8 +347,8 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		snmpProxySelector.setLayoutData(gd);
-		
-      etherNetIpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+
+      etherNetIpProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
       etherNetIpProxySelector.setLabel("Proxy for EtherNet/IP");
       etherNetIpProxySelector.setObjectClass(Node.class);
       etherNetIpProxySelector.setObjectId(etherNetIpProxy);
@@ -314,7 +357,16 @@ public class CreateNodeDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       etherNetIpProxySelector.setLayoutData(gd);
 
-      icmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      modbusProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
+      modbusProxySelector.setLabel("Proxy for Modbus");
+      modbusProxySelector.setObjectClass(Node.class);
+      modbusProxySelector.setObjectId(modbusProxy);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      modbusProxySelector.setLayoutData(gd);
+
+      icmpProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
       icmpProxySelector.setLabel("Proxy for ICMP");
       icmpProxySelector.setObjectClass(Node.class);
       icmpProxySelector.setObjectId(icmpProxy);
@@ -322,8 +374,8 @@ public class CreateNodeDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       icmpProxySelector.setLayoutData(gd);
-      
-      sshProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+
+      sshProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
       sshProxySelector.setLabel("Proxy for SSH");
       sshProxySelector.setEmptySelectionName("<default>");
       sshProxySelector.setObjectClass(Node.class);
@@ -333,7 +385,17 @@ public class CreateNodeDialog extends Dialog
       gd.grabExcessHorizontalSpace = true;
       sshProxySelector.setLayoutData(gd);
 
-      webServiceProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      mqttProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
+      mqttProxySelector.setLabel("Proxy for MQTT");
+      mqttProxySelector.setEmptySelectionName("<default>");
+      mqttProxySelector.setObjectClass(Node.class);
+      mqttProxySelector.setObjectId(mqttProxy);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      mqttProxySelector.setLayoutData(gd);
+
+      webServiceProxySelector = new ObjectSelector(proxyGroup, SWT.NONE, true);
       webServiceProxySelector.setLabel("Proxy for web services");
       webServiceProxySelector.setEmptySelectionName("<default>");
       webServiceProxySelector.setObjectClass(Node.class);
@@ -342,17 +404,17 @@ public class CreateNodeDialog extends Dialog
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       webServiceProxySelector.setLayoutData(gd);
-      
+
 		if (session.isZoningEnabled())
 		{
 			zoneSelector = new ZoneSelector(dialogArea, SWT.NONE, false);
 			zoneSelector.setLabel(Messages.get().CreateNodeDialog_Zone);
-			Zone zone = ConsoleSharedData.getSession().findZone(zoneUIN);
+         Zone zone = session.findZone(zoneUIN);
 			zoneSelector.setZoneUIN((zone != null) ? zone.getUIN() : -1);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
-			gd.horizontalSpan = 2;
+         gd.horizontalSpan = layout.numColumns;
 			zoneSelector.setLayoutData(gd);
 		}
 
@@ -364,13 +426,13 @@ public class CreateNodeDialog extends Dialog
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
-         gd.horizontalSpan = 2;
+         gd.horizontalSpan = layout.numColumns;
          checkCreateAnother.setLayoutData(gd);
 		}		
 		return dialogArea;
 	}
 
-	/* (non-Javadoc)
+   /**
 	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
 	 */
 	@Override
@@ -386,11 +448,11 @@ public class CreateNodeDialog extends Dialog
 			      String.format(Messages.get().CreateNodeDialog_WarningInvalidHostname, hostName));
 			return;
 		}
-		
+
 		objectName = objectNameField.getText().trim();
 		if (objectName.isEmpty())
 			objectName = hostName;
-		
+
 		creationFlags = 0;
 		if (checkUnmanaged.getSelection())
 			creationFlags |= NXCObjectCreationData.CF_CREATE_UNMANAGED;
@@ -408,6 +470,8 @@ public class CreateNodeDialog extends Dialog
          creationFlags |= NXCObjectCreationData.CF_DISABLE_SSH;
       if (checkDisableEtherNetIP.getSelection())
          creationFlags |= NXCObjectCreationData.CF_DISABLE_ETHERNET_IP;
+      if (checkDisableModbusTCP.getSelection())
+         creationFlags |= NXCObjectCreationData.CF_DISABLE_MODBUS_TCP;
       if (checkDisableAutomaticSNMPConfig.getSelection())
          creationFlags |= NXCObjectCreationData.CF_SNMP_SETTINGS_LOCKED;
       if (checkRemoteManagementNode.getSelection())
@@ -417,6 +481,8 @@ public class CreateNodeDialog extends Dialog
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();
       etherNetIpPort = etherNetIpPortField.getSelection();
+      modbusTcpPort = modbusTcpPortField.getSelection();
+      modbusUnitId = (short)modbusUnitIdField.getSelection();
       sshPort = sshPortField.getSelection();
 
 		sshLogin = sshLoginField.getText().trim();
@@ -425,8 +491,10 @@ public class CreateNodeDialog extends Dialog
 		agentProxy = agentProxySelector.getObjectId();
 		snmpProxy = snmpProxySelector.getObjectId();
       etherNetIpProxy = etherNetIpProxySelector.getObjectId();
+      modbusProxy = modbusProxySelector.getObjectId();
       icmpProxy = icmpProxySelector.getObjectId();
       sshProxy = sshProxySelector.getObjectId();
+      mqttProxy = mqttProxySelector.getObjectId();
       webServiceProxy = webServiceProxySelector.getObjectId();
 
       if (session.isZoningEnabled())
@@ -472,8 +540,8 @@ public class CreateNodeDialog extends Dialog
    }
 
    /**
-	 * @return the hostName
-	 */
+    * @return the hostName
+    */
 	public String getHostName()
 	{
 		return hostName;
@@ -512,6 +580,14 @@ public class CreateNodeDialog extends Dialog
    }
 
    /**
+    * @return the modbusProxy
+    */
+   public long getModbusProxy()
+   {
+      return modbusProxy;
+   }
+
+   /**
     * @return the sshPort
     */
    public int getSshPort()
@@ -533,6 +609,14 @@ public class CreateNodeDialog extends Dialog
    public long getSshProxy()
    {
       return sshProxy;
+   }
+
+   /**
+    * @return the mqttProxy
+    */
+   public long getMqttProxy()
+   {
+      return mqttProxy;
    }
 
    /**
@@ -583,6 +667,22 @@ public class CreateNodeDialog extends Dialog
    public int getEtherNetIpPort()
    {
       return etherNetIpPort;
+   }
+
+   /**
+    * @return the modbusTcpPort
+    */
+   public int getModbusTcpPort()
+   {
+      return modbusTcpPort;
+   }
+
+   /**
+    * @return the modbusUnitId
+    */
+   public short getModbusUnitId()
+   {
+      return modbusUnitId;
    }
 
    /**

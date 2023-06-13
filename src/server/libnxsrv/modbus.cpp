@@ -21,6 +21,16 @@
 
 #include "libnxsrv.h"
 
+/**
+ * Get text message from MODBUS operation completion status
+ */
+const TCHAR LIBNXSRV_EXPORTABLE *GetModbusStatusText(ModbusOperationStatus status)
+{
+   static const TCHAR *texts[] = { _T("Success"), _T("Communication failure"), _T("Protocol failure"), _T("Timeout") };
+   int index = static_cast<int>(status);
+   return ((index >= 0) && (index < sizeof(texts) / sizeof(texts[0]))) ? texts[index] : _T("Unknown");
+}
+
 #if WITH_MODBUS
 
 #define DEBUG_TAG _T("modbus")
@@ -34,18 +44,18 @@
 /**
  * Direct transport - check connection
  */
-MODBUS_OperationStatus MODBUS_DirectTransport::checkConnection()
+ModbusOperationStatus ModbusDirectTransport::checkConnection()
 {
-   return MODBUSCheckConnection(m_address, m_port, m_unitId) ? MODBUS_STATUS_SUCCESS : MODBUS_STATUS_COMM_FAILURE;
+   return ModbusCheckConnection(m_ipAddress, m_port, m_unitId) ? MODBUS_STATUS_SUCCESS : MODBUS_STATUS_COMM_FAILURE;
 }
 
 /**
  * Direct transport - read device identification
  */
-MODBUS_OperationStatus MODBUS_DirectTransport::readDeviceIdentification(MODBUS_DeviceIdentification *deviceId)
+ModbusOperationStatus ModbusDirectTransport::readDeviceIdentification(ModbusDeviceIdentification *deviceId)
 {
-   memset(deviceId, 0, sizeof(MODBUS_DeviceIdentification));
-   return (MODBUS_OperationStatus)MODBUSExecute(m_address, m_port, m_unitId,
+   memset(deviceId, 0, sizeof(ModbusDeviceIdentification));
+   return (ModbusOperationStatus)ModbusExecute(m_ipAddress, m_port, m_unitId,
       [deviceId] (modbus_t *mb, const char *ipAddrText, uint16_t port, int32_t unitId) -> int32_t
       {
          modbus_device_id_response_t d;
@@ -118,12 +128,12 @@ MODBUS_OperationStatus MODBUS_DirectTransport::readDeviceIdentification(MODBUS_D
 /**
  * Direct transport - read holding registers
  */
-MODBUS_OperationStatus MODBUS_DirectTransport::readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value)
+ModbusOperationStatus ModbusDirectTransport::readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value)
 {
-   return (MODBUS_OperationStatus)MODBUSExecute(m_address, m_port, m_unitId,
+   return (ModbusOperationStatus)ModbusExecute(m_ipAddress, m_port, m_unitId,
       [address, conversion, value] (modbus_t *mb, const char *ipAddrText, uint16_t port, int32_t unitId) -> int32_t
       {
-         if (MODBUSReadHoldingRegisters(mb, address, conversion, value) < 1)
+         if (ModbusReadHoldingRegisters(mb, address, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadHoldingRegisters(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(errno));
             return MODBUS_STATUS_PROTOCOL_ERROR;
@@ -135,12 +145,12 @@ MODBUS_OperationStatus MODBUS_DirectTransport::readHoldingRegisters(int address,
 /**
  * Direct transport - read input registers
  */
-MODBUS_OperationStatus MODBUS_DirectTransport::readInputRegisters(int address, const TCHAR *conversion, TCHAR *value)
+ModbusOperationStatus ModbusDirectTransport::readInputRegisters(int address, const TCHAR *conversion, TCHAR *value)
 {
-   return (MODBUS_OperationStatus)MODBUSExecute(m_address, m_port, m_unitId,
+   return (ModbusOperationStatus)ModbusExecute(m_ipAddress, m_port, m_unitId,
       [address, conversion, value] (modbus_t *mb, const char *ipAddrText, uint16_t port, int32_t unitId) -> int32_t
       {
-         if (MODBUSReadInputRegisters(mb, address, conversion, value) < 1)
+         if (ModbusReadInputRegisters(mb, address, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadInputRegisters(%hs:%d:%d) failed (%hs)"), ipAddrText, port, unitId, modbus_strerror(errno));
             return MODBUS_STATUS_PROTOCOL_ERROR;
@@ -152,9 +162,9 @@ MODBUS_OperationStatus MODBUS_DirectTransport::readInputRegisters(int address, c
 /**
  * Direct transport - read coil
  */
-MODBUS_OperationStatus MODBUS_DirectTransport::readCoil(int address, TCHAR *value)
+ModbusOperationStatus ModbusDirectTransport::readCoil(int address, TCHAR *value)
 {
-   return (MODBUS_OperationStatus)MODBUSExecute(m_address, m_port, m_unitId,
+   return (ModbusOperationStatus)ModbusExecute(m_ipAddress, m_port, m_unitId,
       [address, value] (modbus_t *mb, const char *ipAddrText, uint16_t port, int32_t unitId) -> int32_t
       {
          uint8_t coil;
@@ -172,9 +182,9 @@ MODBUS_OperationStatus MODBUS_DirectTransport::readCoil(int address, TCHAR *valu
 /**
  * Direct transport - read discrete input
  */
-MODBUS_OperationStatus MODBUS_DirectTransport::readDiscreteInput(int address, TCHAR *value)
+ModbusOperationStatus ModbusDirectTransport::readDiscreteInput(int address, TCHAR *value)
 {
-   return (MODBUS_OperationStatus)MODBUSExecute(m_address, m_port, m_unitId,
+   return (ModbusOperationStatus)ModbusExecute(m_ipAddress, m_port, m_unitId,
       [address, value] (modbus_t *mb, const char *ipAddrText, uint16_t port, int32_t unitId) -> int32_t
       {
          uint8_t input;
@@ -189,54 +199,145 @@ MODBUS_OperationStatus MODBUS_DirectTransport::readDiscreteInput(int address, TC
       }, MODBUS_STATUS_COMM_FAILURE);
 }
 
-#else /* WITH_MODBUS */
-
 /**
- * Dummy transport - check connection
+ * Direct transport - check connection
  */
-MODBUS_OperationStatus MODBUS_DummyTransport::checkConnection()
+ModbusOperationStatus ModbusProxyTransport::checkConnection()
 {
-   return MODBUS_STATUS_COMM_FAILURE;
+   TCHAR metric[256], ipAddrText[64];
+   _sntprintf(metric, 256, _T("Modbus.ConnectionStatus(%s,%u,%d)"), m_ipAddress.toString(ipAddrText), m_port, m_unitId);
+
+   TCHAR result[MAX_RESULT_LENGTH];
+   uint32_t rcc = m_agentConnection->getParameter(metric, result, MAX_RESULT_LENGTH);
+   switch(rcc)
+   {
+      case ERR_SUCCESS:
+         return !_tcscmp(result, _T("1")) ? MODBUS_STATUS_SUCCESS : MODBUS_STATUS_COMM_FAILURE;
+      case ERR_REQUEST_TIMEOUT:
+         return MODBUS_STATUS_TIMEOUT;
+      default:
+         return MODBUS_STATUS_COMM_FAILURE;
+   }
 }
 
 /**
- * Dummy transport - read device identification
+ * Direct transport - read device identification
  */
-MODBUS_OperationStatus MODBUS_DummyTransport::readDeviceIdentification(MODBUS_DeviceIdentification *deviceId)
+ModbusOperationStatus ModbusProxyTransport::readDeviceIdentification(ModbusDeviceIdentification *deviceId)
 {
-   return MODBUS_STATUS_COMM_FAILURE;
+   memset(deviceId, 0, sizeof(ModbusDeviceIdentification));
+
+   TCHAR metric[256], ipAddrText[64];
+   _sntprintf(metric, 256, _T("Modbus.DeviceIdentification(%s,%u,%d,false)"), m_ipAddress.toString(ipAddrText), m_port, m_unitId);
+
+   StringList *objects;
+   uint32_t rcc = m_agentConnection->getList(metric, &objects);
+   if (rcc != ERR_SUCCESS)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 5, _T("ModbusProxyTransport::readDeviceIdentification(%s, %u, %d): request failed (agent error code %d)"), ipAddrText, m_port, m_unitId, rcc);
+      return (rcc == ERR_REQUEST_TIMEOUT) ? MODBUS_STATUS_TIMEOUT : MODBUS_STATUS_COMM_FAILURE;
+   }
+
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ModbusProxyTransport::readDeviceIdentification(%s, %u, %d): %d objects successfully retrieved"), ipAddrText, m_port, m_unitId, objects->size());
+   for(int i = 0; i < objects->size(); i++)
+   {
+      const TCHAR *object = objects->get(i);
+      const TCHAR *value = _tcschr(object, _T('='));
+      if (value == nullptr)
+         continue;
+      value++;
+
+      TCHAR *eptr;
+      int objectId = _tcstol(object, &eptr, 10);
+      if (*eptr != _T('='))
+         continue;
+
+      switch(objectId)
+      {
+         case 0:
+            _tcslcpy(deviceId->vendorName, value, 256);
+            break;
+         case 1:
+            _tcslcpy(deviceId->productCode, value, 256);
+            break;
+         case 2:
+            _tcslcpy(deviceId->revision, value, 256);
+            break;
+         case 3:
+            _tcslcpy(deviceId->vendorURL, value, 256);
+            break;
+         case 4:
+            _tcslcpy(deviceId->productName, value, 256);
+            break;
+         case 5:
+            _tcslcpy(deviceId->modelName, value, 256);
+            break;
+         case 6:
+            _tcslcpy(deviceId->userApplicationName, value, 256);
+            break;
+      }
+   }
+
+   delete objects;
+   return MODBUS_STATUS_SUCCESS;
 }
 
 /**
- * Dummy transport - read holding registers
+ * Proxy transport - generic reader for MODBUS metric
  */
-MODBUS_OperationStatus MODBUS_DummyTransport::readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value)
+ModbusOperationStatus ModbusProxyTransport::readMetricFromAgent(const TCHAR *metric, TCHAR *value)
 {
-   return MODBUS_STATUS_COMM_FAILURE;
+   uint32_t rcc = m_agentConnection->getParameter(metric, value, MAX_RESULT_LENGTH);
+   nxlog_debug_tag(DEBUG_TAG, 6, _T("ModbusProxyTransport::readMetricFromAgent: request for %s %s (agent status code %d)"), metric, (rcc == ERR_SUCCESS) ? _T("successful") : _T("failed"), rcc);
+   switch(rcc)
+   {
+      case ERR_SUCCESS:
+         return MODBUS_STATUS_SUCCESS;
+      case ERR_REQUEST_TIMEOUT:
+         return MODBUS_STATUS_TIMEOUT;
+      default:
+         return MODBUS_STATUS_COMM_FAILURE;
+   }
 }
 
 /**
- * Dummy transport - read input registers
+ * Proxy transport - read holding registers
  */
-MODBUS_OperationStatus MODBUS_DummyTransport::readInputRegisters(int address, const TCHAR *conversion, TCHAR *value)
+ModbusOperationStatus ModbusProxyTransport::readHoldingRegisters(int address, const TCHAR *conversion, TCHAR *value)
 {
-   return MODBUS_STATUS_COMM_FAILURE;
+   TCHAR metric[256], ipAddrText[64];
+   _sntprintf(metric, 256, _T("Modbus.HoldingRegister(%s,%u,%d,%d,%s)"), m_ipAddress.toString(ipAddrText), m_port, m_unitId, address, conversion);
+   return readMetricFromAgent(metric, value);
 }
 
 /**
- * Dummy transport - read coil
+ * Proxy transport - read input registers
  */
-MODBUS_OperationStatus MODBUS_DummyTransport::readCoil(int address, TCHAR *value)
+ModbusOperationStatus ModbusProxyTransport::readInputRegisters(int address, const TCHAR *conversion, TCHAR *value)
 {
-   return MODBUS_STATUS_COMM_FAILURE;
+   TCHAR metric[256], ipAddrText[64];
+   _sntprintf(metric, 256, _T("Modbus.InputRegister(%s,%u,%d,%d,%s)"), m_ipAddress.toString(ipAddrText), m_port, m_unitId, address, conversion);
+   return readMetricFromAgent(metric, value);
 }
 
 /**
- * Dummy transport - read discrete input
+ * Proxy transport - read coil
  */
-MODBUS_OperationStatus MODBUS_DummyTransport::readDiscreteInput(int address, TCHAR *value)
+ModbusOperationStatus ModbusProxyTransport::readCoil(int address, TCHAR *value)
 {
-   return MODBUS_STATUS_COMM_FAILURE;
+   TCHAR metric[256], ipAddrText[64];
+   _sntprintf(metric, 256, _T("Modbus.Coil(%s,%u,%d,%d)"), m_ipAddress.toString(ipAddrText), m_port, m_unitId, address);
+   return readMetricFromAgent(metric, value);
+}
+
+/**
+ * Proxy transport - read discrete input
+ */
+ModbusOperationStatus ModbusProxyTransport::readDiscreteInput(int address, TCHAR *value)
+{
+   TCHAR metric[256], ipAddrText[64];
+   _sntprintf(metric, 256, _T("Modbus.DiscreteInput(%s,%u,%d,%d)"), m_ipAddress.toString(ipAddrText), m_port, m_unitId, address);
+   return readMetricFromAgent(metric, value);
 }
 
 #endif   /* WITH_MODBUS */

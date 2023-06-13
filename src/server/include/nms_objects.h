@@ -2953,11 +2953,12 @@ public:
 enum ProxyType
 {
    SNMP_PROXY = 0,
-   SENSOR_PROXY = 1,
-   ZONE_PROXY = 2,
-   ETHERNET_IP_PROXY = 3,
-   WEB_SERVICE_PROXY = 4,
-   MAX_PROXY_TYPE = 5
+   SENSOR_PROXY,
+   ZONE_PROXY,
+   ETHERNET_IP_PROXY,
+   WEB_SERVICE_PROXY,
+   MODBUS_PROXY,
+   MAX_PROXY_TYPE
 };
 
 /**
@@ -3140,6 +3141,7 @@ protected:
    uint32_t m_pollCountSNMP;
    uint32_t m_pollCountSSH;
    uint32_t m_pollCountEtherNetIP;
+   uint32_t m_pollCountModbus;
    uint32_t m_pollCountICMP;
    uint32_t m_requiredPollCount;
    uint32_t m_pollsAfterIpUpdate;
@@ -3177,6 +3179,7 @@ protected:
    time_t m_failTimeSNMP;
    time_t m_failTimeSSH;
    time_t m_failTimeEtherNetIP;
+   time_t m_failTimeModbus;
    time_t m_recoveryTime;
    time_t m_downSince;
    time_t m_savedDownSince;
@@ -3312,6 +3315,7 @@ protected:
    bool confPollSnmp(uint32_t requestId);
    bool confPollSsh(uint32_t requestId);
    bool confPollEthernetIP(uint32_t requestId);
+   bool confPollModbus(uint32_t requestId);
    NodeType detectNodeType(TCHAR *hypervisorType, TCHAR *hypervisorInfo);
    bool updateSystemHardwareInformation(PollerInfo *poller, uint32_t requestId);
    bool updateHardwareComponents(PollerInfo *poller, uint32_t requestId);
@@ -3615,6 +3619,8 @@ public:
    shared_ptr<AgentConnectionEx> acquireProxyConnection(ProxyType type, bool validate = false);
    SNMP_Transport *createSnmpTransport(uint16_t port = 0, SNMP_Version version = SNMP_VERSION_DEFAULT, const char *context = nullptr, const char *community = nullptr);
    SNMP_SecurityContext *getSnmpSecurityContext() const;
+
+   ModbusTransport *createModbusTransport();
 
    uint32_t getEffectiveSnmpProxy(bool backup = false);
    uint32_t getEffectiveEtherNetIPProxy(bool backup = false);

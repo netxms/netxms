@@ -2294,6 +2294,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("NodeState::SNMPTrapFlood", NSF_SNMP_TRAP_FLOOD);
       NXSL_ENV_CONSTANT("NodeState::ICMPUnreachable", NSF_ICMP_UNREACHABLE);
       NXSL_ENV_CONSTANT("NodeState::SSHUnreachable", NSF_SSH_UNREACHABLE);
+      NXSL_ENV_CONSTANT("NodeState::MODBUSUnreachable", NSF_MODBUS_UNREACHABLE);
    }
 
    if (name.value[0] == 'S')

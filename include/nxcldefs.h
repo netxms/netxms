@@ -300,6 +300,7 @@
 #define NSF_SNMP_TRAP_FLOOD            0x00100000
 #define NSF_ICMP_UNREACHABLE           0x00200000
 #define NSF_SSH_UNREACHABLE            0x00400000
+#define NSF_MODBUS_UNREACHABLE         0x00800000
 
 /**
  * Sensor state flags
@@ -1216,6 +1217,7 @@ enum AggregationFunction
 #define NXC_NCF_SNMP_SETTINGS_LOCKED 0x0080
 #define NXC_NCF_EXTERNAL_GATEWAY     0x0100
 #define NXC_NCF_DISABLE_SSH          0x0200
+#define NXC_NCF_DISABLE_MODBUS_TCP   0x0400
 
 /**
  * Agent data cache modes

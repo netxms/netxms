@@ -189,6 +189,8 @@
 #define EVENT_ASSET_UNLINK                          135
 #define EVENT_ASSET_LINK_CONFLICT                   136
 #define EVENT_CONFIGURATION_ERROR                   137
+#define EVENT_MODBUS_UNREACHABLE                    138
+#define EVENT_MODBUS_OK                             139
 
 #define EVENT_SNMP_UNMATCHED_TRAP                   500
 #define EVENT_SNMP_COLD_START                       501

@@ -32,9 +32,9 @@
 #endif
 
 /**
- * Check if target responds to MODBUS protocol. Return true on success.
+ * Check if target responds to Modbus protocol. Return true on success.
  */
-bool LIBNXAGENT_EXPORTABLE MODBUSCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId)
+bool LIBNXAGENT_EXPORTABLE ModbusCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId)
 {
    char ipAddrText[64];
 
@@ -77,9 +77,9 @@ bool LIBNXAGENT_EXPORTABLE MODBUSCheckConnection(const InetAddress& addr, uint16
 }
 
 /**
- * Execute provided callback within MODBUS session context
+ * Execute provided callback within Modbus session context
  */
-int LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus)
+int LIBNXAGENT_EXPORTABLE ModbusExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus)
 {
    char ipAddrText[64];
 
@@ -146,11 +146,11 @@ enum class ConversionType
  *    string-N-CP : string of N characters encoded using codepage CP (will read (N + 1) / 2 registers)
  *
  * For string conversion, supplied value buffer should be at least N + 2 character long. For other conversions,
- * buffer should be at least 32 characters long.
+ * buffer should be at least 32 characters long. If buffer is smaller, result string will be cut accordingly.
  *
  * Returns number of registers read or -1 on error.
  */
-static int MODBUSReadRegisters(modbus_t *mb, bool input, int address, const TCHAR *conversion, TCHAR *value)
+static int ModbusReadRegisters(modbus_t *mb, bool input, int address, const TCHAR *conversion, TCHAR *value, size_t size)
 {
    ConversionType type;
    int nr;
@@ -229,9 +229,10 @@ static int MODBUSReadRegisters(modbus_t *mb, bool input, int address, const TCHA
       if (rc >= 0)
       {
 #ifdef UNICODE
-         mbcp_to_wchar(text, -1, value, nr * 2 + 1, (codepage[0] != 0) ? codepage : nullptr);
+         mbcp_to_wchar(text, -1, value, size, (codepage[0] != 0) ? codepage : nullptr);
+         value[size - 1] = 0;
 #else
-         strlcpy(value, text, nr * 2 + 1);
+         strlcpy(value, text, size);
 #endif
       }
       MemFreeLocal(text);
@@ -245,16 +246,16 @@ static int MODBUSReadRegisters(modbus_t *mb, bool input, int address, const TCHA
          switch(type)
          {
             case ConversionType::FLOAT_ABCD:
-               _sntprintf(value, 32, _T("%f"), modbus_get_float_abcd(rawData));
+               _sntprintf(value, size, _T("%f"), modbus_get_float_abcd(rawData));
                break;
             case ConversionType::FLOAT_BADC:
-               _sntprintf(value, 32, _T("%f"), modbus_get_float_badc(rawData));
+               _sntprintf(value, size, _T("%f"), modbus_get_float_badc(rawData));
                break;
             case ConversionType::FLOAT_CDAB:
-               _sntprintf(value, 32, _T("%f"), modbus_get_float_cdab(rawData));
+               _sntprintf(value, size, _T("%f"), modbus_get_float_cdab(rawData));
                break;
             case ConversionType::FLOAT_DCBA:
-               _sntprintf(value, 32, _T("%f"), modbus_get_float_dcba(rawData));
+               _sntprintf(value, size, _T("%f"), modbus_get_float_dcba(rawData));
                break;
             case ConversionType::INT16:
                IntegerToString(static_cast<int16_t>(*rawData), value);
@@ -286,19 +287,19 @@ static int MODBUSReadRegisters(modbus_t *mb, bool input, int address, const TCHA
 }
 
 /**
- * Convenience wrapper for common MODBUSReadRegisters: read holding registers
+ * Convenience wrapper for common ModbusReadRegisters: read holding registers
  */
-int LIBNXAGENT_EXPORTABLE MODBUSReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value)
+int LIBNXAGENT_EXPORTABLE ModbusReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size)
 {
-   return MODBUSReadRegisters(mb, false, address, ((conversion != nullptr) && (*conversion != 0)) ? conversion : _T("uint16"), value);
+   return ModbusReadRegisters(mb, false, address, ((conversion != nullptr) && (*conversion != 0)) ? conversion : _T("uint16"), value, size);
 }
 
 /**
  * Convenience wrapper for common MODBUSReadRegisters: read input registers
  */
-int LIBNXAGENT_EXPORTABLE MODBUSReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value)
+int LIBNXAGENT_EXPORTABLE ModbusReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size)
 {
-   return MODBUSReadRegisters(mb, true, address, ((conversion != nullptr) && (*conversion != 0)) ? conversion : _T("uint16"), value);
+   return ModbusReadRegisters(mb, true, address, ((conversion != nullptr) && (*conversion != 0)) ? conversion : _T("uint16"), value, size);
 }
 
 #endif   /* WITH_MODBUS */

@@ -24,6 +24,29 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.18 to 44.19
+ */
+static bool H_UpgradeFromV18()
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_MODBUS_UNREACHABLE, _T("SYS_MODBUS_UNREACHABLE"),
+         EVENT_SEVERITY_MAJOR, EF_LOG, _T("f8dc0d5f-0e46-4bbf-a91d-bb3c0412db2e"),
+         _T("Modbus connectivity failed"),
+         _T("Generated when node is not responding to Modbus requests.\r\n")
+         _T("Parameters:\r\n")
+         _T("   No event-specific parameters")
+      ));
+   CHK_EXEC(CreateEventTemplate(EVENT_MODBUS_OK, _T("SYS_MODBUS_OK"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("47584648-fc4e-4757-b4e7-f6f16b146bac"),
+         _T("Modbus connectivity restored"),
+         _T("Generated when Modbus connectivity with the node is restored.\r\n")
+         _T("Parameters:\r\n")
+         _T("   No event-specific parameters")
+      ));
+   CHK_EXEC(SetMinorSchemaVersion(19));
+   return true;
+}
+
+/**
  * Upgrade from 44.17 to 44.18
  */
 static bool H_UpgradeFromV17()
@@ -96,7 +119,7 @@ static bool H_UpgradeFromV13()
          _T("Parameters:\r\n")
          _T("   subsystem - The subsystem which has the error\r\n")
          _T("   tag - Related tag for the error\r\n")
-         _T("   descriptipon - Description of the error\r\n")
+         _T("   descriptipon - Description of the error")
       ));
    CHK_EXEC(SetMinorSchemaVersion(14));
    return true;
@@ -545,6 +568,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 18, 44, 19, H_UpgradeFromV18 },
    { 17, 44, 18, H_UpgradeFromV17 },
    { 16, 44, 17, H_UpgradeFromV16 },
    { 15, 44, 16, H_UpgradeFromV15 },

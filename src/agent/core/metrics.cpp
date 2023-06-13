@@ -81,12 +81,12 @@ LONG H_ZoneConfigurations(const TCHAR *param, const TCHAR *arg, Table *value, Ab
 LONG H_ZoneProxies(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 #if WITH_MODBUS
-LONG H_MODBUSCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_MODBUSConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session);
-LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_MODBUSInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ModbusCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ModbusConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ModbusDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ModbusDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ModbusHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ModbusInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 #endif
 
 /**
@@ -450,11 +450,11 @@ static NETXMS_SUBAGENT_PARAM s_standardParams[] =
    { _T("File.Type(*)"), H_FileType, nullptr, DCI_DT_UINT, _T("Type of file {instance}") },
    { _T("Hardware.System.SerialNumber"), H_HardwareSerialNumber, nullptr, DCI_DT_STRING, DCIDESC_HARDWARE_SYSTEM_SERIALNUMBER },
 #if WITH_MODBUS
-   { _T("MODBUS.Coil(*)"), H_MODBUSCoil, nullptr, DCI_DT_UINT, _T("Value of MODBUS coil {instance}") },
-   { _T("MODBUS.ConnectionStatus(*)"), H_MODBUSConnectionStatus, nullptr, DCI_DT_INT, _T("Status of MODBUS connection to {instance}") },
-   { _T("MODBUS.DiscreteInput(*)"), H_MODBUSDiscreteInput, nullptr, DCI_DT_UINT, _T("Value of MODBUS discrete input {instance}") },
-   { _T("MODBUS.HoldingRegister(*)"), H_MODBUSHoldingRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS holding register {instance}") },
-   { _T("MODBUS.InputRegister(*)"), H_MODBUSInputRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS input register {instance}") },
+   { _T("Modbus.Coil(*)"), H_ModbusCoil, nullptr, DCI_DT_UINT, _T("Value of MODBUS coil {instance}") },
+   { _T("Modbus.ConnectionStatus(*)"), H_ModbusConnectionStatus, nullptr, DCI_DT_INT, _T("Status of MODBUS connection to {instance}") },
+   { _T("Modbus.DiscreteInput(*)"), H_ModbusDiscreteInput, nullptr, DCI_DT_UINT, _T("Value of MODBUS discrete input {instance}") },
+   { _T("Modbus.HoldingRegister(*)"), H_ModbusHoldingRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS holding register {instance}") },
+   { _T("Modbus.InputRegister(*)"), H_ModbusInputRegister, nullptr, DCI_DT_UINT, _T("Value of MODBUS input register {instance}") },
 #endif
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
    { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, nullptr, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
@@ -502,7 +502,7 @@ static NETXMS_SUBAGENT_LIST s_standardLists[] =
    { _T("Agent.SupportedTables"), H_TableList, nullptr },
    { _T("Agent.ThreadPools"), H_ThreadPoolList, nullptr },
 #if WITH_MODBUS
-   { _T("MODBUS.DeviceIdentification(*)"), H_MODBUSDeviceIdentification, nullptr },
+   { _T("Modbus.DeviceIdentification(*)"), H_ModbusDeviceIdentification, nullptr },
 #endif
    { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByNameList, nullptr },
    { _T("SNMP.ScanAddressRange(*)"), H_SNMPAddressRangeScan, nullptr },

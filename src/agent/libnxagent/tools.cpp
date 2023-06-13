@@ -266,6 +266,30 @@ bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt64(const TCHAR *metric, int in
 }
 
 /**
+ * Get arguments for metric like name(arg1,...) as boolean value
+ * Returns false on processing error
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsBoolean(const TCHAR *metric, int index, bool *value, bool defaultValue, bool inBrackets)
+{
+   TCHAR buffer[256];
+   if (!AgentGetMetricArg(metric, index, buffer, 256, inBrackets))
+      return false;
+   if (buffer[0] == 0)
+   {
+      *value = defaultValue;
+   }
+   else if (!_tcsicmp(buffer, _T("true")) || !_tcsicmp(buffer, _T("yes")) || (_tcstol(buffer, nullptr, 10) != 0))
+   {
+      *value = true;
+   }
+   else
+   {
+      *value = false;
+   }
+   return true;
+}
+
+/**
  * Convert test to integer type representation
  */
 int TextToDataType(const TCHAR *name)

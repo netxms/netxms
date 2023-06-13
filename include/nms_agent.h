@@ -1345,6 +1345,7 @@ bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt32(const TCHAR *metric, int ind
 bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt32(const TCHAR *metric, int index, uint32_t *value, uint32_t defaultValue = 0, bool inBrackets = true);
 bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsInt64(const TCHAR *metric, int index, int64_t *value, int64_t defaultValue = 0, bool inBrackets = true);
 bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsUInt64(const TCHAR *metric, int index, uint64_t *value, uint64_t defaultValue = 0, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetMetricArgAsBoolean(const TCHAR *metric, int index, bool *value, bool defaultValue = false, bool inBrackets = true);
 
 void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
@@ -1426,10 +1427,10 @@ int LIBNXAGENT_EXPORTABLE TextToDataType(const TCHAR *name);
 
 #if WITH_MODBUS
 typedef struct _modbus modbus_t;
-bool LIBNXAGENT_EXPORTABLE MODBUSCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId);
-int LIBNXAGENT_EXPORTABLE MODBUSExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus);
-int LIBNXAGENT_EXPORTABLE MODBUSReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value);
-int LIBNXAGENT_EXPORTABLE MODBUSReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value);
+bool LIBNXAGENT_EXPORTABLE ModbusCheckConnection(const InetAddress& addr, uint16_t port, int32_t unitId);
+int LIBNXAGENT_EXPORTABLE ModbusExecute(const InetAddress& addr, uint16_t port, int32_t unitId, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t)> callback, int commErrorStatus);
+int LIBNXAGENT_EXPORTABLE ModbusReadHoldingRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size);
+int LIBNXAGENT_EXPORTABLE ModbusReadInputRegisters(modbus_t *mb, int address, const TCHAR *conversion, TCHAR *value, size_t size);
 #endif
 
 /**

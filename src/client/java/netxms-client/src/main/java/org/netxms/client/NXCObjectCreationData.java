@@ -45,6 +45,7 @@ public class NXCObjectCreationData
    public static int CF_SNMP_SETTINGS_LOCKED = 0x0080;
    public static int CF_EXTERNAL_GATEWAY     = 0x0100;
    public static int CF_DISABLE_SSH          = 0x0200;
+   public static int CF_DISABLE_MODBUS_TCP   = 0x0400;
 
 	private int objectClass;
 	private String name;
@@ -56,12 +57,15 @@ public class NXCObjectCreationData
 	private int agentPort;
 	private int snmpPort;
    private int etherNetIpPort;
+   private int modbusTcpPort;
+   private short modbusUnitId;
    private int sshPort;
 	private InetAddressEx ipAddress;
 	private long agentProxyId;
 	private long snmpProxyId;
    private long mqttProxyId;
    private long etherNetIpProxyId;
+   private long modbusProxyId;
    private long icmpProxyId;
    private long sshProxyId;
    private long webServiceProxyId;
@@ -132,6 +136,8 @@ public class NXCObjectCreationData
       agentPort = 4700;
       snmpPort = 161;
       etherNetIpPort = 44818;
+      modbusTcpPort = 502;
+      modbusUnitId = 1;
       sshPort = 22;
 		comments = null;
 		creationFlags = 0;
@@ -139,6 +145,7 @@ public class NXCObjectCreationData
 		snmpProxyId = 0;
       mqttProxyId = 0;
       etherNetIpProxyId = 0;
+      modbusProxyId = 0;
 		icmpProxyId = 0;
 		sshProxyId = 0;
 		mapType = 0;
@@ -191,6 +198,10 @@ public class NXCObjectCreationData
          snmpPort = data.getSnmpPort();
       if (data.getEtherNetIPPort() != null)
          etherNetIpPort = data.getEtherNetIPPort();
+      if (data.getModbusTcpPort() != null)
+         modbusTcpPort = data.getModbusTcpPort();
+      if (data.getModbusUnitId() != null)
+         modbusUnitId = data.getModbusUnitId();
       if (data.getSshPort() != null)
          sshPort = data.getSshPort();
       if (data.getIpAddress() != null)
@@ -203,6 +214,8 @@ public class NXCObjectCreationData
          mqttProxyId = data.getMqttProxy();
       if (data.getEtherNetIPProxy() != null)
          etherNetIpProxyId = data.getEtherNetIPProxy();
+      if (data.getModbusProxy() != null)
+         modbusProxyId = data.getModbusProxy();
       if (data.getIcmpProxy() != null)
          icmpProxyId = data.getIcmpProxy();
       if (data.getSshProxy() != null)
@@ -1124,6 +1137,54 @@ public class NXCObjectCreationData
    }
 
    /**
+    * @return the modbusTcpPort
+    */
+   public int getModbusTcpPort()
+   {
+      return modbusTcpPort;
+   }
+
+   /**
+    * @param modbusTcpPort the modbusTcpPort to set
+    */
+   public void setModbusTcpPort(int modbusTcpPort)
+   {
+      this.modbusTcpPort = modbusTcpPort;
+   }
+
+   /**
+    * @return the modbusUnitId
+    */
+   public short getModbusUnitId()
+   {
+      return modbusUnitId;
+   }
+
+   /**
+    * @param modbusUnitId the modbusUnitId to set
+    */
+   public void setModbusUnitId(short modbusUnitId)
+   {
+      this.modbusUnitId = modbusUnitId;
+   }
+
+   /**
+    * @return the modbusProxyId
+    */
+   public long getModbusProxyId()
+   {
+      return modbusProxyId;
+   }
+
+   /**
+    * @param modbusProxyId the modbusProxyId to set
+    */
+   public void setModbusProxyId(long modbusProxyId)
+   {
+      this.modbusProxyId = modbusProxyId;
+   }
+
+   /**
     * @return the sshPort
     */
    public int getSshPort()
@@ -1194,14 +1255,15 @@ public class NXCObjectCreationData
    public String toString()
    {
       return "NXCObjectCreationData [objectClass=" + objectClass + ", name=" + name + ", alias=" + alias + ", parentId=" + parentId + ", comments=" + comments + ", creationFlags=" + creationFlags +
-            ", primaryName=" + primaryName + ", agentPort=" + agentPort + ", snmpPort=" + snmpPort + ", etherNetIpPort=" + etherNetIpPort + ", sshPort=" + sshPort + ", ipAddress=" + ipAddress +
-            ", agentProxyId=" + agentProxyId + ", snmpProxyId=" + snmpProxyId + ", mqttProxyId=" + mqttProxyId + ", etherNetIpProxyId=" + etherNetIpProxyId + ", icmpProxyId=" + icmpProxyId +
-            ", sshProxyId=" + sshProxyId + ", webServiceProxyId=" + webServiceProxyId + ", mapType=" + mapType + ", seedObjectIds=" + seedObjectIds + ", zoneUIN=" + zoneUIN + ", serviceType=" +
-            serviceType + ", ipProtocol=" + ipProtocol + ", ipPort=" + ipPort + ", request=" + request + ", response=" + response + ", linkedNodeId=" + linkedNodeId + ", template=" + template +
-            ", macAddress=" + macAddress + ", ifIndex=" + ifIndex + ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" +
-            physicalPort + ", createStatusDci=" + createStatusDci + ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" +
-            chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" + sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", commProtocol=" + commProtocol + ", xmlConfig=" +
-            xmlConfig + ", xmlRegConfig=" + xmlRegConfig + ", serialNumber=" + serialNumber + ", deviceAddress=" + deviceAddress + ", metaType=" + metaType + ", description=" + description +
-            ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" + instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + "]";
+            ", primaryName=" + primaryName + ", agentPort=" + agentPort + ", snmpPort=" + snmpPort + ", etherNetIpPort=" + etherNetIpPort + ", modbusTcpPort=" + modbusTcpPort + ", modbusUnitId=" +
+            modbusUnitId + ", sshPort=" + sshPort + ", ipAddress=" + ipAddress + ", agentProxyId=" + agentProxyId + ", snmpProxyId=" + snmpProxyId + ", mqttProxyId=" + mqttProxyId +
+            ", etherNetIpProxyId=" + etherNetIpProxyId + ", modbusProxyId=" + modbusProxyId + ", icmpProxyId=" + icmpProxyId + ", sshProxyId=" + sshProxyId + ", webServiceProxyId=" +
+            webServiceProxyId + ", mapType=" + mapType + ", seedObjectIds=" + seedObjectIds + ", zoneUIN=" + zoneUIN + ", serviceType=" + serviceType + ", ipProtocol=" + ipProtocol + ", ipPort=" +
+            ipPort + ", request=" + request + ", response=" + response + ", linkedNodeId=" + linkedNodeId + ", template=" + template + ", macAddress=" + macAddress + ", ifIndex=" + ifIndex +
+            ", ifType=" + ifType + ", chassis=" + chassis + ", module=" + module + ", pic=" + pic + ", port=" + port + ", physicalPort=" + physicalPort + ", createStatusDci=" + createStatusDci +
+            ", deviceId=" + deviceId + ", height=" + height + ", flags=" + flags + ", controllerId=" + controllerId + ", chassisId=" + chassisId + ", sshLogin=" + sshLogin + ", sshPassword=" +
+            sshPassword + ", deviceClass=" + deviceClass + ", vendor=" + vendor + ", commProtocol=" + commProtocol + ", xmlConfig=" + xmlConfig + ", xmlRegConfig=" + xmlRegConfig + ", serialNumber=" +
+            serialNumber + ", deviceAddress=" + deviceAddress + ", metaType=" + metaType + ", description=" + description + ", sensorProxy=" + sensorProxy + ", instanceDiscoveryMethod=" +
+            instanceDiscoveryMethod + ", assetId=" + assetId + ", assetProperties=" + assetProperties + "]";
    }
 }

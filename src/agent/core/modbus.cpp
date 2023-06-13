@@ -33,9 +33,9 @@
 #endif
 
 /**
- * Handler for MODBUS.ConnectionStatus(*) metric
+ * Handler for Modbus.ConnectionStatus(*) metric
  */
-LONG H_MODBUSConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ModbusConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    if (!(g_dwFlags & AF_ENABLE_MODBUS_PROXY))
       return SYSINFO_RC_ACCESS_DENIED;
@@ -50,14 +50,14 @@ LONG H_MODBUSConnectionStatus(const TCHAR *metric, const TCHAR *arg, TCHAR *valu
    if ((unitId < 1) || (unitId > 255))
       return SYSINFO_RC_UNSUPPORTED;
 
-   ret_boolean(value, MODBUSCheckConnection(addr, port, unitId));
+   ret_boolean(value, ModbusCheckConnection(addr, port, unitId));
    return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Common handler for MODBUS.* metrics
  */
-static LONG ReadMODBUSMetric(const TCHAR *metric, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t, int32_t)> reader)
+static LONG ReadModbusMetric(const TCHAR *metric, std::function<int32_t (modbus_t*, const char*, uint16_t, int32_t, int32_t)> reader)
 {
    if (!(g_dwFlags & AF_ENABLE_MODBUS_PROXY))
       return SYSINFO_RC_ACCESS_DENIED;
@@ -73,7 +73,7 @@ static LONG ReadMODBUSMetric(const TCHAR *metric, std::function<int32_t (modbus_
    if ((unitId < 1) || (unitId > 255) || (modbusAddress < 0))
       return SYSINFO_RC_UNSUPPORTED;
 
-   return MODBUSExecute(addr, port, unitId,
+   return ModbusExecute(addr, port, unitId,
       [reader, modbusAddress] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId) -> int32_t
       {
          return reader(mb, addrText, port, unitId, modbusAddress);
@@ -81,18 +81,18 @@ static LONG ReadMODBUSMetric(const TCHAR *metric, std::function<int32_t (modbus_
 }
 
 /**
- * Handler for metric MODBUS.HoldingRegister
+ * Handler for metric Modbus.HoldingRegister
  */
-LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ModbusHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR conversion[64];
    if (!AgentGetMetricArg(metric, 5, conversion, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   return ReadMODBUSMetric(metric,
+   return ReadModbusMetric(metric,
       [conversion, value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
       {
-         if (MODBUSReadHoldingRegisters(mb, modbusAddress, conversion, value) < 1)
+         if (ModbusReadHoldingRegisters(mb, modbusAddress, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadHoldingRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
             return SYSINFO_RC_ERROR;
@@ -102,18 +102,18 @@ LONG H_MODBUSHoldingRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value
 }
 
 /**
- * Handler for metric MODBUS.InputRegister
+ * Handler for metric Modbus.InputRegister
  */
-LONG H_MODBUSInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ModbusInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR conversion[64];
    if (!AgentGetMetricArg(metric, 5, conversion, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   return ReadMODBUSMetric(metric,
+   return ReadModbusMetric(metric,
       [conversion, value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
       {
-         if (MODBUSReadInputRegisters(mb, modbusAddress, conversion, value) < 1)
+         if (ModbusReadInputRegisters(mb, modbusAddress, conversion, value, MAX_RESULT_LENGTH) < 1)
          {
             nxlog_debug_tag(DEBUG_TAG, 5, _T("MODBUSReadInputRegisters(%hs:%d:%d) failed (%hs)"), addrText, port, unitId, modbus_strerror(errno));
             return SYSINFO_RC_ERROR;
@@ -123,11 +123,11 @@ LONG H_MODBUSInputRegister(const TCHAR *metric, const TCHAR *arg, TCHAR *value, 
 }
 
 /**
- * Handler for metric MODBUS.Coil
+ * Handler for metric Modbus.Coil
  */
-LONG H_MODBUSCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ModbusCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   return ReadMODBUSMetric(metric,
+   return ReadModbusMetric(metric,
       [value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
       {
          uint8_t coil;
@@ -143,11 +143,11 @@ LONG H_MODBUSCoil(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractC
 }
 
 /**
- * Handler for metric MODBUS.DiscreteInput
+ * Handler for metric Modbus.DiscreteInput
  */
-LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ModbusDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   return ReadMODBUSMetric(metric,
+   return ReadModbusMetric(metric,
       [value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId, int32_t modbusAddress) -> int32_t
       {
          uint8_t input;
@@ -163,9 +163,9 @@ LONG H_MODBUSDiscreteInput(const TCHAR *metric, const TCHAR *arg, TCHAR *value, 
 }
 
 /**
- * Handler for MODBUS.DeviceIdentification list
+ * Handler for Modbus.DeviceIdentification list
  */
-LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+LONG H_ModbusDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    if (!(g_dwFlags & AF_ENABLE_MODBUS_PROXY))
       return SYSINFO_RC_ACCESS_DENIED;
@@ -173,15 +173,17 @@ LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringL
    InetAddress addr = AgentGetMetricArgAsInetAddress(metric, 1);
    uint16_t port;
    int32_t unitId;
+   bool resolveObjects;
    if ((!addr.isValidUnicast() && !addr.isLoopback()) ||
        !AgentGetMetricArgAsUInt16(metric, 2, &port, MODBUS_TCP_DEFAULT_PORT) ||
-       !AgentGetMetricArgAsInt32(metric, 3, &unitId, 1))
+       !AgentGetMetricArgAsInt32(metric, 3, &unitId, 1) ||
+       !AgentGetMetricArgAsBoolean(metric, 4, &resolveObjects, true))
       return SYSINFO_RC_UNSUPPORTED;
    if ((unitId < 1) || (unitId > 255))
       return SYSINFO_RC_UNSUPPORTED;
 
-   return MODBUSExecute(addr, port, unitId,
-      [value] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId) -> int32_t
+   return ModbusExecute(addr, port, unitId,
+      [value, resolveObjects] (modbus_t *mb, const char *addrText, uint16_t port, int32_t unitId) -> int32_t
       {
          modbus_device_id_response_t deviceId;
          int rc = modbus_read_device_id(mb, MODBUS_READ_DEVICE_ID_REGULAR, 0, &deviceId);
@@ -216,10 +218,10 @@ LONG H_MODBUSDeviceIdentification(const TCHAR *metric, const TCHAR *arg, StringL
 #endif
 
             TCHAR element[256];
-            if (objectId < sizeof(standardNames) / sizeof(const TCHAR*))
-               _sntprintf(element, 256, _T("%s: %s"), standardNames[objectId], objectValue);
+            if (resolveObjects && (objectId < sizeof(standardNames) / sizeof(const TCHAR*)))
+               _sntprintf(element, 256, _T("%s=%s"), standardNames[objectId], objectValue);
             else
-               _sntprintf(element, 256, _T("0x%02X: %s"), objectId, objectValue);
+               _sntprintf(element, 256, _T("%02d=%s"), objectId, objectValue);
             value->add(element);
 
             curr += objectLength + 2;

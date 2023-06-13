@@ -231,7 +231,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'SNMP agent is not responding',
 		'Generated when node''s SNMP agent is not responding.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -240,7 +240,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Native agent is not responding',
 		'Generated when node''s native agent is not responding.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -422,7 +422,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Connectivity with SNMP agent restored',
 		'Generated when connectivity with node''s SNMP agent restored.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -431,7 +431,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Connectivity with native agent restored',
 		'Generated when connectivity with node''s native agent restored.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -477,7 +477,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Lost connection with backend database engine',
 		'Generated if connection with backend database engine is lost.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -486,7 +486,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Connection with backend database engine restored',
 		'Generated when connection with backend database engine restored.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -533,7 +533,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster is down',
 		'Generated when cluster goes down.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -542,7 +542,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster is up',
 		'Generated when cluster goes up.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1258,7 +1258,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'EtherNet/IP connectivity failed',
 		'Generated when node is not responding to EtherNet/IP requests.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1267,7 +1267,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'EtherNet/IP connectivity restored',
 		'Generated when EtherNet/IP connectivity with the node is restored.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1276,7 +1276,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Size of background database writer queue exceeds threshold (new performance data will be discarded)',
 		'Generated when background database writer queue size exceeds threshold.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1285,7 +1285,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Size of background database writer queue is below threshold',
 		'Generated when background database writer queue size drops below threshold.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1294,7 +1294,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Housekeeper task started',
 		'Generated when internal housekeeper task starts.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   No event-specific parameters'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -1564,7 +1564,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node responds to SSH',
       'Generated when node becomes reachable by SSH.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   No message-specific parameters'
+      '   No event-specific parameters'
 	);
 	
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1574,7 +1574,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Node does not respond to SSH',
       'Generated when node becomes unreachable by SSH.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   No message-specific parameters'
+      '   No event-specific parameters'
 	);
 	
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
@@ -1590,6 +1590,26 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   currValue - current attribute''s value' CONCAT CRLF CONCAT
       '   newValue - new attribute''s value' CONCAT CRLF CONCAT
       '   reason - failure reason'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_MODBUS_UNREACHABLE, 'SYS_MODBUS_UNREACHABLE', 'f8dc0d5f-0e46-4bbf-a91d-bb3c0412db2e',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Modbus connectivity failed',
+		'Generated when node is not responding to Modbus requests.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   No event-specific parameters'
+	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+		EVENT_MODBUS_OK, 'SYS_MODBUS_OK', '47584648-fc4e-4757-b4e7-f6f16b146bac',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Modbus connectivity restored',
+		'Generated when Modbus connectivity with the node is restored.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'   No event-specific parameters'
 	);
 
 /*

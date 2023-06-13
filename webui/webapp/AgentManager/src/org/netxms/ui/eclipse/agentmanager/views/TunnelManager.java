@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -462,17 +462,24 @@ public class TunnelManager extends ViewPart implements SessionListener
       final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), 2);
       cd.setCreationFlags(dlg.getCreationFlags());
       cd.setPrimaryName(dlg.getHostName());
+      cd.setObjectAlias(dlg.getObjectAlias());
       cd.setAgentPort(dlg.getAgentPort());
-      cd.setSnmpPort(dlg.getSnmpPort());
       cd.setAgentProxyId(dlg.getAgentProxy());
+      cd.setSnmpPort(dlg.getSnmpPort());
       cd.setSnmpProxyId(dlg.getSnmpProxy());
-      cd.setWebServiceProxyId(dlg.getWebServiceProxy());
       cd.setIcmpProxyId(dlg.getIcmpProxy());
+      cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
+      cd.setEtherNetIpProxyId(dlg.getEtherNetIpProxy());
+      cd.setModbusTcpPort(dlg.getModbusTcpPort());
+      cd.setModbusUnitId(dlg.getModbusUnitId());
+      cd.setModbusProxyId(dlg.getModbusProxy());
+      cd.setWebServiceProxyId(dlg.getWebServiceProxy());
+      cd.setSshPort(dlg.getSshPort());
       cd.setSshProxyId(dlg.getSshProxy());
-      cd.setZoneUIN(dlg.getZoneUIN());
       cd.setSshLogin(dlg.getSshLogin());
       cd.setSshPassword(dlg.getSshPassword());
-      cd.setSshPort(dlg.getSshPort());
+      cd.setMqttProxyId(dlg.getMqttProxy());
+      cd.setZoneUIN(dlg.getZoneUIN());
 
       new ConsoleJob("Create new node and bind tunnel", this, Activator.PLUGIN_ID, null) {
          @Override

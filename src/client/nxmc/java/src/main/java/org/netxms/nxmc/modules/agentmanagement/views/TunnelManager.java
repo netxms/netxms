@@ -343,17 +343,24 @@ public class TunnelManager extends ConfigurationView implements SessionListener
       final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), 2);
       cd.setCreationFlags(dlg.getCreationFlags());
       cd.setPrimaryName(dlg.getHostName());
+      cd.setObjectAlias(dlg.getObjectAlias());
       cd.setAgentPort(dlg.getAgentPort());
-      cd.setSnmpPort(dlg.getSnmpPort());
       cd.setAgentProxyId(dlg.getAgentProxy());
+      cd.setSnmpPort(dlg.getSnmpPort());
       cd.setSnmpProxyId(dlg.getSnmpProxy());
       cd.setIcmpProxyId(dlg.getIcmpProxy());
-      cd.setSshProxyId(dlg.getSshProxy());
+      cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
+      cd.setEtherNetIpProxyId(dlg.getEtherNetIpProxy());
+      cd.setModbusTcpPort(dlg.getModbusTcpPort());
+      cd.setModbusUnitId(dlg.getModbusUnitId());
+      cd.setModbusProxyId(dlg.getModbusProxy());
       cd.setWebServiceProxyId(dlg.getWebServiceProxy());
-      cd.setZoneUIN(dlg.getZoneUIN());
+      cd.setSshPort(dlg.getSshPort());
+      cd.setSshProxyId(dlg.getSshProxy());
       cd.setSshLogin(dlg.getSshLogin());
       cd.setSshPassword(dlg.getSshPassword());
-      cd.setSshPort(dlg.getSshPort());
+      cd.setMqttProxyId(dlg.getMqttProxy());
+      cd.setZoneUIN(dlg.getZoneUIN());
 
       new Job(i18n.tr("Create new node and bind tunnel"), this) {
          @Override

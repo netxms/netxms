@@ -5860,12 +5860,15 @@ public class NXCSession
             msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
             msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
             msg.setFieldInt16(NXCPCodes.VID_ETHERNET_IP_PORT, data.getEtherNetIpPort());
+            msg.setFieldInt16(NXCPCodes.VID_MODBUS_TCP_PORT, data.getModbusTcpPort());
+            msg.setFieldInt16(NXCPCodes.VID_MODBUS_UNIT_ID, data.getModbusUnitId());
             msg.setFieldInt16(NXCPCodes.VID_SSH_PORT, data.getSshPort());
             msg.setFieldInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
             msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
             msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
             msg.setFieldInt32(NXCPCodes.VID_MQTT_PROXY, (int)data.getMqttProxyId());
             msg.setFieldInt32(NXCPCodes.VID_ETHERNET_IP_PROXY, (int)data.getEtherNetIpProxyId());
+            msg.setFieldInt32(NXCPCodes.VID_MODBUS_PROXY, (int)data.getModbusProxyId());
             msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, (int)data.getIcmpProxyId());
             msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxyId());
             msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());

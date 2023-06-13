@@ -436,19 +436,22 @@ public class ObjectCreateMenuManager extends MenuManager
                cd.setPrimaryName(dlg.getHostName());
                cd.setObjectAlias(dlg.getObjectAlias());
                cd.setAgentPort(dlg.getAgentPort());
-               cd.setSnmpPort(dlg.getSnmpPort());
-               cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
-               cd.setSshPort(dlg.getSshPort());
                cd.setAgentProxyId(dlg.getAgentProxy());
+               cd.setSnmpPort(dlg.getSnmpPort());
                cd.setSnmpProxyId(dlg.getSnmpProxy());
+               cd.setEtherNetIpPort(dlg.getEtherNetIpPort());
                cd.setEtherNetIpProxyId(dlg.getEtherNetIpProxy());
+               cd.setModbusTcpPort(dlg.getModbusTcpPort());
+               cd.setModbusUnitId(dlg.getModbusUnitId());
+               cd.setModbusProxyId(dlg.getModbusProxy());
                cd.setIcmpProxyId(dlg.getIcmpProxy());
-               cd.setSshProxyId(dlg.getSshProxy());
                cd.setWebServiceProxyId(dlg.getWebServiceProxy());
-               cd.setZoneUIN(dlg.getZoneUIN());
+               cd.setSshPort(dlg.getSshPort());
+               cd.setSshProxyId(dlg.getSshProxy());
                cd.setSshLogin(dlg.getSshLogin());
                cd.setSshPassword(dlg.getSshPassword());
-               cd.setObjectAlias(dlg.getObjectAlias());
+               cd.setMqttProxyId(dlg.getMqttProxy());
+               cd.setZoneUIN(dlg.getZoneUIN());
 
                final NXCSession session = Registry.getSession();
                new Job(i18n.tr("Creating node"), view, getMessageArea(view)) {
