@@ -885,7 +885,8 @@ public class PreferenceStore implements IPreferenceStore
    @Override
    public String getString(String name)
    {
-      return getAsString(name);
+      String value = getAsString(name);
+      return value == null ? "" : value;
    }
 
    /**

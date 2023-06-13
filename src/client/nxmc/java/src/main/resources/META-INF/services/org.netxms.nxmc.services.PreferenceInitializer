@@ -1,1 +1,3 @@
+org.netxms.nxmc.base.BasePreferenceInitializer
 org.netxms.nxmc.modules.charts.ChartPreferenceInitializer
+org.netxms.nxmc.modules.objects.ObjectsPreferenceInitializer

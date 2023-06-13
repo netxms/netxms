@@ -67,6 +67,8 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.menus.HelpMenuManager;
 import org.netxms.nxmc.base.menus.UserMenuManager;
 import org.netxms.nxmc.base.preferencepages.Appearance;
+import org.netxms.nxmc.base.preferencepages.HttpProxyPrefs;
+import org.netxms.nxmc.base.preferencepages.RegionalSettingsPrefPage;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.View;
@@ -78,7 +80,9 @@ import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.preferencepages.AlarmSounds;
 import org.netxms.nxmc.modules.alarms.preferencepages.Alarms;
+import org.netxms.nxmc.modules.networkmaps.preferencepage.GeneralMapPreferences;
 import org.netxms.nxmc.modules.objects.ObjectsPerspective;
+import org.netxms.nxmc.modules.objects.preferencepages.ObjectBrowser;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.ThemeEngine;
 import org.netxms.nxmc.tools.ColorConverter;
@@ -641,6 +645,10 @@ public class MainWindow extends Window implements MessageAreaHolder
       pm.addToRoot(new PreferenceNode("appearance", new Appearance()));
       pm.addToRoot(new PreferenceNode("alarm", new Alarms()));
       pm.addTo("alarm", new PreferenceNode("alarmSounds", new AlarmSounds()));
+      pm.addToRoot(new PreferenceNode("httpProxy", new HttpProxyPrefs()));
+      pm.addToRoot(new PreferenceNode("networkMap", new GeneralMapPreferences()));
+      pm.addToRoot(new PreferenceNode("objectBrowser", new ObjectBrowser()));
+      pm.addToRoot(new PreferenceNode("regionalSettings", new RegionalSettingsPrefPage()));
 
       PreferenceDialog dlg = new PreferenceDialog(getShell(), pm) {
          @Override
