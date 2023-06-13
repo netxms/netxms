@@ -101,7 +101,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;modbus.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -127,7 +127,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;modbus.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -147,7 +147,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;modbus.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -172,7 +172,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>pcre16.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pcre16.lib;modbus.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -194,6 +194,7 @@
     <ClCompile Include="iflist.cpp" />
     <ClCompile Include="isc.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="modbus.cpp" />
     <ClCompile Include="ndd.cpp" />
     <ClCompile Include="nobject.cpp" />
     <ClCompile Include="nxtool.cpp" />
@@ -221,6 +222,9 @@
     <Message_compiler Include="messages.mc" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\agent\libnxagent\libnxagent.vcxproj">
+      <Project>{811f41fe-131d-491a-9184-fbe687068d34}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\db\libnxdb\libnxdb.vcxproj">
       <Project>{f3e29541-3a0e-45ec-8bec-e193f2401622}</Project>
     </ProjectReference>
