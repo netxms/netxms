@@ -310,7 +310,7 @@ public class DataSources extends DashboardElementPropertyPage
    private void addTemplateItem()
    {
       ChartDciConfig dci = new ChartDciConfig();
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true, true);
       if (dlg.open() == Window.OK)
       {
          dciList.add(dci);
@@ -328,7 +328,7 @@ public class DataSources extends DashboardElementPropertyPage
 		if (dci == null)
 			return;
 
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, dci.getDciId() == 0);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false, dci.getDciId() == 0);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);

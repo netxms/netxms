@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.datacollection.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -55,18 +57,21 @@ public class DataSourceEditDlg extends Dialog
 	private Button checkInvertValues;
    private Button checkRawValues;
    private Button checkMultipeMatch;
+   private Button checkRegexpMatch;
 	private LabeledText instance;
 	private LabeledText dataColumn;
 	private boolean isTemplate;
+   private boolean isNew;
 
 	/**
 	 * @param parentShell
 	 * @param dci
 	 */
-	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean isTemplate)
+	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean isNew, boolean isTemplate)
 	{
 		super(parentShell);
 		this.dci = dci;
+      this.isNew = isNew;
 		this.isTemplate = isTemplate;
 	}
 
@@ -98,7 +103,7 @@ public class DataSourceEditDlg extends Dialog
       if (isTemplate)
       {
          dciName = new TemplateDciSelector(dialogArea, SWT.NONE);
-         dciName.setLabel("Metric regular expression");
+         dciName.setLabel("Metric");
          dciName.setText(dci.dciName);
          gd = new GridData();
          gd.horizontalAlignment = SWT.FILL;
@@ -107,7 +112,7 @@ public class DataSourceEditDlg extends Dialog
          dciName.setLayoutData(gd);       
 
          dciDescription = new TemplateDciSelector(dialogArea, SWT.NONE);
-         dciDescription.setLabel("DCI display name regular expression");
+         dciDescription.setLabel("DCI display name");
          dciDescription.setText(dci.dciDescription);
          dciDescription.setSelectDescription(true);
          gd = new GridData();
@@ -115,6 +120,22 @@ public class DataSourceEditDlg extends Dialog
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalSpan = 2;
          dciDescription.setLayoutData(gd);
+         
+         ModifyListener listener = new ModifyListener() {            
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               if (dciName.isNoValueObject() || dciDescription.isNoValueObject())
+               {
+                  checkMultipeMatch.setSelection(true);
+                  checkRegexpMatch.setSelection(true);
+                  if (name.getText().isEmpty())
+                     name.setText("\\1");
+               }
+            }
+         };
+         dciName.addModifyListener(listener);
+         dciDescription.addModifyListener(listener);
       }
       else
       {
@@ -216,7 +237,11 @@ public class DataSourceEditDlg extends Dialog
       {
          checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
          checkMultipeMatch.setText("Multiple match");
-         checkMultipeMatch.setSelection(dci.multiMatch);         
+         checkMultipeMatch.setSelection(dci.multiMatch);        
+         
+         checkRegexpMatch = new Button(optionsGroup, SWT.CHECK);
+         checkRegexpMatch.setText("Use regular expression for metric and display name");
+         checkRegexpMatch.setSelection(isNew ? false : dci.regexMatch);    
       }
 
       /*** Color ***/
@@ -243,6 +268,7 @@ public class DataSourceEditDlg extends Dialog
          dci.dciName = dciName.getText();
          dci.dciDescription = dciDescription.getText();
          dci.multiMatch = checkMultipeMatch.getSelection();
+         dci.regexMatch = checkRegexpMatch.getSelection();
       }
       else
       {

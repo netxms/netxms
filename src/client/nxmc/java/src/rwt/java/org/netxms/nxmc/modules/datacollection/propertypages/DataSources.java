@@ -328,7 +328,7 @@ public class DataSources extends PreferencePage
 		if (dci == null)
 			return;
 
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, graphIsTemplate);
+		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false, graphIsTemplate);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);

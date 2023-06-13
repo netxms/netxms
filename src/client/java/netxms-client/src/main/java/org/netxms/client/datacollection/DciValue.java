@@ -49,6 +49,7 @@ public abstract class DciValue
    protected int flags;
    protected MeasurementUnit measurementUnit;
    protected int multiplier;
+   protected boolean noValueObject;
 
    /**
     * Factory method to create correct DciValue subclass from NXCP message.
@@ -103,6 +104,7 @@ public abstract class DciValue
 		templateDciId = msg.getFieldAsInt64(fieldId++);
       measurementUnit = new MeasurementUnit(msg, fieldId++);
       multiplier = msg.getFieldAsInt32(fieldId++);
+      noValueObject = msg.getFieldAsBoolean(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
@@ -290,6 +292,14 @@ public abstract class DciValue
    public int getMultiplier()
    {
       return multiplier;
+   }
+
+   /**
+    * @return the noValueObject
+    */
+   public boolean isNoValueObject()
+   {
+      return noValueObject;
    }
 
    /**

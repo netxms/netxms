@@ -159,20 +159,36 @@ public class LineChartElement extends ElementWidget implements HistoricalChartOw
                   if (nodeDciList == null)
                      nodeDciList = session.getLastValues(contextObject.getObjectId());
 
-                  Pattern namePattern = Pattern.compile(dci.dciName);
-                  Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
-                  for(DciValue dciInfo : nodeDciList)
+                  if (dci.regexMatch)
                   {
-                     Matcher nameMatch = namePattern.matcher(dciInfo.getName());
-                     Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
-                     if ((!dci.dciName.isEmpty() && nameMatch.find()) ||
-                         (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                     Pattern namePattern = Pattern.compile(dci.dciName);
+                     Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
+                     for(DciValue dciInfo : nodeDciList)
                      {
-                        ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
-                        runtimeDciList.add(instance);
-                        if (!dci.multiMatch)
-                           break;
+                        Matcher nameMatch = namePattern.matcher(dciInfo.getName());
+                        Matcher descriptionMatch = descriptionPattern.matcher(dciInfo.getDescription());
+                        if ((!dci.dciName.isEmpty() && nameMatch.find()) ||
+                            (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+                        {
+                           ChartDciConfig instance = new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciInfo);
+                           runtimeDciList.add(instance);
+                           if (!dci.multiMatch)
+                              break;
+                        }
                      }
+                  }
+                  else
+                  {
+                     for(DciValue dciInfo : nodeDciList)
+                     {
+                        if ((!dci.dciName.isEmpty() && dciInfo.getName().equalsIgnoreCase(dci.dciName)) ||
+                            (!dci.dciDescription.isEmpty() && dciInfo.getDescription().equalsIgnoreCase(dci.dciDescription)))
+                        {
+                           runtimeDciList.add(new ChartDciConfig(dci, dciInfo));
+                           if (!dci.multiMatch)
+                              break;
+                        }
+                     }            
                   }
                }
                else

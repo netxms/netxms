@@ -170,19 +170,35 @@ public class GraphTemplateCache
       final HashSet<ChartDciConfig> chartMetrics = new HashSet<ChartDciConfig>();
       for(ChartDciConfig dci : graphDefinition.getDciList())
       {
-         Pattern namePattern = Pattern.compile(dci.dciName);
-         Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
-         for(int j = 0; j < dciList.length; j++)
+         if (dci.regexMatch)
          {
-            Matcher nameMatch = namePattern.matcher(dciList[j].getName());
-            Matcher descriptionMatch = descriptionPattern.matcher(dciList[j].getDescription());
-            if ((!dci.dciName.isEmpty() && nameMatch.find()) ||
-                (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+            Pattern namePattern = Pattern.compile(dci.dciName);
+            Pattern descriptionPattern = Pattern.compile(dci.dciDescription);
+            for(int j = 0; j < dciList.length; j++)
             {
-               chartMetrics.add(new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciList[j]));
-               if (!dci.multiMatch)
-                  break;
+               Matcher nameMatch = namePattern.matcher(dciList[j].getName());
+               Matcher descriptionMatch = descriptionPattern.matcher(dciList[j].getDescription());
+               if ((!dci.dciName.isEmpty() && nameMatch.find()) ||
+                   (!dci.dciDescription.isEmpty() && descriptionMatch.find()))
+               {
+                  chartMetrics.add(new ChartDciConfig(dci, (!dci.dciName.isEmpty() && nameMatch.find()) ? nameMatch : descriptionMatch, dciList[j]));
+                  if (!dci.multiMatch)
+                     break;
+               }
             }
+         }
+         else
+         {
+            for(int j = 0; j < dciList.length; j++)
+            {
+               if ((!dci.dciName.isEmpty() && dciList[j].getName().equalsIgnoreCase(dci.dciName)) ||
+                   (!dci.dciDescription.isEmpty() && dciList[j].getDescription().equalsIgnoreCase(dci.dciDescription)))
+               {
+                  chartMetrics.add(new ChartDciConfig(dci, dciList[j]));
+                  if (!dci.multiMatch)
+                     break;
+               }
+            }            
          }
       }
       Display display = viewPlacement.getWindow().getShell().getDisplay();

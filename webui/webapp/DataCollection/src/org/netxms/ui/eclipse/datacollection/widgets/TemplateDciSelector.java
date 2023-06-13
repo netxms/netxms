@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.widgets;
 
 import java.util.List;
+import java.util.regex.Pattern;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciValue;
@@ -31,6 +32,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class TemplateDciSelector extends AbstractSelector
 {
    private boolean selectDescription = false;
+   private boolean noValueObject = false;
 
    /**
     * @param parent
@@ -56,8 +58,16 @@ public class TemplateDciSelector extends AbstractSelector
          List<DciValue> dci = dlg.getSelection();
          if (dci != null && dci.size() == 1)
          {
-            setText(selectDescription ? dci.get(0).getDescription() : dci.get(0).getName());
+            String value = selectDescription ? dci.get(0).getDescription() : dci.get(0).getName();
+            if (dci.get(0).isNoValueObject())
+            {
+               noValueObject = true;
+               value = Pattern.quote(value);
+               value = value.replace("{instance}", "\\E(.*)\\Q").replace("{instance-name}", "\\E(.*)\\Q");
+            } 
+            setText(value);
          }
+         fireModifyListeners();
       }
    }
 
@@ -106,5 +116,13 @@ public class TemplateDciSelector extends AbstractSelector
    public void setSelectDescription(boolean selectDescription)
    {
       this.selectDescription = selectDescription;
+   }
+
+   /**
+    * @return the noValueObject
+    */
+   public boolean isNoValueObject()
+   {
+      return noValueObject;
    }
 }

@@ -295,7 +295,7 @@ public class TemplateDataSources extends PreferencePage
    private void addItem()
    {
       ChartDciConfig dci = new ChartDciConfig();
-      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
+      DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true, true);
       if (dlg.open() == Window.OK)
       {
          dciList.add(dci);
@@ -311,7 +311,7 @@ public class TemplateDataSources extends PreferencePage
 	{
       IStructuredSelection selection = viewer.getStructuredSelection();
 		ChartDciConfig dci = (ChartDciConfig)selection.getFirstElement();
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, true);
+		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false, true);
 		if (dlg.open() == Window.OK)
 		{
 		      viewer.update(dci, null);		      

@@ -86,6 +86,9 @@ public class ChartDciConfig implements NodeItemPair
    public boolean multiMatch;
 
    @Element(required = false)
+   public boolean regexMatch;
+
+   @Element(required = false)
    public String instance;
 
    @Element(required = false)
@@ -112,6 +115,7 @@ public class ChartDciConfig implements NodeItemPair
 		showThresholds = false;
 		invertValues = false;
 		multiMatch = false;
+		regexMatch = true;
       instance = "";
       column = "";
       displayFormat = "";
@@ -138,6 +142,7 @@ public class ChartDciConfig implements NodeItemPair
 		this.invertValues = src.invertValues;
 		this.useRawValues = src.useRawValues;
 		this.multiMatch = src.multiMatch;
+      this.regexMatch = src.regexMatch;
 		this.instance = src.instance;
 		this.column = src.column;
 		this.displayFormat = src.displayFormat;
@@ -163,9 +168,46 @@ public class ChartDciConfig implements NodeItemPair
       showThresholds = false;
       invertValues = false;
       multiMatch = false;
+      regexMatch = false;
       instance = "";
       column = "";
       displayFormat = "";
+   }
+
+   /**
+    * Create DCI info from DciValue object
+    * 
+    * @param src initial configuration to copy form
+    * @param dciValue runtime DCI information
+    */
+   public ChartDciConfig(ChartDciConfig src, DciValue dciValue)
+   {
+      nodeId = dciValue.getNodeId();
+      dciId = dciValue.getId();
+      dciName = dciValue.getName();
+      dciDescription = dciValue.getDescription();
+      type = dciValue.getDcObjectType();
+      this.color = src.color;
+      this.lineWidth = src.lineWidth;
+      this.lineChartType = src.lineChartType;
+      this.displayType = src.displayType;
+      this.showThresholds = src.showThresholds;
+      this.invertValues = src.invertValues;
+      this.useRawValues = src.useRawValues;
+      this.multiMatch = src.multiMatch;
+      this.regexMatch = src.regexMatch;
+      this.instance = src.instance;
+      this.column = src.column;
+      this.displayFormat = src.displayFormat;
+
+      if (src.name.isEmpty())
+      {
+         name = dciValue.getDescription();
+      }
+      else
+      {
+         name = src.name;
+      }
    }
 
    /**
@@ -190,6 +232,7 @@ public class ChartDciConfig implements NodeItemPair
       this.invertValues = src.invertValues;
       this.useRawValues = src.useRawValues;
       this.multiMatch = src.multiMatch;
+      this.regexMatch = src.regexMatch;
       this.instance = src.instance;
       this.column = src.column;
       this.displayFormat = src.displayFormat;
@@ -263,6 +306,7 @@ public class ChartDciConfig implements NodeItemPair
       invertValues = false;
       useRawValues = false;
       multiMatch = false;
+      regexMatch = false;
       instance = "";
       column = "";
       displayFormat = "";
@@ -415,7 +459,7 @@ public class ChartDciConfig implements NodeItemPair
    {
       return "ChartDciConfig [nodeId=" + nodeId + ", dciId=" + dciId + ", dciName=" + dciName + ", dciDescription=" + dciDescription + ", type=" + type + ", color=" + color + ", name=" + name +
             ", lineWidth=" + lineWidth + ", lineChartType=" + lineChartType + ", displayType=" + displayType + ", showThresholds=" + showThresholds + ", invertValues=" +
-            invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" + displayFormat + "]";
+            invertValues + ", useRawValues=" + useRawValues + ", multiMatch=" + multiMatch  + ", useRegex=" + regexMatch + ", instance=" + instance + ", column=" + column + ", displayFormat=" + displayFormat + "]";
    }
 
    @Override
