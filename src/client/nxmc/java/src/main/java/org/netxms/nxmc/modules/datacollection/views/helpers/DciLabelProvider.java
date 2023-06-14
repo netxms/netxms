@@ -73,6 +73,7 @@ public class DciLabelProvider extends LabelProvider implements ITableLabelProvid
       originTexts.put(DataOrigin.AGENT, i18n.tr("NetXMS Agent"));
       originTexts.put(DataOrigin.DEVICE_DRIVER, i18n.tr("Network Device Driver"));
       originTexts.put(DataOrigin.INTERNAL, i18n.tr("Internal"));
+      originTexts.put(DataOrigin.MODBUS, i18n.tr("Modbus"));
       originTexts.put(DataOrigin.MQTT, i18n.tr("MQTT"));
       originTexts.put(DataOrigin.PUSH, i18n.tr("Push"));
       originTexts.put(DataOrigin.SCRIPT, i18n.tr("Script"));

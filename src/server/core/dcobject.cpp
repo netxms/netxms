@@ -1749,7 +1749,7 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
  */
 const TCHAR *DCObject::getDataProviderName(int dataProvider)
 {
-   static const TCHAR *names[] = { _T("internal"), _T("nxagent"), _T("snmp"), _T("websvc"), _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver") };
+   static const TCHAR *names[] = { _T("internal"), _T("nxagent"), _T("snmp"), _T("websvc"), _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), _T("modbus") };
    return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_DEVICE_DRIVER)) ? names[dataProvider] : _T("unknown");
 }
 

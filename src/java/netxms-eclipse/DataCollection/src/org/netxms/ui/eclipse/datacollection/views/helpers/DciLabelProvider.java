@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2017 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,6 +71,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
       originTexts.put(DataOrigin.AGENT, Messages.get().DciLabelProvider_SourceAgent);
       originTexts.put(DataOrigin.DEVICE_DRIVER, Messages.get().DciLabelProvider_SourceDeviceDriver);
       originTexts.put(DataOrigin.INTERNAL, Messages.get().DciLabelProvider_SourceInternal);
+      originTexts.put(DataOrigin.MODBUS, "Modbus");
       originTexts.put(DataOrigin.MQTT, Messages.get().DciLabelProvider_SourceMQTT);
       originTexts.put(DataOrigin.PUSH, Messages.get().DciLabelProvider_SourcePush);
       originTexts.put(DataOrigin.SCRIPT, Messages.get().DciLabelProvider_SourceScript);
@@ -79,7 +80,7 @@ public class DciLabelProvider implements ITableLabelProvider, IColorProvider
       originTexts.put(DataOrigin.SSH, Messages.get().DciLabelProvider_SourceSSH);
       originTexts.put(DataOrigin.WEB_SERVICE, Messages.get().DciLabelProvider_SourceWebService);
       originTexts.put(DataOrigin.WINPERF, Messages.get().DciLabelProvider_SourceWinPerf);
-		
+
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.get().DciLabelProvider_Disabled);
 		statusTexts.put(DataCollectionItem.NOT_SUPPORTED, Messages.get().DciLabelProvider_NotSupported);

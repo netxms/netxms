@@ -1047,6 +1047,7 @@ enum HistoricalDataType
 #define DS_SSH                8
 #define DS_MQTT               9
 #define DS_DEVICE_DRIVER      10
+#define DS_MODBUS             11
 
 /**
  * Item status

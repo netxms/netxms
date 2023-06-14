@@ -3866,7 +3866,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *object, const NXSL_Identifier&
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("origin"))
    {
-      value = vm->createValue(static_cast<INT32>(event->getOrigin()));
+      value = vm->createValue(static_cast<int32_t>(event->getOrigin()));
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("originTimestamp"))
    {
@@ -4387,7 +4387,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const NXSL_Identifier& a
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("origin"))
    {
-		value = vm->createValue((LONG)dci->getOrigin());
+		value = vm->createValue(dci->getOrigin());
    }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("pollingInterval"))
    {

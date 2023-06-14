@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,8 @@ public class General extends AbstractDCIPropertyPage
       "Ω"
    };
    private static final int SUB_ELEMENT_INDENT = 20;
-   
+
+   private NXCSession session = Registry.getSession();
 	private DataCollectionObject dco;
    private Combo origin;
    private MetricSelector metricSelector;
@@ -126,7 +127,7 @@ public class General extends AbstractDCIPropertyPage
    {
       super(i18n.tr("General"), editor);
    }
-	
+
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
@@ -142,7 +143,7 @@ public class General extends AbstractDCIPropertyPage
       layout.marginRight = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = 0;
       dialogArea.setLayout(layout);
-      
+
       Group groupMetricConfig = new Group(dialogArea, SWT.NONE);
       groupMetricConfig.setText("Metric to collect");
       layout = new GridLayout();
@@ -155,7 +156,7 @@ public class General extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupMetricConfig.setLayoutData(gd);
-      
+
       origin = WidgetHelper.createLabeledCombo(groupMetricConfig, SWT.READ_ONLY, i18n.tr("Origin"), new GridData());
       origin.add(i18n.tr("Internal"));
       origin.add(i18n.tr("NetXMS Agent"));
@@ -168,14 +169,9 @@ public class General extends AbstractDCIPropertyPage
       origin.add(i18n.tr("SSH"));
       origin.add(i18n.tr("MQTT"));
       origin.add(i18n.tr("Network Device Driver"));
+      origin.add(i18n.tr("Modbus"));
       origin.select(dco.getOrigin().getValue());
-      origin.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      origin.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
@@ -243,7 +239,7 @@ public class General extends AbstractDCIPropertyPage
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.FLOAT));
          dataType.add(DataCollectionDisplayInfo.getDataTypeName(DataType.STRING));
          dataType.select(getDataTypePosition(dci.getDataType()));
-         
+
          gd = new GridData();
          gd.grabExcessHorizontalSpace = true;
          gd.horizontalAlignment = SWT.FILL;
@@ -264,7 +260,7 @@ public class General extends AbstractDCIPropertyPage
             selection = index;
          }
          dataUnit.select(selection);
-         
+
          useMultipliers = WidgetHelper.createLabeledCombo(groupProcessingAndVisualization, SWT.READ_ONLY, "Use multipliers", new GridData());
          useMultipliers.add("Default");
          useMultipliers.add("Yes");
@@ -285,7 +281,7 @@ public class General extends AbstractDCIPropertyPage
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
       groupPolling.setLayoutData(gd);
-      
+
       SelectionListener pollingButtons = new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -300,7 +296,6 @@ public class General extends AbstractDCIPropertyPage
          }
       };
 
-      final NXCSession session = Registry.getSession();
       scheduleDefault = new Button(groupPolling, SWT.RADIO);
       scheduleDefault.setText(String.format("Server default interval (%d seconds)", session.getDefaultDciPollingInterval()));
       scheduleDefault.setSelection(dco.getPollingScheduleType() == DataCollectionObject.POLLING_SCHEDULE_DEFAULT);
@@ -501,7 +496,7 @@ public class General extends AbstractDCIPropertyPage
 		editor.modify();
 		return true;
 	}
-	
+
 	/**
 	 * Get selected schedule type
 	 * 
@@ -520,7 +515,7 @@ public class General extends AbstractDCIPropertyPage
 	   }
 	   return type;
 	}
-   
+
    /**
     * Get selected retention type
     * 
@@ -547,8 +542,6 @@ public class General extends AbstractDCIPropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		
-		NXCSession session = Registry.getSession();
 		
 		scheduleDefault.setSelection(true);
 		scheduleFixed.setSelection(false);
@@ -591,15 +584,15 @@ public class General extends AbstractDCIPropertyPage
             return 0;  // fallback to int32
 	   }
 	}
-	
+
    /**
     * Data type positions in selector
     */
    private static final DataType[] TYPES = { 
       DataType.INT32, DataType.UINT32, DataType.COUNTER32, DataType.INT64,
       DataType.UINT64, DataType.COUNTER64, DataType.FLOAT, DataType.STRING
-      };
-   
+   };
+
 	/**
 	 * Get data type by selector position
 	 *  
@@ -610,7 +603,7 @@ public class General extends AbstractDCIPropertyPage
 	{
       return TYPES[position];
 	}
-   
+
    /**
     * DCI metric selector class
     */
@@ -627,8 +620,8 @@ public class General extends AbstractDCIPropertyPage
       {
          super(parent, SWT.NONE, AbstractSelector.EDITABLE_TEXT);
       }
-   
-      /* (non-Javadoc)
+
+      /**
        * @see org.netxms.ui.eclipse.widgets.AbstractSelector#selectionButtonHandler()
        */
       @Override

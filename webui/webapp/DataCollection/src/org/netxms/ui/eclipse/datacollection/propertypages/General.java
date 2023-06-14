@@ -162,14 +162,9 @@ public class General extends AbstractDCIPropertyPage
       origin.add(Messages.get().DciLabelProvider_SourceSSH);
       origin.add(Messages.get().DciLabelProvider_SourceMQTT);
       origin.add(Messages.get().DciLabelProvider_SourceDeviceDriver);
+      origin.add("Modbus");
       origin.select(dco.getOrigin().getValue());
-      origin.addSelectionListener(new SelectionListener() {
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e);
-         }
-
+      origin.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {

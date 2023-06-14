@@ -2211,6 +2211,7 @@ NXSL_Value *NXSL_ServerEnv::getConstantValue(const NXSL_Identifier& name, NXSL_V
       NXSL_ENV_CONSTANT("DataSource::AGENT", DS_NATIVE_AGENT);
       NXSL_ENV_CONSTANT("DataSource::DEVICE_DRIVER", DS_DEVICE_DRIVER);
       NXSL_ENV_CONSTANT("DataSource::INTERNAL", DS_INTERNAL);
+      NXSL_ENV_CONSTANT("DataSource::MODBUS", DS_MODBUS);
       NXSL_ENV_CONSTANT("DataSource::MQTT", DS_MQTT);
       NXSL_ENV_CONSTANT("DataSource::PUSH", DS_PUSH_AGENT);
       NXSL_ENV_CONSTANT("DataSource::SCRIPT", DS_SCRIPT);

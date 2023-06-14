@@ -38,7 +38,8 @@ public enum DataOrigin
    SCRIPT(7),
    SSH(8),
    MQTT(9),
-   DEVICE_DRIVER(10);
+   DEVICE_DRIVER(10),
+   MODBUS(11);
 
    private static Logger logger = LoggerFactory.getLogger(DataOrigin.class);
    private static Map<Integer, DataOrigin> lookupTable = new HashMap<Integer, DataOrigin>();
