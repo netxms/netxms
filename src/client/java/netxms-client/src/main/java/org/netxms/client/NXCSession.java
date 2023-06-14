@@ -6690,6 +6690,21 @@ public class NXCSession
          msg.setFieldInt32(NXCPCodes.VID_ETHERNET_IP_PROXY, data.getEtherNetIPProxy().intValue());
       }
 
+      if (data.getModbusTcpPort() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_MODBUS_TCP_PORT, data.getModbusTcpPort());
+      }
+
+      if (data.getModbusUnitId() != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_MODBUS_UNIT_ID, data.getModbusUnitId());
+      }
+
+      if (data.getModbusProxy() != null)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_MODBUS_PROXY, data.getModbusProxy().intValue());
+      }
+
       if (data.getCertificateMappingData() != null || data.getCertificateMappingMethod() != null)
       {
          if (data.getCertificateMappingData() == null || data.getCertificateMappingMethod() == null)

@@ -509,6 +509,17 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              category="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.Modbus"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.Modbus"
+              name="Modbus">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Node">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

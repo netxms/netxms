@@ -407,7 +407,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
-      _T("mqtt_proxy,modbus_proxy FROM nodes WHERE id=?"));
+      _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 

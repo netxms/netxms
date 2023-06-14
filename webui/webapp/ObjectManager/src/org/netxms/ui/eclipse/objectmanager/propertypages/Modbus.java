@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,12 +37,13 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
- * "EtherNet/IP" property page for node
+ * "Modbus" property page for node
  */
-public class EtherNetIP extends PropertyPage
+public class Modbus extends PropertyPage
 {
    private AbstractNode node;
    private LabeledSpinner tcpPort;
+   private LabeledSpinner unitId;
    private ObjectSelector proxy;
 
    /**
@@ -59,23 +60,32 @@ public class EtherNetIP extends PropertyPage
       dialogLayout.marginHeight = 0;
       dialogLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
       dialogLayout.numColumns = 2;
+      dialogLayout.makeColumnsEqualWidth = true;
       dialogArea.setLayout(dialogLayout);
 
       tcpPort = new LabeledSpinner(dialogArea, SWT.NONE);
       tcpPort.setLabel(Messages.get().Communication_TCPPort);
       tcpPort.setRange(1, 65535);
-      tcpPort.setSelection(node.getEtherNetIpPort());
+      tcpPort.setSelection(node.getModbusTcpPort());
       GridData gd = new GridData();
-      gd.verticalAlignment = SWT.BOTTOM;
+      gd.horizontalAlignment = SWT.FILL;
       tcpPort.setLayoutData(gd);
+
+      unitId = new LabeledSpinner(dialogArea, SWT.NONE);
+      unitId.setLabel("Unit ID");
+      unitId.setRange(0, 255);
+      unitId.setSelection(node.getModbusUnitId());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      unitId.setLayoutData(gd);
 
       proxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       proxy.setLabel(Messages.get().Communication_Proxy);
-      proxy.setObjectId(node.getEtherNetIpProxyId());
+      proxy.setObjectId(node.getModbusProxyId());
       gd = new GridData();
-      gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
       proxy.setLayoutData(gd);
 
       return dialogArea;
@@ -90,14 +100,14 @@ public class EtherNetIP extends PropertyPage
    {
       if (isApply)
          setValid(false);
-      
+
       final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
-      md.setEtherNetIPPort(tcpPort.getSelection());
-      md.setEtherNetIPProxy(proxy.getObjectId());
+      md.setModbusTcpPort(tcpPort.getSelection());
+      md.setModbusUnitId((short)unitId.getSelection());
+      md.setModbusProxy(proxy.getObjectId());
 
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob(String.format("Updating EtherNet/IP communication settings for node %s", node.getObjectName()), null,
-            Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format("Updating Modbus communication settings for node %s", node.getObjectName()), null, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -107,7 +117,7 @@ public class EtherNetIP extends PropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot update EtherNet/IP communication settings for node %s", node.getObjectName());
+            return String.format("Cannot update Modbus communication settings for node %s", node.getObjectName());
          }
 
          @Override
@@ -119,7 +129,7 @@ public class EtherNetIP extends PropertyPage
                   @Override
                   public void run()
                   {
-                     EtherNetIP.this.setValid(true);
+                     Modbus.this.setValid(true);
                   }
                });
             }
@@ -153,8 +163,8 @@ public class EtherNetIP extends PropertyPage
    protected void performDefaults()
    {
       super.performDefaults();
-      
-      tcpPort.setText("44818"); //$NON-NLS-1$
+      tcpPort.setText("502");
+      unitId.setText("1");
       proxy.setObjectId(0);
    }
 }

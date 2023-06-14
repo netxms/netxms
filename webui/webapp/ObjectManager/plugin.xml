@@ -509,6 +509,17 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              category="org.netxms.ui.eclipse.objectmanager.propertypages.Communication#10"
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.Modbus"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.Modbus"
+              name="Modbus">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Node">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
@@ -831,6 +842,13 @@
                label="&amp;Automatic bind"
                menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
                style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeZone_Node"
+               label="%action.label.ChangeZone"
+               menubarPath="org.netxms.ui.ObjectOperationsMenu/additions">
          </action>
       </objectContribution>
       <objectContribution

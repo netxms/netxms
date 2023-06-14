@@ -98,7 +98,7 @@ public abstract class AbstractNode extends DataCollectionTarget implements Hardw
    public static final int NF_DISABLE_PERF_COUNT        = 0x10000000;
    public static final int NF_DISABLE_8021X_STATUS_POLL = 0x20000000;
    public static final int NF_DISABLE_SSH               = 0x40000000;
-   public static final int NF_DISABLE_MODBUS_TCP = 0x80000000;
+   public static final int NF_DISABLE_MODBUS_TCP        = 0x80000000;
 
 	// Node state flags
 	public static final int NSF_AGENT_UNREACHABLE  = 0x00010000;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.nxmc.modules.objects.propertypages;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -31,7 +30,7 @@ import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.base.widgets.LabeledSpinner;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.widgets.ObjectSelector;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -45,7 +44,7 @@ public class EtherNetIP extends ObjectPropertyPage
    private static I18n i18n = LocalizationHelper.getI18n(EtherNetIP.class);
 
    private AbstractNode node;
-   private LabeledText tcpPort;
+   private LabeledSpinner tcpPort;
    private ObjectSelector proxy;
 
    /**
@@ -101,17 +100,19 @@ public class EtherNetIP extends ObjectPropertyPage
       dialogLayout.numColumns = 2;
       dialogArea.setLayout(dialogLayout);
 
-      tcpPort = new LabeledText(dialogArea, SWT.NONE);
+      tcpPort = new LabeledSpinner(dialogArea, SWT.NONE);
       tcpPort.setLabel(i18n.tr("TCP port"));
-      tcpPort.setText(Integer.toString(node.getEtherNetIpPort()));
+      tcpPort.setRange(1, 65535);
+      tcpPort.setSelection(node.getEtherNetIpPort());
       GridData gd = new GridData();
-      gd.widthHint = 100;
+      gd.verticalAlignment = SWT.BOTTOM;
       tcpPort.setLayoutData(gd);
       
       proxy = new ObjectSelector(dialogArea, SWT.NONE, true);
       proxy.setLabel(i18n.tr("Proxy"));
       proxy.setObjectId(node.getEtherNetIpProxyId());
       gd = new GridData();
+      gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       proxy.setLayoutData(gd);
@@ -129,21 +130,11 @@ public class EtherNetIP extends ObjectPropertyPage
          setValid(false);
 
       final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
-      try
-      {
-         md.setEtherNetIPPort(Integer.parseInt(tcpPort.getText(), 10));
-      }
-      catch(NumberFormatException e)
-      {
-         MessageDialog.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Please enter valid EtherNet/IP port number"));
-         if (isApply)
-            setValid(true);
-         return false;
-      }
+      md.setEtherNetIPPort(tcpPort.getSelection());
       md.setEtherNetIPProxy(proxy.getObjectId());
 
       final NXCSession session = Registry.getSession();
-      new Job(String.format(i18n.tr("Updating EtherNet/IP communication settings for node %s"), node.getObjectName()), null) {
+      new Job(i18n.tr("Updating EtherNet/IP communication settings for node {0}", node.getObjectName()), null) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -153,7 +144,7 @@ public class EtherNetIP extends ObjectPropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot update EtherNet/IP communication settings for node %s"), node.getObjectName());
+            return i18n.tr("Cannot update EtherNet/IP communication settings for node {0}", node.getObjectName());
          }
 
          @Override

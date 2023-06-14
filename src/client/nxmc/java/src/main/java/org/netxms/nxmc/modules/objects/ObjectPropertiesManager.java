@@ -61,6 +61,7 @@ import org.netxms.nxmc.modules.objects.propertypages.MapBackground;
 import org.netxms.nxmc.modules.objects.propertypages.MapObjectFilter;
 import org.netxms.nxmc.modules.objects.propertypages.MapOptions;
 import org.netxms.nxmc.modules.objects.propertypages.MapSeedNodes;
+import org.netxms.nxmc.modules.objects.propertypages.Modbus;
 import org.netxms.nxmc.modules.objects.propertypages.NetworkServicePolling;
 import org.netxms.nxmc.modules.objects.propertypages.ObjectPropertyPage;
 import org.netxms.nxmc.modules.objects.propertypages.PhysicalContainerPlacement;
@@ -125,6 +126,7 @@ public class ObjectPropertiesManager
       pageClasses.add(MapBackground.class);
       pageClasses.add(MapObjectFilter.class);
       pageClasses.add(MapSeedNodes.class);
+      pageClasses.add(Modbus.class);
       pageClasses.add(MQTT.class);
       pageClasses.add(NetworkServicePolling.class);
       pageClasses.add(PhysicalContainerPlacement.class);
