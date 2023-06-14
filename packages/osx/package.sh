@@ -5,10 +5,10 @@ set -e
 
 if [ `uname -p` = 'arm' ]; then
    arch=aarch64
-   jre_basename=zulu11.54.23-ca-jre11.0.14-macosx_aarch64
+   jre_basename=zulu17.42.19-ca-jdk17.0.7-macosx_aarch64
 else
    arch=x86_64
-   jre_basename=zulu11.54.23-ca-jre11.0.14-macosx_x64
+   jre_basename=zulu17.42.19-ca-jdk17.0.7-macosx_x64
 fi
 
 if [ ! -r "${jre_basename}.zip" ]; then
