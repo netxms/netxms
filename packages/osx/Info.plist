@@ -27,7 +27,7 @@
     <string>English</string>
     <key>Eclipse</key>
     <array>
-      <string>-vm</string><string>../jre/lib/jli/libjli.dylib</string>
+      <string>-vm</string><string>../jre/lib/libjli.dylib</string>
       <string>-keyring</string>
       <string>~/.eclipse_keyring</string>
     </array>
