@@ -553,12 +553,12 @@ void DCObject::setStatus(int status, bool generateEvent, bool userChange)
          if (generateEvent && IsEventSource(owner->getObjectClass()))
          {
             static uint32_t eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-            static const TCHAR *originName[11] =
+            static const TCHAR *originName[12] =
             {
                _T("Internal"), _T("NetXMS Agent"), _T("SNMP"),
                _T("Web Service"), _T("Push"), _T("WinPerf"),
                _T("iLO"), _T("Script"), _T("SSH"), _T("MQTT"),
-               _T("Device Driver")
+               _T("Device Driver"), _T("Modbus")
             };
             static const TCHAR *parameterNames[] = { _T("dciId"), _T("metric"), _T("description"), _T("originCode"), _T("origin") };
             PostDciEventWithNames(eventCode[status], owner->getId(), m_id, "issds", parameterNames, m_id, m_name.cstr(), m_description.cstr(), m_source, originName[m_source]);
@@ -1750,7 +1750,7 @@ void DCObject::getScriptDependencies(StringSet *dependencies) const
 const TCHAR *DCObject::getDataProviderName(int dataProvider)
 {
    static const TCHAR *names[] = { _T("internal"), _T("nxagent"), _T("snmp"), _T("websvc"), _T("push"), _T("winperf"), _T("smclp"), _T("script"), _T("ssh"), _T("mqtt"), _T("driver"), _T("modbus") };
-   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_DEVICE_DRIVER)) ? names[dataProvider] : _T("unknown");
+   return ((dataProvider >= DS_INTERNAL) && (dataProvider <= DS_MODBUS)) ? names[dataProvider] : _T("unknown");
 }
 
 /**

@@ -3582,15 +3582,16 @@ public:
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size) override;
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result) override;
 
-   DataCollectionError getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *name, TCHAR *buffer, size_t size, int interpretRawValue);
+   DataCollectionError getMetricFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *metric, TCHAR *buffer, size_t size, int interpretRawValue);
    DataCollectionError getTableFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, const ObjectArray<DCTableColumn> &columns, shared_ptr<Table> *table);
    DataCollectionError getListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringList **list);
    DataCollectionError getOIDSuffixListFromSNMP(uint16_t port, SNMP_Version version, const TCHAR *oid, StringMap **values);
-   DataCollectionError getMetricFromAgent(const TCHAR *name, TCHAR *buffer, size_t size);
-   DataCollectionError getTableFromAgent(const TCHAR *name, shared_ptr<Table> *table);
-   DataCollectionError getListFromAgent(const TCHAR *name, StringList **list);
-   DataCollectionError getMetricFromSMCLP(const TCHAR *name, TCHAR *buffer, size_t size);
-   DataCollectionError getMetricFromDeviceDriver(const TCHAR *name, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromAgent(const TCHAR *metric, TCHAR *buffer, size_t size);
+   DataCollectionError getTableFromAgent(const TCHAR *metric, shared_ptr<Table> *table);
+   DataCollectionError getListFromAgent(const TCHAR *metric, StringList **list);
+   DataCollectionError getMetricFromSMCLP(const TCHAR *metric, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *buffer, size_t size);
+   DataCollectionError getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size);
 
    double getMetricFromAgentAsDouble(const TCHAR *name, double defaultValue = 0);
    int32_t getMetricFromAgentAsInt32(const TCHAR *name, int32_t defaultValue = 0);

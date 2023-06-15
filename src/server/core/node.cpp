@@ -28,6 +28,8 @@
 #include <ncdrv.h>
 
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
+#define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")
+#define DEBUG_TAG_DC_SNMP           _T("dc.snmp")
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
 #define DEBUG_TAG_NODE_INTERFACES   _T("node.iface")
 #define DEBUG_TAG_ROUTES_POLL       _T("poll.routes")
@@ -6687,13 +6689,13 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
        (m_state & DCSF_UNREACHABLE) ||
        (m_flags & NF_DISABLE_SNMP))
    {
-      DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%d"), m_name, name, SNMP_ERR_COMM);
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%d"), m_name, name, SNMP_ERR_COMM);
       return DCErrorFromSNMPError(SNMP_ERR_COMM);
    }
 
    if (size < 64)
    {
-      DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): result buffer is too small"), m_name, name);
+      nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 7, _T("Node(%s)->getMetricFromSNMP(%s): result buffer is too small"), m_name, name);
       return DCE_COLLECTION_ERROR;
    }
 
@@ -6747,7 +6749,7 @@ DataCollectionError Node::getMetricFromSNMP(uint16_t port, SNMP_Version version,
    {
       snmpResult = SNMP_ERR_COMM;
    }
-   DbgPrintf(7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%u"), m_name, name, snmpResult);
+   nxlog_debug_tag(DEBUG_TAG_DC_SNMP, 7, _T("Node(%s)->getMetricFromSNMP(%s): snmpResult=%u"), m_name, name, snmpResult);
    return DCErrorFromSNMPError(snmpResult);
 }
 
@@ -6989,7 +6991,7 @@ DataCollectionError Node::getMetricFromAgent(const TCHAR *name, TCHAR *buffer, s
    }
 
 end_loop:
-   nxlog_debug(7, _T("Node(%s)->getMetricFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, rc);
+   nxlog_debug_tag(_T("dc.agent"), 7, _T("Node(%s)->getMetricFromAgent(%s): agentError=%u rc=%d"), m_name, name, agentError, rc);
    return rc;
 }
 
@@ -7118,7 +7120,7 @@ DataCollectionError Node::getTableFromAgent(const TCHAR *name, shared_ptr<Table>
    }
 
 end_loop:
-   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, error, result);
+   nxlog_debug_tag(_T("dc.agent"), 7, _T("Node(%s)->getTableFromAgent(%s): error=%u result=%d"), m_name, name, error, result);
    return result;
 }
 
@@ -7177,7 +7179,7 @@ DataCollectionError Node::getListFromAgent(const TCHAR *name, StringList **list)
    }
 
 end_loop:
-   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, agentError, rc);
+   nxlog_debug_tag(_T("dc.agent"), 7, _T("Node(%s)->getListFromAgent(%s): agentError=%u rc=%d"), m_name, name, agentError, rc);
    return rc;
 }
 
@@ -7229,14 +7231,14 @@ DataCollectionError Node::getMetricFromSMCLP(const TCHAR *param, TCHAR *buffer, 
 
 end_loop:
    smclpUnlock();
-   DbgPrintf(7, _T("Node(%s)->GetItemFromSMCLP(%s): result=%d"), m_name, param, result);
+   nxlog_debug_tag(_T("dc.smclp"), 7, _T("Node(%s)->GetItemFromSMCLP(%s): result=%d"), m_name, param, result);
    return result;
 }
 
 /**
  * Get metric value from network device driver
  */
-DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *param, TCHAR *buffer, size_t size)
+DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *buffer, size_t size)
 {
    lockProperties();
    NetworkDeviceDriver *driver = m_driver;
@@ -7248,9 +7250,94 @@ DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *param, TCHAR *b
    SNMP_Transport *transport = createSnmpTransport();
    if (transport == nullptr)
       return DCE_COMM_ERROR;
-   DataCollectionError rc = driver->getMetric(transport, this, m_driverData, param, buffer, size);
+   DataCollectionError rc = driver->getMetric(transport, this, m_driverData, metric, buffer, size);
    delete transport;
    return rc;
+}
+
+/**
+ * Get metric value via Modbus protocol
+ */
+DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size)
+{
+   // Expected metric format is
+   // [unit:][source:]address[|conversion]
+
+   uint16_t unitId = m_modbusUnitId;
+
+   const TCHAR *addressPart = metric;
+   const TCHAR *source = _T("hold:");
+   const TCHAR *p = _tcschr(metric, _T(':'));
+   if (p != nullptr)
+   {
+      // At least one : is present, check for second one
+      p++;
+      const TCHAR *n = _tcschr(p, _T(':'));
+      if (n != nullptr)
+      {
+         TCHAR *eptr;
+         unitId = static_cast<uint16_t>(_tcstoul(metric, &eptr, 10));
+         if ((unitId > 255) || (*eptr != _T(':')))
+         {
+            nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): invalid unit ID"), m_name, metric);
+            return DCE_NOT_SUPPORTED;
+         }
+         source = p;
+         addressPart = n + 1;
+      }
+      else
+      {
+         // Only source and address
+         source = metric;
+         addressPart = p;
+      }
+   }
+
+   TCHAR *eptr;
+   int address = _tcstol(addressPart, &eptr, 0);
+   if ((address < 0) || (address > 65535) || ((*eptr != 0) && (*eptr != _T('|'))))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): invalid register address"), m_name, metric);
+      return DCE_NOT_SUPPORTED;
+   }
+
+   const TCHAR *conversion = (*eptr == _T('|')) ? eptr + 1 : _T("");
+
+   ModbusTransport *transport = createModbusTransport();
+   if (transport == nullptr)
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): cannot create Modbus transport"), m_name, metric);
+      return DCE_NOT_SUPPORTED;
+   }
+
+   ModbusOperationStatus status;
+   if (!_tcsnicmp(source, _T("hold:"), 5))
+   {
+      status = transport->readHoldingRegisters(address, conversion, buffer);
+   }
+   else if (!_tcsnicmp(source, _T("input:"), 6))
+   {
+      status = transport->readInputRegisters(address, conversion, buffer);
+   }
+   else if (!_tcsnicmp(source, _T("coil:"), 5))
+   {
+      status = transport->readCoil(address, buffer);
+   }
+   else if (!_tcsnicmp(source, _T("discrete:"), 9))
+   {
+      status = transport->readDiscreteInput(address, buffer);
+   }
+   else
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): invalid source"), m_name, metric);
+      status = MODBUS_STATUS_PROTOCOL_ERROR;
+   }
+   delete transport;
+
+   DataCollectionError result = (status == MODBUS_STATUS_SUCCESS) ? DCE_SUCCESS :
+            ((status == MODBUS_STATUS_PROTOCOL_ERROR) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
+   nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): modbusStatus=%d result=%d"), m_name, metric, status, result);
+   return result;
 }
 
 /**

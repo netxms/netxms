@@ -195,7 +195,7 @@ static int ModbusReadRegisters(modbus_t *mb, bool input, int address, const TCHA
       nr = 4;
       type = ((*conversion == 'u') || (*conversion == 'U')) ? ConversionType::UINT64 : ConversionType::INT64;
    }
-   else if (!_tcsicmp(conversion, _T("float-abcd")))
+   else if (!_tcsicmp(conversion, _T("float-abcd")) || !_tcsicmp(conversion, _T("float")))
    {
       nr = 2;
       type = ConversionType::FLOAT_ABCD;

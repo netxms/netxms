@@ -146,6 +146,16 @@ static void GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *bu
          case DS_WEB_SERVICE:
             *error = dcTarget->getMetricFromWebService(pItem->getName(), buffer, MAX_RESULT_LENGTH);
             break;
+         case DS_MODBUS:
+            if (dcTarget->getObjectClass() == OBJECT_NODE)
+            {
+               *error = static_cast<Node*>(dcTarget)->getMetricFromModbus(pItem->getName(), buffer, MAX_RESULT_LENGTH);
+            }
+            else
+            {
+               *error = DCE_NOT_SUPPORTED;
+            }
+            break;
          case DS_MQTT:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
