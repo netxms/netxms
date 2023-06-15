@@ -66,6 +66,7 @@ public class Capabilities extends TableElement
       addFlag(Messages.get().Capabilities_FlagHasEntityMIB, (node.getCapabilities() & AbstractNode.NC_HAS_ENTITY_MIB) != 0);
       addFlag("EtherNet/IP", (node.getCapabilities() & AbstractNode.NC_IS_ETHERNET_IP) != 0);
       addFlag("LLDP", (node.getCapabilities() & AbstractNode.NC_IS_LLDP) != 0);
+      addFlag("Modbus TCP", (node.getCapabilities() & AbstractNode.NC_IS_MODBUS_TCP) != 0);
       addFlag("NDP", (node.getCapabilities() & AbstractNode.NC_IS_NDP) != 0);
       addFlag("OSPF", (node.getCapabilities() & AbstractNode.NC_IS_OSPF) != 0);
 		addFlag(Messages.get().Capabilities_FlagIsPrinter, (node.getCapabilities() & AbstractNode.NC_IS_PRINTER) != 0);
