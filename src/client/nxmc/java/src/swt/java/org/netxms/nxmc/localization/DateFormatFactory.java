@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -98,12 +98,12 @@ public class DateFormatFactory
       {
          case DATETIME_FORMAT_SERVER:
             NXCSession session = Registry.getSession();
-            df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
+            df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat());
             break;
          case DATETIME_FORMAT_CUSTOM:
             try
             {
-               df = new SimpleDateFormat(dateFormatString + " " + timeFormatString); //$NON-NLS-1$
+               df = new SimpleDateFormat(dateFormatString + " " + timeFormatString);
             }
             catch(IllegalArgumentException e)
             {

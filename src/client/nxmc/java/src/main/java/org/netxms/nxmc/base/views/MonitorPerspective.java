@@ -64,7 +64,7 @@ public class MonitorPerspective extends Perspective
       configuration.hasNavigationArea = false;
       configuration.multiViewMainArea = true;
       configuration.hasSupplementalArea = false;
-      configuration.priority = 150;
+      configuration.priority = 110;
    }
 
    /**

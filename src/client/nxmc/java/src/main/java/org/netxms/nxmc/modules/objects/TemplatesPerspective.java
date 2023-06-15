@@ -42,6 +42,6 @@ public class TemplatesPerspective extends ObjectsPerspective
    protected void configurePerspective(PerspectiveConfiguration configuration)
    {
       super.configurePerspective(configuration);
-      configuration.priority = 24;
+      configuration.priority = 16;
    }
 }

@@ -440,13 +440,13 @@
                <scope>${lib.scope}</scope>
             </dependency>
             <dependency>
-               <groupId>org.eclipse.rap.nebula</groupId>
+               <groupId>org.eclipse.rap</groupId>
                <artifactId>org.eclipse.rap.nebula.widgets.grid</artifactId>
                <version>${rwt.version}</version>
                <scope>${lib.scope}</scope>
             </dependency>
             <dependency>
-               <groupId>org.eclipse.rap.nebula</groupId>
+               <groupId>org.eclipse.rap</groupId>
                <artifactId>org.eclipse.rap.nebula.jface.gridviewer</artifactId>
                <version>${rwt.version}</version>
                <scope>${lib.scope}</scope>

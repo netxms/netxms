@@ -44,6 +44,6 @@ public class AssetsPerspective extends ObjectsPerspective
    protected void configurePerspective(PerspectiveConfiguration configuration)
    {
       super.configurePerspective(configuration);
-      configuration.priority = 30;
+      configuration.priority = 14;
    }
 }

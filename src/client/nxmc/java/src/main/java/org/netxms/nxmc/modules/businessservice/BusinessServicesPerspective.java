@@ -44,6 +44,6 @@ public class BusinessServicesPerspective extends ObjectsPerspective
    protected void configurePerspective(PerspectiveConfiguration configuration)
    {
       super.configurePerspective(configuration);
-      configuration.priority = 35;
+      configuration.priority = 50;
    }
 }

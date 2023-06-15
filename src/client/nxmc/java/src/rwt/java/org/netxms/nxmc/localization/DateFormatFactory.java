@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,23 @@ public class DateFormatFactory
       instance.timeFormatString = ps.getAsString("DateFormatFactory.Format.Time"); //$NON-NLS-1$
       instance.shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime"); //$NON-NLS-1$
       RWT.getUISession().setAttribute("netxms.dateFormatFactory", instance);
+      if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false)) //$NON-NLS-1$
+         Registry.setServerTimeZone();
+      else
+         Registry.resetTimeZone();
+   }
+
+   /**
+    * Update from preferences
+    */
+   public static void updateFromPreferences()
+   {
+      PreferenceStore ps = PreferenceStore.getInstance();
+      DateFormatFactory instance = getInstance();
+      instance.dateTimeFormat = ps.getAsInteger("DateFormatFactory.Format.DateTime", DATETIME_FORMAT_SERVER); //$NON-NLS-1$
+      instance.dateFormatString = ps.getAsString("DateFormatFactory.Format.Date"); //$NON-NLS-1$
+      instance.timeFormatString = ps.getAsString("DateFormatFactory.Format.Time"); //$NON-NLS-1$
+      instance.shortTimeFormatString = ps.getAsString("DateFormatFactory.Format.ShortTime"); //$NON-NLS-1$
       if (ps.getAsBoolean("DateFormatFactory.UseServerTimeZone", false)) //$NON-NLS-1$
          Registry.setServerTimeZone();
       else

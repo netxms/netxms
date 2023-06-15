@@ -55,7 +55,7 @@ public class GraphsPerspective extends Perspective
       configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = false;
       configuration.hasSupplementalArea = false;
-      configuration.priority = 140;
+      configuration.priority = 22;
    }
 
    /**

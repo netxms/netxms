@@ -51,7 +51,7 @@ public class AlarmsPerspective extends Perspective
       configuration.hasSupplementalArea = false;
       configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = false;
-      configuration.priority = 10;
+      configuration.priority = 26;
    }
 
    /**

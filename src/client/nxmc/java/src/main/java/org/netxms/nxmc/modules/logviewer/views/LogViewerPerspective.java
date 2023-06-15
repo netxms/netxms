@@ -108,7 +108,7 @@ public class LogViewerPerspective extends Perspective
       configuration.hasNavigationArea = false;
       configuration.multiViewMainArea = true;
       configuration.hasSupplementalArea = false;
-      configuration.priority = 155;
+      configuration.priority = 100;
    }
 
    /**

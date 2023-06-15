@@ -42,6 +42,6 @@ public class InfrastructurePerspective extends ObjectsPerspective
    protected void configurePerspective(PerspectiveConfiguration configuration)
    {
       super.configurePerspective(configuration);
-      configuration.priority = 21;
+      configuration.priority = 10;
    }
 }

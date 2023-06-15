@@ -42,6 +42,6 @@ public class DashboardsPerspective extends ObjectsPerspective
    protected void configurePerspective(PerspectiveConfiguration configuration)
    {
       super.configurePerspective(configuration);
-      configuration.priority = 23;
+      configuration.priority = 20;
    }
 }

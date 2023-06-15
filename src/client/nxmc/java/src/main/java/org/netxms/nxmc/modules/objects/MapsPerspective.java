@@ -42,6 +42,6 @@ public class MapsPerspective extends ObjectsPerspective
    protected void configurePerspective(PerspectiveConfiguration configuration)
    {
       super.configurePerspective(configuration);
-      configuration.priority = 22;
+      configuration.priority = 24;
    }
 }

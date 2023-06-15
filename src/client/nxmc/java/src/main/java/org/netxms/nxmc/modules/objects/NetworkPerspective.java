@@ -18,6 +18,7 @@
  */
 package org.netxms.nxmc.modules.objects;
 
+import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
@@ -32,5 +33,15 @@ public class NetworkPerspective extends ObjectsPerspective
    public NetworkPerspective()
    {
       super("Network", i18n.tr("Network"), ResourceManager.getImage("icons/perspective-network.png"), SubtreeType.NETWORK);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.ObjectsPerspective#configurePerspective(org.netxms.nxmc.base.views.PerspectiveConfiguration)
+    */
+   @Override
+   protected void configurePerspective(PerspectiveConfiguration configuration)
+   {
+      super.configurePerspective(configuration);
+      configuration.priority = 12;
    }
 }

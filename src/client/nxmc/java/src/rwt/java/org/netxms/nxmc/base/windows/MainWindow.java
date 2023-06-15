@@ -70,6 +70,7 @@ import org.netxms.nxmc.base.preferencepages.Appearance;
 import org.netxms.nxmc.base.preferencepages.HttpProxyPreferences;
 import org.netxms.nxmc.base.preferencepages.RegionalSettingsPage;
 import org.netxms.nxmc.base.views.Perspective;
+import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.base.views.PinLocation;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewFolder;
@@ -501,29 +502,30 @@ public class MainWindow extends Window implements MessageAreaHolder
       perspectives = Registry.getPerspectives();
       for(final Perspective p : perspectives)
       {
-         p.bindToWindow(this);
-         ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
-         item.setData("PerspectiveId", p.getId());
-         item.setImage(p.getImage());
-         if (!verticalLayout)
-            item.setText(p.getName());
-         KeyStroke shortcut = p.getKeyboardShortcut();
-         item.setToolTipText((shortcut != null) ? p.getName() + "\t" + shortcut.toString() : p.getName());
-         item.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetSelected(SelectionEvent e)
-            {
-               switchToPerspective(p);
-            }
-
-            @Override
-            public void widgetDefaultSelected(SelectionEvent e)
-            {
-               widgetSelected(e);
-            }
-         });
-         if (p.getId().equals("Pinboard"))
-            pinboardPerspective = p;
+         if (p instanceof PerspectiveSeparator)
+         {
+            new ToolItem(mainMenu, SWT.SEPARATOR);
+         }
+         else
+         {
+            p.bindToWindow(this);
+            ToolItem item = new ToolItem(mainMenu, SWT.RADIO);
+            item.setData("PerspectiveId", p.getId());
+            item.setImage(p.getImage());
+            if (!verticalLayout)
+               item.setText(p.getName());
+            KeyStroke shortcut = p.getKeyboardShortcut();
+            item.setToolTipText((shortcut != null) ? p.getName() + "\t" + shortcut.toString() : p.getName());
+            item.addSelectionListener(new SelectionAdapter() {
+               @Override
+               public void widgetSelected(SelectionEvent e)
+               {
+                  switchToPerspective(p);
+               }
+            });
+            if (p.getId().equals("Pinboard"))
+               pinboardPerspective = p;
+         }
       }
    }
 
