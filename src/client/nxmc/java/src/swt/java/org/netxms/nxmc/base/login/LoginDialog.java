@@ -280,7 +280,7 @@ public class LoginDialog extends Dialog
       settings.set("Connect.Login", textLogin.getText());
       settings.set("Connect.AuthMethod", authMethod.getValue());
       if (certificate != null)
-         settings.set("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString());
+         settings.set("Connect.Certificate", ((X509Certificate)certificate).getSubjectX500Principal().toString());
 
       password = textPassword.getText();
       super.okPressed();
@@ -312,7 +312,7 @@ public class LoginDialog extends Dialog
     */
    private static String getCertificateDisplayName(Certificate c)
    {
-      String subjString = ((X509Certificate)c).getSubjectDN().toString();
+      String subjString = ((X509Certificate)c).getSubjectX500Principal().toString();
       Subject subj = SubjectParser.parseSubject(subjString);
       return String.format("%s (%s, %s, %s)", subj.getCommonName(), subj.getOrganization(), subj.getState(), subj.getCountry()); //$NON-NLS-1$
    }
@@ -358,7 +358,7 @@ public class LoginDialog extends Dialog
 
       for(int i = 0; i < certs.length; i++)
       {
-         String subject = ((X509Certificate)certs[i]).getSubjectDN().toString();
+         String subject = ((X509Certificate)certs[i]).getSubjectX500Principal().toString();
          if (subject.equals(lastSelected))
             selectionIndex = i;
          subjectStrings[i] = getCertificateDisplayName(certs[i]);

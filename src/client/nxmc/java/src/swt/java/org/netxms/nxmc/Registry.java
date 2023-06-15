@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.base.views.ConfigurationPerspective;
 import org.netxms.nxmc.base.views.MonitorPerspective;
@@ -61,7 +60,6 @@ public final class Registry
    private static TimeZone timeZone = null;
    private static File stateDir = null;
    private static MainWindow mainWindow = null;
-   private static TrayItem trayIcon = null;
    private static PollManager pollManager = new PollManager();
    private static PinLocation lastViewPinLocation = PinLocation.PINBOARD;
    private static Map<Class<?>, Object> singletons = new HashMap<>();
@@ -356,26 +354,6 @@ public final class Registry
    {
       if (mainWindow == null)
          mainWindow = window;
-   }
-
-   /**
-    * Get current tray icon
-    *
-    * @return current tray icon or null
-    */
-   public static TrayItem getTrayIcon()
-   {
-      return trayIcon;
-   }
-
-   /**
-    * Set current tray icon.
-    * 
-    * @param trayIcon new tray icon
-    */
-   public static void setTrayIcon(TrayItem trayIcon)
-   {
-      Registry.trayIcon = trayIcon;
    }
 
    /**

@@ -24,7 +24,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.base.windows.TrayIconManager;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -37,6 +39,7 @@ public class Appearance extends PropertyPage
 
    private Button checkVerticalLayout;
    private Button checkShowServerClock;
+   private Button checkShowTrayIcon;
 
    public Appearance()
    {
@@ -66,6 +69,13 @@ public class Appearance extends PropertyPage
       checkShowServerClock.setText("Show server &clock");
       checkShowServerClock.setSelection(settings.getAsBoolean("Appearance.ShowServerClock", false));
 
+      if (!Registry.IS_WEB_CLIENT)
+      {
+         checkShowTrayIcon = new Button(dialogArea, SWT.CHECK);
+         checkShowTrayIcon.setText("Show tray &icon (required for notification pop-ups)");
+         checkShowTrayIcon.setSelection(settings.getAsBoolean("Appearance.ShowTrayIcon", true));
+      }
+
       return dialogArea;
    }
 
@@ -78,6 +88,13 @@ public class Appearance extends PropertyPage
       PreferenceStore settings = PreferenceStore.getInstance();
       settings.set("Appearance.VerticalLayout", checkVerticalLayout.getSelection());
       settings.set("Appearance.ShowServerClock", checkShowServerClock.getSelection());
+      settings.set("Appearance.ShowTrayIcon", checkShowTrayIcon.getSelection());
+
+      if (checkShowTrayIcon.getSelection())
+         TrayIconManager.showTrayIcon();
+      else
+         TrayIconManager.hideTrayIcon();
+
       return true;
    }
 }

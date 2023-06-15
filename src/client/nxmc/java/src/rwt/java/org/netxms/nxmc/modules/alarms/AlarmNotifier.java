@@ -358,6 +358,7 @@ public class AlarmNotifier
 
    /**
     * Check if global sound is enabled
+    * @param display 
     * 
     * @return true if enabled
     */

@@ -46,6 +46,7 @@ import org.netxms.client.events.BulkAlarmStateChangeData;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.windows.TrayIconManager;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.dialogs.AlarmReminderDialog;
 import org.netxms.nxmc.resources.StatusDisplayInfo;
@@ -178,7 +179,7 @@ public class AlarmNotifier
       }, "AlarmReminderThread"); //$NON-NLS-1$
       reminderThread.setDaemon(true);
       reminderThread.start();
-      
+
       Thread playerThread = new Thread(new Runnable() {
          @Override
          public void run()
@@ -238,7 +239,7 @@ public class AlarmNotifier
          getSoundAndDownloadIfRequired(s);
       }
    }
-   
+
    /**
     * @param severity
     * @return
@@ -248,7 +249,7 @@ public class AlarmNotifier
       String soundName = ps.getAsString("AlarmNotifier.Sound." + severity);//$NON-NLS-1$
       if ((soundName == null) || soundName.isEmpty())
          return null;
-      
+
       if (!isSoundFileExist(soundName))
       {
          try
@@ -376,10 +377,10 @@ public class AlarmNotifier
          lastReminderTime = System.currentTimeMillis();
       outstandingAlarms++;
 
-      if ((trayPopupError.get() > 0) || !ps.getAsBoolean("TrayIcon.ShowAlarmPopups", true)) //$NON-NLS-1$
+      if ((trayPopupError.get() > 0) || !ps.getAsBoolean("TrayIcon.ShowAlarmPopups", true))
          return;
 
-      final TrayItem trayIcon = Registry.getTrayIcon();
+      final TrayItem trayIcon = TrayIconManager.getTrayIcon();
       if (trayIcon == null)
          return;
 

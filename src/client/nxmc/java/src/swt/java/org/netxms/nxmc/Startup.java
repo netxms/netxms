@@ -56,6 +56,7 @@ import org.netxms.nxmc.base.login.LoginJob;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.windows.MainWindow;
 import org.netxms.nxmc.base.windows.PopOutViewWindow;
+import org.netxms.nxmc.base.windows.TrayIconManager;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
@@ -208,6 +209,9 @@ public class Startup
       }
       else
       {
+         if (PreferenceStore.getInstance().getAsBoolean("Appearance.ShowTrayIcon", true))
+            TrayIconManager.showTrayIcon();
+
          MainWindow w = new MainWindow();
          Registry.setMainWindow(w);
          w.setBlockOnOpen(true);
