@@ -34,13 +34,13 @@ public class GeneralMapPreferences extends FieldEditorPreferencePage
 
    public GeneralMapPreferences()
    {
-      super(i18n.tr("Network maps"), FieldEditorPreferencePage.FLAT);
+      super(i18n.tr("Network Maps"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.FieldEditorPreferencePage#createFieldEditors()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.FieldEditorPreferencePage#createFieldEditors()
+    */
 	@Override
 	protected void createFieldEditors()
 	{

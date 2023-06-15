@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2018 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,19 +29,19 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "Alarms" preference page
  */
-public class Alarms extends FieldEditorPreferencePage
+public class AlarmPreferences extends FieldEditorPreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Alarms.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(AlarmPreferences.class);
 
-   public Alarms()
+   public AlarmPreferences()
    {
       super(i18n.tr("Alarms"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.FieldEditorPreferencePage#createFieldEditors()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.FieldEditorPreferencePage#createFieldEditors()
+    */
 	@Override
 	protected void createFieldEditors()
 	{

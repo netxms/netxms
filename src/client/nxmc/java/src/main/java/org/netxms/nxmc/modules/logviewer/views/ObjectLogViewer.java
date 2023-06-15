@@ -73,7 +73,7 @@ public class ObjectLogViewer extends LogViewer
    @Override
    protected void postContentCreate()
    {            
-      queryWithFilter(logDescriptor.createFilter(object));      
+      queryWithFilter(logDescriptor.createFilter(object));
       super.postContentCreate();
    }
 

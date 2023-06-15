@@ -18,20 +18,20 @@
  */
 package org.netxms.nxmc.base.preferencepages;
 
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * "Appearance" preference page
  */
-public class Appearance extends PreferencePage
+public class Appearance extends PropertyPage
 {
    private static final I18n i18n = LocalizationHelper.getI18n(Appearance.class);
 
@@ -70,34 +70,14 @@ public class Appearance extends PreferencePage
    }
 
    /**
-    * Apply changes
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
-   private void doApply()
+   @Override
+   protected boolean applyChanges(boolean isApply)
    {
-      if (checkVerticalLayout == null)
-         return;
-      
       PreferenceStore settings = PreferenceStore.getInstance();
       settings.set("Appearance.VerticalLayout", checkVerticalLayout.getSelection());
       settings.set("Appearance.ShowServerClock", checkShowServerClock.getSelection());
-   }
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-   @Override
-   protected void performApply()
-   {
-      doApply();
-   }
-
-   /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-   @Override
-   public boolean performOk()
-   {
-      doApply();
       return true;
    }
 }

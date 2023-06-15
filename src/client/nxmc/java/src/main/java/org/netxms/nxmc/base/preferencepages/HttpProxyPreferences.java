@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,16 +21,16 @@ package org.netxms.nxmc.base.preferencepages;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -39,9 +39,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * HTTP proxy preferences
  */
-public class HttpProxyPrefs extends PreferencePage
+public class HttpProxyPreferences extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(HttpProxyPrefs.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(HttpProxyPreferences.class);
    
 	private Button checkUseProxy;
 	private LabeledText editProxyServer;
@@ -51,7 +51,7 @@ public class HttpProxyPrefs extends PreferencePage
 	private LabeledText editLogin;
 	private LabeledText editPassword;
 
-   public HttpProxyPrefs()
+   public HttpProxyPreferences()
    {
       super(i18n.tr("HTTP Proxy"));
       setPreferenceStore(PreferenceStore.getInstance());
@@ -77,7 +77,7 @@ public class HttpProxyPrefs extends PreferencePage
 		GridData gd = new GridData();
 		gd.horizontalSpan = 2;
 		checkUseProxy.setLayoutData(gd);
-		checkUseProxy.addSelectionListener(new SelectionListener() {
+      checkUseProxy.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
@@ -88,12 +88,6 @@ public class HttpProxyPrefs extends PreferencePage
 				checkRequireAuth.setEnabled(enabled);
 				editLogin.setEnabled(enabled && checkRequireAuth.getEnabled());
 				editPassword.setEnabled(enabled && checkRequireAuth.getEnabled());
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		});
 		
@@ -133,19 +127,13 @@ public class HttpProxyPrefs extends PreferencePage
 		gd.horizontalSpan = 2;
 		gd.verticalIndent = WidgetHelper.DIALOG_SPACING;	// additional spacing before auth block
 		checkRequireAuth.setLayoutData(gd);
-		checkRequireAuth.addSelectionListener(new SelectionListener() {
+      checkRequireAuth.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				boolean enabled = checkUseProxy.getSelection() && checkRequireAuth.getSelection();
 				editLogin.setEnabled(enabled);
 				editPassword.setEnabled(enabled);
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		});
 
@@ -181,7 +169,7 @@ public class HttpProxyPrefs extends PreferencePage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		
+
 		checkUseProxy.setSelection(getPreferenceStore().getDefaultBoolean("HTTP_PROXY_ENABLED")); 
 		editProxyServer.setText(getPreferenceStore().getDefaultString("HTTP_PROXY_SERVER")); 
 		editProxyPort.setText(getPreferenceStore().getDefaultString("HTTP_PROXY_PORT")); 
@@ -199,13 +187,13 @@ public class HttpProxyPrefs extends PreferencePage
 	}
 
    /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
-	@Override
-	public boolean performOk()
+   @Override
+   protected boolean applyChanges(boolean isApply)
 	{
 		final IPreferenceStore ps = getPreferenceStore();
-		
+
 		ps.setValue("HTTP_PROXY_ENABLED", checkUseProxy.getSelection()); 
 		ps.setValue("HTTP_PROXY_SERVER", editProxyServer.getText()); 
 		ps.setValue("HTTP_PROXY_PORT", editProxyPort.getText()); 
@@ -213,7 +201,7 @@ public class HttpProxyPrefs extends PreferencePage
 		ps.setValue("HTTP_PROXY_AUTH", checkRequireAuth.getSelection()); 
 		ps.setValue("HTTP_PROXY_LOGIN", editLogin.getText()); 
 		ps.setValue("HTTP_PROXY_PASSWORD", editPassword.getText()); 
-		
+
 		if (checkUseProxy.getSelection())
 		{
 			System.setProperty("http.proxyHost", ps.getString("HTTP_PROXY_SERVER"));  
@@ -222,7 +210,7 @@ public class HttpProxyPrefs extends PreferencePage
          System.setProperty("https.proxyHost", ps.getString("HTTP_PROXY_SERVER"));  
          System.setProperty("https.proxyPort", ps.getString("HTTP_PROXY_PORT"));  
          System.setProperty("https.noProxyHosts", ps.getString("HTTP_PROXY_EXCLUSIONS"));  
-			
+
 			if (checkRequireAuth.getSelection())
 			{
 				Authenticator.setDefault(new Authenticator() {
@@ -248,7 +236,7 @@ public class HttpProxyPrefs extends PreferencePage
          System.clearProperty("https.noProxyHosts"); 
 			Authenticator.setDefault(null);
 		}
-		
-		return super.performOk();
+
+      return true;
 	}
 }

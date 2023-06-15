@@ -30,7 +30,6 @@ import java.util.Set;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.Line;
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -48,6 +47,7 @@ import org.netxms.client.server.ServerFile;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.login.LoginJob;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.alarms.AlarmNotifier;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -61,9 +61,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Alarm sound configuration
  */
-public class AlarmSounds extends PreferencePage
+public class AlarmSounds extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Alarms.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(AlarmPreferences.class);
    private static Logger logger = LoggerFactory.getLogger(LoginJob.class);
    
    private NXCSession session;
@@ -88,9 +88,7 @@ public class AlarmSounds extends PreferencePage
       session = Registry.getSession();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -312,15 +310,11 @@ public class AlarmSounds extends PreferencePage
    }
 
    /**
-    * Apply changes
-    * 
-    * @param isApply true if update operation caused by "Apply" button
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
-   protected void applyChanges(final boolean isApply)
+   @Override
+   protected boolean applyChanges(boolean isApply)
    {
-      if (isGeneralSound == null)
-         return;
-      
       if (isApply)
          setValid(false);
 
@@ -331,7 +325,6 @@ public class AlarmSounds extends PreferencePage
       }
       final boolean newSelection = isGeneralSound.getSelection();
       getShell().getDisplay().asyncExec(new Runnable() {
-         
          @Override
          public void run()
          {
@@ -352,6 +345,8 @@ public class AlarmSounds extends PreferencePage
                setValid(true);            
          }
       });
+
+      return true;
    }
 
    /**
@@ -445,28 +440,5 @@ public class AlarmSounds extends PreferencePage
          if (dest != null)
             dest.close();
       }
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
-    */
-   @Override
-   public boolean performOk()
-   {
-      applyChanges(false);
-      return true;
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.jface.preference.PreferencePage#performApply()
-    */
-   @Override
-   protected void performApply()
-   {
-      applyChanges(true);
    }
 }

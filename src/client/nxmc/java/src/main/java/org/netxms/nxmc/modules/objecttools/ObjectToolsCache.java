@@ -113,7 +113,8 @@ public class ObjectToolsCache
 	/**
 	 * Reload object tools from server
 	 */
-	private void reload()
+   @SuppressWarnings("unused")
+   private void reload()
 	{
 		try
 		{

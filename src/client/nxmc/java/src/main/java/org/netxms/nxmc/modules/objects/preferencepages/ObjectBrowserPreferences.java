@@ -31,10 +31,10 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Preferences page for object browser
  */
-public class ObjectBrowser extends FieldEditorPreferencePage
+public class ObjectBrowserPreferences extends FieldEditorPreferencePage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(ObjectBrowser.class);
-   
+   private static final I18n i18n = LocalizationHelper.getI18n(ObjectBrowserPreferences.class);
+
    private BooleanFieldEditor useServerFilter;
    private BooleanFieldEditor makeFullSync;
    private Composite autoApplyParent;
@@ -44,9 +44,9 @@ public class ObjectBrowser extends FieldEditorPreferencePage
    private StringFieldEditor delay;
    private StringFieldEditor minLength;
 
-   public ObjectBrowser()
+   public ObjectBrowserPreferences()
    {
-      super(i18n.tr("Object browser"), FieldEditorPreferencePage.FLAT);
+      super(i18n.tr("Object Browser"), FieldEditorPreferencePage.FLAT);
       setPreferenceStore(PreferenceStore.getInstance());
    }
 

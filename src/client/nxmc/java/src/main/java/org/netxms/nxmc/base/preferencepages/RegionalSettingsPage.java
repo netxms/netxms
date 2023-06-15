@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -37,6 +36,7 @@ import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
 import org.netxms.nxmc.base.widgets.LabeledText;
 import org.netxms.nxmc.localization.DateFormatFactory;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -47,10 +47,10 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Regional settings page
  */
-public class RegionalSettingsPrefPage extends PreferencePage
+public class RegionalSettingsPage extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(RegionalSettingsPrefPage.class);
-   
+   private static final I18n i18n = LocalizationHelper.getI18n(RegionalSettingsPage.class);
+
 	private Combo dateTimeFormat;
 	private LabeledText dateFormatString;
 	private LabeledText timeFormatString;
@@ -60,16 +60,15 @@ public class RegionalSettingsPrefPage extends PreferencePage
 	private Button checkServerTimeZone;
 	private int format;
 
-   public RegionalSettingsPrefPage()
+   public RegionalSettingsPage()
    {
-      super(i18n.tr("Regional settings"));
+      super(i18n.tr("Regional Settings"));
       setPreferenceStore(PreferenceStore.getInstance());
    }
 
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createContents(Composite parent)
 	{
@@ -256,9 +255,9 @@ public class RegionalSettingsPrefPage extends PreferencePage
       shortTimeFormatString.getTextControl().setBackground(null);
    }
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
-	 */
+   /**
+    * @see org.eclipse.jface.preference.PreferencePage#performDefaults()
+    */
 	@Override
 	protected void performDefaults()
 	{
@@ -275,22 +274,22 @@ public class RegionalSettingsPrefPage extends PreferencePage
 		updateExample(null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.preference.PreferencePage#performOk()
-	 */
-	@Override
-	public boolean performOk()
+   /**
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
+    */
+   @Override
+   protected boolean applyChanges(boolean isApply)
 	{
 		final IPreferenceStore ps = getPreferenceStore();
-		
+
 		ps.setValue("DateFormatFactory.Format.DateTime", format); 
 		ps.setValue("DateFormatFactory.Format.Date", dateFormatString.getText()); 
 		ps.setValue("DateFormatFactory.Format.Time", timeFormatString.getText()); 
       ps.setValue("DateFormatFactory.Format.ShortTime", shortTimeFormatString.getText()); 
       ps.setValue("DateFormatFactory.UseServerTimeZone", checkServerTimeZone.getSelection()); 
-		
+
 		DateFormatFactory.updateFromPreferences();
-		
+
 		return true;
 	}
 }
