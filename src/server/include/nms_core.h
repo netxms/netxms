@@ -1193,6 +1193,29 @@ struct SSHCredentials
 };
 
 /**
+ * Import context
+ */
+class ImportContext : public StringBuffer
+{
+public:
+   void log(int severity, const TCHAR *teg, const TCHAR *message, ...)
+   {
+      if (severity == NXLOG_ERROR)
+         append(_T("ERROR: "));
+      va_list args;
+      va_start(args, message);
+      appendFormattedStringV(message, args);
+      va_end(args);
+      append(_T("\n"));
+      TCHAR logMessage[1024];
+      _sntprintf(logMessage, 1024, _T("%s: %s%s"), teg, severity == NXLOG_ERROR ? _T("ERROR: ") : _T(""), message);
+      va_start(args, message);
+      nxlog_debug_tag2(_T("import"), 4, logMessage, args);
+      va_end(args);
+   }
+};
+
+/**
  * Functions
  */
 void ConfigPreLoad();
@@ -1371,7 +1394,7 @@ uint32_t DeleteObjectToolFromDB(uint32_t toolId);
 uint32_t ChangeObjectToolStatus(uint32_t toolId, bool enabled);
 uint32_t UpdateObjectToolFromMessage(const NXCPMessage& msg);
 void CreateObjectToolExportRecord(StringBuffer &xml, UINT32 id);
-bool ImportObjectTool(ConfigEntry *config, bool overwrite);
+bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *context);
 uint32_t GetObjectToolsIntoMessage(NXCPMessage *msg, uint32_t userId, bool fullAccess);
 uint32_t GetObjectToolDetailsIntoMessage(uint32_t toolId, NXCPMessage *msg);
 
@@ -1379,7 +1402,7 @@ uint32_t ModifySummaryTable(const NXCPMessage& msg, uint32_t *newId);
 uint32_t DeleteSummaryTable(uint32_t tableId);
 Table *QuerySummaryTable(uint32_t tableId, SummaryTable *adHocDefinition, uint32_t baseObjectId, uint32_t userId, uint32_t *rcc);
 bool CreateSummaryTableExportRecord(uint32_t id, StringBuffer &xml);
-bool ImportSummaryTable(ConfigEntry *config, bool overwrite);
+bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context);
 
 void FullCommunityListToMessage(uint32_t userId, NXCPMessage *msg);
 void ZoneCommunityListToMessage(int32_t zoneUIN, NXCPMessage *msg);
@@ -1425,8 +1448,7 @@ void NXCORE_EXPORTABLE WriteAuditLogWithValues2(const TCHAR *subsys, bool isSucc
 void NXCORE_EXPORTABLE WriteAuditLogWithJsonValues2(const TCHAR *subsys, bool isSuccess, uint32_t userId, const TCHAR *workstation,
          session_id_t sessionId, uint32_t objectId, json_t *oldValue, json_t *newValue, const TCHAR *format, va_list args);
 
-bool ValidateConfig(const Config& config, uint32_t flags, TCHAR *errorText, int errorTextLen);
-uint32_t ImportConfig(const Config& config, uint32_t flags);
+uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log);
 void ReportConfigurationError(const TCHAR *subsystem, const TCHAR *tag, const TCHAR *descriptionFormat, ...);
 
 #ifdef _WITH_ENCRYPTION

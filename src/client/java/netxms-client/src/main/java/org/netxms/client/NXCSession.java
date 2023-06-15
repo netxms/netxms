@@ -255,6 +255,7 @@ public class NXCSession
    public static final int CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS  = 0x0100;
    public static final int CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS      = 0x0200;
    public static final int CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS = 0x0400;
+   public static final int CFG_IMPORT_REPLACE_AM_DEFINITIONS            = 0x0800;
 
    // Address list IDs
    public static final int ADDRESS_LIST_DISCOVERY_TARGETS = 1;
@@ -9080,7 +9081,7 @@ public class NXCSession
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void importConfiguration(File configFile, int flags) throws IOException, NXCException
+   public String importConfiguration(File configFile, int flags) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_IMPORT_CONFIGURATION_FILE);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
@@ -9090,7 +9091,8 @@ public class NXCSession
       sendFile(msg.getMessageId(), configFile, null, true, 0);
       waitForRCC(msg.getMessageId()); // wait for file transfer completion
 
-      waitForRCC(msg.getMessageId()); // wait for import completion
+      final NXCPMessage response = waitForRCC(msg.getMessageId()); // wait for import completion
+      return response.getFieldAsString(NXCPCodes.VID_EXECUTION_RESULT);
    }
 
    /**

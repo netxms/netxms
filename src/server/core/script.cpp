@@ -516,12 +516,12 @@ void CreateScriptExportRecord(StringBuffer &xml, UINT32 id)
 /**
  * Import script
  */
-void ImportScript(ConfigEntry *config, bool overwrite)
+void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context)
 {
    const TCHAR *name = config->getSubEntryValue(_T("name"));
    if (name == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_BASE,  4, _T("ImportScript: name missing"));
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Name missing"));
       return;
    }
 
@@ -529,13 +529,13 @@ void ImportScript(ConfigEntry *config, bool overwrite)
    if (guid.isNull())
    {
       guid = uuid::generate();
-      nxlog_debug_tag(DEBUG_TAG_BASE,  4, _T("ImportScript: GUID not found in config, generated GUID %s for script \"%s\""), (const TCHAR *)guid.toString(), name);
+      context->log(NXLOG_INFO, _T("ImportScript()"), _T("GUID not found in config, generated GUID %s for script \"%s\""), (const TCHAR *)guid.toString(), name);
    }
 
    const TCHAR *code = config->getSubEntryValue(_T("code"));
    if (code == nullptr)
    {
-      nxlog_debug_tag(DEBUG_TAG_BASE,  4, _T("ImportScript: code missing"));
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Code missing"));
       return;
    }
 

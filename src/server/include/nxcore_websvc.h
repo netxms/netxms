@@ -94,6 +94,6 @@ shared_ptr<WebServiceDefinition> FindWebServiceDefinition(const TCHAR *name);
 uint32_t ModifyWebServiceDefinition(shared_ptr<WebServiceDefinition> definition);
 uint32_t DeleteWebServiceDefinition(uint32_t id);
 void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, uint32_t *list);
-bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite);
+bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite, ImportContext *context);
 
 #endif

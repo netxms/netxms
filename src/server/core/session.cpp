@@ -10276,21 +10276,20 @@ void ClientSession::importConfigurationFromFile(const NXCPMessage& request)
 void ClientSession::finalizeConfigurationImport(const Config& config, uint32_t flags, NXCPMessage *response)
 {
    // Lock all required components
-   TCHAR lockInfo[MAX_SESSION_NAME], errorMessage[1024];
+   TCHAR lockInfo[MAX_SESSION_NAME];
    if (LockEPP(m_id, m_sessionName, nullptr, lockInfo))
    {
       InterlockedOr(&m_flags, CSF_EPP_LOCKED);
 
       // Validate and import configuration
-      if (ValidateConfig(config, flags, errorMessage, 1024))
-      {
-         response->setField(VID_RCC, ImportConfig(config, flags));
-      }
+      StringBuffer *log;
+      uint32_t result = ImportConfig(config, flags, &log);
+      if (result == RCC_SUCCESS)
+         response->setField(VID_EXECUTION_RESULT, log->cstr());
       else
-      {
-         response->setField(VID_RCC, RCC_CONFIG_VALIDATION_ERROR);
-         response->setField(VID_ERROR_TEXT, errorMessage);
-      }
+         response->setField(VID_ERROR_TEXT, log->cstr());
+      response->setField(VID_RCC, result);
+      delete log;
 
       UnlockEPP();
       InterlockedAnd(&m_flags, ~CSF_EPP_LOCKED);

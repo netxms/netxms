@@ -601,11 +601,11 @@ void CreateWebServiceDefinitionExportRecord(StringBuffer &xml, uint32_t count, u
 /**
  * Import web service definition configuration
  */
-bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite)
+bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite, ImportContext *context)
 {
    if (config.getSubEntryValue(_T("name")) == nullptr)
    {
-      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: no name specified"));
+      context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("No name specified"));
       return false;
    }
 
@@ -623,17 +623,17 @@ bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite)
          uint32_t rcc = ModifyWebServiceDefinition(definition);
          if (rcc == RCC_SUCCESS)
          {
-            nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: web service \"%s\" created"), name);
+            context->log(NXLOG_INFO, _T("ImportWebServiceDefinition()"), _T("Web service \"%s\" created"), name);
             success = true;
          }
          else
          {
-            nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: cannot create web service \"%s\" (RCC=%u)"), name, rcc);
+            context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("Cannot create web service \"%s\" (RCC=%u)"), name, rcc);
          }
       }
       else
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: web service with name \"%s\" already exists"), name);
+         context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("Web service with name \"%s\" already exists"), name);
       }
    }
    else if (overwrite)
@@ -642,17 +642,17 @@ bool ImportWebServiceDefinition(const ConfigEntry& config, bool overwrite)
       uint32_t rcc = ModifyWebServiceDefinition(definition);
       if (rcc == RCC_SUCCESS)
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (overwrite)"), service->getName(), guid.toString(guidText));
+         context->log(NXLOG_INFO, _T("ImportWebServiceDefinition()"), _T("Found existing action \"%s\" with GUID %s (overwrite)"), service->getName(), guid.toString(guidText));
          success = true;
       }
       else
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: cannot update existing web service \"%s\" (RCC=%u)"), service->getName(), rcc);
+         context->log(NXLOG_ERROR, _T("ImportWebServiceDefinition()"), _T("Cannot update existing web service \"%s\" (RCC=%u)"), service->getName(), rcc);
       }
    }
    else
    {
-      nxlog_debug_tag(_T("import"), 4, _T("ImportWebServiceDefinition: found existing action \"%s\" with GUID %s (skipping)"), service->getName(), guid.toString(guidText));
+      context->log(NXLOG_INFO, _T("ImportWebServiceDefinition()"), _T("Found existing action \"%s\" with GUID %s (skipping)"), service->getName(), guid.toString(guidText));
    }
 
    return success;

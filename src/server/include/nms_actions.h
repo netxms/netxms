@@ -47,6 +47,8 @@ struct Action
    void saveToDatabase() const;
 };
 
+class ImportContext;
+
 //
 // Functions
 //
@@ -60,7 +62,7 @@ void UpdateChannelNameInActions(std::pair<TCHAR*, TCHAR*> *names);
 bool CheckChannelIsUsedInAction(TCHAR *name);
 void SendActionsToClient(ClientSession *session, uint32_t requestId);
 void CreateActionExportRecord(StringBuffer &xml, uint32_t id);
-bool ImportAction(ConfigEntry *config, bool overwrite);
+bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context);
 bool IsValidActionId(uint32_t id);
 uuid GetActionGUID(uint32_t id);
 uint32_t FindActionByGUID(const uuid& guid);

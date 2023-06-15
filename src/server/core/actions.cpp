@@ -860,11 +860,11 @@ uint32_t FindActionByGUID(const uuid& guid)
 /**
  * Import action configuration
  */
-bool ImportAction(ConfigEntry *config, bool overwrite)
+bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context)
 {
    if (config->getSubEntryValue(_T("name")) == nullptr)
    {
-      nxlog_debug_tag(_T("import"), 4, _T("ImportAction: no name specified"));
+      context->log(NXLOG_ERROR, _T("ImportAction()"), _T("No name specified"));
       return false;
    }
 
@@ -876,7 +876,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       const TCHAR *name = config->getSubEntryValue(_T("name"));
       if (s_actions.findElement(ActionNameComparator, name) != NULL)
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAction: name \"%s\" already exists"), name);
+         context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Name \"%s\" already exists"), name);
          return false;
       }
 
@@ -891,11 +891,11 @@ bool ImportAction(ConfigEntry *config, bool overwrite)
       TCHAR guidText[64];
       if (!overwrite)
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s (skipping)"),
+         context->log(NXLOG_INFO, _T("ImportAction()"), _T("Found existing action \"%s\" with GUID %s (skipping)"),
                   action->name, action->guid.toString(guidText));
          return true;
       }
-      nxlog_debug_tag(_T("import"), 4, _T("ImportAction: found existing action \"%s\" with GUID %s"), action->name, action->guid.toString(guidText));
+      context->log(NXLOG_INFO, _T("ImportAction()"), _T("Found existing action \"%s\" with GUID %s"), action->name, action->guid.toString(guidText));
       _tcslcpy(action->name, config->getSubEntryValue(_T("name")), MAX_OBJECT_NAME);
       s_updateCode = NX_NOTIFY_ACTION_MODIFIED;
       action = make_shared<Action>(*action);

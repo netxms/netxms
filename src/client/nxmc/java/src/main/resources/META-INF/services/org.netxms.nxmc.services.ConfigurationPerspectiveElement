@@ -22,6 +22,7 @@ org.netxms.nxmc.modules.objects.ObjectQueriesConfigurationElement
 org.netxms.nxmc.modules.objects.PhysicalLinksConfigurationElement
 org.netxms.nxmc.modules.objecttools.ObjectToolsEditorElement
 org.netxms.nxmc.modules.serverconfig.ExportFileBuilderElement
+org.netxms.nxmc.modules.serverconfig.ImportConfigurationElement
 org.netxms.nxmc.modules.serverconfig.NetworkCredentialsElement
 org.netxms.nxmc.modules.serverconfig.NetworkDiscoveryElement
 org.netxms.nxmc.modules.serverconfig.NotificationChannelsElement

@@ -494,19 +494,19 @@ static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 /**
  * Import summary table
  */
-bool ImportSummaryTable(ConfigEntry *config, bool overwrite)
+bool ImportSummaryTable(ConfigEntry *config, bool overwrite, ImportContext *context)
 {
    const TCHAR *guid = config->getSubEntryValue(_T("guid"));
    if (guid == nullptr)
    {
-      DbgPrintf(4, _T("ImportSummaryTable: missing GUID"));
+      context->log(NXLOG_ERROR, _T("ImportSummaryTable()"), _T("Missing GUID"));
       return false;
    }
 
    uuid_t temp;
    if (_uuid_parse(guid, temp) == -1)
    {
-      DbgPrintf(4, _T("ImportSummaryTable: GUID (%s) is invalid"), guid);
+      context->log(NXLOG_ERROR, _T("ImportSummaryTable()"), _T("GUID (%s) is invalid"), guid);
       return false;
    }
 

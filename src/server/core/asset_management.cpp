@@ -1281,7 +1281,7 @@ void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeN
 /**
  * Import asset attributes
  */
-void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite)
+void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context)
 {
    s_schemaLock.writeLock();
 
@@ -1292,12 +1292,12 @@ void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite)
       const TCHAR *name = config->getSubEntryValue(_T("name"));
       if (name == nullptr)
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: no name specified"));
+         context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("No name specified"));
          continue;
       }
       else if (!RegexpMatch(name, _T("^[A-Za-z$_][A-Za-z0-9$_]*$"), true))
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: invalid name format"));
+         context->log(NXLOG_ERROR, _T("ImportAssetManagementSchema()"), _T("Invalid name format"));
          continue;
       }
 
@@ -1306,11 +1306,11 @@ void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite)
       {
          if (attribute == nullptr)
          {
-            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: asset attribute \"%s\" created"), name);
+            context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Asset attribute \"%s\" created"), name);
          }
          else
          {
-            nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: found existing asset attribute \"%s\" (overwrite)"), name);
+            context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Found existing asset attribute \"%s\" (overwrite)"), name);
          }
 
          attribute = new AssetAttribute(name, *config);
@@ -1325,7 +1325,7 @@ void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite)
       }
       else
       {
-         nxlog_debug_tag(_T("import"), 4, _T("ImportAssetManagementSchema: found existing asset attribute \"%s\" (skipping)"), name);
+         context->log(NXLOG_INFO, _T("ImportAssetManagementSchema()"), _T("Found existing asset attribute \"%s\" (skipping)"), name);
       }
    }
 

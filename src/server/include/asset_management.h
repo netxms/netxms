@@ -174,7 +174,7 @@ void LinkAsset(Asset *asset, NetObj *object, ClientSession *session);
 void UnlinkAsset(Asset *asset, ClientSession *session);
 void UpdateAssetLinkage(NetObj *object, bool matchByMacAllowed = true);
 void ExportAssetManagementSchema(StringBuffer &xml, const StringList &attributeNames);
-void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite);
+void ImportAssetManagementSchema(const ConfigEntry& root, bool overwrite, ImportContext *context);
 void WriteAssetChangeLog(uint32_t assetId, const TCHAR *attributeName, AssetOperation operation, const TCHAR *oldValue, const TCHAR *newValue, uint32_t userId, uint32_t objectId);
 
 /**

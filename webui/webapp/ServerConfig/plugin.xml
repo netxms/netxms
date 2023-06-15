@@ -103,6 +103,14 @@
             name="Two-Factor Authentication Methods"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.serverconfig.views.ImportConfiguration"
+            icon="icons/import.png"
+            id="org.netxms.ui.eclipse.serverconfig.views.ImportConfiguration"
+            name="%action.tooltip.ImportConfig"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -341,7 +349,7 @@
            tooltip="%action.tooltip.ExportConfig">
 		   </action>
      <action
-           class="org.netxms.ui.eclipse.serverconfig.actions.ImportConfiguration"
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenImportConfiguration"
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.import_configuration"
            icon="icons/import.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.import_configuration"
