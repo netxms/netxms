@@ -467,17 +467,25 @@ public abstract class Perspective
     */
    public void addMainView(View view)
    {
-      if (mainFolder != null)
-         mainFolder.addView(view);
-      else
-         mainArea.pushView(view);
+      addMainView(view, false, configuration.ignoreViewContext);
    }
 
    /**
     * Add view to main folder or replace view for single-view perspectives.
     *
     * @param view view to add
-    * @param activvate if true, view will be activated
+    * @param activate if true, view will be activated
+    */
+   public void addMainView(View view, boolean activate)
+   {
+      addMainView(view, activate, configuration.ignoreViewContext);
+   }
+
+   /**
+    * Add view to main folder or replace view for single-view perspectives.
+    *
+    * @param view view to add
+    * @param activate if true, view will be activated
     * @param ignoreContext set to true to ignore current context
     */
    public void addMainView(View view, boolean activate, boolean ignoreContext)

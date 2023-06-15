@@ -22,12 +22,14 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.modules.logviewer.LogDescriptor;
 
+/**
+ * Ad-hoc log viewer to be shown in object context
+ */
 public class ObjectLogViewer extends LogViewer
 {   
    private LogDescriptor logDescriptor;
    private AbstractObject object;
    private long contextId;
-   
 
    /**
     * Internal constructor used for cloning
@@ -36,7 +38,7 @@ public class ObjectLogViewer extends LogViewer
    {
       super();
    }
-   
+
    /**
     * Create new log viewer view
     *
@@ -83,6 +85,15 @@ public class ObjectLogViewer extends LogViewer
    {
       return (context != null) && (context instanceof AbstractObject) && 
             ((((AbstractObject)context).getObjectId() == object.getObjectId()) || (((AbstractObject)context).getObjectId() == contextId));
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.ViewWithContext#getContextName()
+    */
+   @Override
+   protected String getContextName()
+   {
+      return object.getObjectName();
    }
 
    /**

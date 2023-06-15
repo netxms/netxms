@@ -48,9 +48,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * World map view
  */
-public class WorldMap extends View
+public class WorldMapView extends View
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(WorldMap.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(WorldMapView.class);
 
    public static final String ID = "WorldMap";
 
@@ -62,7 +62,10 @@ public class WorldMap extends View
    private Action actionZoomIn;
    private Action actionZoomOut;
 
-   public WorldMap()
+   /**
+    * Create world map view
+    */
+   public WorldMapView()
    {
       super(i18n.tr("World Map"), ResourceManager.getImageDescriptor("icons/worldmap.png"), ID, true);
    }
@@ -88,7 +91,7 @@ public class WorldMap extends View
          @Override
          public void onZoom(int zoomLevel)
          {
-            WorldMap.this.zoomLevel = zoomLevel;
+            WorldMapView.this.zoomLevel = zoomLevel;
             mapAccessor.setZoom(zoomLevel);
             actionZoomIn.setEnabled(zoomLevel < MapAccessor.MAX_MAP_ZOOM);
             actionZoomOut.setEnabled(zoomLevel > MapAccessor.MIN_MAP_ZOOM);
@@ -144,7 +147,7 @@ public class WorldMap extends View
          {
             if (map.getSelection().isEmpty())
             {
-               WorldMap.this.fillContextMenu(this);
+               WorldMapView.this.fillContextMenu(this);
             }
             else
             {

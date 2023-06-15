@@ -39,10 +39,8 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.jobs.JobCallingServerJob;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageArea;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.views.AgentFileViewer;
 import org.netxms.nxmc.modules.objects.ObjectContext;
@@ -394,16 +392,7 @@ public final class ObjectToolExecutor
    private static void executeOnMultipleNodes(Set<ObjectContext> sourceObjects, Set<ObjectContext> nodes, ObjectTool tool, Map<String, String> inputValues,
          List<String> maskedFields, List<String> expandedToolData, ViewPlacement viewPlacement)
    {
-      Perspective p = viewPlacement.getPerspective();   
-      MultiNodeCommandExecutor view = new MultiNodeCommandExecutor(tool, sourceObjects, nodes, inputValues, maskedFields, expandedToolData);
-      if (p != null)
-      {
-         p.addMainView(view, true, false);
-      }
-      else
-      {
-         PopOutViewWindow.open(view);
-      }
+      viewPlacement.openView(new MultiNodeCommandExecutor(tool, sourceObjects, nodes, inputValues, maskedFields, expandedToolData));
    }
 
    /**
@@ -414,16 +403,7 @@ public final class ObjectToolExecutor
     */
    private static void executeTableTool(final ObjectContext node, final ObjectTool tool, ViewPlacement viewPlacement)
    {
-      Perspective p = viewPlacement.getPerspective();   
-      TableToolResults view = new TableToolResults(node, tool);
-      if (p != null)
-      {
-         p.addMainView(view, true, false);
-      }
-      else
-      {
-         PopOutViewWindow.open(view);
-      }
+      viewPlacement.openView(new TableToolResults(node, tool));
    }
    
    /**
@@ -468,16 +448,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         Perspective p = viewPlacement.getPerspective();   
-         AgentActionResults view = new AgentActionResults(node, tool, inputValues, maskedFields);
-         if (p != null)
-         {
-            p.addMainView(view, true, false);
-         }
-         else
-         {
-            PopOutViewWindow.open(view);
-         }
+         viewPlacement.openView(new AgentActionResults(node, tool, inputValues, maskedFields));
       }
    }
 
@@ -522,16 +493,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         Perspective p = viewPlacement.getPerspective();   
-         ServerCommandResults view = new ServerCommandResults(node, tool, inputValues, maskedFields);
-         if (p != null)
-         {
-            p.addMainView(view, true, false);
-         }
-         else
-         {
-            PopOutViewWindow.open(view);
-         }
+         viewPlacement.openView(new ServerCommandResults(node, tool, inputValues, maskedFields));
       }
    }
 
@@ -586,16 +548,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         Perspective p = viewPlacement.getPerspective();   
-         SSHCommandResults view = new SSHCommandResults(node, tool, inputValues, null);
-         if (p != null)
-         {
-            p.addMainView(view, true, false);
-         }
-         else
-         {
-            PopOutViewWindow.open(view);
-         }
+         viewPlacement.openView(new SSHCommandResults(node, tool, inputValues, null));
       }
    }
 
@@ -638,16 +591,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         Perspective p = viewPlacement.getPerspective();   
-         ServerScriptResults view = new ServerScriptResults(node, tool, inputValues, null);
-         if (p != null)
-         {
-            p.addMainView(view, true, false);
-         }
-         else
-         {
-            PopOutViewWindow.open(view);
-         }
+         viewPlacement.openView(new ServerScriptResults(node, tool, inputValues, null));
       }
    }
 
@@ -713,16 +657,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         Perspective p = viewPlacement.getPerspective();   
-         LocalCommandResults view = new LocalCommandResults(node, tool, inputValues, null);
-         if (p != null)
-         {
-            p.addMainView(view, true, false);
-         }
-         else
-         {
-            PopOutViewWindow.open(view);
-         }
+         viewPlacement.openView(new LocalCommandResults(node, tool, inputValues, null));
       }
    }
 

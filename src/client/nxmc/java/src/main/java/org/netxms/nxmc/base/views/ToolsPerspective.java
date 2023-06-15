@@ -72,6 +72,8 @@ public class ToolsPerspective extends Perspective
       configuration.hasNavigationArea = false;
       configuration.multiViewMainArea = true;
       configuration.hasSupplementalArea = false;
+      configuration.useGlobalViewId = true;
+      configuration.ignoreViewContext = true;
       configuration.priority = 200;
    }
 

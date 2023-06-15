@@ -53,6 +53,7 @@ public class PinboardPerspective extends Perspective
       configuration.enableViewPinning = false;
       configuration.allViewsAreCloseable = true;
       configuration.useGlobalViewId = true;
+      configuration.ignoreViewContext = true;
       configuration.keyboardShortcut = new KeyStroke(SWT.F12);
    }
 }

@@ -134,7 +134,8 @@ public abstract class ObjectView extends ViewWithContext
    @Override
    protected String getContextName()
    {
-      return (getContext() != null) ? ((AbstractObject)getContext()).getObjectName() : i18n.tr("[none]");
+      AbstractObject object = getObject();
+      return (object != null) ? object.getObjectName() : i18n.tr("[none]");
    }
 
    /**

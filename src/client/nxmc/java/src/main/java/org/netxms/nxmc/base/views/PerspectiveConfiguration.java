@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ public class PerspectiveConfiguration
    public boolean enableViewExtraction = true;
    public boolean allViewsAreCloseable = false;
    public boolean useGlobalViewId = false;
+   public boolean ignoreViewContext = false;
    public int priority = 255;
    public KeyStroke keyboardShortcut = null;
 
@@ -45,9 +46,9 @@ public class PerspectiveConfiguration
    @Override
    public String toString()
    {
-      return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea=" + multiViewNavigationArea + ", multiViewMainArea=" + multiViewMainArea +
-            ", hasHeaderArea=" + hasHeaderArea + ", hasSupplementalArea=" + hasSupplementalArea + ", multiViewSupplementalArea=" + multiViewSupplementalArea + ", enableViewPinning=" +
-            enableViewPinning + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable + ", useGlobalViewId=" + useGlobalViewId + ", priority=" +
-            priority + ", keyboardShortcut=" + keyboardShortcut + "]";
+      return "PerspectiveConfiguration [hasNavigationArea=" + hasNavigationArea + ", multiViewNavigationArea=" + multiViewNavigationArea + ", enableNavigationHistory=" + enableNavigationHistory +
+            ", multiViewMainArea=" + multiViewMainArea + ", hasHeaderArea=" + hasHeaderArea + ", hasSupplementalArea=" + hasSupplementalArea + ", multiViewSupplementalArea=" +
+            multiViewSupplementalArea + ", enableViewPinning=" + enableViewPinning + ", enableViewExtraction=" + enableViewExtraction + ", allViewsAreCloseable=" + allViewsAreCloseable +
+            ", useGlobalViewId=" + useGlobalViewId + ", ignoreViewContext=" + ignoreViewContext + ", priority=" + priority + ", keyboardShortcut=" + keyboardShortcut + "]";
    }
 }

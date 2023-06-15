@@ -2,3 +2,4 @@ org.netxms.nxmc.modules.tools.FindByIpAddressDescriptor
 org.netxms.nxmc.modules.tools.FindByMacAddressDescriptor
 org.netxms.nxmc.modules.tools.ObjectFinderDescriptor
 org.netxms.nxmc.modules.tools.ServerConsoleDescriptor
+org.netxms.nxmc.modules.worldmap.WorldMapToolDescriptor

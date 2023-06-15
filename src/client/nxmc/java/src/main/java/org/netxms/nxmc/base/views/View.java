@@ -902,7 +902,7 @@ public abstract class View implements MessageAreaHolder
 
       if (viewContainer.getPerspective() != null)
       {
-         viewContainer.getPerspective().addMainView(view, true, false);
+         viewContainer.getPerspective().addMainView(view, true);
       }
       else
       {

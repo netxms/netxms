@@ -20,6 +20,7 @@ package org.netxms.nxmc.base.views;
 
 import org.eclipse.jface.window.Window;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.windows.PopOutViewWindow;
 
 /**
  * View placement - window and perspective combination. Perspective can be null for pop-out views.
@@ -60,6 +61,19 @@ public class ViewPlacement
    {
       this.perspective = view.getPerspective();
       this.window = view.getWindow();
+   }
+
+   /**
+    * Open view according to this placement
+    *
+    * @param view view to open
+    */
+   public void openView(View view)
+   {
+      if (perspective != null)
+         perspective.addMainView(view, true);
+      else
+         PopOutViewWindow.open(view);
    }
 
    /**

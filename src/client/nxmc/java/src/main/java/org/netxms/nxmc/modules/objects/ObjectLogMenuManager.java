@@ -24,9 +24,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.ViewPlacement;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.logviewer.LogDescriptor;
 import org.netxms.nxmc.modules.logviewer.LogDescriptorRegistry;
@@ -90,16 +88,7 @@ public class ObjectLogMenuManager extends MenuManager
     * Open log view
     */
    private void openLog(LogDescriptor descriptor)
-   {      
-      Perspective p = viewPlacement.getPerspective();   
-      ObjectLogViewer view = new ObjectLogViewer(descriptor, object, contextId);
-      if (p != null)
-      {
-         p.addMainView(view, true, false);
-      }
-      else
-      {
-         PopOutViewWindow.open(view);
-      }
+   {
+      viewPlacement.openView(new ObjectLogViewer(descriptor, object, contextId));
    }
 }

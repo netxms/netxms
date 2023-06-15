@@ -308,8 +308,8 @@ public class AgentFileViewer extends AdHocObjectView
          return false;
       }
 
-      Perspective p = viewPlacement.getPerspective();
       AgentFileViewer fileView = new AgentFileViewer(nodeId, file, followChanges, contextId);
+      Perspective p = viewPlacement.getPerspective();
       if (p != null)
       {
          p.addMainView(fileView, true, ignoreContext);

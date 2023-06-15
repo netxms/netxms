@@ -28,7 +28,6 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 
 /**
  * Base class for actions intended to be run on objects.
@@ -128,9 +127,6 @@ public abstract class ObjectAction<T extends AbstractObject> extends Action
     */
    protected void openView(View view)
    {
-      if (viewPlacement.isPopOutView())
-         PopOutViewWindow.open(view);
-      else
-         viewPlacement.getPerspective().addMainView(view, true, false);
+      viewPlacement.openView(view);
    }
 }

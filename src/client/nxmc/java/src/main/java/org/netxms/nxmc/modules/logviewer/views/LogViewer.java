@@ -189,7 +189,7 @@ public class LogViewer extends ViewWithContext
 		createActions();
 		createPopupMenu();
    }	
-	
+
    /**
     * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
     */

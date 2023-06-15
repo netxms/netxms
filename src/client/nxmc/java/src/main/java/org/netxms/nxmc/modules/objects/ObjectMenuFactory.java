@@ -65,7 +65,6 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ViewPlacement;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.dashboards.views.AdHocDashboardView;
 import org.netxms.nxmc.modules.datacollection.SummaryTablesCache;
@@ -169,14 +168,7 @@ public final class ObjectMenuFactory
          public void widgetSelected(SelectionEvent e)
          {
             ObjectPollerView view = new ObjectPollerView(object, type, contextId);
-            if (viewPlacement.getPerspective() != null)
-            {
-               viewPlacement.getPerspective().addMainView(view, true, false);
-            }
-            else
-            {
-               PopOutViewWindow.open(view);
-            }
+            viewPlacement.openView(view);
             view.startPoll();
          }
       });
@@ -311,16 +303,7 @@ public final class ObjectMenuFactory
             @Override
             public void widgetSelected(SelectionEvent e)
             {
-
-               AdHocDashboardView view = new AdHocDashboardView(contextId, (Dashboard)d, object);
-               if (viewPlacement.getPerspective() != null)
-               {
-                  viewPlacement.getPerspective().addMainView(view, true, false);
-               }
-               else
-               {
-                  PopOutViewWindow.open(view);
-               }
+               viewPlacement.openView(new AdHocDashboardView(contextId, (Dashboard)d, object));
             }
          });
       }

@@ -50,6 +50,7 @@ db.writer	DB background writers
 dc.*            Data collection
 dc.agent.cache  Agent side cache
 dc.config	Data collection configuration
+dc.modbus       Modbus data collection
 dc.scheduler	Data collection scheduler
 dc.snmp		Agent SNMP data collection
 

@@ -30,9 +30,7 @@ import org.netxms.client.Table;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.ViewPlacement;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.views.SummaryTable;
 import org.slf4j.Logger;
@@ -200,15 +198,7 @@ public class SummaryTablesCache
                public void run()
                {
                   SummaryTable view = new SummaryTable(tableId, baseObjectId, contextId);
-                  Perspective p = viewPlacement.getPerspective();
-                  if (p != null)
-                  {
-                     p.addMainView(view, true, false);
-                  }
-                  else
-                  {
-                     PopOutViewWindow.open(view);
-                  }
+                  viewPlacement.openView(view);
                   view.setTable(results);
                }
             });

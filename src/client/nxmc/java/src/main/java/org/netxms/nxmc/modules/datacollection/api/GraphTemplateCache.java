@@ -19,9 +19,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphDefinition;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.nxmc.Registry;
-import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.ViewPlacement;
-import org.netxms.nxmc.base.windows.PopOutViewWindow;
 import org.netxms.nxmc.modules.datacollection.views.HistoricalGraphView;
 import org.netxms.nxmc.modules.objects.ObjectContext;
 import org.netxms.nxmc.tools.MessageDialogHelper;
@@ -233,16 +231,8 @@ public class GraphTemplateCache
     */
    private static void showPredefinedGraph(GraphDefinition graphDefinition, AbstractNode node, long contextId, ViewPlacement viewPlacement)
    {      
-      Perspective p = viewPlacement.getPerspective();         
       HistoricalGraphView view = new HistoricalGraphView(node, Arrays.asList(graphDefinition.getDciList()), contextId);
-      if (p != null)
-      {
-         p.addMainView(view, true, false);
-      }
-      else
-      {
-         PopOutViewWindow.open(view);
-      }
+      viewPlacement.openView(view);
       view.initPredefinedGraph(graphDefinition);
    }
 }
