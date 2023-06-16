@@ -37,7 +37,7 @@ Rack::Rack() : super()
  */
 Rack::Rack(const TCHAR *name, int height) : super(name, 0)
 {
-	m_height = height;
+	m_height = (height > 0) ? height : 42;
    m_topBottomNumbering = false;
    m_passiveElements = new ObjectArray<RackPassiveElement>(0, 16, Ownership::True);
 }

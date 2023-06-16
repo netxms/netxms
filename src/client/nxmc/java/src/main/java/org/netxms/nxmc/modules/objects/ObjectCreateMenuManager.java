@@ -59,6 +59,7 @@ import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkMapDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNetworkServiceDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateNodeDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateObjectDialog;
+import org.netxms.nxmc.modules.objects.dialogs.CreateRackDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateSubnetDialog;
 import org.netxms.nxmc.modules.objects.dialogs.CreateZoneDialog;
 import org.xnap.commons.i18n.I18n;
@@ -471,7 +472,36 @@ public class ObjectCreateMenuManager extends MenuManager
          }
       };
 
-      actionCreateRack = new GenericObjectCreationAction(i18n.tr("&Rack..."), AbstractObject.OBJECT_RACK, i18n.tr("Rack"));
+      actionCreateRack = new Action(i18n.tr("&Rack...")) {
+         @Override
+         public void run()
+         {
+            if (parentId == 0)
+               return;
+
+            final CreateRackDialog dlg = new CreateRackDialog(shell);
+            if (dlg.open() != Window.OK)
+               return;
+
+            final NXCSession session = Registry.getSession();
+            new Job(i18n.tr("Creating rack"), view, getMessageArea(view)) {
+               @Override
+               protected void run(IProgressMonitor monitor) throws Exception
+               {
+                  NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_RACK, dlg.getName(), parentId);
+                  cd.setObjectAlias(dlg.getAlias());
+                  cd.setHeight(dlg.getHeight());
+                  session.createObject(cd);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return String.format(i18n.tr("Cannot create rack object %s"), dlg.getName());
+               }
+            }.start();
+         }
+      };
 
       actionCreateSubnet = new Action(i18n.tr("&Subnet...")) {
          @Override

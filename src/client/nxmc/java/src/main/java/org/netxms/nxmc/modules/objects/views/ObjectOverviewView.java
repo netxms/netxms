@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
@@ -47,10 +46,10 @@ import org.netxms.nxmc.modules.objects.views.elements.Comments;
 import org.netxms.nxmc.modules.objects.views.elements.Communications;
 import org.netxms.nxmc.modules.objects.views.elements.Connection;
 import org.netxms.nxmc.modules.objects.views.elements.ExternalResources;
-import org.netxms.nxmc.modules.objects.views.elements.ObjectInfo;
 import org.netxms.nxmc.modules.objects.views.elements.Inventory;
 import org.netxms.nxmc.modules.objects.views.elements.LastValues;
 import org.netxms.nxmc.modules.objects.views.elements.Location;
+import org.netxms.nxmc.modules.objects.views.elements.ObjectInfo;
 import org.netxms.nxmc.modules.objects.views.elements.ObjectState;
 import org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
@@ -87,8 +86,8 @@ public class ObjectOverviewView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && ((context instanceof DataCollectionTarget) || (context instanceof Asset) || (context instanceof Chassis) || (context instanceof Interface) ||
-            (context instanceof Subnet) || (context instanceof Zone));
+      return (context != null) &&
+            ((context instanceof DataCollectionTarget) || (context instanceof Chassis) || (context instanceof Interface) || (context instanceof Subnet) || (context instanceof Zone));
    }
 
    /**
