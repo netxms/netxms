@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,10 @@ import java.util.List;
 public interface SnmpWalkListener
 {
 	/**
-	 * Called by NXCSession.snmpWalk when new data from server is available
-	 * 
-	 * @param data list of values received from server
-	 */
-	public void onSnmpWalkData(List<SnmpValue> data);
+    * Called by NXCSession.snmpWalk when new data from server is available
+    * 
+    * @param nodeId ID of node where walk was initiated
+    * @param data list of values received from server
+    */
+   public void onSnmpWalkData(long nodeId, List<SnmpValue> data);
 }

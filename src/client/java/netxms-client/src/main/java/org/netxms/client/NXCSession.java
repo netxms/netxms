@@ -92,8 +92,8 @@ import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.client.datacollection.DciLastValue;
 import org.netxms.client.datacollection.DciInfo;
+import org.netxms.client.datacollection.DciLastValue;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
 import org.netxms.client.datacollection.DciSummaryTableColumn;
@@ -10935,7 +10935,7 @@ public class NXCSession
             final String value = response.getFieldAsString(varId++);
             data.add(new SnmpValue(name, type, value, nodeId));
          }
-         listener.onSnmpWalkData(data);
+         listener.onSnmpWalkData(nodeId, data);
          if (response.isEndOfSequence())
             break;
       }

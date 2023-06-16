@@ -176,9 +176,9 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		startWalk();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
@@ -186,9 +186,9 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		super.cancelPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -247,11 +247,11 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(java.util.List)
-	 */
+   /**
+    * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(long, java.util.List)
+    */
 	@Override
-	public void onSnmpWalkData(final List<SnmpValue> data)
+   public void onSnmpWalkData(final long nodeId, final List<SnmpValue> data)
 	{
 		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override

@@ -666,16 +666,16 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		header.setText((currentNode != null) ? currentNode.getObjectName() : ""); //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
-	 */
+   /**
+    * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
+    */
 	@Override
 	public void saveState(IMemento memento)
 	{
 		super.saveState(memento);
 		memento.putInteger("CurrentNode", (currentNode != null) ? (int)currentNode.getObjectId() : 0); //$NON-NLS-1$
 	}
-	
+
 	/**
 	 * Do SNMP walk
 	 */
@@ -723,11 +723,11 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		job.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(java.util.List)
-	 */
+   /**
+    * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(long, java.util.List)
+    */
 	@Override
-	public void onSnmpWalkData(final List<SnmpValue> data)
+   public void onSnmpWalkData(final long nodeId, final List<SnmpValue> data)
 	{
 		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
@@ -747,9 +747,9 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
 	@Override
 	public void dispose()
 	{

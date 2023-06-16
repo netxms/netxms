@@ -27,10 +27,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -45,6 +42,7 @@ import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.snmp.helpers.SnmpValueLabelProvider;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -63,7 +61,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 	
 	private long nodeId;
 	private SnmpObjectId rootObject;
-	private TableViewer viewer;
+   private SortableTableViewer viewer;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
 	private SnmpValue value;
 	
@@ -79,9 +77,9 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		this.rootObject = rootObject;
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
-	 */
+   /**
+    * @see org.eclipse.jface.window.Window#configureShell(org.eclipse.swt.widgets.Shell)
+    */
 	@Override
 	protected void configureShell(Shell newShell)
 	{
@@ -91,9 +89,9 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		newShell.setSize(settings.getAsPoint("MibWalkDialog.size", 400, 250)); 
 	}	
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#createDialogArea(org.eclipse.swt.widgets.Composite)
+    */
 	@Override
 	protected Control createDialogArea(Composite parent)
 	{
@@ -106,19 +104,10 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 
-		viewer = new TableViewer(dialogArea, SWT.FULL_SELECTION | SWT.SINGLE | SWT.BORDER);
-		viewer.getTable().setLinesVisible(true);
-		viewer.getTable().setHeaderVisible(true);
+      viewer = new SortableTableViewer(dialogArea, SWT.FULL_SELECTION | SWT.SINGLE | SWT.BORDER);
 		setupViewerColumns();
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider()); 
-		viewer.getTable().addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), "MibWalkDialog"); //$NON-NLS-1$
-			}
-		});
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
@@ -158,13 +147,11 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
 		tc.setText(i18n.tr("Value"));
 		tc.setWidth(300);
-		
-		WidgetHelper.restoreColumnSettings(viewer.getTable(), "MibWalkDialog"); //$NON-NLS-1$
 	}
 	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#create()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#create()
+    */
 	@Override
 	public void create()
 	{
@@ -172,9 +159,9 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		startWalk();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#cancelPressed()
+    */
 	@Override
 	protected void cancelPressed()
 	{
@@ -182,9 +169,9 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		super.cancelPressed();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#okPressed()
-	 */
+   /**
+    * @see org.eclipse.jface.dialogs.Dialog#okPressed()
+    */
 	@Override
 	protected void okPressed()
 	{
@@ -242,11 +229,11 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 		}.start();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(java.util.List)
-	 */
+   /**
+    * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(long, java.util.List)
+    */
 	@Override
-	public void onSnmpWalkData(final List<SnmpValue> data)
+   public void onSnmpWalkData(final long nodeId, final List<SnmpValue> data)
 	{
 		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
@@ -254,6 +241,7 @@ public class MibWalkDialog extends Dialog implements SnmpWalkListener
 			{
 				walkData.addAll(data);
 				viewer.setInput(walkData.toArray());
+            viewer.packColumns();
 				try
 				{
 					viewer.getTable().showItem(viewer.getTable().getItem(viewer.getTable().getItemCount() - 1));

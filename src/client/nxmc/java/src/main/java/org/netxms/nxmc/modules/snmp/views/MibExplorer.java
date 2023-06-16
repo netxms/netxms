@@ -19,7 +19,9 @@
 package org.netxms.nxmc.modules.snmp.views;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -33,11 +35,8 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -56,9 +55,11 @@ import org.netxms.client.snmp.MibObject;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.FilterText;
+import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.datacollection.actions.CreateSnmpDci;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
@@ -88,8 +89,9 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	private MibBrowser mibBrowser;
 	private MibObjectDetails details;
    private FilterText filterText;
-	private TableViewer viewer;
+   private SortableTableViewer viewer;
 	private boolean walkActive = false;
+   private long walkObjectId = 0;
 	private List<SnmpValue> walkData = new ArrayList<SnmpValue>();
 	private Action actionWalk;
 	private Action actionCopyObjectName;
@@ -134,6 +136,13 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	@Override
 	public void createContent(Composite parent)
 	{
+      WalkResultCache cache = Registry.getSingleton(WalkResultCache.class);
+      if (cache == null)
+      {
+         cache = new WalkResultCache();
+         Registry.setSingleton(WalkResultCache.class, cache);
+      }
+
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
@@ -186,21 +195,12 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
       });
 
       // walk results
-      viewer = new TableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI);
-		viewer.getTable().setLinesVisible(true);
-		viewer.getTable().setHeaderVisible(true);
+      viewer = new SortableTableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI);
 		setupViewerColumns();
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider());
 		filter = new SnmpWalkFilter();
 		viewer.addFilter(filter);
-		viewer.getTable().addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), ID); //$NON-NLS-1$
-			}
-		});
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -217,6 +217,7 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 				selectInTree();
 			}
 		});
+      viewer.setInput(walkData);
 
       splitter.setWeights(new int[] { 70, 30 });
 
@@ -474,7 +475,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			}
 		});
 
-		// Create menu
 		Menu menu = menuMgr.createContextMenu(viewer.getTable());
 		viewer.getTable().setMenu(menu);
 	}
@@ -524,8 +524,6 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 		tc = new TableColumn(viewer.getTable(), SWT.LEFT);
 		tc.setText(i18n.tr("Value"));
 		tc.setWidth(300);
-		
-		WidgetHelper.restoreColumnSettings(viewer.getTable(), ID); //$NON-NLS-1$
 	}
 
    /**
@@ -535,6 +533,28 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
    protected void onObjectChange(AbstractObject object)
    {
       actionWalk.setEnabled((object != null) && !walkActive);
+      WalkResultCache cache = Registry.getSingleton(WalkResultCache.class);
+      if (walkObjectId != 0)
+      {
+         cache.set(walkObjectId, walkData);
+         walkData = new ArrayList<>();
+      }
+      else
+      {
+         walkData.clear();
+      }
+      List<SnmpValue> cachedWalkData = cache.get(object.getObjectId());
+      if (cachedWalkData != null)
+      {
+         walkData.addAll(cachedWalkData);
+         walkObjectId = object.getObjectId();
+      }
+      else
+      {
+         walkObjectId = 0;
+      }
+      viewer.setInput(walkData);
+      viewer.packColumns();
    }
 
 	/**
@@ -551,10 +571,12 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 
 		walkActive = true;
 		actionWalk.setEnabled(false);
-		viewer.setInput(new SnmpValue[0]);
-		walkData.clear();
+      walkData.clear();
+      viewer.refresh();
 
       final long nodeId = getObjectId();
+      walkObjectId = nodeId;
+
       Job job = new Job(i18n.tr("Walking MIB tree"), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
@@ -586,17 +608,21 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 	}
 
    /**
-    * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(java.util.List)
+    * @see org.netxms.client.snmp.SnmpWalkListener#onSnmpWalkData(long, java.util.List)
     */
 	@Override
-	public void onSnmpWalkData(final List<SnmpValue> data)
+   public void onSnmpWalkData(long nodeId, final List<SnmpValue> data)
 	{
 		viewer.getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{
+            if (nodeId != walkObjectId)
+               return; // Ignore data from incorrect node
+
 				walkData.addAll(data);
-				viewer.setInput(walkData.toArray());
+            viewer.refresh();
+            viewer.packColumns();
 				try
 				{
 					viewer.getTable().showItem(viewer.getTable().getItem(viewer.getTable().getItemCount() - 1));
@@ -608,4 +634,19 @@ public class MibExplorer extends ObjectView implements SnmpWalkListener
 			}
 		});
 	}
+
+   private static class WalkResultCache
+   {
+      private Map<Long, List<SnmpValue>> cache = new HashMap<>();
+
+      List<SnmpValue> get(long id)
+      {
+         return cache.get(id);
+      }
+
+      void set(long id, List<SnmpValue> data)
+      {
+         cache.put(id, data);
+      }
+   }
 }

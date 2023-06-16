@@ -636,9 +636,8 @@ public class TableColumns extends AbstractDCIPropertyPage
                }      
                Map<Long, SnmpValue> oidMap = new HashMap<Long, SnmpValue>();
                session.snmpWalk(nodeId, oid, new SnmpWalkListener() {
-                  
                   @Override
-                  public void onSnmpWalkData(List<SnmpValue> data)
+                  public void onSnmpWalkData(long nodeId, List<SnmpValue> data)
                   {
                      for (SnmpValue v : data)
                      {
