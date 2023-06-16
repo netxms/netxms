@@ -56,6 +56,24 @@ public class DashboardView extends AbstractDashboardView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && (context instanceof Dashboard);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#getPriority()
+    */
+   @Override
+   public int getPriority()
+   {
+      return 1;
+   }
+
+   /**
     * Create actions
     */
    @Override
@@ -133,17 +151,6 @@ public class DashboardView extends AbstractDashboardView
       manager.add(actionRemoveColumn);
       manager.add(new Separator());
       super.fillLocalToolBar(manager);
-   }
-   
-   
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Dashboard);
    }
 
    /**

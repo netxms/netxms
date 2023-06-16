@@ -26,6 +26,9 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
@@ -35,6 +38,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
@@ -61,12 +66,14 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.nxmc.PreferenceStore;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveConfiguration;
 import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewPlacement;
+import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.agentmanagement.views.AgentConfigurationEditor;
 import org.netxms.nxmc.modules.alarms.views.AlarmsView;
@@ -122,13 +129,16 @@ import org.netxms.nxmc.modules.objects.views.UserSessionsView;
 import org.netxms.nxmc.modules.objects.views.VlanView;
 import org.netxms.nxmc.modules.objects.views.VpnView;
 import org.netxms.nxmc.modules.objects.views.WirelessStations;
+import org.netxms.nxmc.modules.objects.views.elements.Comments;
+import org.netxms.nxmc.modules.objects.views.elements.GeneralInfo;
+import org.netxms.nxmc.modules.objects.views.elements.PollStates;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.services.ObjectActionDescriptor;
 import org.netxms.nxmc.services.ObjectViewDescriptor;
-import org.netxms.nxmc.tools.FontTools;
 import org.netxms.nxmc.tools.MessageDialogHelper;
 import org.xnap.commons.i18n.I18n;
 
@@ -144,8 +154,14 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private StructuredSelection selection = new StructuredSelection();
    private Composite headerArea;
    private Label objectName;
+   private RoundedLabel objectStatus;
+   private Composite objectDetails;
+   private GeneralInfo objectGeneralInfo;
+   private PollStates objectPollState;
+   private Comments objectComments;
    private ToolBar objectToolBar;
    private ToolBar objectMenuBar;
+   private Label expandButton;
    private Image imageEditConfig;
    private Image imageExecuteScript;
    private Image imageTakeScreenshot;
@@ -182,7 +198,6 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       configuration.multiViewNavigationArea = false;
       configuration.multiViewMainArea = true;
       configuration.hasHeaderArea = true;
-      configuration.priority = 20;
    }
 
    /**
@@ -289,25 +304,114 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    {
       headerArea = new Composite(parent, SWT.NONE);
       GridLayout layout = new GridLayout();
-      layout.numColumns = 5;
+      layout.numColumns = 8;
+      layout.verticalSpacing = 0;
+      layout.marginHeight = 0;
+      layout.marginTop = 3;
       headerArea.setLayout(layout);
 
       objectName = new Label(headerArea, SWT.LEFT);
-      objectName.setFont(FontTools.createTitleFont());
+      objectName.setFont(JFaceResources.getBannerFont());
 
       Label separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
       GridData gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
-      gd.heightHint = 24;
+      gd.heightHint = 28;
+      separator.setLayoutData(gd);
+
+      objectStatus = new RoundedLabel(headerArea);
+      objectStatus.setToolTipText(i18n.tr("Object status"));
+
+      separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
+      gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
+      gd.heightHint = 28;
       separator.setLayoutData(gd);
 
       objectToolBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
 
       separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
       gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
-      gd.heightHint = 24;
+      gd.heightHint = 28;
       separator.setLayoutData(gd);
 
-      objectMenuBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);      
+      objectMenuBar = new ToolBar(headerArea, SWT.FLAT | SWT.HORIZONTAL | SWT.RIGHT);
+
+      expandButton = new Label(headerArea, SWT.NONE);
+      expandButton.setBackground(headerArea.getBackground());
+      expandButton.setImage(SharedIcons.IMG_EXPAND);
+      expandButton.setToolTipText(i18n.tr("Show additional object information"));
+      expandButton.setCursor(parent.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+      expandButton.addMouseListener(new MouseAdapter() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+            boolean show = PreferenceStore.getInstance().getAsBoolean("ObjectPerspective.showObjectDetails", false);
+            PreferenceStore.getInstance().set("ObjectPerspective.showObjectDetails", !show);
+         }
+      });
+      gd = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
+      expandButton.setLayoutData(gd);
+
+      PreferenceStore.getInstance().addPropertyChangeListener(new IPropertyChangeListener() {
+         @Override
+         public void propertyChange(PropertyChangeEvent event)
+         {
+            if (event.getProperty().equals("ObjectPerspective.showObjectDetails"))
+            {
+               showObjectDetails(Boolean.parseBoolean((String)event.getNewValue()));
+            }
+         }
+      });
+
+      if (PreferenceStore.getInstance().getAsBoolean("ObjectPerspective.showObjectDetails", false))
+         showObjectDetails(true);
+   }
+
+   /**
+    * Show/hide object details
+    *
+    * @param show true to show
+    */
+   private void showObjectDetails(boolean show)
+   {
+      if (show && (objectDetails == null))
+      {
+         objectDetails = new Composite(headerArea, SWT.NONE);
+         GridData gd = new GridData(SWT.FILL, SWT.FILL, true, false);
+         gd.horizontalSpan = ((GridLayout)headerArea.getLayout()).numColumns;
+         objectDetails.setLayoutData(gd);
+
+         GridLayout layout = new GridLayout();
+         layout.numColumns = 3;
+         layout.marginHeight = 0;
+         layout.marginWidth = 0;
+         objectDetails.setLayout(layout);
+
+         objectGeneralInfo = new GeneralInfo(objectDetails, null, null);
+         objectGeneralInfo.setVerticalAlignment(SWT.FILL);
+
+         objectPollState = new PollStates(objectDetails, objectGeneralInfo, null);
+         objectPollState.setVerticalAlignment(SWT.FILL);
+
+         objectComments = new Comments(objectDetails, objectPollState, null);
+         objectComments.setVerticalAlignment(SWT.FILL);
+
+         AbstractObject object = (AbstractObject)selection.getFirstElement();
+         if (object != null)
+         {
+            objectGeneralInfo.setObject(object);
+            if (objectPollState.isApplicableForObject(object))
+               objectPollState.setObject(object);
+            objectComments.setObject(object);
+         }
+      }
+      else if (!show && (objectDetails != null))
+      {
+         objectDetails.dispose();
+         objectDetails = null;
+      }
+      expandButton.setImage(show ? SharedIcons.IMG_COLLAPSE : SharedIcons.IMG_EXPAND);
+      expandButton.setToolTipText(show ? i18n.tr("Hide additional object information") : i18n.tr("Show additional object information"));
+      layoutMainArea();
    }
 
    /**
@@ -323,6 +427,27 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          AbstractObject object = (AbstractObject)selection.getFirstElement();
          this.selection = new StructuredSelection(object);
          objectName.setText(object.getNameWithAlias());
+         if (object.isInMaintenanceMode())
+            objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
+         else
+            objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
+         objectStatus.setLabelBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+         if (objectDetails != null)
+         {
+            objectGeneralInfo.setObject(object);
+            if (objectPollState.isApplicableForObject(object))
+            {
+               objectPollState.setObject(object);
+               objectPollState.fixPlacement();
+            }
+            else
+            {
+               objectPollState.dispose();
+               objectComments.fixPlacement();
+            }
+            objectComments.setObject(object);
+            layoutMainArea();
+         }
          updateObjectToolBar(object);
          updateObjectMenuBar(object);
          updateContextDashboards(object);
@@ -331,6 +456,8 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
       {
          this.selection = new StructuredSelection();
          objectName.setText("");
+         objectStatus.setText("");
+         objectStatus.setLabelBackground(null);
       }
       headerArea.layout();
 
@@ -612,21 +739,16 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
     */
    public boolean showObject(AbstractObject object, long dciId)
    {
+      if (!ObjectBrowser.calculateClassFilter(subtreeType).contains(object.getObjectClass()))
+         return false;
 
-      for (Integer classId : ObjectBrowser.calculateClassFilter(subtreeType))
+      Registry.getMainWindow().switchToPerspective(getId());
+      objectBrowser.selectObject(object);
+      if ((dciId != 0) && showMainView("DataCollection"))
       {
-         if (classId == object.getObjectClass())
-         {
-            Registry.getMainWindow().switchToPerspective(getId());
-            objectBrowser.selectObject(object);
-            if (dciId != 0 && showMainView("DataCollection"))
-            {
-               View dataCollectionView = findMainView("DataCollection");
-               ((DataCollectionView)dataCollectionView).selectDci(dciId);
-            }
-            return true;
-         }
+         View dataCollectionView = findMainView("DataCollection");
+         ((DataCollectionView)dataCollectionView).selectDci(dciId);
       }
-      return false;
+      return true;
    }
 }

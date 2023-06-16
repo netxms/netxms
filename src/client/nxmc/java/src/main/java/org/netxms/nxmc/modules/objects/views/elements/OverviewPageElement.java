@@ -36,8 +36,10 @@ public abstract class OverviewPageElement
 	private Composite parent;
 	private Card widget = null;
 	private OverviewPageElement anchor;
+   private int verticalAlignment = SWT.TOP;
+   private int horizontalSpan = 1;
    private ObjectView objectView;
-	
+
 	/**
     * Create element.
     *
@@ -51,7 +53,7 @@ public abstract class OverviewPageElement
 		this.anchor = anchor;
       this.objectView = objectView;
 	}
-	
+
 	/**
 	 * @return the object
 	 */
@@ -77,13 +79,14 @@ public abstract class OverviewPageElement
 			};
 			GridData gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
+         gd.horizontalSpan = horizontalSpan;
 			gd.grabExcessHorizontalSpace = true;
-			gd.verticalAlignment = SWT.TOP;
+         gd.verticalAlignment = verticalAlignment;
 			widget.setLayoutData(gd);
 		}
 		onObjectChange();
 	}
-	
+
 	/**
 	 * Dispose widget associated with this element
 	 */
@@ -92,7 +95,7 @@ public abstract class OverviewPageElement
 		if ((widget != null) && !widget.isDisposed())
 			widget.dispose();
 	}
-	
+
 	/**
 	 * Check if element is applicable for given object. Default implementation
 	 * always returns true.
@@ -122,10 +125,42 @@ public abstract class OverviewPageElement
 			}
 		}
 	}
-	
+
 	/**
-	 * @return
-	 */
+    * @return the verticalAlignment
+    */
+   public int getVerticalAlignment()
+   {
+      return verticalAlignment;
+   }
+
+   /**
+    * @param verticalAlignment the verticalAlignment to set
+    */
+   public void setVerticalAlignment(int verticalAlignment)
+   {
+      this.verticalAlignment = verticalAlignment;
+   }
+
+   /**
+    * @return the horizontalSpan
+    */
+   public int getHorizontalSpan()
+   {
+      return horizontalSpan;
+   }
+
+   /**
+    * @param horizontalSpan the horizontalSpan to set
+    */
+   public void setHorizontalSpan(int horizontalSpan)
+   {
+      this.horizontalSpan = horizontalSpan;
+   }
+
+   /**
+    * @return
+    */
 	private Control getAnchorControl()
 	{
 		if ((widget != null) && !widget.isDisposed())

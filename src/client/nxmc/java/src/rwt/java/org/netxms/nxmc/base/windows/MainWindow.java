@@ -76,6 +76,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewFolder;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.base.widgets.ServerClock;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -284,30 +285,15 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       new Spacer(headerArea, 32);
 
-      Composite serverNameHolder = new Composite(headerArea, SWT.NONE);
-      FillLayout serverNameLayout = new FillLayout();
-      serverNameLayout.marginHeight = 4;
-      serverNameLayout.marginWidth = 4;
-      serverNameHolder.setLayout(serverNameLayout);
-      serverNameHolder.setBackground(headerBackgroundColor);
-
-      Label serverName = new Label(serverNameHolder, SWT.CENTER);
-      serverName.setBackground(headerBackgroundColor);
-      serverName.setForeground(headerForegroundColor);
+      RoundedLabel serverName = new RoundedLabel(headerArea);
       serverName.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
+      serverName.setLabelForeground(null, headerForegroundColor);
       serverName.setText(session.getServerName());
       serverName.setToolTipText(i18n.tr("Server name"));
       RGB serverColor = ColorConverter.parseColorDefinition(session.getServerColor());
       if (serverColor != null)
       {
-         final Color color = new Color(serverName.getDisplay(), serverColor);
-         serverName.setBackground(color);
-         serverName.setData(RWT.CUSTOM_VARIANT, "ServerName");
-
-         if (!ColorConverter.isDarkColor(serverColor))
-         {
-            serverName.setForeground(serverName.getDisplay().getSystemColor(SWT.COLOR_BLACK));
-         }
+         serverName.setLabelBackground(new Color(serverName.getDisplay(), serverColor));
       }
 
       new Spacer(headerArea, 32);
@@ -324,7 +310,7 @@ public class MainWindow extends Window implements MessageAreaHolder
       Label userInfo = new Label(headerArea, SWT.LEFT);
       userInfo.setBackground(headerBackgroundColor);
       userInfo.setForeground(headerForegroundColor);
-      serverName.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
+      userInfo.setData(RWT.CUSTOM_VARIANT, "MainWindowHeaderNormal");
       userInfo.setText(session.getUserName() + "@" + session.getServerAddress());
       userInfo.setToolTipText(i18n.tr("Login name and server address"));
 

@@ -28,7 +28,6 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * Show object's comments
- *
  */
 public class Comments extends OverviewPageElement
 {

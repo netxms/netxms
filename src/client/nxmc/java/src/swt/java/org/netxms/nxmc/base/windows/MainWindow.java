@@ -82,6 +82,7 @@ import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.views.ViewFolder;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.base.widgets.MessageAreaHolder;
+import org.netxms.nxmc.base.widgets.RoundedLabel;
 import org.netxms.nxmc.base.widgets.ServerClock;
 import org.netxms.nxmc.keyboard.KeyBindingManager;
 import org.netxms.nxmc.keyboard.KeyStroke;
@@ -295,39 +296,15 @@ public class MainWindow extends Window implements MessageAreaHolder
 
       new Spacer(headerArea, 32);
 
-      Composite serverNameHolder = new Canvas(headerArea, SWT.NONE);
-      FillLayout serverNameLayout = new FillLayout();
-      serverNameLayout.marginHeight = 4;
-      serverNameLayout.marginWidth = 4;
-      serverNameHolder.setLayout(serverNameLayout);
-      serverNameHolder.setBackground(headerBackgroundColor);
-
-      Label serverName = new Label(serverNameHolder, SWT.CENTER);
-      serverName.setBackground(headerBackgroundColor);
-      serverName.setForeground(headerForegroundColor);
+      RoundedLabel serverName = new RoundedLabel(headerArea);
+      serverName.setLabelForeground(null, headerForegroundColor);
       serverName.setFont(headerFont);
       serverName.setText(session.getServerName());
       serverName.setToolTipText(i18n.tr("Server name"));
       RGB serverColor = ColorConverter.parseColorDefinition(session.getServerColor());
       if (serverColor != null)
       {
-         final Color color = new Color(serverColor);
-         serverName.setBackground(color);
-
-         if (!ColorConverter.isDarkColor(serverColor))
-         {
-            serverName.setForeground(serverName.getDisplay().getSystemColor(SWT.COLOR_BLACK));
-         }
-
-         serverNameHolder.addPaintListener(new PaintListener() {
-            @Override
-            public void paintControl(PaintEvent e)
-            {
-               e.gc.setBackground(color);
-               Rectangle r = serverNameHolder.getClientArea();
-               e.gc.fillRoundRectangle(0, 0, r.width, r.height, 8, 8);
-            }
-         });
+         serverName.setLabelBackground(new Color(serverColor));
       }
 
       new Spacer(headerArea, 32);

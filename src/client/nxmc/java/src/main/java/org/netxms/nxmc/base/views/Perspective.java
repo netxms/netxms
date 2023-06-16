@@ -52,6 +52,7 @@ public abstract class Perspective
    private PerspectiveConfiguration configuration = new PerspectiveConfiguration();
    private Window window;
    private Composite content;
+   private CompositeWithMessageArea mainAreaHolder;
    private SashForm verticalSplitter;
    private SashForm horizontalSpliter;
    private ViewFolder navigationFolder;
@@ -61,7 +62,6 @@ public abstract class Perspective
    private ViewStack navigationArea;
    private ViewStack mainArea;
    private Composite supplementalArea;
-   private MessageAreaHolder messageArea;
    private ISelectionProvider navigationSelectionProvider;
    private ISelectionChangedListener navigationSelectionListener;
    private ImageCache imageCache;
@@ -269,7 +269,7 @@ public abstract class Perspective
          horizontalSpliter = new SashForm(configuration.hasNavigationArea ? verticalSplitter : content, SWT.VERTICAL);
       }
 
-      CompositeWithMessageArea mainAreaHolder = new CompositeWithMessageArea(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content), SWT.NONE);
+      mainAreaHolder = new CompositeWithMessageArea(configuration.hasSupplementalArea ? horizontalSpliter : (configuration.hasNavigationArea ? verticalSplitter : content), SWT.NONE);
       if (configuration.hasHeaderArea)
       {
          GridLayout layout = new GridLayout();
@@ -287,7 +287,6 @@ public abstract class Perspective
 
          createHeaderArea(headerArea);
       }
-      messageArea = mainAreaHolder;
 
       if (configuration.multiViewMainArea)
       {
@@ -427,7 +426,7 @@ public abstract class Perspective
     */
    public MessageAreaHolder getMessageArea()
    {
-      return messageArea;
+      return mainAreaHolder;
    }
 
    /**
@@ -694,5 +693,13 @@ public abstract class Perspective
          activeViewStack.processKeyStroke(ks);
       else if (activeViewContainer != null)
          activeViewContainer.processKeyStroke(ks);
+   }
+
+   /**
+    * Redo layout of main area
+    */
+   protected void layoutMainArea()
+   {
+      mainAreaHolder.layout(true, true);
    }
 }

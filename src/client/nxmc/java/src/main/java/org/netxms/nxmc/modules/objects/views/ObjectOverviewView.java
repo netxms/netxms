@@ -33,6 +33,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Layout;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Asset;
+import org.netxms.client.objects.Chassis;
+import org.netxms.client.objects.DataCollectionTarget;
+import org.netxms.client.objects.Interface;
+import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.elements.Capabilities;
@@ -69,6 +75,16 @@ public class ObjectOverviewView extends ObjectView
    public ObjectOverviewView()
    {
       super(i18n.tr("Overview"), ResourceManager.getImageDescriptor("icons/object-views/overview.gif"), "ObjectOverview", false);
+   }
+
+   /**
+    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
+    */
+   @Override
+   public boolean isValidForContext(Object context)
+   {
+      return (context != null) && ((context instanceof DataCollectionTarget) || (context instanceof Asset) || (context instanceof Chassis) || (context instanceof Interface) ||
+            (context instanceof Subnet) || (context instanceof Zone));
    }
 
    /**

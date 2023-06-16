@@ -146,7 +146,7 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
    @Override
    public int getPriority()
    {
-      return 15;
+      return 1;
    }
 
    /**

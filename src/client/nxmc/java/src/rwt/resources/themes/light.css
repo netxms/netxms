@@ -2296,7 +2296,7 @@ Label.CardHeader {
    font: bold 16px "Metropolis Semibold", "Segoe UI", "Liberation Sans", Verdana, Helvetica, sans-serif;
 }
 
-Label.ServerName {
+Label.RoundedLabel {
    border-radius: 4px;
    padding: 4px 4px;
 }
