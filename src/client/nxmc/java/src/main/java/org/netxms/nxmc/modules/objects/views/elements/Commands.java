@@ -49,7 +49,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Commands extends OverviewPageElement
 {
-   private I18n i18n = LocalizationHelper.getI18n(Commands.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Commands.class);
+
 	private CommandBox commandBox;
 	private Action actionWakeup;
 	

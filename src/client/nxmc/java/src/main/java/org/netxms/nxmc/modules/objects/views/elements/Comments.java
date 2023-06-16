@@ -31,7 +31,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class Comments extends OverviewPageElement
 {
-   private I18n i18n = LocalizationHelper.getI18n(Comments.class);
+   private final I18n i18n = LocalizationHelper.getI18n(Comments.class);
+
 	private Text comments;
 
 	/**

@@ -39,7 +39,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public abstract class TableElement extends OverviewPageElement
 {
-   private I18n i18n = LocalizationHelper.getI18n(TableElement.class);
+   private final I18n i18n = LocalizationHelper.getI18n(TableElement.class);
+
 	private Table table;
 	private Action actionCopy;
 	private Action actionCopyName;

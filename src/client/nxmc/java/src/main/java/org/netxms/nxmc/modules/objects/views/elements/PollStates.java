@@ -36,6 +36,7 @@ import org.xnap.commons.i18n.I18n;
 public class PollStates extends TableElement
 {
    private final I18n i18n = LocalizationHelper.getI18n(PollStates.class);
+
    private Map<String, String> typeNames = new HashMap<>();
 
    /**

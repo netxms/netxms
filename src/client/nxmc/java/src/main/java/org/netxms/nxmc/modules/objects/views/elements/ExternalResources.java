@@ -40,10 +40,11 @@ import org.xnap.commons.i18n.I18n;
  */
 public class ExternalResources extends OverviewPageElement
 {
-   private I18n i18n = LocalizationHelper.getI18n(ExternalResources.class);
+   private final I18n i18n = LocalizationHelper.getI18n(ExternalResources.class);
+
    private Composite content;
    private List<Element> elements = new ArrayList<Element>();
-   
+
    /**
     * @param parent
     * @param anchor

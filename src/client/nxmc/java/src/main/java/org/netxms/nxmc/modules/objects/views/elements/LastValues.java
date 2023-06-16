@@ -52,10 +52,11 @@ public class LastValues extends OverviewPageElement
 {
    private static Logger logger = LoggerFactory.getLogger(LastValues.class);
 
-   private I18n i18n = LocalizationHelper.getI18n(LastValues.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LastValues.class);
+
    private TableViewer viewer;
    private ViewRefreshController refreshController;
-   
+
    /**
     * @param parent
     * @param anchor

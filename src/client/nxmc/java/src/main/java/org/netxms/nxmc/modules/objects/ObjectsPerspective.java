@@ -130,7 +130,7 @@ import org.netxms.nxmc.modules.objects.views.VlanView;
 import org.netxms.nxmc.modules.objects.views.VpnView;
 import org.netxms.nxmc.modules.objects.views.WirelessStations;
 import org.netxms.nxmc.modules.objects.views.elements.Comments;
-import org.netxms.nxmc.modules.objects.views.elements.GeneralInfo;
+import org.netxms.nxmc.modules.objects.views.elements.ObjectInfo;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
 import org.netxms.nxmc.modules.snmp.views.MibExplorer;
 import org.netxms.nxmc.modules.worldmap.views.ObjectGeoLocationView;
@@ -156,7 +156,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
    private Label objectName;
    private RoundedLabel objectStatus;
    private Composite objectDetails;
-   private GeneralInfo objectGeneralInfo;
+   private ObjectInfo objectGeneralInfo;
    private PollStates objectPollState;
    private Comments objectComments;
    private ToolBar objectToolBar;
@@ -386,7 +386,7 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          layout.marginWidth = 0;
          objectDetails.setLayout(layout);
 
-         objectGeneralInfo = new GeneralInfo(objectDetails, null, null);
+         objectGeneralInfo = new ObjectInfo(objectDetails, null, null);
          objectGeneralInfo.setVerticalAlignment(SWT.FILL);
 
          objectPollState = new PollStates(objectDetails, objectGeneralInfo, null);

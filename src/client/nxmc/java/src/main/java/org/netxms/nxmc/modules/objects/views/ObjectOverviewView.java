@@ -44,10 +44,14 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.elements.Capabilities;
 import org.netxms.nxmc.modules.objects.views.elements.Commands;
 import org.netxms.nxmc.modules.objects.views.elements.Comments;
+import org.netxms.nxmc.modules.objects.views.elements.Communications;
 import org.netxms.nxmc.modules.objects.views.elements.Connection;
 import org.netxms.nxmc.modules.objects.views.elements.ExternalResources;
-import org.netxms.nxmc.modules.objects.views.elements.GeneralInfo;
+import org.netxms.nxmc.modules.objects.views.elements.ObjectInfo;
+import org.netxms.nxmc.modules.objects.views.elements.Inventory;
 import org.netxms.nxmc.modules.objects.views.elements.LastValues;
+import org.netxms.nxmc.modules.objects.views.elements.Location;
+import org.netxms.nxmc.modules.objects.views.elements.ObjectState;
 import org.netxms.nxmc.modules.objects.views.elements.OverviewPageElement;
 import org.netxms.nxmc.modules.objects.views.elements.PollStates;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -141,17 +145,28 @@ public class ObjectOverviewView extends ObjectView
       gd.minimumWidth = SWT.DEFAULT;
       rightColumn.setLayoutData(gd);
 
-      OverviewPageElement e = new GeneralInfo(leftColumn, null, this);
+      // Left column
+      OverviewPageElement e = new ObjectInfo(leftColumn, null, this);
+      elements.add(e);
+      e = new ObjectState(leftColumn, e, this);
+      elements.add(e);
+      e = new Communications(leftColumn, e, this);
+      elements.add(e);
+      e = new Inventory(leftColumn, e, this);
+      elements.add(e);
+      e = new Location(leftColumn, e, this);
       elements.add(e);
       e = new LastValues(leftColumn, e, this);
-      elements.add(e);
-      e = new Commands(leftColumn, e, this);
       elements.add(e);
       e = new ExternalResources(leftColumn, e, this);
       elements.add(e);
       e = new Comments(leftColumn, e, this);
       elements.add(e);
-      e = new Capabilities(rightColumn, null, this);
+
+      // Right column
+      e = new Commands(rightColumn, null, this);
+      elements.add(e);
+      e = new Capabilities(rightColumn, e, this);
       elements.add(e);
       e = new PollStates(rightColumn, e, this);
       elements.add(e);

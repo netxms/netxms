@@ -95,7 +95,7 @@ public class RackView extends ObjectView implements ISelectionProvider
    @Override
    public int getPriority()
    {
-      return 15;
+      return 1;
    }
 
    /**
