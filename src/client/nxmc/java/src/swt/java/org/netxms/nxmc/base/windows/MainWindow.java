@@ -72,9 +72,10 @@ import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.Startup;
 import org.netxms.nxmc.base.menus.HelpMenuManager;
 import org.netxms.nxmc.base.menus.UserMenuManager;
-import org.netxms.nxmc.base.preferencepages.Appearance;
-import org.netxms.nxmc.base.preferencepages.HttpProxyPreferences;
+import org.netxms.nxmc.base.preferencepages.AppearancePage;
+import org.netxms.nxmc.base.preferencepages.HttpProxyPage;
 import org.netxms.nxmc.base.preferencepages.RegionalSettingsPage;
+import org.netxms.nxmc.base.preferencepages.ThemesPage;
 import org.netxms.nxmc.base.views.Perspective;
 import org.netxms.nxmc.base.views.PerspectiveSeparator;
 import org.netxms.nxmc.base.views.PinLocation;
@@ -661,13 +662,14 @@ public class MainWindow extends Window implements MessageAreaHolder
    private void showPreferences()
    {
       PreferenceManager pm = new PreferenceManager();
-      pm.addToRoot(new PreferenceNode("appearance", new Appearance()));
+      pm.addToRoot(new PreferenceNode("appearance", new AppearancePage()));
       pm.addToRoot(new PreferenceNode("alarm", new AlarmPreferences()));
       pm.addTo("alarm", new PreferenceNode("alarmSounds", new AlarmSounds()));
-      pm.addToRoot(new PreferenceNode("httpProxy", new HttpProxyPreferences()));
+      pm.addToRoot(new PreferenceNode("httpProxy", new HttpProxyPage()));
       pm.addToRoot(new PreferenceNode("networkMap", new GeneralMapPreferences()));
       pm.addToRoot(new PreferenceNode("objectBrowser", new ObjectBrowserPreferences()));
       pm.addToRoot(new PreferenceNode("regionalSettings", new RegionalSettingsPage()));
+      pm.addToRoot(new PreferenceNode("themes", new ThemesPage()));
 
       PreferenceDialog dlg = new PreferenceDialog(getShell(), pm) {
          @Override

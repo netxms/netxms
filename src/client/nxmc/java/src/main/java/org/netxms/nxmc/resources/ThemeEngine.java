@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package org.netxms.nxmc.resources;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,21 +31,27 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.tools.ColorCache;
 import org.netxms.nxmc.tools.ColorConverter;
 import org.netxms.nxmc.tools.FontCache;
-import org.netxms.nxmc.tools.FontTools;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Theme manager
  */
 public class ThemeEngine
 {
+   private static final Logger logger = LoggerFactory.getLogger(ThemeEngine.class);
+
    /**
     * Theme engine instances
     */
 	private static final Map<Display, ThemeEngine> instances = new HashMap<Display, ThemeEngine>();
-	
+
 	/**
 	 * Get shared colors instance for given display
 	 * 
@@ -64,15 +72,15 @@ public class ThemeEngine
 		}
 		return instance;
 	}
-	
+
 	private ColorCache colors;
    private FontCache fonts;
    private Map<String, ThemeElement> elements;
-	
+
 	/**
 	 * @param display
 	 */
-	public ThemeEngine(final Display display)
+   private ThemeEngine(final Display display)
 	{
 		colors = new ColorCache();
       fonts = new FontCache();
@@ -89,9 +97,9 @@ public class ThemeEngine
             fonts.dispose();
 			}
 		});
-      loadDefaultTheme();
+      reload(display);
 	}
-	
+
    /**
     * Get background color definition
     * 
@@ -184,6 +192,113 @@ public class ThemeEngine
    }
 
    /**
+    * Get storage directory for custom themes.
+    *
+    * @return storage directory for custom themes
+    */
+   public static File getThemeStorageDirectory()
+   {
+      return new File(Registry.getStateDir(), "themes");
+   }
+
+   /**
+    * Save theme to storage location.
+    *
+    * @param theme theme to save
+    * @throws Exception
+    */
+   public static void saveTheme(Theme theme) throws Exception
+   {
+      File storage = getThemeStorageDirectory();
+      if (!storage.exists())
+         storage.mkdirs();
+      File file = new File(storage, theme.getName() + ".xml");
+      theme.save(file);
+   }
+
+   /**
+    * Delete theme file from storage.
+    *
+    * @param name theme name
+    * @return true if file successfully deleted
+    */
+   public static boolean deleteTheme(String name)
+   {
+      return new File(getThemeStorageDirectory(), name + ".xml").delete();
+   }
+
+   /**
+    * Reload current instance of theme manager
+    */
+   public static void reload()
+   {
+      Display display = Display.getCurrent();
+      getInstance(display).reload(display);
+   }
+
+   /**
+    * Reload this instance of theme manager
+    *
+    * @param display associated display
+    */
+   private void reload(Display display)
+   {
+      PreferenceStore ps = PreferenceStore.getInstance(display);
+      String currentTheme = ps.getString("CurrentTheme");
+      if ((currentTheme == null) || currentTheme.isEmpty() || currentTheme.equalsIgnoreCase("[automatic]"))
+      {
+         loadDefaultTheme(display);
+      }
+      else if (currentTheme.equalsIgnoreCase("Light [built-in]"))
+      {
+         loadTheme(new DefaultLightTheme());
+      }
+      else if (currentTheme.equalsIgnoreCase("Dark [built-in]"))
+      {
+         loadTheme(new DefaultDarkTheme());
+      }
+      else
+      {
+         boolean loaded = false;
+
+         File base = getThemeStorageDirectory();
+         if (base.isDirectory())
+         {
+            for(File f : base.listFiles(new FilenameFilter() {
+               @Override
+               public boolean accept(File dir, String name)
+               {
+                  return name.endsWith(".xml");
+               }
+            }))
+            {
+               logger.info("Loading theme file " + f.getAbsolutePath());
+               try
+               {
+                  Theme t = Theme.load(f);
+                  if (t.getName().equalsIgnoreCase(currentTheme))
+                  {
+                     logger.info("Applying theme " + t.getName());
+                     boolean darkOSTheme = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
+                     t.setMissingElements(darkOSTheme ? new DefaultDarkTheme() : new DefaultLightTheme());
+                     loadTheme(t);
+                     loaded = true;
+                     break;
+                  }
+               }
+               catch(Exception e)
+               {
+                  logger.error("Error loading theme file " + f.getAbsolutePath(), e);
+               }
+            }
+         }
+
+         if (!loaded)
+            loadDefaultTheme(display);
+      }
+   }
+
+   /**
     * Get theme element chain from selected element up to the root
     *
     * @param path element path (separated with dots)
@@ -205,128 +320,21 @@ public class ThemeEngine
    }
 
    /**
-    * Load default theme
+    * Load theme
+    *
+    * @param theme theme to load
     */
-   private void loadDefaultTheme()
+   private void loadTheme(Theme theme)
    {
-      boolean darkOSTheme = ColorConverter.isDarkColor(Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
-
       elements.clear();
-      elements.put(".", new ThemeElement(null, null, null, 0));
-      if (darkOSTheme)
-      {
-         elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
-         elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));
-         elements.put("DeviceView.Port", new ThemeElement(new RGB(64, 64, 64), null));
-         elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(39, 96, 138), null));
-         elements.put("List.DisabledItem", new ThemeElement(null, new RGB(96, 96, 96)));
-         elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
-         elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
-         elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
-         elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));
-         elements.put("MessageArea.Error", new ThemeElement(new RGB(254, 221, 215), new RGB(51, 51, 51)));
-         elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(51, 51, 51)));
-         elements.put("MessageArea.Success", new ThemeElement(new RGB(223, 240, 208), new RGB(51, 51, 51)));
-         elements.put("MessageArea.Warning", new ThemeElement(new RGB(255, 244, 199), new RGB(51, 51, 51)));
-         elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
-         elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
-         elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
-         elements.put("ObjectTree.Maintenance", new ThemeElement(null, new RGB(136, 136, 204)));
-         elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
-         elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
-         elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
-         elements.put("RuleEditor", new ThemeElement(new RGB(53, 53, 53), new RGB(240, 240, 240)));
-         elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(98, 110, 99), null));
-         elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(80, 84, 87), null));
-         elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(113, 115, 48), null));
-         elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(90, 85, 97), null));
-         elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(94, 102, 82), null));
-         elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(56, 66, 77), null));
-         elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(240, 240, 240)));
-         elements.put("Status.Normal", new ThemeElement(null, new RGB(0, 192, 0)));
-         elements.put("Status.Warning", new ThemeElement(null, new RGB(0, 255, 255)));
-         elements.put("Status.Minor", new ThemeElement(null, new RGB(231, 226, 0)));
-         elements.put("Status.Major", new ThemeElement(null, new RGB(255, 128, 0)));
-         elements.put("Status.Critical", new ThemeElement(null, new RGB(192, 0, 0)));
-         elements.put("Status.Unknown", new ThemeElement(null, new RGB(0, 0, 128)));
-         elements.put("Status.Unmanaged", new ThemeElement(null, new RGB(192, 192, 192)));
-         elements.put("Status.Disabled", new ThemeElement(null, new RGB(128, 64, 0)));
-         elements.put("Status.Testing", new ThemeElement(null, new RGB(255, 128, 255)));
-         elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
-         elements.put("TextInput.Error", new ThemeElement(new RGB(48, 0, 0), null));
-      }
-      else
-      {
-         elements.put("Card.Title", new ThemeElement(new RGB(153, 180, 209), new RGB(0, 0, 0)));
-         elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));
-         elements.put("DeviceView.Port", new ThemeElement(new RGB(224, 224, 224), null));
-         elements.put("DeviceView.PortHighlight", new ThemeElement(new RGB(64, 156, 224), null));
-         elements.put("List.Error", new ThemeElement(null, new RGB(255, 0, 0)));
-         elements.put("List.DisabledItem", new ThemeElement(null, new RGB(172, 172, 172)));
-         elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
-         elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
-         elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));
-         elements.put("MessageArea.Error", new ThemeElement(new RGB(254, 221, 215), new RGB(219, 33, 0)));
-         elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(0, 114, 163)));
-         elements.put("MessageArea.Success", new ThemeElement(new RGB(223, 240, 208), new RGB(60, 133, 0)));
-         elements.put("MessageArea.Warning", new ThemeElement(new RGB(255, 244, 199), new RGB(254, 226, 114)));
-         elements.put("MessageBar", new ThemeElement(new RGB(255, 252, 192), new RGB(0, 0, 0)));
-         elements.put("MibExplorer.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
-         elements.put("ObjectTab.Header", new ThemeElement(new RGB(153, 180, 209), new RGB(255, 255, 255)));
-         elements.put("ObjectTree.Maintenance", new ThemeElement(null, new RGB(96, 96, 144)));
-         elements.put("Rack", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
-         elements.put("Rack.Border", new ThemeElement(new RGB(92, 92, 92), new RGB(92, 92, 92)));
-         elements.put("Rack.EmptySpace", new ThemeElement(new RGB(224, 224, 224), null));
-         elements.put("RuleEditor", new ThemeElement(new RGB(255, 255, 255), new RGB(0, 0, 0)));
-         elements.put("RuleEditor.Title.Disabled", new ThemeElement(new RGB(202, 227, 206), null));
-         elements.put("RuleEditor.Title.Normal", new ThemeElement(new RGB(225, 233, 241), null));
-         elements.put("RuleEditor.Title.Selected", new ThemeElement(new RGB(245, 249, 104), null));
-         elements.put("RuleEditor.Border.Action", new ThemeElement(new RGB(186, 176, 201), null));
-         elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(198, 214, 172), null));
-         elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(153, 180, 209), null));
-         elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(0, 0, 0)));
-         elements.put("Status.Normal", new ThemeElement(null, new RGB(0, 192, 0)));
-         elements.put("Status.Warning", new ThemeElement(null, new RGB(0, 255, 255)));
-         elements.put("Status.Minor", new ThemeElement(null, new RGB(231, 226, 0)));
-         elements.put("Status.Major", new ThemeElement(null, new RGB(255, 128, 0)));
-         elements.put("Status.Critical", new ThemeElement(null, new RGB(192, 0, 0)));
-         elements.put("Status.Unknown", new ThemeElement(null, new RGB(0, 0, 128)));
-         elements.put("Status.Unmanaged", new ThemeElement(null, new RGB(192, 192, 192)));
-         elements.put("Status.Disabled", new ThemeElement(null, new RGB(128, 64, 0)));
-         elements.put("Status.Testing", new ThemeElement(null, new RGB(255, 128, 255)));
-         elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
-         elements.put("TextInput.Error", new ThemeElement(new RGB(255, 0, 0), null));
-      }
-      elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(192, 192, 192), "Metropolis Medium,Segoe UI,Liberation Sans,Verdana,Helvetica", 13));
-      elements.put("Window.Header.Highlight", new ThemeElement(new RGB(71, 113, 134), new RGB(192, 192, 192)));
-      elements.put("Window.PerspectiveSwitcher", new ThemeElement(new RGB(0, 54, 77), new RGB(240, 240, 240),
-            "Metropolis Medium,Segoe UI,Liberation Sans,Verdana,Helvetica", 14));
+      elements.putAll(theme.elements);
    }
 
    /**
-    * Theme element
+    * Load default theme
     */
-   private class ThemeElement
+   private void loadDefaultTheme(Display display)
    {
-      RGB background;
-      RGB foreground;
-      String fontName;
-      int fontHeight;
-
-      public ThemeElement(RGB background, RGB foreground, String fontName, int fontHeight)
-      {
-         this.background = background;
-         this.foreground = foreground;
-         this.fontName = (fontName != null) ? FontTools.findFirstAvailableFont(fontName.split(",")) : null;
-         this.fontHeight = fontHeight;
-      }
-
-      public ThemeElement(RGB background, RGB foreground)
-      {
-         this.background = background;
-         this.foreground = foreground;
-         this.fontName = null;
-         this.fontHeight = 0;
-      }
+      loadTheme(WidgetHelper.isSystemDarkTheme(display) ? new DefaultDarkTheme() : new DefaultLightTheme());
    }
 }

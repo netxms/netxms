@@ -30,7 +30,7 @@ public class DefaultDarkTheme extends Theme
     */
    public DefaultDarkTheme()
    {
-      super("Dark");
+      super("Dark [built-in]");
       elements.put(".", new ThemeElement(null, null, null, 0));
       elements.put("Card.Title", new ThemeElement(new RGB(53, 80, 9), new RGB(240, 240, 240)));
       elements.put("Dashboard", new ThemeElement(new RGB(53, 53, 53), null));

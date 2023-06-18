@@ -39,9 +39,9 @@ import org.xnap.commons.i18n.I18n;
 /**
  * HTTP proxy preferences
  */
-public class HttpProxyPreferences extends PropertyPage
+public class HttpProxyPage extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(HttpProxyPreferences.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(HttpProxyPage.class);
    
 	private Button checkUseProxy;
 	private LabeledText editProxyServer;
@@ -51,7 +51,7 @@ public class HttpProxyPreferences extends PropertyPage
 	private LabeledText editLogin;
 	private LabeledText editPassword;
 
-   public HttpProxyPreferences()
+   public HttpProxyPage()
    {
       super(i18n.tr("HTTP Proxy"));
       setPreferenceStore(PreferenceStore.getInstance());

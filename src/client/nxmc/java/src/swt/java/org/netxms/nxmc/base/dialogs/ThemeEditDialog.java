@@ -16,13 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.dialogs;
+package org.netxms.nxmc.base.dialogs;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -34,21 +33,26 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.ui.eclipse.console.Activator;
-import org.netxms.ui.eclipse.console.resources.Theme;
-import org.netxms.ui.eclipse.console.resources.ThemeElement;
-import org.netxms.ui.eclipse.tools.ColorConverter;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.eclipse.swt.widgets.TableItem;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.resources.Theme;
+import org.netxms.nxmc.resources.ThemeElement;
+import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Theme editing dialog
@@ -63,6 +67,7 @@ public class ThemeEditDialog extends Dialog
    private Theme theme;
    private LabeledText name;
    private TableViewer viewer;
+   private ColorCache colorCache;
    private Map<String, ThemeElement> changedElements = new HashMap<String, ThemeElement>();
 
    /**
@@ -83,15 +88,8 @@ public class ThemeEditDialog extends Dialog
    {
       super.configureShell(newShell);
       newShell.setText("Edit Theme");
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      try
-      {
-         newShell.setSize(settings.getInt("ThemeEditDialog.cx"), settings.getInt("ThemeEditDialog.cy")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(NumberFormatException e)
-      {
-         newShell.setSize(670, 600);
-      }
+      PreferenceStore settings = PreferenceStore.getInstance();
+      newShell.setSize(settings.getAsInteger("ThemeEditDialog.cx", 670), settings.getAsInteger("ThemeEditDialog.cy", 600));
    }
 
    /**
@@ -101,6 +99,7 @@ public class ThemeEditDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
+      colorCache = new ColorCache(dialogArea);
 
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
@@ -123,6 +122,14 @@ public class ThemeEditDialog extends Dialog
       setupViewer();
       viewer.setInput(theme.getTags());
       viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      viewer.getTable().addListener(SWT.PaintItem, new Listener() {
+         @Override
+         public void handleEvent(Event event)
+         {
+            if ((event.index == COLUMN_FOREGROUND) || (event.index == COLUMN_BACKGROUND))
+               drawColorCell(event, event.index);
+         }
+      });
       viewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
@@ -170,14 +177,42 @@ public class ThemeEditDialog extends Dialog
    }
 
    /**
+    * Draw color cell
+    *
+    * @param event
+    * @param column
+    */
+   private void drawColorCell(Event event, int column)
+   {
+      TableItem item = (TableItem)event.item;
+      String tag = (String)item.getData();
+
+      ThemeElement e = changedElements.containsKey(tag) ? changedElements.get(tag) : theme.getElement((String)tag);
+      if (e == null)
+         return;
+
+      RGB rgb = (column == COLUMN_FOREGROUND) ? e.foreground : e.background;
+      if (rgb == null)
+         return;
+
+      int width = viewer.getTable().getColumn(column).getWidth();
+      Color color = colorCache.create(rgb);
+      event.gc.setForeground(colorCache.create(0, 0, 0));
+      event.gc.setBackground(color);
+      event.gc.setLineWidth(1);
+      event.gc.fillRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
+      event.gc.drawRectangle(event.x + 3, event.y + 2, width - 7, event.height - 5);
+   }
+
+   /**
     * Save dialog settings
     */
    private void saveSettings()
    {
       Point size = getShell().getSize();
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      settings.put("ThemeEditDialog.cx", size.x); //$NON-NLS-1$
-      settings.put("ThemeEditDialog.cy", size.y); //$NON-NLS-1$
+      PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set("ThemeEditDialog.cx", size.x);
+      settings.set("ThemeEditDialog.cy", size.y);
    }
 
    /**
@@ -242,22 +277,15 @@ public class ThemeEditDialog extends Dialog
       @Override
       public String getColumnText(Object element, int columnIndex)
       {
-         ThemeElement te;
          switch(columnIndex)
          {
             case COLUMN_TAG:
                return (String)element;
             case COLUMN_FONT:
-               te = changedElements.containsKey(element) ? changedElements.get(element) : theme.getElement((String)element);
+               ThemeElement te = changedElements.containsKey(element) ? changedElements.get(element) : theme.getElement((String)element);
                if ((te.fontName == null) || te.fontName.isEmpty())
                   return "";
                return te.fontName + " " + Integer.toString(te.fontHeight) + "pt";
-            case COLUMN_FOREGROUND:
-               te = changedElements.containsKey(element) ? changedElements.get(element) : theme.getElement((String)element);
-               return (te.foreground != null) ? ColorConverter.rgbToCss(te.foreground) : "";
-            case COLUMN_BACKGROUND:
-               te = changedElements.containsKey(element) ? changedElements.get(element) : theme.getElement((String)element);
-               return (te.background != null) ? ColorConverter.rgbToCss(te.background) : "";
             default:
                return "";
          }

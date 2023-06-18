@@ -16,13 +16,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.dialogs;
+package org.netxms.nxmc.base.dialogs;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -43,12 +42,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableColumn;
-import org.netxms.ui.eclipse.console.Activator;
-import org.netxms.ui.eclipse.console.resources.Theme;
-import org.netxms.ui.eclipse.console.resources.ThemeElement;
-import org.netxms.ui.eclipse.tools.ColorConverter;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.LabeledText;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.widgets.LabeledText;
+import org.netxms.nxmc.resources.Theme;
+import org.netxms.nxmc.resources.ThemeElement;
+import org.netxms.nxmc.tools.ColorConverter;
+import org.netxms.nxmc.tools.WidgetHelper;
 
 /**
  * Theme editing dialog
@@ -83,15 +82,8 @@ public class ThemeEditDialog extends Dialog
    {
       super.configureShell(newShell);
       newShell.setText("Edit Theme");
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      try
-      {
-         newShell.setSize(settings.getInt("ThemeEditDialog.cx"), settings.getInt("ThemeEditDialog.cy")); //$NON-NLS-1$ //$NON-NLS-2$
-      }
-      catch(NumberFormatException e)
-      {
-         newShell.setSize(670, 600);
-      }
+      PreferenceStore settings = PreferenceStore.getInstance();
+      newShell.setSize(settings.getAsInteger("ThemeEditDialog.cx", 670), settings.getAsInteger("ThemeEditDialog.cy", 600));
    }
 
    /**
@@ -175,9 +167,9 @@ public class ThemeEditDialog extends Dialog
    private void saveSettings()
    {
       Point size = getShell().getSize();
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      settings.put("ThemeEditDialog.cx", size.x); //$NON-NLS-1$
-      settings.put("ThemeEditDialog.cy", size.y); //$NON-NLS-1$
+      PreferenceStore settings = PreferenceStore.getInstance();
+      settings.set("ThemeEditDialog.cx", size.x);
+      settings.set("ThemeEditDialog.cy", size.y);
    }
 
    /**

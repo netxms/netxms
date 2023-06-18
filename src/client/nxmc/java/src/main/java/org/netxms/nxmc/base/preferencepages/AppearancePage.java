@@ -33,15 +33,15 @@ import org.xnap.commons.i18n.I18n;
 /**
  * "Appearance" preference page
  */
-public class Appearance extends PropertyPage
+public class AppearancePage extends PropertyPage
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Appearance.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(AppearancePage.class);
 
    private Button checkVerticalLayout;
    private Button checkShowServerClock;
    private Button checkShowTrayIcon;
 
-   public Appearance()
+   public AppearancePage()
    {
       super(i18n.tr("Appearance"));
    }
@@ -88,13 +88,14 @@ public class Appearance extends PropertyPage
       PreferenceStore settings = PreferenceStore.getInstance();
       settings.set("Appearance.VerticalLayout", checkVerticalLayout.getSelection());
       settings.set("Appearance.ShowServerClock", checkShowServerClock.getSelection());
-      settings.set("Appearance.ShowTrayIcon", checkShowTrayIcon.getSelection());
-
-      if (checkShowTrayIcon.getSelection())
-         TrayIconManager.showTrayIcon();
-      else
-         TrayIconManager.hideTrayIcon();
-
+      if (!Registry.IS_WEB_CLIENT)
+      {
+         settings.set("Appearance.ShowTrayIcon", checkShowTrayIcon.getSelection());
+         if (checkShowTrayIcon.getSelection())
+            TrayIconManager.showTrayIcon();
+         else
+            TrayIconManager.hideTrayIcon();
+      }
       return true;
    }
 }

@@ -1461,4 +1461,25 @@ public class WidgetHelper
       job.setUser(false);
       job.start();
    }
+
+   /**
+    * Check if system theme is a dark one.
+    *
+    * @return true if system theme is a dark one
+    */
+   public static boolean isSystemDarkTheme()
+   {
+      return isSystemDarkTheme(Display.getCurrent());
+   }
+
+   /**
+    * Check if system theme is a dark one.
+    *
+    * @param display display to use
+    * @return true if system theme is a dark one
+    */
+   public static boolean isSystemDarkTheme(Display display)
+   {
+      return ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
+   }
 }

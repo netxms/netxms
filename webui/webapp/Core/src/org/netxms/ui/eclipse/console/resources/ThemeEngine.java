@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontCache;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Theme manager
@@ -343,7 +344,6 @@ public class ThemeEngine
     */
    private void loadDefaultTheme(Display display)
    {
-      boolean darkThemeDetected = ColorConverter.isDarkColor(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
-      loadTheme(darkThemeDetected ? new DefaultDarkTheme() : new DefaultLightTheme());
+      loadTheme(WidgetHelper.isSystemDarkTheme(display) ? new DefaultDarkTheme() : new DefaultLightTheme());
    }
 }

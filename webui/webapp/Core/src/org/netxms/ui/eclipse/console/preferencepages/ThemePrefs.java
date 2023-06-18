@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
    private Button newButton;
    private Button editButton;
    private Button removeButton;
-   List<Theme> themes = new ArrayList<Theme>();
+   private List<Theme> themes = new ArrayList<Theme>();
 
    /**
     * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
@@ -80,7 +80,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
 	protected Control createContents(Composite parent)
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
-		
+
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
@@ -430,13 +430,13 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
    /**
     * @see org.eclipse.jface.preference.PreferencePage#performOk()
     */
-	@Override
-	public boolean performOk()
-	{
+   @Override
+   public boolean performOk()
+   {
       getPreferenceStore().setValue("CurrentTheme", themeSelector.getText());
       ThemeEngine.reload();
-		return super.performOk();
-	}
+      return super.performOk();
+   }
 
    /**
     * Get automatic theme.
@@ -445,7 +445,6 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
     */
    private static Theme getAutomaticTheme()
    {
-      boolean darkOSTheme = ColorConverter.isDarkColor(Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND).getRGB());
-      return darkOSTheme ? new DefaultDarkTheme() : new DefaultLightTheme();
+      return WidgetHelper.isSystemDarkTheme() ? new DefaultDarkTheme() : new DefaultLightTheme();
    }
 }

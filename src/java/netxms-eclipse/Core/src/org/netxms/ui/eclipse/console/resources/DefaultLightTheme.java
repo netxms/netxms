@@ -30,7 +30,7 @@ public class DefaultLightTheme extends Theme
     */
    public DefaultLightTheme()
    {
-      super("Light");
+      super("Light [built-in]");
       elements.put(".", new ThemeElement(null, null, null, 0));
       elements.put("Card.Title", new ThemeElement(new RGB(153, 180, 209), new RGB(0, 0, 0)));
       elements.put("Dashboard", new ThemeElement(new RGB(240, 240, 240), null));

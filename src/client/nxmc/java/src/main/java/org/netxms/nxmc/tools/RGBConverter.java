@@ -16,43 +16,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.nxmc.base.windows;
+package org.netxms.nxmc.tools;
 
-import org.eclipse.swt.widgets.TrayItem;
+import org.eclipse.swt.graphics.RGB;
+import org.simpleframework.xml.convert.Converter;
+import org.simpleframework.xml.stream.InputNode;
+import org.simpleframework.xml.stream.OutputNode;
 
 /**
- * Manager for tray icon (compatibility class)
+ * SimpleXML converter for UUID class
  */
-public final class TrayIconManager
+public class RGBConverter implements Converter<RGB>
 {
    /**
-    * 
+    * @see org.simpleframework.xml.convert.Converter#read(org.simpleframework.xml.stream.InputNode)
     */
-   private TrayIconManager()
+   @Override
+   public RGB read(InputNode n) throws Exception
    {
+      return ColorConverter.parseColorDefinition(n.getValue());
    }
 
    /**
-    * Show tray icon
+    * @see org.simpleframework.xml.convert.Converter#write(org.simpleframework.xml.stream.OutputNode, java.lang.Object)
     */
-   public static void showTrayIcon()
+   @Override
+   public void write(OutputNode n, RGB rgb) throws Exception
    {
-   }
-
-   /**
-    * Hide tray icon
-    */
-   public static void hideTrayIcon()
-   {
-   }
-
-   /**
-    * Get tray icon.
-    *
-    * @return tray icon or null
-    */
-   public static TrayItem getTrayIcon()
-   {
-      return null;
+      n.setValue(ColorConverter.rgbToCss(rgb));
    }
 }

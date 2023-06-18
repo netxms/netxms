@@ -16,14 +16,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.preferencepages;
+package org.netxms.nxmc.base.preferencepages;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -35,22 +34,25 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.netxms.ui.eclipse.console.Activator;
-import org.netxms.ui.eclipse.console.dialogs.ThemeEditDialog;
-import org.netxms.ui.eclipse.console.resources.DefaultDarkTheme;
-import org.netxms.ui.eclipse.console.resources.DefaultLightTheme;
-import org.netxms.ui.eclipse.console.resources.Theme;
-import org.netxms.ui.eclipse.console.resources.ThemeEngine;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.nxmc.PreferenceStore;
+import org.netxms.nxmc.base.dialogs.ThemeEditDialog;
+import org.netxms.nxmc.base.propertypages.PropertyPage;
+import org.netxms.nxmc.resources.DefaultDarkTheme;
+import org.netxms.nxmc.resources.DefaultLightTheme;
+import org.netxms.nxmc.resources.Theme;
+import org.netxms.nxmc.resources.ThemeEngine;
+import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Theme preferences
  */
-public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePage
+public class ThemesPage extends PropertyPage
 {
+   private static final Logger logger = LoggerFactory.getLogger(ThemesPage.class);
+
    private Combo themeSelector;
    private Button importButton;
    private Button exportButton;
@@ -60,13 +62,12 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
    private List<Theme> themes = new ArrayList<Theme>();
 
    /**
-    * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
+    * Create page.
     */
-	@Override
-	public void init(IWorkbench workbench)
-	{
-		setPreferenceStore(Activator.getDefault().getPreferenceStore());
-	}
+   public ThemesPage()
+   {
+      super("Themes");
+   }
 
    /**
     * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -91,7 +92,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
       themeSelector = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER, "Active theme", gd);
       updateThemeDropDown();
 
-      String currentTheme = getPreferenceStore().getString("CurrentTheme");
+      String currentTheme = PreferenceStore.getInstance().getAsString("CurrentTheme");
       if ((currentTheme != null) && !currentTheme.isEmpty())
       {
          int index = themeSelector.indexOf(currentTheme);
@@ -252,7 +253,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
             }
             catch(Exception e)
             {
-               Activator.logError("Error loading theme file " + f.getAbsolutePath(), e);
+               logger.error("Error loading theme file " + f.getAbsolutePath(), e);
             }
          }
       }
@@ -294,7 +295,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
          catch(Exception e)
          {
             MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
-            Activator.getDefault().logError("Cannot save theme", e);
+            logger.error("Cannot save theme", e);
          }
       }
    }
@@ -322,7 +323,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
       catch(Exception e)
       {
          MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot import theme (%s)", e.getLocalizedMessage()));
-         Activator.getDefault().logError("Cannot import theme", e);
+         logger.error("Cannot import theme", e);
       }
    }
 
@@ -351,7 +352,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
          catch(Exception e)
          {
             MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot save theme (%s)", e.getLocalizedMessage()));
-            Activator.getDefault().logError("Cannot save theme", e);
+            logger.error("Cannot save theme", e);
          }
       }
    }
@@ -398,7 +399,7 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
       catch(Exception e)
       {
          MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot export theme (%s)", e.getLocalizedMessage()));
-         Activator.getDefault().logError("Cannot export theme", e);
+         logger.error("Cannot export theme", e);
       }
    }
 
@@ -416,14 +417,14 @@ public class ThemePrefs extends PreferencePage implements IWorkbenchPreferencePa
 	}
 
    /**
-    * @see org.eclipse.jface.preference.PreferencePage#performOk()
+    * @see org.netxms.nxmc.base.propertypages.PropertyPage#applyChanges(boolean)
     */
    @Override
-   public boolean performOk()
+   protected boolean applyChanges(boolean isApply)
    {
-      getPreferenceStore().setValue("CurrentTheme", themeSelector.getText());
+      PreferenceStore.getInstance().set("CurrentTheme", themeSelector.getText());
       ThemeEngine.reload();
-      return super.performOk();
+      return true;
    }
 
    /**

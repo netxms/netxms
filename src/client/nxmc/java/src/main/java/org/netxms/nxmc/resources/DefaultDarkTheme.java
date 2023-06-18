@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.console.resources;
+package org.netxms.nxmc.resources;
 
 import org.eclipse.swt.graphics.RGB;
 
@@ -40,6 +40,11 @@ public class DefaultDarkTheme extends Theme
       elements.put("List.Error", new ThemeElement(null, new RGB(220, 35, 61)));
       elements.put("Map.GroupBox", new ThemeElement(null, new RGB(255, 255, 255)));
       elements.put("Map.LastValues", new ThemeElement(null, new RGB(0, 64, 0)));
+      elements.put("MessageArea", new ThemeElement(new RGB(255, 255, 255), new RGB(51, 51, 51)));
+      elements.put("MessageArea.Error", new ThemeElement(new RGB(254, 221, 215), new RGB(51, 51, 51)));
+      elements.put("MessageArea.Info", new ThemeElement(new RGB(227, 245, 252), new RGB(51, 51, 51)));
+      elements.put("MessageArea.Success", new ThemeElement(new RGB(223, 240, 208), new RGB(51, 51, 51)));
+      elements.put("MessageArea.Warning", new ThemeElement(new RGB(255, 244, 199), new RGB(51, 51, 51)));
       elements.put("MessageBar", new ThemeElement(new RGB(138, 148, 47), new RGB(0, 0, 0)));
       elements.put("MibExplorer.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
       elements.put("ObjectTab.Header", new ThemeElement(new RGB(64, 64, 64), new RGB(153, 180, 209)));
@@ -55,16 +60,19 @@ public class DefaultDarkTheme extends Theme
       elements.put("RuleEditor.Border.Condition", new ThemeElement(new RGB(94, 102, 82), null));
       elements.put("RuleEditor.Border.Rule", new ThemeElement(new RGB(56, 66, 77), null));
       elements.put("ServiceAvailability.Legend", new ThemeElement(null, new RGB(240, 240, 240)));
-      elements.put("Status.Normal", new ThemeElement(new RGB(0, 192, 0), new RGB(0, 192, 0)));
-      elements.put("Status.Warning", new ThemeElement(new RGB(0, 255, 255), new RGB(0, 255, 255)));
-      elements.put("Status.Minor", new ThemeElement(new RGB(231, 226, 0), new RGB(231, 226, 0)));
-      elements.put("Status.Major", new ThemeElement(new RGB(255, 128, 0), new RGB(255, 128, 0)));
-      elements.put("Status.Critical", new ThemeElement(new RGB(192, 0, 0), new RGB(192, 0, 0)));
-      elements.put("Status.Unknown", new ThemeElement(new RGB(0, 0, 128), new RGB(0, 0, 128)));
-      elements.put("Status.Unmanaged", new ThemeElement(new RGB(192, 192, 192), new RGB(192, 192, 192)));
-      elements.put("Status.Disabled", new ThemeElement(new RGB(128, 64, 0), new RGB(128, 64, 0)));
-      elements.put("Status.Testing", new ThemeElement(new RGB(255, 128, 255), new RGB(255, 128, 255)));
+      elements.put("Status.Normal", new ThemeElement(null, new RGB(0, 192, 0)));
+      elements.put("Status.Warning", new ThemeElement(null, new RGB(0, 255, 255)));
+      elements.put("Status.Minor", new ThemeElement(null, new RGB(231, 226, 0)));
+      elements.put("Status.Major", new ThemeElement(null, new RGB(255, 128, 0)));
+      elements.put("Status.Critical", new ThemeElement(null, new RGB(192, 0, 0)));
+      elements.put("Status.Unknown", new ThemeElement(null, new RGB(0, 0, 128)));
+      elements.put("Status.Unmanaged", new ThemeElement(null, new RGB(192, 192, 192)));
+      elements.put("Status.Disabled", new ThemeElement(null, new RGB(128, 64, 0)));
+      elements.put("Status.Testing", new ThemeElement(null, new RGB(255, 128, 255)));
       elements.put("StatusMap.Text", new ThemeElement(null, new RGB(0, 0, 0)));
       elements.put("TextInput.Error", new ThemeElement(new RGB(48, 0, 0), null));
+      elements.put("Window.Header", new ThemeElement(new RGB(17, 60, 81), new RGB(192, 192, 192), "Metropolis Medium,Segoe UI,Liberation Sans,Verdana,Helvetica", 13));
+      elements.put("Window.Header.Highlight", new ThemeElement(new RGB(71, 113, 134), new RGB(192, 192, 192)));
+      elements.put("Window.PerspectiveSwitcher", new ThemeElement(new RGB(0, 54, 77), new RGB(240, 240, 240), "Metropolis Medium,Segoe UI,Liberation Sans,Verdana,Helvetica", 14));
    }
 }
