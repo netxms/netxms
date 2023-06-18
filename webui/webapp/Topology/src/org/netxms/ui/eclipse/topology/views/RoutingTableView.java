@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,12 +58,14 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class RoutingTableView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.RoutingTableView"; //$NON-NLS-1$
-	
+
 	public static final int COLUMN_DESTINATION = 0;
 	public static final int COLUMN_NEXT_HOP = 1;
 	public static final int COLUMN_INTERFACE = 2;
 	public static final int COLUMN_TYPE = 3;
-	
+   public static final int COLUMN_METRIC = 4;
+   public static final int COLUMN_PROTOCOL = 5;
+
 	private NXCSession session;
 	private long rootObject;
 	private SortableTableViewer viewer;
@@ -72,7 +74,7 @@ public class RoutingTableView extends ViewPart
 	private Action actionExportAllToCsv;
    private Action actionCopyRowToClipboard;
 
-	/* (non-Javadoc)
+	/**
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
 	 */
 	@Override
@@ -92,19 +94,20 @@ public class RoutingTableView extends ViewPart
 		setPartName(String.format(Messages.get().RoutingTableView_Title, session.getObjectName(rootObject)));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createPartControl(Composite parent)
-	{
-		final String[] names = { Messages.get().RoutingTableView_Destination, Messages.get().RoutingTableView_NextHop, Messages.get().RoutingTableView_Interface, Messages.get().RoutingTableView_Type };
-		final int[] widths = { 180, 140, 200, 140 };
+   /**
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   public void createPartControl(Composite parent)
+   {
+      final String[] names = { Messages.get().RoutingTableView_Destination, Messages.get().RoutingTableView_NextHop, 
+            Messages.get().RoutingTableView_Interface, Messages.get().RoutingTableView_Type, "Metric", "Protocol" };
+      final int[] widths = { 180, 140, 200, 140, 140, 180 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_DESTINATION, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new RoutingTableLabelProvider());
 		viewer.setComparator(new RoutingTableComparator());
-		
+
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RoutingTable"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -117,7 +120,7 @@ public class RoutingTableView extends ViewPart
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-		
+
 		refresh();
 	}
 	/**
@@ -235,7 +238,7 @@ public class RoutingTableView extends ViewPart
                }
             });
          }
-         
+
          @Override
          protected String getErrorMessage()
          {

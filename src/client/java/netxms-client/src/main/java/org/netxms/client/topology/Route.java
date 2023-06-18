@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,23 @@
 package org.netxms.client.topology;
 
 import java.net.InetAddress;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.RoutingProtocol;
 
 /**
  * IP route
  */
 public class Route
 {
-   private InetAddress destination;
-   private int prefixLength;
+   private InetAddressEx destination;
    private InetAddress nextHop;
    private int ifIndex;
-   private int type;
    private String ifName;
-   
+   private int type;
+   private int metric;
+   private RoutingProtocol protocol;
+
    /**
     * Create route object from NXCP message
     * 
@@ -41,28 +44,21 @@ public class Route
     */
    public Route(NXCPMessage msg, long baseId)
    {
-      destination = msg.getFieldAsInetAddress(baseId);
-      prefixLength = msg.getFieldAsInt32(baseId + 1);
-      nextHop = msg.getFieldAsInetAddress(baseId + 2);
-      ifIndex = msg.getFieldAsInt32(baseId + 3);
-      type = msg.getFieldAsInt32(baseId + 4);
-      ifName = msg.getFieldAsString(baseId + 5);
+      destination = msg.getFieldAsInetAddressEx(baseId);
+      nextHop = msg.getFieldAsInetAddress(baseId + 1);
+      ifIndex = msg.getFieldAsInt32(baseId + 2);
+      type = msg.getFieldAsInt32(baseId + 3);
+      metric = msg.getFieldAsInt32(baseId + 4);
+      protocol = RoutingProtocol.getByValue(msg.getFieldAsInt32(baseId + 5));
+      ifName = msg.getFieldAsString(baseId + 6);
    }
 
    /**
     * @return the destination
     */
-   public InetAddress getDestination()
+   public InetAddressEx getDestination()
    {
       return destination;
-   }
-
-   /**
-    * @return the prefixLength
-    */
-   public int getPrefixLength()
-   {
-      return prefixLength;
    }
 
    /**
@@ -82,6 +78,16 @@ public class Route
    }
 
    /**
+    * Get interface name.
+    *
+    * @return interface name
+    */
+   public String getIfName()
+   {
+      return ifName;
+   }
+
+   /**
     * @return the type
     */
    public int getType()
@@ -89,20 +95,28 @@ public class Route
       return type;
    }
 
-   /* (non-Javadoc)
+   /**
+    * @return the metric
+    */
+   public int getMetric()
+   {
+      return metric;
+   }
+
+   /**
+    * @return the protocol
+    */
+   public RoutingProtocol getProtocol()
+   {
+      return protocol;
+   }
+
+   /**
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "Route [" + destination.getHostAddress() + "/" + prefixLength + " gw=" + nextHop.getHostAddress() + " iface=" + ifIndex + " type=" + type + "]";
-   }
-
-   /**
-    * @return the ifName
-    */
-   public String getIfName()
-   {
-      return ifName;
+      return "Route [" + destination.toString() + " gw=" + nextHop.getHostAddress() + " iface=" + ifIndex + " type=" + type + " metric=" + metric + " proto=" + protocol + "]";
    }
 }

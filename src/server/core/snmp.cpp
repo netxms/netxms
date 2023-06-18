@@ -32,12 +32,12 @@ static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTranspo
    size_t nameLen = varbind->getName().length();
 	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
 	{
-		nxlog_debug_tag(_T("topo.ipv4"), 4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, varbind->getName().toString().cstr());
+		nxlog_debug_tag(_T("topology.ipv4"), 4, _T("HandlerRoute(): unexpected nameLen %d (name=%s)"), nameLen, varbind->getName().toString().cstr());
 		return SNMP_ERR_SUCCESS;
 	}
 
    uint32_t oidName[MAX_OID_LEN];
-   memcpy(oidName, varbind->getName().value(), nameLen * sizeof(UINT32));
+   memcpy(oidName, varbind->getName().value(), nameLen * sizeof(uint32_t));
 
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpTransport->getSnmpVersion());
 
@@ -53,6 +53,12 @@ static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTranspo
    oidName[nameLen - 5] = 11;  // Destination mask
    request.bindVariable(new SNMP_Variable(oidName, nameLen));
 
+   oidName[nameLen - 5] = 3;  // Metric
+   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+
+   oidName[nameLen - 5] = 9;  // Protocol
+   request.bindVariable(new SNMP_Variable(oidName, nameLen));
+
    uint32_t dwResult;
    SNMP_PDU *response;
    if ((dwResult = snmpTransport->doRequest(&request, &response)) != SNMP_ERR_SUCCESS)
@@ -65,12 +71,14 @@ static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTranspo
    }
 
    ROUTE route;
-   route.dwDestAddr = ntohl(varbind->getValueAsUInt());
-   route.dwIfIndex = response->getVariable(0)->getValueAsUInt();
-   route.dwNextHop = ntohl(response->getVariable(1)->getValueAsUInt());
-   route.dwRouteType = response->getVariable(2)->getValueAsUInt();
-   route.dwDestMask = ntohl(response->getVariable(3)->getValueAsUInt());
-   routingTable->add(&route);
+   route.destination = InetAddress(ntohl(varbind->getValueAsUInt()), BitsInMask(ntohl(response->getVariable(3)->getValueAsUInt())));
+   route.ifIndex = response->getVariable(0)->getValueAsUInt();
+   route.nextHop = InetAddress(ntohl(response->getVariable(1)->getValueAsUInt()));
+   route.routeType = response->getVariable(2)->getValueAsUInt();
+   int metric = response->getVariable(4)->getValueAsInt();
+   route.metric = (metric >= 0) ? metric : 0;
+   route.protocol = static_cast<RoutingProtocol>(response->getVariable(5)->getValueAsInt());
+   routingTable->add(route);
    delete response;
    return SNMP_ERR_SUCCESS;
 }

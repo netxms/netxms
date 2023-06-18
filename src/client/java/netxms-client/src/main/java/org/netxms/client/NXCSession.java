@@ -11077,11 +11077,11 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
       List<Route> rt = new ArrayList<Route>(count);
-      long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         rt.add(new Route(response, varId));
-         varId += 10;
+         rt.add(new Route(response, fieldId));
+         fieldId += 10;
       }
       return rt;
    }

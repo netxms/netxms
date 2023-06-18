@@ -183,9 +183,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 
    if (fgets(szLine, sizeof(szLine), hFile) != nullptr)
    {
-      if (!strncmp(szLine,
-         "Iface\tDestination\tGateway \tFlags\tRefCnt\t"
-            "Use\tMetric\tMask", 55))
+      if (!strncmp(szLine, "Iface\tDestination\tGateway \tFlags\tRefCnt\tUse\tMetric\tMask", 55))
       {
          nRet = SYSINFO_RC_SUCCESS;
 
@@ -193,18 +191,19 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
          {
             char szIF[64];
             int nType = 0;
+            int metric;
             unsigned int nDestination, nGateway, nMask;
 
             if (sscanf(szLine,
-               "%63s\t%08X\t%08X\t%*d\t%*d\t%*d\t%*d\t%08X",
+               "%63s\t%08X\t%08X\t%*d\t%*d\t%*d\t%d\t%08X",
                szIF,
                &nDestination,
                &nGateway,
-               &nMask) == 4)
+               &metric,
+               &nMask) == 5)
             {
                int nIndex;
                struct ifreq irq;
-
                strlcpy(irq.ifr_name, szIF, IFNAMSIZ);
                if (ioctl(nFd, SIOCGIFINDEX, &irq) != 0)
                {
@@ -217,12 +216,11 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
                }
 
                TCHAR output[256], szBuf1[64], szBuf2[64];
-               _sntprintf(output, 256, _T("%s/%d %s %d %d"),
+               _sntprintf(output, 256, _T("%s/%d %s %d %d %d"),
                   IpToStr(ntohl(nDestination), szBuf1),
                   BitsInMask(htonl(nMask)),
                   IpToStr(ntohl(nGateway), szBuf2),
-                  nIndex,
-                  nType);
+                  nIndex, nType, metric);
                pValue->add(output);
             }
          }

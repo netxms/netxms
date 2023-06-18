@@ -27,8 +27,6 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.client.NXCSession;
@@ -44,7 +42,6 @@ import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.objects.views.helpers.RoutingTableComparator;
 import org.netxms.nxmc.modules.objects.views.helpers.RoutingTableLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -58,6 +55,8 @@ public class RoutingTableView extends ObjectView
 	public static final int COLUMN_NEXT_HOP = 1;
 	public static final int COLUMN_INTERFACE = 2;
 	public static final int COLUMN_TYPE = 3;
+   public static final int COLUMN_METRIC = 4;
+   public static final int COLUMN_PROTOCOL = 5;
 
 	private NXCSession session;
    private SortableTableViewer viewer;
@@ -74,7 +73,7 @@ public class RoutingTableView extends ObjectView
       super(i18n.tr("Routing Table"), ResourceManager.getImageDescriptor("icons/object-views/routing_table.gif"), "RoutingTable", false);
       session = Registry.getSession();
    }
-   
+
    /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
     */
@@ -99,25 +98,17 @@ public class RoutingTableView extends ObjectView
    @Override
    protected void createContent(Composite parent)
    {
-		final String[] names = { i18n.tr("Destination"), i18n.tr("Next hop"), i18n.tr("Interface"), i18n.tr("Type") };
-		final int[] widths = { 180, 140, 200, 140 };
+      final String[] names = { i18n.tr("Destination"), i18n.tr("Next hop"), i18n.tr("Interface"), i18n.tr("Type"), i18n.tr("Metric"), i18n.tr("Protocol") };
+      final int[] widths = { 180, 140, 200, 140, 140, 180 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_DESTINATION, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new RoutingTableLabelProvider());
 		viewer.setComparator(new RoutingTableComparator());
 
-		WidgetHelper.restoreTableViewerSettings(viewer, "RoutingTable"); //$NON-NLS-1$
-		viewer.getTable().addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				WidgetHelper.saveTableViewerSettings(viewer, "RoutingTable"); //$NON-NLS-1$
-			}
-		});
-
 		createActions();
 		createPopupMenu();
 	}
+
 	/**
 	 * Create actions
 	 */
@@ -194,6 +185,7 @@ public class RoutingTableView extends ObjectView
                public void run()
                {
                   viewer.setInput(rt.toArray());
+                  viewer.packColumns();
                }
             });
          }

@@ -2483,9 +2483,8 @@ RoutingTable *AgentConnection::getRoutingTable()
          {
             pSlash = defaultMask;
          }
-         route.dwDestAddr = InetAddress::parse(pBuf).getAddressV4();
-         uint32_t bits = _tcstoul(pSlash, nullptr, 10);
-         route.dwDestMask = (bits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> bits));
+         route.destination = InetAddress::parse(pBuf);
+         route.destination.setMaskBits(_tcstol(pSlash, nullptr, 10));
          pBuf = pChar + 1;
       }
 
@@ -2494,7 +2493,7 @@ RoutingTable *AgentConnection::getRoutingTable()
       if (pChar != nullptr)
       {
          *pChar = 0;
-         route.dwNextHop = InetAddress::parse(pBuf).getAddressV4();
+         route.nextHop = InetAddress::parse(pBuf);
          pBuf = pChar + 1;
       }
 
@@ -2503,14 +2502,27 @@ RoutingTable *AgentConnection::getRoutingTable()
       if (pChar != nullptr)
       {
          *pChar = 0;
-         route.dwIfIndex = _tcstoul(pBuf, nullptr, 10);
+         route.ifIndex = _tcstoul(pBuf, nullptr, 10);
          pBuf = pChar + 1;
       }
 
-      // Route type
-      route.dwRouteType = _tcstoul(pBuf, nullptr, 10);
+      // Route type (maybe followed by optional metric)
+      pChar = _tcschr(pBuf, ' ');
+      if (pChar != nullptr)
+      {
+         *pChar = 0;
+         route.routeType = _tcstoul(pBuf, nullptr, 10);
+         pBuf = pChar + 1;
 
-      routingTable->add(&route);
+         // Metric
+         route.routeType = _tcstoul(pBuf, nullptr, 10);
+      }
+      else
+      {
+         route.routeType = _tcstoul(pBuf, nullptr, 10);
+      }
+
+      routingTable->add(route);
       MemFree(line);
    }
 

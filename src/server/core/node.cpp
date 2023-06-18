@@ -7472,21 +7472,23 @@ DataCollectionError Node::getInternalTable(const TCHAR *name, shared_ptr<Table> 
          table->addColumn(_T("IF_INDEX"), DCI_DT_UINT, _T("Interface index"));
          table->addColumn(_T("IF_NAME"), DCI_DT_STRING, _T("Interface name"));
          table->addColumn(_T("ROUTE_TYPE"), DCI_DT_UINT, _T("Route type"));
+         table->addColumn(_T("METRIC"), DCI_DT_UINT, _T("Metric"));
+         table->addColumn(_T("PROTOCOL"), DCI_DT_STRING, _T("Protocol"));
 
          for(int i = 0; i < rt->size(); i++)
          {
             auto *r = rt->get(i);
             table->addRow();
             table->set(0, i + 1);
-            InetAddress arrd = InetAddress(r->dwDestAddr);
-            table->set(1, arrd.toString());
-            table->set(2, static_cast<uint32_t>(BitsInMask(r->dwDestMask)));
-            arrd = InetAddress(r->dwNextHop);
-            table->set(3, arrd.toString());
-            table->set(4, r->dwIfIndex);
-            auto iface = findInterfaceByIndex(r->dwIfIndex);
+            table->set(1, r->destination.toString());
+            table->set(2, r->destination.getMaskBits());
+            table->set(3, r->nextHop.toString());
+            table->set(4, r->ifIndex);
+            auto iface = findInterfaceByIndex(r->ifIndex);
             table->set(5, (iface != nullptr) ? iface->getName() : _T(""));
-            table->set(6, r->dwRouteType);
+            table->set(6, r->routeType);
+            table->set(7, r->metric);
+            table->set(8, r->protocol);
          }
          delete rt;
          *result = table;
@@ -9457,10 +9459,10 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
       for(int i = 0; i < m_routingTable->size(); i++)
       {
          ROUTE *route = m_routingTable->get(i);
-         if ((destAddr.getAddressV4() & route->dwDestMask) == route->dwDestAddr)
+         if (route->destination.contain(destAddr))
          {
-            *srcIfIndex = route->dwIfIndex;
-            shared_ptr<Interface> iface = findInterfaceByIndex(route->dwIfIndex);
+            *srcIfIndex = route->ifIndex;
+            shared_ptr<Interface> iface = findInterfaceByIndex(route->ifIndex);
             if (iface != nullptr)
             {
                *srcAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
@@ -9476,7 +9478,7 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
    }
    else
    {
-      DbgPrintf(6, _T("Node::getOutwardInterface(%s [%d]): no routing table"), m_name, m_id);
+      nxlog_debug_tag(_T("topology.ip"), 6, _T("Node::getOutwardInterface(%s [%d]): no routing table"), m_name, m_id);
    }
    routingTableUnlock();
    return found;
@@ -9539,11 +9541,10 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
       for(int i = 0; i < m_routingTable->size(); i++)
       {
          ROUTE *entry = m_routingTable->get(i);
-         if ((!nextHopFound || (entry->dwDestMask == 0xFFFFFFFF)) &&
-             ((destAddr.getAddressV4() & entry->dwDestMask) == entry->dwDestAddr))
+         if ((!nextHopFound || (entry->destination.getHostBits() == 0)) && entry->destination.contain(destAddr))
          {
-            shared_ptr<Interface> iface = findInterfaceByIndex(entry->dwIfIndex);
-            if ((entry->dwNextHop == 0) && (iface != nullptr) &&
+            shared_ptr<Interface> iface = findInterfaceByIndex(entry->ifIndex);
+            if (entry->nextHop.isAnyLocal() && (iface != nullptr) &&
                 (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
             {
                // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
@@ -9552,11 +9553,10 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             }
             else
             {
-               *nextHop = entry->dwNextHop;
+               *nextHop = entry->nextHop;
             }
-            *route = entry->dwDestAddr;
-            route->setMaskBits(BitsInMask(entry->dwDestMask));
-            *ifIndex = entry->dwIfIndex;
+            *route = entry->destination;
+            *ifIndex = entry->ifIndex;
             *isVpn = false;
             if (iface != nullptr)
             {
@@ -9564,7 +9564,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
             }
             else
             {
-               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), entry->dwIfIndex);
+               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), entry->ifIndex);
             }
             nextHopFound = true;
             break;
@@ -9573,7 +9573,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
    }
    else
    {
-      DbgPrintf(6, _T("Node::getNextHop(%s [%d]): no routing table"), m_name, m_id);
+      nxlog_debug_tag(_T("topology.ip"), 6, _T("Node::getNextHop(%s [%d]): no routing table"), m_name, m_id);
    }
    routingTableUnlock();
 

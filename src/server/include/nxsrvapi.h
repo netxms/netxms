@@ -673,16 +673,39 @@ public:
 };
 
 /**
- * Route information
+ * IP routing protocols (from RFC1213-MIB)
  */
-typedef struct
+enum RoutingProtocol
 {
-   uint32_t dwDestAddr;
-   uint32_t dwDestMask;
-   uint32_t dwNextHop;
-   uint32_t dwIfIndex;
-   uint32_t dwRouteType;
-} ROUTE;
+   ROUTING_PROTOCOL_UNKNOWN = 0,
+   ROUTING_PROTOCOL_OTHER = 1,
+   ROUTING_PROTOCOL_LOCAL = 2,
+   ROUTING_PROTOCOL_NETMGMT = 3,
+   ROUTING_PROTOCOL_ICMP = 4,
+   ROUTING_PROTOCOL_EGP = 5,
+   ROUTING_PROTOCOL_GGP = 6,
+   ROUTING_PROTOCOL_HELLO = 7,
+   ROUTING_PROTOCOL_RIP = 8,
+   ROUTING_PROTOCOL_IS_IS = 9,
+   ROUTING_PROTOCOL_ES_IS = 10,
+   ROUTING_PROTOCOL_IGRP = 11,
+   ROUTING_PROTOCOL_BBN_SPF_IGP = 12,
+   ROUTING_PROTOCOL_OSPF = 13,
+   ROUTING_PROTOCOL_BGP = 14
+};
+
+/**
+ * IP route information
+ */
+struct ROUTE
+{
+   InetAddress destination;
+   InetAddress nextHop;
+   uint32_t ifIndex;
+   uint32_t routeType;
+   uint32_t metric;
+   RoutingProtocol protocol;
+};
 
 /**
  * Routing table

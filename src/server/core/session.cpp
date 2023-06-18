@@ -13614,17 +13614,18 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
          if (rt != nullptr)
          {
             response.setField(VID_RCC, RCC_SUCCESS);
-            response.setField(VID_NUM_ELEMENTS, (UINT32)rt->size());
+            response.setField(VID_NUM_ELEMENTS, rt->size());
             uint32_t id = VID_ELEMENT_LIST_BASE;
             for(int i = 0; i < rt->size(); i++)
             {
                ROUTE *route = rt->get(i);
-               response.setField(id++, route->dwDestAddr);
-               response.setField(id++, (UINT32)BitsInMask(route->dwDestMask));
-               response.setField(id++, route->dwNextHop);
-               response.setField(id++, route->dwIfIndex);
-               response.setField(id++, route->dwRouteType);
-               shared_ptr<Interface> iface = static_cast<Node&>(*node).findInterfaceByIndex(route->dwIfIndex);
+               response.setField(id++, route->destination);
+               response.setField(id++, route->nextHop);
+               response.setField(id++, route->ifIndex);
+               response.setField(id++, route->routeType);
+               response.setField(id++, route->metric);
+               response.setField(id++, route->protocol);
+               shared_ptr<Interface> iface = static_cast<Node&>(*node).findInterfaceByIndex(route->ifIndex);
                if (iface != nullptr)
                {
                   response.setField(id++, iface->getName());
@@ -13632,10 +13633,10 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
                else
                {
                   TCHAR buffer[32];
-                  _sntprintf(buffer, 32, _T("[%u]"), route->dwIfIndex);
+                  _sntprintf(buffer, 32, _T("[%u]"), route->ifIndex);
                   response.setField(id++, buffer);
                }
-               id += 4;
+               id += 3;
             }
             delete rt;
          }
@@ -13655,8 +13656,7 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
       response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   // Send response
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**

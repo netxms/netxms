@@ -1329,8 +1329,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      {
                         ROUTE *r = routingTable->get(i);
                         TCHAR szIpAddr[16];
-                        _sntprintf(szBuffer, 256, _T("%s/%d"), IpToStr(r->dwDestAddr, szIpAddr), BitsInMask(r->dwDestMask));
-                        ConsolePrintf(pCtx, _T("%-18s %-15s %-6d %d\n"), szBuffer, IpToStr(r->dwNextHop, szIpAddr), r->dwIfIndex, r->dwRouteType);
+                        _sntprintf(szBuffer, 256, _T("%s/%d"), r->destination.toString(szIpAddr), r->destination.getMaskBits());
+                        ConsolePrintf(pCtx, _T("%-18s %-15s %-6d %-3d %-5d %d\n"), szBuffer, r->nextHop.toString(szIpAddr), r->ifIndex, r->routeType, r->metric, r->protocol);
                      }
                      ConsoleWrite(pCtx, _T("\n"));
                   }

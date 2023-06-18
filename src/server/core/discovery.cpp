@@ -968,11 +968,11 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, uint32_t i
 static void CheckHostRoute(Node *node, const ROUTE *route)
 {
    TCHAR buffer[16];
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
-   shared_ptr<Interface> iface = node->findInterfaceByIndex(route->dwIfIndex);
-   if ((iface != nullptr) && iface->getIpAddressList()->findSameSubnetAddress(route->dwDestAddr).isValidUnicast())
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 6, _T("Checking host route %s at %d"), route->destination.toString(buffer), route->ifIndex);
+   shared_ptr<Interface> iface = node->findInterfaceByIndex(route->ifIndex);
+   if ((iface != nullptr) && iface->getIpAddressList()->findSameSubnetAddress(route->destination).isValidUnicast())
    {
-      CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
+      CheckPotentialNode(node, route->destination, route->ifIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
    }
    else
    {
@@ -1030,8 +1030,8 @@ void DiscoveryPoller(PollerInfo *poller)
       for(int i = 0; i < rt->size(); i++)
       {
          ROUTE *route = rt->get(i);
-         CheckPotentialNode(node, route->dwNextHop, route->dwIfIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
-         if ((route->dwDestMask == 0xFFFFFFFF) && (route->dwDestAddr != 0))
+         CheckPotentialNode(node, route->nextHop, route->ifIndex, MacAddress::NONE, DA_SRC_ROUTING_TABLE, node->getId());
+         if (route->destination.isValidUnicast() && (route->destination.getHostBits() == 0))
             CheckHostRoute(node, route);
       }
       delete rt;
@@ -1039,8 +1039,7 @@ void DiscoveryPoller(PollerInfo *poller)
 
    node->executeHookScript(_T("DiscoveryPoll"));
 
-   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished discovery poll of node %s (%s)"),
-             node->getName(), (const TCHAR *)node->getIpAddress().toString());
+   nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("Finished discovery poll of node %s (%s)"), node->getName(), node->getIpAddress().toString().cstr());
    node->completeDiscoveryPoll(GetCurrentTimeMs() - startTime);
    delete poller;
 }

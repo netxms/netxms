@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import org.netxms.nxmc.tools.ComparatorHelper;
  */
 public class RoutingTableComparator extends ViewerComparator
 {
-   /* (non-Javadoc)
+   /**
     * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
    @Override
@@ -44,20 +44,26 @@ public class RoutingTableComparator extends ViewerComparator
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
       {
          case RoutingTableView.COLUMN_DESTINATION:
-            result = ComparatorHelper.compareInetAddresses(r1.getDestination(), r2.getDestination());
+            result = ComparatorHelper.compareInetAddresses(r1.getDestination().getAddress(), r2.getDestination().getAddress());
             if (result == 0)
             {
-               result = r1.getPrefixLength() - r2.getPrefixLength();
+               result = r1.getDestination().getMask() - r2.getDestination().getMask();
             }
-            break;
-         case RoutingTableView.COLUMN_NEXT_HOP:
-            result = ComparatorHelper.compareInetAddresses(r1.getNextHop(), r2.getNextHop());
             break;
          case RoutingTableView.COLUMN_INTERFACE:
             result = r1.getIfName().compareToIgnoreCase(r2.getIfName());
             break;
+         case RoutingTableView.COLUMN_METRIC:
+            result = Integer.compare(r1.getMetric(), r2.getMetric());
+            break;
+         case RoutingTableView.COLUMN_NEXT_HOP:
+            result = ComparatorHelper.compareInetAddresses(r1.getNextHop(), r2.getNextHop());
+            break;
+         case RoutingTableView.COLUMN_PROTOCOL:
+            result = r1.getProtocol().toString().compareTo(r2.getProtocol().toString());
+            break;
          case RoutingTableView.COLUMN_TYPE:
-            result = r1.getType() - r2.getType();
+            result = Integer.compare(r1.getType(), r2.getType());
             break;
          default:
             result = 0;
