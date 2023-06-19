@@ -100,7 +100,7 @@ public class StyleRange
       this.fontStyle = fontStyle;
    }
 
-   /* (non-Javadoc)
+   /**
     * @see java.lang.Object#clone()
     */
    @Override

@@ -27,12 +27,6 @@ import java.util.regex.PatternSyntaxException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.LineStyleEvent;
-import org.eclipse.swt.custom.LineStyleListener;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -56,6 +50,8 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.View;
+import org.netxms.nxmc.base.widgets.StyledText;
+import org.netxms.nxmc.base.widgets.helpers.LineStyler;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.SharedIcons;
 import org.netxms.nxmc.resources.ThemeEngine;
@@ -85,7 +81,6 @@ public class BaseFileViewer extends Composite
    protected boolean scrollLock = false;
    private int lineCountLimit = 0;
    protected StringBuilder content = new StringBuilder();
-   protected LineStyler lineStyler = null;
    protected Pattern appendFilter = null;
    protected String lineRemainder = null;
 
@@ -112,26 +107,6 @@ public class BaseFileViewer extends Composite
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       text.setLayoutData(fd);
-
-      text.addLineStyleListener(new LineStyleListener() {
-         @Override
-         public void lineGetStyle(LineStyleEvent event)
-         {
-            try
-            {
-               event.styles = styleLine(event.lineText);
-               if (event.styles != null)
-               {
-                  for(StyleRange r : event.styles)
-                     r.start += event.lineOffset;
-               }
-            }
-            catch(Exception e)
-            {
-               logger.error("Exception in line style listener", e);
-            }
-         }
-      });
 
       /*** Search bar ***/
       searchBar = new Composite(this, SWT.NONE);
@@ -269,15 +244,6 @@ public class BaseFileViewer extends Composite
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       searchBar.setLayoutData(fd);
-
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            if (lineStyler != null)
-               lineStyler.dispose();
-         }
-      });
    }
 
    /**
@@ -578,22 +544,11 @@ public class BaseFileViewer extends Composite
    }
 
    /**
-    * Style line. Default implementation calls registered line styler if any.
-    * 
-    * @param line line text
-    * @return array of style ranges or null
-    */
-   protected StyleRange[] styleLine(String line)
-   {
-      return (lineStyler != null) ? lineStyler.styleLine(line) : null;
-   }
-
-   /**
     * @return the lineStyler
     */
    public LineStyler getLineStyler()
    {
-      return lineStyler;
+      return text.getLineStyler();
    }
 
    /**
@@ -601,13 +556,7 @@ public class BaseFileViewer extends Composite
     */
    public void setLineStyler(LineStyler lineStyler)
    {
-      if (this.lineStyler == lineStyler)
-         return;
-
-      if (this.lineStyler != null)
-         this.lineStyler.dispose();
-
-      this.lineStyler = lineStyler;
+      text.setLineStyler(lineStyler);
    }
 
    /**
@@ -774,24 +723,5 @@ public class BaseFileViewer extends Composite
     */
    protected void setScrollOnAppend(boolean scrollLock)
    {
-   }
-
-   /**
-    * Line styler interface
-    */
-   public interface LineStyler
-   {
-      /**
-       * Style given line.
-       *
-       * @param line text line
-       * @return styling for the line
-       */
-      public StyleRange[] styleLine(String line);
-
-      /**
-       * Called by file viewer when line styler is no longer needed. Implementing classes can use this method to dispose resources.
-       */
-      public void dispose();
    }
 }

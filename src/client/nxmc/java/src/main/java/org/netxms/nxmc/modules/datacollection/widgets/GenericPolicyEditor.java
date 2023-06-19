@@ -33,7 +33,7 @@ import org.netxms.nxmc.modules.datacollection.views.PolicyEditorView;
  */
 public class GenericPolicyEditor extends AbstractPolicyEditor
 {
-   StyledText editor;   
+   private StyledText editor;
 
    /**
     * Constructor
@@ -44,9 +44,9 @@ public class GenericPolicyEditor extends AbstractPolicyEditor
    public GenericPolicyEditor(Composite parent, int style, AgentPolicy policy, PolicyEditorView view)
    {
       super(parent, style, policy, view);      
-      
+
       setLayout(new FillLayout());
-      
+
       editor = new StyledText(this, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
       editor.setFont(JFaceResources.getTextFont());
       

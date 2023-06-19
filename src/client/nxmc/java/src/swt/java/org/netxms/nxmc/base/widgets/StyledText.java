@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,45 @@
  */
 package org.netxms.nxmc.base.widgets;
 
+import org.eclipse.swt.custom.LineStyleEvent;
+import org.eclipse.swt.custom.LineStyleListener;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.nxmc.base.widgets.helpers.LineStyler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Compatibility wrapper for org.eclipse.swt.custom.StyledText (so that web and desktop code can use same class)
  */
 public class StyledText extends org.eclipse.swt.custom.StyledText
 {
-   private boolean scrollOnAppend = false;
+   private static final Logger logger = LoggerFactory.getLogger(StyledText.class);
 
+   private boolean scrollOnAppend = false;
+   private LineStyler lineStyler = null;
+   private LineStyleListener lineStyleListener = null;
+
+   /**
+    * Create new styled text control.
+    *
+    * @param parent parent composite
+    * @param style control style
+    */
    public StyledText(Composite parent, int style)
    {
       super(parent, style);
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (lineStyler != null)
+               lineStyler.dispose();
+         }
+      });
    }
 
    /**
@@ -73,5 +100,61 @@ public class StyledText extends org.eclipse.swt.custom.StyledText
       super.append(string);
       if (scrollOnAppend)
          scrollToBottom();
+   }
+
+   /**
+    * @return the lineStyler
+    */
+   public LineStyler getLineStyler()
+   {
+      return lineStyler;
+   }
+
+   /**
+    * @param lineStyler the lineStyler to set
+    */
+   public void setLineStyler(LineStyler lineStyler)
+   {
+      if (this.lineStyler == lineStyler)
+         return;
+
+      if (this.lineStyler != null)
+         this.lineStyler.dispose();
+
+      this.lineStyler = lineStyler;
+      if (lineStyler != null)
+      {
+         if (lineStyleListener == null)
+         {
+            lineStyleListener = new LineStyleListener() {
+               @Override
+               public void lineGetStyle(LineStyleEvent event)
+               {
+                  try
+                  {
+                     event.styles = lineStyler.styleLine(event.lineText);
+                     if (event.styles != null)
+                     {
+                        for(StyleRange r : event.styles)
+                           r.start += event.lineOffset;
+                     }
+                  }
+                  catch(Exception e)
+                  {
+                     logger.error("Exception in line style listener", e);
+                  }
+               }
+            };
+            addLineStyleListener(lineStyleListener);
+         }
+      }
+      else
+      {
+         if (lineStyleListener != null)
+         {
+            removeLineStyleListener(lineStyleListener);
+            lineStyleListener = null;
+         }
+      }
    }
 }

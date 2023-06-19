@@ -39,7 +39,7 @@ public class RoutingTableComparator extends ViewerComparator
    {
       Route r1 = (Route)e1;
       Route r2 = (Route)e2;
-      
+
       int result;
       switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
       {

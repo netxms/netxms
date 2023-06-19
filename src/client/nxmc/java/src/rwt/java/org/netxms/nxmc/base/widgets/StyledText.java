@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
@@ -36,6 +38,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.TypedListener;
 import org.netxms.nxmc.base.widgets.helpers.LineStyleEvent;
 import org.netxms.nxmc.base.widgets.helpers.LineStyleListener;
+import org.netxms.nxmc.base.widgets.helpers.LineStyler;
 import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 import org.netxms.nxmc.tools.RefreshTimer;
 import org.netxms.nxmc.tools.WidgetHelper;
@@ -60,6 +63,7 @@ public class StyledText extends Composite
    private Set<LineStyleListener> lineStyleListeners = new HashSet<LineStyleListener>(0);
    private boolean scrollOnAppend = false;
    private boolean forceScroll = false;
+   private LineStyler lineStyler = null;
 
    /**
     * @param parent
@@ -81,30 +85,43 @@ public class StyledText extends Composite
             refresh();
          }
       });
+
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (lineStyler != null)
+               lineStyler.dispose();
+         }
+      });
    }
-   
+
    /**
     * Add modify listener
     * 
     * @param modifyListener
     */
-   public void addModifyListener(ModifyListener modifyListener) {
+   public void addModifyListener(ModifyListener modifyListener)
+   {
       checkWidget();
-      if (modifyListener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+      if (modifyListener == null)
+         SWT.error(SWT.ERROR_NULL_ARGUMENT);
       addListener(SWT.Modify, new TypedListener(modifyListener));
    }
-   
+
    /**
     * Remove modify listener
     * 
     * @param modifyListener remove modify listener
     */
-   public void removeModifyListener(ModifyListener modifyListener) {
+   public void removeModifyListener(ModifyListener modifyListener)
+   {
       checkWidget();
-      if (modifyListener == null) SWT.error(SWT.ERROR_NULL_ARGUMENT);
+      if (modifyListener == null)
+         SWT.error(SWT.ERROR_NULL_ARGUMENT);
       removeListener(SWT.Modify, modifyListener);
    }
-   
+
    /**
     * Create modification event and notify listeners 
     * 
@@ -443,13 +460,22 @@ public class StyledText extends Composite
     */
    private void styleLine(String line, int lineStartPos)
    {
-      LineStyleEvent e = new LineStyleEvent();
-      e.lineText = line;
-      for(LineStyleListener l : lineStyleListeners)
-         l.lineGetStyle(e);
-      if (e.styles != null)
+      StyleRange[] styles;
+      if (lineStyler != null)
       {
-         for(StyleRange r : e.styles)
+         styles = lineStyler.styleLine(line);
+      }
+      else
+      {
+         LineStyleEvent e = new LineStyleEvent();
+         e.lineText = line;
+         for(LineStyleListener l : lineStyleListeners)
+            l.lineGetStyle(e);
+         styles = e.styles;
+      }
+      if (styles != null)
+      {
+         for(StyleRange r : styles)
          {
             r.start += lineStartPos;
             styleRanges.put(r.start, r);
@@ -555,5 +581,27 @@ public class StyledText extends Composite
     */
    public void setEditable(boolean editable)
    {
+   }
+
+   /**
+    * @return the lineStyler
+    */
+   public LineStyler getLineStyler()
+   {
+      return lineStyler;
+   }
+
+   /**
+    * @param lineStyler the lineStyler to set
+    */
+   public void setLineStyler(LineStyler lineStyler)
+   {
+      if (this.lineStyler == lineStyler)
+         return;
+
+      if (this.lineStyler != null)
+         this.lineStyler.dispose();
+
+      this.lineStyler = lineStyler;
    }
 }
