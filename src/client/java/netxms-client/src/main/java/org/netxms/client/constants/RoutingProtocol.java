@@ -42,7 +42,12 @@ public enum RoutingProtocol
    IGRP(11),
    BBN_SPF_IGP(12),
    OSPF(13),
-   BGP(14);
+   BGP(14),
+   IDPR(15),
+   EIGRP(16),
+   DVMRP(17),
+   RPL(18),
+   DHCP(19);
 
    private static Logger logger = LoggerFactory.getLogger(RoutingProtocol.class);
    private static Map<Integer, RoutingProtocol> lookupTable = new HashMap<Integer, RoutingProtocol>();

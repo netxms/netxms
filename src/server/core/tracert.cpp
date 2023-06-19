@@ -193,3 +193,27 @@ shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr
 
    return path;
 }
+
+/**
+ * Select best route to given destination from routing table
+ */
+const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination)
+{
+   const ROUTE *bestRoute = nullptr;
+   for(int i = 0; i < routes.size(); i++)
+   {
+      const ROUTE *route = routes.get(i);
+      if (!route->destination.contain(destination))
+         continue;
+
+      if ((bestRoute == nullptr) ||
+          (bestRoute->destination.getMaskBits() < route->destination.getMaskBits()) ||
+          ((bestRoute->destination.getMaskBits() == route->destination.getMaskBits()) && (bestRoute->metric > route->metric)))
+      {
+         bestRoute = route;
+         if (bestRoute->destination.getHostBits() == 0)
+            break;   // Host route found
+      }
+   }
+   return bestRoute;
+}

@@ -71,7 +71,7 @@ static uint32_t HandlerRoute(SNMP_Variable *varbind, SNMP_Transport *snmpTranspo
    }
 
    ROUTE route;
-   route.destination = InetAddress(ntohl(varbind->getValueAsUInt()), BitsInMask(ntohl(response->getVariable(3)->getValueAsUInt())));
+   route.destination = InetAddress(ntohl(varbind->getValueAsUInt()), ntohl(response->getVariable(3)->getValueAsUInt()));
    route.ifIndex = response->getVariable(0)->getValueAsUInt();
    route.nextHop = InetAddress(ntohl(response->getVariable(1)->getValueAsUInt()));
    route.routeType = response->getVariable(2)->getValueAsUInt();

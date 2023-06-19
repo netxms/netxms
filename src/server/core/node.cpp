@@ -9456,29 +9456,25 @@ bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr
    routingTableLock();
    if (m_routingTable != nullptr)
    {
-      for(int i = 0; i < m_routingTable->size(); i++)
+      const ROUTE *route = SelectBestRoute(*m_routingTable, destAddr);
+      if (route != nullptr)
       {
-         ROUTE *route = m_routingTable->get(i);
-         if (route->destination.contain(destAddr))
+         *srcIfIndex = route->ifIndex;
+         shared_ptr<Interface> iface = findInterfaceByIndex(route->ifIndex);
+         if (iface != nullptr)
          {
-            *srcIfIndex = route->ifIndex;
-            shared_ptr<Interface> iface = findInterfaceByIndex(route->ifIndex);
-            if (iface != nullptr)
-            {
-               *srcAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
-            }
-            else
-            {
-               *srcAddr = m_ipAddress;  // use primary IP if outward interface does not have IP address or cannot be found
-            }
-            found = true;
-            break;
+            *srcAddr = iface->getIpAddressList()->getFirstUnicastAddressV4();
          }
+         else
+         {
+            *srcAddr = m_ipAddress;  // use primary IP if outward interface does not have IP address or cannot be found
+         }
+         found = true;
       }
    }
    else
    {
-      nxlog_debug_tag(_T("topology.ip"), 6, _T("Node::getOutwardInterface(%s [%d]): no routing table"), m_name, m_id);
+      nxlog_debug_tag(_T("topology.ip"), 6, _T("Node::getOutwardInterface(%s [%u]): no routing table"), m_name, m_id);
    }
    routingTableUnlock();
    return found;
@@ -9538,42 +9534,38 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
    routingTableLock();
    if (m_routingTable != nullptr)
    {
-      for(int i = 0; i < m_routingTable->size(); i++)
+      const ROUTE *bestRoute = SelectBestRoute(*m_routingTable, destAddr);
+      if ((bestRoute != nullptr) && (!nextHopFound || (bestRoute->destination.getHostBits() == 0)))
       {
-         ROUTE *entry = m_routingTable->get(i);
-         if ((!nextHopFound || (entry->destination.getHostBits() == 0)) && entry->destination.contain(destAddr))
+         shared_ptr<Interface> iface = findInterfaceByIndex(bestRoute->ifIndex);
+         if (bestRoute->nextHop.isAnyLocal() && (iface != nullptr) &&
+             (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
          {
-            shared_ptr<Interface> iface = findInterfaceByIndex(entry->ifIndex);
-            if (entry->nextHop.isAnyLocal() && (iface != nullptr) &&
-                (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
-            {
-               // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
-               // where each vif has netmask 255.255.255.255 and next hop in routing table set to 0.0.0.0
-               *nextHop = destAddr;
-            }
-            else
-            {
-               *nextHop = entry->nextHop;
-            }
-            *route = entry->destination;
-            *ifIndex = entry->ifIndex;
-            *isVpn = false;
-            if (iface != nullptr)
-            {
-               _tcslcpy(name, iface->getName(), MAX_OBJECT_NAME);
-            }
-            else
-            {
-               _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), entry->ifIndex);
-            }
-            nextHopFound = true;
-            break;
+            // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
+            // where each vif has netmask 255.255.255.255 and next hop in routing table set to 0.0.0.0
+            *nextHop = destAddr;
          }
+         else
+         {
+            *nextHop = bestRoute->nextHop;
+         }
+         *route = bestRoute->destination;
+         *ifIndex = bestRoute->ifIndex;
+         *isVpn = false;
+         if (iface != nullptr)
+         {
+            _tcslcpy(name, iface->getName(), MAX_OBJECT_NAME);
+         }
+         else
+         {
+            _sntprintf(name, MAX_OBJECT_NAME, _T("%d"), bestRoute->ifIndex);
+         }
+         nextHopFound = true;
       }
    }
    else
    {
-      nxlog_debug_tag(_T("topology.ip"), 6, _T("Node::getNextHop(%s [%d]): no routing table"), m_name, m_id);
+      nxlog_debug_tag(_T("topology.ip"), 6, _T("Node::getNextHop(%s [%u]): no routing table"), m_name, m_id);
    }
    routingTableUnlock();
 

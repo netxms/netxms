@@ -404,6 +404,7 @@ struct OSPFInterface
 // Topology functions
 
 shared_ptr<NetworkPath> TraceRoute(const shared_ptr<Node>& src, const shared_ptr<Node>& dest);
+const ROUTE *SelectBestRoute(const RoutingTable& routes, const InetAddress& destination);
 void BuildL2Topology(NetworkMapObjectList &topology, Node *root, int depth, bool includeEndNodes, bool useL1Topology);
 shared_ptr<ForwardingDatabase> GetSwitchForwardingDatabase(Node *node);
 shared_ptr<NetObj> FindInterfaceConnectionPoint(const MacAddress& macAddr, int *type);
