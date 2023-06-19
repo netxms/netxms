@@ -15,7 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */package org.netxms.nxmc.modules.objects.views.helpers;
+ */
+package org.netxms.nxmc.modules.objects.views.helpers;
 
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;

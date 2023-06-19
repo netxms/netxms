@@ -85,6 +85,7 @@ import org.netxms.nxmc.modules.objects.dialogs.MaintanenceScheduleDialog;
 import org.netxms.nxmc.modules.objects.dialogs.ObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.dialogs.RelatedObjectSelectionDialog;
 import org.netxms.nxmc.modules.objects.views.ObjectView;
+import org.netxms.nxmc.modules.objects.views.RouteView;
 import org.netxms.nxmc.modules.objects.views.ScreenshotView;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.resources.SharedIcons;
@@ -122,6 +123,8 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemove;
    private Action actionAddNode;
    private Action actionRemoveNode;
+   private Action actionRouteFrom;
+   private Action actionRouteTo;
    private ObjectAction<?> actionCreateInterfaceDCI;
    private ObjectAction<?> actionForcePolicyInstall;
    private ObjectAction<?> actionLinkAssetToObject;
@@ -344,6 +347,22 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
+      actionRouteFrom = new Action(i18n.tr("Route from...")) {
+         @Override
+         public void run()
+         {
+            showRoute(true);
+         }
+      };
+
+      actionRouteTo = new Action(i18n.tr("Route to...")) {
+         @Override
+         public void run()
+         {
+            showRoute(false);
+         }
+      };
+
       ViewPlacement viewPlacement = new ViewPlacement(view);
       actionCreateInterfaceDCI = new CreateInterfaceDciAction(viewPlacement, selectionProvider);
       actionForcePolicyInstall = new ForcedPolicyDeploymentAction(viewPlacement, selectionProvider);
@@ -530,12 +549,18 @@ public class ObjectContextMenuManager extends MenuManager
       // Screenshots, etc. for single node
       if (singleObject)
       {
+         add(new Separator());
          AbstractObject object = getObjectFromSelection();
          if ((object instanceof Node) && ((Node)object).hasAgent() && ((Node)object).getPlatformName().startsWith("windows-"))
          {
-            add(new Separator());
             add(actionTakeScreenshot);
          }
+         if ((object instanceof Node) && (((Node)object).getPrimaryIP().isValidUnicastAddress() || ((Node)object).isManagementServer()))
+         {
+            add(actionRouteFrom);
+            add(actionRouteTo);
+         }
+         add(new Separator());
          add(actionExecuteScript);
       }
 
@@ -1193,5 +1218,32 @@ public class ObjectContextMenuManager extends MenuManager
             return i18n.tr("Cannot remove node from cluster");
          }
       }.start();
+   }
+
+   /**
+    * Show route between current node and another node selected by user
+    * 
+    * @param swap true to swap source and destination (current node is source by default)
+    */
+   private void showRoute(boolean swap)
+   {
+      AbstractObject source = getObjectFromSelection();
+      if (!(source instanceof Node))
+         return;
+
+      final ObjectSelectionDialog dlg = new ObjectSelectionDialog(view.getWindow().getShell(), ObjectSelectionDialog.createNodeSelectionFilter(false));
+      dlg.enableMultiSelection(false);
+      if (dlg.open() != Window.OK)
+         return;
+
+      AbstractObject destination = dlg.getSelectedObjects().get(0);
+      if (!(destination instanceof Node))
+         return;
+
+      long contextId = (view instanceof ObjectView) ? ((ObjectView)view).getObjectId() : source.getObjectId();
+      view.openView(
+            swap ?
+               new RouteView((Node)destination, (Node)source, contextId) :
+               new RouteView((Node)source, (Node)destination, contextId));
    }
 }

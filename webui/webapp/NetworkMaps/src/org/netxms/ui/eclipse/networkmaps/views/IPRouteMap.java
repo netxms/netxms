@@ -128,7 +128,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 			page.addElement(new NetworkMapObject(elementId, h.getNodeId()));
 			if (prevElementId != 0)
 			{
-            NetworkMapLink link = new NetworkMapLink(page.createLinkId(), prevHop.isVpn() ? NetworkMapLink.VPN : NetworkMapLink.NORMAL, prevElementId, elementId);
+            NetworkMapLink link = new NetworkMapLink(page.createLinkId(), (prevHop.getType() == HopInfo.ROUTE) ? NetworkMapLink.NORMAL : NetworkMapLink.VPN, prevElementId, elementId);
 			   if (!prevHop.getName().isEmpty())
 			      link.setName(prevHop.getName());
 				page.addLink(link);

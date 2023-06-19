@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,12 +27,17 @@ import org.netxms.base.NXCPMessage;
  */
 public class HopInfo
 {
+   public static final int ROUTE = 0;
+   public static final int VPN = 1;
+   public static final int PROXY = 2;
+   public static final int DUMMY = 3;
+
 	private long nodeId;
 	private InetAddress nextHop;
 	private int ifIndex;
-	private boolean isVpn;
+   private int type;
 	private String name;
-	
+
 	/**
 	 * Create hop info object from NXCP message
 	 * 
@@ -44,7 +49,7 @@ public class HopInfo
 		nodeId = msg.getFieldAsInt64(baseId);
 		nextHop = msg.getFieldAsInetAddress(baseId + 1);
 		ifIndex = msg.getFieldAsInt32(baseId + 2);
-		isVpn = msg.getFieldAsBoolean(baseId + 3);
+      type = msg.getFieldAsInt32(baseId + 3);
 		name = msg.getFieldAsString(baseId + 4);
 	}
 
@@ -75,9 +80,9 @@ public class HopInfo
 	/**
 	 * @return the isVpn
 	 */
-	public boolean isVpn()
+   public int getType()
 	{
-		return isVpn;
+      return type;
 	}
 
    /**
