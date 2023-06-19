@@ -138,7 +138,7 @@ static DWORD AdapterNameToIndex(const TCHAR *name)
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return SYSINFO_RC_ERROR;
 
-   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)MemAlloc(size);
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
    {
 #ifdef UNICODE
@@ -162,7 +162,7 @@ static DWORD AdapterNameToIndex(const TCHAR *name)
       }
    }
 
-   free(buffer);
+   MemFree(buffer);
    return ifIndex;
 }
 
@@ -178,7 +178,7 @@ static const bool AdapterIndexToName(DWORD index, TCHAR *name)
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return false;
 
-   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)MemAlloc(size);
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
    {
       for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
@@ -192,7 +192,7 @@ static const bool AdapterIndexToName(DWORD index, TCHAR *name)
       }
    }
 
-   free(buffer);
+   MemFree(buffer);
    return result;
 }
 
@@ -208,7 +208,7 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return SYSINFO_RC_ERROR;
 
-   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)MemAlloc(size);
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
    {
       for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
@@ -241,7 +241,7 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
       result = SYSINFO_RC_ERROR;
    }
 
-   free(buffer);
+   MemFree(buffer);
    return result;
 }
 
@@ -257,7 +257,7 @@ LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return SYSINFO_RC_ERROR;
 
-   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)MemAlloc(size);
    if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
    {
       for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
@@ -270,7 +270,7 @@ LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
       result = SYSINFO_RC_ERROR;
    }
 
-   free(buffer);
+   MemFree(buffer);
    return result;
 }
 
@@ -440,39 +440,43 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstr
  */
 LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
-   MIB_IPFORWARDTABLE *pRoutingTable;
-   DWORD i, dwError, dwSize;
-   TCHAR szBuffer[256], szDestIp[16], szNextHop[16];
-
    // Determine required buffer size
-   dwSize = 0;
-   dwError = GetIpForwardTable(NULL, &dwSize, FALSE);
-   if ((dwError != NO_ERROR) && (dwError != ERROR_INSUFFICIENT_BUFFER))
+   DWORD size = 0;
+   DWORD status = GetIpForwardTable(nullptr, &size, FALSE);
+   if ((status != NO_ERROR) && (status != ERROR_INSUFFICIENT_BUFFER))
       return SYSINFO_RC_ERROR;
 
-   pRoutingTable = (MIB_IPFORWARDTABLE *)malloc(dwSize);
-   if (pRoutingTable == NULL)
+   MIB_IPFORWARDTABLE *routingTable = (MIB_IPFORWARDTABLE *)MemAlloc(size);
+   if (routingTable == nullptr)
       return SYSINFO_RC_ERROR;
 
-   dwError = GetIpForwardTable(pRoutingTable, &dwSize, FALSE);
-   if (dwError != NO_ERROR)
+   status = GetIpForwardTable(routingTable, &size, FALSE);
+   if (status != NO_ERROR)
    {
-      free(pRoutingTable);
+      MemFree(routingTable);
       return SYSINFO_RC_ERROR;
    }
 
-   for(i = 0; i < pRoutingTable->dwNumEntries; i++)
+   TCHAR buffer[256], destAddr[16], nextHop[16];
+   for(DWORD i = 0; i < routingTable->dwNumEntries; i++)
    {
-      _sntprintf(szBuffer, 256, _T("%s/%d %s %d %d"), 
-                 IpToStr(ntohl(pRoutingTable->table[i].dwForwardDest), szDestIp),
-                 BitsInMask(ntohl(pRoutingTable->table[i].dwForwardMask)),
-                 IpToStr(ntohl(pRoutingTable->table[i].dwForwardNextHop), szNextHop),
-                 pRoutingTable->table[i].dwForwardIfIndex,
-                 pRoutingTable->table[i].dwForwardType);
-		value->add(szBuffer);
+      // Report Windows specific protocols as "local"
+      uint32_t proto = routingTable->table[i].dwForwardProto;
+      if ((proto == MIB_IPPROTO_NT_AUTOSTATIC) || (proto == MIB_IPPROTO_NT_STATIC) || (proto == MIB_IPPROTO_NT_STATIC_NON_DOD))
+         proto = MIB_IPPROTO_LOCAL;
+
+      _sntprintf(buffer, 256, _T("%s/%d %s %u %u %u %u"), 
+                 IpToStr(ntohl(routingTable->table[i].dwForwardDest), destAddr),
+                 BitsInMask(ntohl(routingTable->table[i].dwForwardMask)),
+                 IpToStr(ntohl(routingTable->table[i].dwForwardNextHop), nextHop),
+                 routingTable->table[i].dwForwardIfIndex,
+                 routingTable->table[i].dwForwardType,
+                 routingTable->table[i].dwForwardMetric1,
+                 proto);
+		value->add(buffer);
    }
 
-   free(pRoutingTable);
+   MemFree(routingTable);
    return SYSINFO_RC_SUCCESS;
 }
 
