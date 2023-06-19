@@ -40,12 +40,14 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
@@ -103,7 +105,7 @@ public class Dashboards extends ObjectPropertyPage
       return (object instanceof AbstractNode) || (object instanceof Cluster) || (object instanceof Condition) ||
              (object instanceof Container) || (object instanceof EntireNetwork) || (object instanceof MobileDevice) ||
              (object instanceof Sensor) || (object instanceof ServiceRoot) || (object instanceof Subnet) ||
-             (object instanceof Zone);
+             (object instanceof Zone) || (object instanceof Rack) || (object instanceof Chassis);
    }
 
    /**
