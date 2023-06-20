@@ -1359,7 +1359,7 @@ static uint32_t DataCollectionSchedulerRun()
          {
             nxlog_debug_tag(DEBUG_TAG, 7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
 
-            if (dci->getOrigin() == DS_NATIVE_AGENT)
+            if ((dci->getOrigin() == DS_NATIVE_AGENT) || (dci->getOrigin() == DS_MODBUS))
             {
                dci->startDataCollection();
                ThreadPoolExecute(g_dataCollectorPool, LocalDataCollectionCallback, dci);

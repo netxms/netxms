@@ -686,7 +686,7 @@ uint32_t AgentConnectionEx::processCollectedData(NXCPMessage *msg)
    }
 
    int origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
-   if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
+   if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT) && (origin != DS_MODBUS))
    {
       debugPrintf(5, _T("AgentConnectionEx::processCollectedData: unsupported data source type %d"), origin);
       return ERR_INTERNAL_ERROR;
@@ -812,7 +812,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
    shared_ptr<Node> node = static_pointer_cast<Node>(FindObjectById(m_nodeId, OBJECT_NODE));
    if (node == nullptr)
    {
-      debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
+      debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find node object (node ID = %u)"), m_nodeId);
       return ERR_INTERNAL_ERROR;
    }
 
@@ -827,7 +827,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
    int count = request->getFieldAsInt16(VID_NUM_ELEMENTS);
    if (count > MAX_BULK_DATA_BLOCK_SIZE)
       count = MAX_BULK_DATA_BLOCK_SIZE;
-   debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%d]"), count, node->getName(), node->getId());
+   debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%u]"), count, node->getName(), node->getId());
 
    // Use half timeout for sending progress updates
    uint32_t agentTimeout = request->getFieldAsUInt32(VID_TIMEOUT) / 2;
@@ -856,7 +856,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
       }
 
       int origin = request->getFieldAsInt16(fieldId + 1);
-      if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
+      if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT) && (origin != DS_MODBUS))
       {
          debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: unsupported data source type %d (element %d)"), origin, i);
          status[i] = BULK_DATA_REC_FAILURE;
@@ -895,7 +895,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
       shared_ptr<DCObject> dcObject = target->getDCObjectById(dciId, 0);
       if (dcObject == nullptr)
       {
-         debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find DCI with ID %d on object %s [%d] (element %d)"),
+         debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find DCI with ID %u on object %s [%u] (element %d)"),
                      dciId, target->getName(), target->getId(), i);
          status[i] = BULK_DATA_REC_FAILURE;
          continue;
@@ -904,7 +904,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
       int type = request->getFieldAsInt16(fieldId + 2);
       if ((type != DCO_TYPE_ITEM) || (dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
       {
-         debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: DCI %s [%d] on object %s [%d] configuration mismatch (element %d)"),
+         debugPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: DCI %s [%u] on object %s [%u] configuration mismatch (element %d)"),
                      dcObject->getName().cstr(), dciId, target->getName(), target->getId(), i);
          status[i] = BULK_DATA_REC_FAILURE;
          continue;
@@ -912,7 +912,7 @@ uint32_t AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPM
 
       TCHAR *value = request->getFieldAsString(fieldId + 5);
       uint32_t statusCode = request->getFieldAsUInt32(fieldId + 6);
-      debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on object %s [%d] (element %d)"),
+      debugPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%u] (type=%d) (status=%d) on object %s [%u] (element %d)"),
                   dcObject->getName().cstr(), dciId, type, statusCode, target->getName(), target->getId(), i);
       time_t t = request->getFieldAsTime(fieldId + 4);
       bool success = true;

@@ -2437,6 +2437,9 @@ public:
    virtual DataCollectionError getInternalMetric(const TCHAR *name, TCHAR *buffer, size_t size);
    virtual DataCollectionError getInternalTable(const TCHAR *name, shared_ptr<Table> *result);
 
+   virtual uint16_t getModbusTcpPort() const { return 0; }
+   virtual uint16_t getModbusUnitId() const { return 0; }
+
    DataCollectionError getMetricFromScript(const TCHAR *param, TCHAR *buffer, size_t bufSize, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getTableFromScript(const TCHAR *param, shared_ptr<Table> *result, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
    DataCollectionError getListFromScript(const TCHAR *param, StringList **list, DataCollectionTarget *targetObject, const shared_ptr<DCObjectInfo>& dciInfo);
@@ -3331,6 +3334,7 @@ protected:
 
    bool checkSshConnection();
 
+   void updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyName);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
    bool updateInterfaceConfiguration(uint32_t requestId);
@@ -3381,6 +3385,9 @@ public:
    virtual int32_t getZoneUIN() const override { return m_zoneUIN; }
 
    virtual json_t *toJson() override;
+
+   virtual uint16_t getModbusTcpPort() const override { return m_modbusTcpPort; }
+   virtual uint16_t getModbusUnitId() const override { return m_modbusUnitId; }
 
    shared_ptr<Cluster> getMyCluster();
 
@@ -3493,8 +3500,6 @@ public:
    uint16_t getCipStatus() const { return m_cipStatus; }
    uint8_t getCipState() const { return m_cipState; }
    uint16_t getCipVendorCode() const { return m_cipVendorCode; }
-   uint16_t getModbusTcpPort() const { return m_modbusTcpPort; }
-   uint16_t getModbusUnitId() const { return m_modbusUnitId; }
    uint32_t getModbusProxy() const { return m_modbusProxy; }
    const char *getSyslogCodepage() const { return m_syslogCodepage; }
    const char *getSnmpCodepage() const { return m_snmpCodepage; }
@@ -3626,7 +3631,7 @@ public:
    uint32_t getEffectiveSnmpProxy(bool backup = false);
    uint32_t getEffectiveEtherNetIPProxy(bool backup = false);
    uint32_t getEffectiveMqttProxy();
-   uint32_t getEffectiveModbusProxy();
+   uint32_t getEffectiveModbusProxy(bool backup = false);
    uint32_t getEffectiveSshProxy();
    uint32_t getEffectiveIcmpProxy();
    uint32_t getEffectiveAgentProxy();

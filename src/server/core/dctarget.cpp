@@ -1847,7 +1847,55 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
    info->msg->setField(info->baseInfoFieldId++, dco->getId());
    info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(dco->getType()));
    info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(dco->getDataSource()));
-   info->msg->setField(info->baseInfoFieldId++, dco->getName());
+   if (dco->getDataSource() == DS_MODBUS)
+   {
+      uint16_t unitId = getModbusUnitId();
+      int address;
+      const TCHAR *source;
+      const TCHAR *conversion;
+      if (ParseModbusMetric(dco->getName(), &unitId, &source, &address, &conversion))
+      {
+         StringBuffer metric(_T("Modbus."));
+         if (!_tcsnicmp(source, _T("hold:"), 5))
+         {
+            metric.append(_T("HoldingRegister("));
+         }
+         else if (!_tcsnicmp(source, _T("input:"), 6))
+         {
+            metric.append(_T("InputRegister("));
+         }
+         else if (!_tcsnicmp(source, _T("coil:"), 5))
+         {
+            metric.append(_T("Coil("));
+         }
+         else if (!_tcsnicmp(source, _T("discrete:"), 9))
+         {
+            metric.append(_T("DiscreteInput("));
+         }
+         metric.append(getPrimaryIpAddress().toString());
+         metric.append(_T(","));
+         metric.append(getModbusTcpPort());
+         metric.append(_T(","));
+         metric.append(unitId);
+         metric.append(_T(","));
+         metric.append(address);
+         if (*conversion != 0)
+         {
+            metric.append(_T(","));
+            metric.append(conversion);
+         }
+         metric.append(_T(")"));
+         info->msg->setField(info->baseInfoFieldId++, metric);
+      }
+      else
+      {
+         info->msg->setField(info->baseInfoFieldId++, _T("invalid_metric"));
+      }
+   }
+   else
+   {
+      info->msg->setField(info->baseInfoFieldId++, dco->getName());
+   }
    info->msg->setField(info->baseInfoFieldId++, dco->getEffectivePollingInterval());
    info->msg->setFieldFromTime(info->baseInfoFieldId++, dco->getLastPollTime());
    info->msg->setField(info->baseInfoFieldId++, m_guid);
@@ -1855,7 +1903,7 @@ void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const 
    if (dco->getType() == DCO_TYPE_ITEM)
       info->msg->setField(info->baseInfoFieldId++, static_cast<const DCItem*>(dco)->getSnmpRawValueType());
    else
-      info->msg->setField(info->baseInfoFieldId++, (INT16)0);
+      info->msg->setField(info->baseInfoFieldId++, static_cast<int16_t>(0));
    info->msg->setField(info->baseInfoFieldId++, primaryProxyId);
 
    if (dco->getDataSource() == DS_SNMP_AGENT)

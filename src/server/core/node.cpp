@@ -28,7 +28,6 @@
 #include <ncdrv.h>
 
 #define DEBUG_TAG_DC_AGENT_CACHE    _T("dc.agent.cache")
-#define DEBUG_TAG_DC_MODBUS         _T("dc.modbus")
 #define DEBUG_TAG_DC_SNMP           _T("dc.snmp")
 #define DEBUG_TAG_ICMP_POLL         _T("poll.icmp")
 #define DEBUG_TAG_NODE_INTERFACES   _T("node.iface")
@@ -1504,7 +1503,7 @@ InterfaceList *Node::getInterfaceList()
 
          int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useAliases=%d, useIfXTable=%s)"),
-                  m_name, m_id, useAliases, useIfXTable ? _T("true") : _T("false"));
+                  m_name, m_id, useAliases, BooleanToString(useIfXTable));
          pIfList = m_driver->getInterfaces(pTransport, this, m_driverData, useAliases, useIfXTable);
 
          if ((pIfList != nullptr) && (m_capabilities & NC_IS_BRIDGE))
@@ -2050,7 +2049,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
          nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
                    m_name, m_id, addr.toString(buffer), addr.getMaskBits(),
                    (pCluster != nullptr) ? pCluster->getName() : _T("(null)"),
-                   (pCluster != nullptr) ? pCluster->getId() : 0, addToSubnet ? _T("yes") : _T("no"));
+                   (pCluster != nullptr) ? pCluster->getId() : 0, BooleanToString(addToSubnet));
          if (addToSubnet)
          {
             shared_ptr<Subnet> pSubnet = FindSubnetForNode(m_zoneUIN, addr);
@@ -3064,7 +3063,7 @@ restart_status_poll:
          }
       }
 
-      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_state);
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): allDown=%s, statFlags=0x%08X"), m_name, BooleanToString(allDown), m_state);
       if (allDown)
       {
          if (!(m_state & DCSF_UNREACHABLE))
@@ -3074,7 +3073,7 @@ restart_status_poll:
             poller->setStatus(_T("check network path"));
             NetworkPathCheckResult patchCheckResult = checkNetworkPath(rqId);
             nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 6, _T("StatusPoll(%s): network path check result: (rootCauseFound=%s, reason=%d, node=%u, iface=%u)"),
-                     m_name, patchCheckResult.rootCauseFound ? _T("true") : _T("false"), static_cast<int>(patchCheckResult.reason),
+                     m_name, BooleanToString(patchCheckResult.rootCauseFound), static_cast<int>(patchCheckResult.reason),
                      patchCheckResult.rootCauseNodeId, patchCheckResult.rootCauseInterfaceId);
             if (patchCheckResult.rootCauseFound)
             {
@@ -7260,48 +7259,15 @@ DataCollectionError Node::getMetricFromDeviceDriver(const TCHAR *metric, TCHAR *
  */
 DataCollectionError Node::getMetricFromModbus(const TCHAR *metric, TCHAR *buffer, size_t size)
 {
-   // Expected metric format is
-   // [unit:][source:]address[|conversion]
-
    uint16_t unitId = m_modbusUnitId;
-
-   const TCHAR *addressPart = metric;
-   const TCHAR *source = _T("hold:");
-   const TCHAR *p = _tcschr(metric, _T(':'));
-   if (p != nullptr)
+   const TCHAR *source;
+   const TCHAR *conversion;
+   int address = 0;
+   if (!ParseModbusMetric(metric, &unitId, &source, &address, &conversion))
    {
-      // At least one : is present, check for second one
-      p++;
-      const TCHAR *n = _tcschr(p, _T(':'));
-      if (n != nullptr)
-      {
-         TCHAR *eptr;
-         unitId = static_cast<uint16_t>(_tcstoul(metric, &eptr, 10));
-         if ((unitId > 255) || (*eptr != _T(':')))
-         {
-            nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): invalid unit ID"), m_name, metric);
-            return DCE_NOT_SUPPORTED;
-         }
-         source = p;
-         addressPart = n + 1;
-      }
-      else
-      {
-         // Only source and address
-         source = metric;
-         addressPart = p;
-      }
-   }
-
-   TCHAR *eptr;
-   int address = _tcstol(addressPart, &eptr, 0);
-   if ((address < 0) || (address > 65535) || ((*eptr != 0) && (*eptr != _T('|'))))
-   {
-      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): invalid register address"), m_name, metric);
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("Node(%s)->getMetricFromModbus(%s): cannot parse metric"), m_name, metric);
       return DCE_NOT_SUPPORTED;
    }
-
-   const TCHAR *conversion = (*eptr == _T('|')) ? eptr + 1 : _T("");
 
    ModbusTransport *transport = createModbusTransport();
    if (transport == nullptr)
@@ -9771,9 +9737,9 @@ uint32_t Node::getEffectiveMqttProxy()
 /**
  * Get effective MODBUS proxy for this node
  */
-uint32_t Node::getEffectiveModbusProxy()
+uint32_t Node::getEffectiveModbusProxy(bool backup)
 {
-   return GetEffectiveProtocolProxy(this, m_modbusProxy, m_zoneUIN, false);
+   return GetEffectiveProtocolProxy(this, m_modbusProxy, m_zoneUIN, backup);
 }
 
 /**
@@ -11486,10 +11452,10 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
              (dco->getSourceNode() == 0))
          {
             msg.setField(baseInfoFieldId++, dco->getId());
-            msg.setField(baseInfoFieldId++, (INT16)dco->getType());
-            msg.setField(baseInfoFieldId++, (INT16)dco->getDataSource());
+            msg.setField(baseInfoFieldId++, static_cast<int16_t>(dco->getType()));
+            msg.setField(baseInfoFieldId++, static_cast<int16_t>(dco->getDataSource()));
             msg.setField(baseInfoFieldId++, dco->getName());
-            msg.setField(baseInfoFieldId++, (INT32)dco->getEffectivePollingInterval());
+            msg.setField(baseInfoFieldId++, dco->getEffectivePollingInterval());
             msg.setFieldFromTime(baseInfoFieldId++, dco->getLastPollTime());
             baseInfoFieldId += 4;
             extraInfoFieldId += 1000;
@@ -11503,6 +11469,8 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       }
       unlockDciAccess();
 
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 6, _T("Node::syncDataCollectionWithAgent(%s [%u]): %d local metrics"), m_name, m_id, count);
+
       ProxyInfo data;
       data.proxyId = m_id;
       data.count = count;
@@ -11515,6 +11483,8 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       g_idxAccessPointById.forEach(super::collectProxyInfoCallback, &data);
       g_idxChassisById.forEach(super::collectProxyInfoCallback, &data);
       g_idxNodeById.forEach(super::collectProxyInfoCallback, &data);
+
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 6, _T("Node::syncDataCollectionWithAgent(%s [%u]): %d proxied metrics"), m_name, m_id, data.count - count);
 
       msg.setField(VID_NUM_ELEMENTS, data.count);
       msg.setField(VID_NUM_NODES, data.nodeInfoCount);
@@ -11539,12 +11509,12 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 
    if (rcc == ERR_SUCCESS)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::syncDataCollectionWithAgent: node %s [%d] synchronized"), m_name, (int)m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::syncDataCollectionWithAgent: node %s [%u] synchronized"), m_name, m_id);
       m_state &= ~NSF_CACHE_MODE_NOT_SUPPORTED;
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::syncDataCollectionWithAgent: node %s [%d] not synchronized (%s)"), m_name, (int)m_id, AgentErrorCodeToText(rcc));
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 4, _T("Node::syncDataCollectionWithAgent: node %s [%u] not synchronized (%s)"), m_name, m_id, AgentErrorCodeToText(rcc));
       if ((rcc == ERR_UNKNOWN_COMMAND) || (rcc == ERR_NOT_IMPLEMENTED))
       {
          m_state |= NSF_CACHE_MODE_NOT_SUPPORTED;
@@ -11596,6 +11566,23 @@ void Node::onDataCollectionChangeAsyncCallback()
 }
 
 /**
+ * Update proxy node data collection configuration if required
+ */
+void Node::updateProxyDataCollectionConfiguration(uint32_t proxyId, const TCHAR *proxyName)
+{
+   if (proxyId == 0)
+      return;
+
+   shared_ptr<Node> proxy = static_pointer_cast<Node>(FindObjectById(proxyId, OBJECT_NODE));
+   if (proxy == nullptr)
+      return;
+
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%u]): executing data collection sync for %s proxy %s [%u]"),
+         m_name, m_id, proxyName, proxy->getName(), proxy->getId());
+   ThreadPoolExecute(g_mainThreadPool, proxy, &Node::onDataCollectionChangeAsyncCallback);
+}
+
+/**
  * Called when data collection configuration changed
  */
 void Node::onDataCollectionChange()
@@ -11604,33 +11591,14 @@ void Node::onDataCollectionChange()
 
    if (m_capabilities & NC_IS_NATIVE_AGENT)
    {
-      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync"), m_name, m_id);
+      nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%u]): executing data collection sync"), m_name, m_id);
       ThreadPoolExecute(g_mainThreadPool, self(), &Node::onDataCollectionChangeAsyncCallback);
    }
 
-   uint32_t snmpProxyId = getEffectiveSnmpProxy(false);
-   if (snmpProxyId != 0)
-   {
-      shared_ptr<Node> snmpProxy = static_pointer_cast<Node>(FindObjectById(snmpProxyId, OBJECT_NODE));
-      if (snmpProxy != nullptr)
-      {
-         nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for SNMP proxy %s [%d]"),
-               m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
-         ThreadPoolExecute(g_mainThreadPool, snmpProxy, &Node::onDataCollectionChangeAsyncCallback);
-      }
-   }
-
-   snmpProxyId = getEffectiveSnmpProxy(true);
-   if (snmpProxyId != 0)
-   {
-      shared_ptr<Node> snmpProxy = static_pointer_cast<Node>(FindObjectById(snmpProxyId, OBJECT_NODE));
-      if (snmpProxy != nullptr)
-      {
-         nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for backup SNMP proxy %s [%d]"),
-               m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
-         ThreadPoolExecute(g_mainThreadPool, snmpProxy, &Node::onDataCollectionChangeAsyncCallback);
-      }
-   }
+   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(false), _T("SNMP"));
+   updateProxyDataCollectionConfiguration(getEffectiveSnmpProxy(true), _T("backup SNMP"));
+   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(false), _T("Modbus"));
+   updateProxyDataCollectionConfiguration(getEffectiveModbusProxy(true), _T("backup Modbus"));
 }
 
 /**
@@ -11786,6 +11754,13 @@ void Node::collectProxyInfo(ProxyInfo *info)
    bool backupSnmpProxy = (getEffectiveSnmpProxy(true) == info->proxyId);
    bool isTarget = false;
 
+   uint32_t primaryModbusProxy = getEffectiveModbusProxy(false);
+   bool modbusProxy = (primaryModbusProxy == info->proxyId);
+   bool backupModbusProxy = (getEffectiveModbusProxy(true) == info->proxyId);
+
+   nxlog_debug_tag(DEBUG_TAG_DC_AGENT_CACHE, 5, _T("Node::collectProxyInfo(%s [%u]): proxyId=%u snmp=%s backup-snmp=%s modbus=%s backup-modbus=%s"),
+      m_name, m_id, info->proxyId, BooleanToString(snmpProxy), BooleanToString(backupSnmpProxy), BooleanToString(modbusProxy), BooleanToString(backupModbusProxy));
+
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
    {
@@ -11794,12 +11769,23 @@ void Node::collectProxyInfo(ProxyInfo *info)
          continue;
 
       if ((((snmpProxy || backupSnmpProxy) && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
+           ((modbusProxy || backupModbusProxy) && (dco->getDataSource() == DS_MODBUS) && (dco->getSourceNode() == 0)) ||
            ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId))) &&
           dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
       {
-         addProxyDataCollectionElement(info, dco, backupSnmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) ? primarySnmpProxy : 0);
-         if (dco->getDataSource() == DS_SNMP_AGENT)
-            isTarget = true;
+         switch(dco->getDataSource())
+         {
+            case DS_NATIVE_AGENT:
+               addProxyDataCollectionElement(info, dco, 0);
+               break;
+            case DS_SNMP_AGENT:
+               addProxyDataCollectionElement(info, dco, backupSnmpProxy ? primarySnmpProxy : 0);
+               isTarget = true;
+               break;
+            case DS_MODBUS:
+               addProxyDataCollectionElement(info, dco, backupModbusProxy ? primaryModbusProxy : 0);
+               break;
+         }
       }
    }
    unlockDciAccess();

@@ -379,7 +379,7 @@ public:
    SharedString getName() const { return GetAttributeWithLock(m_name, m_mutex); }
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutex); }
 	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
-   int getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
+   int32_t getEffectivePollingInterval() const { return (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM) ? std::max(m_pollingInterval, 1) : m_defaultPollingInterval; }
    shared_ptr<DataCollectionOwner> getOwner() const { return m_owner.lock(); }
    uint32_t getOwnerId() const { return m_ownerId; }
    const TCHAR *getOwnerName() const;
@@ -930,6 +930,8 @@ public:
 void InitDataCollector();
 void WriteFullParamListToMessage(NXCPMessage *msg, int origin, uint16_t flags);
 int GetDCObjectType(uint32_t nodeId, uint32_t dciId);
+
+bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **source, int *address, const TCHAR **conversion);
 
 void CalculateItemValueDiff(ItemValue *result, int dataType, const ItemValue &value1, const ItemValue &value2);
 void CalculateItemValueAverage(ItemValue *result, int dataType, const ItemValue * const *valueList, size_t sampleCount);

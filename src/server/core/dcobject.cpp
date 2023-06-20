@@ -1174,7 +1174,7 @@ void DCObject::setTransformationScript(TCHAR *source)
  */
 int16_t DCObject::getAgentCacheMode()
 {
-   if ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT))
+   if ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT) && (m_source != DS_MODBUS))
       return AGENT_CACHE_OFF;
 
    shared_ptr<Node> node;
@@ -1198,6 +1198,9 @@ int16_t DCObject::getAgentCacheMode()
       return AGENT_CACHE_OFF;
 
    if ((m_source == DS_SNMP_AGENT) && (node->getEffectiveSnmpProxy() == 0))
+      return AGENT_CACHE_OFF;
+
+   if ((m_source == DS_MODBUS) && (node->getEffectiveModbusProxy() == 0))
       return AGENT_CACHE_OFF;
 
    uint32_t mode = DCF_GET_CACHE_MODE(m_flags);

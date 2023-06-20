@@ -608,3 +608,56 @@ int GetDCObjectType(uint32_t nodeId, uint32_t dciId)
    }
    return DCO_TYPE_ITEM;   // default
 }
+
+/**
+ * Parse Modbus metric
+ * Expected metric format is
+ *    [unit:][source:]address[|conversion]
+ * If unit is not set in metric, unitId passed to the function will remain unchanged
+ */
+bool ParseModbusMetric(const TCHAR *metric, uint16_t *unitId, const TCHAR **source, int *address, const TCHAR **conversion)
+{
+   // Expected metric format is
+   // [unit:][source:]address[|conversion]
+
+   const TCHAR *addressPart = metric;
+   *source = _T("hold:");
+   const TCHAR *p = _tcschr(metric, _T(':'));
+   if (p != nullptr)
+   {
+      // At least one : is present, check for second one
+      p++;
+      const TCHAR *n = _tcschr(p, _T(':'));
+      if (n != nullptr)
+      {
+         TCHAR *eptr;
+         uint16_t uid = static_cast<uint16_t>(_tcstoul(metric, &eptr, 10));
+         if ((uid > 255) || (*eptr != _T(':')))
+         {
+            nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("ParseModbusMetric(%s): invalid unit ID"), metric);
+            return false;
+         }
+         *unitId = uid;
+         *source = p;
+         addressPart = n + 1;
+      }
+      else
+      {
+         // Only source and address
+         *source = metric;
+         addressPart = p;
+      }
+   }
+
+   TCHAR *eptr;
+   int a = _tcstol(addressPart, &eptr, 0);
+   if ((a < 0) || (a > 65535) || ((*eptr != 0) && (*eptr != _T('|'))))
+   {
+      nxlog_debug_tag(DEBUG_TAG_DC_MODBUS, 7, _T("ParseModbusMetric(%s): invalid register address"), metric);
+      return false;
+   }
+   *address = a;
+
+   *conversion = (*eptr == _T('|')) ? eptr + 1 : _T("");
+   return true;
+}
