@@ -127,8 +127,40 @@ enum class ConversionType
    FLOAT_ABCD,
    FLOAT_CDAB,
    FLOAT_BADC,
-   FLOAT_DCBA
+   FLOAT_DCBA,
+   DOUBLE_BE,
+   DOUBLE_LE
 };
+
+/**
+ * Get double value from Modbus register data (big endian)
+ */
+static inline double modbus_get_double_be(uint16_t *input)
+{
+#if WORDS_BIGENDIAN
+   return *reinterpret_cast<double*>(input);
+#else
+   uint16_t value[4];
+   for(int i = 0; i < 4; i++)
+      value[i] = htons(input[i]);
+   return bswap_double(*reinterpret_cast<double*>(value));
+#endif
+}
+
+/**
+ * Get double value from Modbus register data (little endian)
+ */
+static inline double modbus_get_double_le(uint16_t *input)
+{
+#if WORDS_BIGENDIAN
+   return bswap_double(*reinterpret_cast<double*>(input));
+#else
+   uint16_t value[4];
+   for(int i = 0; i < 4; i++)
+      value[i] = htons(input[i]);
+   return *reinterpret_cast<double*>(value);
+#endif
+}
 
 /**
  * Read registers from device and convert data according to given specification. Possible specifications:
@@ -138,10 +170,14 @@ enum class ConversionType
  *    uint32      : 32 bit unsigned integer (will read 2 registers)
  *    int64       : 64 bit signed integer (will read 4 registers)
  *    uint64      : 64 bit unsigned integer (will read 4 registers)
+ *    float       : 4 byte floating point number, ABCD byte order
  *    float-abcd  : 4 byte floating point number, ABCD byte order
  *    float-cdab  : 4 byte floating point number, CDAB byte order
  *    float-badc  : 4 byte floating point number, BADC byte order
  *    float-dcba  : 4 byte floating point number, DCBA byte order
+ *    double      : 8 byte floating point number, big endian byte order
+ *    double-be   : 8 byte floating point number, big endian byte order
+ *    double-le   : 8 byte floating point number, little endian byte order
  *    string-N    : string of N characters (will read (N + 1) / 2 registers)
  *    string-N-CP : string of N characters encoded using codepage CP (will read (N + 1) / 2 registers)
  *
@@ -215,6 +251,16 @@ static int ModbusReadRegisters(modbus_t *mb, bool input, int address, const TCHA
       nr = 2;
       type = ConversionType::FLOAT_DCBA;
    }
+   else if (!_tcsicmp(conversion, _T("double-be")) || !_tcsicmp(conversion, _T("double")))
+   {
+      nr = 4;
+      type = ConversionType::DOUBLE_BE;
+   }
+   else if (!_tcsicmp(conversion, _T("double-le")))
+   {
+      nr = 4;
+      type = ConversionType::DOUBLE_LE;
+   }
    else
    {
       return -1;  // invalid conversion
@@ -245,6 +291,12 @@ static int ModbusReadRegisters(modbus_t *mb, bool input, int address, const TCHA
       {
          switch(type)
          {
+            case ConversionType::DOUBLE_BE:
+               _sntprintf(value, size, _T("%f"), modbus_get_double_be(rawData));
+               break;
+            case ConversionType::DOUBLE_LE:
+               _sntprintf(value, size, _T("%f"), modbus_get_double_le(rawData));
+               break;
             case ConversionType::FLOAT_ABCD:
                _sntprintf(value, size, _T("%f"), modbus_get_float_abcd(rawData));
                break;
