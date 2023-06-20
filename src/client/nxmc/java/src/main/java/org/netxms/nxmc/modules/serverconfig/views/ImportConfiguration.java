@@ -1,22 +1,44 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2023 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.nxmc.modules.serverconfig.views;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
@@ -25,21 +47,34 @@ import org.netxms.nxmc.base.widgets.helpers.LineStyler;
 import org.netxms.nxmc.base.widgets.helpers.StyleRange;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.filemanager.widgets.LocalFileSelector;
-import org.netxms.nxmc.tools.ColorCache;
+import org.netxms.nxmc.resources.SharedIcons;
+import org.netxms.nxmc.resources.StatusDisplayInfo;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
+/**
+ * "Import Configuration" view
+ */
 public class ImportConfiguration extends ConfigurationView
 {
    private static final I18n i18n = LocalizationHelper.getI18n(ServerVariables.class);
-   
-   private LocalFileSelector fileSelector;
 
+   private LocalFileSelector fileSelector;
    private Button buttonImport;
    private Group options;
    private List<Button> buttonFlags = new ArrayList<Button>();
    private Button buttonSelectAll;
    private Button buttonDeselectAll;
    private StyledText text;
+   private Action actionImport;
+
+   /**
+    * Create view
+    */
+   public ImportConfiguration()
+   {
+      super(i18n.tr("Import Configuration"), SharedIcons.IMPORT, "ImportConfiguration", false);
+   }
 
    /**
     * @see org.netxms.nxmc.base.views.View#createContent(org.eclipse.swt.widgets.Composite)
@@ -50,7 +85,7 @@ public class ImportConfiguration extends ConfigurationView
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       parent.setLayout(layout);
-      
+
       fileSelector = new LocalFileSelector(parent, SWT.NONE, false, SWT.OPEN | SWT.SINGLE);
       fileSelector.setLabel(i18n.tr("File name"));
       GridData gd = new GridData();
@@ -61,25 +96,30 @@ public class ImportConfiguration extends ConfigurationView
          @Override
          public void modifyText(ModifyEvent e)
          {
-            buttonImport.setEnabled(true);            
+            boolean fileSelected = (fileSelector.getFile() != null);
+            buttonImport.setEnabled(fileSelected);
+            actionImport.setEnabled(fileSelected);
          }
       });
-      
+
       buttonImport = new Button(parent, SWT.PUSH);
-      buttonImport.setText("Import");
+      buttonImport.setText(i18n.tr("Import"));
+      buttonImport.setToolTipText(i18n.tr("Start import from selected file (F9)"));
       buttonImport.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            run();
+            doImport();
          }
       });
       gd = new GridData();
       gd.verticalAlignment = SWT.BOTTOM;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonImport.setLayoutData(gd);
       buttonImport.setEnabled(false);
-      
+
       options = new Group(parent, SWT.NONE);
+      options.setText(i18n.tr("Options"));
       GridLayout optionsLayout = new GridLayout();
       optionsLayout.numColumns = 3;
       options.setLayout(optionsLayout);
@@ -88,20 +128,19 @@ public class ImportConfiguration extends ConfigurationView
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 2;
       options.setLayoutData(gd);
-      
-      addFlag(i18n.tr("Replace existing &actions"), NXCSession.CFG_IMPORT_REPLACE_ACTIONS);
-      addFlag(i18n.tr("Replace existing &DCI summary tables"), NXCSession.CFG_IMPORT_REPLACE_SUMMARY_TABLES);
-      addFlag(i18n.tr("Replace existing EPP &rules"), NXCSession.CFG_IMPORT_REPLACE_EPP_RULES);
-      addFlag(i18n.tr("Replace existing &events"), NXCSession.CFG_IMPORT_REPLACE_EVENTS);
-      addFlag(i18n.tr("Replace existing library &scripts"), NXCSession.CFG_IMPORT_REPLACE_SCRIPTS);
-      addFlag(i18n.tr("Replace existing &object tools"), NXCSession.CFG_IMPORT_REPLACE_OBJECT_TOOLS);
-      addFlag(i18n.tr("Replace existing S&NMP traps"), NXCSession.CFG_IMPORT_REPLACE_TRAPS);
-      addFlag(i18n.tr("Replace existing &templates"), NXCSession.CFG_IMPORT_REPLACE_TEMPLATES);
-      addFlag(i18n.tr("Replace existing &template &names and &locations"), NXCSession.CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS);
-      addFlag(i18n.tr("Remove empty template groups after import"), NXCSession.CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS);
-      addFlag(i18n.tr("Replace &web service definitions"), NXCSession.CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS);
-      addFlag(i18n.tr("Replace existing &asset management defenitions"), NXCSession.CFG_IMPORT_REPLACE_AM_DEFINITIONS);
-      
+
+      addOptionCheckBox(i18n.tr("Replace &actions"), NXCSession.CFG_IMPORT_REPLACE_ACTIONS);
+      addOptionCheckBox(i18n.tr("Replace asset &management attributes"), NXCSession.CFG_IMPORT_REPLACE_AM_DEFINITIONS);
+      addOptionCheckBox(i18n.tr("Replace &DCI summary tables"), NXCSession.CFG_IMPORT_REPLACE_SUMMARY_TABLES);
+      addOptionCheckBox(i18n.tr("Replace EPP &rules"), NXCSession.CFG_IMPORT_REPLACE_EPP_RULES);
+      addOptionCheckBox(i18n.tr("Replace &events"), NXCSession.CFG_IMPORT_REPLACE_EVENTS);
+      addOptionCheckBox(i18n.tr("Replace library &scripts"), NXCSession.CFG_IMPORT_REPLACE_SCRIPTS);
+      addOptionCheckBox(i18n.tr("Replace &object tools"), NXCSession.CFG_IMPORT_REPLACE_OBJECT_TOOLS);
+      addOptionCheckBox(i18n.tr("Replace S&NMP traps"), NXCSession.CFG_IMPORT_REPLACE_TRAPS);
+      addOptionCheckBox(i18n.tr("Replace &templates"), NXCSession.CFG_IMPORT_REPLACE_TEMPLATES);
+      addOptionCheckBox(i18n.tr("Replace template names and &locations"), NXCSession.CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS);
+      addOptionCheckBox(i18n.tr("Replace &web service definitions"), NXCSession.CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS);
+      addOptionCheckBox(i18n.tr("Remove empty template &groups after import"), NXCSession.CFG_IMPORT_DELETE_EMPTY_TEMPLATE_GROUPS);
 
       Composite buttons = new Composite(options, SWT.NONE);
       layout = new GridLayout();
@@ -113,10 +152,9 @@ public class ImportConfiguration extends ConfigurationView
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = 3;
       buttons.setLayoutData(gd);
-      
-           
+
       buttonSelectAll = new Button(buttons, SWT.PUSH);
-      buttonSelectAll.setText("Select all");
+      buttonSelectAll.setText(i18n.tr("&Select all"));
       buttonSelectAll.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -129,10 +167,11 @@ public class ImportConfiguration extends ConfigurationView
       });
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonSelectAll.setLayoutData(gd);
-      
+
       buttonDeselectAll = new Button(buttons, SWT.PUSH);
-      buttonDeselectAll.setText("Clear selection");
+      buttonDeselectAll.setText(i18n.tr("&Clear all"));
       buttonDeselectAll.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -145,9 +184,12 @@ public class ImportConfiguration extends ConfigurationView
       });
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonDeselectAll.setLayoutData(gd);
-      
-      text = new StyledText(parent, SWT.H_SCROLL | SWT.V_SCROLL);
+
+      new Label(parent, SWT.NONE).setText(i18n.tr("Import log"));
+
+      text = new StyledText(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
       text.setEditable(false);
       text.setFont(JFaceResources.getTextFont());
       gd = new GridData();
@@ -157,28 +199,34 @@ public class ImportConfiguration extends ConfigurationView
       gd.grabExcessVerticalSpace = true;
       gd.horizontalSpan = 2;
       text.setLayoutData(gd);
-      
-      ColorCache colorCache = new ColorCache(parent);      
-      LineStyler lineStyler = new LineStyler() {
 
-         private final RGB COLOR_ERROR = new RGB(192, 0, 0);
-         private final RGB COLOR_SUCCESS = new RGB(155, 187, 89);
-         
+      LineStyler lineStyler = new LineStyler() {
          @Override
          public StyleRange[] styleLine(String line)
          {
             List<StyleRange> styles = new ArrayList<StyleRange>(16);
-            
-            if (line.startsWith("ERROR")) 
+
+            if (line.startsWith("[ERROR]") || line.startsWith("[FAILURE]"))
             {
-               StyleRange r = new StyleRange(0, line.length(), colorCache.create(COLOR_ERROR), null);
+               StyleRange r = new StyleRange(1, line.indexOf(']') - 1, StatusDisplayInfo.getStatusColor(Severity.CRITICAL), null);
                r.fontStyle = SWT.BOLD;
                styles.add(r);
             }
-            
-            if (line.startsWith("SUCCESS")) 
+            else if (line.startsWith("[WARNING]"))
             {
-               StyleRange r = new StyleRange(0, line.length(), colorCache.create(COLOR_SUCCESS), null);
+               StyleRange r = new StyleRange(1, 7, StatusDisplayInfo.getStatusColor(Severity.MAJOR), null);
+               r.fontStyle = SWT.BOLD;
+               styles.add(r);
+            }
+            else if (line.startsWith("[SUCCESS]"))
+            {
+               StyleRange r = new StyleRange(1, 7, StatusDisplayInfo.getStatusColor(Severity.NORMAL), null);
+               r.fontStyle = SWT.BOLD;
+               styles.add(r);
+            }
+            else if (line.startsWith("[INFO]"))
+            {
+               StyleRange r = new StyleRange(1, 4, StatusDisplayInfo.getStatusColor(Severity.UNKNOWN), null);
                r.fontStyle = SWT.BOLD;
                styles.add(r);
             }
@@ -191,36 +239,77 @@ public class ImportConfiguration extends ConfigurationView
          }
       };
       text.setLineStyler(lineStyler);
+
+      createActions();
    }
-   
-   private void addFlag(String text, int flag)
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionImport = new Action(i18n.tr("Import"), SharedIcons.IMPORT) {
+         @Override
+         public void run()
+         {
+            doImport();
+         }
+      };
+      actionImport.setEnabled(false);
+      addKeyBinding("F9", actionImport);
+   }
+
+   /**
+    * Add checkbox for import option
+    *
+    * @param text option text
+    * @param flag bit flag to set
+    */
+   private void addOptionCheckBox(String text, int flag)
    {
       Button button = new Button(options, SWT.CHECK);
       button.setText(text);
-      button.setData(flag);
+      button.setData("BitFlag", flag);
       buttonFlags.add(button);
    }
 
-   private void run()
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalToolBar(org.eclipse.jface.action.IToolBarManager)
+    */
+   @Override
+   protected void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionImport);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionImport);
+      super.fillLocalMenu(manager);
+   }
+
+   /**
+    * Run import
+    */
+   private void doImport()
+   {
+      text.setText("");
+
       int flagBuilder = 0;
       for (Button button : buttonFlags)
       {
          if (button.getSelection())
-         {
-            flagBuilder |= (Integer)button.getData();            
-         }
+            flagBuilder |= (Integer)button.getData("BitFlag");
       }
-      
+
       final int flags = flagBuilder;
       final NXCSession session = Registry.getSession();
-      Job job = new Job(i18n.tr("Import configuration"), this) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return i18n.tr("Failed to import configuration");
-         }
-
+      Job job = new Job(i18n.tr("Importing configuration"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -231,8 +320,7 @@ public class ImportConfiguration extends ConfigurationView
                   @Override
                   public void run()
                   {
-                     text.setText(result);
-                     text.append("SUCCESS");
+                     text.setText(result + "[SUCCESS] Import completed successfully");
                   }
                });
             }
@@ -242,17 +330,22 @@ public class ImportConfiguration extends ConfigurationView
                   @Override
                   public void run()
                   {
-                     text.setText(e.getAdditionalInfo());
-                     text.append("ERROR");
+                     String output = e.getAdditionalInfo();
+                     text.setText(((output != null) ? output : "") + "[FAILURE] Import failed (" + e.getLocalizedMessage() + ")");
                   }
                });         
-               throw e;
             }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Failed to import configuration");
          }
       };
       job.start();
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#isModified()
     */
@@ -261,7 +354,7 @@ public class ImportConfiguration extends ConfigurationView
    {
       return false;
    }
-   
+
    /**
     * @see org.netxms.nxmc.base.views.ConfigurationView#save()
     */

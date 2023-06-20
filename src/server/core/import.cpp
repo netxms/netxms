@@ -226,7 +226,7 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
 	   code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
 	   if (code >= FIRST_USER_EVENT_ID)
 	   {
-	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Event template without GUID and code %d is not in system range"), code);
+	      context->log(NXLOG_WARNING, _T("ImportEvent()"), _T("Event template without GUID and code %d is not in system range"), code);
          code = 0;
 	   }
 	   else
@@ -436,7 +436,7 @@ static void DeleteEmptyTemplateGroup(shared_ptr<NetObj> templateGroup)
    if (parent != nullptr)
       DeleteEmptyTemplateGroup(parent);
 
-   nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template group %s [%d] with GUID %s deleted as there was empty"), templateGroup->getName(), templateGroup->getId());
+   nxlog_debug_tag(DEBUG_TAG, 5, _T("ImportConfig(): template group %s [%d] with GUID %s deleted because it was empty"), templateGroup->getName(), templateGroup->getId());
 }
 
 /**
@@ -463,7 +463,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 	if (eventsRoot != nullptr)
 	{
       unique_ptr<ObjectArray<ConfigEntry>> events = eventsRoot->getSubEntries(_T("event#*"));
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("%d events to import"), events->size());
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("%d event templates to import"), events->size());
       for (int i = 0; i < events->size(); i++)
       {
 			rcc = ImportEvent(events->get(i), (flags & CFG_IMPORT_REPLACE_EVENTS) != 0, context);
@@ -476,7 +476,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 			ReloadEvents();
 			NotifyClientSessions(NX_NOTIFY_RELOAD_EVENT_DB, 0);
 		}
-		context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Events imported"));
+		context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Event templates import completed"));
 	}
 
 	// Import traps
@@ -491,7 +491,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 			if (rcc != RCC_SUCCESS)
 				goto stop_processing;
 		}
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("SNMP traps imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("SNMP traps import completed"));
 	}
 
 	// Import templates
@@ -558,7 +558,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
             object->unhide();
 		   }
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Templates imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Templates import completed"));
 	}
 
    // Import actions
@@ -570,7 +570,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       {
          ImportAction(actions->get(i), (flags & CFG_IMPORT_REPLACE_ACTIONS) != 0, context);
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Actions imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Actions import completed"));
    }
 
 	// Import rules
@@ -595,7 +595,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
             goto stop_processing;
          }
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Event processing policy rules imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Event processing policy import completed"));
 	}
 
 	// Import scripts
@@ -607,7 +607,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       {
          ImportScript(scripts->get(i), (flags & CFG_IMPORT_REPLACE_SCRIPTS) != 0, context);
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Scripts imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Script import completed"));
 	}
 
 	// Import object tools
@@ -619,7 +619,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       {
          ImportObjectTool(objectTools->get(i), (flags & CFG_IMPORT_REPLACE_OBJECT_TOOLS) != 0, context);
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Object tools imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Object tools import completed"));
 	}
 
 	// Import summary tables
@@ -631,7 +631,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       {
          ImportSummaryTable(summaryTables->get(i), (flags & CFG_IMPORT_REPLACE_SUMMARY_TABLES) != 0, context);
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("DCI summary tables imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("DCI summary tables import completed"));
 	}
 
 	// Import web service definitions
@@ -643,7 +643,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
       {
          ImportWebServiceDefinition(*webServiceDef->get(i), (flags & CFG_IMPORT_REPLACE_WEB_SVCERVICE_DEFINITIONS) != 0, context);
       }
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Web service definitions imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Web service definitions import completed"));
    }
 
    // Import asset management schema
@@ -651,7 +651,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
    if (assetsRoot != nullptr)
    {
       ImportAssetManagementSchema(*assetsRoot, (flags & CFG_IMPORT_REPLACE_AM_DEFINITIONS) != 0, context);
-      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Asset management schema imported"));
+      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Asset management schema import completed"));
    }
 
 stop_processing:

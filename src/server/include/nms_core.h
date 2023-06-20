@@ -1201,8 +1201,18 @@ class ImportContext : public StringBuffer
 public:
    void log(int severity, const TCHAR *function, const TCHAR *message, ...)
    {
-      if (severity == NXLOG_ERROR)
-         append(_T("ERROR: "));
+      switch(severity)
+      {
+         case NXLOG_ERROR:
+            append(_T("[ERROR] "));
+            break;
+         case NXLOG_WARNING:
+            append(_T("[WARNING] "));
+            break;
+         default:
+            append(_T("[INFO] "));
+            break;
+      }
 
       va_list args;
       va_start(args, message);
@@ -1211,7 +1221,7 @@ public:
       append(_T("\n"));
 
       TCHAR logMessage[1024];
-      _sntprintf(logMessage, 1024, _T("%s: %s%s"), function, severity == NXLOG_ERROR ? _T("ERROR: ") : _T(""), message);
+      _sntprintf(logMessage, 1024, _T("%s: %s%s"), function, (severity == NXLOG_ERROR) ? _T("ERROR: ") : _T(""), message);
       va_start(args, message);
       nxlog_debug_tag2(_T("import"), 4, logMessage, args);
       va_end(args);

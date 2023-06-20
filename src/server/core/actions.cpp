@@ -864,7 +864,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context)
 {
    if (config->getSubEntryValue(_T("name")) == nullptr)
    {
-      context->log(NXLOG_ERROR, _T("ImportAction()"), _T("No name specified"));
+      context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Missing action name"));
       return false;
    }
 
@@ -876,7 +876,7 @@ bool ImportAction(ConfigEntry *config, bool overwrite, ImportContext *context)
       const TCHAR *name = config->getSubEntryValue(_T("name"));
       if (s_actions.findElement(ActionNameComparator, name) != NULL)
       {
-         context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Name \"%s\" already exists"), name);
+         context->log(NXLOG_ERROR, _T("ImportAction()"), _T("Action with name \"%s\" already exists"), name);
          return false;
       }
 
