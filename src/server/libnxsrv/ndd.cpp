@@ -479,7 +479,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 {
    bool success = false;
 
-	nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, useIfXTable ? _T("true") : _T("false"));
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, BooleanToString(useIfXTable));
 
    // Get number of interfaces
 	// Some devices may not return ifNumber at all or return completely insane values

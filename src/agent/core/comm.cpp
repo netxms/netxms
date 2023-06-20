@@ -93,8 +93,7 @@ bool RegisterSession(const shared_ptr<CommSession>& session)
    {
       g_sessions.add(session);
       g_sessionLock.unlock();
-      session->debugPrintf(4, _T("Session registered (control=%s, master=%s)"),
-               session->isControlServer() ? _T("true") : _T("false"), session->isMasterServer() ? _T("true") : _T("false"));
+      session->debugPrintf(4, _T("Session registered (control=%s, master=%s)"), BooleanToString(session->isControlServer()), BooleanToString(session->isMasterServer()));
       return true;
    }
 

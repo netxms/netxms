@@ -1163,7 +1163,7 @@ void DCTable::createExportRecord(StringBuffer &xml) const
    xml.append(_T("</instanceRetentionTime>\n\t\t\t\t\t<comments>"));
    xml.append(EscapeStringForXML2(m_comments));
    xml.append(_T("</comments>\n\t\t\t\t\t<isDisabled>"));
-   xml.append((m_status == ITEM_STATUS_DISABLED) ? _T("true") : _T("false"));
+   xml.append(BooleanToString(m_status == ITEM_STATUS_DISABLED));
    xml.append(_T("</isDisabled>\n"));
 
 	if (m_transformationScriptSource != nullptr)

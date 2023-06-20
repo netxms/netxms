@@ -997,21 +997,21 @@ private:
 public:
    ResourcePool()
    {
-      m_free = NULL;
-      m_used = NULL;
+      m_free = nullptr;
+      m_used = nullptr;
    }
 
    ~ResourcePool()
    {
       ResourcePoolElement<T> *handle = m_used;
-      while(handle != NULL)
+      while(handle != nullptr)
       {
          Destroy(handle->resource);
          handle = handle->next;
       }
 
       handle = m_free;
-      while(handle != NULL)
+      while(handle != nullptr)
       {
          Destroy(handle->resource);
          handle = handle->next;
@@ -1024,7 +1024,7 @@ public:
    T *acquire()
    {
       ResourcePoolElement<T> *handle;
-      if (m_free != NULL)
+      if (m_free != nullptr)
       {
          handle = m_free;
          m_free = handle->next;
@@ -1043,16 +1043,16 @@ public:
     */
    void release(T *resource)
    {
-      ResourcePoolElement<T> *handle = m_used, *prev = NULL;
-      while((handle != NULL) && (handle->resource != resource))
+      ResourcePoolElement<T> *handle = m_used, *prev = nullptr;
+      while((handle != nullptr) && (handle->resource != resource))
       {
          prev = handle;
          handle = handle->next;
       }
-      if (handle != NULL)
+      if (handle != nullptr)
       {
          Reset(handle->resource);
-         if (prev != NULL)
+         if (prev != nullptr)
             prev->next = handle->next;
          else
             m_used = handle->next;
@@ -4494,6 +4494,11 @@ typedef struct _dir_struc_w
 //
 // Functions
 //
+
+static inline const TCHAR *BooleanToString(bool v)
+{
+   return v ? _T("true") : _T("false");
+}
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, uint32_t timeout, bool *isTimeout = nullptr);
 ssize_t LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, Mutex* mutex);

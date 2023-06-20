@@ -343,7 +343,7 @@ void LDAPConnection::open()
    }
    else
    {
-      nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::initLDAP(): servers=\"%s\" port=%d secure=%s"), m_connList, port, m_secure ? _T("yes") : _T("no"));
+      nxlog_debug_tag(LDAP_DEBUG_TAG, 4, _T("LDAPConnection::initLDAP(): servers=\"%s\" port=%d secure=%s"), m_connList, port, BooleanToString(m_secure));
       m_ldapConn = ldap_sslinit(m_connList, port, m_secure);
    }
 #else

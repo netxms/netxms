@@ -365,7 +365,7 @@ Table *LogHandle::createTable()
 Table *LogHandle::getData(int64_t startRow, int64_t numRows, bool refresh, uint32_t userId)
 {
 	nxlog_debug(4, _T("Log data request: startRow=") INT64_FMT _T(", numRows=") INT64_FMT _T(", refresh=%s, userId=%u"),
-	         startRow, numRows, refresh ? _T("true") : _T("false"), userId);
+	         startRow, numRows, BooleanToString(refresh), userId);
 
 	if (m_resultSet == nullptr)
 		return createTable();	// send empty table to indicate end of data
