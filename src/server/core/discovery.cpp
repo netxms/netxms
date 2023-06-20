@@ -434,7 +434,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
          }
          delete list;
       }
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter - range check result is %s"), ipAddrText, result ? _T("true") : _T("false"));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): filter - range check result is %s"), ipAddrText, BooleanToString(result));
       if (!result)
          return false;
    }
@@ -650,7 +650,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
       if ((filterFlags & DFF_PROTOCOL_SSH) && (data.flags & NNF_IS_SSH))
          result = true;
 
-      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): protocol check result is %s"), ipAddrText, result ? _T("true") : _T("false"));
+      nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): protocol check result is %s"), ipAddrText, BooleanToString(result));
    }
 
    // Execute filter script
@@ -677,7 +677,7 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
          if (vm->run(1, &param))
          {
             result = vm->getResult()->getValueAsBoolean();
-            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script result is %s"), ipAddrText, result ? _T("true") : _T("false"));
+            nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 4, _T("AcceptNewNode(%s): Filter script result is %s"), ipAddrText, BooleanToString(result));
          }
          else
          {
@@ -1242,8 +1242,8 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
          if (snmpScanEnabled)
          {
             ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 5, _T("Starting SNMP check on range %s - %s via proxy %s [%u] (snmp=%s tcp=%s bs=%u delay=%u)"),
-                  IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId(), snmpScanEnabled ? _T("true") : _T("false"),
-                  tcpScanEnabled ? _T("true") : _T("false"), blockSize, interBlockDelay);
+                  IpToStr(from, ipAddr1), IpToStr(to, ipAddr2), proxy->getName(), proxy->getId(), BooleanToString(snmpScanEnabled),
+                  BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);
             IntegerArray<uint16_t> ports = GetWellKnownPorts(_T("snmp"), 0);
             unique_ptr<StringList> communities = SnmpGetKnownCommunities(0);
             for(int i = 0; i < ports.size(); i++)
@@ -1279,7 +1279,7 @@ void CheckRange(const InetAddressListElement& range, void (*callback)(const Inet
       TCHAR ipAddr1[64], ipAddr2[64], rangeText[128];
       _sntprintf(rangeText, 128, _T("%s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
       ConsoleDebugPrintf(console, DEBUG_TAG_DISCOVERY, 4, _T("Starting active discovery check on range %s (snmp=%s tcp=%s bs=%u delay=%u)"),
-            rangeText, snmpScanEnabled ? _T("true") : _T("false"), tcpScanEnabled ? _T("true") : _T("false"), blockSize, interBlockDelay);
+            rangeText, BooleanToString(snmpScanEnabled), BooleanToString(tcpScanEnabled), blockSize, interBlockDelay);
       while((from <= to) && !IsShutdownInProgress())
       {
          if (interBlockDelay > 0)

@@ -129,7 +129,7 @@ static void ApplyTemplateThread()
          break;
 
       nxlog_debug_tag(_T("obj.dc"), 5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%s"),
-		         task->source->getId(), task->source->getName(), task->updateType, task->targetId, task->removeDCI ? _T("true") : _T("false"));
+		         task->source->getId(), task->source->getName(), task->updateType, task->targetId, BooleanToString(task->removeDCI));
       bool success = false;
       shared_ptr<NetObj> dcTarget = FindObjectById(task->targetId);
       if ((dcTarget != nullptr) && dcTarget->isDataCollectionTarget())
@@ -1860,8 +1860,7 @@ static void DumpObject(ServerConsole *console, const NetObj& object)
             ConsolePrintf(console, _T("   IP address..........: %s/%d\n"), a.toString(buffer), a.getMaskBits());
          }
          ConsolePrintf(console, _T("   Interface index.....: %u\n"), static_cast<const Interface&>(object).getIfIndex());
-         ConsolePrintf(console, _T("   Physical port.......: %s\n"),
-                  static_cast<const Interface&>(object).isPhysicalPort() ? _T("yes") : _T("no"));
+         ConsolePrintf(console, _T("   Physical port.......: %s\n"), BooleanToString(static_cast<const Interface&>(object).isPhysicalPort()));
          if (static_cast<const Interface&>(object).isPhysicalPort())
          {
             ConsolePrintf(console, _T("   Physical location...: %s\n"),

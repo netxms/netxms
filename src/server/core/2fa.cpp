@@ -249,7 +249,7 @@ bool TOTPAuthMethod::validateResponse(TwoFactorAuthenticationToken* token, const
 unique_ptr<StringMap> TOTPAuthMethod::extractBindingConfiguration(const Config& binding) const
 {
    auto configuration = make_unique<StringMap>();
-   configuration->set(_T("Initialized"), binding.getValueAsBoolean(_T("/MethodBinding/Initialized"), false) ? _T("true") : _T("false"));
+   configuration->set(_T("Initialized"), BooleanToString(binding.getValueAsBoolean(_T("/MethodBinding/Initialized"), false)));
    return configuration;
 }
 

@@ -929,7 +929,7 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 		{
          g_serverList.add(new ServerInfo(curr, isControl, isMaster));
          nxlog_debug(3, _T("Added server access record %s (control=%s, master=%s)"), curr,
-                  isControl ? _T("true") : _T("false"), isMaster ? _T("true") : _T("false"));
+                  BooleanToString(isControl), BooleanToString(isMaster));
 		}
 	}
 	MemFree(serverList);
