@@ -521,7 +521,7 @@ void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context)
    const TCHAR *name = config->getSubEntryValue(_T("name"));
    if (name == nullptr)
    {
-      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Name missing"));
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name missing"));
       return;
    }
 
@@ -529,13 +529,13 @@ void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context)
    if (guid.isNull())
    {
       guid = uuid::generate();
-      context->log(NXLOG_INFO, _T("ImportScript()"), _T("GUID not found in config, generated GUID %s for script \"%s\""), (const TCHAR *)guid.toString(), name);
+      context->log(NXLOG_INFO, _T("ImportScript()"), _T("GUID script \"%s\" not found in configuration file, generated new GUID %s"), name, guid.toString().cstr());
    }
 
    const TCHAR *code = config->getSubEntryValue(_T("code"));
    if (code == nullptr)
    {
-      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Code missing"));
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Missing source code for script \"%s\""), name);
       return;
    }
 
@@ -571,10 +571,17 @@ void ImportScript(ConfigEntry *config, bool overwrite, ImportContext *context)
             DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
 
          if (DBExecute(hStmt))
+         {
+            context->log(NXLOG_INFO, _T("ImportScript()"), _T("Script \"%s\" successfully imported"), name);
             ReloadScript(id);
+         }
          DBFreeStatement(hStmt);
       }
       DBConnectionPoolReleaseConnection(hdb);
+   }
+   else
+   {
+      context->log(NXLOG_ERROR, _T("ImportScript()"), _T("Script name \"%s\" is invalid"), name);
    }
 }
 

@@ -918,14 +918,14 @@ bool ImportObjectTool(ConfigEntry *config, bool overwrite, ImportContext *contex
    const TCHAR *guid = config->getSubEntryValue(_T("guid"));
    if (guid == nullptr)
    {
-      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Missing GUID"));
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Missing object tool GUID"));
       return false;
    }
 
    uuid_t temp;
    if (_uuid_parse(guid, temp) == -1)
    {
-      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("GUID (%s) is invalid"), guid);
+      context->log(NXLOG_ERROR, _T("ImportObjectTool()"), _T("Object tool GUID %s is invalid"), guid);
       return false;
    }
 

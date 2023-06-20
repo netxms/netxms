@@ -52,7 +52,7 @@ static bool IsEventExist(const TCHAR *name, const Config& config)
 /**
  * Validate DCI from template
  */
-static bool ValidateDci(const Config& config, const ConfigEntry *dci, const TCHAR *templateName,  ImportContext *context)
+static bool ValidateDci(const Config& config, const ConfigEntry *dci, const TCHAR *templateName, ImportContext *context)
 {
 	ConfigEntry *thresholdsRoot = dci->findEntry(_T("thresholds"));
 	if (thresholdsRoot == nullptr)
@@ -66,15 +66,15 @@ static bool ValidateDci(const Config& config, const ConfigEntry *dci, const TCHA
       if (!IsEventExist(threshold->getSubEntryValue(_T("activationEvent")), config))
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
-                    _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"activationEvent\" refers to unknown event"),
-                    templateName, dci->getSubEntryValue(_T("description"), 0, _T("<unnamed>")), i + 1);
+            _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"activationEvent\" refers to unknown event"),
+            templateName, dci->getSubEntryValue(_T("description"), 0, _T("<unnamed>")), i + 1);
          success = false;
       }
       if (!IsEventExist(threshold->getSubEntryValue(_T("deactivationEvent")), config))
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
-                    _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"deactivationEvent\" refers to unknown event"),
-                    templateName, dci->getSubEntryValue(_T("description"), 0, _T("<unnamed>")), i + 1);
+            _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"deactivationEvent\" refers to unknown event"),
+            templateName, dci->getSubEntryValue(_T("description"), 0, _T("<unnamed>")), i + 1);
          success = false;
       }
    }
@@ -134,13 +134,13 @@ bool ValidateConfig(const Config& config, uint32_t flags, ImportContext *context
          ConfigEntry *event = events->get(i);
          context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating event \"%s\""), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
 
-         UINT32 code = event->getSubEntryValueAsUInt(_T("code"));
+         uint32_t code = event->getSubEntryValueAsUInt(_T("code"));
 			if ((code >= FIRST_USER_EVENT_ID) || (code == 0))
 			{
 				ConfigEntry *e = event->findEntry(_T("name"));
 				if (e == nullptr)
 				{
-				   context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("Mandatory attribute \"name\" missing for entry %s"), event->getName());
+				   context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("Mandatory attribute \"name\" missing for event template"));
 					success = false;
 				}
 			}
@@ -155,10 +155,10 @@ bool ValidateConfig(const Config& config, uint32_t flags, ImportContext *context
       for (int i = 0; i < traps->size(); i++)
       {
          ConfigEntry *trap = traps->get(i);
-         context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating trap \"%s\""), trap->getSubEntryValue(_T("description"), 0, _T("<unnamed>")));
+         context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validating SNMP trap definition \"%s\""), trap->getSubEntryValue(_T("description"), 0, _T("<unnamed>")));
          if (!IsEventExist(trap->getSubEntryValue(_T("event")), config))
 			{
-            context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("Trap \"%s\" references unknown event"), trap->getSubEntryValue(_T("description"), 0, _T("")));
+            context->log(NXLOG_ERROR, _T("ValidateConfig()"), _T("SNMP trap definition \"%s\" refers to unknown event"), trap->getSubEntryValue(_T("description"), 0, _T("")));
             success = false;
 			}
       }
@@ -176,7 +176,7 @@ bool ValidateConfig(const Config& config, uint32_t flags, ImportContext *context
       }
    }
 
-	context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validate configuration %s"), success ? _T("successfully finished") : _T("failed"));
+	context->log(NXLOG_INFO, _T("ValidateConfig()"), _T("Validation %s"), success ? _T("successfully finished") : _T("failed"));
    return success;
 }
 
@@ -213,12 +213,11 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
 	   DBFreeStatement(hStmt);
 	   if (code != 0)
 	   {
-
-	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Found existing event with GUID %s (code=%d)"), (const TCHAR *)guid.toString(), code);
+	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Found existing event template with code %d and GUID %s"), code, guid.toString().cstr());
 	   }
 	   else
 	   {
-	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("ImportEvent: event with GUID %s not found"), (const TCHAR *)guid.toString());
+	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Event template with GUID %s not found"), guid.toString().cstr());
 	   }
 	}
 	else
@@ -227,8 +226,8 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
 	   code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
 	   if (code >= FIRST_USER_EVENT_ID)
 	   {
-	      code = 0;
-	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Event without GUID and code not in system range"));
+	      context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Event template without GUID and code %d is not in system range"), code);
+         code = 0;
 	   }
 	   else
 	   {
@@ -284,7 +283,7 @@ static uint32_t ImportEvent(const ConfigEntry *event, bool overwrite, ImportCont
 					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)guid.toString(), (const TCHAR *)DBPrepareString(hdb, tags));
       context->log(NXLOG_INFO, _T("ImportEvent()"), _T("Added new event: code=%d, name=%s, guid=%s"), code, name, (const TCHAR *)guid.toString());
    }
-	UINT32 rcc = (query[0] != 0) ? (DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE) : RCC_SUCCESS;
+	uint32_t rcc = (query[0] != 0) ? (DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE) : RCC_SUCCESS;
 
 	DBConnectionPoolReleaseConnection(hdb);
 	return rcc;
@@ -304,18 +303,19 @@ static uint32_t ImportTrap(const ConfigEntry& trap, bool overwrite, ImportContex
    if (guid.isNull())
    {
       guid = uuid::generate();
-      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("GUID not found in config, generated GUID %s"), (const TCHAR *)guid.toString());
+      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("SNMP trap definition GUID not found in configuration file, generated new GUID %s"), guid.toString().cstr());
    }
-   UINT32 id = ResolveTrapGuid(guid);
+   uint32_t id = ResolveTrapGuid(guid);
    if ((id != 0) && !overwrite)
    {
-      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("Skipping existing entry with GUID %s"), (const TCHAR *)guid.toString());
+      context->log(NXLOG_INFO, _T("ImportTrap()"), _T("Skipping existing SNMP trap definition with GUID %s"), guid.toString().cstr());
       return RCC_SUCCESS;
    }
 
 	SNMPTrapConfiguration *trapCfg = new SNMPTrapConfiguration(trap, guid, id, eventTemplate->getCode());
 	if (!trapCfg->getOid().isValid())
 	{
+      context->log(NXLOG_ERROR, _T("ImportTrap()"), _T("SNMP trap definition %s refers to invalid OID"), guid.toString().cstr());
 	   delete trapCfg;
 		return rcc;
 	}
@@ -512,23 +512,23 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 		   {
 		      if (flags & CFG_IMPORT_REPLACE_TEMPLATES)
 		      {
-		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Updating existing template %s [%d] with GUID %s"), object->getName(), object->getId(), (const TCHAR *)guid.toString());
+		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Updating existing template %s [%u] with GUID %s"), object->getName(), object->getId(), guid.toString().cstr());
 		         object->updateFromImport(tc);
 		      }
 		      else
 		      {
-		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%d] with GUID %s skipped"), object->getName(), object->getId(), (const TCHAR *)guid.toString());
+		         context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s skipped"), object->getName(), object->getId(), guid.toString().cstr());
 		      }
 
             if (flags & CFG_IMPORT_REPLACE_TEMPLATE_NAMES_LOCATIONS)
             {
-               context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%d] with GUID %s renamed to %s"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), tc->getSubEntryValue(_T("name")));
+               context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s renamed to %s"), object->getName(), object->getId(), guid.toString().cstr(), tc->getSubEntryValue(_T("name")));
 
                object->setName(tc->getSubEntryValue(_T("name")));
                shared_ptr<NetObj> parent = FindTemplateRoot(tc);
                if (!parent->isChild(object->getId()))
                {
-                  context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%d] with GUID %s moved to %s template group"), object->getName(), object->getId(), (const TCHAR *)guid.toString(), parent->getName());
+                  context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Existing template %s [%u] with GUID %s moved to %s template group"), object->getName(), object->getId(), guid.toString().cstr(), parent->getName());
                   unique_ptr<SharedObjectArray<NetObj>> parents = object->getParents(OBJECT_TEMPLATEGROUP);
                   if (parents->size() > 0)
                   {
@@ -548,7 +548,7 @@ uint32_t ImportConfig(const Config& config, uint32_t flags, StringBuffer **log)
 		   }
 		   else
 		   {
-		      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Template with GUID %s not found"), (const TCHAR *)guid.toString());
+		      context->log(NXLOG_INFO, _T("ImportConfig()"), _T("Template with GUID %s not found"), guid.toString().cstr());
             shared_ptr<NetObj> parent = FindTemplateRoot(tc);
             object = make_shared<Template>(tc->getSubEntryValue(_T("name"), 0, _T("Unnamed Object")), guid);
             NetObjInsert(object, true, true);
