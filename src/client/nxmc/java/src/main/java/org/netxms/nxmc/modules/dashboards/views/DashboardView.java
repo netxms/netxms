@@ -19,6 +19,7 @@
 package org.netxms.nxmc.modules.dashboards.views;
 
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.netxms.client.constants.UserAccessRights;
@@ -74,12 +75,13 @@ public class DashboardView extends AbstractDashboardView
    }
 
    /**
-    * Create actions
+    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#createActions()
     */
    @Override
    protected void createActions()
    {
       super.createActions();
+
       actionSave = new Action(i18n.tr("&Save"), SharedIcons.SAVE) {
          @Override
          public void run()
@@ -89,7 +91,7 @@ public class DashboardView extends AbstractDashboardView
       };
       actionSave.setEnabled(false);
 
-      actionEditMode = new Action(i18n.tr("Edit mode"), Action.AS_CHECK_BOX) {
+      actionEditMode = new Action(i18n.tr("&Edit mode"), Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -154,6 +156,21 @@ public class DashboardView extends AbstractDashboardView
    }
 
    /**
+    * @see org.netxms.nxmc.modules.dashboards.views.AbstractDashboardView#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionEditMode);
+      manager.add(actionSave);
+      manager.add(new Separator());
+      manager.add(actionAddColumn);
+      manager.add(actionRemoveColumn);
+      manager.add(new Separator());
+      super.fillLocalMenu(manager);
+   }
+
+   /**
     * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
     */
    @Override
@@ -170,23 +187,20 @@ public class DashboardView extends AbstractDashboardView
    protected void rebuildDashboard(Dashboard dashboard, AbstractObject dashboardContext)
    {
       super.rebuildDashboard(dashboard, dashboardContext);
-      if (dbc != null)
+      if ((dbc != null) && !readOnly)
       {
-         if (!readOnly)
-         {
-            actionAddColumn.setEnabled(dbc.getColumnCount() < 128);
-            actionRemoveColumn.setEnabled(dbc.getColumnCount() != dbc.getMinimalColumnCount());
-            actionSave.setEnabled(dbc.isModified());
-            dbc.setModifyListener(dbcModifyListener);
-            actionEditMode.setEnabled(true);
-         }
-         else
-         {
-            actionAddColumn.setEnabled(false);
-            actionRemoveColumn.setEnabled(false);
-            actionSave.setEnabled(false);     
-            actionEditMode.setEnabled(false);
-         }
+         actionAddColumn.setEnabled(dbc.getColumnCount() < 128);
+         actionRemoveColumn.setEnabled(dbc.getColumnCount() != dbc.getMinimalColumnCount());
+         actionSave.setEnabled(dbc.isModified());
+         dbc.setModifyListener(dbcModifyListener);
+         actionEditMode.setEnabled(true);
+      }
+      else
+      {
+         actionAddColumn.setEnabled(false);
+         actionRemoveColumn.setEnabled(false);
+         actionSave.setEnabled(false);
+         actionEditMode.setEnabled(false);
       }
    }   
 }

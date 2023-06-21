@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -106,7 +106,6 @@ public abstract class AbstractDashboardView extends ObjectView
       };
       actionExportValues.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"); 
       addKeyBinding("M1+F3", actionExportValues);
-      
 
       actionSaveAsImage = new Action("Save as &image", SharedIcons.SAVE_AS_IMAGE) {
          @Override
@@ -127,6 +126,18 @@ public abstract class AbstractDashboardView extends ObjectView
    {
       manager.add(actionExportValues);
       manager.add(actionSaveAsImage);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionExportValues);
+      manager.add(actionSaveAsImage);
+      super.fillLocalMenu(manager);
    }
 
    /**

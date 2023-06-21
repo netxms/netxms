@@ -519,19 +519,12 @@ public class ViewFolder extends ViewContainer
    }
 
    /**
-    * Activate view internal handling of view activation.
+    * Prepare given view activation.
     *
-    * @param view view to activate
-    * @param tabItem tab item holding view
+    * @param view view to prepare
     */
-   private void activateView(View view, CTabItem tabItem)
+   private void prepareViewActivation(View view)
    {
-      if ((view instanceof ViewWithContext) && !ignoreContextForView(tabItem))
-      {
-         if (((ViewWithContext)view).getContext() != context)
-            ((ViewWithContext)view).setContext(context);
-      }
-
       updateViewToolBar(view);
       updateViewMenu(view);
 
@@ -566,6 +559,23 @@ public class ViewFolder extends ViewContainer
          }
          showFilterAction.setEnabled(false);
       }
+   }
+
+   /**
+    * Activate view internal handling of view activation.
+    *
+    * @param view view to activate
+    * @param tabItem tab item holding view
+    */
+   private void activateView(View view, CTabItem tabItem)
+   {
+      if ((view instanceof ViewWithContext) && !ignoreContextForView(tabItem))
+      {
+         if (((ViewWithContext)view).getContext() != context)
+            ((ViewWithContext)view).setContext(context);
+      }
+
+      prepareViewActivation(view);
 
       if ((navigationBack != null) && (navigationForward != null))
       {
@@ -733,6 +743,7 @@ public class ViewFolder extends ViewContainer
       {
          if (activeView instanceof ViewWithContext)
             ((ViewWithContext)activeView).setContext(context);
+         prepareViewActivation(activeView);
          activeView.activate();
       }
    }
@@ -755,6 +766,7 @@ public class ViewFolder extends ViewContainer
       {
          if (activeView instanceof ViewWithContext)
             ((ViewWithContext)activeView).setContext(context);
+         prepareViewActivation(activeView);
          activeView.activate();
       }
    }

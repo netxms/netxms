@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -107,7 +108,6 @@ public abstract class AbstractDashboardView extends ObjectView
       };
       actionExportValues.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"); 
       addKeyBinding("M1+F3", actionExportValues);
-      
 
       actionSaveAsImage = new Action("Save as &image", SharedIcons.SAVE_AS_IMAGE) {
          @Override
@@ -128,6 +128,18 @@ public abstract class AbstractDashboardView extends ObjectView
    {
       manager.add(actionExportValues);
       manager.add(actionSaveAsImage);
+      super.fillLocalToolBar(manager);
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#fillLocalMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillLocalMenu(IMenuManager manager)
+   {
+      manager.add(actionExportValues);
+      manager.add(actionSaveAsImage);
+      super.fillLocalMenu(manager);
    }
 
    /**
@@ -146,13 +158,13 @@ public abstract class AbstractDashboardView extends ObjectView
       {
          if (!(w instanceof LineChartElement))
             continue;
-         
+
          for(DataCacheElement d : ((LineChartElement)w).getDataCache())
          {
             data.add(d);
          }
       }
-      
+
       final DateFormat dfDate = DateFormatFactory.getDateFormat();
       final DateFormat dfTime = DateFormatFactory.getTimeFormat();
       final DateFormat dfDateTime = DateFormatFactory.getDateTimeFormat();
