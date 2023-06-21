@@ -181,6 +181,7 @@ public class PolicyEditorView extends AdHocObjectView implements SessionListener
          }
       };
       actionSave.setEnabled(false);
+      addKeyBinding("M1+S", actionSave);
    }
 
    /**
