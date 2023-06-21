@@ -1998,25 +1998,27 @@ protected:
    int16_t m_operState;             // interface operational state
    int16_t m_pendingOperState;
    int16_t m_confirmedOperState;
+   int16_t m_lastKnownOperState;
+   int16_t m_lastKnownAdminState;
    int16_t m_dot1xPaeAuthState;       // 802.1x port auth state
    int16_t m_dot1xBackendAuthState; // 802.1x backend auth state
-   uint64_t m_lastDownEventId;
+   SpanningTreePortState m_stpPortState;
    int32_t m_pendingStatus;
    int32_t m_statusPollCount;
    int32_t m_operStatePollCount;
    int32_t m_requiredPollCount;
    int32_t m_zoneUIN;
-   int32_t m_ifTableSuffixLen;
-   uint32_t *m_ifTableSuffix;
-   IntegerArray<uint32_t> *m_vlans;
-   int16_t m_lastKnownOperState;
-   int16_t m_lastKnownAdminState;
    uint32_t m_ospfArea;
    OSPFInterfaceState m_ospfState;
    OSPFInterfaceType m_ospfType;
+   int32_t m_ifTableSuffixLen;
+   uint32_t *m_ifTableSuffix;
+   IntegerArray<uint32_t> *m_vlans;
+   uint64_t m_lastDownEventId;
 
    void icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
-   void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node);
+   void paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node);
+   void stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node);
 
 protected:
    virtual void onObjectDelete(const NetObj& object) override;
@@ -2075,6 +2077,7 @@ public:
    int getExpectedState() const { return (int)((m_flags & IF_EXPECTED_STATE_MASK) >> 28); }
    int getAdminState() const { return (int)m_adminState; }
    int getOperState() const { return (int)m_operState; }
+   SpanningTreePortState getSTPPortState() const { return m_stpPortState; }
    int getConfirmedOperState() const { return (int)m_confirmedOperState; }
    int getDot1xPaeAuthState() const { return (int)m_dot1xPaeAuthState; }
    int getDot1xBackendAuthState() const { return (int)m_dot1xBackendAuthState; }

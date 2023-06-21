@@ -140,6 +140,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
             return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : "";
          case InterfacesView.COLUMN_STATUS:
             return StatusDisplayInfo.getStatusText(iface.getStatus());
+         case InterfacesView.COLUMN_STP_STATE:
+            return iface.getStpPortState().getText();
          case InterfacesView.COLUMN_TYPE:
             String typeName = iface.getIfTypeName();
             return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType());

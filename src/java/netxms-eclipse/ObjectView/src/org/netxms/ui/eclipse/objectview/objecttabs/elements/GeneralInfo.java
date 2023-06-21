@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.SpanningTreePortState;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -151,11 +152,18 @@ public class GeneralInfo extends TableElement
 				{
 					addPair(Messages.get().GeneralInfo_SlotPort, iface.getPhysicalLocation());
 					AbstractNode node = iface.getParentNode();
-					if ((node != null) && node.is8021xSupported())
-					{
-						addPair(Messages.get().GeneralInfo_8021xPAE, iface.getDot1xPaeStateAsText());
-						addPair(Messages.get().GeneralInfo_8021xBackend, iface.getDot1xBackendStateAsText());
-					}
+               if (node != null)
+               {
+                  if (node.isBridge() && (iface.getStpPortState() != SpanningTreePortState.UNKNOWN))
+                  {
+                     addPair("Spanning Tree port state", iface.getStpPortState().getText());
+                  }
+                  if (node.is8021xSupported())
+                  {
+                     addPair(Messages.get().GeneralInfo_8021xPAE, iface.getDot1xPaeStateAsText());
+                     addPair(Messages.get().GeneralInfo_8021xBackend, iface.getDot1xBackendStateAsText());
+                  }
+               }
 				}
             addPair("VLAN", InterfaceListLabelProvider.getVlanList(iface), false);
 				if (iface.getIpAddressList().size() > 0)

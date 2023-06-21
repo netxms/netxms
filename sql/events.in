@@ -1594,6 +1594,53 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
+      EVENT_ASSET_LINK, 'SYS_ASSET_LINK', '8dae7b06-b854-4d88-9eb7-721b6110c200',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Asset %<assetName> linked',
+      'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
+      'Parameters:'  CONCAT CRLF CONCAT
+      '   assetId - asset id'  CONCAT CRLF CONCAT
+      '   assetName - asset name'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+      EVENT_ASSET_UNLINK, 'SYS_ASSET_UNLINK', 'f149433b-ea2f-4bfd-bf23-35e7778b1b55',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Asset %<assetName> unlinked',
+      'Generated when asset is unlinked from node.'  CONCAT CRLF CONCAT
+      'Parameters:'  CONCAT CRLF CONCAT
+      '   assetId - asset id'  CONCAT CRLF CONCAT
+      '   assetName - asset name'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+      EVENT_ASSET_LINK_CONFLICT, 'SYS_ASSET_LINK_CONFLICT', '2bfd6557-1b88-4cf0-801b-78cffb2afc3c',
+      EVENT_SEVERITY_MINOR, 1, 
+      'Asset %<assetName> already linked with %<nodeName> node',
+      'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
+      'Parameters:'  CONCAT CRLF CONCAT
+      '   assetId - asset id found by auto linking'  CONCAT CRLF CONCAT
+      '   assetName - asset name found by auto linking'  CONCAT CRLF CONCAT
+      '   currentNodeId - currently linked node id'  CONCAT CRLF CONCAT
+      '   currentNodeName - currently linked node name'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+      EVENT_CONFIGURATION_ERROR, 'SYS_CONFIGURATION_ERROR', '762c581c-e9bf-11ed-a05b-0242ac120003',
+      EVENT_SEVERITY_MINOR, 1, 
+      'System configuration error (%<description>)',
+      'Generated on any system configuration error.'   CONCAT CRLF CONCAT
+      'Parameters:'   CONCAT CRLF CONCAT
+      '   subsystem - The subsystem which has the error'   CONCAT CRLF CONCAT
+      '   tag - Related tag for the error'   CONCAT CRLF CONCAT
+      '   descriptipon - Description of the error'      
+   );
+   
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
 		EVENT_MODBUS_UNREACHABLE, 'SYS_MODBUS_UNREACHABLE', 'f8dc0d5f-0e46-4bbf-a91d-bb3c0412db2e',
 		EVENT_SEVERITY_MAJOR, 1,
 		'Modbus connectivity failed',
@@ -1611,6 +1658,21 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		'   No event-specific parameters'
 	);
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+	(
+      EVENT_IF_STP_STATE_CHANGED, 'SYS_IF_STP_STATE_CHANGED', '977a5634-d0ec-44a0-a7a5-6e193ca57c38',
+      EVENT_SEVERITY_NORMAL, 1, 
+      'Interface %<ifName> STP state changed from %<oldStateText> to %<newStateText>',
+      'Generated when system detects interface Spanning Tree state change.'   CONCAT CRLF CONCAT
+      'Parameters:'   CONCAT CRLF CONCAT
+      '   ifIndex - Interface index'   CONCAT CRLF CONCAT
+      '   ifName - Interface name'   CONCAT CRLF CONCAT
+      '   oldState - Old state'   CONCAT CRLF CONCAT
+      '   oldStateText - Old state as text'   CONCAT CRLF CONCAT
+      '   newState - New state'   CONCAT CRLF CONCAT
+      '   newStateText - New state as text'      
+   );
 
 /*
 ** SNMP traps
@@ -1690,50 +1752,3 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) SNMP trap OID'
 	);   
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-	EVENT_ASSET_LINK, 'SYS_ASSET_LINK', '8dae7b06-b854-4d88-9eb7-721b6110c200',
-	EVENT_SEVERITY_NORMAL, 1,
-   'Asset %<assetName> linked',
-   'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
-   'Parameters:'  CONCAT CRLF CONCAT
-   '   assetId - asset id'  CONCAT CRLF CONCAT
-   '   assetName - asset name'
-   );
-
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-	EVENT_ASSET_UNLINK, 'SYS_ASSET_UNLINK', 'f149433b-ea2f-4bfd-bf23-35e7778b1b55',
-   EVENT_SEVERITY_NORMAL, 1,
-   'Asset %<assetName> unlinked',
-   'Generated when asset is unlinked from node.'  CONCAT CRLF CONCAT
-   'Parameters:'  CONCAT CRLF CONCAT
-   '   assetId - asset id'  CONCAT CRLF CONCAT
-   '   assetName - asset name'
-   );
-
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-	EVENT_ASSET_LINK_CONFLICT, 'SYS_ASSET_LINK_CONFLICT', '2bfd6557-1b88-4cf0-801b-78cffb2afc3c',
-   EVENT_SEVERITY_MINOR, 1, 
-   'Asset %<assetName> already linked with %<nodeName> node',
-   'Generated when asset is linked with node.'  CONCAT CRLF CONCAT
-   'Parameters:'  CONCAT CRLF CONCAT
-   '   assetId - asset id found by auto linking'  CONCAT CRLF CONCAT
-   '   assetName - asset name found by auto linking'  CONCAT CRLF CONCAT
-   '   currentNodeId - currently linked node id'  CONCAT CRLF CONCAT
-   '   currentNodeName - currently linked node name'
-   );
-
-
-INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
-	(
-	EVENT_CONFIGURATION_ERROR, 'SYS_CONFIGURATION_ERROR', '762c581c-e9bf-11ed-a05b-0242ac120003',
-   EVENT_SEVERITY_MINOR, 1, 
-   'System configuration error (%<description>)',
-   'Generated on any system configuration error.'   CONCAT CRLF CONCAT
-   'Parameters:'   CONCAT CRLF CONCAT
-   '   subsystem - The subsystem which has the error'   CONCAT CRLF CONCAT
-   '   tag - Related tag for the error'   CONCAT CRLF CONCAT
-   '   descriptipon - Description of the error'      
-   );

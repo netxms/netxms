@@ -158,6 +158,9 @@ public class InterfaceListComparator extends ViewerComparator
          case InterfacesView.COLUMN_STATUS:
 				result = iface1.getStatus().compareTo(iface2.getStatus());
 				break;
+         case InterfacesView.COLUMN_STP_STATE:
+            result = iface1.getStpPortState().getText().compareTo(iface2.getStpPortState().getText());
+            break;
          case InterfacesView.COLUMN_TYPE:
 				result = iface1.getIfType() - iface2.getIfType();
 				break;

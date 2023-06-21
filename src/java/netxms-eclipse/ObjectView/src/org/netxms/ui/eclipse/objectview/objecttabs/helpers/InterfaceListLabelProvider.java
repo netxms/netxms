@@ -141,6 +141,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
             return getPeerProtocol(iface);
          case InterfacesTab.COLUMN_SPEED:
             return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : ""; //$NON-NLS-1$
+         case InterfacesTab.COLUMN_STP_STATE:
+            return iface.getStpPortState().getText();
          case InterfacesTab.COLUMN_VLAN:
             return getVlanList(iface);
 		}

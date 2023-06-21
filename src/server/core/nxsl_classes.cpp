@@ -2808,6 +2808,14 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
       value = vm->createValue(iface->getSpeed());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("stpState"))
+   {
+      value = vm->createValue(static_cast<int32_t>(iface->getSTPPortState()));
+   }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("stpStateText"))
+   {
+      value = vm->createValue(STPPortStateToText(iface->getSTPPortState()));
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("vlans"))
    {
       value = iface->getVlanListForNXSL(vm);

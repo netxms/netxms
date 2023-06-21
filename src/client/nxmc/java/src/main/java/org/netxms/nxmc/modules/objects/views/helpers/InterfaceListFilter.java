@@ -64,7 +64,7 @@ public class InterfaceListFilter extends NodeSubObjectFilter
             matchPeerDiscoveryProtocol(iface) ||
             matchAdminState(iface) ||
             matchOperState(iface) ||
-            matchExpState(iface) ||
+            matchStpState(iface) ||
             matchStatus(iface) ||
             matchDot1xPaeState(iface) ||
             matchDot1xBackendState(iface) ||
@@ -252,12 +252,12 @@ public class InterfaceListFilter extends NodeSubObjectFilter
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchPeerIp(Interface interf)
+   private boolean matchPeerIp(Interface iface)
    {
-      Interface peer = (Interface)session.findObjectById(interf.getPeerInterfaceId(), Interface.class);
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
       if (peer == null)
          return false;
       if (peer.getIpAddressListAsString().toLowerCase().contains(filterString))
@@ -266,58 +266,48 @@ public class InterfaceListFilter extends NodeSubObjectFilter
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchPeerDiscoveryProtocol(Interface interf)
+   private boolean matchPeerDiscoveryProtocol(Interface iface)
    {
-      if (interf.getPeerDiscoveryProtocol().toString().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return iface.getPeerDiscoveryProtocol().toString().toLowerCase().contains(filterString);
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchAdminState(Interface interf)
+   private boolean matchAdminState(Interface iface)
    {
-      if (interf.getAdminStateAsText().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return iface.getAdminStateAsText().toLowerCase().contains(filterString);
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchOperState(Interface interf)
+   private boolean matchOperState(Interface iface)
    {
-      if (interf.getOperStateAsText().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return iface.getOperStateAsText().toLowerCase().contains(filterString);
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchExpState(Interface interf)
+   private boolean matchStpState(Interface iface)
    {
-      if (Integer.toString(interf.getExpectedState()).toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return iface.getStpPortState().getText().toLowerCase().contains(filterString);
    }
 
    /**
-    * @param interf
+    * @param iface
     * @return
     */
-   private boolean matchStatus(Interface interf)
+   private boolean matchStatus(Interface iface)
    {
-      if (interf.getStatus().toString().toLowerCase().contains(filterString))
-         return true;
-      return false;
+      return iface.getStatus().toString().toLowerCase().contains(filterString);
    }
 
    /**

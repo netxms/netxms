@@ -20,6 +20,7 @@ package org.netxms.nxmc.modules.objects.views.elements;
 
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.SpanningTreePortState;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
@@ -121,10 +122,17 @@ public class ObjectState extends TableElement
 				if (iface.isPhysicalPort())
 				{
 					AbstractNode node = iface.getParentNode();
-					if ((node != null) && node.is8021xSupported())
+               if (node != null)
 					{
-                  addPair(i18n.tr("802.1x PAE state"), iface.getDot1xPaeStateAsText());
-                  addPair(i18n.tr("802.1x backend state"), iface.getDot1xBackendStateAsText());
+                  if (node.isBridge() && (iface.getStpPortState() != SpanningTreePortState.UNKNOWN))
+                  {
+                     addPair(i18n.tr("Spanning Tree port state"), iface.getStpPortState().getText());
+                  }
+                  if (node.is8021xSupported())
+                  {
+                     addPair(i18n.tr("802.1x PAE state"), iface.getDot1xPaeStateAsText());
+                     addPair(i18n.tr("802.1x backend state"), iface.getDot1xBackendStateAsText());
+                  }
 					}
 				}
             if (iface.isOSPF())

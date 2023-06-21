@@ -319,6 +319,20 @@ public:
 };
 
 /**
+ * Spanning tree port state
+ */
+enum class SpanningTreePortState : int16_t
+{
+   UNKNOWN = 0,
+   DISABLED = 1,
+   BLOCKING = 2,
+   LISTENING = 3,
+   LEARNING = 4,
+   FORWARDING = 5,
+   BROKEN = 6
+};
+
+/**
  * OSPF area
  */
 struct OSPFArea
@@ -437,6 +451,8 @@ void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 String BuildLldpId(int type, const BYTE *data, size_t length);
+
+const TCHAR *STPPortStateToText(SpanningTreePortState state);
 
 void BridgeMapPorts(SNMP_Transport *transport, InterfaceList *ifList);
 

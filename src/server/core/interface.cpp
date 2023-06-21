@@ -57,6 +57,7 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
    m_ospfArea = 0;
    m_ospfType = OSPFInterfaceType::UNKNOWN;
    m_ospfState = OSPFInterfaceState::UNKNOWN;
+   m_stpPortState = SpanningTreePortState::UNKNOWN;
 }
 
 /**
@@ -100,6 +101,7 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
    m_ospfArea = 0;
    m_ospfType = OSPFInterfaceType::UNKNOWN;
    m_ospfState = OSPFInterfaceState::UNKNOWN;
+   m_stpPortState = SpanningTreePortState::UNKNOWN;
    setCreationTime();
 }
 
@@ -146,6 +148,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *description, uint32_t index
    m_ospfArea = 0;
    m_ospfType = OSPFInterfaceType::UNKNOWN;
    m_ospfState = OSPFInterfaceState::UNKNOWN;
+   m_stpPortState = SpanningTreePortState::UNKNOWN;
    setCreationTime();
 }
 
@@ -174,7 +177,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
 		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
-      _T("ospf_area,ospf_if_type,ospf_if_state,iftable_suffix FROM interfaces WHERE id=?"));
+      _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
 		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -216,9 +219,10 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       m_ospfArea = DBGetFieldIPAddr(hResult, 0, 24);
       m_ospfType = static_cast<OSPFInterfaceType>(DBGetFieldLong(hResult, 0, 25));
       m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 26));
+      m_stpPortState = static_cast<SpanningTreePortState>(DBGetFieldLong(hResult, 0, 27));
 
       TCHAR suffixText[128];
-      DBGetField(hResult, 0, 27, suffixText, 128);
+      DBGetField(hResult, 0, 28, suffixText, 128);
       Trim(suffixText);
       if (suffixText[0] == 0)
       {
@@ -340,7 +344,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
          _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"), _T("last_known_oper_state"),
          _T("last_known_admin_state"), _T("if_alias"), _T("ospf_area"), _T("ospf_if_type"), _T("ospf_if_state"),
-         nullptr
+         _T("stp_port_state"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("interfaces"), _T("id"), m_id, columns);
@@ -389,7 +393,8 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
             DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfType));
          DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfState));
-         DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_stpPortState));
+         DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -614,14 +619,21 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 			break;
 	}
 
-	// Check 802.1x state
-	if ((node->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && node->is8021xPollingEnabled())
+	// Check STP state
+	if ((node->getCapabilities() & NC_IS_BRIDGE) && isPhysicalPort() && (snmpTransport != nullptr))
 	{
-		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), node->getName(), m_name);
-		paeStatusPoll(rqId, snmpTransport, node.get());
-		if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
-			newStatus = STATUS_MAJOR;
+		nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking Spanning Tree state for interface %s"), node->getName(), m_name);
+		stpStatusPoll(rqId, snmpTransport, *node);
 	}
+
+   // Check 802.1x state
+   if ((node->getCapabilities() & NC_IS_8021X) && isPhysicalPort() && (snmpTransport != nullptr) && node->is8021xPollingEnabled())
+   {
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), node->getName(), m_name);
+      paeStatusPoll(rqId, snmpTransport, *node);
+      if ((m_dot1xPaeAuthState == PAE_STATE_FORCE_UNAUTH) && (newStatus < STATUS_MAJOR))
+         newStatus = STATUS_MAJOR;
+   }
 
 	// Reset status to unknown if node has known network connectivity problems
 	if ((newStatus == STATUS_CRITICAL) && (node->getState() & DCSF_NETWORK_PATH_PROBLEM))
@@ -699,7 +711,7 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
       {
 		   sendPollerMsg(_T("      Interface status changed to %s\r\n"), GetStatusAsText(m_status, true));
 
-         //Post system event if it was not already sent before unknown state
+         // Post system event if it was not already sent before unknown state
          if ((m_lastKnownOperState == IF_OPER_STATE_UNKNOWN || m_lastKnownOperState != static_cast<int16_t>(operState)) ||
          (m_lastKnownAdminState == IF_ADMIN_STATE_UNKNOWN || m_lastKnownAdminState != static_cast<int16_t>(adminState)))
          {
@@ -708,9 +720,9 @@ void Interface::statusPoll(ClientSession *session, uint32_t rqId, ObjectQueue<Ev
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status],
                      node->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
          }
-         if(static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
+         if (static_cast<int16_t>(operState) != IF_OPER_STATE_UNKNOWN)
             m_lastKnownOperState = static_cast<int16_t>(operState);
-         if(static_cast<int16_t>(adminState) != IF_ADMIN_STATE_UNKNOWN)
+         if (static_cast<int16_t>(adminState) != IF_ADMIN_STATE_UNKNOWN)
             m_lastKnownAdminState = static_cast<int16_t>(adminState);
       }
    }
@@ -841,9 +853,46 @@ void Interface::icmpStatusPoll(uint32_t rqId, uint32_t nodeIcmpProxy, Cluster *c
 }
 
 /**
+ * Spanning tree status poll
+ */
+void Interface::stpStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node)
+{
+   sendPollerMsg(_T("      Checking port STP state...\r\n"));
+
+   int32_t v = static_cast<int32_t>(SpanningTreePortState::UNKNOWN);
+   uint32_t oid[12] = { 1, 3, 6, 1, 2, 1, 17, 2, 15, 1, 3, m_bridgePortNumber };
+   SnmpGet(transport->getSnmpVersion(), transport, nullptr, oid, 12, &v, sizeof(int32_t), 0);
+   SpanningTreePortState stpState = static_cast<SpanningTreePortState>(v);
+
+   if (m_stpPortState != stpState)
+   {
+      sendPollerMsg(_T("      Port Spanning Tree state changed to %s\r\n"), STPPortStateToText(stpState));
+      nxlog_debug_tag(DEBUG_TAG_STATUS_POLL, 5, _T("Interface::stpStatusPoll(%s [%u]): Port STP state changed to %s"), m_name, m_id, STPPortStateToText(stpState));
+
+      lockProperties();
+      SpanningTreePortState oldState = m_stpPortState;
+      m_stpPortState = stpState;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+
+      if (!m_isSystem)
+      {
+         EventBuilder(EVENT_IF_STP_STATE_CHANGED, node)
+            .param(_T("ifIndex"), m_index)
+            .param(_T("ifName"), m_name)
+            .param(_T("oldState"), static_cast<int>(oldState))
+            .param(_T("oldStateText"), STPPortStateToText(oldState))
+            .param(_T("newState"), static_cast<int>(stpState))
+            .param(_T("newStateText"), STPPortStateToText(stpState))
+            .post();
+      }
+   }
+}
+
+/**
  * PAE (802.1x) status poll
  */
-void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *node)
+void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, const Node& node)
 {
 	static const TCHAR *paeStateText[] =
 	{
@@ -893,11 +942,11 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 		modified = true;
       if (!m_isSystem)
       {
-		   PostSystemEvent(EVENT_8021X_PAE_STATE_CHANGED, node->getId(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
+		   PostSystemEvent(EVENT_8021X_PAE_STATE_CHANGED, node.getId(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
 		         static_cast<uint32_t>(m_dot1xPaeAuthState), PAE_STATE_TEXT(m_dot1xPaeAuthState), m_id, m_name);
 		   if (paeState == PAE_STATE_FORCE_UNAUTH)
 		   {
-			   PostSystemEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->getId(), "ds", m_id, m_name);
+			   PostSystemEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node.getId(), "ds", m_id, m_name);
 		   }
       }
 	}
@@ -910,16 +959,16 @@ void Interface::paeStatusPoll(uint32_t rqId, SNMP_Transport *transport, Node *no
 		modified = true;
       if (!m_isSystem)
       {
-		   PostSystemEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->getId(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
+		   PostSystemEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node.getId(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
 		             (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_id, m_name);
 
 		   if (backendState == BACKEND_STATE_FAIL)
 		   {
-			   PostSystemEvent(EVENT_8021X_AUTH_FAILED, node->getId(), "ds", m_id, m_name);
+			   PostSystemEvent(EVENT_8021X_AUTH_FAILED, node.getId(), "ds", m_id, m_name);
 		   }
 		   else if (backendState == BACKEND_STATE_TIMEOUT)
 		   {
-			   PostSystemEvent(EVENT_8021X_AUTH_TIMEOUT, node->getId(), "ds", m_id, m_name);
+			   PostSystemEvent(EVENT_8021X_AUTH_TIMEOUT, node.getId(), "ds", m_id, m_name);
 		   }
       }
 	}
@@ -959,6 +1008,7 @@ void Interface::fillMessageInternal(NXCPMessage *msg, uint32_t userId)
    msg->setField(VID_IF_ALIAS, m_ifAlias);
 	msg->setField(VID_ADMIN_STATE, m_adminState);
 	msg->setField(VID_OPER_STATE, m_operState);
+   msg->setField(VID_STP_PORT_STATE, static_cast<uint16_t>(m_stpPortState));
 	msg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
 	msg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
 	msg->setField(VID_ZONE_UIN, m_zoneUIN);
@@ -1376,7 +1426,7 @@ NXSL_Value *Interface::getVlanListForNXSL(NXSL_VM *vm)
  */
 bool Interface::isPointToPoint() const
 {
-   static UINT32 ptpTypes[] = {
+   static uint32_t ptpTypes[] = {
             IFTYPE_LAPB, IFTYPE_E1, IFTYPE_PROP_PTP_SERIAL, IFTYPE_PPP, IFTYPE_SLIP,
             IFTYPE_RS232, IFTYPE_V35, IFTYPE_ADSL, IFTYPE_RADSL, IFTYPE_SDSL, IFTYPE_VDSL,
             IFTYPE_HDLC, IFTYPE_MSDSL, IFTYPE_IDSL, IFTYPE_HDSL2, IFTYPE_SHDSL, 0
@@ -1483,6 +1533,7 @@ json_t *Interface::toJson()
    json_object_set_new(root, "peerDiscoveryProtocol", json_integer(m_peerDiscoveryProtocol));
    json_object_set_new(root, "adminState", json_integer(m_adminState));
    json_object_set_new(root, "operState", json_integer(m_operState));
+   json_object_set_new(root, "stpPortState", json_integer(static_cast<json_int_t>(m_stpPortState)));
    json_object_set_new(root, "lastKnownOperState", json_integer(m_lastKnownOperState));
    json_object_set_new(root, "lastKnownAdminState", json_integer(m_lastKnownAdminState));
    json_object_set_new(root, "pendingOperState", json_integer(m_pendingOperState));

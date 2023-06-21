@@ -25,6 +25,25 @@
 #define DEBUG_TAG _T("topology.stp")
 
 /**
+ * Spanning tree state as text
+ */
+const TCHAR *STPPortStateToText(SpanningTreePortState state)
+{
+   static const TCHAR *stpStateText[] =
+   {
+      _T("UNKNOWN"),
+      _T("DISABLED"),
+      _T("BLOCKING"),
+      _T("LISTENING"),
+      _T("LEARNING"),
+      _T("FORWARDING"),
+      _T("BROKEN")
+   };
+   int index = static_cast<int>(state);
+   return (index <= static_cast<int>(SpanningTreePortState::BROKEN)) && (index >= 0) ? stpStateText[index] : stpStateText[0];
+}
+
+/**
  * STP port table walker's callback
  */
 static uint32_t STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, LinkLayerNeighbors *neighbors)

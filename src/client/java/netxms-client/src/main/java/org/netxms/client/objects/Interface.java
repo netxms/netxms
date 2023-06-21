@@ -33,6 +33,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
 import org.netxms.client.constants.OSPFInterfaceState;
 import org.netxms.client.constants.OSPFInterfaceType;
+import org.netxms.client.constants.SpanningTreePortState;
 import org.netxms.client.objects.interfaces.NodeChild;
 import org.netxms.client.objects.interfaces.ZoneMember;
 import org.netxms.client.snmp.SnmpObjectId;
@@ -428,6 +429,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
    protected String ifAlias;
 	private int adminState;
 	private int operState;
+   private SpanningTreePortState stpPortState;
 	private int dot1xPaeState;
 	private int dot1xBackendState;
 	private SnmpObjectId ifTableSuffix;
@@ -464,6 +466,7 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 		adminState = msg.getFieldAsInt32(NXCPCodes.VID_ADMIN_STATE);
 		operState = msg.getFieldAsInt32(NXCPCodes.VID_OPER_STATE);
+      stpPortState = SpanningTreePortState.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STP_PORT_STATE));
 		dot1xPaeState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_PAE_STATE);
 		dot1xBackendState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_BACKEND_STATE);
 		ifTableSuffix = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_IFTABLE_SUFFIX));
@@ -794,10 +797,20 @@ public class Interface extends GenericObject implements ZoneMember, NodeChild
 	}
 
 	/**
-	 * Get interface expected state
-	 * 
-	 * @return interface expected state
-	 */
+    * Get Spanning Tree port state for this interface.
+    *
+    * @return Spanning Tree port state for this interface
+    */
+   public SpanningTreePortState getStpPortState()
+   {
+      return stpPortState;
+   }
+
+   /**
+    * Get interface expected state
+    * 
+    * @return interface expected state
+    */
 	public int getExpectedState()
 	{
 		return (flags & IF_EXPECTED_STATE_MASK) >> 28;

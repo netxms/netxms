@@ -24,6 +24,34 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.19 to 44.20
+ */
+static bool H_UpgradeFromV19()
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE interfaces ADD stp_port_state integer\n")
+      _T("UPDATE interfaces SET stp_port_state=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(DBSetNotNullConstraint(g_dbHandle, _T("interfaces"), _T("stp_port_state")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_STP_STATE_CHANGED, _T("SYS_IF_STP_STATE_CHANGED"),
+         EVENT_SEVERITY_NORMAL, EF_LOG, _T("977a5634-d0ec-44a0-a7a5-6e193ca57c38"),
+         _T("Interface %<ifName> STP state changed from %<oldStateText> to %<newStateText>"),
+         _T("Generated when system detects interface Spanning Tree state change.\r\n")
+         _T("Parameters:\r\n")
+         _T("   ifIndex - Interface index\r\n")
+         _T("   ifName - Interface name\r\n")
+         _T("   oldState - Old state\r\n")
+         _T("   oldStateText - Old state as text\r\n")
+         _T("   newState - New state\r\n")
+         _T("   newStateText - New state as text")
+      ));
+   CHK_EXEC(SetMinorSchemaVersion(20));
+   return true;
+}
+
+/**
  * Upgrade from 44.18 to 44.19
  */
 static bool H_UpgradeFromV18()
@@ -568,6 +596,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 19, 44, 20, H_UpgradeFromV19 },
    { 18, 44, 19, H_UpgradeFromV18 },
    { 17, 44, 18, H_UpgradeFromV17 },
    { 16, 44, 17, H_UpgradeFromV16 },
