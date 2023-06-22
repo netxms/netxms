@@ -955,13 +955,13 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
          if (object != nullptr && object->isDataCollectionTarget())
          {
             shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(event->getDciId(), 0);
-            if (!dcObject->getComments().isEmpty())
+            SharedString comments = dcObject->getComments();
+            if (!comments.isEmpty())
             {
-               uint32_t commetnId = 0;
-               alarm->updateAlarmComment(&commetnId, dcObject->getComments(), 0, true);
+               uint32_t commentId = 0;
+               alarm->updateAlarmComment(&commentId, comments, 0, true);
             }
          }
-
       }
 
       // Notify connected clients about new alarm
