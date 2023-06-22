@@ -68,7 +68,7 @@ public class RoundedLabel extends Canvas
          {
             e.gc.setBackground(label.getBackground());
             Rectangle r = getClientArea();
-            e.gc.fillRoundRectangle(0, 0, r.width, r.height, 8, 8);
+            e.gc.fillRoundRectangle(0, 0, r.width - 1, r.height - 1, 8, 8);
          }
       });
    }

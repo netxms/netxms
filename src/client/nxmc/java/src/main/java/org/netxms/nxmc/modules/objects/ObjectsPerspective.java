@@ -55,6 +55,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
@@ -140,6 +141,7 @@ import org.netxms.nxmc.resources.StatusDisplayInfo;
 import org.netxms.nxmc.services.ObjectActionDescriptor;
 import org.netxms.nxmc.services.ObjectViewDescriptor;
 import org.netxms.nxmc.tools.MessageDialogHelper;
+import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
@@ -320,6 +322,9 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
 
       objectStatus = new RoundedLabel(headerArea);
       objectStatus.setToolTipText(i18n.tr("Object status"));
+      gd = new GridData(SWT.FILL, SWT.FILL, false, true);
+      gd.widthHint = WidgetHelper.getTextWidth(objectStatus, StatusDisplayInfo.getStatusText(ObjectStatus.UNMANAGED) + 10);
+      objectStatus.setLayoutData(gd);
 
       separator = new Label(headerArea, SWT.SEPARATOR | SWT.VERTICAL);
       gd = new GridData(SWT.CENTER, SWT.FILL, false, true);
@@ -427,27 +432,16 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          AbstractObject object = (AbstractObject)selection.getFirstElement();
          this.selection = new StructuredSelection(object);
          objectName.setText(object.getNameWithAlias());
+
          if (object.isInMaintenanceMode())
             objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
          else
             objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
          objectStatus.setLabelBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+
          if (objectDetails != null)
-         {
-            objectGeneralInfo.setObject(object);
-            if (objectPollState.isApplicableForObject(object))
-            {
-               objectPollState.setObject(object);
-               objectPollState.fixPlacement();
-            }
-            else
-            {
-               objectPollState.dispose();
-               objectComments.fixPlacement();
-            }
-            objectComments.setObject(object);
-            layoutMainArea();
-         }
+            updateObjectDetails(object);
+
          updateObjectToolBar(object);
          updateObjectMenuBar(object);
          updateContextDashboards(object);
@@ -467,6 +461,51 @@ public abstract class ObjectsPerspective extends Perspective implements ISelecti
          for(ISelectionChangedListener l : selectionListeners)
             l.selectionChanged(e);
       }
+   }
+
+   /**
+    * @see org.netxms.nxmc.base.views.Perspective#updateContext(java.lang.Object)
+    */
+   @Override
+   protected void updateContext(Object context)
+   {
+      super.updateContext(context);
+
+      AbstractObject object = (AbstractObject)context;
+      objectName.setText(object.getNameWithAlias());
+
+      if (object.isInMaintenanceMode())
+         objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()) + i18n.tr(" (maintenance)"));
+      else
+         objectStatus.setText(StatusDisplayInfo.getStatusText(object.getStatus()));
+      objectStatus.setLabelBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
+
+      if (objectDetails != null)
+         updateObjectDetails(object);
+      else
+         headerArea.layout();
+   }
+
+   /**
+    * Update object details.
+    *
+    * @param object currently selected object
+    */
+   private void updateObjectDetails(AbstractObject object)
+   {
+      objectGeneralInfo.setObject(object);
+      if (objectPollState.isApplicableForObject(object))
+      {
+         objectPollState.setObject(object);
+         objectPollState.fixPlacement();
+      }
+      else
+      {
+         objectPollState.dispose();
+         objectComments.fixPlacement();
+      }
+      objectComments.setObject(object);
+      layoutMainArea();
    }
 
    /**

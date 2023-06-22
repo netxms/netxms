@@ -197,9 +197,9 @@ public abstract class AbstractDashboardView extends ObjectView
                      combinedTimeSeries.add(r.getTimestamp());
                }
             }
-            
+
             List<Double[]> combinedData = new ArrayList<Double[]>(data.size());
-            
+
             // insert missing values
             for(DataCacheElement d : data)
             {
