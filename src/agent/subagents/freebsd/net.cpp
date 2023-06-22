@@ -299,6 +299,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *val
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
 	((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
+
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[6] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_DUMP, 0 };
 	char *pRT = NULL, *pNext = NULL;
@@ -311,12 +312,12 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *val
 	{
 		if (nReqSize > 0)
 		{
-			pRT = (char *)malloc(nReqSize);
+			pRT = (char *)MemAlloc(nReqSize);
 			if (pRT != NULL)
 			{
 				if (sysctl(mib, 6, pRT, &nReqSize, NULL, 0) < 0)
 				{
-					free(pRT);
+					MemFree(pRT);
 					pRT = NULL;
 				}
 			}
@@ -392,20 +393,32 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *val
 				}
 				else
 				{
-					strcat(szOut,
-							inet_ntoa(sa2sin(rti_info[RTAX_GATEWAY])->sin_addr));
+					strcat(szOut, inet_ntoa(sa2sin(rti_info[RTAX_GATEWAY])->sin_addr));
 					strcat(szOut, " ");
 				}
-				snprintf(szTmp, sizeof(szTmp), "%d %d",
-						rtm->rtm_index,
-						(rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4);
-				strcat(szOut, szTmp);
 
-				value->addMBString(szOut);
+            int routeType;
+            if (rtm->rtm_flags & RTF_STATIC)
+               routeType = 3; // netmgmt
+            else if (rtm->rtm_flags & RTF_LOCAL)
+               routeType = 2; // local
+            else if (rtm->rtm_flags & RTF_DYNAMIC)
+               routeType = 4; // icmp
+            else
+               routeType = 1; // other
+
+				snprintf(szTmp, sizeof(szTmp), "%d %d %d %d",
+				   rtm->rtm_index,
+				   (rtm->rtm_flags & RTF_GATEWAY) == 0 ? 3 : 4,
+				   static_cast<int>(rtm->rtm_rmx.rmx_weight),
+               routeType);
+            strcat(szOut, szTmp);
+
+            value->addMBString(szOut);
 			}
 		}
 
-		free(pRT);
+		MemFree(pRT);
 	}
 
 #undef ROUNDUP
