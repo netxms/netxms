@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -262,7 +262,7 @@ public class AlarmList extends CompositeWithMessageBar
       initShowfilter = Activator.getDefault().getPreferenceStore().getBoolean("INIT_SHOW_FILTER");
 		
 		createActions();
-		createPopupMenu();
+		createContextMenu();
 
       if ((visibilityValidator == null) || visibilityValidator.isVisible())
          refresh();
@@ -545,7 +545,7 @@ public class AlarmList extends CompositeWithMessageBar
             createIssue();
          }
       };
-      
+
       actionShowIssue = new Action(Messages.get().AlarmList_ShowTicketInBrowser, SharedIcons.BROWSER) {
          @Override
          public void run()
@@ -553,7 +553,7 @@ public class AlarmList extends CompositeWithMessageBar
             showIssue();
          }
       };
-      
+
       actionUnlinkIssue = new Action(Messages.get().AlarmList_UnlinkTicket) {
          @Override
          public void run()
@@ -613,8 +613,8 @@ public class AlarmList extends CompositeWithMessageBar
 	}
 
 	/**
-	 * 
-	 */
+    * Initialize timed acknowledge actions and configuration
+    */
 	private void initializeTimeAcknowledge()
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
@@ -654,7 +654,7 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
-    * 
+    * Create default intervals for timed sticky acknowledge
     */
    private void createDefaultIntervals()
    {
@@ -705,9 +705,9 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
-    * Create pop-up menu for alarm list
+    * Create context menu for alarm list
     */
-   private void createPopupMenu()
+   private void createContextMenu()
    {
       // Create menu manager.
       MenuManager menuMgr = new FilteringMenuManager(Activator.PLUGIN_ID);
@@ -901,7 +901,7 @@ public class AlarmList extends CompositeWithMessageBar
                filterAndLimit();
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -956,7 +956,7 @@ public class AlarmList extends CompositeWithMessageBar
       updatedAlarms.addAll(updateList);
       updateList.clear();
 
-      alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
+      getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()
          {
@@ -1050,8 +1050,8 @@ public class AlarmList extends CompositeWithMessageBar
 			   HashMap<Long, Alarm> alarms = session.getAlarms();
             synchronized(alarmList)
             {
-      		   alarmList.clear();
-      		   alarmList.putAll(alarms);
+               alarmList.clear();
+               alarmList.putAll(alarms);
                filterAndLimit();
             }
          }
@@ -1119,16 +1119,16 @@ public class AlarmList extends CompositeWithMessageBar
 	}
 	
 	/**
-	 * Acknowledge selected alarms
-	 * 
-	 * @param sticky
-	 */
+    * Acknowledge selected alarms
+    *
+    * @param sticky
+    */
 	private void acknowledgeAlarms(final boolean sticky, final int time)
 	{
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.isEmpty())
 			return;
-		
+
 		final Object[] alarms = selection.toArray();
 		new ConsoleJob(Messages.get().AcknowledgeAlarm_JobName, viewPart, Activator.PLUGIN_ID) {
 			@Override
@@ -1145,7 +1145,7 @@ public class AlarmList extends CompositeWithMessageBar
 				}
 				monitor.done();
 			}
-			
+
 			@Override
 			protected String getErrorMessage()
 			{
@@ -1173,20 +1173,16 @@ public class AlarmList extends CompositeWithMessageBar
 			   final Map<Long, Integer> resolveFails = session.bulkResolveAlarms(alarmIds);
             if (!resolveFails.isEmpty())
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               runInUIThread(() -> {
+                  if (!isDisposed())
                   {
                      AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), resolveFails);
-                     if (dlg.open() == Window.OK)
-                     {
-                        return;
-                     }
+                     dlg.open();
                   }
                });
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1214,20 +1210,16 @@ public class AlarmList extends CompositeWithMessageBar
 		      final Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
 				if (!terminationFails.isEmpty())
 				{
-				   runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               runInUIThread(() -> {
+                  if (!isDisposed())
                   {
                      AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(viewPart.getSite().getShell(), terminationFails);
-                     if (dlg.open() == Window.OK)
-                     {
-                        return;
-                     }
+                     dlg.open();
                   }
                });
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1244,7 +1236,7 @@ public class AlarmList extends CompositeWithMessageBar
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new ConsoleJob(Messages.get().AlarmList_JobTitle_CreateTicket, viewPart, Activator.PLUGIN_ID) {
          @Override
@@ -1252,7 +1244,7 @@ public class AlarmList extends CompositeWithMessageBar
          {
             session.openHelpdeskIssue(id);
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1269,19 +1261,15 @@ public class AlarmList extends CompositeWithMessageBar
       IStructuredSelection selection = alarmSelectionProvider.getStructuredSelection();
       if (selection.size() != 1)
          return;
-      
+
       final long id = ((Alarm)selection.getFirstElement()).getId();
       new ConsoleJob(Messages.get().AlarmList_JobTitle_ShowTicket, viewPart, Activator.PLUGIN_ID) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final String url = session.getHelpdeskIssueUrl(id);
-            runInUIThread(new Runnable() { 
-               @Override
-               public void run()
-               {
-                  ExternalWebBrowser.open(url);
-               }
+            runInUIThread(() -> {
+               ExternalWebBrowser.open(url);
             });
          }
 
@@ -1414,7 +1402,7 @@ public class AlarmList extends CompositeWithMessageBar
       filterText.setText(text);
       onFilterModify();
    }
-   
+
    /**
     * @return action to show filter
     */
@@ -1422,7 +1410,7 @@ public class AlarmList extends CompositeWithMessageBar
    {
       return actionShowFilter;
    }
-   
+
    /**
     * Set action to be executed when user press "Close" button in object filter.
     * Default implementation will hide filter area without notifying parent.
@@ -1433,7 +1421,7 @@ public class AlarmList extends CompositeWithMessageBar
    {
       filterText.setCloseAction(action);
    }
-   
+
    /**
     * @return true if filter is enabled
     */

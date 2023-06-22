@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -214,8 +214,7 @@ public class AlarmList extends CompositeWithMessageArea
             WidgetHelper.saveTreeViewerSettings(alarmViewer, configPrefix);
          }
       });
-      
-      alarmViewer.addDoubleClickListener(new IDoubleClickListener() {         
+      alarmViewer.addDoubleClickListener(new IDoubleClickListener() {
          @Override
          public void doubleClick(DoubleClickEvent event)
          {
@@ -841,7 +840,7 @@ public class AlarmList extends CompositeWithMessageArea
                filterAndLimit();
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -995,8 +994,8 @@ public class AlarmList extends CompositeWithMessageArea
 			   HashMap<Long, Alarm> alarms = session.getAlarms();
             synchronized(alarmList)
             {
-      		   alarmList.clear();
-      		   alarmList.putAll(alarms);
+               alarmList.clear();
+               alarmList.putAll(alarms);
                filterAndLimit();
             }
          }
@@ -1080,18 +1079,16 @@ public class AlarmList extends CompositeWithMessageArea
 			   final Map<Long, Integer> resolveFails = session.bulkResolveAlarms(alarmIds);
             if (!resolveFails.isEmpty())
             {
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               runInUIThread(() -> {
+                  if (!isDisposed())
                   {
-                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(
-                           (view != null) ? view.getWindow().getShell() : null, resolveFails);
+                     AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog((view != null) ? view.getWindow().getShell() : null, resolveFails);
                      dlg.open();
                   }
                });
             }
          }
-         
+
          @Override
          protected String getErrorMessage()
          {
@@ -1119,9 +1116,8 @@ public class AlarmList extends CompositeWithMessageArea
 		      final Map<Long, Integer> terminationFails = session.bulkTerminateAlarms(alarmIds);
 				if (!terminationFails.isEmpty())
 				{
-				   runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
+               runInUIThread(() -> {
+                  if (!isDisposed())
                   {
                      AlarmStateChangeFailureDialog dlg = new AlarmStateChangeFailureDialog(
                            (view != null) ? view.getWindow().getShell() : null, terminationFails);
@@ -1154,16 +1150,15 @@ public class AlarmList extends CompositeWithMessageArea
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final String issueId = session.openHelpdeskIssue(id);
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  String message = String.format(i18n.tr("Helpdesk issue created successfully (assigned ID is %s)"), issueId);
-                  if (view != null)
-                     view.addMessage(MessageArea.SUCCESS, message);
-                  else
-                     MessageDialogHelper.openInformation(getShell(), i18n.tr("Create Helpdesk Issue"), message);
-               }
+            runInUIThread(() -> {
+               if (isDisposed())
+                  return;
+
+               String message = String.format(i18n.tr("Helpdesk issue created successfully (assigned ID is %s)"), issueId);
+               if (view != null)
+                  view.addMessage(MessageArea.SUCCESS, message);
+               else
+                  MessageDialogHelper.openInformation(getShell(), i18n.tr("Create Helpdesk Issue"), message);
             });
          }
 
@@ -1190,12 +1185,8 @@ public class AlarmList extends CompositeWithMessageArea
          protected void run(IProgressMonitor monitor) throws Exception
          {
             final String url = session.getHelpdeskIssueUrl(id);
-            runInUIThread(new Runnable() { 
-               @Override
-               public void run()
-               {
-                  ExternalWebBrowser.open(url);
-               }
+            runInUIThread(() -> {
+               ExternalWebBrowser.open(url);
             });
          }
 
