@@ -289,7 +289,7 @@ public class LinkGeneral extends PropertyPage
       if (obj == null)
          return "[" + Long.toString(objectId) + "]";
       java.util.List<AbstractObject> parentNode = obj.getParentChain(new int [] { AbstractObject.OBJECT_NODE });
-      return (parentNode.size() > 0 ? parentNode.get(0).getObjectName() + "/" : "") +  obj.getObjectName();	   
+      return (parentNode.size() > 0 ? parentNode.get(0).getObjectName() + " / " : "") +  obj.getObjectName();	   
 	}
 
    /**

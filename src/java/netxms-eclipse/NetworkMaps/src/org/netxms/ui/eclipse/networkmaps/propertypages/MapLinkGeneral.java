@@ -164,7 +164,7 @@ public class MapLinkGeneral extends PropertyPage
 		{
          for(Long id : object.getStatusObjects())
 		   {
-            list.add(getobjectName(id));
+            list.add(getObjectName(id));
 		   }
 		}
       list.setEnabled(radioColorObject.getSelection());
@@ -270,14 +270,14 @@ public class MapLinkGeneral extends PropertyPage
     * @param objectId object id
     * @return formatted name
     */
-   private String getobjectName(long objectId)
+   private String getObjectName(long objectId)
    {
       NXCSession session = ConsoleSharedData.getSession();
       AbstractObject obj = session.findObjectById(objectId);
       if (obj == null)
          return "[" + Long.toString(objectId) + "]";
       java.util.List<AbstractObject> parentNode = obj.getParentChain(new int [] { AbstractObject.OBJECT_NODE });
-      return (parentNode.size() > 0 ? parentNode.get(0).getObjectName() + "/" : "") +  obj.getObjectName();    
+      return (parentNode.size() > 0 ? parentNode.get(0).getObjectName() + " / " : "") +  obj.getObjectName();    
    }
 
    /**
@@ -295,7 +295,7 @@ public class MapLinkGeneral extends PropertyPage
             for(AbstractObject obj : objects)
             {
                object.addStatusObject(obj.getObjectId());
-               list.add(getobjectName(obj.getObjectId())); 
+               list.add(getObjectName(obj.getObjectId())); 
             }
          }
       }
