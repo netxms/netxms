@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,7 +134,8 @@ public class StatusIndicatorElement extends ElementWidget
                   @Override
                   public void run()
                   {
-                     refreshData();
+                     if (!isDisposed())
+                        refreshData();
                   }
                });
             }
@@ -238,7 +239,8 @@ public class StatusIndicatorElement extends ElementWidget
                   @Override
                   public void run()
                   {
-                     updateElements(scriptData, dciValues);
+                     if (!isDisposed())
+                        updateElements(scriptData, dciValues);
                   }
                });
             }
