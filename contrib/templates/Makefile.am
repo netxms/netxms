@@ -31,6 +31,7 @@ templates_DATA = \
 	netxms_agent.xml \
 	netxms_server.xml \
 	object_tools.xml \
+        printers.xml \
 	qnap.xml \
 	ruckus_zonedirector.xml \
 	sonicwall.xml \

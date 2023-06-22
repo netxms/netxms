@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<formatVersion>4</formatVersion>
+	<server>
+		<version>4.3.0-rc223</version>
+		<buildTag>4.3-223-g20c122be56</buildTag>
+		<operatingSystem>Linux 6.2.0-23-generic</operatingSystem>
+	</server>
+	<description></description>
+	<events>
+	</events>
+	<templates>
+		<template id="35447">
+			<guid>d4ccbc96-4378-40cf-a329-ba072027955a</guid>
+			<name>Printer Common</name>
+			<comments></comments>
+			<path>
+				<element id="1">SNMP</element>
+				<element id="2">Printers</element>
+			</path>
+			<dataCollection>
+				<dci id="312311">
+					<guid>adcdac44-544c-4317-bb74-78b93f80f931</guid>
+					<name>.1.3.6.1.2.1.43.11.1.1.9.{instance}</name>
+					<description>Toner level {instance-name}</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>4</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName>%</unitName>
+					<multiplier>0</multiplier>
+					<transformation>transport = $node-&gt;createSNMPTransport();&#x0A;if (transport != null)&#x0A;{&#x0A;&#x09;type = transport-&gt;getValue(&quot;.1.3.6.1.2.1.43.11.1.1.7.&quot; .. $dci-&gt;instance);&#x0A;&#x09;if (type == 19)&#x0A;&#x09;&#x09;return $1;&#x0A;&#x09;maxValue = transport-&gt;getValue(&quot;.1.3.6.1.2.1.43.11.1.1.8.&quot; .. $dci-&gt;instance);&#x0A;&#x09;return $1 / maxValue * 100;&#x0A;}&#x0A;return $1;</transformation>
+					<perfTabSettings></perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData>.1.3.6.1.2.1.43.11.1.1.9</instanceDiscoveryData>
+					<instanceFilter>name = &quot;&quot;;&#x0A;transport = $node-&gt;createSNMPTransport();&#x0A;if (transport != null)&#x0A;{&#x0A;&#x09;name = transport-&gt;getValue(&quot;.1.3.6.1.2.1.43.11.1.1.6.&quot; .. $1);&#x0A;}&#x0A;return Instance(displayName: name, name: $1);</instanceFilter>
+				</dci>
+				<dci id="312320">
+					<guid>2263d36d-23db-422e-ae39-fdee685640c0</guid>
+					<name>.1.3.6.1.2.1.25.3.5.1.1.1</name>
+					<description>Printer status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>60</interval>
+					<retentionType>1</retentionType>
+					<retention>30</retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<transformation>state = %(&quot;other&quot;, &quot;unknown&quot;, &quot;idle&quot;, &quot;printlng&quot;, &quot;warmup&quot;);&#x0A;&#x0A;return state[$1 - 1];</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="312343">
+					<guid>4ab3aa9c-66f0-4b2b-8653-861280037fbd</guid>
+					<name>.1.3.6.1.2.1.1.6.0</name>
+					<description>Printer location</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>60</interval>
+					<retentionType>1</retentionType>
+					<retention>30</retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings></perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="312344">
+					<guid>aa54f7ac-0c77-4ad6-a1a4-f5d9da17f6fa</guid>
+					<name>.1.3.6.1.2.1.25.3.2.1.3.1</name>
+					<description>Printer model</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>60</interval>
+					<retentionType>1</retentionType>
+					<retention>30</retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<perfTabSettings></perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="312352">
+					<guid>8e6ec140-45f2-46fd-9690-0c754a299b6e</guid>
+					<name>.1.3.6.1.2.1.43.9.2.1.6.1.1</name>
+					<description>Printer output status</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>1</scheduleType>
+					<interval>60</interval>
+					<retentionType>1</retentionType>
+					<retention>30</retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<transformation>state = %(&quot;Available and Idle&quot;, &quot;Unavailable and OnRequest&quot;, &quot;Available and Standby&quot;, &quot;Unavailable because Broken&quot;, &quot;Available and Active&quot;, &quot;Unknown&quot;, &quot;Available and Busy&quot;);&#x0A;&#x0A;return state[$1];</transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;stacked&gt;false&lt;/stacked&gt;&#x0A;   &lt;showLegendAlways&gt;false&lt;/showLegendAlways&gt;&#x0A;   &lt;extendedLegend&gt;true&lt;/extendedLegend&gt;&#x0A;   &lt;useMultipliers&gt;true&lt;/useMultipliers&gt;&#x0A;   &lt;minYScaleValue&gt;0.0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100.0&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;automaticColor&gt;false&lt;/automaticColor&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;groupName&gt;&lt;/groupName&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;modifyYBase&gt;false&lt;/modifyYBase&gt;&#x0A;   &lt;invertedValues&gt;false&lt;/invertedValues&gt;&#x0A;   &lt;translucent&gt;true&lt;/translucent&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+				<dci id="312375">
+					<guid>ba1ff1b9-2844-472c-b5c4-e19d52374135</guid>
+					<name>.1.3.6.1.2.1.25.3.5.1.2.1</name>
+					<description>Printer error state</description>
+					<dataType>4</dataType>
+					<samples>0</samples>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>4</flags>
+					<snmpRawValueType>2</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<unitName></unitName>
+					<multiplier>0</multiplier>
+					<transformation>errorState = &quot;&quot;;&#x0A;if ($1 == &quot;&quot;)&#x0A;&#x09;return &quot;OK&quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 31))&#x0A;&#x09;errorState = &quot;Paper is low, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 30))&#x0A;&#x09;errorState = errorState .. &quot;No paper, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 29))&#x0A;&#x09;errorState = errorState .. &quot;Low toner, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 28))&#x0A;&#x09;errorState = errorState .. &quot;No toner, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 27))&#x0A;&#x09;errorState = errorState .. &quot;Door open, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 26))&#x0A;&#x09;errorState = errorState .. &quot;Jammed, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 25))&#x0A;&#x09;errorState = errorState .. &quot;Ofline, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 24))&#x0A;&#x09;errorState = errorState .. &quot;Service requested, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 23))&#x0A;&#x09;errorState = errorState .. &quot;Input tray missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 22))&#x0A;&#x09;errorState = errorState .. &quot;Output tray missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 21))&#x0A;&#x09;errorState = errorState .. &quot;Marker supply missing, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 20))&#x0A;&#x09;errorState = errorState .. &quot;Output near full, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 19))&#x0A;&#x09;errorState = errorState .. &quot;Output full, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 18))&#x0A;&#x09;errorState = errorState .. &quot;Input tray empty, &quot;;&#x0A;if ($1 &amp; (1 &lt;&lt; 17))&#x0A;&#x09;errorState = errorState .. &quot;Overdue prevent maint, &quot;;&#x0A;&#x0A;if (errorState == &quot;&quot;)&#x0A;&#x09;return &quot;OK&quot;;&#x0A;else&#x0A;&#x09;return errorState-&gt;substring(0, (errorState-&gt;length - 2));</transformation>
+					<thresholds>
+						<threshold id="1">
+							<function>0</function>
+							<condition>5</condition>
+							<value>OK</value>
+							<activationEvent>SYS_THRESHOLD_REACHED</activationEvent>
+							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
+							<sampleCount>1</sampleCount>
+							<repeatInterval>-1</repeatInterval>
+							<script></script>
+						</threshold>
+					</thresholds>
+					<perfTabSettings></perfTabSettings>
+					<instance></instance>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dci>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isSNMP)&#x0A;&#x09;return false;&#x0A;return $node-&gt;isPrinter;</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+		<template id="35501">
+			<guid>7a0b03b4-087e-401c-abae-809503aa49ff</guid>
+			<name>Printer Canon</name>
+			<comments></comments>
+			<path>
+				<element id="1">SNMP</element>
+				<element id="2">Printers</element>
+			</path>
+			<dataCollection>
+				<dctable id="312633">
+					<guid>073c9907-524f-46a8-b312-5f2e330704b8</guid>
+					<name>.1.3.6.1.4.1.1602.1.11.2.1.1.2</name>
+					<description>Printed pages</description>
+					<origin>2</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<flags>0</flags>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instance></instance>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<columns>
+						<column id="1">
+							<name>Name</name>
+							<displayName>Name</displayName>
+							<snmpOid>.1.3.6.1.4.1.1602.1.11.2.1.1.2</snmpOid>
+							<flags>772</flags>
+						</column>
+						<column id="2">
+							<name>Value</name>
+							<displayName>Value</displayName>
+							<snmpOid>.1.3.6.1.4.1.1602.1.11.2.1.1.3</snmpOid>
+							<flags>7</flags>
+						</column>
+					</columns>
+					<thresholds>
+					</thresholds>
+					<perfTabSettings></perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dctable>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isSNMP)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isPrinter)&#x0A;&#x09;return false;&#x0A;return ($node-&gt;sysDescription ilike &quot;Canon*&quot;);</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+		<template id="35502">
+			<guid>2818e453-6d6a-420f-8863-7b06e5251791</guid>
+			<name>Printer HP</name>
+			<comments></comments>
+			<path>
+				<element id="1">SNMP</element>
+				<element id="2">Printers</element>
+			</path>
+			<dataCollection>
+				<dctable id="312640">
+					<guid>8e5a8cb9-489e-492a-81b0-538fa3e52926</guid>
+					<name>DCI::HpPrintedPageCount</name>
+					<description>Printed pages</description>
+					<origin>7</origin>
+					<scheduleType>0</scheduleType>
+					<interval></interval>
+					<retentionType>0</retentionType>
+					<retention></retention>
+					<systemTag></systemTag>
+					<flags>0</flags>
+					<snmpPort>0</snmpPort>
+					<snmpVersion>127</snmpVersion>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<instance></instance>
+					<instanceRetentionTime>-1</instanceRetentionTime>
+					<comments></comments>
+					<isDisabled>false</isDisabled>
+					<columns>
+					</columns>
+					<thresholds>
+					</thresholds>
+					<perfTabSettings></perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+				</dctable>
+			</dataCollection>
+			<agentPolicies>
+			</agentPolicies>
+			<filter autoBind="true" autoUnbind="false">if (classof($object) != &quot;Node&quot;)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isSNMP)&#x0A;&#x09;return false;&#x0A;if (!$node-&gt;isPrinter)&#x0A;&#x09;return false;&#x0A;return ($node-&gt;sysDescription ilike &quot;HP*&quot;);</filter>
+			<filter2 autoBind="false" autoUnbind="false"></filter2>
+		</template>
+	</templates>
+	<traps>
+	</traps>
+	<rules>
+	</rules>
+	<scripts>
+		<script id="10069">
+			<guid>7e5ee5bf-6286-47e7-a741-aadd25207889</guid>
+			<name>DCI::HpPrintedPageCount</name>
+			<code>transport = $node-&gt;createSNMPTransport();&#x0A;if (transport == null) {&#x0A;  return null;&#x0A;}&#x0A;&#x0A;table = new Table();&#x0A;table-&gt;addColumn(&quot;Name&quot;, DCI::STRING, &quot;Node&quot;, true);&#x0A;table-&gt;addColumn(&quot;Value&quot;, DCI::INT32, &quot;Value&quot;);&#x0A;&#x0A;total = transport-&gt;get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.5.0&quot;);&#x0A;row = table-&gt;addRow();&#x0A;table-&gt;set(row, 0, &quot;Total number of pages&quot;);&#x0A;table-&gt;set(row, 1, total-&gt;value);&#x0A;&#x0A;total = transport-&gt;get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.7.0&quot;);&#x0A;row = table-&gt;addRow();&#x0A;table-&gt;set(row, 0, &quot;Total number of color pages&quot;);&#x0A;table-&gt;set(row, 1, total-&gt;value);&#x0A;&#x0A;total = transport-&gt;get(&quot;.1.3.6.1.4.1.11.2.3.9.4.2.1.4.1.2.22.0&quot;);&#x0A;row = table-&gt;addRow();&#x0A;table-&gt;set(row, 0, &quot;Total number of duplex&quot;);&#x0A;table-&gt;set(row, 1, total-&gt;value);&#x0A;&#x0A;return table;&#x0A;</code>
+		</script>
+	</scripts>
+	<objectTools>
+	</objectTools>
+	<dciSummaryTables>
+	</dciSummaryTables>
+	<actions>
+	</actions>
+	<webServiceDefinitions>
+	</webServiceDefinitions>
+	<assetManagementSchema>
+	</assetManagementSchema>
+</configuration>
