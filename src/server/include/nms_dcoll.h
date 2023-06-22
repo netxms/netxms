@@ -307,7 +307,7 @@ protected:
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
    NXSL_Program *m_transformationScript;  // Compiled transformation script
    time_t m_lastScriptErrorReport;
-	TCHAR *m_comments;
+   SharedString m_comments;
 	bool m_doForcePoll;                    // Force poll indicator
 	ClientSession *m_pollingSession;       // Force poll requestor session
    uint16_t m_instanceDiscoveryMethod;
@@ -408,6 +408,7 @@ public:
    bool hasAccess(uint32_t userId);
    uint32_t getRelatedObject() const { return m_relatedObject; }
    bool isDisabledByUser() { return (m_stateFlags & DCO_STATE_DISABLED_BY_USER) ? true : false; }
+   SharedString getComments() const { return GetAttributeWithLock(m_comments, m_mutex); }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);

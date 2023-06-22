@@ -97,7 +97,6 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
    m_transformationScriptSource = nullptr;
    m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
-   m_comments = nullptr;
    m_doForcePoll = false;
    m_pollingSession = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
@@ -114,7 +113,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
-         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
+         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(src->m_instanceDiscoveryData), m_comments(src->m_comments),
          m_instanceName(src->m_instanceName), m_accessList(src->m_accessList)
 {
    m_id = src->m_id;
@@ -143,7 +142,6 @@ DCObject::DCObject(const DCObject *src, bool shadowCopy) :
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
-	m_comments = MemCopyString(src->m_comments);
 	m_doForcePoll = false;
 	m_pollingSession = nullptr;
 
@@ -171,8 +169,8 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(_T("")), m_instanceName(_T("")),
-         m_accessList(0, 16)
+         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(_T("")), m_comments(_T("")),
+         m_instanceName(_T("")), m_accessList(0, 16)
 {
    m_id = id;
    m_guid = uuid::generate();
@@ -202,7 +200,6 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
    m_transformationScriptSource = nullptr;
    m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
-   m_comments = nullptr;
    m_doForcePoll = false;
    m_pollingSession = nullptr;
    m_instanceDiscoveryMethod = IDM_NONE;
@@ -276,7 +273,7 @@ DCObject::DCObject(ConfigEntry *config, const shared_ptr<DataCollectionOwner>& o
    m_transformationScriptSource = nullptr;
    m_transformationScript = nullptr;
    m_lastScriptErrorReport = 0;
-   m_comments = MemCopyString(config->getSubEntryValue(_T("comments")));
+   m_comments = config->getSubEntryValue(_T("comments"));
    m_doForcePoll = false;
    m_pollingSession = nullptr;
    setTransformationScript(MemCopyString(config->getSubEntryValue(_T("transformation"))));
@@ -323,7 +320,6 @@ DCObject::~DCObject()
    delete m_transformationScript;
    delete m_schedules;
    MemFree(m_pszPerfTabSettings);
-   MemFree(m_comments);
    MemFree(m_instanceFilterSource);
    delete m_instanceFilter;
 }
@@ -865,7 +861,7 @@ void DCObject::updateFromMessage(const NXCPMessage& msg)
    m_snmpPort = msg.getFieldAsUInt16(VID_SNMP_PORT);
    m_snmpVersion = msg.isFieldExist(VID_SNMP_VERSION) ? static_cast<SNMP_Version>(msg.getFieldAsInt16(VID_SNMP_VERSION)) : SNMP_VERSION_DEFAULT;
 	msg.getFieldAsString(VID_PERFTAB_SETTINGS, &m_pszPerfTabSettings);
-   msg.getFieldAsString(VID_COMMENTS, &m_comments);
+	m_comments = msg.getFieldAsSharedString(VID_COMMENTS);
 
    m_pollingScheduleType = static_cast<BYTE>(msg.getFieldAsUInt16(VID_POLLING_SCHEDULE_TYPE));
    if (m_pollingScheduleType == DC_POLLING_SCHEDULE_CUSTOM)
@@ -1055,8 +1051,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_snmpPort = src->m_snmpPort;
    m_snmpVersion = src->m_snmpVersion;
 
-   MemFree(m_comments);
-   m_comments = MemCopyString(src->m_comments);
+   m_comments = src->m_comments;
 
 	MemFree(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = MemCopyString(src->m_pszPerfTabSettings);

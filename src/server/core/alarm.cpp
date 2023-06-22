@@ -949,6 +949,21 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
             NotifyClients(NX_NOTIFY_ALARM_CHANGED, parent);
          }
       }
+      if (event->getDciId() != 0)
+      {
+         shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
+         if (object != nullptr && object->isDataCollectionTarget())
+         {
+            object->calculateCompoundStatus();
+            shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(event->getDciId(), 0);
+            if (dcObject->getComments() != nullptr)
+            {
+               uint32_t commetnId = 0;
+               alarm->updateAlarmComment(&commetnId, dcObject->getComments(), 0, true);
+            }
+         }
+
+      }
 
       // Notify connected clients about new alarm
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);

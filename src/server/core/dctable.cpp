@@ -177,7 +177,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<Dat
 	m_sourceNode = DBGetFieldULong(hResult, row, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, row, 14, nullptr, 0);
    setTransformationScript(DBGetField(hResult, row, 15, nullptr, 0));
-   m_comments = DBGetField(hResult, row, 16, nullptr, 0);
+   m_comments = DBGetFieldAsSharedString(hResult, row, 16);
    m_guid = DBGetFieldGUID(hResult, row, 17);
    m_instanceDiscoveryMethod = (WORD)DBGetFieldLong(hResult, row, 18);
    m_instanceDiscoveryData = DBGetFieldAsSharedString(hResult, row, 19);

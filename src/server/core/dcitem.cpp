@@ -115,7 +115,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int row, const shared_ptr<DataC
 	setInstanceFilter(tmp);
    MemFree(tmp);
 	m_sampleCount = DBGetFieldLong(hResult, row, 25);
-   m_comments = DBGetField(hResult, row, 26, nullptr, 0);
+   m_comments = DBGetFieldAsSharedString(hResult, row, 26);
    m_guid = DBGetFieldGUID(hResult, row, 27);
    DBGetField(hResult, row, 28, m_predictionEngine, MAX_NPE_NAME_LEN);
    m_instanceRetentionTime = DBGetFieldLong(hResult, row, 29);
