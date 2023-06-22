@@ -1410,7 +1410,7 @@ uint32_t NetObj::modifyFromMessage(const NXCPMessage& msg)
 void NetObj::updateFlags(uint32_t flags, uint32_t mask)
 {
    m_flags &= ~mask;
-   m_flags |= flags;
+   m_flags |= (flags & mask);
 }
 
 /**
