@@ -212,7 +212,7 @@ public class InterfacePolling extends ObjectPropertyPage
     */
    private int collectFlags()
    {
-      int flags = iface.getFlags();
+      int flags = 0;
       for(int i = 0; i < flagButtons.size(); i++)
       {
          if (flagButtons.get(i).getSelection())
