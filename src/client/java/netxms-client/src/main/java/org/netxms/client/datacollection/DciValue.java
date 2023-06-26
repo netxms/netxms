@@ -39,6 +39,7 @@ public abstract class DciValue
 	protected String name;				// name
 	protected String description;	// description
 	protected String value;			// value
+   protected String comments;
    protected DataOrigin source;  // data source (agent, SNMP, etc.)
 	protected DataType dataType;
 	protected int status;				// status (active, disabled, etc.)
@@ -105,6 +106,7 @@ public abstract class DciValue
       measurementUnit = new MeasurementUnit(msg, fieldId++);
       multiplier = msg.getFieldAsInt32(fieldId++);
       noValueObject = msg.getFieldAsBoolean(fieldId++);
+      comments = msg.getFieldAsString(fieldId++);
 		if (msg.getFieldAsBoolean(fieldId++))
 			activeThreshold = new Threshold(msg, fieldId);
 		else
@@ -155,24 +157,38 @@ public abstract class DciValue
 	}
 
 	/**
-	 * @return the description
-	 */
+    * Get DCi description.
+    *
+    * @return DCI description
+    */
 	public String getDescription()
 	{
 		return description;
 	}
 
 	/**
-	 * @return the value
-	 */
+    * Get current (last collected) DCI value.
+    *
+    * @return current DCI value
+    */
 	public String getValue()
 	{
 		return value;
 	}
 
 	/**
-	 * @return the source
-	 */
+    * Get DCI comments.
+    *
+    * @return DCI comments
+    */
+   public String getComments()
+   {
+      return comments;
+   }
+
+   /**
+    * @return the source
+    */
    public DataOrigin getSource()
 	{
 		return source;

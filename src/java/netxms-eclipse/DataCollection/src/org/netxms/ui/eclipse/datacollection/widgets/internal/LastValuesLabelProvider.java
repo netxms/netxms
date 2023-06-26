@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,24 +86,26 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	   DciValue dciValue = ((DciValue)element);
 		switch(columnIndex)
 		{
+         case LastValuesWidget.COLUMN_COMMENTS:
+            return dciValue.getComments().replace("\r", "").replace('\n', ' ');
+         case LastValuesWidget.COLUMN_DESCRIPTION:
+            return dciValue.getDescription();
+         case LastValuesWidget.COLUMN_EVENT:
+            return getEventName(dciValue);
 			case LastValuesWidget.COLUMN_ID:
 				return Long.toString(dciValue.getId());
-			case LastValuesWidget.COLUMN_DESCRIPTION:
-				return dciValue.getDescription();
+         case LastValuesWidget.COLUMN_THRESHOLD:
+            return formatThreshold(dciValue);
+         case LastValuesWidget.COLUMN_TIMESTAMP:
+            if (dciValue.getTimestamp().getTime() <= 1000)
+               return null;
+            return RegionalSettings.getDateTimeFormat().format(dciValue.getTimestamp());
 			case LastValuesWidget.COLUMN_VALUE:
 				if (showErrors && dciValue.getErrorCount() > 0)
 					return Messages.get().LastValuesLabelProvider_Error;
 				if (dciValue.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
 					return Messages.get().LastValuesLabelProvider_Table;		
 				return dciValue.getFormattedValue(useMultipliers, RegionalSettings.TIME_FORMATTER);
-			case LastValuesWidget.COLUMN_TIMESTAMP:
-				if (dciValue.getTimestamp().getTime() <= 1000)
-					return null;
-				return RegionalSettings.getDateTimeFormat().format(dciValue.getTimestamp());
-			case LastValuesWidget.COLUMN_THRESHOLD:
-            return formatThreshold(dciValue);
-         case LastValuesWidget.COLUMN_EVENT:
-            return getEventName(dciValue);
 		}
 		return null;
 	}

@@ -862,7 +862,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, m_flags);
    msg->setField(fieldId++, m_description);
    msg->setField(fieldId++, static_cast<uint16_t>(m_source));
-   if (instance != nullptr && column != nullptr)
+   if ((instance != nullptr) && (column != nullptr))
    {
       shared_ptr<Table> t = getLastValue();
       int columnIndex =  t->getColumnIndex(column);
@@ -883,7 +883,7 @@ void DCTable::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t fieldId, co
    msg->setField(fieldId++, _T(""));
    msg->setField(fieldId++, 0);
    msg->setField(fieldId++, !hasValue());
-
+   msg->setField(fieldId++, m_comments);
 
    if (m_thresholds != nullptr)
    {

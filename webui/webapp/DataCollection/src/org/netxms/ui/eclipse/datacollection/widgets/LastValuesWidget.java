@@ -86,6 +86,7 @@ public class LastValuesWidget extends CompositeWithMessageBar
 	public static final int COLUMN_TIMESTAMP = 3;
 	public static final int COLUMN_THRESHOLD = 4;
    public static final int COLUMN_EVENT = 5;
+   public static final int COLUMN_COMMENTS = 6;
 
 	private final ViewPart viewPart;
 	private DataCollectionTarget dcTarget;
@@ -167,8 +168,9 @@ public class LastValuesWidget extends CompositeWithMessageBar
 		});
 
 		// Setup table columns
-		final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime, Messages.get().LastValuesWidget_ColThreshold, "Event" };
-		final int[] widths = { 70, 250, 150, 120, 150, 250 };
+      final String[] names = { Messages.get().LastValuesWidget_ColID, Messages.get().LastValuesWidget_ColDescr, Messages.get().LastValuesWidget_ColValue, Messages.get().LastValuesWidget_ColTime,
+            Messages.get().LastValuesWidget_ColThreshold, "Event", "Comments" };
+      final int[] widths = { 70, 250, 150, 120, 150, 250, 250 };
 		dataViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 
 		labelProvider = new LastValuesLabelProvider();

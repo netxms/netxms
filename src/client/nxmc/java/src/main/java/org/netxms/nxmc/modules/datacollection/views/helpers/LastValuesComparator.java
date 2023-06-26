@@ -58,8 +58,20 @@ public class LastValuesComparator extends ViewerComparator
       DciValue v2 = (DciValue)e2;
 
       int result = 0;
-      switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
+      switch((Integer)sortColumn.getData("ID"))
       {
+         case BaseDataCollectionView.LV_COLUMN_COMMENTS:
+            result = v1.getComments().compareToIgnoreCase(v2.getComments());
+            break;
+         case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
+            result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
+            break;
+         case BaseDataCollectionView.LV_COLUMN_EVENT:
+            result = getEventName(v1).compareToIgnoreCase(getEventName(v2));
+            break;
+         case BaseDataCollectionView.LV_COLUMN_ID:
+            result = Long.compare(v1.getId(), v2.getId());
+            break;
          case BaseDataCollectionView.LV_COLUMN_OWNER:
             AbstractObject obj1 = Registry.getSession().findObjectById(v1.getNodeId());
             AbstractObject obj2 = Registry.getSession().findObjectById(v2.getNodeId());
@@ -67,20 +79,11 @@ public class LastValuesComparator extends ViewerComparator
             String name2 = (obj2 != null) ? obj2.getObjectName() : "[" + Long.toString(v2.getNodeId()) + "]";
             result = name1.compareToIgnoreCase(name2);
             break;
-         case BaseDataCollectionView.LV_COLUMN_ID:
-            result = (int)(v1.getId() - v2.getId());
-            break;
-         case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
-            result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
+         case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
+            result = v1.getTimestamp().compareTo(v2.getTimestamp());
             break;
          case BaseDataCollectionView.LV_COLUMN_VALUE:
             result = compareValue(v1, v2);
-            break;
-         case BaseDataCollectionView.LV_COLUMN_EVENT:
-            result = getEventName(v1).compareToIgnoreCase(getEventName(v2));
-            break;
-         case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
-            result = v1.getTimestamp().compareTo(v2.getTimestamp());
             break;
          default:
             result = 0;

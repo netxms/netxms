@@ -1483,6 +1483,7 @@ void DCItem::fillLastValueSummaryMessage(NXCPMessage *msg, uint32_t baseId, cons
    msg->setField(baseId++, m_unitName);
    msg->setField(baseId++, m_multiplier);
    msg->setField(baseId++, !hasValue());
+   msg->setField(baseId++, m_comments);
 
 	if (m_thresholds != nullptr)
 	{

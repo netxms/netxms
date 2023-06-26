@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,6 +103,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    public static final int LV_COLUMN_TIMESTAMP = 4;
    public static final int LV_COLUMN_THRESHOLD = 5;
    public static final int LV_COLUMN_EVENT = 6;
+   public static final int LV_COLUMN_COMMENTS = 7;
 
    protected SortableTableViewer viewer;
 
@@ -161,8 +162,8 @@ public abstract class BaseDataCollectionView extends ObjectView
       parent.setLayout(new FillLayout());
 
       // Setup table columns
-      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold"), i18n.tr("Event") };
-      final int[] widths = { 250, 70, 250, 150, 120, 150, 250 };
+      final String[] names = { i18n.tr("Owner"), i18n.tr("ID"), i18n.tr("Description"), i18n.tr("Value"), i18n.tr("Timestamp"), i18n.tr("Threshold"), i18n.tr("Event"), i18n.tr("Comments") };
+      final int[] widths = { 250, 70, 250, 150, 120, 150, 250, 250 };
       viewer = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 
       labelProvider = new LastValuesLabelProvider(viewer);
@@ -359,7 +360,7 @@ public abstract class BaseDataCollectionView extends ObjectView
    }
 
    /**
-    * Refresh DCI list
+    * @see org.netxms.nxmc.base.views.View#refresh()
     */
    @Override
    public void refresh()
@@ -531,7 +532,9 @@ public abstract class BaseDataCollectionView extends ObjectView
                      viewer.setInput(data);
                      clearMessages();
                      if (callback != null)
+                     {
                         callback.run();
+                     }
                      else 
                      {
                         List<DciValue> selected = new ArrayList<DciValue>(selection.size());

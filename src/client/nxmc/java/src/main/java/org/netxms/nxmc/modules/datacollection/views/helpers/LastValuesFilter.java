@@ -58,7 +58,7 @@ public class LastValuesFilter extends ViewerFilter implements AbstractViewerFilt
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 
-      return value.getDescription().toLowerCase().contains(filterString) || matchEventName(value);
+      return value.getDescription().toLowerCase().contains(filterString) || value.getComments().toLowerCase().contains(filterString) || matchEventName(value);
 	}
 
    /**

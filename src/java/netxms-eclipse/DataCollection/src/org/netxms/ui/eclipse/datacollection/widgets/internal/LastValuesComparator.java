@@ -52,20 +52,23 @@ public class LastValuesComparator extends ViewerComparator
 
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
-			case LastValuesWidget.COLUMN_ID:
-				result = (int)(v1.getId() - v2.getId());
-				break;
-			case LastValuesWidget.COLUMN_DESCRIPTION:
-				result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
-				break;
-			case LastValuesWidget.COLUMN_VALUE:
-				result = compareValue(v1, v2);
-				break;
+         case LastValuesWidget.COLUMN_COMMENTS:
+            result = v1.getComments().compareToIgnoreCase(v2.getComments());
+            break;
+         case LastValuesWidget.COLUMN_DESCRIPTION:
+            result = v1.getDescription().compareToIgnoreCase(v2.getDescription());
+            break;
          case LastValuesWidget.COLUMN_EVENT:
             result = getEventName(v1).compareToIgnoreCase(getEventName(v2));
             break;
-			case LastValuesWidget.COLUMN_TIMESTAMP:
-				result = v1.getTimestamp().compareTo(v2.getTimestamp());
+			case LastValuesWidget.COLUMN_ID:
+            result = Long.compare(v1.getId(), v2.getId());
+				break;
+         case LastValuesWidget.COLUMN_TIMESTAMP:
+            result = v1.getTimestamp().compareTo(v2.getTimestamp());
+            break;
+			case LastValuesWidget.COLUMN_VALUE:
+				result = compareValue(v1, v2);
 				break;
 			default:
 				result = 0;

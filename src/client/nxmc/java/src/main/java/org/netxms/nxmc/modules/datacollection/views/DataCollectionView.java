@@ -235,11 +235,11 @@ public class DataCollectionView extends BaseDataCollectionView
             ds.set(configPrefix + ".hideTemplateItems", actionHideTemplateItems.isChecked());
          }
       });
-      
+
       createContextMenu();
 
       hideModificationWarnings = ds.getAsBoolean(configPrefix + ".hideModificationWarnings", false); 
-      
+
       final Display display = viewer.getControl().getDisplay();
       changeListener = new RemoteChangeListener() {
          @Override

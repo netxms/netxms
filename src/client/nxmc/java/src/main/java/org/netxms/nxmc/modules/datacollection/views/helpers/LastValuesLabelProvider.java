@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,8 @@ import org.xnap.commons.i18n.I18n;
  */
 public class LastValuesLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private I18n i18n = LocalizationHelper.getI18n(LastValuesLabelProvider.class);
+   private final I18n i18n = LocalizationHelper.getI18n(LastValuesLabelProvider.class);
+
 	private Image[] stateImages = new Image[3];
 	private boolean useMultipliers = true;
 	private boolean showErrors = true;
@@ -62,7 +63,7 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	public LastValuesLabelProvider(SortableTableViewer viewer)
 	{
 		super();
-		
+
       this.viewer = viewer;
 
       stateImages[0] = ResourceManager.getImageDescriptor("icons/dci/active.gif").createImage();
@@ -103,26 +104,28 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	   DciValue dciValue = ((DciValue)element);
 		switch((Integer)viewer.getTable().getColumn(columnIndex).getData("ID"))
 		{
+         case BaseDataCollectionView.LV_COLUMN_COMMENTS:
+            return dciValue.getComments().replace("\r", "").replace('\n', ' ');
+         case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
+            return dciValue.getDescription();
+         case BaseDataCollectionView.LV_COLUMN_EVENT:
+            return getEventName(dciValue);
+         case BaseDataCollectionView.LV_COLUMN_ID:
+            return Long.toString(dciValue.getId());
          case BaseDataCollectionView.LV_COLUMN_OWNER:
             return session.getObjectNameWithAlias(dciValue.getNodeId());
-			case BaseDataCollectionView.LV_COLUMN_ID:
-				return Long.toString(dciValue.getId());
-			case BaseDataCollectionView.LV_COLUMN_DESCRIPTION:
-				return dciValue.getDescription();
+         case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
+            return formatThreshold(dciValue);
+         case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
+            if (dciValue.getTimestamp().getTime() <= 1000)
+               return null;
+            return DateFormatFactory.getDateTimeFormat().format(dciValue.getTimestamp());
 			case BaseDataCollectionView.LV_COLUMN_VALUE:
 				if (showErrors && dciValue.getErrorCount() > 0)
                return i18n.tr("<< ERROR >>");
 				if (dciValue.getDcObjectType() == DataCollectionObject.DCO_TYPE_TABLE)
                return i18n.tr("<< TABLE >>");
             return dciValue.getFormattedValue(useMultipliers, DateFormatFactory.getTimeFormatter());
-			case BaseDataCollectionView.LV_COLUMN_TIMESTAMP:
-				if (dciValue.getTimestamp().getTime() <= 1000)
-					return null;
-            return DateFormatFactory.getDateTimeFormat().format(dciValue.getTimestamp());
-			case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
-            return formatThreshold(dciValue);
-         case BaseDataCollectionView.LV_COLUMN_EVENT:
-            return getEventName(dciValue);
 		}
 		return null;
 	}
