@@ -254,6 +254,9 @@ static void ProcessEvent(Event *event, int processorId)
    // possible deadlock on g_rwlockIdIndex
    event->expandMessageText();
 
+   // Execute pre-processing callback if set
+   event->executeCallback();
+
    // Attempt to correlate event to some of previous events
    CorrelateEvent(event);
 

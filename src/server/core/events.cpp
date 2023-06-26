@@ -592,7 +592,6 @@ void Event::initFromTemplate(const EventTemplate *eventTemplate)
 
    if ((eventTemplate->getTags() != nullptr) && (eventTemplate->getTags()[0] != 0))
       m_tags.splitAndAdd(eventTemplate->getTags(), _T(","));
-
 }
 
 /**
@@ -1468,7 +1467,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
 
    // Execute pre-send callback
    if (callback != nullptr)
-      callback(m_event);
+      m_event->m_callback = callback;
 
    // Add new event to m_queue
    if (queue == nullptr)

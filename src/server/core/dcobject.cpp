@@ -113,7 +113,7 @@ DCObject::DCObject(const shared_ptr<DataCollectionOwner>& owner) : m_owner(owner
  */
 DCObject::DCObject(const DCObject *src, bool shadowCopy) :
          m_owner(src->m_owner), m_name(src->m_name), m_description(src->m_description), m_systemTag(src->m_systemTag),
-         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(src->m_instanceDiscoveryData), m_comments(src->m_comments),
+         m_mutex(MutexType::RECURSIVE), m_comments(src->m_comments), m_instanceDiscoveryData(src->m_instanceDiscoveryData),
          m_instanceName(src->m_instanceName), m_accessList(src->m_accessList)
 {
    m_id = src->m_id;
@@ -169,7 +169,7 @@ DCObject::DCObject(uint32_t id, const TCHAR *name, int source, BYTE scheduleType
          BYTE retentionType, const TCHAR *retentionTime, const shared_ptr<DataCollectionOwner>& owner,
          const TCHAR *description, const TCHAR *systemTag) :
          m_owner(owner), m_name(name), m_description(description), m_systemTag(systemTag),
-         m_mutex(MutexType::RECURSIVE), m_instanceDiscoveryData(_T("")), m_comments(_T("")),
+         m_mutex(MutexType::RECURSIVE), m_comments(_T("")), m_instanceDiscoveryData(_T("")),
          m_instanceName(_T("")), m_accessList(0, 16)
 {
    m_id = id;

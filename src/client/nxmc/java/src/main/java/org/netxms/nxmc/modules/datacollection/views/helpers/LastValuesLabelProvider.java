@@ -112,6 +112,8 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
             return getEventName(dciValue);
          case BaseDataCollectionView.LV_COLUMN_ID:
             return Long.toString(dciValue.getId());
+         case BaseDataCollectionView.LV_COLUMN_MESSAGE:
+            return getEventMessage(dciValue);
          case BaseDataCollectionView.LV_COLUMN_OWNER:
             return session.getObjectNameWithAlias(dciValue.getNodeId());
          case BaseDataCollectionView.LV_COLUMN_THRESHOLD:
@@ -158,6 +160,18 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
       if (threshold == null)
          return "";
       return session.getEventName(threshold.getFireEvent());
+   }
+
+   /**
+    * Get threshold activation event message.
+    *
+    * @param value DCI value
+    * @return threshold activation event message or empty string
+    */
+   public String getEventMessage(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      return (threshold != null) ? threshold.getLastEventMessage() : "";
    }
 
    /**

@@ -163,6 +163,7 @@ private:
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
 	time_t m_lastEventTimestamp;
+	TCHAR *m_lastEventMessage;
 
    const ItemValue& value() const { return m_value; }
    void calculateAverage(ItemValue *result, const ItemValue &lastValue, ItemValue **ppPrevValues);
@@ -173,9 +174,9 @@ private:
 
 public:
 	Threshold();
-   Threshold(DCItem *pRelatedItem);
-   Threshold(Threshold *src, bool shadowCopy);
-   Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem);
+   Threshold(DCItem *relatedItem);
+   Threshold(const Threshold& src, bool shadowCopy);
+   Threshold(DB_RESULT hResult, int row, DCItem *relatedItem);
 	Threshold(ConfigEntry *config, DCItem *parentItem);
    ~Threshold();
 
@@ -197,7 +198,7 @@ public:
 	bool needValueExpansion() const { return m_expandValue; }
 	String getTextualDefinition() const;
 
-	void markLastEvent(int severity);
+	void markLastEvent(int severity, const TCHAR *message);
    void updateBeforeMaintenanceState() { m_wasReachedBeforeMaint = m_isReached; }
    void setLastCheckedValue(const ItemValue &value) { m_lastCheckValue = value; }
 
@@ -211,7 +212,7 @@ public:
    void createId();
    uint32_t getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
 
-   bool equals(const Threshold *t) const;
+   bool equals(const Threshold& t) const;
 
    void createExportRecord(StringBuffer &xml, int index) const;
    json_t *toJson() const;
@@ -219,7 +220,7 @@ public:
 	void associate(DCItem *pItem);
 	void setDataType(BYTE type) { m_dataType = type; }
 
-	void reconcile(const Threshold *src);
+	void reconcile(const Threshold& src);
 
    bool isUsingEvent(uint32_t eventCode) const { return (eventCode == m_eventCode || eventCode == m_rearmEventCode); }
 };
@@ -267,7 +268,7 @@ template class NXCORE_EXPORTABLE weak_ptr<DataCollectionOwner>;
 /**
  * Generic data collection object
  */
-class NXCORE_EXPORTABLE DCObject : public SearchAttributeProvider
+class NXCORE_EXPORTABLE DCObject : public enable_shared_from_this<DCObject>, public SearchAttributeProvider
 {
    friend class DCObjectInfo;
 
@@ -500,7 +501,16 @@ protected:
    void clearCache();
 
    bool hasScriptThresholds() const;
-   Threshold *getThresholdById(UINT32 id) const;
+   Threshold *getThresholdById(uint32_t id) const;
+
+   void markLastThresholdEvent(uint32_t thresholdId, int severity, const TCHAR *message)
+   {
+      lock();
+      Threshold *t = getThresholdById(thresholdId);
+      if (t != nullptr)
+         t->markLastEvent(severity, message);
+      unlock();
+   }
 
 	virtual bool isCacheLoaded() override;
    virtual shared_ptr<DCObjectInfo> createDescriptorInternal() const override;
@@ -535,7 +545,7 @@ public:
    int getNXSLDataType() const;
    int getDeltaCalculationMethod() const { return m_deltaCalculation; }
 	bool isInterpretSnmpRawValue() const { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
-	WORD getSnmpRawValueType() const { return m_snmpRawValueType; }
+	uint16_t getSnmpRawValueType() const { return m_snmpRawValueType; }
 	bool hasActiveThreshold() const;
    int getThresholdSeverity() const;
 	int getSampleCount() const { return m_sampleCount; }

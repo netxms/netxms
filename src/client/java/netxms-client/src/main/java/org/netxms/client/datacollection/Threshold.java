@@ -60,6 +60,7 @@ public class Threshold
 	private boolean active;
 	private Severity currentSeverity;
 	private Date lastEventTimestamp;
+   private String lastEventMessage;
 
 	/**
 	 * Create DCI threshold object from NXCP message
@@ -80,7 +81,8 @@ public class Threshold
 		value = msg.getFieldAsString(fieldId++);
 		active = msg.getFieldAsBoolean(fieldId++);
 		currentSeverity = Severity.getByValue(msg.getFieldAsInt32(fieldId++));
-		lastEventTimestamp = msg.getFieldAsDate(fieldId);
+      lastEventTimestamp = msg.getFieldAsDate(fieldId++);
+      lastEventMessage = msg.getFieldAsString(fieldId);
 	}
 
 	/**
@@ -100,6 +102,7 @@ public class Threshold
 		active = false;
 		currentSeverity = Severity.NORMAL;
 		lastEventTimestamp = new Date(0);
+      lastEventMessage = null;
 	}
 
 	/**
@@ -121,6 +124,7 @@ public class Threshold
 		active = src.active;
 		currentSeverity = src.currentSeverity;
 		lastEventTimestamp = src.lastEventTimestamp;
+      lastEventMessage = src.lastEventMessage;
 	}
 
 	/**
@@ -286,12 +290,24 @@ public class Threshold
 	}
 
 	/**
-	 * @return the lastEventTimestamp
-	 */
+    * Get timestamp of last event generated when this threshold was activated.
+    *
+    * @return timestamp of last event generated when this threshold was activated or 0
+    */
 	public Date getLastEventTimestamp()
 	{
 		return lastEventTimestamp;
 	}
+
+   /**
+    * Get message from last event generated when this threshold was activated.
+    *
+    * @return message from last event generated when this threshold was activated or null
+    */
+   public String getLastEventMessage()
+   {
+      return lastEventMessage;
+   }
 
    /**
     * @return the script

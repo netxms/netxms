@@ -93,7 +93,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
          case LastValuesWidget.COLUMN_EVENT:
             return getEventName(dciValue);
 			case LastValuesWidget.COLUMN_ID:
-				return Long.toString(dciValue.getId());
+            return Long.toString(dciValue.getId());
+         case LastValuesWidget.COLUMN_MESSAGE:
+            return getEventMessage(dciValue);
          case LastValuesWidget.COLUMN_THRESHOLD:
             return formatThreshold(dciValue);
          case LastValuesWidget.COLUMN_TIMESTAMP:
@@ -138,6 +140,18 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
       if (threshold == null)
          return "";
       return thresholdLabelProvider.getColumnText(threshold, Thresholds.COLUMN_EVENT);
+   }
+
+   /**
+    * Get threshold activation event message.
+    *
+    * @param value DCI value
+    * @return threshold activation event message or empty string
+    */
+   public String getEventMessage(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      return (threshold != null) ? threshold.getLastEventMessage() : "";
    }
 
    /**

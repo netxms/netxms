@@ -51,7 +51,7 @@ public class LastValuesComparator extends ViewerComparator
 		DciValue v2 = (DciValue)e2;
 
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
-		{
+      {
          case LastValuesWidget.COLUMN_COMMENTS:
             result = v1.getComments().compareToIgnoreCase(v2.getComments());
             break;
@@ -61,19 +61,22 @@ public class LastValuesComparator extends ViewerComparator
          case LastValuesWidget.COLUMN_EVENT:
             result = getEventName(v1).compareToIgnoreCase(getEventName(v2));
             break;
-			case LastValuesWidget.COLUMN_ID:
+         case LastValuesWidget.COLUMN_ID:
             result = Long.compare(v1.getId(), v2.getId());
-				break;
+            break;
+         case LastValuesWidget.COLUMN_MESSAGE:
+            result = getEventMessage(v1).compareToIgnoreCase(getEventMessage(v2));
+            break;
          case LastValuesWidget.COLUMN_TIMESTAMP:
             result = v1.getTimestamp().compareTo(v2.getTimestamp());
             break;
-			case LastValuesWidget.COLUMN_VALUE:
-				result = compareValue(v1, v2);
-				break;
-			default:
-				result = 0;
-				break;
-		}
+         case LastValuesWidget.COLUMN_VALUE:
+            result = compareValue(v1, v2);
+            break;
+         default:
+            result = 0;
+            break;
+      }
 		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
 	}
 
@@ -89,6 +92,18 @@ public class LastValuesComparator extends ViewerComparator
       if (threshold == null)
          return "";
       return session.getEventName(threshold.getFireEvent());
+   }
+
+   /**
+    * Get threshold activation event message.
+    *
+    * @param value DCI value
+    * @return threshold activation event message or empty string
+    */
+   public String getEventMessage(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      return (threshold != null) ? threshold.getLastEventMessage() : "";
    }
 
 	/**

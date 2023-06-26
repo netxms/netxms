@@ -148,6 +148,7 @@ private:
 	MutableString m_lastAlarmMessage;
 	int64_t m_queueTime;
 	EventQueueBinding *m_queueBinding;
+	std::function<void (Event*)> m_callback;
 
 	void init(const EventTemplate *eventTemplate, EventOrigin origin, time_t originTimestamp, uint32_t sourceId, uint32_t dciId);
 	void initFromTemplate(const EventTemplate *eventTemplate);
@@ -194,6 +195,12 @@ public:
 
    uint64_t getRootId() const { return m_rootId; }
    void setRootId(uint64_t id) { m_rootId = id; }
+
+   void executeCallback()
+   {
+      if (m_callback != nullptr)
+         m_callback(this);
+   }
 
    void prepareMessage(NXCPMessage *msg) const;
 

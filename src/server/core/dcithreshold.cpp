@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,17 +25,17 @@
 /**
  * Create new threshold for given DCI
  */
-Threshold::Threshold(DCItem *pRelatedItem)
+Threshold::Threshold(DCItem *relatedItem)
 {
    m_id = 0;
-   m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getOwnerId();
+   m_itemId = relatedItem->getId();
+   m_targetId = relatedItem->getOwnerId();
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
    m_expandValue = false;
    m_function = F_LAST;
    m_operation = OP_EQ;
-   m_dataType = pRelatedItem->getDataType();
+   m_dataType = relatedItem->getDataType();
    m_sampleCount = 1;
    m_scriptSource = nullptr;
    m_script = nullptr;
@@ -45,6 +45,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
+	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
 }
 
@@ -71,35 +72,37 @@ Threshold::Threshold()
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = -1;
 	m_lastEventTimestamp = 0;
+   m_lastEventMessage = nullptr;
 	m_numMatches = 0;
 }
 
 /**
  * Create from another threshold object
  */
-Threshold::Threshold(Threshold *src, bool shadowCopy)
+Threshold::Threshold(const Threshold& src, bool shadowCopy)
 {
-   m_id = shadowCopy ? src->m_id : CreateUniqueId(IDG_THRESHOLD);
-   m_itemId = src->m_itemId;
-   m_targetId = src->m_targetId;
-   m_eventCode = src->m_eventCode;
-   m_rearmEventCode = src->m_rearmEventCode;
-   m_value = src->m_value;
-   m_expandValue = src->m_expandValue;
-   m_function = src->m_function;
-   m_operation = src->m_operation;
-   m_dataType = src->m_dataType;
-   m_sampleCount = src->m_sampleCount;
+   m_id = shadowCopy ? src.m_id : CreateUniqueId(IDG_THRESHOLD);
+   m_itemId = src.m_itemId;
+   m_targetId = src.m_targetId;
+   m_eventCode = src.m_eventCode;
+   m_rearmEventCode = src.m_rearmEventCode;
+   m_value = src.m_value;
+   m_expandValue = src.m_expandValue;
+   m_function = src.m_function;
+   m_operation = src.m_operation;
+   m_dataType = src.m_dataType;
+   m_sampleCount = src.m_sampleCount;
    m_scriptSource = nullptr;
    m_script = nullptr;
-   setScript(MemCopyString(src->m_scriptSource));
-   m_lastScriptErrorReport = shadowCopy ? src->m_lastScriptErrorReport : 0;
-   m_isReached = shadowCopy ? src->m_isReached : false;
-   m_wasReachedBeforeMaint = shadowCopy ? src->m_wasReachedBeforeMaint : false;
-	m_currentSeverity = shadowCopy ? src->m_currentSeverity : SEVERITY_NORMAL;
-	m_repeatInterval = src->m_repeatInterval;
-	m_lastEventTimestamp = shadowCopy ? src->m_lastEventTimestamp : 0;
-	m_numMatches = shadowCopy ? src->m_numMatches : 0;
+   setScript(MemCopyString(src.m_scriptSource));
+   m_lastScriptErrorReport = shadowCopy ? src.m_lastScriptErrorReport : 0;
+   m_isReached = shadowCopy ? src.m_isReached : false;
+   m_wasReachedBeforeMaint = shadowCopy ? src.m_wasReachedBeforeMaint : false;
+	m_currentSeverity = shadowCopy ? src.m_currentSeverity : SEVERITY_NORMAL;
+	m_repeatInterval = src.m_repeatInterval;
+	m_lastEventTimestamp = shadowCopy ? src.m_lastEventTimestamp : 0;
+   m_lastEventMessage = nullptr;
+	m_numMatches = shadowCopy ? src.m_numMatches : 0;
 }
 
 /**
@@ -108,38 +111,42 @@ Threshold::Threshold(Threshold *src, bool shadowCopy)
  * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
  *        sample_count,script,event_code,current_state,rearm_event_code,
  *        repeat_interval,current_severity,last_event_timestamp,match_count,
- *        state_before_maint,last_checked_value FROM thresholds
+ *        state_before_maint,last_checked_value,last_event_message FROM thresholds
  */
-Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
+Threshold::Threshold(DB_RESULT hResult, int row, DCItem *relatedItem)
 {
-   TCHAR szBuffer[MAX_DB_STRING];
+   TCHAR textBuffer[MAX_EVENT_MSG_LENGTH];
 
-   m_id = DBGetFieldULong(hResult, iRow, 0);
-   m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getOwnerId();
-   m_eventCode = DBGetFieldULong(hResult, iRow, 7);
-   m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
-   DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
-   m_value = szBuffer;
-   m_expandValue = (NumChars(m_value, '%') > 0);
-   m_function = (BYTE)DBGetFieldLong(hResult, iRow, 3);
-   m_operation = (BYTE)DBGetFieldLong(hResult, iRow, 4);
-   m_dataType = pRelatedItem->getDataType();
-   m_sampleCount = DBGetFieldLong(hResult, iRow, 5);
-	if ((m_function == F_LAST) && (m_sampleCount < 1))
-		m_sampleCount = 1;
+   m_id = DBGetFieldULong(hResult, row, 0);
+   DBGetField(hResult, row, 1, textBuffer, MAX_DB_STRING);
+   m_value = textBuffer;
+   m_function = (BYTE)DBGetFieldLong(hResult, row, 3);
+   m_operation = (BYTE)DBGetFieldLong(hResult, row, 4);
+   m_sampleCount = DBGetFieldLong(hResult, row, 5);
    m_scriptSource = nullptr;
    m_script = nullptr;
+   setScript(DBGetField(hResult, row, 6, nullptr, 0));
+   m_eventCode = DBGetFieldULong(hResult, row, 7);
+   m_isReached = DBGetFieldLong(hResult, row, 8);
+   m_rearmEventCode = DBGetFieldULong(hResult, row, 9);
+   m_repeatInterval = DBGetFieldLong(hResult, row, 10);
+   m_currentSeverity = (BYTE)DBGetFieldLong(hResult, row, 11);
+   m_lastEventTimestamp = (time_t)DBGetFieldULong(hResult, row, 12);
+   m_numMatches = DBGetFieldLong(hResult, row, 13);
+   m_wasReachedBeforeMaint = DBGetFieldLong(hResult, row, 14) ? true : false;
+   DBGetField(hResult, row, 15, textBuffer, MAX_DB_STRING);
+   m_lastCheckValue = textBuffer;
+   DBGetField(hResult, row, 16, textBuffer, MAX_EVENT_MSG_LENGTH);
+   m_lastEventMessage = (textBuffer[0] != 0) ? MemCopyString(textBuffer) : nullptr;
+
    m_lastScriptErrorReport = 0;
-   setScript(DBGetField(hResult, iRow, 6, nullptr, 0));
-   m_isReached = DBGetFieldLong(hResult, iRow, 8);
-   m_wasReachedBeforeMaint = DBGetFieldLong(hResult, iRow, 14) ? true : false;
-	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
-	m_currentSeverity = (BYTE)DBGetFieldLong(hResult, iRow, 11);
-	m_lastEventTimestamp = (time_t)DBGetFieldULong(hResult, iRow, 12);
-	m_numMatches = DBGetFieldLong(hResult, iRow, 13);
-   DBGetField(hResult, iRow, 14, szBuffer, MAX_DB_STRING);
-   m_lastCheckValue = szBuffer;
+   m_itemId = relatedItem->getId();
+   m_targetId = relatedItem->getOwnerId();
+   m_dataType = relatedItem->getDataType();
+   m_expandValue = (NumChars(m_value, '%') > 0);
+
+	if ((m_function == F_LAST) && (m_sampleCount < 1))
+		m_sampleCount = 1;
 }
 
 /**
@@ -168,6 +175,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = config->getSubEntryValueAsInt(_T("repeatInterval"), 0, -1);
 	m_lastEventTimestamp = 0;
+	m_lastEventMessage = nullptr;
 	m_numMatches = 0;
 }
 
@@ -178,6 +186,7 @@ Threshold::~Threshold()
 {
    MemFree(m_scriptSource);
    delete m_script;
+   MemFree(m_lastEventMessage);
 }
 
 /**
@@ -197,7 +206,7 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
       _T("item_id"), _T("fire_value"), _T("rearm_value"), _T("check_function"), _T("check_operation"), _T("sample_count"),
       _T("script"), _T("event_code"), _T("sequence_number"), _T("current_state"), _T("state_before_maint"), _T("rearm_event_code"),
       _T("repeat_interval"), _T("current_severity"), _T("last_event_timestamp"), _T("match_count"), _T("last_checked_value"),
-      nullptr
+      _T("last_event_message"), nullptr
    };
 	DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("thresholds"), _T("threshold_id"), m_id, columns);
 	if (hStmt == nullptr)
@@ -220,7 +229,8 @@ bool Threshold::saveToDB(DB_HANDLE hdb, uint32_t index)
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastEventTimestamp));
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_numMatches);
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_lastCheckValue.getString(), DB_BIND_STATIC);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_lastEventMessage, DB_BIND_STATIC);
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
 
 	bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -545,16 +555,22 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
 /**
  * Mark last activation event
  */
-void Threshold::markLastEvent(int severity)
+void Threshold::markLastEvent(int severity, const TCHAR *message)
 {
 	m_lastEventTimestamp = time(nullptr);
 	m_currentSeverity = (BYTE)severity;
+	MemFree(m_lastEventMessage);
+	m_lastEventMessage = MemCopyString(message);
 
 	// Update threshold in database
-	TCHAR query[256];
-   _sntprintf(query, 256,
-              _T("UPDATE thresholds SET current_severity=%d,last_event_timestamp=%d WHERE threshold_id=%u"),
-              (int)m_currentSeverity, (int)m_lastEventTimestamp, m_id);
+	StringBuffer query = _T("UPDATE thresholds SET current_severity=");
+	query.append(severity);
+	query.append(_T(",last_event_timestamp="));
+	query.append(static_cast<int64_t>(m_lastEventTimestamp));
+	query.append(_T(",last_event_message="));
+	query.append(DBPrepareString(g_dbDriver, message, 2000));
+	query.append(_T("WHERE threshold_id="));
+	query.append(m_id);
 	QueueSQLRequest(query);
 }
 
@@ -601,6 +617,7 @@ void Threshold::fillMessage(NXCPMessage *msg, uint32_t baseId) const
 	msg->setField(fieldId++, m_isReached);
 	msg->setField(fieldId++, static_cast<uint16_t>(m_currentSeverity));
 	msg->setFieldFromTime(fieldId++, m_lastEventTimestamp);
+   msg->setField(fieldId++, CHECK_NULL_EX(m_lastEventMessage));
 }
 
 /**
@@ -840,37 +857,37 @@ void Threshold::calculateAbsoluteDeviation(ItemValue *result, const ItemValue &l
 /**
  * Check if given threshold is equal to this threshold
  */
-bool Threshold::equals(const Threshold *t) const
+bool Threshold::equals(const Threshold& t) const
 {
    bool match;
 
-   if ((m_function == F_SCRIPT) || t->m_expandValue || m_expandValue)
+   if ((m_function == F_SCRIPT) || t.m_expandValue || m_expandValue)
    {
-      match = (_tcscmp(t->m_value.getString(), m_value.getString()) == 0);
+      match = (_tcscmp(t.m_value.getString(), m_value.getString()) == 0);
    }
    else
    {
       switch(m_dataType)
       {
          case DCI_DT_INT:
-            match = (t->m_value.getInt32() == m_value.getInt32());
+            match = (t.m_value.getInt32() == m_value.getInt32());
             break;
          case DCI_DT_UINT:
          case DCI_DT_COUNTER32:
-            match = (t->m_value.getUInt32() == m_value.getUInt32());
+            match = (t.m_value.getUInt32() == m_value.getUInt32());
             break;
          case DCI_DT_INT64:
-            match = (t->m_value.getInt64() == m_value.getInt64());
+            match = (t.m_value.getInt64() == m_value.getInt64());
             break;
          case DCI_DT_UINT64:
          case DCI_DT_COUNTER64:
-            match = (t->m_value.getUInt64() == m_value.getUInt64());
+            match = (t.m_value.getUInt64() == m_value.getUInt64());
             break;
          case DCI_DT_FLOAT:
-            match = (t->m_value.getDouble() == m_value.getDouble());
+            match = (t.m_value.getDouble() == m_value.getDouble());
             break;
          case DCI_DT_STRING:
-            match = (_tcscmp(t->m_value.getString(), m_value.getString()) == 0);
+            match = (_tcscmp(t.m_value.getString(), m_value.getString()) == 0);
             break;
          default:
             match = true;
@@ -878,14 +895,14 @@ bool Threshold::equals(const Threshold *t) const
       }
    }
    return match &&
-          (t->m_eventCode == m_eventCode) &&
-          (t->m_rearmEventCode == m_rearmEventCode) &&
-          (t->m_dataType == m_dataType) &&
-          (t->m_function == m_function) &&
-          (t->m_operation == m_operation) &&
-          (t->m_sampleCount == m_sampleCount) &&
-          !_tcscmp(CHECK_NULL_EX(t->m_scriptSource), CHECK_NULL_EX(m_scriptSource)) &&
-			 (t->m_repeatInterval == m_repeatInterval);
+          (t.m_eventCode == m_eventCode) &&
+          (t.m_rearmEventCode == m_rearmEventCode) &&
+          (t.m_dataType == m_dataType) &&
+          (t.m_function == m_function) &&
+          (t.m_operation == m_operation) &&
+          (t.m_sampleCount == m_sampleCount) &&
+          (t.m_repeatInterval == m_repeatInterval) &&
+          !_tcscmp(CHECK_NULL_EX(t.m_scriptSource), CHECK_NULL_EX(m_scriptSource));
 }
 
 /**
@@ -940,6 +957,7 @@ json_t *Threshold::toJson() const
    json_object_set_new(root, "numMatches", json_integer(m_numMatches));
    json_object_set_new(root, "repeatInterval", json_integer(m_repeatInterval));
    json_object_set_new(root, "lastEventTimestamp", json_integer(m_lastEventTimestamp));
+   json_object_set_new(root, "lastEventMessage", json_string_t(m_lastEventMessage));
    return root;
 }
 
@@ -992,15 +1010,15 @@ void Threshold::setScript(TCHAR *script)
 /**
  * Reconcile changes in threshold copy
  */
-void Threshold::reconcile(const Threshold *src)
+void Threshold::reconcile(const Threshold& src)
 {
-   m_numMatches = src->m_numMatches;
-   m_isReached = src->m_isReached;
-   m_wasReachedBeforeMaint = src->m_wasReachedBeforeMaint;
-   m_lastEventTimestamp = src->m_lastEventTimestamp;
-   m_currentSeverity = src->m_currentSeverity;
-   m_lastScriptErrorReport = src->m_lastScriptErrorReport;
-   m_lastCheckValue = src->m_lastCheckValue;
+   m_numMatches = src.m_numMatches;
+   m_isReached = src.m_isReached;
+   m_wasReachedBeforeMaint = src.m_wasReachedBeforeMaint;
+   m_lastEventTimestamp = src.m_lastEventTimestamp;
+   m_currentSeverity = src.m_currentSeverity;
+   m_lastScriptErrorReport = src.m_lastScriptErrorReport;
+   m_lastCheckValue = src.m_lastCheckValue;
 }
 
 /**

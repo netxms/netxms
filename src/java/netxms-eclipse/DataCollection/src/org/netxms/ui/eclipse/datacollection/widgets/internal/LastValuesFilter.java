@@ -57,8 +57,20 @@ public class LastValuesFilter extends ViewerFilter
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 
-      return value.getDescription().toLowerCase().contains(filterString) || value.getComments().toLowerCase().contains(filterString) || matchEventName(value);
+      return value.getDescription().toLowerCase().contains(filterString) || value.getComments().toLowerCase().contains(filterString) || matchEventMessage(value) || matchEventName(value);
 	}
+
+   /**
+    * Match threshold activation event message against filter string.
+    *
+    * @param value DCI value
+    * @return true if matched
+    */
+   private boolean matchEventMessage(DciValue value)
+   {
+      Threshold t = value.getActiveThreshold();
+      return (t != null) && t.getLastEventMessage().toLowerCase().contains(filterString);
+   }
 
    /**
     * Match threshold activation event name against filter string.

@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.20 to 44.21
+ */
+static bool H_UpgradeFromV20()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE thresholds ADD last_event_message varchar(2000)")));
+   CHK_EXEC(SetMinorSchemaVersion(21));
+   return true;
+}
+
+/**
  * Upgrade from 44.19 to 44.20
  */
 static bool H_UpgradeFromV19()
@@ -596,6 +606,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 20, 44, 21, H_UpgradeFromV20 },
    { 19, 44, 20, H_UpgradeFromV19 },
    { 18, 44, 19, H_UpgradeFromV18 },
    { 17, 44, 18, H_UpgradeFromV17 },

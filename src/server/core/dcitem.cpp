@@ -56,7 +56,7 @@ DCItem::DCItem(const DCItem *src, bool shadowCopy) : DCObject(src, shadowCopy)
 		m_thresholds = new ObjectArray<Threshold>(src->m_thresholds->size(), 8, Ownership::True);
 		for(int i = 0; i < src->m_thresholds->size(); i++)
 		{
-			Threshold *t = new Threshold(src->m_thresholds->get(i), shadowCopy);
+			Threshold *t = new Threshold(*src->m_thresholds->get(i), shadowCopy);
 			m_thresholds->add(t);
 		}
 	}
@@ -262,7 +262,7 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
               _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")
 				  _T("last_event_timestamp,match_count,state_before_maint,")
-				  _T("last_checked_value FROM thresholds WHERE item_id=? ")
+				  _T("last_checked_value,last_event_message FROM thresholds WHERE item_id=? ")
               _T("ORDER BY sequence_number"));
 	if (hStmt != nullptr)
 	{
@@ -422,52 +422,59 @@ void DCItem::checkThresholds(ItemValue &value)
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
+		uint32_t thresholdId = t->getId();
       ItemValue checkValue, thresholdValue;
       ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, thresholdValue, owner, this);
       t->setLastCheckedValue(checkValue);
       switch(result)
       {
          case ThresholdCheckResult::ACTIVATED:
-            EventBuilder(t->getEventCode(), m_ownerId)
-               .dci(m_id)
-               .param(_T("dciName"), m_name)
-               .param(_T("dciDescription"), m_description)
-               .param(_T("thresholdValue"), thresholdValue.getString())
-               .param(_T("currentValue"), checkValue.getString())
-               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-               .param(_T("instance"), m_instanceName)
-               .param(_T("isRepeatedEvent"), _T("0"))
-               .param(_T("dciValue"), value.getString())
-               .param(_T("operation"), t->getOperation())
-               .param(_T("function"), t->getFunction())
-               .param(_T("pollCount"), t->getSampleCount())
-               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
+            {
+               shared_ptr<DCObject> sharedThis(shared_from_this());
+               EventBuilder(t->getEventCode(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("thresholdValue"), thresholdValue.getString())
+                  .param(_T("currentValue"), checkValue.getString())
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("instance"), m_instanceName)
+                  .param(_T("isRepeatedEvent"), _T("0"))
+                  .param(_T("dciValue"), value.getString())
+                  .param(_T("operation"), t->getOperation())
+                  .param(_T("function"), t->getFunction())
+                  .param(_T("pollCount"), t->getSampleCount())
+                  .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+            }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
                i = m_thresholds->size();  // Stop processing
-            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
             break;
          case ThresholdCheckResult::DEACTIVATED:
-            EventBuilder(t->getRearmEventCode(), m_ownerId)
-               .dci(m_id)
-               .param(_T("dciName"), m_name)
-               .param(_T("dciDescription"), m_description)
-               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-               .param(_T("instance"), m_instanceName)
-               .param(_T("thresholdValue"), thresholdValue.getString())
-               .param(_T("currentValue"), checkValue.getString())
-               .param(_T("dciValue"), value.getString())
-               .param(_T("operation"), t->getOperation())
-               .param(_T("function"), t->getFunction())
-               .param(_T("pollCount"), t->getSampleCount())
-               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-               .post();
+            {
+               shared_ptr<DCObject> sharedThis(shared_from_this());
+               EventBuilder(t->getRearmEventCode(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("instance"), m_instanceName)
+                  .param(_T("thresholdValue"), thresholdValue.getString())
+                  .param(_T("currentValue"), checkValue.getString())
+                  .param(_T("dciValue"), value.getString())
+                  .param(_T("operation"), t->getOperation())
+                  .param(_T("function"), t->getFunction())
+                  .param(_T("pollCount"), t->getSampleCount())
+                  .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
+            }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
                // this flag used to re-send activation event for next active threshold
                thresholdDeactivated = true;
             }
-            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
             {
@@ -476,6 +483,7 @@ void DCItem::checkThresholds(ItemValue &value)
 	            time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
 				   if (thresholdDeactivated || ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval <= now)))
 				   {
+	               shared_ptr<DCObject> sharedThis(shared_from_this());
 		            EventBuilder(t->getEventCode(), m_ownerId)
 		               .dci(m_id)
 		               .param(_T("dciName"), m_name)
@@ -490,7 +498,7 @@ void DCItem::checkThresholds(ItemValue &value)
 		               .param(_T("function"), t->getFunction())
 		               .param(_T("pollCount"), t->getSampleCount())
 		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-		               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
+		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 				   }
             }
 				if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -513,23 +521,23 @@ void DCItem::createMessage(NXCPMessage *pMsg)
 	DCObject::createMessage(pMsg);
 
    lock();
-   pMsg->setField(VID_DCI_DATA_TYPE, (WORD)m_dataType);
-   pMsg->setField(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
-   pMsg->setField(VID_SAMPLE_COUNT, (WORD)m_sampleCount);
-	pMsg->setField(VID_MULTIPLIER, (UINT32)m_multiplier);
+   pMsg->setField(VID_DCI_DATA_TYPE, static_cast<uint16_t>(m_dataType));
+   pMsg->setField(VID_DCI_DELTA_CALCULATION, static_cast<uint16_t>(m_deltaCalculation));
+   pMsg->setField(VID_SAMPLE_COUNT, static_cast<uint16_t>(m_sampleCount));
+	pMsg->setField(VID_MULTIPLIER, static_cast<uint32_t>(m_multiplier));
 	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
 	pMsg->setField(VID_NPE_NAME, m_predictionEngine);
    pMsg->setField(VID_UNITS_NAME, m_unitName);
 	if (m_thresholds != nullptr)
 	{
-		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
+		pMsg->setField(VID_NUM_THRESHOLDS, static_cast<uint32_t>(m_thresholds->size()));
 		uint32_t fieldId = VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < m_thresholds->size(); i++, fieldId += 20)
 			m_thresholds->get(i)->fillMessage(pMsg, fieldId);
 	}
 	else
 	{
-		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)0);
+		pMsg->setField(VID_NUM_THRESHOLDS, static_cast<uint32_t>(0));
 	}
    unlock();
 }
@@ -750,7 +758,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
             Threshold *dst = getThresholdById(src->getId());
             if (dst != nullptr)
             {
-               dst->reconcile(src);
+               dst->reconcile(*src);
             }
          }
 
@@ -808,47 +816,54 @@ void DCItem::processNewError(bool noInstance, time_t now)
 	for(int i = 0; i < getThresholdCount(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
+		uint32_t thresholdId = t->getId();
       ThresholdCheckResult result = t->checkError(m_errorCount);
       switch(result)
       {
          case ThresholdCheckResult::ACTIVATED:
-            EventBuilder(t->getEventCode(), m_ownerId)
-               .dci(m_id)
-               .param(_T("dciName"), m_name)
-               .param(_T("dciDescription"), m_description)
-               .param(_T("thresholdValue"), _T(""))
-               .param(_T("currentValue"), _T(""))
-               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-               .param(_T("instance"), m_instanceName)
-               .param(_T("isRepeatedEvent"), _T("0"))
-               .param(_T("dciValue"), _T(""))
-               .param(_T("operation"), t->getOperation())
-               .param(_T("function"), t->getFunction())
-               .param(_T("pollCount"), t->getSampleCount())
-               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
+            {
+               shared_ptr<DCObject> sharedThis(shared_from_this());
+               EventBuilder(t->getEventCode(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("thresholdValue"), _T(""))
+                  .param(_T("currentValue"), _T(""))
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("instance"), m_instanceName)
+                  .param(_T("isRepeatedEvent"), _T("0"))
+                  .param(_T("dciValue"), _T(""))
+                  .param(_T("operation"), t->getOperation())
+                  .param(_T("function"), t->getFunction())
+                  .param(_T("pollCount"), t->getSampleCount())
+                  .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
+            }
             if (!(m_flags & DCF_ALL_THRESHOLDS))
             {
                i = m_thresholds->size();  // Stop processing
             }
-            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
             break;
          case ThresholdCheckResult::DEACTIVATED:
-            EventBuilder(t->getRearmEventCode(), m_ownerId)
-               .dci(m_id)
-               .param(_T("dciName"), m_name)
-               .param(_T("dciDescription"), m_description)
-               .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
-               .param(_T("instance"), m_instanceName)
-               .param(_T("thresholdValue"), _T(""))
-               .param(_T("currentValue"), _T(""))
-               .param(_T("dciValue"), _T(""))
-               .param(_T("operation"), t->getOperation())
-               .param(_T("function"), t->getFunction())
-               .param(_T("pollCount"), t->getSampleCount())
-               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-               .post();
-            NotifyClientsOnThresholdChange(m_ownerId, m_id, t->getId(), nullptr, result);
+            {
+               shared_ptr<DCObject> sharedThis(shared_from_this());
+               EventBuilder(t->getRearmEventCode(), m_ownerId)
+                  .dci(m_id)
+                  .param(_T("dciName"), m_name)
+                  .param(_T("dciDescription"), m_description)
+                  .param(_T("dciId"), m_id, EventBuilder::OBJECT_ID_FORMAT)
+                  .param(_T("instance"), m_instanceName)
+                  .param(_T("thresholdValue"), _T(""))
+                  .param(_T("currentValue"), _T(""))
+                  .param(_T("dciValue"), _T(""))
+                  .param(_T("operation"), t->getOperation())
+                  .param(_T("function"), t->getFunction())
+                  .param(_T("pollCount"), t->getSampleCount())
+                  .param(_T("thresholdDefinition"), t->getTextualDefinition())
+                  .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
+            }
+            NotifyClientsOnThresholdChange(m_ownerId, m_id, thresholdId, nullptr, result);
             break;
          case ThresholdCheckResult::ALREADY_ACTIVE:
             {
@@ -856,6 +871,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
                time_t repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : static_cast<time_t>(t->getRepeatInterval());
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + repeatInterval < now))
 				   {
+	               shared_ptr<DCObject> sharedThis(shared_from_this());
 		            EventBuilder(t->getEventCode(), m_ownerId)
 		               .dci(m_id)
 		               .param(_T("dciName"), m_name)
@@ -870,7 +886,7 @@ void DCItem::processNewError(bool noInstance, time_t now)
 		               .param(_T("function"), t->getFunction())
 		               .param(_T("pollCount"), t->getSampleCount())
 		               .param(_T("thresholdDefinition"), t->getTextualDefinition())
-		               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
+		               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
 				   }
             }
 				if (!(m_flags & DCF_ALL_THRESHOLDS))
@@ -912,6 +928,8 @@ void DCItem::generateEventsBasedOnThrDiff()
       Threshold *t = m_thresholds->get(i);
       if (t->isReached() != t->wasReachedBeforeMaintenance())
       {
+         uint32_t thresholdId = t->getId();
+         shared_ptr<DCObject> sharedThis(shared_from_this());
          if (t->isReached())
          {
             EventBuilder(t->getEventCode(), ownerId)
@@ -928,7 +946,7 @@ void DCItem::generateEventsBasedOnThrDiff()
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
                .param(_T("thresholdDefinition"), t->getTextualDefinition())
-               .post([t] (Event *e) { t->markLastEvent(e->getSeverity()); });
+               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, e->getSeverity(), e->getMessage()); });
          }
          else
          {
@@ -945,7 +963,7 @@ void DCItem::generateEventsBasedOnThrDiff()
                .param(_T("function"), t->getFunction())
                .param(_T("pollCount"), t->getSampleCount())
                .param(_T("thresholdDefinition"), t->getTextualDefinition())
-               .post();
+               .post([sharedThis, thresholdId] (Event *e) { static_cast<DCItem&>(*sharedThis).markLastThresholdEvent(thresholdId, SEVERITY_NORMAL, nullptr); });
          }
       }
    }
@@ -1847,7 +1865,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 	int count = std::min(getThresholdCount(), item->getThresholdCount());
 	int i;
    for(i = 0; i < count; i++)
-      if (!m_thresholds->get(i)->equals(item->m_thresholds->get(i)))
+      if (!m_thresholds->get(i)->equals(*item->m_thresholds->get(i)))
          break;
    count = i;   // First unmatched threshold's position
 
@@ -1860,7 +1878,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 		m_thresholds = new ObjectArray<Threshold>(item->getThresholdCount(), 8, Ownership::True);
 	for(i = count; i < item->getThresholdCount(); i++)
    {
-      Threshold *t = new Threshold(item->m_thresholds->get(i), false);
+      Threshold *t = new Threshold(*item->m_thresholds->get(i), false);
       t->bindToItem(m_id, m_ownerId);
 		m_thresholds->add(t);
    }
@@ -2098,12 +2116,12 @@ void DCItem::fillMessageWithThresholds(NXCPMessage *msg, bool activeOnly)
 	lock();
 
 	msg->setField(VID_NUM_THRESHOLDS, (UINT32)getThresholdCount());
-	UINT32 id = VID_DCI_THRESHOLD_BASE;
-	for(int i = 0; i < getThresholdCount(); i++, id += 20)
+	uint32_t fieldId = VID_DCI_THRESHOLD_BASE;
+	for(int i = 0; i < getThresholdCount(); i++, fieldId += 20)
 	{
 	   Threshold *threshold = m_thresholds->get(i);
 	   if (!activeOnly || threshold->isReached())
-         threshold->fillMessage(msg, id);
+         threshold->fillMessage(msg, fieldId);
 	}
 
 	unlock();
@@ -2291,7 +2309,7 @@ bool DCItem::hasScriptThresholds() const
 /**
  * Get threshold object by it's ID
  */
-Threshold *DCItem::getThresholdById(UINT32 id) const
+Threshold *DCItem::getThresholdById(uint32_t id) const
 {
    if (m_thresholds == nullptr)
       return nullptr;

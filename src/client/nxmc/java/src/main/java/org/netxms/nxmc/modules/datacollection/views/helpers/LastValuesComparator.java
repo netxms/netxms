@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,6 +72,9 @@ public class LastValuesComparator extends ViewerComparator
          case BaseDataCollectionView.LV_COLUMN_ID:
             result = Long.compare(v1.getId(), v2.getId());
             break;
+         case BaseDataCollectionView.LV_COLUMN_MESSAGE:
+            result = getEventMessage(v1).compareToIgnoreCase(getEventMessage(v2));
+            break;
          case BaseDataCollectionView.LV_COLUMN_OWNER:
             AbstractObject obj1 = Registry.getSession().findObjectById(v1.getNodeId());
             AbstractObject obj2 = Registry.getSession().findObjectById(v2.getNodeId());
@@ -104,6 +107,18 @@ public class LastValuesComparator extends ViewerComparator
       if (threshold == null)
          return "";
       return session.getEventName(threshold.getFireEvent());
+   }
+
+   /**
+    * Get threshold activation event message.
+    *
+    * @param value DCI value
+    * @return threshold activation event message or empty string
+    */
+   public String getEventMessage(DciValue value)
+   {
+      Threshold threshold = value.getActiveThreshold();
+      return (threshold != null) ? threshold.getLastEventMessage() : "";
    }
 
 	/**
