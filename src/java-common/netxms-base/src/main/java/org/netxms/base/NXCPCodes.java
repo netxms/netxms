@@ -195,7 +195,7 @@ public class NXCPCodes
    public static final int CMD_LINK_ASSET = 0x00A9;
    public static final int CMD_UNLINK_ASSET = 0x00AA;
    public static final int CMD_GET_USER_SESSIONS = 0x00AB;
-   // public static final int CMD_UPDATE_MODULE_INFO = 0x00AC;
+   public static final int CMD_GET_ARP_CACHE = 0x00AC;
 	public static final int CMD_COPY_USER_VARIABLE = 0x00AD;
 	public static final int CMD_RESOLVE_DCI_NAMES = 0x00AE;
 	public static final int CMD_GET_MY_CONFIG = 0x00AF;

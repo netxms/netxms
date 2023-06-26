@@ -215,7 +215,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(uint16_t code, TCHAR *buffer)
       _T("CMD_LINK_ASSET"),
       _T("CMD_UNLINK_ASSET"),
       _T("CMD_GET_USER_SESSIONS"),
-      _T("CMD_0x00AC"), // was: CMD_UPDATE_MODULE_INFO
+      _T("CMD_GET_ARP_CACHE"),
       _T("CMD_COPY_USER_VARIABLE"),
       _T("CMD_RESOLVE_DCI_NAMES"),
       _T("CMD_GET_MY_CONFIG"),

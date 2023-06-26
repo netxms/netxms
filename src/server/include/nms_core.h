@@ -810,6 +810,7 @@ private:
    void getEffectiveRights(const NXCPMessage& request);
    void getSwitchForwardingDatabase(const NXCPMessage& request);
    void getRoutingTable(const NXCPMessage& request);
+   void getArpCache(const NXCPMessage& request);
    void getLocationHistory(const NXCPMessage& request);
    void getScreenshot(const NXCPMessage& request);
 	void executeScript(const NXCPMessage& request);

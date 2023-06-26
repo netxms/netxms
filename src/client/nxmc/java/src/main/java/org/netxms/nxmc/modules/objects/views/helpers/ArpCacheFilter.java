@@ -21,26 +21,18 @@ package org.netxms.nxmc.modules.objects.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
-import org.netxms.client.topology.FdbEntry;
+import org.netxms.client.topology.ArpCacheEntry;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.views.AbstractViewerFilter;
-import org.netxms.nxmc.localization.LocalizationHelper;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Filter for switch forwarding database  
  */
-public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
+public class ArpCacheFilter extends ViewerFilter implements AbstractViewerFilter
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(FDBFilter.class);
-
-   private static final String TYPE_MATCH_DYNAMIC = i18n.tr("Dynamic").toLowerCase();
-   private static final String TYPE_MATCH_STATIC = i18n.tr("Static").toLowerCase();
-   private static final String TYPE_MATCH_UNKNOWN = i18n.tr("Unknown").toLowerCase();
-
    private NXCSession session = Registry.getSession();
    private String filterString = null;
-
+   
    /**
     * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
     */
@@ -50,38 +42,18 @@ public class FDBFilter extends ViewerFilter implements AbstractViewerFilter
       if ((filterString == null) || (filterString.isEmpty()))
          return true;
 
-      final FdbEntry e = (FdbEntry)element;
-      if (e.getAddress().toString().toLowerCase().contains(filterString))
+      final ArpCacheEntry e = (ArpCacheEntry)element;
+      if (e.getMacAddress().toString().toLowerCase().contains(filterString))
          return true;
-      if (Integer.toString(e.getPort()).contains(filterString))
+      if (e.getIpAddress().getHostAddress().contains(filterString))
          return true;
       if (e.getInterfaceName().toLowerCase().contains(filterString))
          return true;
-      if (Integer.toString(e.getVlanId()).contains(filterString))
-         return true;
       if ((e.getNodeId() != 0) && session.getObjectName(e.getNodeId()).toLowerCase().contains(filterString))
          return true;
-      if (matchType(e))
-         return true;
-
-      String vendor = session.getVendorByMac(e.getAddress(), null);
+      
+      String vendor = session.getVendorByMac(e.getMacAddress(), null);
       return (vendor != null) && vendor.toLowerCase().contains(filterString);
-   }
-
-   /**
-    * Checks if filterString contains FDB type
-    */
-   private boolean matchType(FdbEntry en)
-   {
-      switch(en.getType())
-      {
-         case 3:
-            return TYPE_MATCH_DYNAMIC.contains(filterString);
-         case 5:
-            return TYPE_MATCH_STATIC.contains(filterString);
-         default:
-            return TYPE_MATCH_UNKNOWN.contains(filterString);
-      }
    }
 
    /**

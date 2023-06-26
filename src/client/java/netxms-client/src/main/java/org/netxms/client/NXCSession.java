@@ -199,6 +199,7 @@ import org.netxms.client.snmp.SnmpTrapLogRecord;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
+import org.netxms.client.topology.ArpCacheEntry;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.client.topology.NetworkPath;
@@ -11087,6 +11088,33 @@ public class NXCSession
          fieldId += 10;
       }
       return rt;
+   }
+
+   /**
+    * Get ARP cache from node
+    *
+    * @param nodeId node object ID
+    * @param forceRead if true, ARP cache will be read from node, otherwise cached version may be returned
+    * @return list of ARP cache entries
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<ArpCacheEntry> getArpCache(long nodeId, boolean forceRead) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ARP_CACHE);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_FORCE_RELOAD, forceRead);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<ArpCacheEntry> arpCache = new ArrayList<ArpCacheEntry>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         arpCache.add(new ArpCacheEntry(response, fieldId));
+         fieldId += 10;
+      }
+      return arpCache;
    }
 
    /**

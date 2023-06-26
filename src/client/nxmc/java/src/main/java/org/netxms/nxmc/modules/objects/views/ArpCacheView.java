@@ -27,40 +27,36 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.netxms.base.MacAddress;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
-import org.netxms.client.topology.FdbEntry;
+import org.netxms.client.topology.ArpCacheEntry;
 import org.netxms.nxmc.base.actions.CopyTableRowsAction;
 import org.netxms.nxmc.base.actions.ExportToCsvAction;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.widgets.SortableTableViewer;
 import org.netxms.nxmc.localization.LocalizationHelper;
-import org.netxms.nxmc.modules.objects.views.helpers.FDBComparator;
-import org.netxms.nxmc.modules.objects.views.helpers.FDBFilter;
-import org.netxms.nxmc.modules.objects.views.helpers.FDBLabelProvider;
+import org.netxms.nxmc.modules.objects.views.helpers.ArpCacheComparator;
+import org.netxms.nxmc.modules.objects.views.helpers.ArpCacheFilter;
+import org.netxms.nxmc.modules.objects.views.helpers.ArpCacheLabelProvider;
 import org.netxms.nxmc.resources.ResourceManager;
 import org.netxms.nxmc.tools.WidgetHelper;
 import org.xnap.commons.i18n.I18n;
 
 /**
- * Switch forwarding database view
+ * ARP cache view
  */
-public class SwitchForwardingDatabaseView extends ObjectView
+public class ArpCacheView extends ObjectView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(SwitchForwardingDatabaseView.class);
+   private static final I18n i18n = LocalizationHelper.getI18n(ArpCacheView.class);
 
-	public static final int COLUMN_MAC_ADDRESS = 0;
-   public static final int COLUMN_VENDOR = 1;
-	public static final int COLUMN_PORT = 2;
+   public static final int COLUMN_IP_ADDRESS = 0;
+   public static final int COLUMN_MAC_ADDRESS = 1;
+   public static final int COLUMN_VENDOR = 2;
 	public static final int COLUMN_INTERFACE = 3;
-   public static final int COLUMN_VLAN = 4;
-	public static final int COLUMN_NODE = 5;
-   public static final int COLUMN_TYPE = 6;
+   public static final int COLUMN_NODE = 4;
 
 	private SortableTableViewer viewer;
    private boolean refreshPending = true;
@@ -72,9 +68,9 @@ public class SwitchForwardingDatabaseView extends ObjectView
    /**
     * Default constructor
     */
-   public SwitchForwardingDatabaseView()
+   public ArpCacheView()
    {
-      super(i18n.tr("FDB"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "FDB", true);
+      super(i18n.tr("ARP Cache"), ResourceManager.getImageDescriptor("icons/object-views/fdb.gif"), "ARPCache", true);
    }
 
    /**
@@ -83,7 +79,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
    @Override
    public boolean isValidForContext(Object context)
    {
-      return (context != null) && (context instanceof Node) && ((Node)context).isBridge();
+      return (context != null) && (context instanceof Node) && (((Node)context).hasAgent() || ((Node)context).hasSnmpAgent() || ((Node)context).isManagementServer());
    }
 
    /**
@@ -92,7 +88,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
    @Override
    public int getPriority()
    {
-      return 150;
+      return 155;
    }
 
    /**
@@ -102,25 +98,16 @@ public class SwitchForwardingDatabaseView extends ObjectView
    protected void createContent(Composite parent)
 	{	   
 		final String[] names = { 
-            i18n.tr("MAC"), i18n.tr("NIC Vendor"), i18n.tr("Port"), i18n.tr("Interface"), i18n.tr("VLAN"), i18n.tr("Node"), i18n.tr("Type")
+            i18n.tr("IP Address"), i18n.tr("MAC Address"), i18n.tr("NIC Vendor"), i18n.tr("Interface"), i18n.tr("Node")
 		   };
-		final int[] widths = { 180, 200, 100, 200, 100, 250, 110 };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
+      final int[] widths = { 180, 180, 200, 200, 250 };
+      viewer = new SortableTableViewer(parent, names, widths, COLUMN_IP_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new FDBLabelProvider(viewer));
-		viewer.setComparator(new FDBComparator());
-		FDBFilter filter = new FDBFilter();
+      viewer.setLabelProvider(new ArpCacheLabelProvider(viewer));
+      viewer.setComparator(new ArpCacheComparator());
+      ArpCacheFilter filter = new ArpCacheFilter();
 		setFilterClient(viewer, filter);
 		viewer.addFilter(filter);
-
-      WidgetHelper.restoreTableViewerSettings(viewer, "SwitchForwardingDatabase");
-		viewer.getTable().addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-            WidgetHelper.saveTableViewerSettings(viewer, "SwitchForwardingDatabase");
-			}
-		});
 
 		createActions();
 		createPopupMenu();
@@ -137,7 +124,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
          public void run()
          {
             @SuppressWarnings("unchecked")
-            final List<FdbEntry> selection = viewer.getStructuredSelection().toList();
+            final List<ArpCacheEntry> selection = viewer.getStructuredSelection().toList();
             if (selection.size() > 0)
             {
                final StringBuilder sb = new StringBuilder();
@@ -145,8 +132,8 @@ public class SwitchForwardingDatabaseView extends ObjectView
                {
                   if (i > 0)
                      sb.append('\t');
-                  
-                  MacAddress addr  = selection.get(i).getAddress();
+
+                  MacAddress addr = selection.get(i).getMacAddress();
                   sb.append(addr != null ? addr.toString() : "");
                }
                WidgetHelper.copyToClipboard(sb.toString());
@@ -215,11 +202,11 @@ public class SwitchForwardingDatabaseView extends ObjectView
       if (objectId == 0)
          return;
 
-      new Job(i18n.tr("Reading switch forwarding database"), this) {
+      new Job(i18n.tr("Reading ARP cache"), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
-            final List<FdbEntry> fdb = session.getSwitchForwardingDatabase(objectId);
+            final List<ArpCacheEntry> fdb = session.getArpCache(objectId, true);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -232,7 +219,7 @@ public class SwitchForwardingDatabaseView extends ObjectView
          @Override
          protected String getErrorMessage()
          {
-            return String.format(i18n.tr("Cannot get switch forwarding database for node %s"), session.getObjectName(objectId));
+            return String.format(i18n.tr("Cannot get ARP cache for node %s"), session.getObjectName(objectId));
          }
       }.start();
 	}

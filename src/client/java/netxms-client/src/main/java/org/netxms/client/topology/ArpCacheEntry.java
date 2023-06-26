@@ -18,45 +18,56 @@
  */
 package org.netxms.client.topology;
 
+import java.net.InetAddress;
 import org.netxms.base.MacAddress;
 import org.netxms.base.NXCPMessage;
 
 /**
- * Switch forwarding database entry
+ * ARP cache entry
  */
-public class FdbEntry
+public class ArpCacheEntry
 {
-   private MacAddress address;
+   private InetAddress ipAddress;
+   private MacAddress macAddress;
    private int interfaceIndex;
    private String interfaceName;
-   private int port;
    private long nodeId;
-   private int vlanId;
-   private int type;
-   
+   private String nodeName;
+
    /**
-    * Create FDB entry from NXCP message.
+    * Create ARP cache entry from NXCP message.
     * 
     * @param msg NXCP message
-    * @param baseId object base id
+    * @param baseId base field id
     */
-   public FdbEntry(NXCPMessage msg, long baseId)
+   public ArpCacheEntry(NXCPMessage msg, long baseId)
    {
-      address = msg.getFieldAsMacAddress(baseId);
-      interfaceIndex = msg.getFieldAsInt32(baseId + 1);
-      port = msg.getFieldAsInt32(baseId + 2);
-      nodeId = msg.getFieldAsInt64(baseId + 3);
-      vlanId = msg.getFieldAsInt32(baseId + 4);
-      type = msg.getFieldAsInt32(baseId + 5);
-      interfaceName = msg.getFieldAsString(baseId + 6);
+      ipAddress = msg.getFieldAsInetAddress(baseId);
+      macAddress = msg.getFieldAsMacAddress(baseId + 1);
+      interfaceIndex = msg.getFieldAsInt32(baseId + 2);
+      interfaceName = msg.getFieldAsString(baseId + 3);
+      nodeId = msg.getFieldAsInt64(baseId + 4);
+      nodeName = msg.getFieldAsString(baseId + 5);
    }
 
    /**
-    * @return the address
+    * Get IP address.
+    *
+    * @return IP address
     */
-   public MacAddress getAddress()
+   public InetAddress getIpAddress()
    {
-      return address;
+      return ipAddress;
+   }
+
+   /**
+    * Get MAC address.
+    *
+    * @return MAC address
+    */
+   public MacAddress getMacAddress()
+   {
+      return macAddress;
    }
 
    /**
@@ -68,11 +79,11 @@ public class FdbEntry
    }
 
    /**
-    * @return the port
+    * @return the interfaceName
     */
-   public int getPort()
+   public String getInterfaceName()
    {
-      return port;
+      return interfaceName.isEmpty() ? "[" + Integer.toString(interfaceIndex) + "]" : interfaceName;
    }
 
    /**
@@ -84,36 +95,20 @@ public class FdbEntry
    }
 
    /**
-    * @return the vlanId
+    * @return the nodeName
     */
-   public int getVlanId()
+   public String getNodeName()
    {
-      return vlanId;
+      return nodeName;
    }
 
    /**
-    * @return the type
-    */
-   public int getType()
-   {
-      return type;
-   }
-
-   /* (non-Javadoc)
     * @see java.lang.Object#toString()
     */
    @Override
    public String toString()
    {
-      return "FdbEntry [address=" + address + ", interfaceIndex=" + interfaceIndex + ", port=" + port + ", nodeId=" + nodeId
-            + ", vlanId=" + vlanId + ", type=" + type + "]";
-   }
-
-   /**
-    * @return the interfaceName
-    */
-   public String getInterfaceName()
-   {
-      return interfaceName;
+      return "ArpCacheEntry [ipAddress=" + ipAddress + ", macAddress=" + macAddress + ", interfaceIndex=" + interfaceIndex + ", interfaceName=" + interfaceName + ", nodeId=" + nodeId + ", nodeName=" +
+            nodeName + "]";
    }
 }

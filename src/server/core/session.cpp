@@ -1659,6 +1659,9 @@ void ClientSession::processRequest(NXCPMessage *request)
       case CMD_GET_ROUTING_TABLE:
          getRoutingTable(*request);
          break;
+      case CMD_GET_ARP_CACHE:
+         getArpCache(*request);
+         break;
       case CMD_GET_LOC_HISTORY:
          getLocationHistory(*request);
          break;
@@ -11652,8 +11655,8 @@ void ClientSession::findMacAddress(const NXCPMessage& request)
 void ClientSession::findIpAddress(const NXCPMessage& request)
 {
    TCHAR ipAddrText[64];
-   NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
-	msg.setField(VID_RCC, RCC_SUCCESS);
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+	response.setField(VID_RCC, RCC_SUCCESS);
 
 	MacAddress macAddr;
 	bool found = false;
@@ -11706,14 +11709,14 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
          shared_ptr<Node> node = (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getParentNode() : static_cast<AccessPoint&>(*cp).getParentNode();
          if (node != nullptr)
          {
-		      msg.setField(VID_OBJECT_ID, node->getId());
-			   msg.setField(VID_INTERFACE_ID, cp->getId());
-            msg.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getIfIndex() : (UINT32)0);
-			   msg.setField(VID_LOCAL_NODE_ID, localNodeId);
-			   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
-			   msg.setField(VID_MAC_ADDR, macAddr);
-			   msg.setField(VID_IP_ADDRESS, ipAddr);
-			   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
+		      response.setField(VID_OBJECT_ID, node->getId());
+			   response.setField(VID_INTERFACE_ID, cp->getId());
+            response.setField(VID_IF_INDEX, (cp->getObjectClass() == OBJECT_INTERFACE) ? static_cast<Interface&>(*cp).getIfIndex() : (UINT32)0);
+			   response.setField(VID_LOCAL_NODE_ID, localNodeId);
+			   response.setField(VID_LOCAL_INTERFACE_ID, localIfId);
+			   response.setField(VID_MAC_ADDR, macAddr);
+			   response.setField(VID_IP_ADDRESS, ipAddr);
+			   response.setField(VID_CONNECTION_TYPE, (UINT16)type);
             if (cp->getObjectClass() == OBJECT_INTERFACE)
             {
                debugPrintf(5, _T("findIpAddress(%s): nodeId=%u ifId=%u ifName=%s ifIndex=%u"), ipAddr.toString(ipAddrText),
@@ -11728,23 +11731,23 @@ void ClientSession::findIpAddress(const NXCPMessage& request)
 		else if (iface != nullptr)
 		{
 		   // Connection not found but node with given IP address registered in the system
-         msg.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
-         msg.setField(VID_MAC_ADDR, macAddr);
-         msg.setField(VID_IP_ADDRESS, ipAddr);
-         msg.setField(VID_LOCAL_NODE_ID, iface->getParentNodeId());
-         msg.setField(VID_LOCAL_INTERFACE_ID, iface->getId());
+         response.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
+         response.setField(VID_MAC_ADDR, macAddr);
+         response.setField(VID_IP_ADDRESS, ipAddr);
+         response.setField(VID_LOCAL_NODE_ID, iface->getParentNodeId());
+         response.setField(VID_LOCAL_INTERFACE_ID, iface->getId());
 		}
 	}
    else if (iface != nullptr)
    {
       // Connection not found but node with given IP address registered in the system
-      msg.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
-      msg.setField(VID_IP_ADDRESS, ipAddr);
-      msg.setField(VID_LOCAL_NODE_ID, iface->getParentNodeId());
-      msg.setField(VID_LOCAL_INTERFACE_ID, iface->getId());
+      response.setField(VID_CONNECTION_TYPE, (UINT16)CP_TYPE_UNKNOWN);
+      response.setField(VID_IP_ADDRESS, ipAddr);
+      response.setField(VID_LOCAL_NODE_ID, iface->getParentNodeId());
+      response.setField(VID_LOCAL_INTERFACE_ID, iface->getId());
    }
 
-	sendMessage(&msg);
+	sendMessage(response);
 }
 
 /**
@@ -11769,7 +11772,7 @@ void ClientSession::findHostname(const NXCPMessage& request)
       response.setField(fieldId++, nodes->get(i)->getId());
    }
 
-   sendMessage(&response);
+   sendMessage(response);
 }
 
 /**
@@ -11840,7 +11843,7 @@ void ClientSession::sendLibraryImage(const NXCPMessage& request)
 	}
 
 	response.setField(VID_RCC, rcc);
-	sendMessage(&response);
+	sendMessage(response);
 
 	if (rcc == RCC_SUCCESS)
 		sendFile(absFileName, request.getId(), 0);
@@ -11865,11 +11868,11 @@ void ClientSession::onLibraryImageChange(const uuid& guid, bool removed)
  */
 void ClientSession::updateLibraryImage(const NXCPMessage& request)
 {
-	NXCPMessage msg(CMD_REQUEST_COMPLETED, request.getId());
+	NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
    if (!checkSysAccessRights(SYSTEM_ACCESS_MANAGE_IMAGE_LIB))
    {
-	   msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-      sendMessage(&msg);
+	   response.setField(VID_RCC, RCC_ACCESS_DENIED);
+      sendMessage(response);
       return;
    }
 
@@ -11974,12 +11977,12 @@ void ClientSession::updateLibraryImage(const NXCPMessage& request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		msg.setField(VID_GUID, guid);
+		response.setField(VID_GUID, guid);
 	}
 
    DBConnectionPoolReleaseConnection(hdb);
-	msg.setField(VID_RCC, rcc);
-	sendMessage(&msg);
+	response.setField(VID_RCC, rcc);
+	sendMessage(response);
 }
 
 /**
@@ -13642,6 +13645,71 @@ void ClientSession::getRoutingTable(const NXCPMessage& request)
          else
          {
             response.setField(VID_RCC, RCC_NO_ROUTING_TABLE);
+         }
+      }
+      else
+      {
+         response.setField(VID_RCC, RCC_ACCESS_DENIED);
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, node->getId(), _T("Access denied on reading routing table"));
+      }
+   }
+   else  // No object with given ID
+   {
+      response.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(response);
+}
+
+/**
+ * Get ARP cache
+ */
+void ClientSession::getArpCache(const NXCPMessage& request)
+{
+   NXCPMessage response(CMD_REQUEST_COMPLETED, request.getId());
+
+   // Get node id and check object class and access rights
+   shared_ptr<NetObj> node = FindObjectById(request.getFieldAsUInt32(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != nullptr)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         shared_ptr<ArpCache> arpCache = static_cast<Node&>(*node).getArpCache(request.getFieldAsBoolean(VID_FORCE_RELOAD));
+         if (arpCache != nullptr)
+         {
+            response.setField(VID_RCC, RCC_SUCCESS);
+
+            int size = arpCache->size();
+            response.setField(VID_NUM_ELEMENTS, size);
+            uint32_t fieldId = VID_ELEMENT_LIST_BASE;
+            for(int i = 0; i < size; i++)
+            {
+               const ArpEntry *e = arpCache->get(i);
+               response.setField(fieldId++, e->ipAddr);
+               response.setField(fieldId++, e->macAddr);
+               response.setField(fieldId++, e->ifIndex);
+
+               shared_ptr<Interface> iface = static_cast<Node&>(*node).findInterfaceByIndex(e->ifIndex);
+               response.setField(fieldId++, (iface != nullptr) ? iface->getName() : _T(""));
+
+               shared_ptr<Node> remoteNode = FindNodeByIP(static_cast<Node&>(*node).getZoneUIN(), e->ipAddr);
+               if ((remoteNode != nullptr) && remoteNode->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+               {
+                  response.setField(fieldId++, remoteNode->getId());
+                  response.setField(fieldId++, remoteNode->getName());
+               }
+               else
+               {
+                  response.setField(fieldId++, 0);
+                  response.setField(fieldId++, _T(""));
+               }
+
+               fieldId += 4;
+            }
+         }
+         else
+         {
+            response.setField(VID_RCC, RCC_NO_ARP_CACHE);
          }
       }
       else

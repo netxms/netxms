@@ -406,7 +406,7 @@ typedef struct
 #define CMD_LINK_ASSET                    0x00A9
 #define CMD_UNLINK_ASSET                  0x00AA
 #define CMD_GET_USER_SESSIONS             0x00AB
-// unused: #define CMD_UPDATE_MODULE_INFO            0x00AC
+#define CMD_GET_ARP_CACHE                 0x00AC
 #define CMD_COPY_USER_VARIABLE            0x00AD
 #define CMD_RESOLVE_DCI_NAMES             0x00AE
 #define CMD_GET_MY_CONFIG                 0x00AF
