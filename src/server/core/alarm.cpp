@@ -952,14 +952,17 @@ uint32_t NXCORE_EXPORTABLE CreateNewAlarm(const uuid& ruleGuid, const TCHAR *rul
       if (event->getDciId() != 0)
       {
          shared_ptr<NetObj> object = FindObjectById(event->getSourceId());
-         if (object != nullptr && object->isDataCollectionTarget())
+         if ((object != nullptr) && object->isDataCollectionTarget())
          {
             shared_ptr<DCObject> dcObject = static_cast<DataCollectionOwner&>(*object).getDCObjectById(event->getDciId(), 0);
-            SharedString comments = dcObject->getComments();
-            if (!comments.isEmpty())
+            if (dcObject != nullptr)
             {
-               uint32_t commentId = 0;
-               alarm->updateAlarmComment(&commentId, comments, 0, true);
+               SharedString comments = dcObject->getComments();
+               if (!comments.isEmpty())
+               {
+                  uint32_t commentId = 0;
+                  alarm->updateAlarmComment(&commentId, comments, 0, true);
+               }
             }
          }
       }

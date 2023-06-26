@@ -515,7 +515,7 @@ ScriptVMHandle NXCORE_EXPORTABLE CreateServerScriptVM(const NXSL_Program *script
 /**
  * Report script error
  */
-bool NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj* object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...);
+void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...);
 
 class ImportContext;
 

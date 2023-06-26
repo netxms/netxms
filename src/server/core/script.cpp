@@ -39,7 +39,7 @@ static VolatileCounter s_scriptErrorCount = 0;
  * @param errorText error text
  * @param nameFormat script name as formatted string
  */
-bool NXCORE_EXPORTABLE ReportScriptError(const TCHAR* context, const NetObj* object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...)
+void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *object, uint32_t dciId, const TCHAR *errorText, const TCHAR *nameFormat, ...)
 {
    uint32_t count = static_cast<uint32_t>(InterlockedIncrement(&s_scriptErrorCount));
    if (count >= 1000)
@@ -49,7 +49,7 @@ bool NXCORE_EXPORTABLE ReportScriptError(const TCHAR* context, const NetObj* obj
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Too many script errors - script error reporting temporarily disabled"));
          PostSystemEvent(EVENT_TOO_MANY_SCRIPT_ERRORS, g_dwMgmtNode, nullptr);
       }
-      return false;
+      return;
    }
 
    TCHAR name[1024];
@@ -60,7 +60,15 @@ bool NXCORE_EXPORTABLE ReportScriptError(const TCHAR* context, const NetObj* obj
 
    nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Script error (object=%s objectId=%u dciId=%u context=%s name=%s): %s"),
          (object != nullptr) ? object->getName() : _T("NONE"), (object != nullptr) ? object->getId() : 0, dciId, context, name, errorText);
-   return PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dciId, "ssdds", name, errorText, dciId, (object != nullptr) ? object->getId() : 0, context);
+
+   EventBuilder(EVENT_SCRIPT_ERROR, g_dwMgmtNode)
+      .dci(dciId)
+      .param(_T("scriptName"), name)
+      .param(_T("errorText"), errorText)
+      .param(_T("dciId"), dciId)
+      .param(_T("objectId"), (object != nullptr) ? object->getId() : 0)
+      .param(_T("context"), context)
+      .post();
 }
 
 /**
