@@ -314,6 +314,7 @@ public class NXCSession
    private boolean disconnected = false;
    private boolean serverConsoleConnected = false;
    private Integer serverConsoleConnectionCount = 0;
+   private Object serverConsoleConnectionLock = new Object();
    private boolean allowCompression = false;
    private EncryptionContext encryptionContext = null;
    private Throwable receiverStopCause = null;
@@ -10843,7 +10844,7 @@ public class NXCSession
     */
    public void openConsole() throws IOException, NXCException
    {
-      synchronized(serverConsoleConnectionCount)
+      synchronized(serverConsoleConnectionLock)
       {
          if (serverConsoleConnectionCount == 0)
          {
@@ -10864,7 +10865,7 @@ public class NXCSession
     */
    public void closeConsole() throws IOException, NXCException
    {
-      synchronized(serverConsoleConnectionCount)
+      synchronized(serverConsoleConnectionLock)
       {
          if (serverConsoleConnectionCount > 0)
          {
