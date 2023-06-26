@@ -408,4 +408,20 @@ public class NetworkMapPage
 		}
 		return result.toArray(new NetworkMapElement[result.size()]);
 	}
+
+   /**
+    * Update existing on the map element
+    * 
+    * @param element element with data to update
+    * @return true if element updated, false if element not found
+    */
+   public boolean updateElement(NetworkMapElement element)
+   {
+      if (elements.containsKey(element.getId()))
+      {
+         addElement(element);
+         return true;
+      }
+      return false;
+   }
 }

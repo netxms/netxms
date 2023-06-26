@@ -356,7 +356,7 @@ public class LinkDataSources extends PropertyPage
    private boolean applyChanges(final boolean isApply)
    {
       link.setDciList(dciList);      
-      link.update();
+      link.setModified();
       return true;
    }
 

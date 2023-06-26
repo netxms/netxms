@@ -64,6 +64,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.propertypages.PropertyDialog;
+import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.modules.imagelibrary.ImageProvider;
 import org.netxms.nxmc.modules.imagelibrary.ImageUpdateListener;
@@ -880,6 +881,25 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
 			defaultLinkColor.dispose();
 		super.dispose();
 	}
+	
+	/**
+	 * Update existing element or show message if failed
+	 * 
+	 * @param element element to update
+	 * @return true if was successfully updated
+	 */
+	private boolean updateElement(NetworkMapElement element)
+	{
+      if (mapPage.updateElement(element))
+      {
+         saveMap();
+         addDciToRequestList();
+         return true;
+      }
+
+      addMessage(MessageArea.ERROR, i18n.tr("Failed to update map element: the object no longer exists"));
+      return false;
+	}
 
    /**
     * Add DCI container to map
@@ -906,8 +926,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIContainer))
          return;
 
-      if (showDCIContainerProperties((NetworkMapDCIContainer)selection.getFirstElement()))
+      NetworkMapDCIContainer dciContainer = (NetworkMapDCIContainer)selection.getFirstElement();
+      if (showDCIContainerProperties(dciContainer) && updateElement(dciContainer))
+      {
          saveMap();
+      }
    }
 
    /**
@@ -950,8 +973,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIImage))
          return;
 
-      if (showDCIImageProperties((NetworkMapDCIImage)selection.getFirstElement()))
+      NetworkMapDCIImage dciImage = (NetworkMapDCIImage)selection.getFirstElement();
+      if (showDCIImageProperties(dciImage) && updateElement(dciImage))
+      {
          saveMap();
+      }
    }
 
    /**
@@ -1013,7 +1039,14 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       dlg.setBlockOnOpen(true);
       dlg.open();
       if (link.isModified())
-         saveMap();
+      {
+         if (link.update(mapPage))
+         {
+            saveMap();
+         }
+         else
+            addMessage(MessageArea.ERROR, i18n.tr("Failed to update link: the object no longer exists"));
+      }
 	}
 	
    /**
@@ -1040,8 +1073,11 @@ public class PredefinedMapView extends AbstractNetworkMapView implements ImageUp
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapTextBox))
          return;
 
-      if (showTextBoxProperties((NetworkMapTextBox)selection.getFirstElement()))
+      NetworkMapTextBox textBox = (NetworkMapTextBox)selection.getFirstElement();
+      if (showTextBoxProperties(textBox) && updateElement(textBox))
+      {
          saveMap();
+      }
    }
 
 	/**

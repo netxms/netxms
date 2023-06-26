@@ -365,7 +365,7 @@ public class LinkDataSources extends PropertyPage
    protected boolean applyChanges(final boolean isApply)
    {
       object.setDciList(dciList);
-      object.update();
+      object.setModified();
       return true;
    }
 }

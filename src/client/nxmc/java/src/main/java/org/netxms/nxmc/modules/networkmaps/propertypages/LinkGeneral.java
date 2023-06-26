@@ -353,7 +353,7 @@ public class LinkGeneral extends PropertyPage
 		}
       object.setUseActiveThresholds(checkUseThresholds.getSelection());
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
-		object.update();
+		object.setModified();
 		return true;
 	}
 }

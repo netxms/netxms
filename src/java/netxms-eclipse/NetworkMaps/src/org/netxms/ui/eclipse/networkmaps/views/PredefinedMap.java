@@ -72,6 +72,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
  * View for predefined map
@@ -921,6 +922,25 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			defaultLinkColor.dispose();
 		super.dispose();
 	}
+   
+   /**
+    * Update existing element or show message if failed
+    * 
+    * @param element element to update
+    * @return true if was successfully updated
+    */
+   private boolean updateElement(NetworkMapElement element)
+   {
+      if (mapPage.updateElement(element))
+      {
+         saveMap();
+         addDciToRequestList();
+         return true;
+      }
+
+      viewerContainer.showMessage(CompositeWithMessageBar.ERROR, "Failed to update map element: the object no longer exists");
+      return false;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#onObjectChange(org.netxms.client.objects.AbstractObject)
@@ -1012,7 +1032,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, container);
       if (dlg != null)
       {
-         if(dlg.open() == PropertyDialog.OK)         
+         if(dlg.open() == PropertyDialog.OK && updateElement(container))         
             saveMap();
       }
    }
@@ -1031,7 +1051,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, container);
       if (dlg != null)
       {
-         if(dlg.open() == PropertyDialog.OK)         
+         if(dlg.open() == PropertyDialog.OK && updateElement(container))         
             saveMap();
       }
    }
@@ -1051,8 +1071,15 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		if (dlg != null)
 		{
 			dlg.open();
-			if (link.isModified())
-				saveMap();
+	      if (link.isModified())
+	      {
+	         if (link.update(mapPage))
+	         {
+	            saveMap();
+	         }
+	         else
+	            viewerContainer.showMessage(CompositeWithMessageBar.ERROR, "Failed to update link: the object no longer exists");
+	      }
 		}
 	}
 	
@@ -1067,8 +1094,9 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapTextBox))
          return;
 
-      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, (NetworkMapTextBox)selection.getFirstElement());
-      if (dlg.open() != Window.OK)
+      NetworkMapTextBox textBox = (NetworkMapTextBox)selection.getFirstElement();
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, textBox);
+      if (dlg.open() != Window.OK || updateElement(textBox))
          return;
 
       saveMap();

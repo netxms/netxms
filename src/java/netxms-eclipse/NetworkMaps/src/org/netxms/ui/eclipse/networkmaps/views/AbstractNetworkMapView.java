@@ -69,6 +69,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -123,6 +124,7 @@ import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.CommandBridge;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
  * Base class for network map views
@@ -153,6 +155,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected NXCSession session;
 	protected AbstractObject rootObject;
 	protected NetworkMapPage mapPage;
+   protected CompositeWithMessageBar viewerContainer;
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
 	protected MapLayoutAlgorithm layoutAlgorithm = MapLayoutAlgorithm.SPRING;
@@ -252,10 +255,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	@Override
 	public final void createPartControl(Composite parent)
 	{
-		FillLayout layout = new FillLayout();
-		parent.setLayout(layout);
+		parent.setLayout(new FillLayout());
 
-		viewer = new ExtendedGraphViewer(parent, SWT.NONE);
+		viewerContainer = new CompositeWithMessageBar(parent, SWT.NONE);
+		
+		viewer = new ExtendedGraphViewer(viewerContainer.getContent(), SWT.NONE);
       labelProvider = new MapLabelProvider(viewer);
 		viewer.setContentProvider(new MapContentProvider(viewer, labelProvider));
 		viewer.setLabelProvider(labelProvider);

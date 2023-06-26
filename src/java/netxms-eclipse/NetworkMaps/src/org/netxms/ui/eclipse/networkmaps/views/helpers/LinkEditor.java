@@ -22,7 +22,6 @@ import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.SingleDciConfig;
-import org.netxms.client.maps.elements.NetworkMapObject;
 
 /**
  * Utility class for editing map links 
@@ -30,7 +29,6 @@ import org.netxms.client.maps.elements.NetworkMapObject;
 public class LinkEditor
 {
 	private NetworkMapLink link;
-	private NetworkMapPage mapPage;
 	private String name;
 	private int type;
 	private String connectorName1;
@@ -51,7 +49,6 @@ public class LinkEditor
 	public LinkEditor(NetworkMapLink link, NetworkMapPage mapPage)
 	{
 		this.link = link;
-		this.mapPage = mapPage;
 		name = link.getName();
 		type = link.getType();
 		connectorName1 = link.getConnectorName1();
@@ -67,13 +64,27 @@ public class LinkEditor
 	
 	/**
 	 * Update network map link
+	 * @param mapPage 
 	 */
-	public void update()
+	public boolean update(NetworkMapPage mapPage)
 	{
-		mapPage.removeLink(link);
-		long[] bp = link.getBendPoints();
-      link = new NetworkMapLink(link.getId(), name, type, link.getElement1(), link.getElement2(), connectorName1, connectorName2,
-            (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], link.getFlags(), link.isLocked());
+	   NetworkMapLink currentLink = null;
+	   for (NetworkMapLink l : mapPage.getLinks())
+	   {
+	      if (l.getId() == link.getId())
+	      {
+	         currentLink = l;
+	      }
+	   }
+	   if (currentLink == null)
+	   {
+	      return false;
+	   }
+	   
+		long[] bp = currentLink.getBendPoints();
+		mapPage.removeLink(link.getId());
+      link = new NetworkMapLink(link.getId(), name, type, currentLink.getElement1(), currentLink.getElement2(), connectorName1, connectorName2,
+            (dciList != null) ? dciList.toArray(new SingleDciConfig[dciList.size()]) : new SingleDciConfig[0], currentLink.getFlags(), currentLink.isLocked());
 		link.setColor(color);
 		link.setColorSource(colorSource);
       link.setColorProvider(colorProvider);
@@ -83,6 +94,7 @@ public class LinkEditor
 		link.getConfig().setUseActiveThresholds(useActiveThresholds);
 		mapPage.addLink(link);
 		modified = true;
+		return true;
 	}
 
 	/**
@@ -246,38 +258,20 @@ public class LinkEditor
 	}
 
 	/**
-	 * @return the mapPage
-	 */
-	public NetworkMapPage getMapPage()
-	{
-		return mapPage;
-	}
-	
-	/**
-	 * @return
-	 */
-	public long getObject1()
-	{
-		NetworkMapObject e = (NetworkMapObject)mapPage.getElement(link.getElement1(), NetworkMapObject.class);
-		return (e != null) ? e.getObjectId() : 0;
-	}
-
-	/**
-	 * @return
-	 */
-	public long getObject2()
-	{
-		NetworkMapObject e = (NetworkMapObject)mapPage.getElement(link.getElement2(), NetworkMapObject.class);
-		return (e != null) ? e.getObjectId() : 0;
-	}
-
-	/**
 	 * @return the modified
 	 */
 	public boolean isModified()
 	{
 		return modified;
 	}
+
+   /**
+    * @return the modified
+    */
+   public void setModified()
+   {
+      modified = true;
+   }
 
    /**
     * @return the config
@@ -309,5 +303,15 @@ public class LinkEditor
    public void setUseActiveThresholds(boolean useActiveThresholds)
    {
       this.useActiveThresholds = useActiveThresholds;
+   }
+
+   /**
+    * Get updated link object
+    * 
+    * @return updated link object
+    */
+   public NetworkMapLink getLink()
+   {
+      return link;
    }
 }
