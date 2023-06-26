@@ -193,6 +193,14 @@ public abstract class AbstractNetworkMapView extends ObjectView implements ISele
       super(name, image, id, false);
    }
 
+   /**
+    * Constructor for cloning
+    */
+   protected AbstractNetworkMapView()
+   {
+      super();
+   }
+
 	/**
 	 * Build map page containing data to display. Should be implemented in derived classes.
 	 */

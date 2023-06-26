@@ -19,34 +19,43 @@
 package org.netxms.nxmc.modules.networkmaps.views;
 
 import java.util.Iterator;
-
+import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.VPNConnector;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
-import org.netxms.client.maps.NetworkMapLink;
-import org.netxms.client.maps.NetworkMapPage;
-import org.netxms.client.maps.elements.NetworkMapObject;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * IP neighbors for given node
  */
-public class IPTopology extends AbstractNetworkMapView
+public class IPTopologyMapView extends AdHocTopologyMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(IPTopology.class);
-   public static final String ID = "IPTopology";
+   private static final I18n i18n = LocalizationHelper.getI18n(IPTopologyMapView.class);
+   private static final String ID = "IPTopology";
 
    /**
     * Constructor
+    * 
+    * @param rootObjectId root object ID
     */
-   public IPTopology()
+   public IPTopologyMapView(long rootObjectId)
    {
-      super(i18n.tr("IP topology"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), "IPTopology");
+      super(i18n.tr("IP topology"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), ID, rootObjectId);
    }
-   
+
+   /**
+    * Constructor for cloning
+    */
+   protected IPTopologyMapView()
+   {
+      super();
+   }
+
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
@@ -126,43 +135,4 @@ public class IPTopology extends AbstractNetworkMapView
 		}
       addDciToRequestList();
 	}
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#refresh()
-    */
-   @Override
-   public void refresh()
-   {
-      if (isActive())
-         super.refresh();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#activate()
-    */
-   @Override
-   public void activate()
-   {
-      refresh();
-      super.activate();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node) && 
-            (((Node)context).getPrimaryIP().isValidUnicastAddress() || ((Node)context).isManagementServer());
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
-    */
-   @Override
-   protected void onObjectChange(AbstractObject object)
-   {
-      refresh();
-   }  
 }

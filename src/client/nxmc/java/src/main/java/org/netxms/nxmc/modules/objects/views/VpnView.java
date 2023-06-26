@@ -110,7 +110,7 @@ public class VpnView extends NodeSubObjectTableView
    protected void createViewer()
    {
       final String[] names = { i18n.tr("Id"), i18n.tr("Name"), i18n.tr("Status"), i18n.tr("Peer gateway"), i18n.tr("Local subnets"), i18n.tr("Remote subnets") };
-      
+
       final int[] widths = { 60, 150, 80, 150, 200, 200 };
       viewer = new SortableTableViewer(mainArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       labelProvider = new VPNConnectorListLabelProvider();

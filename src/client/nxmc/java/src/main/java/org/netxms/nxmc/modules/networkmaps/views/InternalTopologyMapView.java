@@ -21,28 +21,37 @@ package org.netxms.nxmc.modules.networkmaps.views;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
+import org.netxms.nxmc.resources.ResourceManager;
 import org.xnap.commons.i18n.I18n;
 
 /**
  * Internal connection topology view for given object
  */
-public class InternalConnectionTopology extends AbstractNetworkMapView
+public class InternalTopologyMapView extends AdHocTopologyMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(InternalConnectionTopology.class);
-   public static final String ID = "InternalConnectionTopology";
+   private static final I18n i18n = LocalizationHelper.getI18n(InternalTopologyMapView.class);
+   private static final String ID = "InternalConnectionTopology";
 
    /**
     * Constructor
+    *
+    * @param rootObjectId root object ID
     */
-   public InternalConnectionTopology()
+   public InternalTopologyMapView(long rootObjectId)
    {
-      super(i18n.tr("Internal connection map"), null, "InternalConnectionTopology");
+      super(i18n.tr("Internal Connection Map"), ResourceManager.getImageDescriptor("icons/object-views/quickmap.png"), ID, rootObjectId);
    }
-   
+
+   /**
+    * Constructor for cloning
+    */
+   protected InternalTopologyMapView()
+   {
+      super();
+   }
+
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
@@ -51,8 +60,8 @@ public class InternalConnectionTopology extends AbstractNetworkMapView
    {
       if (mapPage == null)
          mapPage = new NetworkMapPage(ID + getObjectName());
-      
-      new Job(String.format("Get internal connection map for %s", getObjectName()), this) {
+
+      new Job(String.format("Building internal connection map for %s", getObjectName()), this) {
          @Override
          protected void run(IProgressMonitor monitor) throws Exception
          {
@@ -72,46 +81,8 @@ public class InternalConnectionTopology extends AbstractNetworkMapView
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot get internal connection map for %s", getObjectName());
+            return String.format("Cannot build internal connection map for %s", getObjectName());
          }
       }.start();
    }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#refresh()
-    */
-   @Override
-   public void refresh()
-   {
-      if (isActive())
-         super.refresh();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#activate()
-    */
-   @Override
-   public void activate()
-   {
-      refresh();
-      super.activate();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node);
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
-    */
-   @Override
-   protected void onObjectChange(AbstractObject object)
-   {
-      refresh();
-   }  
 }

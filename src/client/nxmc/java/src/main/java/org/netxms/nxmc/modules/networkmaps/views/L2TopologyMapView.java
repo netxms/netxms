@@ -21,8 +21,6 @@ package org.netxms.nxmc.modules.networkmaps.views;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.localization.LocalizationHelper;
 import org.netxms.nxmc.resources.ResourceManager;
@@ -31,19 +29,29 @@ import org.xnap.commons.i18n.I18n;
 /**
  * Layer 2 topology view for given object
  */
-public class Layer2Topology extends AbstractNetworkMapView
+public class L2TopologyMapView extends AdHocTopologyMapView
 {
-   private static final I18n i18n = LocalizationHelper.getI18n(Layer2Topology.class);
-   public static final String ID = "Layer2Topology";
+   private static final I18n i18n = LocalizationHelper.getI18n(L2TopologyMapView.class);
+   private static final String ID = "Layer2Topology";
 
    /**
     * Constructor
+    *
+    * @param rootObjectId root object ID
     */
-   public Layer2Topology()
+   public L2TopologyMapView(long rootObjectId)
    {
-      super(i18n.tr("Layer 2 topology"), ResourceManager.getImageDescriptor("icons/object-views/layer2.png"), "Layer2Topology");
+      super(i18n.tr("Layer 2 Topology"), ResourceManager.getImageDescriptor("icons/object-views/layer2.png"), ID, rootObjectId);
    }
-   
+
+   /**
+    * Constructor for cloning
+    */
+   protected L2TopologyMapView()
+   {
+      super();
+   }
+
    /**
     * @see org.netxms.nxmc.modules.networkmaps.views.AbstractNetworkMapView#buildMapPage()
     */
@@ -51,8 +59,8 @@ public class Layer2Topology extends AbstractNetworkMapView
 	protected void buildMapPage()
 	{
 		if (mapPage == null)
-			mapPage = new NetworkMapPage(ID + getObjectName());
-		
+         mapPage = new NetworkMapPage(ID + "." + getObjectName());
+
 		new Job(String.format(i18n.tr("Get layer 2 topology for %s"), getObjectName()), this) {
 			@Override
 			protected void run(IProgressMonitor monitor) throws Exception
@@ -65,7 +73,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 			protected void jobFailureHandler(Exception e)
 			{
 				// On failure, create map with root object only
-				NetworkMapPage page = new NetworkMapPage(ID + getObjectName());
+            NetworkMapPage page = new NetworkMapPage(ID + "." + getObjectName());
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), getObjectId()));
 				replaceMapPage(page, getDisplay());
 			}
@@ -77,43 +85,4 @@ public class Layer2Topology extends AbstractNetworkMapView
 			}
 		}.start();
 	}
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#refresh()
-    */
-   @Override
-   public void refresh()
-   {
-      if (isActive())
-         super.refresh();
-   }
-
-   /**
-    * @see org.netxms.nxmc.base.views.View#activate()
-    */
-   @Override
-   public void activate()
-   {
-      refresh();
-      super.activate();
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#isValidForContext(java.lang.Object)
-    */
-   @Override
-   public boolean isValidForContext(Object context)
-   {
-      return (context != null) && (context instanceof Node) && 
-            (((Node)context).getPrimaryIP().isValidUnicastAddress() || ((Node)context).isManagementServer());
-   }
-
-   /**
-    * @see org.netxms.nxmc.modules.objects.views.ObjectView#onObjectChange(org.netxms.client.objects.AbstractObject)
-    */
-   @Override
-   protected void onObjectChange(AbstractObject object)
-   {
-      refresh();
-   }  
 }

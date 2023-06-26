@@ -76,6 +76,9 @@ import org.netxms.nxmc.modules.assetmanagement.UnlinkObjectFromAssetAction;
 import org.netxms.nxmc.modules.dashboards.CloneDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ExportDashboardAction;
 import org.netxms.nxmc.modules.dashboards.ImportDashboardAction;
+import org.netxms.nxmc.modules.networkmaps.views.IPTopologyMapView;
+import org.netxms.nxmc.modules.networkmaps.views.InternalTopologyMapView;
+import org.netxms.nxmc.modules.networkmaps.views.L2TopologyMapView;
 import org.netxms.nxmc.modules.nxsl.views.ScriptExecutorView;
 import org.netxms.nxmc.modules.objects.actions.ChangeZoneAction;
 import org.netxms.nxmc.modules.objects.actions.CreateInterfaceDciAction;
@@ -125,6 +128,9 @@ public class ObjectContextMenuManager extends MenuManager
    private Action actionRemoveNode;
    private Action actionRouteFrom;
    private Action actionRouteTo;
+   private Action actionLayer2Topology;
+   private Action actionIPTopology;
+   private Action actionInternalTopology;
    private ObjectAction<?> actionCreateInterfaceDCI;
    private ObjectAction<?> actionForcePolicyInstall;
    private ObjectAction<?> actionLinkAssetToObject;
@@ -363,6 +369,30 @@ public class ObjectContextMenuManager extends MenuManager
          }
       };
 
+      actionLayer2Topology = new Action(i18n.tr("&Layer 2 topology")) {
+         @Override
+         public void run()
+         {
+            view.openView(new L2TopologyMapView(getObjectIdFromSelection()));
+         }
+      };
+
+      actionIPTopology = new Action(i18n.tr("&IP topology")) {
+         @Override
+         public void run()
+         {
+            view.openView(new IPTopologyMapView(getObjectIdFromSelection()));
+         }
+      };
+
+      actionInternalTopology = new Action(i18n.tr("Internal &communication topology")) {
+         @Override
+         public void run()
+         {
+            view.openView(new InternalTopologyMapView(getObjectIdFromSelection()));
+         }
+      };
+
       ViewPlacement viewPlacement = new ViewPlacement(view);
       actionCreateInterfaceDCI = new CreateInterfaceDciAction(viewPlacement, selectionProvider);
       actionForcePolicyInstall = new ForcedPolicyDeploymentAction(viewPlacement, selectionProvider);
@@ -559,6 +589,11 @@ public class ObjectContextMenuManager extends MenuManager
          {
             add(actionRouteFrom);
             add(actionRouteTo);
+            MenuManager topologyMapMenu = new MenuManager(i18n.tr("Topology maps"));
+            topologyMapMenu.add(actionLayer2Topology);
+            topologyMapMenu.add(actionIPTopology);
+            topologyMapMenu.add(actionInternalTopology);
+            add(topologyMapMenu);
          }
          add(new Separator());
          add(actionExecuteScript);
