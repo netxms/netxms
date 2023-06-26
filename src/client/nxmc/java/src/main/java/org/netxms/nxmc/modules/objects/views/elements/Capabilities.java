@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2020 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,6 +82,7 @@ public class Capabilities extends TableElement
          addPair(i18n.tr("SNMP Port"), Integer.toString(node.getSnmpPort()));
          addPair(i18n.tr("SNMP Version"), getSnmpVersionName(node.getSnmpVersion()));
       }
+      addFlag("SSH", (node.getCapabilities() & AbstractNode.NC_IS_SSH) != 0);
       addFlag("STP", (node.getCapabilities() & AbstractNode.NC_IS_STP) != 0);
       addFlag(i18n.tr("User Agent"), (node.getCapabilities() & AbstractNode.NC_HAS_USER_AGENT) != 0);
       addFlag("VRRP", (node.getCapabilities() & AbstractNode.NC_IS_VRRP) != 0);
@@ -119,9 +120,9 @@ public class Capabilities extends TableElement
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
-	 */
+   /**
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement#isApplicableForObject(org.netxms.client.objects.AbstractObject)
+    */
 	@Override
 	public boolean isApplicableForObject(AbstractObject object)
 	{
