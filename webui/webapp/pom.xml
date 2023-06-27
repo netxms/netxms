@@ -74,7 +74,7 @@
         </repository> 
         <repository>
             <id>zest</id>
-            <url>http://www.netxms.org/eclipse/zest-rap</url>
+            <url>https://www.netxms.org/eclipse/zest-rap</url>
             <layout>p2</layout>
         </repository> 
     </repositories> 

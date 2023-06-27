@@ -21,11 +21,6 @@ public class Messages extends NLS
    public String AbstractTraceView_Subscribing;
    public String AbstractTraceView_Unsubscribing;
 	public String BrandingManager_ProductName;
-   public String BrowserView_Back;
-   public String BrowserView_Forward;
-   public String BrowserView_PartName_Changed;
-   public String BrowserView_PartName_Changing;
-   public String BrowserView_Stop;
 	public String CompositeWithMessageBar_HideMessage;
    public String ConsoleJob_ErrorDialogTitle;
 	public String ExportToCsvAction_ExportToCsv;
