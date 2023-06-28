@@ -746,7 +746,9 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
       {
          // Run threshold check with DCI unlocked if there are script thresholds
          // to avoid possible server deadlock if script causes agent reconnect
-         DCItem *shadowCopy = new DCItem(this, true);
+         // Shadow copy has to be shared one because threshold check may require
+         // shared pointer to DCI for additional background processing
+         shared_ptr<DCItem> shadowCopy = make_shared<DCItem>(this, true);
          unlock();
          shadowCopy->checkThresholds(*pValue);
          lock();
@@ -761,8 +763,6 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const TCHAR *originalValue, boo
                dst->reconcile(*src);
             }
          }
-
-         delete shadowCopy;
       }
       else
       {

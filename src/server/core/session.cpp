@@ -4506,8 +4506,7 @@ void ClientSession::copyDCI(const NXCPMessage& request)
                {
                   DCObject *dstItem = srcItem->clone();
                   dstItem->setTemplateId(0, 0);
-                  dstItem->changeBinding(CreateUniqueId(IDG_ITEM),
-                           static_pointer_cast<DataCollectionOwner>(destinationObject), FALSE);
+                  dstItem->changeBinding(CreateUniqueId(IDG_ITEM), static_pointer_cast<DataCollectionOwner>(destinationObject), false);
                   if (static_cast<DataCollectionOwner&>(*destinationObject).addDCObject(dstItem))
                   {
                      if (doMove)

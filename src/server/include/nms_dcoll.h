@@ -227,6 +227,7 @@ public:
 
 class DataCollectionOwner;
 class DCObjectInfo;
+class DCObject;
 
 /**
  * DCObject storage class
@@ -263,6 +264,7 @@ enum DCObjectRetentionType
 
 #ifdef _WIN32
 template class NXCORE_EXPORTABLE weak_ptr<DataCollectionOwner>;
+template class NXCORE_EXPORTABLE weak_ptr<DCObject>;
 #endif
 
 /**
