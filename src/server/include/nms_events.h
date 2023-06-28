@@ -118,6 +118,11 @@ struct EventProcessingThreadStats
 
 class EventBuilder;
 
+#ifdef _WIN32
+class Event;
+template class NXCORE_EXPORTABLE std::function<void(Event*)>;
+#endif
+
 /**
  * Event
  */
