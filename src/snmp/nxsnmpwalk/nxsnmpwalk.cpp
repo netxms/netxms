@@ -213,10 +213,22 @@ int main(int argc, char *argv[])
 				{
 					m_encryptionMethod = SNMP_ENCRYPT_DES;
 				}
-				else if (!stricmp(optarg, "aes"))
-				{
-					m_encryptionMethod = SNMP_ENCRYPT_AES;
-				}
+            else if (!stricmp(optarg, "aes"))
+            {
+               m_encryptionMethod = SNMP_ENCRYPT_AES_128;
+            }
+            else if (!stricmp(optarg, "aes-128"))
+            {
+               m_encryptionMethod = SNMP_ENCRYPT_AES_128;
+            }
+            else if (!stricmp(optarg, "aes-192"))
+            {
+               m_encryptionMethod = SNMP_ENCRYPT_AES_192;
+            }
+            else if (!stricmp(optarg, "aes-256"))
+            {
+               m_encryptionMethod = SNMP_ENCRYPT_AES_256;
+            }
 				else if (!stricmp(optarg, "none"))
 				{
 					m_encryptionMethod = SNMP_ENCRYPT_NONE;

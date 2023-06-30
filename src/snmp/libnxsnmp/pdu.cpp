@@ -682,6 +682,20 @@ bool SNMP_PDU::parsePdu(const BYTE *pdu, size_t pduLength)
 	return success;
 }
 
+static int GetAesSizeByMethod(SNMP_EncryptionMethod enc)
+{
+   switch (enc)
+   {
+   case SNMP_ENCRYPT_AES_128:
+      return 128;
+   case SNMP_ENCRYPT_AES_192:
+      return 192;
+   case SNMP_ENCRYPT_AES_256:
+      return 256;
+   }
+   return 128;
+}
+
 /**
  * Decrypt data in packet
  */
@@ -712,11 +726,13 @@ bool SNMP_PDU::decryptData(const BYTE *data, size_t length, BYTE *decryptedData,
 		return false;  // Compiled without DES support
 #endif
 	}
-	else if (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES)
+	else if ((securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_128) ||
+	      (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_192) ||
+	      (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_256))
 	{
 #ifndef OPENSSL_NO_AES
 		AES_KEY key;
-		AES_set_encrypt_key(securityContext->getPrivKey(), 128, &key);
+		AES_set_encrypt_key(securityContext->getPrivKey(), GetAesSizeByMethod(securityContext->getPrivMethod()), &key);
 
 		BYTE iv[16];
 		uint32_t boots, engineTime;
@@ -1044,11 +1060,12 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 					goto cleanup;
 #endif
 				}
-				else if (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES)
+				else if ((securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_128) || (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_192) ||
+			         (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES_256))
 				{
 #ifndef OPENSSL_NO_AES
 					AES_KEY key;
-					AES_set_encrypt_key(securityContext->getPrivKey(), 128, &key);
+					AES_set_encrypt_key(securityContext->getPrivKey(), GetAesSizeByMethod(securityContext->getPrivMethod()), &key);
 
 					BYTE iv[16];
 					uint32_t boots = htonl(securityContext->getAuthoritativeEngine().getBoots());

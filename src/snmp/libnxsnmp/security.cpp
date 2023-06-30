@@ -236,10 +236,10 @@ const BYTE *SNMP_SecurityContext::getPrivKey()
  * Generate user key from password using provided hash function
  */
 template<void (*__HashForPattern)(const void*, size_t, size_t, BYTE*), void (*__Hash)(const void*, size_t, BYTE*), size_t __hashSize>
-static inline void GenerateUserKey(const char *password, const SNMP_Engine& authoritativeEngine, BYTE *key)
+static inline void GenerateUserKey(const void *password, size_t passwordLen, const SNMP_Engine& authoritativeEngine, BYTE *key)
 {
    BYTE buffer[1024];
-   __HashForPattern(password, strlen(password), 1048576, buffer);
+   __HashForPattern(password, passwordLen, 1048576, buffer);
    memcpy(&buffer[__hashSize], authoritativeEngine.getId(), authoritativeEngine.getIdLen());
    memcpy(&buffer[__hashSize + authoritativeEngine.getIdLen()], buffer, __hashSize);
    __Hash(buffer, authoritativeEngine.getIdLen() + __hashSize * 2, key);
@@ -259,28 +259,44 @@ void SNMP_SecurityContext::recalculateKeys()
 	switch(m_authMethod)
 	{
 	   case SNMP_AUTH_MD5:
-	      GenerateUserKey<MD5HashForPattern, CalculateMD5Hash, MD5_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
-         GenerateUserKey<MD5HashForPattern, CalculateMD5Hash, MD5_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+	      GenerateUserKey<MD5HashForPattern, CalculateMD5Hash, MD5_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
+         GenerateUserKey<MD5HashForPattern, CalculateMD5Hash, MD5_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
+         if ((m_privMethod == SNMP_ENCRYPT_AES_192) || (m_privMethod== SNMP_ENCRYPT_AES_256))
+         {
+            GenerateUserKey<MD5HashForPattern, CalculateMD5Hash, MD5_DIGEST_SIZE>(m_privKey, 16, m_authoritativeEngine, m_privKey + 16);
+         }
 	      break;
       case SNMP_AUTH_SHA1:
-         GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
-         GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA1HashForPattern, CalculateSHA1Hash, SHA1_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
+         if ((m_privMethod == SNMP_ENCRYPT_AES_192) || (m_privMethod== SNMP_ENCRYPT_AES_256))
+         {
+            BYTE privKeyPart2[20];
+            GenerateUserKey<MD5HashForPattern, CalculateSHA1Hash, MD5_DIGEST_SIZE>(m_privKey, 20, m_authoritativeEngine, privKeyPart2);
+            memcpy(m_privKey + 20, privKeyPart2, 12);
+         }
          break;
       case SNMP_AUTH_SHA224:
-         GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
-         GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA224HashForPattern, CalculateSHA224Hash, SHA224_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
+         if (m_privMethod== SNMP_ENCRYPT_AES_256)
+         {
+            BYTE privKeyPart2[28];
+            GenerateUserKey<MD5HashForPattern, CalculateSHA224Hash, MD5_DIGEST_SIZE>(m_privKey, 20, m_authoritativeEngine, privKeyPart2);
+            memcpy(m_privKey + 28, privKeyPart2, 4);
+         }
          break;
       case SNMP_AUTH_SHA256:
-         GenerateUserKey<SHA256HashForPattern, CalculateSHA256Hash, SHA256_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
-         GenerateUserKey<SHA256HashForPattern, CalculateSHA256Hash, SHA256_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         GenerateUserKey<SHA256HashForPattern, CalculateSHA256Hash, SHA256_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA256HashForPattern, CalculateSHA256Hash, SHA256_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
          break;
       case SNMP_AUTH_SHA384:
-         GenerateUserKey<SHA384HashForPattern, CalculateSHA384Hash, SHA384_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
-         GenerateUserKey<SHA384HashForPattern, CalculateSHA384Hash, SHA384_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         GenerateUserKey<SHA384HashForPattern, CalculateSHA384Hash, SHA384_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA384HashForPattern, CalculateSHA384Hash, SHA384_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
          break;
       case SNMP_AUTH_SHA512:
-         GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(authPassword, m_authoritativeEngine, m_authKey);
-         GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(privPassword, m_authoritativeEngine, m_privKey);
+         GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(authPassword, strlen(authPassword), m_authoritativeEngine, m_authKey);
+         GenerateUserKey<SHA512HashForPattern, CalculateSHA512Hash, SHA512_DIGEST_SIZE>(privPassword, strlen(privPassword), m_authoritativeEngine, m_privKey);
          break;
       default:
          break;

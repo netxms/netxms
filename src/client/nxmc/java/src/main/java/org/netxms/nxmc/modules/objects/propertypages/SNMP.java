@@ -160,8 +160,10 @@ public class SNMP extends ObjectPropertyPage
       fd.top = new FormAttachment(snmpVersion.getParent(), 0, SWT.BOTTOM);
       snmpPriv = WidgetHelper.createLabeledCombo(dialogArea, SWT.BORDER | SWT.READ_ONLY, i18n.tr("Encryption"), fd);
       snmpPriv.add(i18n.tr("NONE"));
-      snmpPriv.add(i18n.tr("DES"));
-      snmpPriv.add(i18n.tr("AES"));
+      snmpPriv.add("DES");
+      snmpPriv.add("AES-128");
+      snmpPriv.add("AES-192");
+      snmpPriv.add("AES-256");
       snmpPriv.select(node.getSnmpPrivMethod());
       snmpPriv.setEnabled(node.getSnmpVersion() == SnmpVersion.V3);
       

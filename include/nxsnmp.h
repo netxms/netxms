@@ -257,7 +257,9 @@ enum SNMP_EncryptionMethod
 {
    SNMP_ENCRYPT_NONE = 0,
    SNMP_ENCRYPT_DES = 1,
-   SNMP_ENCRYPT_AES = 2
+   SNMP_ENCRYPT_AES_128 = 2,
+   SNMP_ENCRYPT_AES_192 = 3,
+   SNMP_ENCRYPT_AES_256 = 4,
 };
 
 //

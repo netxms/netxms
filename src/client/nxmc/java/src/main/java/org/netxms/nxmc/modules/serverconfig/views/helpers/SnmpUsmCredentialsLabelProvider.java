@@ -33,7 +33,7 @@ public class SnmpUsmCredentialsLabelProvider extends LabelProvider implements IT
 {
    private final I18n i18n = LocalizationHelper.getI18n(SnmpUsmCredentialsLabelProvider.class);
    private final String[] authMethodName = { i18n.tr("None"), "MD5", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512" };
-   private final String[] privMethodName = { i18n.tr("None"), "DES", "AES" };
+   private final String[] privMethodName = { i18n.tr("None"), "DES", "AES-128", "AES-192", "AES-256" };
 
    /**
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

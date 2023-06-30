@@ -105,7 +105,9 @@ public class EditSnmpUsmCredentialsDialog extends Dialog
       privMethod = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, i18n.tr("Encryption"), WidgetHelper.DEFAULT_LAYOUT_DATA);
       privMethod.add(i18n.tr("None"));
       privMethod.add("DES");
-      privMethod.add("AES");
+      privMethod.add("AES-128");
+      privMethod.add("AES-192");
+      privMethod.add("AES-256");
 		privMethod.select(2);
 		
 		authPasswd = new LabeledText(dialogArea, SWT.NONE);

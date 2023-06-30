@@ -274,7 +274,13 @@ SNMPTrapDriver *SNMPTrapDriver::createInstance(Config *config)
    if (v != nullptr)
    {
       if (!_tcsicmp(v, _T("aes")))
-         instance->m_privMethod = SNMP_ENCRYPT_AES;
+         instance->m_privMethod = SNMP_ENCRYPT_AES_128;
+      else if (!_tcsicmp(v, _T("aes-128")))
+         instance->m_privMethod = SNMP_ENCRYPT_AES_128;
+      else if (!_tcsicmp(v, _T("aes-192")))
+         instance->m_privMethod = SNMP_ENCRYPT_AES_192;
+      else if (!_tcsicmp(v, _T("aes-256")))
+         instance->m_privMethod = SNMP_ENCRYPT_AES_256;
       else if (!_tcsicmp(v, _T("des")))
          instance->m_privMethod = SNMP_ENCRYPT_DES;
       else if (!_tcsicmp(v, _T("none")))
