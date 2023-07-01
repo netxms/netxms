@@ -47,7 +47,6 @@ import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
@@ -61,7 +60,6 @@ import org.netxms.reporting.tools.DateParameterParser;
 import org.netxms.reporting.tools.ThreadLocalReportInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRParameter;
@@ -453,12 +451,12 @@ public class ReportManager
       final String outputFile = new File(getOutputDirectory(jobConfiguration.reportId), jobId.toString() + FILE_SUFFIX_FILLED).getPath();
       try
       {
-         prepareParameters(jobConfiguration.executionParameters, report, localParameters);
-         logger.debug("Report parameters: " + localParameters);
-
          dbConnection = server.createDatabaseConnection();
 
-         executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection);
+         executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection, authToken);
+
+         prepareParameters(jobConfiguration.executionParameters, report, localParameters);
+         logger.debug("Report parameters: " + localParameters);
 
          DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
          reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "org.netxms.reporting.nxcl.NXCLQueryExecutorFactory");
@@ -468,7 +466,7 @@ public class ReportManager
          saveResult(new ReportResult(jobId, jobConfiguration.reportId, new Date(), userId, true));
          sendMailNotifications(jobConfiguration.reportId, report.getName(), jobId, jobConfiguration.renderFormat, jobConfiguration.emailRecipients);
 
-         executeHook("CleanupHook", subrepoDirectory, localParameters, dbConnection);
+         executeHook("CleanupHook", subrepoDirectory, localParameters, dbConnection, authToken);
       }
       catch(Throwable e)
       {
@@ -508,10 +506,11 @@ public class ReportManager
     * @param reportLocation location of report's files
     * @param parameters report execution parameters
     * @param dbConnection database connection
+    * @param authToken authentication token
     * @throws Exception on any unrecoverable error
     */
    @SuppressWarnings("unchecked")
-   private void executeHook(String hookName, String reportLocation, HashMap<String, Object> parameters, Connection dbConnection) throws Exception
+   private void executeHook(String hookName, String reportLocation, HashMap<String, Object> parameters, Connection dbConnection, String authToken) throws Exception
    {
       ReportClassLoader classLoader = null;
       try
@@ -520,8 +519,18 @@ public class ReportManager
          classLoader = new ReportClassLoader(urls, getClass().getClassLoader());
          Class<ExecutionHook> hookClass = (Class<ExecutionHook>)classLoader.loadClass("report." + hookName);
          ExecutionHook hook = hookClass.getConstructor().newInstance();
+         if (hook.isServerAccessRequired())
+         {
+            logger.info("Execution hook " + hookName + " requires server access");
+            if (authToken != null)
+               hook.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"), authToken);
+            else
+               hook.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"), server.getConfigurationProperty("netxms.server.login", "admin"),
+                     server.getConfigurationProperty("netxms.server.password", ""));
+         }
          logger.info("Running report execution hook " + hookName);
          hook.run(parameters, dbConnection);
+         hook.disconnect();
       }
       catch(ClassNotFoundException e)
       {
@@ -579,9 +588,10 @@ public class ReportManager
       for(JRParameter jrParameter : jrParameters)
       {
          if (!jrParameter.isForPrompting() || jrParameter.isSystemDefined())
-         {
             continue;
-         }
+
+         if (Boolean.parseBoolean(jrParameter.getPropertiesMap().getProperty("internal")))
+            continue;
 
          final String jrName = jrParameter.getName();
          final String input = parameters.get(jrName);

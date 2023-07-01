@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,84 +20,25 @@ package org.netxms.reporting.extensions;
 
 import java.io.IOException;
 import java.util.Map;
+import org.netxms.client.NXCException;
+import org.netxms.client.NXCSession;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRValueParameter;
-import org.netxms.client.NXCException;
-import org.netxms.client.NXCSession;
-import org.netxms.client.ProtocolVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Custom data source for reading data from NetXMS server via API
  */
-public abstract class NXCLDataSource implements JRDataSource
+public abstract class NXCLDataSource extends GenericExtension implements JRDataSource
 {
-   private static final Logger log = LoggerFactory.getLogger(NXCLDataSource.class);
-
-   private static final int[] PROTOCOL_COMPONENTS = { ProtocolVersion.INDEX_FULL };
-
    protected JRDataset dataset;
    protected Map<String, ? extends JRValueParameter> parameters;
 
    protected NXCLDataSource(JRDataset dataset, Map<String, ? extends JRValueParameter> parameters)
    {
+      super();
       this.dataset = dataset;
       this.parameters = parameters;
-   }
-
-   /**
-    * Connect to NetXMS server using login and password authentication.
-    *
-    * @param server server host name
-    * @param login login name
-    * @param password password
-    */
-   public void connect(String server, String login, String password)
-   {
-      log.debug("Connecting to NetXMS server " + server + " as " + login);
-      connect(server, null, login, password);
-   }
-
-   /**
-    * Connect to NetXMS server using login/password or authentication token.
-    *
-    * @param server server host name
-    * @param token authentication token
-    */
-   public void connect(String server, String token)
-   {
-      log.debug("Connecting to NetXMS server " + server + " using authentication token");
-      connect(server, token, null, null);
-   }
-
-   /**
-    * Connect to NetXMS server using login/password or authentication token.
-    *
-    * @param server server host name
-    * @param token authentication token
-    * @param login login name
-    * @param password password
-    */
-   private void connect(String server, String token, String login, String password)
-   {
-      NXCSession session = new NXCSession(server);
-      try
-      {
-         session.connect(PROTOCOL_COMPONENTS);
-         if (token != null)
-            session.login(token);
-         else
-            session.login(login, password);
-         session.syncEventTemplates();
-         session.syncObjects();
-         loadData(session);
-      }
-      catch(Exception e)
-      {
-         log.error("Cannot connect to NetXMS server", e);
-      }
    }
 
    protected Object getParameterValue(String name)
@@ -105,6 +46,22 @@ public abstract class NXCLDataSource implements JRDataSource
       return parameters == null ? null : parameters.get(name).getValue();
    }
 
+   /**
+    * @see org.netxms.reporting.extensions.GenericExtension#onConnect(org.netxms.client.NXCSession)
+    */
+   @Override
+   protected void onConnect(NXCSession session) throws IOException, NXCException
+   {
+      loadData(session);
+   }
+
+   /**
+    * Load necessary data from server.
+    *
+    * @param session client session
+    * @throws IOException
+    * @throws NXCException
+    */
    public abstract void loadData(NXCSession session) throws IOException, NXCException;
 
    public abstract void setQuery(String query);
