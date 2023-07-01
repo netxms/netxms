@@ -93,7 +93,7 @@ public class NXCLQueryExecutor implements JRQueryExecuter
    }
 
    /**
-    * Get authenticatrion token from report parameters.
+    * Get authentication token from report parameters.
     *
     * @return authentication token or null
     */

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * Report execution hook
  */
-public interface ExecutionHook
+public abstract class ExecutionHook extends GenericExtension
 {
    /**
     * Hook's execution method, called by report executor. Throwing an exception will stop report execution.
@@ -33,5 +33,17 @@ public interface ExecutionHook
     * @param dbConnection database connection
     * @throws Exception on any unrecoverable failure
     */
-   public void run(Map<String, Object> parameters, Connection dbConnection) throws Exception;
+   public abstract void run(Map<String, Object> parameters, Connection dbConnection) throws Exception;
+
+   /**
+    * Called by framework to check if this hook requires NetXMS server access. Default implementation always returns false. If true
+    * is returned, framework will establish connection to the NetXMS server and attribute <code>session</session> will point to
+    * valid client session.
+    * 
+    * @return true if this hook requires access to NetXMS server
+    */
+   public boolean isServerAccessRequired()
+   {
+      return false;
+   }
 }
