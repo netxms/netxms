@@ -56,8 +56,12 @@ public class ReportDefinition
          if (jrParameter.isSystemDefined() || !jrParameter.isForPrompting())
             continue;
 
-         final ReportParameter parameter = new ReportParameter(jrParameter, labels, index++);
-         parameters.put(parameter.getName(), parameter);
+         final JRPropertiesMap propertiesMap = jrParameter.getPropertiesMap();
+         if (!ReportDefinition.getPropertyFromMap(propertiesMap, "internal", false))
+         {
+            final ReportParameter parameter = new ReportParameter(jrParameter, labels, index++);
+            parameters.put(parameter.getName(), parameter);
+         }
       }
    }
 
@@ -167,16 +171,7 @@ public class ReportDefinition
    protected static boolean getPropertyFromMap(JRPropertiesMap map, String key, boolean defaultValue)
    {
       if (map.containsProperty(key))
-      {
-         try
-         {
-            return Boolean.parseBoolean(map.getProperty(key));
-         }
-         catch(NumberFormatException e)
-         {
-            return defaultValue;
-         }
-      }
+         return Boolean.parseBoolean(map.getProperty(key));
       return defaultValue;
    }
 
