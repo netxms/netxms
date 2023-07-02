@@ -62,6 +62,12 @@
          <scope>compile</scope>
       </dependency>
       <dependency>
+         <groupId>commons-io</groupId>
+         <artifactId>commons-io</artifactId>
+         <version>2.13.0</version>
+         <scope>${lib.scope}</scope>
+      </dependency>
+      <dependency>
          <groupId>javax.mail</groupId>
          <artifactId>mail</artifactId>
          <version>1.4.7</version>

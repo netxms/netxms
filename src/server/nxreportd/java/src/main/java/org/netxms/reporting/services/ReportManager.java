@@ -47,6 +47,7 @@ import java.util.UUID;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import org.apache.commons.io.FileUtils;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
@@ -89,6 +90,7 @@ public class ReportManager
    private static final String FILE_SUFFIX_COMPILED = ".jasper";
    private static final String FILE_SUFFIX_FILLED = ".jrprint";
    private static final String FILE_SUFFIX_METADATA = ".meta";
+   private static final String FILE_SUFFIX_SQL = ".sql";
    private static final String MAIN_REPORT_COMPILED = "main" + FILE_SUFFIX_COMPILED;
 
    private static final Logger logger = LoggerFactory.getLogger(ReportManager.class);
@@ -207,6 +209,7 @@ public class ReportManager
          deleteFolder(destination);
          UUID bundleId = unpackJar(destination, new File(definitionsDirectory, archiveName));
          compileReport(destination);
+         executeDeploymentSqlStatements(destination);
          synchronized(reportMap)
          {
             reportMap.put(bundleId, deployedName);
@@ -351,6 +354,46 @@ public class ReportManager
          {
             logger.error("Cannot compile report " + file.getAbsoluteFile(), e);
          }
+      }
+   }
+
+   /**
+    * Execute deployment SQL statements
+    *
+    * @param reportDirectory report directory
+    */
+   private void executeDeploymentSqlStatements(File reportDirectory)
+   {
+      final String[] list = reportDirectory.list(new FilenameFilter() {
+         @Override
+         public boolean accept(File dir, String name)
+         {
+            return name.endsWith(FILE_SUFFIX_SQL);
+         }
+      });
+      if (list.length > 0)
+      {
+         Arrays.sort(list);
+         try (Connection dbConnection = server.createDatabaseConnection())
+         {
+            for(String fileName : list)
+            {
+               logger.debug("Executing deployment SQL statement from " + fileName);
+               final File file = new File(reportDirectory, fileName);
+               String content = FileUtils.readFileToString(file, "UTF-8");
+               Statement stmt = dbConnection.createStatement();
+               stmt.executeUpdate(content);
+               stmt.close();
+            }
+         }
+         catch(Exception e)
+         {
+            logger.error("Error executing deployment SQL statement", e);
+         }
+      }
+      else
+      {
+         logger.info("No deployment SQL statements");
       }
    }
 
