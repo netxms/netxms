@@ -35,6 +35,8 @@ public class ReportDefinition
 {
    private String name;
    private boolean requiresDataView = false;
+   private boolean requiresResponsibleUsersView = false;
+   private String responsibleUsersTag = null;
    private int numberOfColumns = 1;
    private Map<String, ReportParameter> parameters = new HashMap<String, ReportParameter>(0);
 
@@ -49,6 +51,8 @@ public class ReportDefinition
       name = jasperReport.getName();
       numberOfColumns = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.numberOfColumns", 1);
       requiresDataView = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.requiresDataView", false);
+      requiresResponsibleUsersView = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.requiresResponsibleUsersView", false);
+      responsibleUsersTag = getPropertyFromMap(jasperReport.getPropertiesMap(), "org.netxms.reporting.responsibleUsersTag", null);
 
       int index = 0;
       for(JRParameter jrParameter : jasperReport.getParameters())
@@ -106,6 +110,26 @@ public class ReportDefinition
    }
 
    /**
+    * Check if responsible users view is required for this report.
+    *
+    * @return true if responsible users view is required for this report
+    */
+   public boolean isResponsibleUsersViewRequired()
+   {
+      return requiresResponsibleUsersView;
+   }
+
+   /**
+    * Get optional tag for responsible users.
+    *
+    * @return optional tag for responsible users (can be null)
+    */
+   public String getResponsibleUsersTag()
+   {
+      return responsibleUsersTag;
+   }
+
+   /**
     * Fill NXCP message.
     *
     * @param message NXCP message
@@ -133,7 +157,8 @@ public class ReportDefinition
    @Override
    public String toString()
    {
-      return "ReportDefinition [name=" + name + ", requiresDataView=" + requiresDataView + ", numberOfColumns=" + numberOfColumns + ", parameters=" + parameters + "]";
+      return "ReportDefinition [name=" + name + ", requiresDataView=" + requiresDataView + ", requiresResponsibleUsersView=" + requiresResponsibleUsersView + ", numberOfColumns=" + numberOfColumns +
+            ", parameters=" + parameters + "]";
    }
 
    /**

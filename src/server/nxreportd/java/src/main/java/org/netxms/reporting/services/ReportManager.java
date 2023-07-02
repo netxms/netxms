@@ -56,6 +56,7 @@ import org.netxms.reporting.ReportClassLoader;
 import org.netxms.reporting.Server;
 import org.netxms.reporting.ServerException;
 import org.netxms.reporting.extensions.ExecutionHook;
+import org.netxms.reporting.extensions.PrepareResponsibleUsers;
 import org.netxms.reporting.model.ReportDefinition;
 import org.netxms.reporting.tools.DateParameterParser;
 import org.netxms.reporting.tools.ThreadLocalReportInfo;
@@ -496,6 +497,13 @@ public class ReportManager
       {
          dbConnection = server.createDatabaseConnection();
 
+         if (reportDefinition.isResponsibleUsersViewRequired())
+         {
+            if (reportDefinition.getResponsibleUsersTag() != null)
+               localParameters.put("responsible_users_tag", reportDefinition.getResponsibleUsersTag());
+            executeHook(PrepareResponsibleUsers.class, subrepoDirectory, localParameters, dbConnection, authToken);
+         }
+
          executeHook("PreparationHook", subrepoDirectory, localParameters, dbConnection, authToken);
 
          prepareParameters(jobConfiguration.executionParameters, report, localParameters);
@@ -528,6 +536,7 @@ public class ReportManager
          if (dbConnection != null)
          {
             dropDataView(dbConnection, idataView);
+            dropTemporaryTable(dbConnection, localParameters, "responsible_users_table");
             try
             {
                dbConnection.close();
@@ -560,20 +569,8 @@ public class ReportManager
       {
          URL[] urls = { new URL("file:" + reportLocation) };
          classLoader = new ReportClassLoader(urls, getClass().getClassLoader());
-         Class<ExecutionHook> hookClass = (Class<ExecutionHook>)classLoader.loadClass("report." + hookName);
-         ExecutionHook hook = hookClass.getConstructor().newInstance();
-         if (hook.isServerAccessRequired())
-         {
-            logger.info("Execution hook " + hookName + " requires server access");
-            if (authToken != null)
-               hook.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"), authToken);
-            else
-               hook.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"), server.getConfigurationProperty("netxms.server.login", "admin"),
-                     server.getConfigurationProperty("netxms.server.password", ""));
-         }
-         logger.info("Running report execution hook " + hookName);
-         hook.run(parameters, dbConnection);
-         hook.disconnect();
+         Class<? extends ExecutionHook> hookClass = (Class<? extends ExecutionHook>)classLoader.loadClass("report." + hookName);
+         executeHook(hookClass, reportLocation, parameters, dbConnection, authToken);
       }
       catch(ClassNotFoundException e)
       {
@@ -594,7 +591,58 @@ public class ReportManager
    }
 
    /**
+    * Execute hook code.
+    *
+    * @param hookClass hook class
+    * @param reportLocation location of report's files
+    * @param parameters report execution parameters
+    * @param dbConnection database connection
+    * @param authToken authentication token
+    * @throws Exception on any unrecoverable error
+    */
+   private void executeHook(Class<? extends ExecutionHook> hookClass, String reportLocation, HashMap<String, Object> parameters, Connection dbConnection, String authToken) throws Exception
+   {
+      ExecutionHook hook = hookClass.getConstructor().newInstance();
+      if (hook.isServerAccessRequired())
+      {
+         logger.info("Execution hook " + hookClass.getTypeName() + " requires server access");
+         if (authToken != null)
+            hook.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"), authToken);
+         else
+            hook.connect(server.getConfigurationProperty("netxms.server.hostname", "localhost"), server.getConfigurationProperty("netxms.server.login", "admin"),
+                  server.getConfigurationProperty("netxms.server.password", ""));
+      }
+      logger.info("Running report execution hook " + hookClass.getTypeName());
+      hook.run(parameters, dbConnection);
+      hook.disconnect();
+   }
+
+   /**
     * Drop data view created by server
+    *
+    * @param viewName view name
+    */
+   private void dropTemporaryTable(Connection dbConnection, Map<String, Object> localParameters, String key)
+   {
+      String tableName = (String)localParameters.get(key);
+      if ((tableName == null) || tableName.isEmpty())
+         return;
+
+      logger.debug("Drop temporary table " + tableName);
+      try
+      {
+         Statement stmt = dbConnection.createStatement();
+         stmt.execute("DROP TABLE " + tableName);
+         stmt.close();
+      }
+      catch(Exception e)
+      {
+         logger.error("Cannot drop temporary table " + tableName, e);
+      }
+   }
+
+   /**
+    * Drop responsible users table
     *
     * @param viewName view name
     */
@@ -613,7 +661,6 @@ public class ReportManager
       catch(Exception e)
       {
          logger.error("Cannot drop data view " + viewName, e);
-         return;
       }
    }
 
