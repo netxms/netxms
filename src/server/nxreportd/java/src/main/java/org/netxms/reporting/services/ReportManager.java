@@ -58,6 +58,7 @@ import org.netxms.reporting.ServerException;
 import org.netxms.reporting.extensions.ExecutionHook;
 import org.netxms.reporting.extensions.PrepareResponsibleUsers;
 import org.netxms.reporting.model.ReportDefinition;
+import org.netxms.reporting.tools.DatabaseTools;
 import org.netxms.reporting.tools.DateParameterParser;
 import org.netxms.reporting.tools.ThreadLocalReportInfo;
 import org.slf4j.Logger;
@@ -536,7 +537,7 @@ public class ReportManager
          if (dbConnection != null)
          {
             dropDataView(dbConnection, idataView);
-            dropTemporaryTable(dbConnection, localParameters, "responsible_users_table");
+            DatabaseTools.dropTemporaryTable(dbConnection, localParameters, "responsible_users_table");
             try
             {
                dbConnection.close();
@@ -615,30 +616,6 @@ public class ReportManager
       logger.info("Running report execution hook " + hookClass.getTypeName());
       hook.run(parameters, dbConnection);
       hook.disconnect();
-   }
-
-   /**
-    * Drop data view created by server
-    *
-    * @param viewName view name
-    */
-   private void dropTemporaryTable(Connection dbConnection, Map<String, Object> localParameters, String key)
-   {
-      String tableName = (String)localParameters.get(key);
-      if ((tableName == null) || tableName.isEmpty())
-         return;
-
-      logger.debug("Drop temporary table " + tableName);
-      try
-      {
-         Statement stmt = dbConnection.createStatement();
-         stmt.execute("DROP TABLE " + tableName);
-         stmt.close();
-      }
-      catch(Exception e)
-      {
-         logger.error("Cannot drop temporary table " + tableName, e);
-      }
    }
 
    /**
