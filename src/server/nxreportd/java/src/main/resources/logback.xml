@@ -12,6 +12,10 @@
                <pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
             </encoder>
          </appender>
+         <logger name="org.apache.commons.digester" additivity="false">
+            <level value="INFO"/>
+            <appender-ref ref="LOGFILE"/>
+         </logger>
          <root level="debug">
             <appender-ref ref="LOGFILE"/>
          </root>
@@ -22,6 +26,10 @@
                <pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</pattern>
             </encoder>
          </appender>
+         <logger name="org.apache.commons.digester" additivity="false">
+            <level value="INFO"/>
+            <appender-ref ref="CONSOLE"/>
+         </logger>
          <root level="debug">
             <appender-ref ref="CONSOLE"/>
          </root>
