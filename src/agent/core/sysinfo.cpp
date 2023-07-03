@@ -27,6 +27,8 @@
 
 #include <nxstat.h>
 
+#define FILEMON_DEBUG_TAG  _T("filemon")
+
 /**
  * Handler for System.CurrentDate parameter
  */
@@ -301,7 +303,7 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 #endif
 
    int mode = CAST_FROM_POINTER(arg, int);
-   DebugPrintf(6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, BooleanToString(bRecursive), mode);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, BooleanToString(bRecursive), mode);
 
 #if defined(_WIN32) || !defined(UNICODE)
    nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT, searchInverse);
@@ -342,7 +344,7 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   DebugPrintf(6, _T("H_MD5Hash: path=\"%s\""), realFileName);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_MD5Hash: path=\"%s\""), realFileName);
 
    BYTE hash[MD5_DIGEST_SIZE];
    if (!CalculateFileMD5Hash(realFileName, hash))
@@ -366,7 +368,7 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   DebugPrintf(6, _T("H_SHA1Hash: path=\"%s\""), realFileName);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_SHA1Hash: path=\"%s\""), realFileName);
 
    BYTE hash[SHA1_DIGEST_SIZE];
    if (!CalculateFileSHA1Hash(realFileName, hash))
@@ -391,7 +393,7 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSessi
    if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   DebugPrintf(6, _T("H_CRC32: path=\"%s\""), realFileName);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_CRC32: path=\"%s\""), realFileName);
 
    if (!CalculateFileCRC32(realFileName, &crc32))
       return SYSINFO_RC_UNSUPPORTED;
@@ -491,7 +493,7 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    if (ExpandFileName(path, realPath, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   DebugPrintf(6, _T("H_FileTime: path=\"%s\""), realPath);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_FileTime: path=\"%s\""), realPath);
 
    NX_STAT_STRUCT fileInfo;
    if (CALL_STAT(realPath, &fileInfo) == -1)
@@ -529,7 +531,7 @@ LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    if (ExpandFileName(path, realPath, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
-   DebugPrintf(6, _T("H_FileType: path=\"%s\""), realPath);
+   nxlog_debug_tag(FILEMON_DEBUG_TAG, 6, _T("H_FileType: path=\"%s\""), realPath);
 
    NX_STAT_STRUCT fileInfo;
    if (CALL_STAT(realPath, &fileInfo) == -1)
