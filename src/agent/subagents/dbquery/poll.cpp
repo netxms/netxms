@@ -114,6 +114,8 @@ void Query::poll()
       return;
    }
 
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 7, _T("DBQUERY: Query::poll(%s): Executing query \"%s\" in database \"%s\""), m_name, m_query, m_dbid);
+
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    DB_RESULT hResult = DBSelectEx(hdb, m_query, errorText);
    if (hResult == nullptr)

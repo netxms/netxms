@@ -342,6 +342,8 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
+   DebugPrintf(6, _T("H_MD5Hash: path=\"%s\""), realFileName);
+
    BYTE hash[MD5_DIGEST_SIZE];
    if (!CalculateFileMD5Hash(realFileName, hash))
       return SYSINFO_RC_UNSUPPORTED;
@@ -363,6 +365,8 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    // Expand strftime macros in the path
    if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
+
+   DebugPrintf(6, _T("H_SHA1Hash: path=\"%s\""), realFileName);
 
    BYTE hash[SHA1_DIGEST_SIZE];
    if (!CalculateFileSHA1Hash(realFileName, hash))
@@ -386,6 +390,8 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSessi
    // Expand strftime macros in the path
    if (ExpandFileName(fileName, realFileName, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
+
+   DebugPrintf(6, _T("H_CRC32: path=\"%s\""), realFileName);
 
    if (!CalculateFileCRC32(realFileName, &crc32))
       return SYSINFO_RC_UNSUPPORTED;
@@ -485,6 +491,8 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    if (ExpandFileName(path, realPath, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
 
+   DebugPrintf(6, _T("H_FileTime: path=\"%s\""), realPath);
+
    NX_STAT_STRUCT fileInfo;
    if (CALL_STAT(realPath, &fileInfo) == -1)
       return (errno == ENOENT) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
@@ -520,6 +528,8 @@ LONG H_FileType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
    TCHAR realPath[MAX_PATH];
    if (ExpandFileName(path, realPath, MAX_PATH, session->isMasterServer()) == nullptr)
       return SYSINFO_RC_UNSUPPORTED;
+
+   DebugPrintf(6, _T("H_FileType: path=\"%s\""), realPath);
 
    NX_STAT_STRUCT fileInfo;
    if (CALL_STAT(realPath, &fileInfo) == -1)
