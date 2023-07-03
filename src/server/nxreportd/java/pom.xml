@@ -21,6 +21,24 @@
             <lib.scope>provided</lib.scope>
          </properties>
       </profile>
+      <profile>
+         <id>non-oss</id>
+         <activation>
+            <property>
+               <name>env.OSS</name>
+               <value>false</value>
+            </property>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>com.radensolutions</groupId>
+               <artifactId>jasperreports-additional-fonts</artifactId>
+               <version>1.0.0</version>
+               <scope>runtime</scope>
+               <optional>true</optional>
+            </dependency>
+         </dependencies>
+      </profile>
    </profiles>
    <dependencies>
       <dependency>
