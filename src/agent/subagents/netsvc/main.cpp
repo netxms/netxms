@@ -59,6 +59,16 @@ void CurlCommonSetup(CURL *curl, const char *url, const OptionList& options, uin
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, static_cast<long>(2));
    else
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, static_cast<long>(0));
+
+   const TCHAR *login = options.get(_T("login"), _T(""));
+   const TCHAR *password = options.get(_T("password"), _T(""));
+   if ((login[0] != 0) && (password[0] != 0))
+   {
+      curl_easy_setopt(curl, CURLOPT_USERNAME, login);
+      curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+   }
+
+
 }
 
 /**
