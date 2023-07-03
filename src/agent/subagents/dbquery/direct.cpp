@@ -38,6 +38,8 @@ LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       return SYSINFO_RC_ERROR;
    }
 
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 6, _T("H_DirectQuery: Executing query \"%s\" in database \"%s\""), query, dbid);
+
    LONG rc = SYSINFO_RC_ERROR;
    DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != NULL)
@@ -74,7 +76,7 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_ERROR;
    }
 
-   AgentWriteDebugLog(7, _T("DBQUERY: H_DirectQueryConfigurable: Executing query \"%s\" in database %s"), query, dbid);
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 6, _T("H_DirectQueryConfigurable: Executing query \"%s\" in database \"%s\""), query, dbid);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt != NULL)
@@ -119,6 +121,8 @@ LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value, Abst
       AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQueryTable: no connection handle for database %s"), dbid);
       return SYSINFO_RC_ERROR;
    }
+
+   nxlog_debug_tag(DBQUERY_DEBUG_TAG, 6, _T("H_DirectQueryTable: Executing query \"%s\" in database \"%s\""), query, dbid);
 
    LONG rc = SYSINFO_RC_ERROR;
    DB_RESULT hResult = DBSelect(hdb, query);

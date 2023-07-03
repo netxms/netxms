@@ -31,6 +31,8 @@
 #define MAX_DBID_LEN       64
 #define MAX_QUERY_NAME_LEN 64
 
+#define DBQUERY_DEBUG_TAG  _T("dbquery")
+
 /**
  * Query definition
  */
