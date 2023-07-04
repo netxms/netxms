@@ -250,8 +250,8 @@ static bool H_UpgradeFromV9()
          TCHAR query[1024];
          _sntprintf(query, 1024,
                _T("UPDATE clusters SET zone_guid="
-                     "(SELECT zone_guid FROM nodes WHERE id="
-                     "(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)) WHERE id=%d"),
+                     "coalesce((SELECT zone_guid FROM nodes WHERE id="
+                     "(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)), 0) WHERE id=%d"),
                clusterId, clusterId);
          if (!SQLQuery(query) && !g_ignoreErrors)
             return false;
