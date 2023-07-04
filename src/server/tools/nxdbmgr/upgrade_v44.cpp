@@ -249,20 +249,12 @@ static bool H_UpgradeFromV9()
 
          TCHAR query[1024];
          _sntprintf(query, 1024,
-               _T("SELECT zone_guid FROM nodes WHERE id=(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)"),
-               clusterId);
-         DB_RESULT zoneHasNodes = SQLSelect(query);
-         if (zoneHasNodes != nullptr && (DBGetNumRows(zoneHasNodes) > 0))
-         {
-            _sntprintf(query, 1024,
-                  _T("UPDATE clusters SET zone_guid="
-                        "(SELECT zone_guid FROM nodes WHERE id="
-                        "(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)) WHERE id=%d"),
-                  clusterId, clusterId);
-            if (!SQLQuery(query) && !g_ignoreErrors)
-               return false;
-         }
-         DBFreeResult(zoneHasNodes);
+               _T("UPDATE clusters SET zone_guid="
+                     "(SELECT zone_guid FROM nodes WHERE id="
+                     "(SELECT MIN(node_id) FROM cluster_members WHERE cluster_id=%d)) WHERE id=%d"),
+               clusterId, clusterId);
+         if (!SQLQuery(query) && !g_ignoreErrors)
+            return false;
       }
       DBFreeResult(result);
    }
