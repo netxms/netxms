@@ -710,7 +710,8 @@ retry:
          if (requestData != nullptr)
             nxlog_debug_tag(DEBUG_TAG, 7, _T("ServiceEntry::query(%s): request data: %hs"), url, requestData);
 
-         if (curl_easy_perform(curl) == CURLE_OK)
+         CURLcode rc = curl_easy_perform(curl);
+         if (rc == CURLE_OK)
          {
             deleteContent();
             long responseCode;
@@ -823,7 +824,7 @@ retry:
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): error making curl request: %hs"), url, errbuf);
+            nxlog_debug_tag(DEBUG_TAG, 1, _T("ServiceEntry::query(%s): call to curl_easy_perform failed (%d: %hs)"), url, rc, errbuf);
             rcc = ERR_MALFORMED_RESPONSE;
          }
       }
@@ -1051,7 +1052,8 @@ retry:
            if (requestData != nullptr)
               nxlog_debug_tag(DEBUG_TAG, 7, _T("WebServiceCustomRequest(): request data: %hs"), requestData);
 
-           if (curl_easy_perform(curl) == CURLE_OK)
+           CURLcode rc = curl_easy_perform(curl);
+           if (rc == CURLE_OK)
            {
               long responseCode;
               curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
@@ -1104,7 +1106,7 @@ retry:
            }
            else
            {
-              nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): error making curl request: %hs"), errbuf);
+              nxlog_debug_tag(DEBUG_TAG, 1, _T("WebServiceCustomRequest(): call to curl_easy_perform failed (%d: %hs)"), rc, errbuf);
               rcc = ERR_MALFORMED_RESPONSE;
            }
         }

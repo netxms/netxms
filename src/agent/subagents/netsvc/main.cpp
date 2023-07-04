@@ -66,36 +66,29 @@ void CurlCommonSetup(CURL *curl, const char *url, const OptionList& options, uin
    {
       char loginUTF8[128];
       char decryptedPassword[128];
-#ifdef UNICODE
-      wchar_to_utf8(login, -1, loginUTF8, 128);
-      wchar_to_utf8(password, -1, decryptedPassword, 128);
-#else
-      mb_to_utf8((login, -1, loginUTF8, 128);
-      mb_to_utf8(password, -1, decryptedPassword, 128);
-#endif
+      tchar_to_utf8(login, -1, loginUTF8, 128);
+      tchar_to_utf8(password, -1, decryptedPassword, 128);
       DecryptPasswordA(loginUTF8, decryptedPassword, decryptedPassword, sizeof(decryptedPassword));
       curl_easy_setopt(curl, CURLOPT_USERNAME, loginUTF8);
       curl_easy_setopt(curl, CURLOPT_PASSWORD, decryptedPassword);
    }
 
-   const TCHAR *tlsMode = options.get(_T("tlsMode"), _T(""));
-   if ((tlsMode[0] != 0))
+   const TCHAR *tlsMode = options.get(_T("tls-mode"), _T(""));
+   if (tlsMode[0] != 0)
    {
       if (!_tcsicmp(tlsMode, _T("try")))
       {
          curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_TRY);
-
       }
       else if (!_tcsicmp(tlsMode, _T("always")))
       {
          curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
-
       }
       else
       {
          curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_NONE);
          if (_tcsicmp(tlsMode, _T("none")))
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("CurlCommonSetup(%hs): unknown tlsMode \"%s\", should be one of: none, try, always. TLS mode set to none"), url, tlsMode);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("CurlCommonSetup(%hs): invalid value \"%s\" for tls-mode, should be one of: none, try, always. TLS mode set to \"none\"."), url, tlsMode);
       }
    }
 }

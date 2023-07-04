@@ -25,7 +25,7 @@
  */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-    ByteStream *data = (ByteStream*) userdata;
+    ByteStream *data = static_cast<ByteStream*>(userdata);
     size_t bytes = size * nmemb;
     data->write(ptr, bytes);
     return bytes;
@@ -48,7 +48,7 @@ LONG NetworkServiceStatus_Other(CURL *curl, const OptionList& options, const cha
     CURLcode rc = curl_easy_perform(curl);
     if (rc != CURLE_OK)
     {
-       nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_Other(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
+       nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_Other(%hs): call to curl_easy_perform failed (%d: %hs)"), url, rc, errorText);
     }
 
     *result = CURLCodeToCheckResult(rc);

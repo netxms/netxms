@@ -107,13 +107,13 @@ retry:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): call to curl_easy_perform failed (%d: %hs)"), url, rc, errorText);
          *result = CURLCodeToCheckResult(rc);
       }
    }
    else
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): cannot set URL with curl_easy_setopt (%hs)"), url, errorText);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_HTTP(%hs): cannot set URL with curl_easy_setopt (error %d)"), url, rc);
       *result = CURLCodeToCheckResult(rc);
    }
 
@@ -353,7 +353,7 @@ retry:
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 6, _T("H_HTTPChecksum(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
+         nxlog_debug_tag(DEBUG_TAG, 6, _T("H_HTTPChecksum(%hs): call to curl_easy_perform failed (%d: %hs)"), url, rc, errorText);
       }
    }
 

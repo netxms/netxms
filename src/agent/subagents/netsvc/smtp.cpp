@@ -46,7 +46,7 @@ int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char
    if (rc != CURLE_OK)
    {
       TCHAR addrText[64];
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("CheckSMTP(%s//%s:%d): call to curl_easy_perform failed (%hs)"), enableTLS ? _T("smtps") : _T("smtp"), addr.toString(addrText), port, errorText);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("CheckSMTP(%s//%s:%d): call to curl_easy_perform failed (%d: %hs)"), enableTLS ? _T("smtps") : _T("smtp"), addr.toString(addrText), port, rc, errorText);
    }
    int result = CURLCodeToCheckResult(rc);
 
@@ -83,7 +83,7 @@ LONG NetworkServiceStatus_SMTP(CURL *curl, const OptionList& options, const char
    CURLcode rc = curl_easy_perform(curl);
    if (rc != CURLE_OK)
    {
-      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_SMTP(%hs): call to curl_easy_perform failed (%hs)"), url, errorText);
+      nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkServiceStatus_SMTP(%hs): call to curl_easy_perform failed (%d: %hs)"), url, rc, errorText);
    }
    *result = CURLCodeToCheckResult(rc);
 
