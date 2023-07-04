@@ -51,6 +51,7 @@ int CheckSMTP(const InetAddress& addr, uint16_t port, bool enableTLS, const char
    int result = CURLCodeToCheckResult(rc);
 
    curl_slist_free_all(recipients);
+   curl_easy_cleanup(curl);
    return result;
 }
 
