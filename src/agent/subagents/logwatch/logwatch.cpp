@@ -41,9 +41,9 @@ static bool s_processOfflineEvents;
 /**
  * File parsing thread
  */
-static void ParserThreadFile(LogParser *parser)
+static void ParserThreadFile(LogParser *parser, off_t startOffset)
 {
-   parser->monitorFile(-1);
+   parser->monitorFile(startOffset);
 }
 
 #ifdef _WIN32
@@ -180,117 +180,138 @@ static void ExecuteAction(const TCHAR *action, const StringList& args, void *use
 }
 
 /**
+ * Collect list of matching files from given base directory
+ */
+static StringList *CollectMatchingFiles(const TCHAR *basePath, const TCHAR *fileTemplate, bool followSymlinks)
+{
+   StringList *matchingFiles = new StringList();
+
+   TCHAR fname[MAX_PATH];
+   ExpandFileName(fileTemplate, fname, MAX_PATH, true);
+
+   _TDIR *dir = _topendir(basePath);
+   if (dir != nullptr)
+   {
+      struct _tdirent *d;
+      while((d = _treaddir(dir)) != nullptr)
+      {
+         if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+            continue;
+
+#if defined(__APPLE__) || defined(_WIN32) // Case insensitive
+         if (MatchString(fname, d->d_name, false))
+#else
+         if (MatchString(fname, d->d_name, true))
+#endif
+         {
+#if defined(_WIN32)
+            if (d->d_type == DT_REG)
+               matchingFiles->add(d->d_name);
+#elif HAVE_DIRENT_D_TYPE
+            if ((d->d_type == DT_REG) || ((d->d_type == DT_LNK) && followSymlinks))
+               matchingFiles->add(d->d_name);
+#else
+            TCHAR path[MAX_PATH];
+            _tcscpy(path, basePath);
+            _tcslcat(path, d->d_name, MAX_PATH);
+            NX_STAT_STRUCT st;
+            if (CALL_STAT(path, &st) == 0)
+            {
+               if (S_ISREG(st.st_mode) || (followSymlinks && S_ISLNK(st.st_mode)))
+                  matchingFiles->add(d->d_name);
+            }
+#endif
+         }
+      }
+      _tclosedir(dir);
+   }
+
+   return matchingFiles;
+}
+
+/**
+ * Update active parsers list from template
+ */
+static void UpdateParsersFromTemplate(LogParser *templateParser, StringObjectMap<LogParser> *activeParsers, const TCHAR *basePath, const TCHAR *fileTemplate, bool firstRun)
+{
+   StringList *matchingFiles = CollectMatchingFiles(basePath, fileTemplate, templateParser->isFollowSymlinks());
+   StringList *monitoredFiles = activeParsers->keys();
+
+   for(int i = 0; i < monitoredFiles->size();)
+   {
+      int index = matchingFiles->indexOf(monitoredFiles->get(i));
+      if (index != -1)
+      {
+         matchingFiles->remove(index);
+         monitoredFiles->remove(i);
+      }
+      else
+      {
+         i++;
+      }
+   }
+
+   for(int i = 0; i < matchingFiles->size(); i++)
+   {
+      TCHAR path[MAX_PATH];
+      _tcscpy(path, basePath);
+      _tcslcat(path, matchingFiles->get(i), MAX_PATH);
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("New match for base path \"%s\" and template \"%s\": \"%s\""), basePath, fileTemplate, path);
+
+      LogParser *p = new LogParser(templateParser);
+      p->setFileName(path);
+      p->setCallback(LogParserMatch);
+      p->setDataPushCallback(AgentPushParameterData);
+      p->setActionCallback(ExecuteAction);
+      p->setThread(ThreadCreateEx(ParserThreadFile, p, firstRun ? static_cast<off_t>(-1) : static_cast<off_t>(0)));
+      activeParsers->set(matchingFiles->get(i), p);
+   }
+
+   for(int i = 0; i < monitoredFiles->size(); i++)
+   {
+      nxlog_debug_tag(DEBUG_TAG, 3, _T("File \"%s\" no longer matches template \"%s\" (base path \"%s\")"), monitoredFiles->get(i), fileTemplate, basePath);
+      LogParser *p = activeParsers->unlink(monitoredFiles->get(i));
+      p->stop();
+      delete p;
+   }
+
+   delete matchingFiles;
+   delete monitoredFiles;
+}
+
+/**
  * File template watching thread
  */
-static void ParserThreadTemplate(LogParser *parser)
+static void TemplateParserThread(LogParser *parser)
 {
    const TCHAR *fileTemplate = _tcsrchr(parser->getFileName(), FS_PATH_SEPARATOR_CHAR);
    if (fileTemplate == nullptr)
    {
-      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot start file template log monitoring: no path in file name template \"%s\""), parser->getFileName());
+      nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Cannot start template parser: cannot extract base path from file name template \"%s\""), parser->getFileName());
       return;
    }
 
-   TCHAR dirPath[MAX_PATH];
-   memset(dirPath, 0, sizeof dirPath);
-   memcpy(dirPath, parser->getFileName(), ((fileTemplate - (parser->getFileName())) + 1) * sizeof(TCHAR));
+   TCHAR basePath[MAX_PATH];
+   memset(basePath, 0, sizeof basePath);
+   memcpy(basePath, parser->getFileName(), ((fileTemplate - (parser->getFileName())) + 1) * sizeof(TCHAR));
    fileTemplate++;
 
-   StringObjectMap<LogParser> currentWatchedFiles(Ownership::False);
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Template parser started (base-path=\"%s\" template=\"%s\")"), basePath, fileTemplate);
 
-   nxlog_debug_tag(DEBUG_TAG, 1, _T("Starting file template log watching: path=%s file template=%s"), dirPath, fileTemplate);
+   StringObjectMap<LogParser> activeParsers(Ownership::False);
+   UpdateParsersFromTemplate(parser, &activeParsers, basePath, fileTemplate, true);
+   while(!parser->getStopCondition()->wait(10000))
+      UpdateParsersFromTemplate(parser, &activeParsers, basePath, fileTemplate, false);
 
-   do
-   {
-      StringList matchingFileList;
-      StringList *previousWatchedFiles = currentWatchedFiles.keys();
-      TCHAR fname[MAX_PATH];
-      ExpandFileName(fileTemplate, fname, MAX_PATH, true);
-
-      _TDIR *dir = _topendir(dirPath);
-      if (dir != nullptr)
+   activeParsers.forEach(
+      [] (const TCHAR *key, const LogParser *p) -> EnumerationCallbackResult
       {
-         struct _tdirent *d;
-         while((d = _treaddir(dir)) != nullptr)
-         {
-            if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
-               continue;
+         const_cast<LogParser*>(p)->stop();
+         delete const_cast<LogParser*>(p);
+         return _CONTINUE;
+      });
 
-#if defined(__APPLE__) || defined(_WIN32) // Case insensitive
-            if (MatchString(fname, d->d_name, false))
-#else
-            if (MatchString(fname, d->d_name, true))
-#endif
-            {
-#if defined(_WIN32)
-               if (d->d_type == DT_REG)
-                  matchingFileList.add(d->d_name);
-#elif HAVE_DIRENT_D_TYPE
-               if ((d->d_type == DT_REG) || ((d->d_type == DT_LNK) && parser->isFollowSymlinks()))
-                  matchingFileList.add(d->d_name);
-#else
-               TCHAR path[MAX_PATH];
-               _tcscpy(path, dirPath);
-               _tcslcat(path, d->d_name, MAX_PATH);
-               NX_STAT_STRUCT st;
-               if (CALL_STAT(path, &st) == 0)
-               {
-                  if (S_ISREG(st.st_mode) || (parser->isFollowSymlinks() && S_ISLNK(st.st_mode)))
-                     matchingFileList.add(d->d_name);
-               }
-#endif
-            }
-         }
-         _tclosedir(dir);
-      }
-
-      for(int i = 0; i < previousWatchedFiles->size(); )
-      {
-         int index = matchingFileList.indexOf(previousWatchedFiles->get(i));
-         if (index != -1)
-         {
-            matchingFileList.remove(index);
-            previousWatchedFiles->remove(i);
-         }
-         else
-         {
-            i++;
-         }
-      }
-
-      for(int i = 0; i < matchingFileList.size(); i++)
-      {
-         LogParser *p = new LogParser(parser);
-         TCHAR path[MAX_PATH];
-         _tcscpy(path, dirPath);
-         _tcslcat(path, matchingFileList.get(i), MAX_PATH);
-         p->setFileName(path);
-         p->setCallback(LogParserMatch);
-         p->setDataPushCallback(AgentPushParameterData);
-         p->setActionCallback(ExecuteAction);
-         p->setThread(ThreadCreateEx(ParserThreadFile, p));
-         currentWatchedFiles.set(matchingFileList.get(i), p);
-      }
-
-      for(int i = 0; i < previousWatchedFiles->size(); i++)
-      {
-         LogParser *p = currentWatchedFiles.unlink(previousWatchedFiles->get(i));
-         p->stop();
-         delete p;
-      }
-
-      delete previousWatchedFiles;
-
-   } while(!parser->getStopCondition()->wait(10000));
-
-   ObjectArray<LogParser> * parsers = currentWatchedFiles.values();
-   for(int i = 0; i < parsers->size(); i++)
-   {
-      LogParser *p = parsers->get(i);
-      p->stop();
-      delete p;
-   }
-   delete parsers;
+   nxlog_debug_tag(DEBUG_TAG, 1, _T("Template parser stopped (base-path=\"%s\" template=\"%s\")"), basePath, fileTemplate);
 }
 
 /**
@@ -439,17 +460,17 @@ static bool SubagentInit(Config *config)
 		}
 		else	// regular file
 		{
-			p->setThread(ThreadCreateEx(ParserThreadFile, p));
+			p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
 		}
 #else
-		p->setThread(ThreadCreateEx(ParserThreadFile, p));
+		p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
 #endif
 	}
 
    for (int i = 0; i < s_templateParsers.size(); i++)
    {
       LogParser *p = s_templateParsers.get(i);
-      p->setThread(ThreadCreateEx(ParserThreadTemplate, p));
+      p->setThread(ThreadCreateEx(TemplateParserThread, p));
    }
 
 	return true;
@@ -515,17 +536,17 @@ static void OnAgentNotify(UINT32 code, void *data)
       }
       else	// regular file
       {
-         p->setThread(ThreadCreateEx(ParserThreadFile, p));
+         p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
       }
 #else
-      p->setThread(ThreadCreateEx(ParserThreadFile, p));
+      p->setThread(ThreadCreateEx(ParserThreadFile, p, static_cast<off_t>(-1)));
 #endif
    }
 
    for (int i = 0; i < s_templateParsers.size(); i++)
    {
       LogParser *p = s_templateParsers.get(i);
-      p->setThread(ThreadCreateEx(ParserThreadTemplate, p));
+      p->setThread(ThreadCreateEx(TemplateParserThread, p));
    }
 
    s_parserLock.unlock();
