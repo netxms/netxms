@@ -41,6 +41,7 @@ int CheckPOP3(const InetAddress& addr, uint16_t port, bool enableTLS, const char
       TCHAR addrText[64];
       nxlog_debug_tag(DEBUG_TAG, 6, _T("CheckPOP3(%s//%s:%d): call to curl_easy_perform failed (%hs)"), enableTLS ? _T("pop3s") : _T("pop3"), addr.toString(addrText), port, errorText);
    }
+   curl_easy_cleanup(curl);
    return CURLCodeToCheckResult(rc);
 }
 

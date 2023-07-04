@@ -30,7 +30,7 @@
             <id>eclipse-2023-06</id>
             <url>http://download.eclipse.org/releases/2023-06</url>
             <layout>p2</layout>
-        </repository> 
+        </repository>
      </repositories>
    </profile>
    <profile>
@@ -49,5 +49,4 @@
      </repositories>
    </profile>
  </profiles>
-
 </project>
