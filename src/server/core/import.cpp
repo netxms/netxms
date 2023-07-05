@@ -31,6 +31,9 @@
  */
 static bool IsEventExist(const TCHAR *name, const Config& config)
 {
+   if (name == nullptr)
+      return false;
+
    shared_ptr<EventTemplate> e = FindEventTemplateByName(name);
 	if (e != nullptr)
 		return true;
@@ -63,14 +66,18 @@ static bool ValidateDci(const Config& config, const ConfigEntry *dci, const TCHA
    for (int i = 0; i < thresholds->size(); i++)
    {
       ConfigEntry *threshold = thresholds->get(i);
-      if (!IsEventExist(threshold->getSubEntryValue(_T("activationEvent")), config))
+
+      const TCHAR *eventName = threshold->getSubEntryValue(_T("activationEvent"));
+      if ((eventName != nullptr) && (*eventName != 0) && !IsEventExist(eventName, config))
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
             _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"activationEvent\" refers to unknown event"),
             templateName, dci->getSubEntryValue(_T("description"), 0, _T("<unnamed>")), i + 1);
          success = false;
       }
-      if (!IsEventExist(threshold->getSubEntryValue(_T("deactivationEvent")), config))
+
+      eventName = threshold->getSubEntryValue(_T("deactivationEvent"));
+      if ((eventName != nullptr) && (*eventName != 0) && !IsEventExist(eventName, config))
       {
          context->log(NXLOG_ERROR, _T("ValidateDci()"),
             _T("Template \"%s\" DCI \"%s\" threshold %d attribute \"deactivationEvent\" refers to unknown event"),

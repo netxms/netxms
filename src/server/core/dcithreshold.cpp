@@ -157,8 +157,8 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    createId();
    m_itemId = parentItem->getId();
    m_targetId = parentItem->getOwnerId();
-   m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
-   m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
+   m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")), EVENT_THRESHOLD_REACHED);
+   m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")), EVENT_THRESHOLD_REARMED);
    m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
    m_operation = (BYTE)config->getSubEntryValueAsInt(_T("condition"), 0, OP_EQ);
    m_dataType = parentItem->getDataType();
