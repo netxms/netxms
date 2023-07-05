@@ -45,6 +45,7 @@ import org.netxms.client.ScriptCompilationResult;
 import org.netxms.nxmc.Registry;
 import org.netxms.nxmc.base.jobs.Job;
 import org.netxms.nxmc.base.views.ConfigurationView;
+import org.netxms.nxmc.base.views.View;
 import org.netxms.nxmc.base.widgets.MessageArea;
 import org.netxms.nxmc.keyboard.KeyStroke;
 import org.netxms.nxmc.localization.LocalizationHelper;
@@ -89,6 +90,47 @@ public class ScriptEditorView extends ConfigurationView
       this.scriptId = scriptId;
       this.scriptName = scriptName;
       this.session = Registry.getSession();
+   }
+
+   /**
+    * Clone constructor
+    *
+    * @param scriptId script ID
+    * @param scriptName script name
+    */
+   public ScriptEditorView()
+   {
+      super(null, null, null, false);
+      this.scriptId = 0;
+      this.scriptName = "";
+      this.session = Registry.getSession();
+   }
+   
+   
+
+   /**
+    * @see org.netxms.nxmc.base.views.View#cloneView()
+    */
+   @Override
+   public View cloneView()
+   {
+      ScriptEditorView view = (ScriptEditorView)super.cloneView();
+      view.scriptId = scriptId;
+      view.scriptName = scriptName;
+      return view;
+   }
+   
+   /**
+    * @see org.netxms.nxmc.base.views.View#postClone(org.netxms.nxmc.base.views.View)
+    */
+   @Override
+   protected void postClone(View origin)
+   {
+      //Do not call super post clone (default action for ConfigurationView is to call refresh)
+      ScriptEditorView view = (ScriptEditorView)origin;
+      editor.setText(view.editor.getText());
+      modified = view.modified;
+      actionSave.setEnabled(modified);
    }
 
    /**
