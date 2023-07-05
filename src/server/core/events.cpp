@@ -1588,7 +1588,7 @@ void CreateEventTemplateExportRecord(StringBuffer &str, uint32_t eventCode)
 /**
  * Resolve event name
  */
-bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
+bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer)
 {
    bool bRet = false;
 

@@ -554,7 +554,7 @@ Event *LoadEventFromDatabase(uint64_t eventId);
 Event *FindEventInLoggerQueue(uint64_t eventId);
 StructArray<EventProcessingThreadStats> *GetEventProcessingThreadStats();
 
-bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
+bool EventNameFromCode(uint32_t eventCode, TCHAR *buffer);
 uint32_t NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, uint32_t defaultValue = 0);
 shared_ptr<EventTemplate> FindEventTemplateByCode(uint32_t code);
 shared_ptr<EventTemplate> FindEventTemplateByName(const TCHAR *name);
