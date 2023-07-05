@@ -26,7 +26,7 @@
 
 #include <nms_core.h>
 #include <hdlink.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 
 #define JIRA_DEBUG_TAG _T("hdlink.jira")
 

@@ -4,7 +4,7 @@
 ** 
 ** SMSEagle API documentation - https://www.smseagle.eu/api/
 **
-** Copyright (C) 2014-2022 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 ** Copyright (C) 2016 TEMPEST a.s.
 **
 ** This program is free software; you can redistribute it and/or modify
@@ -27,12 +27,7 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
-#include <curl/curl.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
+#include <nxlibcurl.h>
 
 #define DEBUG_TAG _T("ncd.smseagle")
 
@@ -156,6 +151,7 @@ int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
 
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (m_flags & OPTION_VERIFY_CERTIFICATE) ? 1 : 0);
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, (m_flags & OPTION_VERIFY_HOST) ? 2 : 0);
+   EnableLibCURLUnexpectedEOFWorkaround(curl);
 
    ByteStream responseData(32768);
    responseData.setAllocationStep(32768);
@@ -189,7 +185,8 @@ int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
    int result = -1;
    if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
    {
-      if (curl_easy_perform(curl) == CURLE_OK)
+      CURLcode rc = curl_easy_perform(curl);
+      if (rc == CURLE_OK)
       {
          nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
          long response = 500;
@@ -202,7 +199,7 @@ int SMSEagleDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errbuf);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errbuf);
       }
    }
    else

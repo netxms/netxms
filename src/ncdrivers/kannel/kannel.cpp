@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Notification channel driver for Kannel gateway
-** Copyright (C) 2014-2021 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 
 #define DEBUG_TAG _T("ncd.kannel")
 
@@ -126,7 +126,8 @@ int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
 
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
       {
-         if (curl_easy_perform(curl) == CURLE_OK)
+         CURLcode rc = curl_easy_perform(curl);
+         if (rc == CURLE_OK)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(data->size()));
 
@@ -140,7 +141,7 @@ int KannelDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
          }
          else
          {
-         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
+         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
          }
       }
       else

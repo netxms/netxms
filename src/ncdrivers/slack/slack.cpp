@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SMS driver for slack.com service
-** Copyright (C) 2014-2022 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,13 +23,8 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 #include <jansson.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
 
 #define DEBUG_TAG _T("ncd.slack")
 
@@ -86,7 +81,7 @@ int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
    nxlog_debug_tag(DEBUG_TAG, 4, _T("channel=\"%s\", text=\"%s\""), recipient, body);
 
    CURL *curl = curl_easy_init();
-   if (curl != NULL)
+   if (curl != nullptr)
    {
 #if HAVE_DECL_CURLOPT_NOSIGNAL
       curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
@@ -140,10 +135,14 @@ int SlackDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
          result = -1;
       }
 
-      if (result == 0 && curl_easy_perform(curl) != CURLE_OK)
+      if (result == 0)
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %hs"), errBuff);
-         result = -1;
+         CURLcode rc = curl_easy_perform(curl);
+         if (rc != CURLE_OK)
+         {
+            nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed: %d: %hs"), rc, errBuff);
+            result = -1;
+         }
       }
 
       if (result == 0)

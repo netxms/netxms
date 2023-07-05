@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -5052,9 +5052,6 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
 #else
 #define ParseDateTime ParseDateTimeA
 #endif
-
-bool LIBNETXMS_EXPORTABLE InitializeLibCURL();
-const char LIBNETXMS_EXPORTABLE *GetLibCURLVersion();
 
 /**
  * NetXMS directory type

@@ -24,13 +24,8 @@
 #include <ncdrv.h>
 #include <nms_util.h>
 #include <netxms-version.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 #include <jansson.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
 
 #define DEBUG_TAG _T("ncd.twilio")
 
@@ -201,7 +196,8 @@ int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
 
    if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
    {
-      if (curl_easy_perform(curl) == CURLE_OK)
+      CURLcode rc = curl_easy_perform(curl);
+      if (rc == CURLE_OK)
       {
          nxlog_debug_tag(DEBUG_TAG, 7, _T("Got %d bytes"), static_cast<int>(responseData.size()));
          if (responseData.size() > 0)
@@ -249,7 +245,7 @@ int TwilioDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
       }
    }
    else

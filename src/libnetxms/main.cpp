@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2020 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -23,10 +23,7 @@
 
 #include "libnetxms.h"
 #include <gauge_helpers.h>
-
-#if HAVE_LIBCURL
-#include <curl/curl.h>
-#endif
+#include <nxlibcurl.h>
 
 /**
  * Default thread stack size
@@ -50,6 +47,11 @@ static int s_curlInitialized = 0;
  * Saved cURL version
  */
 static const char *s_curlVersion = "uninitialized";
+
+/**
+ * libcurl OpenSSL 3 backaend indicator
+ */
+LIBNETXMS_EXPORTABLE_VAR(bool g_curlOpenSSL3Backend) = false;
 
 /**
  * Initialize libcurl
@@ -80,6 +82,12 @@ retry:
 
    s_curlVersion = curl_version();
    nxlog_debug_tag(_T("init.curl"), 3, _T("cURL initialized (version: %hs)"), s_curlVersion);
+
+#ifndef _WIN32
+   g_curlOpenSSL3Backend = (strstr(s_curlVersion, "OpenSSL/3.") != nullptr);
+   if (g_curlOpenSSL3Backend)
+      nxlog_debug_tag(_T("init.curl"), 3, _T("OpenSSL 3 is used as cURL SSL backend"));
+#endif
 
 #if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);

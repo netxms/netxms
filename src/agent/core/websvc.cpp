@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2020-2022 Raden Solutions
+** Copyright (C) 2020-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ typedef int jv;
 
 #if HAVE_LIBCURL
 
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 #include <netxms-regex.h>
 
 /**
@@ -656,6 +656,7 @@ uint32_t ServiceEntry::query(const TCHAR *url, uint16_t requestMethod, const cha
       curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Agent/" NETXMS_VERSION_STRING_A);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, verifyPeer ? 1 : 0);
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, verifyHost ? 2 : 0);
+      EnableLibCURLUnexpectedEOFWorkaround(curl);
 
       curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, s_httpRequestMethods[requestMethod]);
       if (requestData != nullptr)
@@ -1008,6 +1009,7 @@ void WebServiceCustomRequest(NXCPMessage* request, shared_ptr<AbstractCommSessio
          curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, 0);
          curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
       }
+      EnableLibCURLUnexpectedEOFWorkaround(curl);
 
       if (authType == WebServiceAuthType::NONE)
       {

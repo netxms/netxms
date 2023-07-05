@@ -24,13 +24,8 @@
 #include <ncdrv.h>
 #include <nms_util.h>
 #include <netxms-version.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 #include <jansson.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
 
 #define DEBUG_TAG _T("ncd.msteams")
 
@@ -201,10 +196,14 @@ int MicrosoftTeamsDriver::send(const TCHAR* recipient, const TCHAR* subject, con
       result = -1;
    }
 
-   if ((result == 0) && curl_easy_perform(curl) != CURLE_OK)
+   if (result == 0)
    {
-      nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
-      result = -1;
+      CURLcode rc = curl_easy_perform(curl);
+      if (rc != CURLE_OK)
+      {
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
+         result = -1;
+      }
    }
 
    if (result == 0)

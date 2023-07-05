@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Text2Reach.com service
-** Copyright (C) 2014-2019 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 **
 ** Text2Reach API documentation - http://www.text2reach.com/files/text2reach_bulkapi_v1.14.pdf
 **
@@ -22,12 +22,7 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
-#include <curl/curl.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
+#include <nxlibcurl.h>
 
 #define DEBUG_TAG _T("ncd.text2reach")
 
@@ -65,7 +60,7 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
    char protocols[1024] = {0};
    const char * const *p = version->protocols;
-   while (*p != NULL)
+   while (*p != nullptr)
    {
       strncat(protocols, *p, strlen(protocols) - 1);
       strncat(protocols, " ", strlen(protocols) - 1);
@@ -81,7 +76,7 @@ Text2ReachDriver::Text2ReachDriver(Config *config)
 		{ _T("from"), CT_MB_STRING, 0, 0, sizeof(m_from), 0, m_from },	
 		{ _T("unicode"), CT_BOOLEAN_FLAG_32, 0, 0, 1, 0, &flags },
 		{ _T("blacklist"), CT_BOOLEAN_FLAG_32, 0, 0, 2, 0, &flags },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
 
 	config->parseTemplate(_T("Text2Reach"), configTemplate);
@@ -148,7 +143,8 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
 
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
       {
-         if (curl_easy_perform(curl) == CURLE_OK)
+         CURLcode rc = curl_easy_perform(curl);
+         if (rc == CURLE_OK)
          {
             long response = 500;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
@@ -181,7 +177,7 @@ int Text2ReachDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
          }
          else
          {
-            nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
+            nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
          }
       }
       else

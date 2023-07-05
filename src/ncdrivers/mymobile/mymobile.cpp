@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SMS driver for MyMobile API gateways
-** Copyright (C) 2014-2020 Raden Solutions
+** Copyright (C) 2014-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,13 +23,8 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 #include <jansson.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
 
 #define DEBUG_TAG _T("ncd.mymobile")
 
@@ -61,7 +56,7 @@ MyMobileDriver::MyMobileDriver(Config *config)
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
    char protocols[1024] = {0};
    const char * const *p = version->protocols;
-   while (*p != NULL)
+   while (*p != nullptr)
    {
       strncat(protocols, *p, strlen(protocols) - 1);
       strncat(protocols, " ", strlen(protocols) - 1);
@@ -74,7 +69,7 @@ MyMobileDriver::MyMobileDriver(Config *config)
 	{
 		{ _T("Username"), CT_MB_STRING, 0, 0, sizeof(m_username), 0, m_username },
 		{ _T("Password"), CT_MB_STRING, 0, 0, sizeof(m_password), 0, m_password },
-		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, nullptr }
 	};
 
 	config->parseTemplate(_T("MyMobile"), configTemplate);
@@ -96,7 +91,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *con
 static bool ParseResponse(const char *xml)
 {
    Config *response = new Config();
-   if (!response->loadXmlConfigFromMemory(xml, (int)strlen(xml), NULL, "api_result", false))
+   if (!response->loadXmlConfigFromMemory(xml, (int)strlen(xml), nullptr, "api_result", false))
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse response XML"));
       return false;
@@ -112,7 +107,7 @@ static bool ParseResponse(const char *xml)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending result: %s"), result);
       const TCHAR *error = response->getValue(_T("/call_result/error"));
-      if (error != NULL)
+      if (error != nullptr)
          nxlog_debug_tag(DEBUG_TAG, 4, _T("Sending error details: %s"), error);
    }
    return success;
@@ -167,7 +162,8 @@ int MyMobileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
 
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
       {
-         if (curl_easy_perform(curl) == CURLE_OK)
+         CURLcode rc = curl_easy_perform(curl);
+         if (rc == CURLE_OK)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
             if (responseData.size() > 0)
@@ -183,7 +179,7 @@ int MyMobileDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCH
          }
          else
          {
-         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
+         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
          }
       }
       else

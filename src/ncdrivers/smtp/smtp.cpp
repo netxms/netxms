@@ -24,7 +24,7 @@
 #include <ncdrv.h>
 #include <nms_util.h>
 #include <nxcldefs.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 
 #define DEBUG_TAG _T("ncd.smtp")
 
@@ -287,6 +287,11 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
    curl_easy_setopt(curl, CURLOPT_MAIL_FROM, m_fromAddr);
    curl_easy_setopt(curl, CURLOPT_USE_SSL, (m_tlsMode == TLSMode::NONE) ? (long)CURLUSESSL_NONE : (long)CURLUSESSL_ALL);
 
+   if (m_tlsMode != TLSMode::NONE)
+   {
+      EnableLibCURLUnexpectedEOFWorkaround(curl);
+   }
+
    if ((m_login[0] != 0) && (m_password[0] != 0))
    {
       curl_easy_setopt(curl, CURLOPT_USERNAME, m_login);
@@ -320,7 +325,7 @@ int SmtpDriver::send(const TCHAR *recipient, const TCHAR *subject, const TCHAR *
       CURLcode rc = curl_easy_perform(curl);
       if (rc != CURLE_OK)
       {
-         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform(\"%hs\") failed (%hs)"), url, (errorBuffer[0] != 0) ? errorBuffer : curl_easy_strerror(rc));
+         nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform(\"%hs\") failed (%d: %hs)"), url, rc, (errorBuffer[0] != 0) ? errorBuffer : curl_easy_strerror(rc));
          if ((rc == CURLE_COULDNT_CONNECT) || (rc == CURLE_OPERATION_TIMEDOUT) || (rc == CURLE_SEND_ERROR) || (rc == CURLE_RECV_ERROR))
             result = 30;   // Retry in 30 seconds
          else

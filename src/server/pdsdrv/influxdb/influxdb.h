@@ -36,10 +36,7 @@
 #include <nms_core.h>
 #include <pdsdrv.h>
 #include <nxqueue.h>
-
-#if HAVE_LIBCURL
-#include <curl/curl.h>
-#endif
+#include <nxlibcurl.h>
 
 // debug pdsdrv.influxdb 1-8
 #define DEBUG_TAG _T("pdsdrv.influxdb")

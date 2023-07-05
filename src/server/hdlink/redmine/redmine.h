@@ -26,7 +26,7 @@
 
 #include <nms_core.h>
 #include <hdlink.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 
 #define JIRA_MAX_LOGIN_LEN 64
 #define JIRA_MAX_PASSWORD_LEN 64

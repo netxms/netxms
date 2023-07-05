@@ -23,7 +23,7 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 
 #ifndef CURL_MAX_HTTP_HEADER
 // workaround for older cURL versions

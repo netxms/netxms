@@ -25,7 +25,7 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <netxms-regex.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 
 #define DEBUG_TAG _T("netsvc")
 

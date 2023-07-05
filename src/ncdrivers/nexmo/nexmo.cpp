@@ -23,13 +23,8 @@
 
 #include <ncdrv.h>
 #include <nms_util.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 #include <jansson.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
 
 #define DEBUG_TAG _T("ncd.nexmo")
 
@@ -100,7 +95,7 @@ static bool ParseResponse(const char *response)
 {
    json_error_t error;
    json_t *root = json_loads(response, 0, &error);
-   if (root == NULL)
+   if (root == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Cannot parse response JSON"));
       return false;
@@ -108,7 +103,7 @@ static bool ParseResponse(const char *response)
 
    bool success = false;
    json_t *messages = json_object_get(root, "messages");
-   if (messages != NULL)
+   if (messages != nullptr)
    {
       size_t count = json_array_size(messages);
       if (count > 0)
@@ -117,14 +112,14 @@ static bool ParseResponse(const char *response)
          for(size_t i = 0; i < count; i++)
          {
             json_t *m = json_array_get(messages, i);
-            if ((m == NULL) || !json_is_object(m))
+            if ((m == nullptr) || !json_is_object(m))
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Invalid response (\"messages\"[%d] is invalid)"), (int)i);
                success = false;
                break;
             }
             json_t *status = json_object_get(m, "status");
-            if ((status == NULL) || !json_is_string(status))
+            if ((status == nullptr) || !json_is_string(status))
             {
                nxlog_debug_tag(DEBUG_TAG, 4, _T("Invalid response (\"status\" is missing or invalid for \"messages\"[%d])"), (int)i);
                success = false;
@@ -213,7 +208,8 @@ int NexmoDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
 
       if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
       {
-         if (curl_easy_perform(curl) == CURLE_OK)
+         CURLcode rc = curl_easy_perform(curl);
+         if (rc == CURLE_OK)
          {
             nxlog_debug_tag(DEBUG_TAG, 4, _T("%d bytes received"), static_cast<int>(responseData.size()));
             if (responseData.size() > 0)
@@ -229,7 +225,7 @@ int NexmoDriver::send(const TCHAR* recipient, const TCHAR* subject, const TCHAR*
          }
          else
          {
-         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
+         	nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
          }
       }
       else

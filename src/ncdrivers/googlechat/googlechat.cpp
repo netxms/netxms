@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Notification channel driver for Microsoft Teams
-** Copyright (C) 2021-2022 Raden Solutions
+** Copyright (C) 2021-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,13 +24,8 @@
 #include <ncdrv.h>
 #include <nms_util.h>
 #include <netxms-version.h>
-#include <curl/curl.h>
+#include <nxlibcurl.h>
 #include <jansson.h>
-
-#ifndef CURL_MAX_HTTP_HEADER
-// workaround for older cURL versions
-#define CURL_MAX_HTTP_HEADER CURL_MAX_WRITE_SIZE
-#endif
 
 #define DEBUG_TAG _T("ncd.googlechat")
 
@@ -92,7 +87,7 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    nxlog_debug_tag(DEBUG_TAG, 7, _T("Prepared request: %s"), request.cstr());
 
    CURL *curl = curl_easy_init();
-   if (curl == NULL)
+   if (curl == nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG, 4, _T("Call to curl_easy_init() failed"));
       return -1;
@@ -107,7 +102,7 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
    curl_easy_setopt(curl, CURLOPT_USERAGENT, "NetXMS Google Chat Driver/" NETXMS_VERSION_STRING_A);
 
-   struct curl_slist *headers = NULL;
+   struct curl_slist *headers = nullptr;
    char *json = request.getUTF8String();
    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json);
    headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -120,7 +115,7 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
 
    // Attempt to lookup URL alias
    const TCHAR *url = m_rooms.get(recipient);
-   if (url == NULL)
+   if (url == nullptr)
       url = recipient;
 
    char utf8url[256];
@@ -131,7 +126,8 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
 #endif
    if (curl_easy_setopt(curl, CURLOPT_URL, utf8url) == CURLE_OK)
    {
-      if (curl_easy_perform(curl) == CURLE_OK)
+      CURLcode rc = curl_easy_perform(curl);
+      if (rc == CURLE_OK)
       {
          long httpCode = 0;
          curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
@@ -149,7 +145,7 @@ int GoogleChatDriver::send(const TCHAR* recipient, const TCHAR* subject, const T
       }
       else
       {
-         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%hs)"), errorBuffer);
+         nxlog_debug_tag(DEBUG_TAG, 5, _T("Call to curl_easy_perform() failed (%d: %hs)"), rc, errorBuffer);
       }
    }
    else
