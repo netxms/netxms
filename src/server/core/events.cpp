@@ -1451,7 +1451,7 @@ bool EventBuilder::post(ObjectQueue<Event> *queue, std::function<void (Event*)> 
 
    m_event->initFromTemplate(eventTemplate.get());
 
-   if (m_event->m_originTimestamp != 0)
+   if (m_event->m_originTimestamp == 0)
       m_event->m_originTimestamp = m_event->m_timestamp;
 
    // Using transformation within PostEvent may cause deadlock if called from within locked object or DCI
