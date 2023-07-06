@@ -31,6 +31,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.Sensor;
@@ -327,6 +328,10 @@ public class GeneralInfo extends TableElement
             if (session.isZoningEnabled())
                addPair("Zone UIN", getZoneName(cluster.getZoneId()));
             break;
+         case AbstractObject.OBJECT_NETWORKMAP:
+            NetworkMap map = (NetworkMap)object;
+            addPair("Map type", getMapTypeDescription(map.getMapType()));
+            break;
 			default:
 				break;
 		}
@@ -373,4 +378,28 @@ public class GeneralInfo extends TableElement
 	      return Long.toString(zoneId);
 	   return String.format("%d (%s)", zoneId, zone.getObjectName());
 	}
+
+   /**
+    * Get textual description for given map type.
+    *
+    * @param mapType map type code
+    * @return textual description for given map type
+    */
+   private String getMapTypeDescription(int mapType)
+   {
+      switch(mapType)
+      {
+         case NetworkMap.TYPE_CUSTOM:
+            return "Custom";
+         case NetworkMap.TYPE_INTERNAL_TOPOLOGY:
+            return "Internal Topology";
+         case NetworkMap.TYPE_IP_TOPOLOGY:
+            return "IP Topology";
+         case NetworkMap.TYPE_LAYER2_TOPOLOGY:
+            return "L2 Tpology";
+         case NetworkMap.TYPE_OSPF_TOPOLOGY:
+            return "OSPF Topology";
+      }
+      return String.format("Unknown (%d)", mapType);
+   }
 }

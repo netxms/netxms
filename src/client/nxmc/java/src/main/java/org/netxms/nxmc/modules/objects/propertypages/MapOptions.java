@@ -21,6 +21,7 @@ package org.netxms.nxmc.modules.objects.propertypages;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -175,17 +176,11 @@ public class MapOptions extends ObjectPropertyPage
 		routingAlgorithm.add(i18n.tr("Manhattan"));
       routingAlgorithm.select(map.getDefaultLinkRouting() - 1);
 
-		final SelectionListener listener = new SelectionListener() {
+      final SelectionListener listener = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
 				linkColor.setEnabled(radioColorCustom.getSelection());
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
 			}
 		};
 		
@@ -233,17 +228,11 @@ public class MapOptions extends ObjectPropertyPage
 	      checkCustomRadius = new Button(topoGroup, SWT.CHECK);
 	      checkCustomRadius.setText(i18n.tr("Custom discovery &radius"));
          checkCustomRadius.setSelection(map.getDiscoveryRadius() > 0);
-	      checkCustomRadius.addSelectionListener(new SelectionListener() {
+         checkCustomRadius.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e)
 				{
 			      topologyRadius.setEnabled(checkCustomRadius.getSelection());
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
 				}
 			});
 
@@ -266,7 +255,7 @@ public class MapOptions extends ObjectPropertyPage
       checkCalculateStatus = new Button(advGroup, SWT.CHECK);
       checkCalculateStatus.setText(i18n.tr("&Calculate map status based on contained object status"));
       checkCalculateStatus.setSelection((map.getFlags() & NetworkMap.MF_CALCULATE_STATUS) != 0);
-      
+
 		return dialogArea;
 	}
 

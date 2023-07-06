@@ -25,6 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Asset;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
 import org.netxms.nxmc.Registry;
@@ -96,6 +97,10 @@ public class ObjectInfo extends TableElement
             if (session.isZoningEnabled())
                addPair(i18n.tr("Zone UIN"), getZoneName(cluster.getZoneId()));
             break;
+         case AbstractObject.OBJECT_NETWORKMAP:
+            NetworkMap map = (NetworkMap)object;
+            addPair(i18n.tr("Map type"), getMapTypeDescription(map.getMapType()));
+            break;
 			case AbstractObject.OBJECT_SUBNET:
 				Subnet subnet = (Subnet)object;
 				if (session.isZoningEnabled())
@@ -133,4 +138,28 @@ public class ObjectInfo extends TableElement
 	      return Long.toString(zoneId);
 	   return String.format("%d (%s)", zoneId, zone.getObjectName());
 	}
+
+   /**
+    * Get textual description for given map type.
+    *
+    * @param mapType map type code
+    * @return textual description for given map type
+    */
+   private String getMapTypeDescription(int mapType)
+   {
+      switch(mapType)
+      {
+         case NetworkMap.TYPE_CUSTOM:
+            return i18n.tr("Custom");
+         case NetworkMap.TYPE_INTERNAL_TOPOLOGY:
+            return i18n.tr("Internal Topology");
+         case NetworkMap.TYPE_IP_TOPOLOGY:
+            return i18n.tr("IP Topology");
+         case NetworkMap.TYPE_LAYER2_TOPOLOGY:
+            return i18n.tr("L2 Tpology");
+         case NetworkMap.TYPE_OSPF_TOPOLOGY:
+            return i18n.tr("OSPF Topology");
+      }
+      return i18n.tr("Unknown ({0})", Integer.toString(mapType));
+   }
 }
