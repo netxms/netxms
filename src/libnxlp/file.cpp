@@ -398,21 +398,28 @@ off_t LogParser::processNewRecords(int fh)
  */
 static int ScanFileEncoding(int fh)
 {
+   auto pos = _tell(fh);
+   _lseek(fh, 0, SEEK_SET);
+
+   int encoding = LP_FCP_ACP;
+
    char buffer[10];
    if (_read(fh, buffer, 4) > 3)
    {
       if (!memcmp(buffer, "\x00\x00\xFE\xFF", 4))
-         return LP_FCP_UCS4_BE;
-      if (!memcmp(buffer, "\xFF\xFE\x00\x00", 4))
-         return LP_FCP_UCS4_LE;
-      if (!memcmp(buffer, "\xEF\xBB\xBF", 3))
-         return LP_FCP_UTF8;
-      if (!memcmp(buffer, "\xFE\xFF", 2))
-         return LP_FCP_UCS2_BE;
-      if (!memcmp(buffer, "\xFF\xFE", 2))
-         return LP_FCP_UCS2_LE;
+         encoding = LP_FCP_UCS4_BE;
+      else if (!memcmp(buffer, "\xFF\xFE\x00\x00", 4))
+         encoding = LP_FCP_UCS4_LE;
+      else if (!memcmp(buffer, "\xEF\xBB\xBF", 3))
+         encoding = LP_FCP_UTF8;
+      else if (!memcmp(buffer, "\xFE\xFF", 2))
+         encoding = LP_FCP_UCS2_BE;
+      else if (!memcmp(buffer, "\xFF\xFE", 2))
+         encoding = LP_FCP_UCS2_LE;
    }
-   return LP_FCP_ACP;
+
+   _lseek(fh, pos, SEEK_SET);
+   return encoding;
 }
 
 /**
@@ -602,7 +609,6 @@ bool LogParser::monitorFile(off_t startOffset)
       if (m_fileEncoding == LP_FCP_AUTO)
       {
          m_fileEncoding = ScanFileEncoding(fh);
-         _lseek(fh, 0, SEEK_SET);
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Detected encoding %s for file \"%s\""), s_encodingName[m_fileEncoding], fname);
       }
 
@@ -857,7 +863,6 @@ bool LogParser::monitorFile2(off_t startOffset)
       if (m_fileEncoding == LP_FCP_AUTO)
       {
          m_fileEncoding = ScanFileEncoding(fh);
-         _lseek(fh, 0, SEEK_SET);
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Detected encoding %s for file \"%s\""), s_encodingName[m_fileEncoding], fname);
       }
 
@@ -1064,7 +1069,6 @@ bool LogParser::monitorFileWithSnapshot(off_t startOffset)
       if (m_fileEncoding == LP_FCP_AUTO)
       {
          m_fileEncoding = ScanFileEncoding(fh);
-         _lseek(fh, 0, SEEK_SET);
          nxlog_debug_tag(DEBUG_TAG, 3, _T("Detected encoding %s for file \"%s\""), s_encodingName[m_fileEncoding], fname);
       }
 
