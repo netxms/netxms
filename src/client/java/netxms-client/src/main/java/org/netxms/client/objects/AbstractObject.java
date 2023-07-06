@@ -44,8 +44,6 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.configs.CustomAttribute;
 import org.netxms.client.services.ServiceManager;
 import org.netxms.client.users.ResponsibleUser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base class for all NetXMS objects (both built-in and provided by extensions)
@@ -125,8 +123,6 @@ public abstract class AbstractObject
 	public static final int PROPAGATE_FIXED = 2;
 	public static final int PROPAGATE_RELATIVE = 3;
 	public static final int PROPAGATE_TRANSLATED = 4;
-
-   private static final Logger logger = LoggerFactory.getLogger(AbstractObject.class);
 
 	@Internal protected NXCSession session = null;
 	protected long objectId = 0;
@@ -318,18 +314,14 @@ public abstract class AbstractObject
 		   for(i = 0, id = NXCPCodes.VID_MODULE_DATA_BASE; i < count; i++, id += 0x100000)
 		   {
 		      String module = msg.getFieldAsString(id);
-		      ModuleDataProvider p = (ModuleDataProvider)ServiceManager.getServiceHandler(module, ModuleDataProvider.class);
+            ModuleDataProvider p = ServiceManager.getModuleDataProvider(module);
 		      if (p != null)
 		      {
 		         moduleData.put(module, p.createModuleData(msg, id + 1));
 		      }
-		      else
-		      {
-               logger.warn("Unable to find data provider for module " + module);
-		      }
 		   }
 		}
-		
+
 		// Responsible users
       count = msg.getFieldAsInt32(NXCPCodes.VID_RESPONSIBLE_USERS_COUNT);
       id = NXCPCodes.VID_RESPONSIBLE_USERS_BASE;
