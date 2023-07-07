@@ -788,6 +788,7 @@ inline int _fileno(FILE *stream) { return fileno(stream); }
 inline char *_getcwd(char *buffer, size_t size) { return ::getcwd(buffer, size); }
 inline int _isatty(int fd) { return ::isatty(fd); }
 inline off_t _lseek(int fd, off_t offset, int whence) { return ::lseek(fd, offset, whence);  }
+inline off_t _tell(int fd) { return ::lseek(fd, 0, SEEK_CUR); }
 inline int _mkdir(const char *pathname, mode_t mode) { return ::mkdir(pathname, mode); }
 inline int _open(const char *pathname, int flags) { return ::open(pathname, flags); }
 inline int _open(const char *pathname, int flags, mode_t mode) { return ::open(pathname, flags, mode); }
@@ -809,6 +810,7 @@ inline ssize_t _write(int fd, const void *buf, size_t count) { return ::write(fd
 #define _getcwd(b, s)      getcwd((b), (s))
 #define _isatty(f)         isatty(f)
 #define _lseek(f, o, w)    lseek((f), (o) ,(w))
+#define _tell(f)           lseek((f), 0, SEEK_CUR)
 #define _mkdir(p, m)       mkdir((p), (m))
 #define _open              open
 #define _pclose(f)         pclose(f)
