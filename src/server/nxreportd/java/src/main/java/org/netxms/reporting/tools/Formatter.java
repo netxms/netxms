@@ -46,6 +46,6 @@ public final class Formatter
       long hours = (period % 86400) / 3600;
       long minutes = (period % 3600) / 60;
       long seconds = (period % 60);
-      return String.format("%dd days %02d:%02d:%02d", days, hours, minutes, seconds);
+      return String.format("%dd %02d:%02d:%02d", days, hours, minutes, seconds);
    }
 }
