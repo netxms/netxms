@@ -24,11 +24,11 @@ fi
 show_usage_and_exit() {
 	cat <<END
 NetXMS Reporting Server
-Copyright (c) 2021 Raden Solutions
+Copyright (c) 2021-2023 Raden Solutions
 
 SYNOPSIS
 
-	$0 [-hd] [-l LOGFILE] [-w WORKSPACE]
+	$0 [-hd] [-D PROPERTY] [-l LOGFILE] [-w WORKSPACE]
 
 DESCRIPTION
 	The following options are available:
@@ -38,6 +38,9 @@ DESCRIPTION
 
 	-d
 		Run as daemon (in background)
+
+	-D PROPERTY
+		Define Java property
 
 	-l LOGFILE
 		Log all output to file LOGFILE
@@ -50,13 +53,16 @@ END
 	exit 1
 }
 
-while getopts 'dhl:w:' c; do
+while getopts 'dD:hl:w:' c; do
 	case $c in
 		h)
 			show_usage_and_exit
 			;;
 		d)
 			DAEMON="yes"
+			;;
+		D)
+			JAVA_OPTIONS="$JAVA_OPTIONS -D$OPTARG"
 			;;
 		l)
 			JAVA_OPTIONS="$JAVA_OPTIONS -Dnxreportd.logfile=$OPTARG"
