@@ -123,6 +123,14 @@ public final class Server implements Daemon
          @Override
          public void onDelete(String name)
          {
+            if (name.endsWith(".jar") || name.endsWith(".zip"))
+               executeBackgroundTask(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     reportManager.undeploy(name);
+                  }
+               });
          }
       });
 
