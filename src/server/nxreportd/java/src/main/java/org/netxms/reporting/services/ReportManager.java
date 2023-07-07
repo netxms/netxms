@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2021 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package org.netxms.reporting.services;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -226,6 +227,53 @@ public class ReportManager
    }
 
    /**
+    * Undeploy previously deployed report
+    *
+    * @param archiveName archive name
+    */
+   public void undeploy(String archiveName)
+   {
+      File definitionsDirectory = getDefinitionsDirectory();
+      logger.debug("Deploying " + archiveName);
+      try
+      {
+         String deployedName = archiveName.split("\\.(?=[^\\.]+$)")[0];
+         File destination = new File(definitionsDirectory, deployedName);
+         if (destination.isDirectory())
+         {
+            try (InputStream in = new FileInputStream(new File(destination, "META-INF/MANIFEST.MF")))
+            {
+               Manifest manifest = new Manifest(in);
+               String buildId = manifest.getMainAttributes().getValue("Build-Id");
+               if (buildId != null)
+               {
+                  UUID bundleId = UUID.fromString(buildId);
+                  synchronized(reportMap)
+                  {
+                     reportMap.remove(bundleId);
+                  }
+                  logger.info("Report " + bundleId + " removed (was deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath() + ")");
+               }
+            }
+            catch(Exception e)
+            {
+               logger.error("Error while procesisng manifest for deployed package " + destination.getName(), e);
+            }
+            deleteFolder(destination);
+            logger.info("Deployed package directory " + destination.getName() + " deleted");
+         }
+         else
+         {
+            logger.info("Cannot find deployed package for archive " + archiveName);
+         }
+      }
+      catch(Exception e)
+      {
+         logger.error("Error while undeploying package from archive " + archiveName, e);
+      }
+   }
+
+   /**
     * Delete given folder recursively
     *
     * @param folder folder to delete
@@ -264,7 +312,6 @@ public class ReportManager
       JarFile jarFile = new JarFile(archive);
       try
       {
-         Manifest manifest = jarFile.getManifest();
          Enumeration<JarEntry> entries = jarFile.entries();
          while(entries.hasMoreElements())
          {
@@ -317,6 +364,7 @@ public class ReportManager
             }
          }
 
+         Manifest manifest = jarFile.getManifest();
          String buildId = manifest.getMainAttributes().getValue("Build-Id");
          if (buildId == null)
             throw new ServerException("Missing Build-Id attribute in package manifest");
