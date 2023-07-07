@@ -56,6 +56,7 @@ import org.netxms.client.reporting.ReportingJobConfiguration;
 import org.netxms.reporting.ReportClassLoader;
 import org.netxms.reporting.Server;
 import org.netxms.reporting.ServerException;
+import org.netxms.reporting.extensions.AbstractBackgroundWorker;
 import org.netxms.reporting.extensions.ExecutionHook;
 import org.netxms.reporting.extensions.PrepareResponsibleUsers;
 import org.netxms.reporting.model.ReportDefinition;
@@ -101,6 +102,7 @@ public class ReportManager
    private Server server;
    private String workspace;
    private Map<UUID, String> reportMap;
+   private Map<UUID, AbstractBackgroundWorker> backgroundWorkers;
 
    /**
     * Create new report manager.
@@ -111,7 +113,8 @@ public class ReportManager
    {
       this.server = server;
       workspace = server.getConfigurationProperty("nxreportd.workspace", "");
-      reportMap = new HashMap<UUID, String>();
+      reportMap = new HashMap<>();
+      backgroundWorkers = new HashMap<>();
    }
 
    /**
@@ -123,8 +126,7 @@ public class ReportManager
    {
       synchronized(reportMap)
       {
-         ArrayList<UUID> li = new ArrayList<UUID>(reportMap.keySet());
-         return li;
+         return new ArrayList<UUID>(reportMap.keySet());
       }
    }
 
@@ -211,14 +213,21 @@ public class ReportManager
          File destination = new File(definitionsDirectory, deployedName);
          deleteFolder(destination);
          UUID bundleId = unpackJar(destination, new File(definitionsDirectory, archiveName));
-         compileReport(destination);
          executeDeploymentSqlStatements(destination);
-         synchronized(reportMap)
+         if (compileReport(destination))
          {
-            reportMap.put(bundleId, deployedName);
+            synchronized(reportMap)
+            {
+               reportMap.put(bundleId, deployedName);
+            }
+            logger.info("Complete report package " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
          }
-         logger.info("Report " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
+         else
+         {
+            logger.info("Incomplete report package " + bundleId + " deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath());
+         }
          validateResults(bundleId);
+         startBackgroundWorker(bundleId, destination);
       }
       catch(Exception e)
       {
@@ -251,6 +260,15 @@ public class ReportManager
                   synchronized(reportMap)
                   {
                      reportMap.remove(bundleId);
+                  }
+                  synchronized(backgroundWorkers)
+                  {
+                     AbstractBackgroundWorker worker = backgroundWorkers.remove(bundleId);
+                     if (worker != null)
+                     {
+                        logger.info("Stopping background worker for report " + bundleId);
+                        worker.stop();
+                     }
                   }
                   logger.info("Report " + bundleId + " removed (was deployed as \"" + deployedName + "\" in " + destination.getAbsolutePath() + ")");
                }
@@ -380,8 +398,9 @@ public class ReportManager
     * Compile report in given directory
     *
     * @param reportDirectory report directory
+    * @return true if at least one source file was compiled
     */
-   private static void compileReport(File reportDirectory)
+   private static boolean compileReport(File reportDirectory)
    {
       final String[] list = reportDirectory.list(new FilenameFilter() {
          @Override
@@ -390,21 +409,24 @@ public class ReportManager
             return name.endsWith(FILE_SUFFIX_DEFINITION);
          }
       });
+
+      boolean compiled = false;
       for(String fileName : list)
       {
          final File file = new File(reportDirectory, fileName);
          try
          {
             final String sourceFileName = file.getAbsolutePath();
-            final String destinationFileName = sourceFileName.substring(0, sourceFileName.length() - FILE_SUFFIX_DEFINITION.length())
-                  + FILE_SUFFIX_COMPILED;
+            final String destinationFileName = sourceFileName.substring(0, sourceFileName.length() - FILE_SUFFIX_DEFINITION.length()) + FILE_SUFFIX_COMPILED;
             JasperCompileManager.compileReportToFile(sourceFileName, destinationFileName);
+            compiled = true;
          }
          catch(JRException e)
          {
             logger.error("Cannot compile report " + file.getAbsoluteFile(), e);
          }
       }
+      return compiled;
    }
 
    /**
@@ -664,6 +686,58 @@ public class ReportManager
       logger.info("Running report execution hook " + hookClass.getTypeName());
       hook.run(parameters, dbConnection);
       hook.disconnect();
+   }
+   
+   /**
+    * Start report background worker, if any
+    *
+    * @param bundleId report bundle ID
+    * @param reportLocation location of report's files
+    * @throws Exception on any unrecoverable error
+    */
+   @SuppressWarnings("unchecked")
+   private void startBackgroundWorker(UUID bundleId, File reportLocation) throws Exception
+   {
+      ReportClassLoader classLoader = null;
+      try
+      {
+         URL[] urls = { new URL("file:" + reportLocation.getAbsolutePath() + File.separatorChar) };
+         classLoader = new ReportClassLoader(urls, getClass().getClassLoader());
+         Class<? extends AbstractBackgroundWorker> workerClass = (Class<? extends AbstractBackgroundWorker>)classLoader.loadClass("report.BackgroundWorker");
+         AbstractBackgroundWorker worker = workerClass.getDeclaredConstructor().newInstance();
+         synchronized(backgroundWorkers)
+         {
+            AbstractBackgroundWorker currentWorker = backgroundWorkers.get(bundleId);
+            if (currentWorker != null)
+            {
+               logger.debug("Replacing existing background worker for report " + bundleId);
+               currentWorker.stop();
+            }
+            backgroundWorkers.put(bundleId, worker);
+         }
+         logger.info("Starting background worker for " + reportLocation.getName());
+         worker.start(server);
+      }
+      catch(ClassNotFoundException e)
+      {
+         // ignore
+      }
+      catch(NoSuchMethodException e)
+      {
+         logger.debug("Cannot find default constructor for background worker in " + reportLocation.getName());
+      }
+      finally
+      {
+         try
+         {
+            if (classLoader != null)
+               classLoader.close();
+         }
+         catch(Exception e)
+         {
+            logger.warn("Unexpected exception while closing report background worker class loader", e);
+         }
+      }
    }
 
    /**
