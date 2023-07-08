@@ -43,7 +43,7 @@ SNMP_SecurityContext::SNMP_SecurityContext()
 /**
  * Create copy of given security context
  */
-SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src) : m_authoritativeEngine(src->m_authoritativeEngine)
+SNMP_SecurityContext::SNMP_SecurityContext(const SNMP_SecurityContext *src) : m_authoritativeEngine(src->m_authoritativeEngine), m_contextEngine(src->m_contextEngine)
 {
 	m_securityModel = src->m_securityModel;
 	m_authName = MemCopyStringA(src->m_authName);

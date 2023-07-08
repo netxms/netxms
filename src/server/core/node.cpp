@@ -408,7 +408,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("chassis_placement_config,vendor,product_code,product_name,product_version,serial_number,cip_device_type,")
       _T("cip_status,cip_state,eip_proxy,eip_port,hardware_id,cip_vendor_code,agent_cert_mapping_method,")
       _T("agent_cert_mapping_data,snmp_engine_id,ssh_port,ssh_key_id,syslog_codepage,snmp_codepage,ospf_router_id,")
-      _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id FROM nodes WHERE id=?"));
+      _T("mqtt_proxy,modbus_proxy,modbus_tcp_port,modbus_unit_id,snmp_context_engine_id FROM nodes WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -467,6 +467,15 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine(engineId, engineIdLen, 0, 0));
       }
       m_snmpSecurity->recalculateKeys();
+
+      DBGetFieldA(hResult, 0, 82, snmpEngineId, 256);
+      if (snmpEngineId[0] != 0)
+      {
+         BYTE engineId[128];
+         size_t engineIdLen = StrToBinA(snmpEngineId, engineId, 128);
+         if (engineIdLen > 0)
+            m_snmpSecurity->setContextEngine(SNMP_Engine(engineId, engineIdLen));
+      }
    }
    else
    {
@@ -1006,9 +1015,9 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          _T("agent_cert_subject"), _T("hypervisor_type"), _T("hypervisor_info"), _T("icmp_poll_mode"), _T("chassis_placement_config"),
          _T("vendor"), _T("product_code"), _T("product_name"), _T("product_version"), _T("serial_number"), _T("cip_device_type"),
          _T("cip_status"), _T("cip_state"), _T("eip_proxy"), _T("eip_port"), _T("hardware_id"), _T("cip_vendor_code"),
-         _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("syslog_codepage"), _T("snmp_codepage"),
-         _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"), _T("modbus_unit_id"),
-         nullptr
+         _T("agent_cert_mapping_method"), _T("agent_cert_mapping_data"), _T("snmp_engine_id"), _T("snmp_context_engine_id"),
+         _T("syslog_codepage"), _T("snmp_codepage"), _T("ospf_router_id"), _T("mqtt_proxy"), _T("modbus_proxy"), _T("modbus_tcp_port"),
+         _T("modbus_unit_id"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("nodes"), _T("id"), m_id, columns);
@@ -1133,22 +1142,24 @@ bool Node::saveToDatabase(DB_HANDLE hdb)
          if (m_snmpSecurity != nullptr)
          {
             DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+            DBBind(hStmt, 76, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getContextEngine().toString(), DB_BIND_TRANSIENT);
          }
          else
          {
             DBBind(hStmt, 75, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+            DBBind(hStmt, 76, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
          }
-         DBBind(hStmt, 76, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
-         DBBind(hStmt, 77, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_snmpCodepage, DB_BIND_STATIC);
+         DBBind(hStmt, 77, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_syslogCodepage, DB_BIND_STATIC);
+         DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, DB_CTYPE_UTF8_STRING, m_snmpCodepage, DB_BIND_STATIC);
          if (m_ospfRouterId != 0)
-            DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfRouterId, routerId), DB_BIND_STATIC);
+            DBBind(hStmt, 79, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfRouterId, routerId), DB_BIND_STATIC);
          else
-            DBBind(hStmt, 78, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-         DBBind(hStmt, 79, DB_SQLTYPE_INTEGER, m_mqttProxy);
-         DBBind(hStmt, 80, DB_SQLTYPE_INTEGER, m_modbusProxy);
-         DBBind(hStmt, 81, DB_SQLTYPE_INTEGER, m_modbusTcpPort);
-         DBBind(hStmt, 82, DB_SQLTYPE_INTEGER, m_modbusUnitId);
-         DBBind(hStmt, 83, DB_SQLTYPE_INTEGER, m_id);
+            DBBind(hStmt, 79, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+         DBBind(hStmt, 80, DB_SQLTYPE_INTEGER, m_mqttProxy);
+         DBBind(hStmt, 81, DB_SQLTYPE_INTEGER, m_modbusProxy);
+         DBBind(hStmt, 82, DB_SQLTYPE_INTEGER, m_modbusTcpPort);
+         DBBind(hStmt, 83, DB_SQLTYPE_INTEGER, m_modbusUnitId);
+         DBBind(hStmt, 84, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
@@ -1363,7 +1374,7 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
 
    unlockProperties();
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=?,snmp_engine_id=?,down_since=? WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE nodes SET last_agent_comm_time=?,syslog_msg_count=?,snmp_trap_count=?,snmp_engine_id=?,snmp_context_engine_id=?,down_since=? WHERE id=?"));
    if (hStmt == nullptr)
       return false;
 
@@ -1372,11 +1383,17 @@ bool Node::saveRuntimeData(DB_HANDLE hdb)
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
    DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
    if (m_snmpSecurity != nullptr)
+   {
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthoritativeEngine().toString(), DB_BIND_TRANSIENT);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getContextEngine().toString(), DB_BIND_TRANSIENT);
+   }
    else
+   {
       DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+      DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, _T(""), DB_BIND_STATIC);
+   }
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_downSince));
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
    m_savedDownSince = m_downSince;
    unlockProperties();
 
@@ -2477,6 +2494,10 @@ restart_status_poll:
                lockProperties();
                m_snmpSecurity->setAuthoritativeEngine(*pTransport->getAuthoritativeEngine());
                m_snmpSecurity->recalculateKeys();
+               if (pTransport->getContextEngine() != nullptr)
+               {
+                  m_snmpSecurity->setContextEngine(*pTransport->getContextEngine());
+               }
                unlockProperties();
             }
          }
@@ -2485,6 +2506,7 @@ restart_status_poll:
             // Reset authoritative engine data
             lockProperties();
             m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine());
+            m_snmpSecurity->setContextEngine(SNMP_Engine());
             unlockProperties();
             delete pTransport;
             retryCount--;
@@ -5455,6 +5477,11 @@ bool Node::confPollSnmp(uint32_t requestId)
    m_snmpPort = pTransport->getPort();
    delete m_snmpSecurity;
    m_snmpSecurity = new SNMP_SecurityContext(pTransport->getSecurityContext());
+   if (m_snmpVersion == SNMP_VERSION_3)
+   {
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMPv3 authoritative engine ID: %s"), m_name, m_snmpSecurity->getAuthoritativeEngine().toString().cstr());
+      nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 5, _T("ConfPoll(%s): SNMPv3 context engine ID: %s"), m_name, m_snmpSecurity->getContextEngine().toString().cstr());
+   }
    m_capabilities |= NC_IS_SNMP;
    if (m_state & NSF_SNMP_UNREACHABLE)
    {

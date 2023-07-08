@@ -616,6 +616,7 @@ private:
 	BYTE m_privKey[64];
 	bool m_validKeys;
 	SNMP_Engine m_authoritativeEngine;
+   SNMP_Engine m_contextEngine;
 	SNMP_AuthMethod m_authMethod;
 	SNMP_EncryptionMethod m_privMethod;
 
@@ -656,7 +657,10 @@ public:
    void setContextName(const char *name);
 
    void setAuthoritativeEngine(const SNMP_Engine &engine);
-   const SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
+   const SNMP_Engine& getAuthoritativeEngine() const { return m_authoritativeEngine; }
+
+   void setContextEngine(const SNMP_Engine &engine) { m_contextEngine = engine; }
+   const SNMP_Engine& getContextEngine() const { return m_contextEngine; }
 
    size_t getSignatureSize() const;
 };
@@ -824,8 +828,9 @@ public:
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
 	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }
-	const char *getCommunityString() { return (m_securityContext != nullptr) ? m_securityContext->getCommunity() : ""; }
-   const SNMP_Engine *getAuthoritativeEngine() { return m_authoritativeEngine; }
+	const char *getCommunityString() const { return (m_securityContext != nullptr) ? m_securityContext->getCommunity() : ""; }
+   const SNMP_Engine *getAuthoritativeEngine() const { return m_authoritativeEngine; }
+   const SNMP_Engine *getContextEngine() const { return m_contextEngine; }
 
 	void enableEngineIdAutoupdate(bool enabled) { m_enableEngineIdAutoupdate = enabled; }
 	bool isEngineIdAutoupdateEnabled() const { return m_enableEngineIdAutoupdate; }

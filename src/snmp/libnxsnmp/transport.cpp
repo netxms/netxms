@@ -101,7 +101,8 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 	m_securityContext = ctx;
    delete m_authoritativeEngine;
    m_authoritativeEngine = ((ctx != nullptr) && (ctx->getAuthoritativeEngine().getIdLen() > 0)) ? new SNMP_Engine(ctx->getAuthoritativeEngine()) : nullptr;
-   delete_and_null(m_contextEngine);
+   delete m_contextEngine;
+   m_contextEngine = ((ctx != nullptr) && (ctx->getContextEngine().getIdLen() > 0)) ? new SNMP_Engine(ctx->getContextEngine()) : nullptr;
 }
 
 /**
@@ -208,6 +209,7 @@ retry_wait:
                   {
                      delete m_contextEngine;
                      m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
+                     m_securityContext->setContextEngine(*m_contextEngine);
                   }
 
                   if ((*response)->getCommand() == SNMP_REPORT)
@@ -238,9 +240,17 @@ retry_wait:
                            // Use provided context engine ID if set in response
                            // Use authoritative engine ID if response has no context engine id
                            if ((*response)->getContextEngineIdLength() > 0)
+                           {
                               request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
+                              if (m_securityContext->getContextEngine().getIdLen() == 0)
+                              {
+                                 m_securityContext->setContextEngine(SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength()));
+                              }
+                           }
                            else if ((*response)->getAuthoritativeEngine().getIdLen() != 0)
+                           {
                               request->setContextEngineId((*response)->getAuthoritativeEngine().getId(), (*response)->getAuthoritativeEngine().getIdLen());
+                           }
                            canRetry = true;
                         }
                         if (m_securityContext->getAuthoritativeEngine().getIdLen() == 0)

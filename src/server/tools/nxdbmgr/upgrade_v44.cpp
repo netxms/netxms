@@ -24,6 +24,16 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.21 to 44.22
+ */
+static bool H_UpgradeFromV21()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_context_engine_id varchar(255)")));
+   CHK_EXEC(SetMinorSchemaVersion(22));
+   return true;
+}
+
+/**
  * Upgrade from 44.20 to 44.21
  */
 static bool H_UpgradeFromV20()
@@ -606,6 +616,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 21, 44, 22, H_UpgradeFromV21 },
    { 20, 44, 21, H_UpgradeFromV20 },
    { 19, 44, 20, H_UpgradeFromV19 },
    { 18, 44, 19, H_UpgradeFromV18 },
