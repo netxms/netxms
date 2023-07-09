@@ -52,6 +52,24 @@ public class ServerAction
 		channelName = "";
 	}
 	
+   /**
+    * Create copy of given server action object with new ID
+    * 
+    * @param id new action ID
+    * @param src source action object
+    */
+   public ServerAction(long id, ServerAction src)
+   {
+      this.id = id;
+      type = src.type;
+      name = src.name;
+      data = src.data;
+      recipientAddress = src.recipientAddress;
+      emailSubject = src.emailSubject;
+      disabled = src.disabled;
+      channelName = src.channelName;
+   }
+
 	/**
 	 * Create server action object from NXCP message
 	 * 

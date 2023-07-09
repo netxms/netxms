@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,13 +28,14 @@ import org.netxms.ui.eclipse.console.Activator;
  */
 public class SharedIcons
 {
-	public static ImageDescriptor ADD_OBJECT;
+   public static ImageDescriptor ADD_OBJECT;
 	public static ImageDescriptor ALARM;
    public static ImageDescriptor BROWSER;
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor CLEAR;
 	public static ImageDescriptor CLEAR_LOG;
+   public static ImageDescriptor CLONE;
 	public static ImageDescriptor CLOSE;
 	public static ImageDescriptor COLLAPSE;
 	public static ImageDescriptor COLLAPSE_ALL;
@@ -46,7 +47,7 @@ public class SharedIcons
    public static ImageDescriptor DELETE_OBJECT;
    public static ImageDescriptor DISABLE;
    public static ImageDescriptor DOWN;
-	public static ImageDescriptor EDIT;
+   public static ImageDescriptor EDIT;
 	public static ImageDescriptor EMPTY;
 	public static ImageDescriptor EXECUTE;
 	public static ImageDescriptor EXPAND;
@@ -82,7 +83,8 @@ public class SharedIcons
 	public static Image IMG_CHECKBOX_ON;
 	public static Image IMG_CLEAR;
 	public static Image IMG_CLEAR_LOG;
-	public static Image IMG_CLOSE;
+   public static Image IMG_CLONE;
+   public static Image IMG_CLOSE;
 	public static Image IMG_COLLAPSE;
 	public static Image IMG_COLLAPSE_ALL;
    public static Image IMG_CONTAINER;
@@ -134,6 +136,7 @@ public class SharedIcons
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
 		CLEAR = Activator.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$
 		CLEAR_LOG = Activator.getImageDescriptor("icons/clear_log.gif"); //$NON-NLS-1$
+      CLONE = Activator.getImageDescriptor("icons/clone.png"); //$NON-NLS-1$
 		CLOSE = Activator.getImageDescriptor("icons/close.png"); //$NON-NLS-1$
 		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png"); //$NON-NLS-1$
 		COLLAPSE_ALL = Activator.getImageDescriptor("icons/collapseall.png"); //$NON-NLS-1$
@@ -181,6 +184,7 @@ public class SharedIcons
 		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage(display);
 		IMG_CLEAR = CLEAR.createImage(display);
 		IMG_CLEAR_LOG = CLEAR_LOG.createImage(display);
+      IMG_CLONE = CLONE.createImage(display);
 		IMG_CLOSE = CLOSE.createImage(display);
 		IMG_COLLAPSE = COLLAPSE.createImage(display);
 		IMG_COLLAPSE_ALL = COLLAPSE_ALL.createImage(display);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Victor Kirhenshtein
+ * Copyright (C) 2003-2023 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ public class SharedIcons
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor CLEAR;
 	public static ImageDescriptor CLEAR_LOG;
+   public static ImageDescriptor CLONE;
 	public static ImageDescriptor CLOSE;
 	public static ImageDescriptor COLLAPSE;
 	public static ImageDescriptor COLLAPSE_ALL;
@@ -92,7 +93,8 @@ public class SharedIcons
 	public static Image IMG_CHECKBOX_ON;
 	public static Image IMG_CLEAR;
 	public static Image IMG_CLEAR_LOG;
-	public static Image IMG_CLOSE;
+   public static Image IMG_CLONE;
+   public static Image IMG_CLOSE;
 	public static Image IMG_COLLAPSE;
 	public static Image IMG_COLLAPSE_ALL;
    public static Image IMG_COMMENTS;
@@ -156,6 +158,7 @@ public class SharedIcons
       CHECKBOX_ON = ResourceManager.getImageDescriptor("icons/checkbox_on.png");
       CLEAR = ResourceManager.getImageDescriptor("icons/clear.png");
       CLEAR_LOG = ResourceManager.getImageDescriptor("icons/clear_log.gif");
+      CLONE = ResourceManager.getImageDescriptor("icons/clone.png");
       CLOSE = ResourceManager.getImageDescriptor("icons/close.png");
       COLLAPSE = ResourceManager.getImageDescriptor("icons/collapse.png");
       COLLAPSE_ALL = ResourceManager.getImageDescriptor("icons/collapseall.png");
@@ -215,6 +218,7 @@ public class SharedIcons
 		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage();
 		IMG_CLEAR = CLEAR.createImage();
 		IMG_CLEAR_LOG = CLEAR_LOG.createImage();
+      IMG_CLONE = CLONE.createImage();
 		IMG_CLOSE = CLOSE.createImage();
 		IMG_COLLAPSE = COLLAPSE.createImage();
 		IMG_COLLAPSE_ALL = COLLAPSE_ALL.createImage();

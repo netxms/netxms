@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -94,10 +94,11 @@ public class ActionManager extends ViewPart implements SessionListener
    private FilterText filterText;
    private IDialogSettings settings;
    private Composite content;
-	private Action actionRefresh;
-	private Action actionNew;
-	private Action actionEdit;
-	private Action actionDelete;
+   private Action actionRefresh;
+   private Action actionNew;
+   private Action actionEdit;
+   private Action actionDelete;
+   private Action actionClone;
    private Action actionShowFilter;
    private Action actionEnable;
    private Action actionDisable;
@@ -316,7 +317,7 @@ public class ActionManager extends ViewPart implements SessionListener
 				createAction();
 			}
 		};
-		
+
       actionEdit = new Action("&Edit...", SharedIcons.EDIT) {
 			@Override
 			public void run()
@@ -324,7 +325,15 @@ public class ActionManager extends ViewPart implements SessionListener
 				editAction();
 			}
 		};
-		
+
+      actionClone = new Action("&Clone...", SharedIcons.CLONE) {
+         @Override
+         public void run()
+         {
+            cloneAction();
+         }
+      };
+
       actionDelete = new Action(Messages.get().ActionManager_ActionDelete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
@@ -390,6 +399,7 @@ public class ActionManager extends ViewPart implements SessionListener
    protected void fillContextMenu(final IMenuManager manager)
    {
       manager.add(actionNew);
+      manager.add(actionClone);
       manager.add(actionEdit);
       manager.add(actionEnable);
       manager.add(actionDisable);
@@ -421,19 +431,51 @@ public class ActionManager extends ViewPart implements SessionListener
             session.modifyAction(action);
          }
       }.start();
-	}
+   }
 
-	/**
-	 * Edit currently selected action
-	 */
-	private void editAction()
-	{
+   /**
+    * Clone existing action
+    */
+   private void cloneAction()
+   {
       IStructuredSelection selection = viewer.getStructuredSelection();
-		if (selection.size() != 1)
-			return;
+      if (selection.size() != 1)
+         return;
 
-		final ServerAction action = (ServerAction)selection.getFirstElement();
-		final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
+      final ServerAction action = new ServerAction(0, (ServerAction)selection.getFirstElement());
+      action.setName("Copy of " + action.getName());
+      final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, true);
+      if (dlg.open() != Window.OK)
+         return;
+
+      new ConsoleJob(Messages.get().ActionManager_CreateJobName, this, Activator.PLUGIN_ID) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            long id = session.createAction(action.getName());
+            action.setId(id);
+            session.modifyAction(action);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ActionManager_CreateJobError;
+         }
+      }.start();
+   }
+
+   /**
+    * Edit currently selected action
+    */
+   private void editAction()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final ServerAction action = (ServerAction)selection.getFirstElement();
+      final EditActionDlg dlg = new EditActionDlg(getSite().getShell(), action, false);
       if (dlg.open() != Window.OK)
          return;
 
@@ -450,13 +492,13 @@ public class ActionManager extends ViewPart implements SessionListener
             return Messages.get().ActionManager_UpdateJobError;
          }
       }.start();
-	}
+   }
 
-	/**
-	 * Delete selected actions
-	 */
-	private void deleteActions()
-	{
+   /**
+    * Delete selected actions
+    */
+   private void deleteActions()
+   {
       IStructuredSelection selection = viewer.getStructuredSelection();
 		if (selection.isEmpty())
 			return;

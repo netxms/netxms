@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,6 +80,7 @@ public class ActionManager extends ConfigurationView
    private Action actionNew;
    private Action actionEdit;
    private Action actionDelete;
+   private Action actionClone;
    private Action actionEnable;
    private Action actionDisable;
 
@@ -118,6 +119,7 @@ public class ActionManager extends ConfigurationView
             if (selection != null)
             {
                actionEdit.setEnabled(selection.size() == 1);
+               actionClone.setEnabled(selection.size() == 1);
                actionDelete.setEnabled(selection.size() > 0);
             }
          }
@@ -258,6 +260,15 @@ public class ActionManager extends ConfigurationView
       };
       addKeyBinding("M3+ENTER", actionEdit);
 
+      actionClone = new Action(i18n.tr("&Clone..."), SharedIcons.CLONE) {
+         @Override
+         public void run()
+         {
+            cloneAction();
+         }
+      };
+      addKeyBinding("M1+M3+C", actionClone);
+
       actionDelete = new Action(i18n.tr("&Delete"), SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
@@ -314,6 +325,7 @@ public class ActionManager extends ConfigurationView
    protected void fillContextMenu(final IMenuManager manager)
    {
       manager.add(actionNew);
+      manager.add(actionClone);
       manager.add(actionEdit);
       manager.add(actionEnable);
       manager.add(actionDisable);
@@ -344,6 +356,38 @@ public class ActionManager extends ConfigurationView
    private void createAction()
    {
       final ServerAction action = new ServerAction(0);
+      final EditActionDlg dlg = new EditActionDlg(getWindow().getShell(), action, true);
+      if (dlg.open() != Window.OK)
+         return;
+
+      new Job(i18n.tr("Create action"), this) {
+         @Override
+         protected void run(IProgressMonitor monitor) throws Exception
+         {
+            long id = session.createAction(action.getName());
+            action.setId(id);
+            session.modifyAction(action);
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return i18n.tr("Cannot create action");
+         }
+      }.start();
+   }
+
+   /**
+    * Clone existing action
+    */
+   private void cloneAction()
+   {
+      IStructuredSelection selection = viewer.getStructuredSelection();
+      if (selection.size() != 1)
+         return;
+
+      final ServerAction action = new ServerAction(0, (ServerAction)selection.getFirstElement());
+      action.setName("Copy of " + action.getName());
       final EditActionDlg dlg = new EditActionDlg(getWindow().getShell(), action, true);
       if (dlg.open() != Window.OK)
          return;
