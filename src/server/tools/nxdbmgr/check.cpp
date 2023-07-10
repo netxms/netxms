@@ -532,8 +532,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
          uint32_t objectId = DBGetFieldULong(hResult, i, 0);
 
          // Check if referred node exists
-         _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%d AND is_deleted=0"),
-                    DBGetFieldULong(hResult, i, 1));
+         _sntprintf(query, 256, _T("SELECT name FROM object_properties WHERE object_id=%d AND is_deleted=0"), DBGetFieldULong(hResult, i, 1));
          DB_RESULT hResult2 = SQLSelect(query);
          if (hResult2 != nullptr)
          {
@@ -938,14 +937,34 @@ static bool IsDciExists(uint32_t dciId, uint32_t nodeId, bool isTable)
 }
 
 /**
+ * Check if DCI is in deleted DCI list
+ */
+static bool isDciInDeleteList(uint32_t nodeId, uint32_t dciId)
+{
+   DB_STATEMENT hStmt = DBPrepare(g_dbHandle, _T("SELECT type FROM dci_delete_list WHERE node_id=? AND dci_id=?"));
+   if (hStmt == nullptr)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, nodeId);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dciId);
+
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   bool inList = (hResult != nullptr) && (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+
+   DBFreeStatement(hStmt);
+   return inList;
+}
+
+/**
  * Check collected data
  */
 static void CheckCollectedData(bool isTable)
 {
    StartStage(isTable ? _T("Table DCI history records") : _T("DCI history records"));
 
-	time_t now = time(NULL);
-	IntegerArray<UINT32> *targets = GetDataCollectionTargets();
+	time_t now = time(nullptr);
+	IntegerArray<uint32_t> *targets = GetDataCollectionTargets();
 	SetStageWorkTotal(targets->size());
 	for(int i = 0; i < targets->size(); i++)
    {
@@ -975,22 +994,22 @@ static void CheckCollectedData(bool isTable)
 
    for(int i = 0; i < targets->size(); i++)
    {
-      UINT32 objectId = targets->get(i);
+      uint32_t objectId = targets->get(i);
       TCHAR query[1024];
       _sntprintf(query, 1024, _T("SELECT distinct(item_id) FROM %s_%d"), isTable ? _T("tdata") : _T("idata"), objectId);
       DB_RESULT hResult = SQLSelect(query);
-      if (hResult != NULL)
+      if (hResult != nullptr)
       {
          int count = DBGetNumRows(hResult);
          for(int i = 0; i < count; i++)
          {
             uint32_t id = DBGetFieldLong(hResult, i, 0);
-            if (!IsDciExists(id, objectId, isTable))
+            if (!IsDciExists(id, objectId, isTable) && !isDciInDeleteList(objectId, id))
             {
                g_dbCheckErrors++;
-               if (GetYesNoEx(_T("Found collected data for non-existing DCI [%d] on node [%d]. Delete invalid records?"), id, objectId))
+               if (GetYesNoEx(_T("Found collected data for non-existing DCI [%u] on node [%u]. Delete invalid records?"), id, objectId))
                {
-                  _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE item_id=%d"), isTable ? _T("tdata") : _T("idata"), objectId, id);
+                  _sntprintf(query, 1024, _T("DELETE FROM %s_%d WHERE item_id=%u"), isTable ? _T("tdata") : _T("idata"), objectId, id);
                   if (SQLQuery(query))
                      g_dbCheckFixes++;
                }

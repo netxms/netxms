@@ -557,7 +557,7 @@ void DCItem::deleteFromDatabase()
    QueueRawDciDataDelete(m_id);
 
    auto owner = m_owner.lock();
-   if ((owner != nullptr) && owner->isDataCollectionTarget() && g_dbSyntax != DB_SYNTAX_TSDB)
+   if ((owner != nullptr) && owner->isDataCollectionTarget() && (g_dbSyntax != DB_SYNTAX_TSDB))
       static_cast<DataCollectionTarget*>(owner.get())->scheduleItemDataCleanup(m_id);
 }
 
