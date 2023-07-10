@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2013-2022 Victor Kirhenshtein
+** Copyright (C) 2013-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,16 +27,20 @@
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
 #if _OPENWRT
-   const char *command = "opkg list-installed | awk -e '{ print \"@@@ #\" $1 \"|\" $3 \"||||\" }'";
+   const TCHAR *command = _T("opkg list-installed | awk -e '{ print \"@@@ #\" $1 \"|\" $3 \"||||\" }'");
+   bool shellExec = true;
 #else
-   const char *command;
+   bool shellExec;
+   const TCHAR *command;
    if (access("/bin/rpm", X_OK) == 0)
    {
-		command = "/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}%|RELEASE?{-%{RELEASE}}:{}||%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'";
+		command = _T("/bin/rpm -qa --queryformat '@@@ #%{NAME}:%{ARCH}|%{VERSION}%|RELEASE?{-%{RELEASE}}:{}||%{VENDOR}|%{INSTALLTIME}|%{URL}|%{SUMMARY}\\n'");
+		shellExec = false;
    }
    else if (access("/usr/bin/dpkg-query", X_OK) == 0)
    {
-		command = "/usr/bin/dpkg-query -W -f '@@@${Status}#${package}:${Architecture}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'";
+		command = _T("/usr/bin/dpkg-query -W -f '@@@${Status}#${package}:${Architecture}|${version}|||${homepage}|${description}\\n' | grep '@@@install.*installed.*#'");
+      shellExec = true;
 	}
 	else
 	{
@@ -45,32 +49,44 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 #endif
 
    struct utsname un;
-   const char *arch;
+   const TCHAR *arch;
+#ifdef UNICODE
+   TCHAR machine[64];
+#endif
    if (uname(&un) != -1)
    {
       if (!strcmp(un.machine, "i686") || !strcmp(un.machine, "i586") || !strcmp(un.machine, "i486") || !strcmp(un.machine, "i386"))
       {
-         arch = ":i686:i586:i486:i386";
+         arch = _T(":i686:i586:i486:i386");
       }
       else if (!strcmp(un.machine, "amd64") || !strcmp(un.machine, "x86_64"))
       {
-         arch = ":amd64:x86_64";
+         arch = _T(":amd64:x86_64");
       }
       else
       {
+#ifdef UNICODE
+         machine[0] = 0;
+         mb_to_wchar(un.machine, -1, &machine[1], 63);
+         arch = machine;
+#else
          memmove(&un.machine[1], un.machine, strlen(un.machine) + 1);
          un.machine[0] = ':';
          arch = un.machine;
+#endif
       }
    }
    else
    {
-      arch = ":i686:i586:i486:i386";
+      arch = _T(":i686:i586:i486:i386");
    }
 
-	FILE *pipe = popen(command, "r");
-	if (pipe == nullptr)
-		return SYSINFO_RC_ERROR;
+   LineOutputProcessExecutor executor(command, shellExec);
+   if (!executor.execute())
+      return SYSINFO_RC_ERROR;
+
+   if (!executor.waitForCompletion(5000))
+      return SYSINFO_RC_ERROR;
 
 	value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"), true);
 	value->addColumn(_T("VERSION"), DCI_DT_STRING, _T("Version"), true);
@@ -79,61 +95,45 @@ LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, Abstr
 	value->addColumn(_T("URL"), DCI_DT_STRING, _T("URL"));
 	value->addColumn(_T("DESCRIPTION"), DCI_DT_STRING, _T("Description"));
 
-	while(true)
+	for(int i = 0; i < executor.getData().size(); i++)
 	{
-		char line[1024];
-		if (fgets(line, 1024, pipe) == nullptr)
-			break;
+		TCHAR line[1024];
+		_tcslcpy(line, executor.getData().get(i), 1024);
 
-		if (memcmp(line, "@@@", 3))
+		if (_tcsncmp(line, _T("@@@"), 3))
 			continue;
 
 		value->addRow();
-		char *curr = strchr(&line[3], '#');
+		TCHAR *curr = _tcschr(&line[3], _T('#'));
 		if (curr != nullptr)
 			curr++;
 		else
 			curr = &line[3];
 		for(int i = 0; i < 6; i++)
 		{
-			char *ptr = strchr(curr, '|');
+			TCHAR *ptr = _tcschr(curr, _T('|'));
 			if (ptr != nullptr)
-			{
 				*ptr = 0;
-			}
-			else
-			{
-				ptr = strchr(curr, '\n');
-				if (ptr != nullptr)
-				{
-					*ptr = 0;
-					ptr = nullptr;
-				}
-			}
 
 			// Remove architecture from package name if it is the same as
 			// OS architecture or package is architecture-independent
 			if (i == 0)
 			{
-			   char *pa = strrchr(curr, ':');
+			   TCHAR *pa = _tcsrchr(curr, _T(':'));
 			   if (pa != nullptr)
 			   {
-			      if (!strcmp(pa, ":all") || !strcmp(pa, ":noarch") || !strcmp(pa, ":(none)") || (strstr(arch, pa) != nullptr))
+			      if (!_tcscmp(pa, _T(":all")) || !_tcscmp(pa, _T(":noarch")) || !_tcscmp(pa, _T(":(none)")) || (_tcsstr(arch, pa) != nullptr))
 			         *pa = 0;
 			   }
 			}
 
-#ifdef UNICODE
-			value->setPreallocated(i, WideStringFromMBString(curr));
-#else
 			value->set(i, curr);
-#endif
+
 			if (ptr == nullptr)
 				break;
 			curr = ptr + 1;
 		}
 	}
-	pclose(pipe);
 
 	return SYSINFO_RC_SUCCESS;
 }
