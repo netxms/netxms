@@ -80,7 +80,7 @@ public class TcpProxy
     * Close local resources associated with proxy session.
     * Should only be called by remote proxy session closure notification handler.
     */
-   protected void localClose()
+   protected synchronized void localClose()
    {
       logger.debug("Local close for TCP proxy channel " + channelId);
       sendTimer.cancel();
@@ -102,7 +102,7 @@ public class TcpProxy
     *
     * @param cause cause for abort
     */
-   protected void abort(Throwable cause)
+   protected synchronized void abort(Throwable cause)
    {
       logger.debug("Abort for TCP proxy channel " + channelId, cause);
       localInputStream.setException(cause);
@@ -205,13 +205,16 @@ public class TcpProxy
     * Send data to destination
     *
     * @param data data block
-    * @throws IOException  TODO
-    * @throws NXCException TODO
+    * @throws IOException when client cannot send data to the server or channel is already closed
+    * @throws NXCException when NetXMS server cannot accept or forward data
     */
    public synchronized void send(byte[] data) throws IOException, NXCException
    {
       if (flushException != null)
          throw new IOException(flushException);
+
+      if (isClosed())
+         throw new IOException("Proxy channel is closed");
 
       if (pendingBytes + data.length < sendBuffer.length)
       {
@@ -261,7 +264,7 @@ public class TcpProxy
     */
    private synchronized void flushSendBuffer()
    {
-      if (pendingBytes == 0)
+      if ((pendingBytes == 0) || isClosed())
          return;
 
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_TCP_PROXY_DATA, channelId);

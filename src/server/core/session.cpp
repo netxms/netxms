@@ -14009,19 +14009,20 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
                      msg.setField(VID_RCC, RCC_SUCCESS);
                      msg.setField(VID_CHANNEL_ID, clientChannelId);
                      writeAuditLog(AUDIT_SYSCFG, true, proxyNode->getId(), _T("Created TCP proxy to %s port %d via %s [%u] (client channel %u)"),
-                              (const TCHAR *)ipAddr.toString(), (int)port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
-                     debugPrintf(3, _T("Created TCP proxy to %s:%d via node %s [%d]"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId());
+                           ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
+                     debugPrintf(3, _T("Created TCP proxy to %s:%d via node %s [%d] (client channel %u)"),
+                           ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), clientChannelId);
                   }
                   else
                   {
                      msg.setField(VID_RCC, AgentErrorToRCC(rcc));
-                     debugPrintf(4, _T("TCP proxy setup failed (%s)"), AgentErrorCodeToText(rcc));
+                     debugPrintf(4, _T("TCP proxy to %s:%d via node %s [%u] setup failed (%s)"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId(), AgentErrorCodeToText(rcc));
                   }
                }
                else
                {
                   msg.setField(VID_RCC, RCC_COMM_FAILURE);
-                  debugPrintf(4, _T("TCP proxy setup failed (no connection to agent)"));
+                  debugPrintf(4, _T("TCP proxy to %s:%d via node %s [%u] setup failed (no connection to agent)"), ipAddr.toString().cstr(), port, proxyNode->getName(), proxyNode->getId());
                }
             }
             else
@@ -14045,7 +14046,7 @@ void ClientSession::setupTcpProxy(const NXCPMessage& request)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       writeAuditLog(AUDIT_SYSCFG, false, 0, _T("Access denied on setting up TCP proxy"));
    }
-   sendMessage(&msg);
+   sendMessage(msg);
 }
 
 /**
