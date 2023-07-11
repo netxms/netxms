@@ -148,8 +148,8 @@
       <plugin id="org.netxms.gef4.zest.core"/>
       <plugin id="org.netxms.gef4.zest.jface"/>
       <plugin id="org.netxms.gef4.zest.layouts"/>
-      <plugin id="org.netxms.rap.draw2d"/>
-      <plugin id="org.netxms.rap.draw2d.compatibility"/>
+      <plugin id="org.netxms.rap.draw2d" version="1.5.3"/>
+      <plugin id="org.netxms.rap.draw2d.compatibility" version="1.5.3"/>
       <plugin id="org.netxms.ui.base"/>
       <plugin id="org.netxms.ui.eclipse.actionmanager"/>
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>

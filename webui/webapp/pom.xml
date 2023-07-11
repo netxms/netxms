@@ -45,9 +45,9 @@
   </modules>
 
     <properties>
-        <tycho.version>1.4.0</tycho.version>
+        <tycho.version>2.7.5</tycho.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
-	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
+        <tycho.groupid>org.eclipse.tycho</tycho.groupid>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <war.filename>nxmc</war.filename>
@@ -80,12 +80,12 @@
             <id>zest</id>
             <url>http://www.netxms.org/eclipse/zest-rap</url>
             <layout>p2</layout>
-        </repository> 
+        </repository>
         <repository>
             <id>warProducts</id>
-            <url>http://download.eclipse.org/libra/releases</url>
+            <url>http://mirrors.ibiblio.org/eclipse/libra/releases/R-0.3.1-201609011955</url>
             <layout>p2</layout>
-        </repository> 
+        </repository>
     </repositories> 
 
   <build>
