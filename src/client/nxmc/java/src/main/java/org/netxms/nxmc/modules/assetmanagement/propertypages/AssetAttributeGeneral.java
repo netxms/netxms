@@ -218,7 +218,7 @@ public class AssetAttributeGeneral extends PropertyPage
          }
          if (!newName.matches("[A-Za-z$_][A-Za-z0-9$_]*"))
          { 
-            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Name should be NXSL complient"));
+            MessageDialogHelper.openWarning(getShell(), i18n.tr("Warning"), i18n.tr("Name should be NXSL compliant"));
             return false;            
          }
          attribute.setName(textName.getText());
