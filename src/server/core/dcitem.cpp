@@ -1737,8 +1737,8 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	if (hStmt != nullptr)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)periodStart);
-		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)periodEnd);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, static_cast<int32_t>(periodStart));
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, static_cast<int32_t>(periodEnd));
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != nullptr)
 		{

@@ -377,15 +377,20 @@ static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 /**
  * Get all DCI values for period
- * Format: GetDCIValues(node, dciId, startTime, endTime)
+ * Format: GetDCIValues(node, dciId, startTime, endTime, rawValue)
+ * Raw value indicator is optional (default is false)
+ * End time is optional (default is current time)
  * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
  */
 static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
+   if ((argc < 3) || (argc > 5))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->isInteger() || !argv[2]->isInteger() || !argv[3]->isInteger())
+	if (!argv[1]->isInteger() || !argv[2]->isInteger() || ((argc > 3) && !argv[3]->isInteger()))
 		return NXSL_ERR_NOT_INTEGER;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
@@ -396,33 +401,37 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	shared_ptr<DCObject> dci = node->getDCObjectById(argv[1]->getValueAsUInt32(), 0);
 	if ((dci != nullptr) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-      TCHAR query[1024];
+      StringBuffer query(_T("SELECT "));
+      query.append(((argc > 4) && argv[4]->isTrue()) ? _T("raw_value") : _T("idata_value"));
       if (g_flags & AF_SINGLE_TABLE_PERF_DATA)
       {
          if (g_dbSyntax == DB_SYNTAX_TSDB)
          {
-            _sntprintf(query, 256,
-                     _T("SELECT idata_value FROM idata_sc_%s WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?) ORDER BY idata_timestamp DESC"),
-                     DCObject::getStorageClassName(dci->getStorageClass()));
+            query.append(_T(" FROM idata_sc_"));
+            query.append(DCObject::getStorageClassName(dci->getStorageClass()));
+            query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN to_timestamp(?) AND to_timestamp(?)"));
          }
          else
          {
-            _tcscpy(query, _T("SELECT idata_value FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"));
+            query.append(_T(" FROM idata WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
          }
       }
       else
       {
-         _sntprintf(query, 1024, _T("SELECT idata_value FROM idata_%u WHERE item_id=? AND idata_timestamp BETWEEN ? AND ? ORDER BY idata_timestamp DESC"), node->getId());
+         query.append(_T(" FROM idata_"));
+         query.append(node->getId());
+         query.append(_T(" WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"));
       }
+      query.append(_T(" ORDER BY idata_timestamp DESC"));
+
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       DB_STATEMENT hStmt = DBPrepare(hdb, query);
 		if (hStmt != nullptr)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
 			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
-			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (argc > 3) ? argv[3]->getValueAsInt32() : static_cast<int32_t>(time(nullptr)));
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != nullptr)
 			{
@@ -592,7 +601,7 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { "GetDCIObject", F_GetDCIObject, 2 },
    { "GetDCIRawValue", F_GetDCIRawValue, 2 },
    { "GetDCIValue", F_GetDCIValue, 2 },
-   { "GetDCIValues", F_GetDCIValues, 4 },
+   { "GetDCIValues", F_GetDCIValues, -1 },
    { "GetDCIValueByDescription", F_GetDCIValueByDescription, 2 },
    { "GetDCIValueByName", F_GetDCIValueByName, 2 },
 	{ "GetMaxDCIValue", F_GetMaxDCIValue, 4 },
