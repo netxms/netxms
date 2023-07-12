@@ -1491,6 +1491,14 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 }
 
 /**
+ * enableWinPerfCountersCache(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableWinPerfCountersCache)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_PERF_COUNT, true);
+}
+
+/**
  * Node::executeAgentCommand(command, ...) method
  */
 NXSL_METHOD_DEFINITION(Node, executeAgentCommand)
@@ -1852,6 +1860,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_DCTargetClass()
    NXSL_REGISTER_METHOD(Node, enableRoutingTablePolling, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableSsh, 1);
+   NXSL_REGISTER_METHOD(Node, enableWinPerfCountersCache, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
    NXSL_REGISTER_METHOD(Node, executeAgentCommand, -1);
    NXSL_REGISTER_METHOD(Node, executeAgentCommandWithOutput, -1);
