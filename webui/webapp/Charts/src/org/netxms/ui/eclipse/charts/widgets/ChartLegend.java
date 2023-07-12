@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.charts.widgets;
 
 import java.util.List;
+import java.util.function.Consumer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -69,14 +70,17 @@ public class ChartLegend extends Composite
     * Create chart legend.
     *
     * @param chart owning chart
+    * @param foreground foreground color for legend
+    * @param vertical true if legend should have vertical orientation
     */
-   public ChartLegend(Chart chart, boolean vertical)
+   public ChartLegend(Chart chart, Color foreground, boolean vertical)
    {
       super(chart, SWT.NONE);
 
       this.chart = chart;
       this.vertical = vertical;
       super.setBackground(chart.getBackground());
+      super.setForeground(foreground);
       updateHeaderFont();
 
       addDisposeListener(new DisposeListener() {
@@ -115,10 +119,9 @@ public class ChartLegend extends Composite
    @Override
    public void setForeground(Color color)
    {
-      if (color == null)
-         super.setForeground(defaultForeground);
-      else
-         super.setForeground(color);
+      Color effectiveColor = (color != null) ? color : defaultForeground;
+      super.setForeground(effectiveColor);
+      updateChildren(this, (c) -> c.setForeground(effectiveColor));
    }
 
    /**
@@ -127,10 +130,25 @@ public class ChartLegend extends Composite
    @Override
    public void setBackground(Color color)
    {
-      if (color == null)
-         super.setBackground(chart.getBackground());
-      else
-         super.setBackground(color);
+      Color effectiveColor = (color != null) ? color : chart.getBackground(); 
+      super.setBackground(effectiveColor);
+      updateChildren(this, (c) -> c.setBackground(effectiveColor));
+   }
+
+   /**
+    * Update child controls recursively by executing given operation on each of them.
+    *
+    * @param parent parent composite
+    * @param operation operation to execute
+    */
+   private void updateChildren(Composite parent, Consumer<Control> operation)
+   {
+      for(Control c : parent.getChildren())
+      {
+         operation.accept(c);
+         if (c instanceof Composite)
+            updateChildren((Composite)c, operation);
+      }
    }
 
    /**
@@ -191,6 +209,7 @@ public class ChartLegend extends Composite
          headerLabels[0].setText("Curr");
          headerLabels[0].setFont(headerFont);
          headerLabels[0].setBackground(getBackground());
+         headerLabels[0].setForeground(getForeground());
          GridData gd = new GridData();
          gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
          headerLabels[0].setLayoutData(gd);
@@ -199,16 +218,19 @@ public class ChartLegend extends Composite
          headerLabels[1].setText("Min");
          headerLabels[1].setFont(headerFont);
          headerLabels[1].setBackground(getBackground());
+         headerLabels[1].setForeground(getForeground());
 
          headerLabels[2] = new Label(this, SWT.NONE);
          headerLabels[2].setText("Max");
          headerLabels[2].setFont(headerFont);
          headerLabels[2].setBackground(getBackground());
+         headerLabels[2].setForeground(getForeground());
 
          headerLabels[3] = new Label(this, SWT.NONE);
          headerLabels[3].setText("Avg");
          headerLabels[3].setFont(headerFont);
          headerLabels[3].setBackground(getBackground());
+         headerLabels[3].setForeground(getForeground());
 
          List<GraphItem> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
@@ -219,6 +241,7 @@ public class ChartLegend extends Composite
             {
                dataLabels[i][j] = new Label(this, SWT.NONE);
                dataLabels[i][j].setBackground(getBackground());
+               dataLabels[i][j].setForeground(getForeground());
                if (j == 0)
                {
                   gd = new GridData();
@@ -246,6 +269,7 @@ public class ChartLegend extends Composite
          headerLabels[0].setText("Value");
          headerLabels[0].setFont(headerFont);
          headerLabels[0].setBackground(getBackground());
+         headerLabels[0].setForeground(getForeground());
          GridData gd = new GridData();
          gd.horizontalIndent = EXTENDED_LEGEND_DATA_SPACING;
          headerLabels[0].setLayoutData(gd);
@@ -254,6 +278,7 @@ public class ChartLegend extends Composite
          headerLabels[1].setText("Pct");
          headerLabels[1].setFont(headerFont);
          headerLabels[1].setBackground(getBackground());
+         headerLabels[1].setForeground(getForeground());
 
          List<GraphItem> metrics = chart.getItems();
          for(int i = 0; i < metrics.size(); i++)
@@ -264,6 +289,7 @@ public class ChartLegend extends Composite
             {
                dataLabels[i][j] = new Label(this, SWT.NONE);
                dataLabels[i][j].setBackground(getBackground());
+               dataLabels[i][j].setForeground(getForeground());
                if (j == 0)
                {
                   gd = new GridData();
@@ -377,6 +403,7 @@ public class ChartLegend extends Composite
          Label label = new Label(this, SWT.NONE);
          label.setText(text);
          label.setBackground(getBackground());
+         label.setForeground(parent.getForeground());
          label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
       }
    }

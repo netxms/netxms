@@ -339,7 +339,7 @@ public class Chart extends Composite
     */
    private void createLegend()
    {
-      legend = new ChartLegend(this, isLegendOnSide());
+      legend = new ChartLegend(this, getColorFromPreferences("Chart.Colors.Legend"), isLegendOnSide());
       GridData gd = new GridData();
       if (isLegendOnSide())
       {
@@ -361,7 +361,6 @@ public class Chart extends Composite
          for(Control c : legend.getChildren())
             c.setMenu(menu);
       }
-      legend.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
    }
 
    /**
@@ -604,7 +603,7 @@ public class Chart extends Composite
    {
       if (index >= ChartConfiguration.MAX_GRAPH_ITEM_COUNT)
          return;
-         
+
       DataSeries series = dataSeries.get(index);
       if (series != null)
       {
