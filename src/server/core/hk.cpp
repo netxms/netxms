@@ -315,7 +315,7 @@ static void HouseKeeper()
       nxlog_debug_tag(DEBUG_TAG, 2, _T("Wakeup"));
       s_running = true;
       time_t cycleStartTime = time(nullptr);
-      EventBuilder(EVENT_HOUSEKEEPER_STARTED, g_dwMgmtNode).post();
+      PostSystemEvent(EVENT_HOUSEKEEPER_STARTED, g_dwMgmtNode, nullptr);
 
       s_throttlingHighWatermark = ConfigReadInt(_T("Housekeeper.Throttle.HighWatermark"), 250000);
       s_throttlingLowWatermark = ConfigReadInt(_T("Housekeeper.Throttle.LowWatermark"), 50000);
