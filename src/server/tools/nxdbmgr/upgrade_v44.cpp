@@ -31,33 +31,33 @@ static bool H_UpgradeFromV22()
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
       _T("description='Generated when system detects loss of network connectivity based on beacon probing.\r\n")
       _T("Parameters:\r\n")
-      _T("   numberOfBeacons - Number of beacons'\r\n")
+      _T("   1) numberOfBeacons - Number of beacons'")
       _T("WHERE event_code=50")));
 
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
       _T("description='Generated when system detects restoration of network connectivity based on beacon probing.\r\n")
       _T("Parameters:\r\n")
-      _T("   numberOfBeacons - Number of beacons'\r\n")
+      _T("   1) numberOfBeacons - Number of beacons'")
       _T("WHERE event_code=51")));
 
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
       _T("description='Generated when cluster resource goes up.\r\n")
       _T("Parameters:\r\n")
-      _T("   resourceId - Resource ID\r\n")
-      _T("   resourceName - Resource name\r\n")
-      _T("   newOwnerNodeId - New owner node ID\r\n")
-      _T("   newOwnerNodeName - New owner node name'\r\n")
+      _T("   1) resourceId - Resource ID\r\n")
+      _T("   2) resourceName - Resource name\r\n")
+      _T("   3) newOwnerNodeId - New owner node ID\r\n")
+      _T("   4) newOwnerNodeName - New owner node name'")
       _T("WHERE event_code=40")));
 
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
       _T("description='Generated when cluster resource moved between nodes.\r\n")
       _T("Parameters:\r\n")
-      _T("   resourceId - Resource ID\r\n")
-      _T("   resourceName - Resource name\r\n")
-      _T("   previousOwnerNodeId - Previous owner node ID\r\n")
-      _T("   previousOwnerNodeName - Previous owner node name'\r\n")
-      _T("   newOwnerNodeId - New owner node ID\r\n")
-      _T("   newOwnerNodeName - New owner node name'\r\n")
+      _T("   1) resourceId - Resource ID\r\n")
+      _T("   2) resourceName - Resource name\r\n")
+      _T("   3) previousOwnerNodeId - Previous owner node ID\r\n")
+      _T("   4) previousOwnerNodeName - Previous owner node name\r\n")
+      _T("   5) newOwnerNodeId - New owner node ID\r\n")
+      _T("   6) newOwnerNodeName - New owner node name'")
       _T("WHERE event_code=38")));
 
    CHK_EXEC(SetMinorSchemaVersion(23));
