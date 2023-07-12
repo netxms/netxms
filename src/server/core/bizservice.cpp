@@ -408,11 +408,11 @@ void BusinessService::changeState(int newState)
             DBFreeStatement(hStmt);
          }
          DBConnectionPoolReleaseConnection(hdb);
-         PostSystemEvent(EVENT_BUSINESS_SERVICE_FAILED, m_id, nullptr);
+         EventBuilder(EVENT_BUSINESS_SERVICE_FAILED, m_id).post();
       }
       else
       {
-         PostSystemEvent(EVENT_BUSINESS_SERVICE_DEGRADED, m_id, nullptr);
+         EventBuilder(EVENT_BUSINESS_SERVICE_DEGRADED, m_id).post();
       }
    }
    else if (m_serviceState < prevState)

@@ -3174,7 +3174,7 @@ restart_status_poll:
             }
             else
             {
-               PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
+               EventBuilder(EVENT_NODE_DOWN, m_id).post();
             }
 
             RemoveFileMonitorsByNodeId(m_id);
@@ -3191,7 +3191,7 @@ restart_status_poll:
                }
                else
                {
-                  PostSystemEvent(EVENT_NODE_DOWN, m_id, nullptr);
+                  EventBuilder(EVENT_NODE_DOWN, m_id).post();
                }
 
                m_state &= ~DCSF_NETWORK_PATH_PROBLEM;
@@ -4321,7 +4321,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
          if ((m_state & NSF_AGENT_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
          {
             m_state &= ~NSF_AGENT_UNREACHABLE;
-            PostSystemEvent(EVENT_AGENT_OK, m_id, nullptr);
+            EventBuilder(EVENT_AGENT_OK, m_id).post();
             sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
             m_pollCountAgent = 0;
 
@@ -4346,7 +4346,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_SNMP) && (m_state & NSF_SNMP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_SNMP_UNREACHABLE;
-         PostSystemEvent(EVENT_SNMP_OK, m_id, nullptr);
+         EventBuilder(EVENT_SNMP_OK, m_id).post();
          sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Connectivity with SNMP agent restored"), m_name);
          m_pollCountSNMP = 0;
@@ -4363,7 +4363,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_SSH) && (m_state & NSF_SSH_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_SSH_UNREACHABLE;
-         PostSystemEvent(EVENT_SSH_OK, m_id, nullptr);
+         EventBuilder(EVENT_SSH_OK, m_id).post();
          sendPollerMsg(POLLER_INFO _T("   SSH connectivity restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): SSH connectivity restored"), m_name);
          m_pollCountSSH = 0;
@@ -4380,7 +4380,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_ETHERNET_IP) && (m_state & NSF_ETHERNET_IP_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
+         EventBuilder(EVENT_ETHERNET_IP_OK, m_id).post();
          sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
          m_pollCountEtherNetIP = 0;
       }
@@ -4396,7 +4396,7 @@ void Node::configurationPoll(PollerInfo *poller, ClientSession *session, uint32_
       if ((m_capabilities & NC_IS_MODBUS_TCP) && (m_state & NSF_MODBUS_UNREACHABLE) && (m_runtimeFlags & NDF_RECHECK_CAPABILITIES))
       {
          m_state &= ~NSF_MODBUS_UNREACHABLE;
-         PostSystemEvent(EVENT_MODBUS_OK, m_id, nullptr);
+         EventBuilder(EVENT_MODBUS_OK, m_id).post();
          sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
          nxlog_debug_tag(DEBUG_TAG_CONF_POLL, 6, _T("ConfPoll(%s): Modbus connectivity restored"), m_name);
          m_pollCountModbus = 0;
@@ -4987,7 +4987,7 @@ bool Node::confPollAgent(uint32_t requestId)
       if (m_state & NSF_AGENT_UNREACHABLE)
       {
          m_state &= ~NSF_AGENT_UNREACHABLE;
-         PostSystemEvent(EVENT_AGENT_OK, m_id, nullptr);
+         EventBuilder(EVENT_AGENT_OK, m_id).post();
          sendPollerMsg(POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
       }
       else
@@ -5243,7 +5243,7 @@ bool Node::confPollEthernetIP(uint32_t requestId)
       if (m_state & NSF_ETHERNET_IP_UNREACHABLE)
       {
          m_state &= ~NSF_ETHERNET_IP_UNREACHABLE;
-         PostSystemEvent(EVENT_ETHERNET_IP_OK, m_id, nullptr);
+         EventBuilder(EVENT_ETHERNET_IP_OK, m_id).post();
          sendPollerMsg(POLLER_INFO _T("   EtherNet/IP connectivity restored\r\n"));
       }
 
@@ -5349,7 +5349,7 @@ bool Node::confPollModbus(uint32_t requestId)
          if (m_state & NSF_MODBUS_UNREACHABLE)
          {
             m_state &= ~NSF_MODBUS_UNREACHABLE;
-            PostSystemEvent(EVENT_MODBUS_OK, m_id, nullptr);
+            EventBuilder(EVENT_MODBUS_OK, m_id).post();
             sendPollerMsg(POLLER_INFO _T("   Modbus connectivity restored\r\n"));
          }
          unlockProperties();
@@ -5486,7 +5486,7 @@ bool Node::confPollSnmp(uint32_t requestId)
    if (m_state & NSF_SNMP_UNREACHABLE)
    {
       m_state &= ~NSF_SNMP_UNREACHABLE;
-      PostSystemEvent(EVENT_SNMP_OK, m_id, nullptr);
+      EventBuilder(EVENT_SNMP_OK, m_id).post();
       sendPollerMsg(POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
    }
    unlockProperties();
@@ -12238,7 +12238,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
                {
                   m_state |= NSF_ICMP_UNREACHABLE;
                   m_pollCountICMP = 0;
-                  PostSystemEvent(EVENT_ICMP_UNREACHABLE, m_id, nullptr);
+                  EventBuilder(EVENT_ICMP_UNREACHABLE, m_id).post();
                   setModified(MODIFY_NODE_PROPERTIES);
                   m_pollCountICMP = 0;
                }
@@ -12257,7 +12257,7 @@ void Node::icmpPollAddress(AgentConnection *conn, const TCHAR *target, const Ine
                {
                   m_state &= ~NSF_ICMP_UNREACHABLE;
                   m_pollCountICMP = 0;
-                  PostSystemEvent(EVENT_ICMP_OK, m_id, nullptr);
+                  EventBuilder(EVENT_ICMP_OK, m_id).post();
                   setModified(MODIFY_NODE_PROPERTIES);
                }
             }
