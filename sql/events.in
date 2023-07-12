@@ -600,7 +600,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'NetXMS server network connectivity lost',
 		'Generated when system detects loss of network connectivity based on beacon probing.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Number of beacons'
+		'   numberOfBeacons - Number of beacons'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -609,7 +609,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'NetXMS server network connectivity restored',
 		'Generated when system detects restoration of network connectivity based on beacon probing.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Number of beacons'
+		'   numberOfBeacons - Number of beacons'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

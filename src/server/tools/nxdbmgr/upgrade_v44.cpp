@@ -24,6 +24,21 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.22 to 44.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when system detects loss of network connectivity based on beacon probing.\r\n")
+      _T("Parameters:\r\n")
+      _T("   numberOfBeacons - Number of beacons'\r\n")
+      _T("WHERE event_code=50")));
+
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 44.21 to 44.22
  */
 static bool H_UpgradeFromV21()
@@ -616,6 +631,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 44, 23, H_UpgradeFromV22 },
    { 21, 44, 22, H_UpgradeFromV21 },
    { 20, 44, 21, H_UpgradeFromV20 },
    { 19, 44, 20, H_UpgradeFromV19 },
