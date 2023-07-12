@@ -169,7 +169,7 @@ public final class ObjectToolExecutor
          {      
             List<String> expandedText = null;
 
-            if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+            if (((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0) || (objects.size() >= 10))
             {
                String message = tool.getConfirmationText();
                if (objects.size() == 1)
@@ -187,8 +187,16 @@ public final class ObjectToolExecutor
                }
                else
                {
-                  ObjectContext node = objects.iterator().next();
-                  message = node.substituteMacrosForMultipleNodes(message, inputValues, getDisplay());
+                  if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+                  {
+                     ObjectContext node = objects.iterator().next();
+                     message = node.substituteMacrosForMultipleNodes(message, inputValues, getDisplay());
+                  }
+                  else
+                  {
+                     // No confirmation required but execution is on big number of objects
+                     message = i18n.tr("You attempt to execute tool on {0} objects. Are you sure?", Integer.toString(objects.size()));
+                  }
                }
 
                ConfirmationRunnable runnable = new ConfirmationRunnable(message);
