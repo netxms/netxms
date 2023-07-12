@@ -681,19 +681,24 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 								if (m_pResourceList[k].dwCurrOwner == 0)
 								{
 									// Resource up
-									PostSystemEvent(EVENT_CLUSTER_RESOURCE_UP, m_id, "dsds",
-												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
-												 node->getId(), node->getName());
+                           EventBuilder(EVENT_CLUSTER_RESOURCE_UP, m_id).
+                              param(_T("resourceId"), m_pResourceList[k].dwId).
+                              param(_T("resourceName"), m_pResourceList[k].szName).
+                              param(_T("newOwnerNodeId"), node->getId()).
+                              param(_T("newOwnerNodeName"), node->getName()).post();
 								}
 								else
 								{
 									// Moved
 									shared_ptr<NetObj> pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
-									PostSystemEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_id, "dsdsds",
-												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
-												 m_pResourceList[k].dwCurrOwner,
-												 (pObject != NULL) ? pObject->getName() : _T("<unknown>"),
-												 node->getId(), node->getName());
+                           EventBuilder(EVENT_CLUSTER_RESOURCE_MOVED, m_id).
+                              param(_T("resourceId"), m_pResourceList[k].dwId).
+                              param(_T("resourceName"), m_pResourceList[k].szName).
+                              param(_T("previousOwnerNodeId"), m_pResourceList[k].dwCurrOwner).
+                              param(_T("previousOwnerNodeName"), (pObject != NULL) ? pObject->getName() : _T("<unknown>")).
+                              param(_T("newOwnerNodeId"), node->getId()).
+                              param(_T("newOwnerNodeName"), node->getName()).post();
+
 								}
 								m_pResourceList[k].dwCurrOwner = node->getId();
 								modified |= MODIFY_CLUSTER_RESOURCES;

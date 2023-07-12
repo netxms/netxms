@@ -495,12 +495,12 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster resource "%2" moved from node %4 to node %6',
 		'Generated when cluster resource moved between nodes.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Resource ID' CONCAT CRLF CONCAT
-		'   2) Resource name' CONCAT CRLF CONCAT
-		'   3) Previous owner node ID' CONCAT CRLF CONCAT
-		'   4) Previous owner node name' CONCAT CRLF CONCAT
-		'   5) New owner node ID' CONCAT CRLF CONCAT
-		'   6) New owner node name'
+		'   resourceId - Resource ID' CONCAT CRLF CONCAT
+		'   resourceName - Resource name' CONCAT CRLF CONCAT
+		'   previousOwnerNodeId - Previous owner node ID' CONCAT CRLF CONCAT
+		'   previousOwnerNodeName - Previous owner node name' CONCAT CRLF CONCAT
+		'   newOwnerNodeId - New owner node ID' CONCAT CRLF CONCAT
+		'   newOwnerNodeName - New owner node name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
@@ -521,10 +521,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster resource "%2" is up (new owner is %4)',
 		'Generated when cluster resource goes up.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Resource ID' CONCAT CRLF CONCAT
-		'   2) Resource name' CONCAT CRLF CONCAT
-		'   3) New owner node ID' CONCAT CRLF CONCAT
-		'   4) New owner node name'
+		'   resourceId - Resource ID' CONCAT CRLF CONCAT
+		'   resourceName - Resource name' CONCAT CRLF CONCAT
+		'   ownerNodeId - New owner node ID' CONCAT CRLF CONCAT
+		'   ownerNodeName - New owner node name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(
