@@ -140,6 +140,19 @@ static bool H_UpgradeFromV22()
       _T("   4) templateName - Template name'")
       _T("WHERE event_code=67")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when device geolocation change is detected.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) newLatitude - Latitude of new location in degrees\r\n")
+      _T("   2) newLongitude - Longitude of new location in degrees\r\n")
+      _T("   3) newLatitudeAsString- Latitude of new location in textual form\r\n")
+      _T("   4) newLongitudeAsString - Longitude of new location in textual form\r\n")
+      _T("   5) previousLatitude - Latitude of previous location in degrees\r\n")
+      _T("   6) previousLongitude - Longitude of previous location in degrees\r\n")
+      _T("   7) previousLatitudeAsString - Latitude of previous location in textual form\r\n")
+      _T("   8) previoudLongitudeAsString - Longitude of previous location in textual form'")
+      _T("WHERE event_code=111")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

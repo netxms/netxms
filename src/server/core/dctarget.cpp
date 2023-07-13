@@ -2022,6 +2022,7 @@ void DataCollectionTarget::removeTemplate(Template *templateObject, NetObj *poll
       .param(_T("nodeName"), templateObject->getName())
       .param(_T("templateId"), m_id)
       .param(_T("templateName"), m_name)
+      .post();
 }
 
 /**
@@ -2677,9 +2678,16 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
 
    if ((m_flags & DCF_LOCATION_CHANGE_EVENT) && m_geoLocation.isValid() && geoLocation.isValid() && !m_geoLocation.equals(geoLocation))
    {
-      PostSystemEvent(EVENT_GEOLOCATION_CHANGED, m_id, "ffssffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
-            geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), m_geoLocation.getLatitude(), m_geoLocation.getLongitude(),
-            m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
+      EventBuilder(EVENT_GEOLOCATION_CHANGED, m_id)
+         .param(_T("newLatitude"), geoLocation.getLatitude())
+         .param(_T("newLongitude"), geoLocation.getLongitude())
+         .param(_T("newLatitudeAsString"), geoLocation.getLatitudeAsString())
+         .param(_T("newLongitudeAsString"), geoLocation.getLongitudeAsString())
+         .param(_T("previousLatitude"), m_geoLocation.getLatitude())
+         .param(_T("previousLongitude"), m_geoLocation.getLongitude())
+         .param(_T("previousLatitudeAsString"), m_geoLocation.getLatitudeAsString())
+         .param(_T("previoudLongitudeAsString"), m_geoLocation.getLongitudeAsString())
+         .post();
    }
    m_geoLocation = geoLocation;
    setModified(MODIFY_COMMON_PROPERTIES);

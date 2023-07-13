@@ -1343,14 +1343,14 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Device geolocation changed to %3 %4 (was %7 %8)',
       'Generated when device geolocation change is detected.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Latitude of new location in degrees' CONCAT CRLF CONCAT
-      '   2) Longitude of new location in degrees' CONCAT CRLF CONCAT
-      '   3) Latitude of new location in textual form' CONCAT CRLF CONCAT
-      '   4) Longitude of new location in textual form' CONCAT CRLF CONCAT
-      '   5) Latitude of previous location in degrees' CONCAT CRLF CONCAT
-      '   6) Longitude of previous location in degrees' CONCAT CRLF CONCAT
-      '   7) Latitude of previous location in textual form' CONCAT CRLF CONCAT
-      '   8) Longitude of previous location in textual form'
+      '   1) newLatitude - Latitude of new location in degrees' CONCAT CRLF CONCAT
+      '   2) newLongitude - Longitude of new location in degrees' CONCAT CRLF CONCAT
+      '   3) newLatitudeAsString- Latitude of new location in textual form' CONCAT CRLF CONCAT
+      '   4) newLongitudeAsString - Longitude of new location in textual form' CONCAT CRLF CONCAT
+      '   5) previousLatitude - Latitude of previous location in degrees' CONCAT CRLF CONCAT
+      '   6) previousLongitude - Longitude of previous location in degrees' CONCAT CRLF CONCAT
+      '   7) previousLatitudeAsString - Latitude of previous location in textual form' CONCAT CRLF CONCAT
+      '   8) previoudLongitudeAsString - Longitude of previous location in textual form'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
