@@ -509,10 +509,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 		'Cluster resource "%2" is down (last owner was %4)',
 		'Generated when cluster resource goes down.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   1) Resource ID' CONCAT CRLF CONCAT
-		'   2) Resource name' CONCAT CRLF CONCAT
-		'   3) Last owner node ID' CONCAT CRLF CONCAT
-		'   4) Last owner node name'
+		'   1) resourceId - Resource ID' CONCAT CRLF CONCAT
+		'   2) resourceName - Resource name' CONCAT CRLF CONCAT
+		'   3) lastOwnerNodeId - Last owner node ID' CONCAT CRLF CONCAT
+		'   4) lastOwnerNodeName - Last owner node name'
 	);
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
 	(

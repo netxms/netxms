@@ -725,10 +725,12 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 			if ((!resourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
 			{
 				shared_ptr<NetObj> pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
-				PostSystemEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
-							 m_pResourceList[i].dwId, m_pResourceList[i].szName,
-							 m_pResourceList[i].dwCurrOwner,
-							 (pObject != nullptr) ? pObject->getName() : _T("<unknown>"));
+            EventBuilder(EVENT_CLUSTER_RESOURCE_DOWN, m_id)
+               .param(_T("resourceId"), m_pResourceList[i].dwId)
+               .param(_T("resourceName"), m_pResourceList[i].szName)
+               .param(_T("lastOwnerNodeId"), m_pResourceList[i].dwCurrOwner)
+               .param(_T("lastOwnerNodeName"), (pObject != nullptr) ? pObject->getName() : _T("<unknown>"))
+               .post();
 				m_pResourceList[i].dwCurrOwner = 0;
             modified |= MODIFY_CLUSTER_RESOURCES;
 			}

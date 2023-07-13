@@ -86,6 +86,15 @@ static bool H_UpgradeFromV22()
       _T("   4) containerName - Container name'")
       _T("WHERE event_code=64")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when cluster resource goes down.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) resourceId - Resource ID\r\n")
+      _T("   2) resourceName - Resource name\r\n")
+      _T("   3) lastOwnerNodeId - Last owner node ID\r\n")
+      _T("   4) lastOwnerNodeName - Last owner node name'")
+      _T("WHERE event_code=39")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
