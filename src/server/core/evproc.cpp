@@ -79,7 +79,7 @@ static void EventStormDetector()
                .param(_T("eps"), numEvents)
                .param(_T("duration"), duration)
                .param(_T("threshold"), eventsPerSecond)
-               .post()
+               .post();
 			}
 		}
 		else if ((numEvents < eventsPerSecond) && (g_flags & AF_EVENT_STORM_DETECTED))
@@ -87,7 +87,11 @@ static void EventStormDetector()
 			actualDuration = 0;
 			InterlockedAnd64(&g_flags, ~AF_EVENT_STORM_DETECTED);
 		   nxlog_debug_tag(DEBUG_TAG, 2, _T("Event storm condition cleared"));
-		   PostSystemEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
+         EventBuilder(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode)
+            .param(_T("eps"), numEvents)
+            .param(_T("duration"), duration)
+            .param(_T("threshold"), eventsPerSecond)
+            .post();
 		}
 	}
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Event storm detector thread stopped"));
