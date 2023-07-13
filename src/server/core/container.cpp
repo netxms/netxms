@@ -373,7 +373,12 @@ void Container::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_
          nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Container::autobindPoll(): binding object \"%s\" [%u] to container \"%s\" [%u]"), object->getName(), object->getId(), m_name, m_id);
          addChild(object);
          object->addParent(self());
-         PostSystemEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", object->getId(), object->getName(), m_id, m_name);
+         EventBuilder(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode)
+            .param(_T("nodeId"), object->getId())
+            .param(_T("nodeName"), object->getName())
+            .param(_T("containerId"), m_id)
+            .param(_T("containerName"), m_name)
+            .post();
          calculateCompoundStatus();
       }
       else if ((decision == AutoBindDecision_Unbind) && isDirectChild(object->getId()))
