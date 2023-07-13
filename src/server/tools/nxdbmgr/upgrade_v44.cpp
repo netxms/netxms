@@ -60,7 +60,16 @@ static bool H_UpgradeFromV22()
       _T("   6) newOwnerNodeName - New owner node name'")
       _T("WHERE event_code=38")));
 
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node, cluster, or mobile device left maintenance mode.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) userId - Initiating user ID\r\n")
+      _T("   2) userName - Initiating user name'")
+      _T("WHERE event_code=79")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
+   
    return true;
 }
 

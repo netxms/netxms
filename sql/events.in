@@ -943,8 +943,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Left maintenance mode',
       'Generated when node, cluster, or mobile device left maintenance mode.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Initiating user ID' CONCAT CRLF CONCAT
-      '   2) Initiating user name'
+      '   1) userId - Initiating user ID' CONCAT CRLF CONCAT
+      '   2) userName - Initiating user name'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

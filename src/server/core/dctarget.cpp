@@ -1770,7 +1770,11 @@ void DataCollectionTarget::leaveMaintenanceMode(uint32_t userId)
    ResolveUserId(userId, userName, true);
 
    nxlog_debug_tag(DEBUG_TAG_MAINTENANCE, 4, _T("Leaving maintenance mode for %s [%d] (initiated by %s)"), m_name, m_id, userName);
-   PostSystemEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, "ds", userId, userName);
+   EventBuilder(EVENT_MAINTENANCE_MODE_LEFT, m_id)
+      .param(_T("userId"), userId)
+      .param(_T("userName"), userName)
+      .post();
+
 
    readLockDciAccess();
    for(int i = 0; i < m_dcObjects.size(); i++)
