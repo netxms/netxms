@@ -86,7 +86,7 @@ public class SortableTableViewer extends TableViewer
 		if (initialized)
 			return;
 		initialized = true;
-		
+
 		for(int i = 0; i < names.length; i++)
 		{
 			TableColumn c = new TableColumn(getTable(), SWT.LEFT);
@@ -94,7 +94,7 @@ public class SortableTableViewer extends TableViewer
 			c.setText(names[i]);
 			if (widths != null)
 				c.setWidth(widths[i]);
-			c.setData("ID", Integer.valueOf(i)); //$NON-NLS-1$
+         c.setData("ID", Integer.valueOf(i));
 			c.addSelectionListener(sortingListener);
 		}
 

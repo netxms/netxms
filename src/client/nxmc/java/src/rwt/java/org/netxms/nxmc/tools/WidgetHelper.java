@@ -552,7 +552,7 @@ public class WidgetHelper
 			}
 		}
 	}
-	
+
 	/**
 	 * Save settings for sortable table viewer
 	 * @param viewer Viewer
@@ -564,8 +564,8 @@ public class WidgetHelper
       saveColumnSettings(table, prefix);
 		TableColumn column = table.getSortColumn();
       PreferenceStore settings = PreferenceStore.getInstance();
-      settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1); //$NON-NLS-1$ //$NON-NLS-2$
-      settings.set(prefix + ".sortDirection", table.getSortDirection()); //$NON-NLS-1$
+      settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
+      settings.set(prefix + ".sortDirection", table.getSortDirection());
 	}
 	
 	/**
@@ -580,8 +580,8 @@ public class WidgetHelper
       PreferenceStore settings = PreferenceStore.getInstance();
 		try
 		{
-         table.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", SWT.UP)); //$NON-NLS-1$
-         int column = settings.getAsInteger(prefix + ".sortColumn", 0); //$NON-NLS-1$
+         table.setSortDirection(settings.getAsInteger(prefix + ".sortDirection", SWT.UP));
+         int column = settings.getAsInteger(prefix + ".sortColumn", 0);
 			if (column >= 0)
 			{
 				table.setSortColumn(viewer.getColumnById(column));
@@ -603,8 +603,8 @@ public class WidgetHelper
       saveColumnSettings(tree, prefix);
 		TreeColumn column = tree.getSortColumn();
       PreferenceStore settings = PreferenceStore.getInstance();
-      settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1); //$NON-NLS-1$ //$NON-NLS-2$
-      settings.set(prefix + ".sortDirection", tree.getSortDirection()); //$NON-NLS-1$
+      settings.set(prefix + ".sortColumn", (column != null) ? (Integer)column.getData("ID") : -1);
+      settings.set(prefix + ".sortDirection", tree.getSortDirection());
 	}
 	
 	/**

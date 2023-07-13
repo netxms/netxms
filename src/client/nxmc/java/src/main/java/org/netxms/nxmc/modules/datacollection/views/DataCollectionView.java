@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2022 Raden Solutions
+ * Copyright (C) 2003-2023 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -182,7 +183,7 @@ public class DataCollectionView extends BaseDataCollectionView
       setFilterClient(viewer, dcFilter); 
       dcFilter.setHideTemplateItems(ds.getAsBoolean(configPrefix + ".hideTemplateItems", false));
       viewer.addFilter(dcFilter);
-      WidgetHelper.restoreTableViewerSettings(viewer, configPrefix); //$NON-NLS-1$
+      WidgetHelper.restoreTableViewerSettings(viewer, configPrefix);
 
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -198,7 +199,7 @@ public class DataCollectionView extends BaseDataCollectionView
                actionConvert.setEnabled(selection.size() > 0);
                actionDuplicate.setEnabled(selection.size() > 0);
                actionBulkUpdate.setEnabled(selection.size() > 0);
-               
+
                Iterator<?> it = selection.iterator();
                boolean canActivate = false;
                boolean canDisable = false;
@@ -1097,8 +1098,19 @@ public class DataCollectionView extends BaseDataCollectionView
     */
    private void switchMode()
    {
+      int savedSortColumn = -1;
+      int savedSortDirection = SWT.NONE;
+
       if (viewer != null)
       {
+         TableColumn sortColumn = viewer.getTable().getSortColumn();
+         savedSortColumn = (sortColumn != null) ? (Integer)sortColumn.getData("ID") : -1;
+         if (editMode) // Switching from "last values" mode, column with ID 0 is "owner"
+            savedSortColumn--;
+         else // Switching from "edit" mode, column with ID 0 is "ID", adjust for column 0 being "owner" in "last values" mode
+            savedSortColumn++;
+         savedSortDirection = viewer.getTable().getSortDirection();
+
          viewer.getControl().dispose();
          session.removeListener(clientListener);
          if (dciConfig != null)
@@ -1128,6 +1140,12 @@ public class DataCollectionView extends BaseDataCollectionView
       else 
       {
          createLastValuesViewer(parent, validator);
+      }
+
+      if ((savedSortColumn != -1) && (savedSortColumn < 2) && (savedSortDirection != SWT.NONE))
+      {
+         viewer.getTable().setSortColumn(viewer.getColumnById(savedSortColumn));
+         viewer.getTable().setSortDirection(savedSortDirection);
       }
 
       parent.layout(true, true);
