@@ -2108,7 +2108,12 @@ void DataCollectionTarget::applyTemplates()
             nxlog_debug_tag(_T("obj.bind"), 4, _T("DataCollectionTarget::applyTemplates(): applying template \"%s\" [%u] to object \"%s\" [%u]"),
                   templateObject->getName(), templateObject->getId(), m_name, m_id);
             templateObject->applyToTarget(self());
-            PostSystemEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, templateObject->getId(), templateObject->getName());
+            EventBuilder(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id)
+               .param(_T("nodeName"), m_name)
+               .param(_T("templateId"), templateObject->getId())
+               .param(_T("templateName"), templateObject->getName())
+               .post();
          }
       }
       else if ((decision == AutoBindDecision_Unbind) && templateObject->isAutoUnbindEnabled() && templateObject->isDirectChild(m_id))
