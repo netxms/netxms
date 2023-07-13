@@ -2710,8 +2710,15 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
             {
                nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Device %s [%u] is within restricted area %s [%u] (current coordinates %s %s)"),
                         m_name, m_id, area->getName(), area->getId(), geoLocation.getLatitudeAsString(), geoLocation.getLatitudeAsString());
-               PostSystemEvent(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, m_id, "ffsssd", geoLocation.getLatitude(), geoLocation.getLongitude(),
-                     geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString(), area->getName(), area->getId());
+               EventBuilder(EVENT_GEOLOCATION_INSIDE_RESTRICTED_AREA, m_id)
+                  .param(_T("newLatitude"), geoLocation.getLatitude())
+                  .param(_T("newLongitude"), geoLocation.getLongitude())
+                  .param(_T("newLatitudeAsString"), geoLocation.getLatitudeAsString())
+                  .param(_T("newLongitudeAsString"), geoLocation.getLongitudeAsString())
+                  .param(_T("areaName"), area->getName())
+                  .param(_T("areaId"), area->getId())
+                  .post();
+
                m_geoLocationRestrictionsViolated = true;
             }
             break;
