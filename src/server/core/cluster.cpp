@@ -1048,7 +1048,13 @@ void Cluster::autobindPoll(PollerInfo *poller, ClientSession *session, uint32_t 
          if (addNode(static_pointer_cast<Node>(node)))
          {
             nxlog_debug_tag(DEBUG_TAG_AUTOBIND_POLL, 4, _T("Cluster::autobindPoll(): binding node \"%s\" [%u] to cluster \"%s\" [%u]"), node->getName(), node->getId(), m_name, m_id);
-            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", node->getId(), node->getName(), m_id, m_name);
+            EventBuilder(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode)
+               .param(_T("nodeId"), node->getId())
+               .param(_T("nodeName"), node->getName())
+               .param(_T("clusterId"), m_id)
+               .param(_T("clusterName"), m_name)
+               .post();
+
             calculateCompoundStatus();
          }
          else

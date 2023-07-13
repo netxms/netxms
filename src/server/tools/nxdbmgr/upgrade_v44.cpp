@@ -95,6 +95,15 @@ static bool H_UpgradeFromV22()
       _T("   4) lastOwnerNodeName - Last owner node name'")
       _T("WHERE event_code=39")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when node added to cluster object by autoadd rule.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) nodeId - Node ID\r\n")
+      _T("   2) nodeName - Node name\r\n")
+      _T("   3) clusterId - Cluster ID\r\n")
+      _T("   4) clusterName - Cluster name'")
+      _T("WHERE event_code=114")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;

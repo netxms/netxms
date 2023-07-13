@@ -12464,7 +12464,12 @@ void Node::updateClusterMembership()
                       m_name, m_id, cluster->getName(), cluster->getId());
             cluster->addChild(self());
             addParent(cluster->self());
-            PostSystemEvent(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode, "isis", m_id, m_name, cluster->getId(), cluster->getName());
+            EventBuilder(EVENT_CLUSTER_AUTOADD, g_dwMgmtNode)
+               .param(_T("nodeId"), m_id)
+               .param(_T("nodeName"), m_name)
+               .param(_T("clusterId"), cluster->getId())
+               .param(_T("clusterName"), cluster->getName())
+               .post();
             cluster->calculateCompoundStatus();
          }
       }
