@@ -1373,10 +1373,10 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Device geolocation %3 %4 is outside allowed area',
       'Generated when new device geolocation is ouside allowed areas.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Latitude of new location in degrees' CONCAT CRLF CONCAT
-      '   2) Longitude of new location in degrees' CONCAT CRLF CONCAT
-      '   3) Latitude of new location in textual form' CONCAT CRLF CONCAT
-      '   4) Longitude of new location in textual form'
+      '   1) newLatitude - Latitude of new location in degrees' CONCAT CRLF CONCAT
+      '   2) newLongitude - Longitude of new location in degrees' CONCAT CRLF CONCAT
+      '   3) newLatitudeAsString - Latitude of new location in textual form' CONCAT CRLF CONCAT
+      '   4) newLongitudeAsString - Longitude of new location in textual form'
    );
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (

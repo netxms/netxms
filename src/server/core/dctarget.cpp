@@ -2747,8 +2747,13 @@ void DataCollectionTarget::updateGeoLocation(const GeoLocation& geoLocation)
       {
          nxlog_debug_tag(DEBUG_TAG_GEOLOCATION, 4, _T("Device %s [%u] is outside allowed area (current coordinates %s %s)"),
                   m_name, m_id, geoLocation.getLatitudeAsString(), geoLocation.getLatitudeAsString());
-         PostSystemEvent(EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA, m_id, "ffss", geoLocation.getLatitude(), geoLocation.getLongitude(),
-               geoLocation.getLatitudeAsString(), geoLocation.getLongitudeAsString());
+         EventBuilder(EVENT_GEOLOCATION_OUTSIDE_ALLOWED_AREA, m_id)
+            .param(_T("newLatitude"), geoLocation.getLatitude())
+            .param(_T("newLongitude"), geoLocation.getLongitude())
+            .param(_T("newLatitudeAsString"), geoLocation.getLatitudeAsString())
+            .param(_T("newLongitudeAsString"), geoLocation.getLongitudeAsString())
+            .post();
+
          m_geoLocationRestrictionsViolated = true;
       }
       else if (insideArea && m_geoLocationRestrictionsViolated)

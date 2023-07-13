@@ -164,6 +164,15 @@ static bool H_UpgradeFromV22()
       _T("   6) areaId - Area ID'")
       _T("WHERE event_code=112")));
 
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET ")
+      _T("description='Generated when new device geolocation is ouside allowed areas.\r\n")
+      _T("Parameters:\r\n")
+      _T("   1) newLatitude - Latitude of new location in degrees\r\n")
+      _T("   2) newLongitude - Longitude of new location in degrees\r\n")
+      _T("   3) newLatitudeAsString- Latitude of new location in textual form\r\n")
+      _T("   4) newLongitudeAsString - Longitude of new location in textual form'")
+      _T("WHERE event_code=113")));
+
    CHK_EXEC(SetMinorSchemaVersion(23));
 
    return true;
