@@ -221,11 +221,14 @@ public class ReportExecutionForm extends Composite
 		final Composite scheduleArea = toolkit.createComposite(section);
 		section.setClient(scheduleArea);
 		createSchedulesSection(scheduleArea);
-		
-		session.addListener(new SessionListener() {			
+
+      final SessionListener sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n) 
 			{
+            if (isDisposed())
+               return;
+
             if (n.getCode() == SessionNotification.SCHEDULE_UPDATE)
 				{
                getDisplay().asyncExec(new Runnable() {
@@ -247,7 +250,15 @@ public class ReportExecutionForm extends Composite
                });
 				}
 			}
-		});
+      };
+      session.addListener(sessionListener);
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            session.removeListener(sessionListener);
+         }
+      });
 
 		refreshScheduleList();
 		refreshResultList();
