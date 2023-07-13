@@ -63,7 +63,7 @@ Interface::Interface() : super(), m_macAddr(MacAddress::ZERO)
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask) : super(), m_macAddr(MacAddress::ZERO), m_description(_T("unknown"))
+Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask) : super(), m_macAddr(MacAddress::ZERO), m_description(_T("unknown")), m_ifName(_T("unknown"))
 {
    m_parentInterfaceId = 0;
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
@@ -108,8 +108,8 @@ Interface::Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyn
 /**
  * Constructor for normal interface object
  */
-Interface::Interface(const TCHAR *name, const TCHAR *description, uint32_t index, const InetAddressList& addrList, uint32_t ifType, int32_t zoneUIN)
-          : super(), m_macAddr(MacAddress::ZERO), m_description(description)
+Interface::Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *description, uint32_t index, const InetAddressList& addrList, uint32_t ifType, int32_t zoneUIN)
+          : super(), m_macAddr(MacAddress::ZERO), m_description(description), m_ifName(ifName)
 {
    if ((ifType == IFTYPE_SOFTWARE_LOOPBACK) || addrList.isLoopbackOnly())
       m_flags = IF_LOOPBACK;
@@ -117,7 +117,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *description, uint32_t index
       m_flags = 0;
 
    m_parentInterfaceId = 0;
-   _tcslcpy(m_name, name, MAX_OBJECT_NAME);
+   _tcslcpy(m_name, objectName, MAX_OBJECT_NAME);
    m_index = index;
    m_type = ifType;
    m_mtu = 0;
@@ -175,7 +175,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
 	DB_STATEMENT hStmt = DBPrepare(hdb,
 		_T("SELECT if_type,if_index,node_id,mac_addr,required_polls,bridge_port,phy_chassis,phy_module,")
-		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_alias,dot1x_pae_state,dot1x_backend_state,")
+		_T("phy_pic,phy_port,peer_node_id,peer_if_id,description,if_name,if_alias,dot1x_pae_state,dot1x_backend_state,")
 		_T("admin_state,oper_state,peer_proto,mtu,speed,parent_iface,last_known_oper_state,last_known_admin_state,")
       _T("ospf_area,ospf_if_type,ospf_if_state,stp_port_state,iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == nullptr)
@@ -204,25 +204,26 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 		m_peerNodeId = DBGetFieldULong(hResult, 0, 10);
 		m_peerInterfaceId = DBGetFieldULong(hResult, 0, 11);
 		m_description = DBGetFieldAsSharedString(hResult, 0, 12);
-      m_ifAlias = DBGetFieldAsSharedString(hResult, 0, 13);
-		m_dot1xPaeAuthState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 14));
-		m_dot1xBackendAuthState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 15));
-		m_adminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 16));
-		m_operState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 17));
+      m_ifName = DBGetFieldAsSharedString(hResult, 0, 13);
+      m_ifAlias = DBGetFieldAsSharedString(hResult, 0, 14);
+		m_dot1xPaeAuthState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 15));
+		m_dot1xBackendAuthState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 16));
+		m_adminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 17));
+		m_operState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 18));
 		m_confirmedOperState = m_operState;
-		m_peerDiscoveryProtocol = static_cast<LinkLayerProtocol>(DBGetFieldLong(hResult, 0, 18));
-		m_mtu = DBGetFieldULong(hResult, 0, 19);
-      m_speed = DBGetFieldUInt64(hResult, 0, 20);
-      m_parentInterfaceId = DBGetFieldULong(hResult, 0, 21);
-      m_lastKnownOperState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 22));
-      m_lastKnownAdminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 23));
-      m_ospfArea = DBGetFieldIPAddr(hResult, 0, 24);
-      m_ospfType = static_cast<OSPFInterfaceType>(DBGetFieldLong(hResult, 0, 25));
-      m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 26));
-      m_stpPortState = static_cast<SpanningTreePortState>(DBGetFieldLong(hResult, 0, 27));
+		m_peerDiscoveryProtocol = static_cast<LinkLayerProtocol>(DBGetFieldLong(hResult, 0, 19));
+		m_mtu = DBGetFieldULong(hResult, 0, 20);
+      m_speed = DBGetFieldUInt64(hResult, 0, 21);
+      m_parentInterfaceId = DBGetFieldULong(hResult, 0, 22);
+      m_lastKnownOperState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 23));
+      m_lastKnownAdminState = static_cast<int16_t>(DBGetFieldLong(hResult, 0, 24));
+      m_ospfArea = DBGetFieldIPAddr(hResult, 0, 25);
+      m_ospfType = static_cast<OSPFInterfaceType>(DBGetFieldLong(hResult, 0, 26));
+      m_ospfState = static_cast<OSPFInterfaceState>(DBGetFieldLong(hResult, 0, 27));
+      m_stpPortState = static_cast<SpanningTreePortState>(DBGetFieldLong(hResult, 0, 28));
 
       TCHAR suffixText[128];
-      DBGetField(hResult, 0, 28, suffixText, 128);
+      DBGetField(hResult, 0, 29, suffixText, 128);
       Trim(suffixText);
       if (suffixText[0] == 0)
       {
@@ -344,7 +345,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          _T("description"), _T("admin_state"), _T("oper_state"), _T("dot1x_pae_state"), _T("dot1x_backend_state"),
          _T("peer_proto"), _T("mtu"), _T("speed"), _T("parent_iface"), _T("iftable_suffix"), _T("last_known_oper_state"),
          _T("last_known_admin_state"), _T("if_alias"), _T("ospf_area"), _T("ospf_if_type"), _T("ospf_if_state"),
-         _T("stp_port_state"), nullptr
+         _T("stp_port_state"), _T("if_name"), nullptr
       };
 
       DB_STATEMENT hStmt = DBPrepareMerge(hdb, _T("interfaces"), _T("id"), m_id, columns);
@@ -366,7 +367,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_physicalLocation.port);
          DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, m_peerNodeId);
          DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, m_peerInterfaceId);
-         DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
+         DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC, MAX_DB_STRING - 1);
          DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_adminState));
          DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_operState));
          DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_dot1xPaeAuthState));
@@ -386,7 +387,7 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          }
          DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownOperState));
          DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_lastKnownAdminState));
-         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_ifAlias, DB_BIND_STATIC);
+         DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_ifAlias, DB_BIND_STATIC, MAX_DB_STRING - 1);
          if (m_flags & IF_OSPF_INTERFACE)
             DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, IpToStr(m_ospfArea, ospfArea), DB_BIND_STATIC);
          else
@@ -394,7 +395,8 @@ bool Interface::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfType));
          DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_ospfState));
          DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, static_cast<uint32_t>(m_stpPortState));
-         DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_ifName, DB_BIND_STATIC, MAX_DB_STRING - 1);
+         DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_id);
 
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);

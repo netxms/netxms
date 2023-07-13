@@ -190,7 +190,7 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
 
    if (s_showInterfaces)
    {
-      InterfaceList *ifList = driver->getInterfaces(transport, &s_object, s_driverData, 0, true);
+      InterfaceList *ifList = driver->getInterfaces(transport, &s_object, s_driverData, true);
       if (ifList != nullptr)
       {
          if (ifList->size() > 0)
@@ -204,11 +204,12 @@ static void PrintDeviceInformation(NetworkDeviceDriver *driver, SNMP_Transport *
                         _T("      Index ..........: %u\n")
                         _T("      Bridge port ....: %u\n")
                         _T("      Alias ..........: %s\n")
+                        _T("      Description ....: %s\n")
                         _T("      Type ...........: %u\n")
                         _T("      Speed ..........: ") UINT64_FMT _T("\n")
                         _T("      MAC address ....: %s\n")
                         _T("      Is physical ....: %s\n"),
-                     iface->name, iface->index, iface->bridgePort, iface->alias, iface->type, iface->speed,
+                     iface->name, iface->index, iface->bridgePort, iface->alias, iface->description, iface->type, iface->speed,
                      MACToStr(iface->macAddr, macAddrText), iface->isPhysicalPort ? _T("yes") : _T("no"));
                if (iface->isPhysicalPort)
                {

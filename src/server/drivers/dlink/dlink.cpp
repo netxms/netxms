@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for D-Link switches
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -107,10 +107,10 @@ void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObject 
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 

@@ -475,11 +475,11 @@ static uint32_t HandlerInetCidrRouteTable(SNMP_Variable *var, SNMP_Transport *tr
  * @param useAliases policy for interface alias usage
  * @param useIfXTable if true, usage of ifXTable is allowed
  */
-InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    bool success = false;
 
-	nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p,%d,%s)"), snmp, useAliases, BooleanToString(useIfXTable));
+	nxlog_debug_tag(DEBUG_TAG, 6, _T("NetworkDeviceDriver::getInterfaces(%p,%s)"), snmp, BooleanToString(useIfXTable));
 
    // Get number of interfaces
 	// Some devices may not return ifNumber at all or return completely insane values
@@ -532,61 +532,13 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
             iface->alias[0] = 0;
          }
 
-         // Set name to ifAlias if needed
-         if (useAliases > 0)
-         {
-            _tcscpy(iface->name, iface->alias);
-         }
-
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifDescr from ifTable
-         TCHAR buffer[256];
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%u"), iface->index);
          if (!useIfXTable ||
-				 (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, sizeof(buffer), 0) != SNMP_ERR_SUCCESS))
+				 (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, iface->name, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS))
          {
-		      _tcslcpy(buffer, iface->description, 256);
+		      _tcslcpy(iface->name, iface->description, MAX_DB_STRING);
 		   }
-
-			// Build full interface object name
-         switch(useAliases)
-         {
-         	case 1:	// Use only alias if available, otherwise name
-         		if (iface->name[0] == 0)
-         		   _tcslcpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
-         		break;
-         	case 2:	// Concatenate alias with name
-         	case 3:	// Concatenate name with alias
-         		if (iface->name[0] != 0)
-         		{
-						if (useAliases == 2)
-						{
-         				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
-         				{
-		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), buffer);
-		      				iface->name[MAX_DB_STRING - 1] = 0;
-		      			}
-						}
-						else
-						{
-							TCHAR temp[MAX_DB_STRING];
-							_tcscpy(temp, iface->name);
-							_tcslcpy(iface->name, buffer, MAX_DB_STRING);
-         				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
-         				{
-		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), temp);
-		      				iface->name[MAX_DB_STRING - 1] = 0;
-		      			}
-						}
-         		}
-         		else
-         		{
-         		   _tcslcpy(iface->name, buffer, MAX_DB_STRING);	// Alias is empty or not available
-					}
-         		break;
-         	default:	// Use only name
-         	   _tcslcpy(iface->name, buffer, MAX_DB_STRING);
-         		break;
-         }
 
          // Interface type
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%u"), iface->index);
@@ -628,6 +580,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, NObject 
 
          // MAC address
          _sntprintf(oid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%u"), iface->index);
+         BYTE buffer[MAC_ADDR_LENGTH];
          memset(buffer, 0, MAC_ADDR_LENGTH);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, nullptr, 0, buffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
 			{

@@ -661,15 +661,15 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 		      continue;
 
 		   Node *node = static_cast<Node*>(pollList.get(i));
-		   InterfaceList *pIfList = node->getInterfaceList();
-			if (pIfList != NULL)
+		   InterfaceList *ifList = node->getInterfaceList();
+			if (ifList != nullptr)
 			{
 				lockProperties();
-				for(int j = 0; j < pIfList->size(); j++)
+				for(int j = 0; j < ifList->size(); j++)
 				{
-					for(UINT32 k = 0; k < m_dwNumResources; k++)
+					for(uint32_t k = 0; k < m_dwNumResources; k++)
 					{
-                  if (pIfList->get(j)->hasAddress(m_pResourceList[k].ipAddr))
+                  if (ifList->get(j)->hasAddress(m_pResourceList[k].ipAddr))
 						{
 							if (m_pResourceList[k].dwCurrOwner != node->getId())
 							{
@@ -703,7 +703,7 @@ void Cluster::statusPoll(PollerInfo *poller, ClientSession *pSession, uint32_t r
 					}
 				}
 				unlockProperties();
-				delete pIfList;
+				delete ifList;
 			}
 			else
 			{

@@ -194,7 +194,7 @@ static uint32_t HandlerInterfaceList(SNMP_Variable *var, SNMP_Transport *snmp, I
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *ILODriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *ILODriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    InterfaceList *ifList = new InterfaceList(8);
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.232.9.2.5.1.1.2"), HandlerInterfaceList, ifList) != SNMP_ERR_SUCCESS)

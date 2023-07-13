@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,6 +48,14 @@ static inline String LLDP_OID(const TCHAR *suffix, bool v2)
    StringBuffer oid(v2 ? _T(".1.3.111.2.802.1.1.13.") : _T(".1.0.8802.1.1.2."));
    oid.append(suffix);
    return oid;
+}
+
+/**
+ * Get LLDP MIB name
+ */
+static inline const TCHAR *LLDP_MIB_NAME(bool v2)
+{
+   return v2 ? _T("LLDP-V2-MIB") : _T("LLDP-MIB");
 }
 
 /**

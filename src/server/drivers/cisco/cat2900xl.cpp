@@ -87,10 +87,10 @@ static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, voi
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 	

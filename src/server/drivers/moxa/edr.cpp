@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Moxa EDR devices
-** Copyright (C) 2020 Raden Solutions
+** Copyright (C) 2020-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -116,9 +116,9 @@ bool MoxaEDRDriver::getHardwareInformation(SNMP_Transport *snmp, NObject *node, 
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *MoxaEDRDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *MoxaEDRDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 	   return nullptr;
 

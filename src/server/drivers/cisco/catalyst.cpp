@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco Catalyst switches
-** Copyright (C) 2003-2021 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -105,10 +105,10 @@ static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, voi
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
    // Get interface list from standard MIB
-   InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+   InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 	

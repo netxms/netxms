@@ -1488,25 +1488,25 @@ shared_ptr<ArpCache> Node::getArpCache(bool forceRead)
  */
 InterfaceList *Node::getInterfaceList()
 {
-   InterfaceList *pIfList = nullptr;
+   InterfaceList *ifList = nullptr;
 
    if ((m_capabilities & NC_IS_NATIVE_AGENT) && (!(m_flags & NF_DISABLE_NXCP)))
    {
       shared_ptr<AgentConnectionEx> conn = getAgentConnection();
       if (conn != nullptr)
       {
-         pIfList = conn->getInterfaceList();
+         ifList = conn->getInterfaceList();
       }
    }
-   if ((pIfList == nullptr) && (m_capabilities & NC_IS_LOCAL_MGMT))
+   if ((ifList == nullptr) && (m_capabilities & NC_IS_LOCAL_MGMT))
    {
-      pIfList = GetLocalInterfaceList();
+      ifList = GetLocalInterfaceList();
    }
-   if ((pIfList == nullptr) && (m_capabilities & NC_IS_SNMP) &&
+   if ((ifList == nullptr) && (m_capabilities & NC_IS_SNMP) &&
        (!(m_flags & NF_DISABLE_SNMP)) && (m_driver != nullptr))
    {
-      SNMP_Transport *pTransport = createSnmpTransport();
-      if (pTransport != nullptr)
+      SNMP_Transport *snmpTransport = createSnmpTransport();
+      if (snmpTransport != nullptr)
       {
          bool useIfXTable;
          if (m_nUseIfXTable == IFXTABLE_DEFAULT)
@@ -1518,16 +1518,15 @@ InterfaceList *Node::getInterfaceList()
             useIfXTable = (m_nUseIfXTable == IFXTABLE_ENABLED) ? true : false;
          }
 
-         int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
-         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useAliases=%d, useIfXTable=%s)"),
-                  m_name, m_id, useAliases, BooleanToString(useIfXTable));
-         pIfList = m_driver->getInterfaces(pTransport, this, m_driverData, useAliases, useIfXTable);
+         nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::getInterfaceList(node=%s [%u]): calling driver (useIfXTable=%s)"),
+                  m_name, m_id, BooleanToString(useIfXTable));
+         ifList = m_driver->getInterfaces(snmpTransport, this, m_driverData, useIfXTable);
 
-         if ((pIfList != nullptr) && (m_capabilities & NC_IS_BRIDGE))
+         if ((ifList != nullptr) && (m_capabilities & NC_IS_BRIDGE))
          {
-            BridgeMapPorts(pTransport, pIfList);
+            BridgeMapPorts(snmpTransport, ifList);
          }
-         delete pTransport;
+         delete snmpTransport;
       }
       else
       {
@@ -1535,13 +1534,13 @@ InterfaceList *Node::getInterfaceList()
       }
    }
 
-   if (pIfList != nullptr)
+   if (ifList != nullptr)
    {
-      checkInterfaceNames(pIfList);
-      addVrrpInterfaces(pIfList);
+      checkInterfaceNames(ifList);
+      addVrrpInterfaces(ifList);
    }
 
-   return pIfList;
+   return ifList;
 }
 
 /**
@@ -1617,7 +1616,7 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
  * @param ifIndex interface index to match
  * @return pointer to interface object or nullptr if appropriate interface couldn't be found
  */
-shared_ptr<Interface> Node::findInterfaceByIndex(UINT32 ifIndex) const
+shared_ptr<Interface> Node::findInterfaceByIndex(uint32_t ifIndex) const
 {
    readLockChildList();
    for(int i = 0; i < getChildList().size(); i++)
@@ -1648,7 +1647,7 @@ shared_ptr<Interface> Node::findInterfaceByName(const TCHAR *name) const
       if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
          auto iface = static_pointer_cast<Interface>(getChildList().getShared(i));
-         if (!_tcsicmp(iface->getName(), name) || !_tcsicmp(iface->getDescription(), name))
+         if (!_tcsicmp(iface->getIfName(), name) || !_tcsicmp(iface->getDescription(), name) || !_tcsicmp(iface->getName(), name))
          {
             unlockChildList();
             return iface;
@@ -1938,32 +1937,75 @@ bool Node::isMyIP(const InetAddress& addr) const
 }
 
 /**
+ * Build interface object name based on alias usage settings and actual interface information
+ */
+static void BuildInterfaceObjectName(TCHAR *ifObjectName, const InterfaceInfo& ifInfo, int useAliases)
+{
+   // Use interface description if name is not set
+   const TCHAR *ifName = (ifInfo.name[0] != 0) ? ifInfo.name : ifInfo.description;
+
+   switch(useAliases)
+   {
+      case 1:  // Use only alias if available, otherwise name
+         _tcslcpy(ifObjectName, (ifInfo.alias[0] != 0) ? ifInfo.alias : ifName, MAX_OBJECT_NAME);
+         break;
+      case 2:  // Concatenate alias with name
+         if (ifInfo.alias[0] != 0)
+         {
+            _sntprintf(ifObjectName, MAX_OBJECT_NAME, _T("%s (%s)"), ifInfo.alias, ifName);
+            ifObjectName[MAX_OBJECT_NAME - 1] = 0;
+         }
+         else
+         {
+            _tcslcpy(ifObjectName, ifName, MAX_OBJECT_NAME);
+         }
+         break;
+      case 3:  // Concatenate name with alias
+         if (ifInfo.alias[0] != 0)
+         {
+            _sntprintf(ifObjectName, MAX_OBJECT_NAME, _T("%s (%s)"), ifName, ifInfo.alias);
+            ifObjectName[MAX_OBJECT_NAME - 1] = 0;
+         }
+         else
+         {
+            _tcslcpy(ifObjectName, ifName, MAX_OBJECT_NAME);
+         }
+         break;
+      default: // Do not use alias
+         _tcslcpy(ifObjectName, ifName, MAX_OBJECT_NAME);
+         break;
+   }
+}
+
+/**
  * Create interface object. Can return nullptr if interface creation hook
  * blocks interface creation.
  */
-shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manuallyCreated, bool fakeInterface, bool syntheticMask)
+shared_ptr<Interface> Node::createInterfaceObject(const InterfaceInfo& info, bool manuallyCreated, bool fakeInterface, bool syntheticMask)
 {
    shared_ptr<Interface> iface;
-   if (info->name[0] != 0)
+   if (info.name[0] != 0)
    {
-      iface = make_shared<Interface>(info->name, (info->description[0] != 0) ? info->description : info->name,
-               info->index, info->ipAddrList, info->type, m_zoneUIN);
+      TCHAR ifObjectName[MAX_OBJECT_NAME];
+      BuildInterfaceObjectName(ifObjectName, info, ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0));
+      iface = make_shared<Interface>(ifObjectName, info.name, (info.description[0] != 0) ? info.description : info.name,
+               info.index, info.ipAddrList, info.type, m_zoneUIN);
    }
    else
    {
-      iface = make_shared<Interface>(info->ipAddrList, m_zoneUIN, syntheticMask);
+      iface = make_shared<Interface>(info.ipAddrList, m_zoneUIN, syntheticMask);
    }
-   iface->setAlias(info->alias);
-   iface->setIfAlias(info->alias);
-   iface->setMacAddr(MacAddress(info->macAddr, MAC_ADDR_LENGTH), false);
-   iface->setBridgePortNumber(info->bridgePort);
-   iface->setPhysicalLocation(info->location);
-   iface->setPhysicalPortFlag(info->isPhysicalPort);
+   iface->setAlias(info.alias);
+   iface->setIfAlias(info.alias);
+   iface->setMacAddr(MacAddress(info.macAddr, MAC_ADDR_LENGTH), false);
+   iface->setBridgePortNumber(info.bridgePort);
+   iface->setPhysicalLocation(info.location);
+   iface->setPhysicalPortFlag(info.isPhysicalPort);
    iface->setManualCreationFlag(manuallyCreated);
-   iface->setSystemFlag(info->isSystem);
-   iface->setMTU(info->mtu);
-   iface->setSpeed(info->speed);
-   iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
+   iface->setSystemFlag(info.isSystem);
+   iface->setMTU(info.mtu);
+   iface->setSpeed(info.speed);
+   iface->setIfTableSuffix(info.ifTableSuffixLength, info.ifTableSuffix);
 
    // Expand interface name
    TCHAR expandedName[MAX_OBJECT_NAME];
@@ -2013,7 +2055,7 @@ shared_ptr<Interface> Node::createInterfaceObject(InterfaceInfo *info, bool manu
       }
       vm.destroy();
       nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 6, _T("Node::createInterfaceObject(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
-                m_name, m_id, iface->getName(), info->index, pass ? _T("accepted") : _T("rejected"));
+                m_name, m_id, iface->getName(), info.index, pass ? _T("accepted") : _T("rejected"));
       if (!pass)
       {
          sendPollerMsg(POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), iface->getName());
@@ -2043,7 +2085,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    bool bSyntheticMask = false;
    TCHAR buffer[64];
 
-   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface(\"%s\", %d, %d, bp=%d, chassis=%u, module=%u, pic=%u, port=%u) called for node %s [%d]"),
+   nxlog_debug_tag(DEBUG_TAG_NODE_INTERFACES, 5, _T("Node::createNewInterface(\"%s\", ifIndex=%u, ifType=%u, bp=%d, chassis=%u, module=%u, pic=%u, port=%u) called for node %s [%u]"),
          info->name, info->index, info->type, info->bridgePort, info->location.chassis, info->location.module,
          info->location.pic, info->location.port, m_name, m_id);
    for(int i = 0; i < info->ipAddrList.size(); i++)
@@ -2110,7 +2152,7 @@ shared_ptr<Interface> Node::createNewInterface(InterfaceInfo *info, bool manuall
    }
 
    // Insert to objects' list and generate event
-   shared_ptr<Interface>  iface = createInterfaceObject(info, manuallyCreated, fakeInterface, bSyntheticMask);
+   shared_ptr<Interface>  iface = createInterfaceObject(*info, manuallyCreated, fakeInterface, bSyntheticMask);
    if (iface == nullptr)
       return iface;
 
@@ -6177,6 +6219,8 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          hasChanges = true;
       }
 
+      int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
+
       // Add new interfaces and check configuration of existing
       for(int j = 0; j < ifList->size(); j++)
       {
@@ -6184,6 +6228,9 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
          shared_ptr<Interface> pInterface;
          bool isNewInterface = true;
          bool interfaceUpdated = false;
+
+         TCHAR ifObjectName[MAX_OBJECT_NAME];
+         BuildInterfaceObjectName(ifObjectName, *ifInfo, useAliases);
 
          readLockChildList();
          for(int i = 0; i < getChildList().size(); i++)
@@ -6207,10 +6254,15 @@ bool Node::updateInterfaceConfiguration(uint32_t requestId)
                      interfaceUpdated = true;
                   }
                   TCHAR expandedName[MAX_OBJECT_NAME];
-                  pInterface->expandName(ifInfo->name, expandedName);
+                  pInterface->expandName(ifObjectName, expandedName);
                   if (_tcscmp(expandedName, pInterface->getName()))
                   {
                      pInterface->setName(expandedName);
+                     interfaceUpdated = true;
+                  }
+                  if (_tcscmp(ifInfo->name, pInterface->getIfName()))
+                  {
+                     pInterface->setIfName(ifInfo->name);
                      interfaceUpdated = true;
                   }
                   if (_tcscmp(ifInfo->description, pInterface->getDescription()))
@@ -10951,6 +11003,8 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
    InterfaceList *pIfList = getInterfaceList();
    if (pIfList != nullptr)
    {
+      int useAliases = ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0);
+
       // Check names of existing interfaces
       for(int j = 0; j < pIfList->size(); j++)
       {
@@ -10961,30 +11015,39 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 rqId)
          {
             if (getChildList().get(i)->getObjectClass() == OBJECT_INTERFACE)
             {
-               Interface *pInterface = (Interface *)getChildList().get(i);
+               Interface *iface = static_cast<Interface*>(getChildList().get(i));
 
-               if (ifInfo->index == pInterface->getIfIndex())
+               if (ifInfo->index == iface->getIfIndex())
                {
-                  sendPollerMsg(_T("   Checking interface %d (%s)\r\n"), pInterface->getIfIndex(), pInterface->getName());
-                  if (_tcscmp(ifInfo->name, pInterface->getName()))
+                  sendPollerMsg(_T("   Checking interface %u (%s)\r\n"), iface->getIfIndex(), iface->getName());
+
+                  TCHAR ifObjectName[MAX_OBJECT_NAME], expandedName[MAX_OBJECT_NAME];
+                  BuildInterfaceObjectName(ifObjectName, *ifInfo, useAliases);
+                  iface->expandName(ifObjectName, expandedName);
+                  if (_tcscmp(expandedName, iface->getName()))
                   {
-                     pInterface->setName(ifInfo->name);
-                     sendPollerMsg(POLLER_WARNING _T("   Name of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->name);
+                     iface->setName(expandedName);
+                     sendPollerMsg(POLLER_WARNING _T("   Object name of interface %u changed to %s\r\n"), iface->getIfIndex(), expandedName);
                   }
-                  if (_tcscmp(ifInfo->description, pInterface->getDescription()))
+                  if (_tcscmp(ifInfo->name, iface->getIfName()))
                   {
-                     pInterface->setDescription(ifInfo->description);
-                     sendPollerMsg(POLLER_WARNING _T("   Description of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->description);
+                     iface->setIfName(ifInfo->name);
+                     sendPollerMsg(POLLER_WARNING _T("   Name of interface %u changed to %s\r\n"), iface->getIfIndex(), ifInfo->name);
                   }
-                  if (_tcscmp(ifInfo->alias, pInterface->getIfAlias()))
+                  if (_tcscmp(ifInfo->description, iface->getDescription()))
                   {
-                     if (pInterface->getAlias().isEmpty() || !_tcscmp(pInterface->getIfAlias(), pInterface->getAlias()))
+                     iface->setDescription(ifInfo->description);
+                     sendPollerMsg(POLLER_WARNING _T("   Description of interface %u changed to %s\r\n"), iface->getIfIndex(), ifInfo->description);
+                  }
+                  if (_tcscmp(ifInfo->alias, iface->getIfAlias()))
+                  {
+                     if (iface->getAlias().isEmpty() || !_tcscmp(iface->getIfAlias(), iface->getAlias()))
                      {
-                        pInterface->setAlias(ifInfo->alias);
-                        sendPollerMsg(POLLER_WARNING _T("   Alias of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
+                        iface->setAlias(ifInfo->alias);
+                        sendPollerMsg(POLLER_WARNING _T("   Alias of interface %u changed to %s\r\n"), iface->getIfIndex(), ifInfo->alias);
                      }
-                     pInterface->setIfAlias(ifInfo->alias);
-                     sendPollerMsg(POLLER_WARNING _T("   SNMP alias of interface %u changed to %s\r\n"), pInterface->getIfIndex(), ifInfo->alias);
+                     iface->setIfAlias(ifInfo->alias);
+                     sendPollerMsg(POLLER_WARNING _T("   SNMP alias of interface %u changed to %s\r\n"), iface->getIfIndex(), ifInfo->alias);
                   }
                   break;
                }

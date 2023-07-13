@@ -275,9 +275,9 @@ GeoLocation CambiumEPMPDriver::getGeoLocation(SNMP_Transport *snmp, NObject *nod
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CambiumEPMPDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
    if (ifList == nullptr)
       return nullptr;
 

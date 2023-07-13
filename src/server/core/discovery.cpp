@@ -482,32 +482,18 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
    if ((data.ifList == nullptr) && (data.flags & NNF_IS_SNMP))
    {
       data.driver->analyzeDevice(snmpTransport, data.snmpObjectId, &data, &data.driverData);
-      data.ifList = data.driver->getInterfaces(snmpTransport, &data, data.driverData,
-               ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0), ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
+      data.ifList = data.driver->getInterfaces(snmpTransport, &data, data.driverData, ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
    }
 
    // Check all interfaces for matching existing nodes
-   InterfaceList *ifList = nullptr;
-   if (agentConnection != nullptr)
-   {
-      ifList = agentConnection->getInterfaceList();
-   }
-   if ((ifList == nullptr) && (snmpTransport != nullptr))
-   {
-      NObject node;
-      DriverData *driverData = nullptr;
-      data.driver->analyzeDevice(snmpTransport, data.snmpObjectId, &node, &driverData);
-      ifList = data.driver->getInterfaces(snmpTransport, &node, driverData, ConfigReadInt(_T("Objects.Interfaces.UseAliases"), 0), ConfigReadBoolean(_T("Objects.Interfaces.UseIfXTable"), true));
-      delete driverData;
-   }
-   if (ifList != nullptr)
+   if (data.ifList != nullptr)
    {
       nxlog_debug_tag(DEBUG_TAG_DISCOVERY, 5, _T("AcceptNewNode(%s): interface list retrieved, checking for duplicates"), ipAddrText);
 
       bool duplicate = false;
-      for (int i = 0; (i < ifList->size()) && !duplicate; i++)
+      for (int i = 0; (i < data.ifList->size()) && !duplicate; i++)
       {
-         InterfaceInfo *iface = ifList->get(i);
+         InterfaceInfo *iface = data.ifList->get(i);
          if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
             continue;
 
@@ -566,7 +552,6 @@ static bool AcceptNewNode(NewNodeData *newNodeData)
             }
          }
       }
-      delete ifList;
 
       if (duplicate)
       {

@@ -99,14 +99,17 @@ static uint32_t HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, In
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-   InterfaceList *pIfList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
-   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.27514.1.11.4.1.1.1"), HandlerIndex, pIfList) == SNMP_ERR_SUCCESS)
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, false);
+   if (ifList == nullptr)
+      return nullptr;
+
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.27514.1.11.4.1.1.1"), HandlerIndex, ifList) == SNMP_ERR_SUCCESS)
    {
-      for(int i = 0; i < pIfList->size(); i++)
+      for(int i = 0; i < ifList->size(); i++)
       {
-         InterfaceInfo *iface = pIfList->get(i);
+         InterfaceInfo *iface = ifList->get(i);
          if (iface->index > 1000)
          {
             uint32_t oid[MAX_OID_LEN];
@@ -132,7 +135,7 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, NObject *node
          }
       }
    }
-   return pIfList;
+   return ifList;
 }
 
 /**

@@ -2647,6 +2647,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const NXSL_Identif
    {
 		value = vm->createValue(iface->getIfIndex());
    }
+   else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifName"))
+   {
+      value = vm->createValue(iface->getIfName());
+   }
    else if (NXSL_COMPARE_ATTRIBUTE_NAME("ifType"))
    {
 		value = vm->createValue(iface->getIfType());

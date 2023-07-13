@@ -6,7 +6,7 @@
 ** author: https://dev.raden.solutions/issues/779#note-4
 ** 
 ** Copyright (C) 2015 Procyshin Dmitriy
-** 
+**
 ** Permission is hereby granted, free of charge, to any person obtaining a copy of
 ** this software and associated documentation files (the “Software”), to deal in
 ** the Software without restriction, including without limitation the rights to
@@ -40,13 +40,13 @@
 class QtechOLTDriver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
-	virtual int isPotentialDevice(const TCHAR *oid);
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
+	virtual const TCHAR *getName() override;
+	virtual const TCHAR *getVersion() override;
+	virtual int isPotentialDevice(const TCHAR *oid) override;
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
    virtual void getInterfaceState(SNMP_Transport *snmp, NObject *node, DriverData *driverData, uint32_t ifIndex,
-            int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
+            int ifTableSuffixLen, uint32_t *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState) override;
 };
 
 #endif

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Netonix switches
-** Copyright (C) 2003-2017 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -51,7 +51,7 @@ const TCHAR *NetonixDriver::getVersion()
  */
 int NetonixDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return (_tcscmp(oid, _T(".1.3.6.1.4.1.46242")) == 0) ? 127 : 0;
+   return (_tcscmp(oid, _T(".1.3.6.1.4.1.46242")) == 0) ? 127 : 0;
 }
 
 /**
@@ -62,7 +62,7 @@ int NetonixDriver::isPotentialDevice(const TCHAR *oid)
  */
 bool NetonixDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
-	return true;
+   return true;
 }
 
 /**
@@ -83,12 +83,12 @@ void NetonixDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObjec
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *NetonixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *NetonixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+   // Get interface list from standard MIB
+   InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+   if (ifList == nullptr)
+      return nullptr;
 
 	// Mark all ports as physical
    // Device do not return logical ports
@@ -100,7 +100,7 @@ InterfaceList *NetonixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node,
       iface->location.port = iface->index;
 	}
 
-	return ifList;
+   return ifList;
 }
 
 /**

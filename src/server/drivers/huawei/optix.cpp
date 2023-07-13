@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Huawei Optix devices
-** Copyright (C) 2003-2021 Raden Solutions
+** Copyright (C) 2003-2023 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -193,9 +193,9 @@ static UINT32 HandlerEthPortList(SNMP_Variable *var, SNMP_Transport *snmp, void 
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
-	InterfaceList *ifList = new InterfaceList();
+   InterfaceList *ifList = new InterfaceList();
 
 	// Walk ethernet ports
    if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2011.2.25.4.50.52.1.1.1.23"), HandlerEthPortList, ifList) != SNMP_ERR_SUCCESS) // optixEthPortMac
@@ -211,7 +211,7 @@ InterfaceList *OptixDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, D
       return nullptr;
    }
 
-	return ifList;
+   return ifList;
 }
 
 /**

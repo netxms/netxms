@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Ping3 devices
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,13 +33,13 @@
 class Ping3Driver : public NetworkDeviceDriver
 {
 public:
-	virtual const TCHAR *getName();
-	virtual const TCHAR *getVersion();
+	virtual const TCHAR *getName() override;
+	virtual const TCHAR *getVersion() override;
 
-   virtual const TCHAR *getCustomTestOID();
-	virtual int isPotentialDevice(const TCHAR *oid);
-	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual const TCHAR *getCustomTestOID() override;
+	virtual int isPotentialDevice(const TCHAR *oid) override;
+	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid) override;
+	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable) override;
 };
 
 #endif

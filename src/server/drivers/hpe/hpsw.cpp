@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for HP switches with HH3C MIB support
-** Copyright (C) 2003-2022 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -99,10 +99,10 @@ static uint32_t PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, Interf
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *HPSwitchDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *HPSwitchDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 

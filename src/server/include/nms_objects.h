@@ -1985,6 +1985,7 @@ protected:
    MacAddress m_macAddr;
    InetAddressList m_ipAddressList;
    SharedString m_description;   // Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
+   SharedString m_ifName;        // Original interface name as received from SNMP or NetXMS agent (before expansion)
    SharedString m_ifAlias;
    uint32_t m_type;
    uint32_t m_mtu;
@@ -2032,7 +2033,7 @@ protected:
 public:
    Interface();
    Interface(const InetAddressList& addrList, int32_t zoneUIN, bool bSyntheticMask);
-   Interface(const TCHAR *name, const TCHAR *description, uint32_t index, const InetAddressList& addrList, uint32_t ifType, int32_t zoneUIN);
+   Interface(const TCHAR *objectName, const TCHAR *ifName, const TCHAR *description, uint32_t index, const InetAddressList& addrList, uint32_t ifType, int32_t zoneUIN);
    virtual ~Interface();
 
    shared_ptr<Interface> self() { return static_pointer_cast<Interface>(NObject::self()); }
@@ -2082,6 +2083,7 @@ public:
    int getDot1xPaeAuthState() const { return (int)m_dot1xPaeAuthState; }
    int getDot1xBackendAuthState() const { return (int)m_dot1xBackendAuthState; }
    SharedString getDescription() const { return GetAttributeWithLock(m_description, m_mutexProperties); }
+   SharedString getIfName() const { return GetAttributeWithLock(m_ifName, m_mutexProperties); }
    SharedString getIfAlias() const { return GetAttributeWithLock(m_ifAlias, m_mutexProperties); }
    const MacAddress& getMacAddr() const { return m_macAddr; }
    int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
@@ -2156,7 +2158,14 @@ public:
       setModified(MODIFY_INTERFACE_PROPERTIES);
       unlockProperties();
    }
-   void setIfAlias(const TCHAR* ifAlias)
+   void setIfName(const TCHAR *ifName)
+   {
+      lockProperties();
+      m_ifName = ifName;
+      setModified(MODIFY_INTERFACE_PROPERTIES);
+      unlockProperties();
+   }
+   void setIfAlias(const TCHAR *ifAlias)
    {
       lockProperties();
       m_ifAlias = ifAlias;
@@ -3313,7 +3322,7 @@ protected:
    void deleteInterface(Interface *iface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
-   shared_ptr<Interface> createInterfaceObject(InterfaceInfo *info, bool manuallyCreated, bool fakeInterface, bool syntheticMask);
+   shared_ptr<Interface> createInterfaceObject(const InterfaceInfo& info, bool manuallyCreated, bool fakeInterface, bool syntheticMask);
    shared_ptr<Subnet> createSubnet(InetAddress& baseAddr, bool syntheticMask);
    void checkAgentPolicyBinding(const shared_ptr<AgentConnectionEx>& conn);
    void updatePrimaryIpAddr();
@@ -3539,7 +3548,7 @@ public:
 
    shared_ptr<ArpCache> getArpCache(bool forceRead = false);
    InterfaceList *getInterfaceList();
-   shared_ptr<Interface> findInterfaceByIndex(UINT32 ifIndex) const;
+   shared_ptr<Interface> findInterfaceByIndex(uint32_t ifIndex) const;
    shared_ptr<Interface> findInterfaceByName(const TCHAR *name) const;
    shared_ptr<Interface> findInterfaceByAlias(const TCHAR *alias) const;
    shared_ptr<Interface> findInterfaceByMAC(const MacAddress& macAddr) const;

@@ -106,10 +106,10 @@ UINT32 BayStackDriver::getSlotSize(NObject *node)
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
 	if (ifList == nullptr)
 		return nullptr;
 

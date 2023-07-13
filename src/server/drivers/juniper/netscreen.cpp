@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Netscreen firewalls
-** Copyright (C) 2003-2018 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -75,10 +75,8 @@ void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObj
 /**
  * Handler for interface enumeration
  */
-static UINT32 HandlerIfList(SNMP_Variable *varbind, SNMP_Transport *transport, void *arg)
+static uint32_t HandlerIfList(SNMP_Variable *varbind, SNMP_Transport *transport, InterfaceList *ifList)
 {
-   InterfaceList *ifList = (InterfaceList *)arg;
-
    size_t nameLen = varbind->getName().length();
    uint32_t oidName[MAX_OID_LEN];
    memcpy(oidName, varbind->getName().value(), nameLen * sizeof(uint32_t));
@@ -131,12 +129,12 @@ static UINT32 HandlerIfList(SNMP_Variable *varbind, SNMP_Transport *transport, v
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *stdIfList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, 0, false);
-	if (stdIfList == NULL)
-		return NULL;
+	InterfaceList *stdIfList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, false);
+	if (stdIfList == nullptr)
+		return nullptr;
 
 	InterfaceList *ifList = new InterfaceList;
 	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList) == SNMP_ERR_SUCCESS)

@@ -24,6 +24,17 @@
 #include <nxevent.h>
 
 /**
+ * Upgrade from 44.22 to 44.23
+ */
+static bool H_UpgradeFromV22()
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE interfaces ADD if_name varchar(255)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE interfaces SET if_name=(SELECT name FROM object_properties WHERE object_properties.object_id=interfaces.id)")));
+   CHK_EXEC(SetMinorSchemaVersion(23));
+   return true;
+}
+
+/**
  * Upgrade from 44.21 to 44.22
  */
 static bool H_UpgradeFromV21()
@@ -616,6 +627,7 @@ static struct
    int nextMinor;
    bool (*upgradeProc)();
 } s_dbUpgradeMap[] = {
+   { 22, 44, 23, H_UpgradeFromV22 },
    { 21, 44, 22, H_UpgradeFromV21 },
    { 20, 44, 21, H_UpgradeFromV20 },
    { 19, 44, 20, H_UpgradeFromV19 },

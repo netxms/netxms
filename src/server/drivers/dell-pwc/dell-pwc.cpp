@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Dell PowerConnect switches
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2023 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -84,14 +84,14 @@ void PowerConnectDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, N
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	if (ifList == nullptr)
+		return nullptr;
 
-	UINT32 slotSize = node->getCustomAttributeAsUInt32(_T(".powerConnect.slotSize"), 52);
+	uint32_t slotSize = node->getCustomAttributeAsUInt32(_T(".powerConnect.slotSize"), 52);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)

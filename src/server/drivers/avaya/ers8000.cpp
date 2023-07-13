@@ -83,14 +83,14 @@ void PassportDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, NObje
  * @param snmp SNMP transport
  * @param node Node
  */
-InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, NObject *node, DriverData *driverData, bool useIfXTable)
 {
 	// Get interface list from standard MIB
-	InterfaceList *ifList = AvayaERSDriver::getInterfaces(snmp, node, driverData, useAliases, useIfXTable);
-	if (ifList == NULL)
-		return NULL;
+	InterfaceList *ifList = AvayaERSDriver::getInterfaces(snmp, node, driverData, useIfXTable);
+	if (ifList == nullptr)
+		return nullptr;
 
-	UINT32 maxSlot = node->getCustomAttributeAsUInt32(_T(".rapidCity.maxSlot"), 10);
+	uint32_t maxSlot = node->getCustomAttributeAsUInt32(_T(".rapidCity.maxSlot"), 10);
 	bool is1600Series = node->getCustomAttributeAsBoolean(_T(".rapidCity.is1600"), false);
 	
 	// Calculate slot/port pair from ifIndex
