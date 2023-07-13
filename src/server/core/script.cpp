@@ -47,7 +47,7 @@ void NXCORE_EXPORTABLE ReportScriptError(const TCHAR *context, const NetObj *obj
       if (count == 1000)
       {
          nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG_BASE, _T("Too many script errors - script error reporting temporarily disabled"));
-         PostSystemEvent(EVENT_TOO_MANY_SCRIPT_ERRORS, g_dwMgmtNode, nullptr);
+         EventBuilder(EVENT_TOO_MANY_SCRIPT_ERRORS, g_dwMgmtNode).post();
       }
       return;
    }

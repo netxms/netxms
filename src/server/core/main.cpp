@@ -692,12 +692,12 @@ static void DBEventHandler(uint32_t event, const WCHAR *arg1, const WCHAR *arg2,
 	switch(event)
 	{
 		case DBEVENT_CONNECTION_LOST:
-			PostSystemEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, nullptr);
+			EventBuilder(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode).post();
 			InterlockedOr64(&g_flags, AF_DB_CONNECTION_LOST);
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, FALSE);
 			break;
 		case DBEVENT_CONNECTION_RESTORED:
-			PostSystemEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, nullptr);
+			EventBuilder(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode).post();
 			InterlockedAnd64(&g_flags, ~AF_DB_CONNECTION_LOST);
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
@@ -1338,7 +1338,7 @@ retry_db_lock:
    s_statCollectorThread = ThreadCreateEx(ServerStatCollector);
 
    g_flags |= AF_SERVER_INITIALIZED;
-   PostSystemEvent(EVENT_SERVER_STARTED, g_dwMgmtNode, nullptr);
+   EventBuilder(EVENT_SERVER_STARTED, g_dwMgmtNode).post();
    nxlog_write_tag(NXLOG_INFO, DEBUG_TAG_STARTUP, _T("Server initialization completed in %d milliseconds"), static_cast<int>(GetCurrentTimeMs() - initStartTime));
    return TRUE;
 }
