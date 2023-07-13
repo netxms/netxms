@@ -1452,8 +1452,8 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Duplicate MAC address found (%1 on %2)',
       'Generated when duplicate MAC address found.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) MAC address ' CONCAT CRLF CONCAT
-      '   2) List of interfaces where MAC address was found'
+      '   1) macAddress - MAC address ' CONCAT CRLF CONCAT
+      '   2) listOfInterfaces - List of interfaces where MAC address was found'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES

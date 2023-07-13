@@ -159,7 +159,10 @@ void NXCORE_EXPORTABLE MacDbAddObject(const MacAddress& macAddr, const shared_pt
 
             if (g_flags & AF_SERVER_INITIALIZED)
             {
-               PostSystemEvent(EVENT_DUPLICATE_MAC_ADDRESS, nodeId, "Hs", &macAddr, objects.cstr());
+               EventBuilder(EVENT_DUPLICATE_MAC_ADDRESS, nodeId)
+                  .param(_T("macAddress"), macAddr)
+                  .param(_T("listOfInterfaces"), objects.cstr())
+                  .post();
             }
          }
       }
