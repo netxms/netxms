@@ -949,7 +949,7 @@ static void QueueMonitorThread()
             s_queueMonitorDiscardFlag = true;
             nxlog_write_tag(NXLOG_WARNING, DEBUG_TAG, _T("Background database writer queue size for DCI data exceeds threshold (current=") INT64_FMT _T(", threshold=") INT64_FMT _T(")"),
                      currentQueueSize, maxQueueSize);
-            EventBuilder(EVENT_DBWRITER_QUEUE_OVERFLOW, g_dwMgmtNode).post()
+            PostSystemEvent(EVENT_DBWRITER_QUEUE_OVERFLOW, g_dwMgmtNode, nullptr);
          }
       }
       else if (s_queueMonitorDiscardFlag)
@@ -957,7 +957,7 @@ static void QueueMonitorThread()
          s_queueMonitorDiscardFlag = false;
          nxlog_write_tag(NXLOG_INFO, DEBUG_TAG, _T("Background database writer queue size for DCI data is below threshold (current=") INT64_FMT _T(", threshold=") INT64_FMT _T(")"),
                   currentQueueSize, maxQueueSize);
-         EventBuilder(EVENT_DBWRITER_QUEUE_NORMAL, g_dwMgmtNode).post()
+         PostSystemEvent(EVENT_DBWRITER_QUEUE_NORMAL, g_dwMgmtNode, nullptr);
       }
    }
    nxlog_debug_tag(DEBUG_TAG, 1, _T("Queue monitor stopped"));
